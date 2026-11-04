@@ -1,4 +1,4 @@
-// 核心字符串可省略 std::lang::，所有组合保持同一类型与值复制语义。
+// 核心字符串可省略 std::core::，所有组合保持同一类型与值复制语义。
 struct TextBox<T>{T value;};
 struct TextBorrow{
     static String const& view(String const& value){return value;}
@@ -34,7 +34,7 @@ void main(){
     assert(inferred("inferred")=="inferred");
     String fn(String) transform=copyText;
     assert(transform(original)=="abcd");
-    assert(__typeTag(std::lang::String)==__typeTag(std::lang::String));
+    assert(__typeTag(std::core::String)==__typeTag(std::core::String));
     assert(__typeTag(String)==__typeTag(String));
     int64 string=3;assert(string==3);
     println("String type OK");

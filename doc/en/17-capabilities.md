@@ -4,7 +4,7 @@
 **English** · [简体中文](../17-capabilities.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Loops use `while`, `loop`, and `for (... in ...)`. Both `for-in` and `while` support value expressions with `else` and `yield`. List literals use `[a, b, c]`; Set literals use `{a, b, c}`. Intervals use `std::lang::range(a, b)` (half open) and `rangeEq(a, b)` (inclusive). Integers and char support intervals directly; custom iteration types implement `NextValue<T>`. Interval match patterns accept integers and char, while ordinary custom value patterns use `Equal<T>`.
+Loops use `while`, `loop`, and `for (... in ...)`. Both `for-in` and `while` support value expressions with `else` and `yield`. List literals use `[a, b, c]`; Set literals use `{a, b, c}`. Intervals use `std::core::range(a, b)` (half open) and `rangeEq(a, b)` (inclusive). Integers and char support intervals directly; custom iteration types implement `NextValue<T>`. Interval match patterns accept integers and char, while ordinary custom value patterns use `Equal<T>`.
 
 [Documentation index](README.md) · [中文](17-capabilities.md)
 
@@ -19,11 +19,11 @@ Standard-library failures use `Result<T, Error>` with an owned interface payload
 
 Heap object allocation uses `new T`, or `new T(args)` for construction. Ownership transfer uses `move value`; pointers and references dereference one level automatically, and an extra address-of operand is not accepted.
 
-Support includes [return control expressions, statement-level named closures and field derivation](29-declaration-sugars.md). Hidden result bindings preserve internal moves, external copies and borrow cleanup. Named functions reuse fn captures. `#derive` supports Equal/Hash/Clone and same-name interface/member-macro pairs, retaining normal interface, borrow and resource checks and never generating Drop.
+Support includes [return control expressions, statement-level named closures and member macros](29-declaration-sugars.md). Hidden result bindings preserve moves, copies and borrow cleanup. Member macros can add interfaces with `$implement` and generate methods subject to normal interface, borrow and resource checks.
 
 Generic closures support `fn<T>`, inference from argument types, full specialization and uniquely most specific partial specialization. They can be direct struct members and can be passed or stored as values of a generic type parameter `F`. Calls with different types share one closure environment, preserving ordinary capture, copy and borrow rules. See the [language reference](04-language-reference.md).
 
-Sources and macros are shared through `module` / `import`; a macro definition is registered in the module that defines it and calls resolve by module visibility, with `std::lang` always visible and qualified names (`$std::lang::assert(...)`) naming a module directly. The generated parser builds macro ASTs; semantic analysis performs hygienic substitution and static type inference before quadruple generation. Ordered round, square and curly groups, type parameters, variadic fragments, five complete syntax categories and ECMAScript regex matching are supported. See [hygienic AST macros](25-literals-operators-macros.md#compile-time-hygienic-ast-macros).
+Sources and macros are shared through `module` / `import`; a macro definition is registered in the module that defines it and calls resolve by module visibility, with `std::core` always visible and qualified names (`$std::core::assert(...)`) naming a module directly. The generated parser builds macro ASTs; semantic analysis performs hygienic substitution and static type inference before quadruple generation. Ordered round, square and curly groups, type parameters, variadic fragments, five complete syntax categories and ECMAScript regex matching are supported. See [hygienic AST macros](25-literals-operators-macros.md#compile-time-hygienic-ast-macros).
 
 Executable entry points support only `void main`, with no parameters or `List<String>` arguments. It exits with code 0 on normal completion; panic still fails. Trailing semicolons on `struct`, `enum`, and `interface` declarations are optional.
 
@@ -34,7 +34,7 @@ AOT shared libraries expose functions using `export` and may omit `main`. `chali
 | Types | Fixed-width integers, float32/float64, bool, char, String, big numbers; arrays, tuples, structs, payload enums, containers and function types |
 | Abstraction | Overloads, generic monomorphization, interface constraints, associated types, constant generics, default type parameters, default interface methods and runtime interface dispatch |
 | Function values | Anonymous functions use `fn`; inline arguments, nested higher-order functions and const/mut/copy/move captures are supported |
-| Control flow | Match, guards, integer singleton/range overlap warnings, destructuring, ranges, if expressions, block expressions with `yield value;`, tuple exits with `yield (a, b);`, nested-loop exits with `break level N;` / `break all;`, implicit moves of direct variables and value breaks across non-value loops, macros and conditional compilation |
+| Control flow | Match, guards, integer singleton/range overlap warnings, destructuring, ranges, if expressions, block expressions with `yield value;`, tuple exits with `yield (a, b);`, nested-loop exits with `break label;`, implicit moves of direct variables and value breaks across non-value loops, macros and conditional compilation |
 | Errors and cleanup | Option, Result, custom error propagation, `?`, panic, defer, scope(exit), Drop and Closeable |
 | Ownership | Ordinary owned-value assignment and value arguments copy; move transfers resources. The old binding cannot be read, written or rebound; a complete move permits a new declaration using that name |
 | References | Non-null read-only/mutable references; `Option<T const&>` and `Option<T mut&>` represent an optional reference, with None constructing no reference |

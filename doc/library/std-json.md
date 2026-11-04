@@ -199,22 +199,34 @@ JSON and TOML parsing OK
 
 聚合入口的具体操作参见对应子模块；本页类型/方法的调用形式列在下方。
 
+## 宏定义
+
+<a id="symbol-306"></a>
+
+### `Json`
+
+```chali
+$macro Json<T>(encode:ident, decode:ident) -> member
+```
+
+为具体类型 T 生成实例编码方法和静态解码方法。两个名称由调用者指定，编解码使用反射并返回 Result。
+
 ## 类型、枚举、常量与字段
 
 公开字段按源码原样列出；句柄和游标字段用于包装器状态，通常通过方法操作。枚举的括号表示变体载荷。
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-218"></a>`interface Json` | 结构化 JSON 编码协议；解码由派生类型的静态 fromJson 入口提供。 |
-| 模块 | <a id="symbol-219"></a>`struct JsonValue : Iterator<JsonValue>` | 独立拥有 JSON 子树的值，关闭不影响副本或已提取子值。 |
+| 模块 | <a id="symbol-307"></a>`interface Json` | 结构化 JSON 编码协议；配套的成员宏可生成静态解码入口。 |
+| 模块 | <a id="symbol-308"></a>`struct JsonValue : Iterator<JsonValue>` | 独立拥有 JSON 子树的值，关闭不影响副本或已提取子值。 |
 
 ## 函数索引
 
 | 名称 | 声明 |
 | --- | --- |
-| [Json::toJson](#api-0) | `Result<String,std::lang::Error> toJson()` |
-| [serialize](#api-1) | `Result<String,std::lang::Error> serialize<T>(T const& value)` |
-| [deserialize](#api-2) | `Result<T,std::lang::Error> deserialize<T>(String text)` |
+| [Json::toJson](#api-0) | `Result<String,std::core::Error> toJson()` |
+| [serialize](#api-1) | `Result<String,std::core::Error> serialize<T>(T const& value)` |
+| [deserialize](#api-2) | `Result<T,std::core::Error> deserialize<T>(String text)` |
 | [JsonValue::isValid](#api-3) | `bool isValid()` |
 | [JsonValue::close](#api-4) | `bool close()` |
 | [JsonValue::kind](#api-5) | `int64 kind()` |
@@ -231,17 +243,17 @@ JSON and TOML parsing OK
 | [JsonValue::asInt](#api-16) | `Option<int64> asInt()` |
 | [JsonValue::asFloat64](#api-17) | `Option<float64> asFloat64()` |
 | [JsonValue::asBool](#api-18) | `Option<bool> asBool()` |
-| [JsonValue::asString](#api-19) | `Option<std::lang::String> asString()` |
-| [JsonValue::asBytes](#api-20) | `Option<std::lang::List<uint8>> asBytes()` |
-| [JsonValue::asDateTime](#api-21) | `Option<std::lang::String> asDateTime()` |
-| [JsonValue::find](#api-22) | `Option<JsonValue> find(std::lang::String key)` |
-| [JsonValue::findBytes](#api-23) | `Option<JsonValue> findBytes(std::lang::List<uint8> key)` |
+| [JsonValue::asString](#api-19) | `Option<std::core::String> asString()` |
+| [JsonValue::asBytes](#api-20) | `Option<std::core::List<uint8>> asBytes()` |
+| [JsonValue::asDateTime](#api-21) | `Option<std::core::String> asDateTime()` |
+| [JsonValue::find](#api-22) | `Option<JsonValue> find(std::core::String key)` |
+| [JsonValue::findBytes](#api-23) | `Option<JsonValue> findBytes(std::core::List<uint8> key)` |
 | [JsonValue::at](#api-24) | `Option<JsonValue> at(int64 index)` |
 | [JsonValue::iterator](#api-25) | `Option<JsonValue> iterator(int64 index)` |
-| [JsonValue::keyAt](#api-26) | `Option<std::lang::String> keyAt(int64 index)` |
-| [JsonValue::keyBytesAt](#api-27) | `Option<std::lang::List<uint8>> keyBytesAt(int64 index)` |
-| [JsonValue::dump](#api-28) | `std::lang::String dump()` |
-| [parse](#api-29) | `Result<JsonValue, std::lang::Error> parse(std::lang::String text)` |
+| [JsonValue::keyAt](#api-26) | `Option<std::core::String> keyAt(int64 index)` |
+| [JsonValue::keyBytesAt](#api-27) | `Option<std::core::List<uint8>> keyBytesAt(int64 index)` |
+| [JsonValue::dump](#api-28) | `std::core::String dump()` |
+| [parse](#api-29) | `Result<JsonValue, std::core::Error> parse(std::core::String text)` |
 
 <a id="api-0"></a>
 
@@ -250,7 +262,7 @@ JSON and TOML parsing OK
 **声明**
 
 ```chali
-Result<String,std::lang::Error> toJson();
+Result<String,std::core::Error> toJson();
 ```
 
 **行为**
@@ -263,7 +275,7 @@ Result<String,std::lang::Error> toJson();
 
 **返回值**
 
-`Result<String,std::lang::Error>`。将当前值编码为 JSON；失败返回统一 Error，具体字段格式由实现决定。
+`Result<String,std::core::Error>`。将当前值编码为 JSON；失败返回统一 Error，具体字段格式由实现决定。
 
 **错误与边界**
 
@@ -286,7 +298,7 @@ obj.toJson();
 **声明**
 
 ```chali
-Result<String,std::lang::Error> serialize<T>(T const& value);
+Result<String,std::core::Error> serialize<T>(T const& value);
 ```
 
 **行为**
@@ -303,7 +315,7 @@ Result<String,std::lang::Error> serialize<T>(T const& value);
 
 **返回值**
 
-`Result<String,std::lang::Error>`。按具体反射类型编码独立值，失败返回诊断。
+`Result<String,std::core::Error>`。按具体反射类型编码独立值，失败返回诊断。
 
 **错误与边界**
 
@@ -315,7 +327,7 @@ Result<String,std::lang::Error> serialize<T>(T const& value);
 std::json::serialize<T>(value);
 ```
 
-**源码**：[source/std/json.chl:16](../../source/std/json.chl#L16)。
+**源码**：[source/std/json.chl:27](../../source/std/json.chl#L27)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -326,7 +338,7 @@ std::json::serialize<T>(value);
 **声明**
 
 ```chali
-Result<T,std::lang::Error> deserialize<T>(String text);
+Result<T,std::core::Error> deserialize<T>(String text);
 ```
 
 **行为**
@@ -343,7 +355,7 @@ Result<T,std::lang::Error> deserialize<T>(String text);
 
 **返回值**
 
-`Result<T,std::lang::Error>`。按具体反射类型严格校验并恢复独立拥有的值。
+`Result<T,std::core::Error>`。按具体反射类型严格校验并恢复独立拥有的值。
 
 **错误与边界**
 
@@ -355,7 +367,7 @@ Result<T,std::lang::Error> deserialize<T>(String text);
 std::json::deserialize<T>(text);
 ```
 
-**源码**：[source/std/json.chl:23](../../source/std/json.chl#L23)。
+**源码**：[source/std/json.chl:34](../../source/std/json.chl#L34)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -393,7 +405,7 @@ bool isValid();
 obj.isValid();
 ```
 
-**源码**：[source/std/json.chl:64](../../source/std/json.chl#L64)。
+**源码**：[source/std/json.chl:75](../../source/std/json.chl#L75)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -431,7 +443,7 @@ bool close();
 obj.close();
 ```
 
-**源码**：[source/std/json.chl:66](../../source/std/json.chl#L66)。
+**源码**：[source/std/json.chl:77](../../source/std/json.chl#L77)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -467,7 +479,7 @@ int64 kind();
 obj.kind();
 ```
 
-**源码**：[source/std/json.chl:67](../../source/std/json.chl#L67)。
+**源码**：[source/std/json.chl:78](../../source/std/json.chl#L78)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -503,7 +515,7 @@ bool isNull();
 obj.isNull();
 ```
 
-**源码**：[source/std/json.chl:68](../../source/std/json.chl#L68)。
+**源码**：[source/std/json.chl:79](../../source/std/json.chl#L79)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -539,7 +551,7 @@ bool isBool();
 obj.isBool();
 ```
 
-**源码**：[source/std/json.chl:69](../../source/std/json.chl#L69)。
+**源码**：[source/std/json.chl:80](../../source/std/json.chl#L80)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -575,7 +587,7 @@ bool isInt();
 obj.isInt();
 ```
 
-**源码**：[source/std/json.chl:70](../../source/std/json.chl#L70)。
+**源码**：[source/std/json.chl:81](../../source/std/json.chl#L81)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -611,7 +623,7 @@ bool isFloat();
 obj.isFloat();
 ```
 
-**源码**：[source/std/json.chl:71](../../source/std/json.chl#L71)。
+**源码**：[source/std/json.chl:82](../../source/std/json.chl#L82)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -647,7 +659,7 @@ bool isString();
 obj.isString();
 ```
 
-**源码**：[source/std/json.chl:72](../../source/std/json.chl#L72)。
+**源码**：[source/std/json.chl:83](../../source/std/json.chl#L83)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -683,7 +695,7 @@ bool isArray();
 obj.isArray();
 ```
 
-**源码**：[source/std/json.chl:73](../../source/std/json.chl#L73)。
+**源码**：[source/std/json.chl:84](../../source/std/json.chl#L84)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -719,7 +731,7 @@ bool isObject();
 obj.isObject();
 ```
 
-**源码**：[source/std/json.chl:74](../../source/std/json.chl#L74)。
+**源码**：[source/std/json.chl:85](../../source/std/json.chl#L85)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -755,7 +767,7 @@ bool isTable();
 obj.isTable();
 ```
 
-**源码**：[source/std/json.chl:75](../../source/std/json.chl#L75)。
+**源码**：[source/std/json.chl:86](../../source/std/json.chl#L86)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -791,7 +803,7 @@ bool isDateTime();
 obj.isDateTime();
 ```
 
-**源码**：[source/std/json.chl:76](../../source/std/json.chl#L76)。
+**源码**：[source/std/json.chl:87](../../source/std/json.chl#L87)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -829,7 +841,7 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/json.chl:78](../../source/std/json.chl#L78)。
+**源码**：[source/std/json.chl:89](../../source/std/json.chl#L89)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -865,7 +877,7 @@ Option<int64> asInt();
 obj.asInt();
 ```
 
-**源码**：[source/std/json.chl:79](../../source/std/json.chl#L79)。
+**源码**：[source/std/json.chl:90](../../source/std/json.chl#L90)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -901,7 +913,7 @@ Option<float64> asFloat64();
 obj.asFloat64();
 ```
 
-**源码**：[source/std/json.chl:83](../../source/std/json.chl#L83)。
+**源码**：[source/std/json.chl:94](../../source/std/json.chl#L94)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -937,7 +949,7 @@ Option<bool> asBool();
 obj.asBool();
 ```
 
-**源码**：[source/std/json.chl:87](../../source/std/json.chl#L87)。
+**源码**：[source/std/json.chl:98](../../source/std/json.chl#L98)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -948,7 +960,7 @@ obj.asBool();
 **声明**
 
 ```chali
-Option<std::lang::String> asString();
+Option<std::core::String> asString();
 ```
 
 **行为**
@@ -963,7 +975,7 @@ Option<std::lang::String> asString();
 
 **返回值**
 
-`Option<std::lang::String>`。提取不含零字节的字符串；否则 None。
+`Option<std::core::String>`。提取不含零字节的字符串；否则 None。
 
 **错误与边界**
 
@@ -975,7 +987,7 @@ Option<std::lang::String> asString();
 obj.asString();
 ```
 
-**源码**：[source/std/json.chl:92](../../source/std/json.chl#L92)。
+**源码**：[source/std/json.chl:103](../../source/std/json.chl#L103)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -986,7 +998,7 @@ obj.asString();
 **声明**
 
 ```chali
-Option<std::lang::List<uint8>> asBytes();
+Option<std::core::List<uint8>> asBytes();
 ```
 
 **行为**
@@ -999,7 +1011,7 @@ Option<std::lang::List<uint8>> asBytes();
 
 **返回值**
 
-`Option<std::lang::List<uint8>>`。提取字符串的原始字节，包括零字节。
+`Option<std::core::List<uint8>>`。提取字符串的原始字节，包括零字节。
 
 **错误与边界**
 
@@ -1011,7 +1023,7 @@ Option<std::lang::List<uint8>> asBytes();
 obj.asBytes();
 ```
 
-**源码**：[source/std/json.chl:97](../../source/std/json.chl#L97)。
+**源码**：[source/std/json.chl:108](../../source/std/json.chl#L108)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -1022,7 +1034,7 @@ obj.asBytes();
 **声明**
 
 ```chali
-Option<std::lang::String> asDateTime();
+Option<std::core::String> asDateTime();
 ```
 
 **行为**
@@ -1035,7 +1047,7 @@ Option<std::lang::String> asDateTime();
 
 **返回值**
 
-`Option<std::lang::String>`。提取日期时间的文本表示。
+`Option<std::core::String>`。提取日期时间的文本表示。
 
 **错误与边界**
 
@@ -1047,7 +1059,7 @@ Option<std::lang::String> asDateTime();
 obj.asDateTime();
 ```
 
-**源码**：[source/std/json.chl:102](../../source/std/json.chl#L102)。
+**源码**：[source/std/json.chl:113](../../source/std/json.chl#L113)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -1058,7 +1070,7 @@ obj.asDateTime();
 **声明**
 
 ```chali
-Option<JsonValue> find(std::lang::String key);
+Option<JsonValue> find(std::core::String key);
 ```
 
 **行为**
@@ -1069,7 +1081,7 @@ Option<JsonValue> find(std::lang::String key);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `key` | `std::lang::String key` | 查找键或下标 | 无 |
+| `key` | `std::core::String key` | 查找键或下标 | 无 |
 
 **返回值**
 
@@ -1085,7 +1097,7 @@ Option<JsonValue> find(std::lang::String key);
 obj.find(key);
 ```
 
-**源码**：[source/std/json.chl:107](../../source/std/json.chl#L107)。
+**源码**：[source/std/json.chl:118](../../source/std/json.chl#L118)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -1096,7 +1108,7 @@ obj.find(key);
 **声明**
 
 ```chali
-Option<JsonValue> findBytes(std::lang::List<uint8> key);
+Option<JsonValue> findBytes(std::core::List<uint8> key);
 ```
 
 **行为**
@@ -1109,7 +1121,7 @@ Option<JsonValue> findBytes(std::lang::List<uint8> key);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `key` | `std::lang::List<uint8> key` | 查找键或下标 | 无 |
+| `key` | `std::core::List<uint8> key` | 查找键或下标 | 无 |
 
 **返回值**
 
@@ -1125,7 +1137,7 @@ Option<JsonValue> findBytes(std::lang::List<uint8> key);
 obj.findBytes(key);
 ```
 
-**源码**：[source/std/json.chl:114](../../source/std/json.chl#L114)。
+**源码**：[source/std/json.chl:125](../../source/std/json.chl#L125)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -1165,7 +1177,7 @@ Option<JsonValue> at(int64 index);
 obj.at(index);
 ```
 
-**源码**：[source/std/json.chl:121](../../source/std/json.chl#L121)。
+**源码**：[source/std/json.chl:132](../../source/std/json.chl#L132)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -1203,7 +1215,7 @@ Option<JsonValue> iterator(int64 index);
 obj.iterator(index);
 ```
 
-**源码**：[source/std/json.chl:127](../../source/std/json.chl#L127)。
+**源码**：[source/std/json.chl:138](../../source/std/json.chl#L138)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -1214,7 +1226,7 @@ obj.iterator(index);
 **声明**
 
 ```chali
-Option<std::lang::String> keyAt(int64 index);
+Option<std::core::String> keyAt(int64 index);
 ```
 
 **行为**
@@ -1231,7 +1243,7 @@ Option<std::lang::String> keyAt(int64 index);
 
 **返回值**
 
-`Option<std::lang::String>`。按遍历位置读取键。
+`Option<std::core::String>`。按遍历位置读取键。
 
 **错误与边界**
 
@@ -1243,7 +1255,7 @@ Option<std::lang::String> keyAt(int64 index);
 obj.keyAt(index);
 ```
 
-**源码**：[source/std/json.chl:129](../../source/std/json.chl#L129)。
+**源码**：[source/std/json.chl:140](../../source/std/json.chl#L140)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -1254,7 +1266,7 @@ obj.keyAt(index);
 **声明**
 
 ```chali
-Option<std::lang::List<uint8>> keyBytesAt(int64 index);
+Option<std::core::List<uint8>> keyBytesAt(int64 index);
 ```
 
 **行为**
@@ -1269,7 +1281,7 @@ Option<std::lang::List<uint8>> keyBytesAt(int64 index);
 
 **返回值**
 
-`Option<std::lang::List<uint8>>`。按成员位置读取原始字节键。
+`Option<std::core::List<uint8>>`。按成员位置读取原始字节键。
 
 **错误与边界**
 
@@ -1281,7 +1293,7 @@ Option<std::lang::List<uint8>> keyBytesAt(int64 index);
 obj.keyBytesAt(index);
 ```
 
-**源码**：[source/std/json.chl:134](../../source/std/json.chl#L134)。
+**源码**：[source/std/json.chl:145](../../source/std/json.chl#L145)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -1292,7 +1304,7 @@ obj.keyBytesAt(index);
 **声明**
 
 ```chali
-std::lang::String dump();
+std::core::String dump();
 ```
 
 **行为**
@@ -1305,7 +1317,7 @@ std::lang::String dump();
 
 **返回值**
 
-`std::lang::String`。将节点序列化为文本。
+`std::core::String`。将节点序列化为文本。
 
 **错误与边界**
 
@@ -1317,7 +1329,7 @@ std::lang::String dump();
 obj.dump();
 ```
 
-**源码**：[source/std/json.chl:139](../../source/std/json.chl#L139)。
+**源码**：[source/std/json.chl:150](../../source/std/json.chl#L150)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。
 
@@ -1328,7 +1340,7 @@ obj.dump();
 **声明**
 
 ```chali
-Result<JsonValue, std::lang::Error> parse(std::lang::String text);
+Result<JsonValue, std::core::Error> parse(std::core::String text);
 ```
 
 **行为**
@@ -1341,11 +1353,11 @@ Result<JsonValue, std::lang::Error> parse(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<JsonValue, std::lang::Error>`。解析JSON 文本；成功返回根节点，失败返回诊断字符串。
+`Result<JsonValue, std::core::Error>`。解析JSON 文本；成功返回根节点，失败返回诊断字符串。
 
 **错误与边界**
 
@@ -1357,6 +1369,6 @@ Result<JsonValue, std::lang::Error> parse(std::lang::String text);
 std::json::parse(text);
 ```
 
-**源码**：[source/std/json.chl:143](../../source/std/json.chl#L143)。
+**源码**：[source/std/json.chl:154](../../source/std/json.chl#L154)。
 
 **完整示例**：[example/samples/std_structured_data.chl](../../example/samples/std_structured_data.chl)。

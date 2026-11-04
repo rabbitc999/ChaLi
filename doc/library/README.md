@@ -6,7 +6,7 @@
 
 采用 C/C++ 参考手册常见的组织方式：模块 → 类型 → 函数/重载，逐项列出声明、参数、返回值、行为、边界及调用形式。语法仍为 ChaLi，不是 C++。
 
-覆盖工具链自带的 `std::lang`、`std`、`std::*` 与可选 `std::reflect`；编译器注入的算法和核心容器另有来源标记。`__` 前缀胶水是实现细节，不作为应用 API。底层 C++ 依赖库与宿主 C ABI 见[宿主集成](../08-host-integration.md)。
+覆盖工具链自带的 `std::core`、`std`、`std::*` 与可选 `std::reflect`；编译器注入的算法和核心容器另有来源标记。`__` 前缀胶水是实现细节，不作为应用 API。底层 C++ 依赖库与宿主 C ABI 见[宿主集成](../08-host-integration.md)。
 
 ## 阅读约定
 
@@ -18,51 +18,54 @@
 
 ## 模块目录
 
-| 模块 | 内容 | 函数重载数 |
-| --- | --- | ---: |
-| [`std::array`](std-array.md) | 可扩容数组 | 16 |
-| [`std::binary`](std-binary.md) | 二进制读取 | 35 |
-| [`std::cas`](std-cas.md) | 精确符号计算 | 50 |
-| [`std::cli`](std-cli.md) | 命令行参数 | 8 |
-| [`std::clock`](std-clock.md) | 单调时钟 | 2 |
-| [`std::collections`](std-collections.md) | 集合扩展 | 51 |
-| [`std::complex`](std-complex.md) | 泛型复数 | 8 |
-| [`std::compress`](std-compress.md) | 无损压缩 | 2 |
-| [`std::concurrency`](std-concurrency.md) | 线程通信与共享 | 18 |
-| [`std::csv`](std-csv.md) | CSV 读写 | 4 |
-| [`std::datetime`](std-datetime.md) | UTC 日期时间 | 11 |
-| [`std::encoding`](std-encoding.md) | 文本编码 | 8 |
-| [`std::event`](std-event.md) | 显式事件与定时源 | 12 |
-| [`std::graph`](std-graph.md) | 图论与并查集 | 24 |
-| [`std::image`](std-image.md) | 图片处理 | 25 |
-| [`std::io`](std-io.md) | 文件与流接口 | 38 |
-| [`std::iter`](std-iter.md) | 惰性迭代器 | 109 |
-| [`std::json`](std-json.md) | JSON 文档与反射编解码 | 30 |
-| [`std::lang`](std-lang.md) | 核心库 | 297 |
-| [`std::linalg`](std-linalg.md) | 向量与矩阵 | 56 |
-| [`std::linkedlist`](std-linkedlist.md) | 双向链表 | 20 |
-| [`std::math`](std-math.md) | 泛型数学 | 24 |
-| [`std::memory`](std-memory.md) | 内存视图与统计 | 5 |
-| [`std::message`](std-message.md) | 线程邮箱 | 6 |
-| [`std::net`](std-net.md) | TCP 与 HTTP | 37 |
-| [`std::numerics`](std-numerics.md) | 数值分析 | 7 |
-| [`std::numtheory`](std-numtheory.md) | 整数数论 | 7 |
-| [`std::parse`](std-parse.md) | 严格文本解析 | 5 |
-| [`std::path`](std-path.md) | 路径字符串 | 4 |
-| [`std::probe`](std-probe.md) | 最小宿主集成探针 | 1 |
-| [`std::process`](std-process.md) | 宿主进程 | 4 |
-| [`std::random`](std-random.md) | 随机数 | 15 |
-| [`std::reflect`](std-reflect.md) | 反射 | 41 |
-| [`std::regex`](std-regex.md) | 正则表达式 | 8 |
-| [`std::serialization`](std-serialization.md) | 反射字节序列化 | 2 |
-| [`std::signal`](std-signal.md) | 复数信号变换 | 8 |
-| [`std::sql`](std-sql.md) | 数据库 | 55 |
-| [`std::text`](std-text.md) | UTF-8 文本工具 | 33 |
-| [`std::thread`](std-thread.md) | 隔离线程 | 31 |
-| [`std::toml`](std-toml.md) | TOML 文档与反射编解码 | 29 |
-| [`std::tree`](std-tree.md) | 树与堆 | 50 |
-| [`std::utf8`](std-utf8.md) | UTF-8 与码点 | 8 |
-| [`std::algorithms`](std-algorithms.md) | 通用算法 | 28 |
+| 模块 | 内容 | 函数重载数 | 宏数 |
+| --- | --- | ---: | ---: |
+| [`std::array`](std-array.md) | 可扩容数组 | 16 | 0 |
+| [`std::big_number`](std-big_number.md) | 任意精度数值 | 27 | 0 |
+| [`std::binary`](std-binary.md) | 二进制读取 | 35 | 0 |
+| [`std::cas`](std-cas.md) | 精确符号计算 | 50 | 0 |
+| [`std::cli`](std-cli.md) | 命令行参数 | 8 | 0 |
+| [`std::clock`](std-clock.md) | 单调时钟 | 2 | 0 |
+| [`std::collections`](std-collections.md) | 集合扩展 | 60 | 0 |
+| [`std::complex`](std-complex.md) | 泛型复数 | 8 | 0 |
+| [`std::compress`](std-compress.md) | 无损压缩 | 2 | 0 |
+| [`std::concurrency`](std-concurrency.md) | 线程通信与共享 | 18 | 0 |
+| [`std::core`](std-core.md) | 核心库 | 271 | 2 |
+| [`std::csv`](std-csv.md) | CSV 读写 | 4 | 0 |
+| [`std::date_time`](std-date_time.md) | UTC 日期时间 | 15 | 0 |
+| [`std::encoding`](std-encoding.md) | 文本编码 | 8 | 0 |
+| [`std::event`](std-event.md) | 显式事件与定时源 | 12 | 0 |
+| [`std::graph`](std-graph.md) | 图论与并查集 | 24 | 0 |
+| [`std::image`](std-image.md) | 图片处理 | 25 | 0 |
+| [`std::io`](std-io.md) | 文件与流接口 | 42 | 0 |
+| [`std::iter`](std-iter.md) | 惰性迭代器 | 111 | 0 |
+| [`std::json`](std-json.md) | JSON 文档与反射编解码 | 30 | 1 |
+| [`std::linear_algebra`](std-linear_algebra.md) | 向量与矩阵 | 56 | 0 |
+| [`std::linked_list`](std-linked_list.md) | 双向链表 | 20 | 0 |
+| [`std::log`](std-log.md) | 结构化日志 | 3 | 0 |
+| [`std::macro`](std-macro.md) | 标准宏 | 0 | 7 |
+| [`std::math`](std-math.md) | 泛型数学 | 24 | 0 |
+| [`std::memory`](std-memory.md) | 内存视图与统计 | 5 | 0 |
+| [`std::message`](std-message.md) | 线程邮箱 | 6 | 0 |
+| [`std::net`](std-net.md) | TCP 与 HTTP | 39 | 0 |
+| [`std::number_theory`](std-number_theory.md) | 整数数论 | 7 | 0 |
+| [`std::numerics`](std-numerics.md) | 数值分析 | 7 | 0 |
+| [`std::parse`](std-parse.md) | 严格文本解析 | 5 | 0 |
+| [`std::path`](std-path.md) | 路径字符串 | 6 | 0 |
+| [`std::probe`](std-probe.md) | 最小宿主集成探针 | 1 | 0 |
+| [`std::process`](std-process.md) | 宿主进程 | 4 | 0 |
+| [`std::random`](std-random.md) | 随机数 | 15 | 0 |
+| [`std::reflect`](std-reflect.md) | 反射 | 41 | 0 |
+| [`std::regex`](std-regex.md) | 正则表达式 | 8 | 0 |
+| [`std::serialization`](std-serialization.md) | 反射字节序列化 | 2 | 0 |
+| [`std::signal`](std-signal.md) | 复数信号变换 | 8 | 0 |
+| [`std::sql`](std-sql.md) | 数据库 | 55 | 0 |
+| [`std::text`](std-text.md) | UTF-8 文本工具 | 37 | 0 |
+| [`std::thread`](std-thread.md) | 隔离线程 | 31 | 0 |
+| [`std::toml`](std-toml.md) | TOML 文档与反射编解码 | 29 | 0 |
+| [`std::tree`](std-tree.md) | 树与堆 | 67 | 0 |
+| [`std::utf8`](std-utf8.md) | UTF-8 与码点 | 8 | 0 |
+| [`std::algorithms`](std-algorithms.md) | 通用算法 | 28 | 0 |
 
 ## 查找与维护
 

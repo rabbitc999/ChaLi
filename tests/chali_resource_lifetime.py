@@ -114,7 +114,7 @@ def main():
         run('struct Resource : Closeable { void close() {} }; struct Owner { Resource child; }; void dispose(Owner const& owner) { owner.child.drop(); } void main() {}', False)
         run('struct Item : Drop { int64 value; void drop() {} }; void main() { Item mut& source = new Item; source.value = 7; Item result = move(source); source.drop(); assert(result.value == 7); }')
         run('void main() { int64 mut& source = new int64; let take = fn move[source]() { source }; source.drop(); }', False, 'CHL1205')
-        run('void main() { std::lang::sweep(); }', False)
+        run('void main() { std::core::sweep(); }', False)
         print(f'[通过] {sequence} 项临时字符串、重复释放、跨调用检查和分支清理回归', flush=True)
 
 

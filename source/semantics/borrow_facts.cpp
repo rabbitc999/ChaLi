@@ -289,7 +289,7 @@ std::size_t BorrowSourceDepth(int id, bool address)
     {
         const auto sourceType = ExprType(node.kids[0]);
         const auto instance = chali_generic::session.made.find(sourceType->name);
-        const bool standard = instance != chali_generic::session.made.end() && instance->second.generic->module == "std::lang" && (instance->second.generic->name == "Result" || instance->second.generic->name == "Option");
+        const bool standard = instance != chali_generic::session.made.end() && instance->second.generic->module == "std::core" && (instance->second.generic->name == "Result" || instance->second.generic->name == "Option");
         Memory::Set<Memory::String> references;
         if (!standard && PropagationBorrowsStorage(RawExprType(id), references))
         {
@@ -308,7 +308,7 @@ std::size_t BorrowSourceDepth(int id, bool address)
         }
         // 静态方法、命名构造入口和枚举变体共用节点；借用其拥有型结果仍借用局部临时槽。
         // 限定全局与静态字段是既有存储，不能当成新构造的临时对象。
-        if (const auto global = FindQualifiedGlobal(node.s, node.s2))
+        if (const auto global = FindQualifiedGlobal(node.s, node.s2, node.module))
             return address ? BorrowStorageDepth(global) : global->borrowDepth;
         if (node.type2 != 1 && FindStaticField(node.s, node.s2)) return 0u;
         const auto resultType = RawExprType(id);

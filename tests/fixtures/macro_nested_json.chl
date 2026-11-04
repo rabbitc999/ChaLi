@@ -73,8 +73,8 @@ struct Middle<T> { T inner; }
 struct Root {
     Middle<Leaf> middle;
     List<int64> items;
-    Set<std::lang::String> unique;
-    Map<std::lang::String, List<Leaf>> byName;
+    Set<std::core::String> unique;
+    Map<std::core::String, List<Leaf>> byName;
     List<int64> emptyList;
     Set<int64> emptySet;
     Map<String, bool> emptyMap;

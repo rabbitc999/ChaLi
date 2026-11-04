@@ -18,7 +18,7 @@ class SceneTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.work = Path(self.temp.name)
         self.source = self.work / 'hello world.chl'
-        self.source.write_text('void main(List<String> args) {\n    for (String arg in args) { std::lang::println("[{}]", arg); }\n    return;\n}\n', encoding='utf-8')
+        self.source.write_text('void main(List<String> args) {\n    for (String arg in args) { std::core::println("[{}]", arg); }\n    return;\n}\n', encoding='utf-8')
 
     def cli(self, *arguments, code=0):
         result = subprocess.run([str(COMPILER), *map(str, arguments)], cwd=self.work, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=180, env=dict(os.environ, CHALI_PYTHON=sys.executable))

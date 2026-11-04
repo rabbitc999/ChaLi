@@ -4,8 +4,8 @@
  * Closeable 资源仅通过 cloneBytes 显式复制，不声明 Copy 接口。
  */
 struct BootstrapString: Closeable {
-    std::lang::RawStorage<uint8> storage;
-    std::lang::BarePtr<uint8> data;
+    std::core::RawStorage<uint8> storage;
+    std::core::BarePtr<uint8> data;
     int64 length;
 
     int64 byteLength() { return self.length; }
@@ -13,16 +13,16 @@ struct BootstrapString: Closeable {
     void reserve(int64 requested) {
         assert(requested >= 0);
         if (requested <= self.storage.capacity()) { return; }
-        std::lang::RawStorage<uint8> fresh = std::lang::RawStorage<uint8>::allocate(requested);
+        std::core::RawStorage<uint8> fresh = std::core::RawStorage<uint8>::allocate(requested);
         unsafe {
             if (self.length > 0) {
-                std::lang::memcpy<uint8,uint8>(std::lang::barePointer<uint8>(fresh.pointer(0)),
+                std::core::memcpy<uint8,uint8>(std::core::barePointer<uint8>(fresh.pointer(0)),
                     self.data, self.length);
             }
         }
         self.storage.close();
         self.storage = move(fresh);
-        unsafe { self.data = std::lang::barePointer<uint8>(self.storage.pointer(0)); }
+        unsafe { self.data = std::core::barePointer<uint8>(self.storage.pointer(0)); }
     }
     void pushByte(uint8 value) {
         if (self.length == self.storage.capacity()) {
@@ -34,8 +34,8 @@ struct BootstrapString: Closeable {
             self.reserve(next);
         }
         unsafe {
-            std::lang::BarePtr<uint8> pointer = self.data + self.length;
-            uint8 mut& target = std::lang::dereference<uint8>(pointer);
+            std::core::BarePtr<uint8> pointer = self.data + self.length;
+            uint8 mut& target = std::core::dereference<uint8>(pointer);
             *target = value;
         }
         self.length = self.length + 1;
@@ -43,7 +43,7 @@ struct BootstrapString: Closeable {
     uint8 getByte(int64 index) {
         assert(index >= 0 && index < self.length);
         unsafe {
-            uint8 mut& value = std::lang::dereference<uint8>(self.data + index);
+            uint8 mut& value = std::core::dereference<uint8>(self.data + index);
             return *value;
         }
     }
@@ -54,7 +54,7 @@ struct BootstrapString: Closeable {
     void setByte(int64 index, uint8 value) {
         assert(index >= 0 && index < self.length);
         unsafe {
-            uint8 mut& target = std::lang::dereference<uint8>(self.data + index);
+            uint8 mut& target = std::core::dereference<uint8>(self.data + index);
             *target = value;
         }
     }
@@ -64,7 +64,7 @@ struct BootstrapString: Closeable {
         self.reserve(self.length + count);
         if (count > 0) {
             unsafe {
-                std::lang::memcpy<uint8,uint8>(self.data + self.length, other.data, count);
+                std::core::memcpy<uint8,uint8>(self.data + self.length, other.data, count);
             }
         }
         self.length = self.length + count;
@@ -81,7 +81,7 @@ struct BootstrapString: Closeable {
         result.reserve(self.length);
         if (self.length > 0) {
             unsafe {
-                std::lang::memcpy<uint8,uint8>(result.data, self.data, self.length);
+                std::core::memcpy<uint8,uint8>(result.data, self.data, self.length);
             }
         }
         result.length = self.length;
@@ -91,7 +91,7 @@ struct BootstrapString: Closeable {
         assert(count >= 0);
         self.reserve(count);
         if (count > 0) {
-            unsafe { std::lang::memset<uint8>(self.data, value, count); }
+            unsafe { std::core::memset<uint8>(self.data, value, count); }
         }
         self.length = count;
     }

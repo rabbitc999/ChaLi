@@ -69,19 +69,23 @@ ack:hello 5
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-458"></a>`struct ThreadResult` | 任务完成状态、原始错误与调用栈。 |
-| ThreadResult | <a id="symbol-459"></a>`int64 status` | 线程等待状态，区分完成、超时、取消与失败。 |
-| ThreadResult | <a id="symbol-460"></a>`String error` | 最近操作的错误说明。 |
-| ThreadResult | <a id="symbol-461"></a>`String trace` | 失败任务保留的原始源码调用栈文本。 |
-| 模块 | <a id="symbol-462"></a>`struct ThreadGroup : Drop` | 拥有任务回收责任的线程组。 |
-| ThreadGroup | <a id="symbol-463"></a>`List<Thread> tasks` | 线程组登记并负责回收的 Thread 列表。 |
-| ThreadGroup | <a id="symbol-464"></a>`bool completed` | 全部任务是否已经回收。 |
-| ThreadGroup | <a id="symbol-465"></a>`bool successful` | 已完成线程组是否全部成功。 |
-| ThreadGroup | <a id="symbol-466"></a>`String error` | 最近操作的错误说明。 |
-| 模块 | <a id="symbol-467"></a>`struct ThreadPool : Drop` | 固定工作线程和有界静态任务队列。 |
-| ThreadPool | <a id="symbol-468"></a>`std::concurrency::Channel<void fn()> jobs` | 跨线程的有界静态任务队列。 |
-| ThreadPool | <a id="symbol-469"></a>`ThreadGroup group` | 统一负责工作线程生命周期的线程组。 |
-| ThreadPool | <a id="symbol-470"></a>`bool closed` | 是否已停止接受任务或事件。 |
+| 模块 | <a id="symbol-487"></a>`const int64 RUNNING = 0` | 任务正在运行的状态常量。 |
+| 模块 | <a id="symbol-488"></a>`const int64 SUCCEEDED = 1` | 任务已成功完成的状态常量。 |
+| 模块 | <a id="symbol-489"></a>`const int64 FAILED = 2` | 任务失败的状态常量，数值见所属模块声明。 |
+| 模块 | <a id="symbol-490"></a>`const int64 CANCELLED = 3` | 任务已取消的状态常量，数值见所属模块声明。 |
+| 模块 | <a id="symbol-491"></a>`struct ThreadResult` | 任务完成状态、原始错误与调用栈。 |
+| ThreadResult | <a id="symbol-492"></a>`int64 status` | 线程等待状态，区分完成、超时、取消与失败。 |
+| ThreadResult | <a id="symbol-493"></a>`String error` | 最近操作的错误说明。 |
+| ThreadResult | <a id="symbol-494"></a>`String trace` | 失败任务保留的原始源码调用栈文本。 |
+| 模块 | <a id="symbol-495"></a>`struct ThreadGroup : Drop` | 拥有任务回收责任的线程组。 |
+| ThreadGroup | <a id="symbol-496"></a>`List<Thread> tasks` | 线程组登记并负责回收的 Thread 列表。 |
+| ThreadGroup | <a id="symbol-497"></a>`bool completed` | 全部任务是否已经回收。 |
+| ThreadGroup | <a id="symbol-498"></a>`bool successful` | 已完成线程组是否全部成功。 |
+| ThreadGroup | <a id="symbol-499"></a>`String error` | 最近操作的错误说明。 |
+| 模块 | <a id="symbol-500"></a>`struct ThreadPool : Drop` | 固定工作线程和有界静态任务队列。 |
+| ThreadPool | <a id="symbol-501"></a>`std::concurrency::Channel<void fn()> jobs` | 跨线程的有界静态任务队列。 |
+| ThreadPool | <a id="symbol-502"></a>`ThreadGroup group` | 统一负责工作线程生命周期的线程组。 |
+| ThreadPool | <a id="symbol-503"></a>`bool closed` | 是否已停止接受任务或事件。 |
 
 ## 函数索引
 

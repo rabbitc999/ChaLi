@@ -59,9 +59,9 @@ def main():
     for allocator in ('malloc', 'pool'):
         source = work / ('stale-' + allocator + '.chl')
         source.write_text('void main(){String value="abcdefghijklmnopqrstuvwxyz0123456789";unsafe{'
-                          'int64 mut& slot=(int64 mut&)(int64)std::lang::address(&value);'
-                          'int64 old=std::lang::__bootStringOwnedData(*slot);value.reserve(100);'
-                          'int64 byte=std::lang::__bootStringByte(old,0);println("{}",byte);}}\n', encoding='utf-8')
+                          'int64 mut& slot=(int64 mut&)(int64)std::core::address(&value);'
+                          'int64 old=std::core::__bootStringOwnedData(*slot);value.reserve(100);'
+                          'int64 byte=std::core::__bootStringByte(old,0);println("{}",byte);}}\n', encoding='utf-8')
         prefix = work / ('stale-' + allocator)
         built = execute([compiler, 'aot', source, '--allocator', allocator, '--out', prefix], allocator + '-stale-build', environment)
         assert built.returncode == 0, (built.stdout, built.stderr, work)

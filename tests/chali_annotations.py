@@ -121,7 +121,7 @@ def main():
         checks += 1
         check('@annotation A(v:String="ok")\n@A\nvoid main(){const int64 x=1;x=2;return;}', '不可变变量')
         check('@annotation A(v:String="ok")\n@A\n' + main_fn)
-        check('@annotation A(v:std::lang::String="ok")\n@A\n' + main_fn)
+        check('@annotation A(v:std::core::String="ok")\n@A\n' + main_fn)
         check('type F = uint64;\n@annotation F\n' + main_fn, '名称与类型冲突')
         unit = directory / ('annotation-unit.exe' if os.name == 'nt' else 'annotation-unit')
         build = args.build_root.resolve()

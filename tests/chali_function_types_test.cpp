@@ -35,13 +35,13 @@ int main()
     const auto parts = splitTop(text.substr(1, close - 1));
     require(parts.size() == 2u && parts[1] == "int64", "嵌套函数类型的逗号分隔失败");
     coreAliasShadows.clear();
-    require(canonicalType("int64 fn(String, bool fn(int64))") == "int64 fn(std::lang::String,bool fn(int64))",
+    require(canonicalType("int64 fn(String, bool fn(int64))") == "int64 fn(std::core::String,bool fn(int64))",
             "嵌套函数类型没有生成可重新解析的前置签名");
-    require(canonicalType("String & fn(List<String>, String fn(String &))") == "std::lang::String const& fn(std::lang::List<std::lang::String>,std::lang::String fn(std::lang::String const&))",
+    require(canonicalType("String & fn(List<String>, String fn(String &))") == "std::core::String const& fn(std::core::List<std::core::String>,std::core::String fn(std::core::String const&))",
             "函数参数或返回值未递归归一字符串与引用身份");
     require(chali_lambda::split("int64 fn(int64) callback, int64 value").size() == 2u,
             "lambda 函数类型形参未正确分隔");
-    require(canonicalType("(String fn(String)) &") == "(std::lang::String fn(std::lang::String)) const&", "函数值引用未保留括号或归一叶子类型");
+    require(canonicalType("(String fn(String)) &") == "(std::core::String fn(std::core::String)) const&", "函数值引用未保留括号或归一叶子类型");
     Memory::String source = "T fn(T) make<T>(T value){return fn(T x){x+value};}";
     normalizeGenericSyntax(source);
     Memory::Map<Memory::String, Generic> generics;

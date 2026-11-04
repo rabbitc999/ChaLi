@@ -14,10 +14,10 @@
 import std::memory;
 
 void main() {
-    std::lang::RawStorage<String> slots = std::lang::RawStorage<String>::allocate(8);
+    std::core::RawStorage<String> slots = std::core::RawStorage<String>::allocate(8);
     unsafe {
-        std::lang::initAt<String>(slots.pointer(0), "hello");
-        String value = std::lang::takeAt<String>(slots.pointer(0));
+        std::core::initAt<String>(slots.pointer(0), "hello");
+        String value = std::core::takeAt<String>(slots.pointer(0));
         assert(value == "hello");
     }
     slots.close();
@@ -26,7 +26,7 @@ void main() {
 
 `RawStorage<T>` owns uninitialized capacity and implements `Closeable`. Spare slots do not construct elements. `RawPtr<T>` holds allocation identity and an element index, rather than a host machine pointer. Do not modify internal handles. A pointer at `capacity` is a valid one-past position, but cannot be dereferenced. `__rawSize(T)` and `__rawAlign(T)` query language storage layout inside unsafe scopes. Direct array types and host aliases are unsupported raw elements; wrap arrays in a named struct.
 
-The public `std::lang::rawSize<T>()` queries the same value layout from safe code. For example, `rawSize<uint8>() == 1` and `rawSize<int64>() == 8`. Aggregate sizes include their language storage slots. Owning values such as String report the value slot size, excluding separately allocated contents and capacity. This query does not access an object or describe the host C ABI `sizeof`. Void, direct arrays and host aliases are unsupported.
+The public `std::core::rawSize<T>()` queries the same value layout from safe code. For example, `rawSize<uint8>() == 1` and `rawSize<int64>() == 8`. Aggregate sizes include their language storage slots. Owning values such as String report the value slot size, excluding separately allocated contents and capacity. This query does not access an object or describe the host C ABI `sizeof`. Void, direct arrays and host aliases are unsupported.
 
 | Operation | Behavior |
 | --- | --- |
@@ -46,11 +46,11 @@ Type identity, capacity overflow, alignment, initialization state and allocation
 
 ```chali
 unsafe {
-    std::lang::BarePtr<int64> p = std::lang::barePointer<int64>(slots.pointer(0));
-    std::lang::BarePtr<int64> q = p + 1;
+    std::core::BarePtr<int64> p = std::core::barePointer<int64>(slots.pointer(0));
+    std::core::BarePtr<int64> q = p + 1;
     assert(q - p == 1);
-    std::lang::memset<int64>(p, (uint8)0, 8);
-    int64 mut& value = std::lang::dereference<int64>(p);
+    std::core::memset<int64>(p, (uint8)0, 8);
+    int64 mut& value = std::core::dereference<int64>(p);
     *value = 42;
 }
 ```
@@ -59,7 +59,7 @@ Here `slots` is a `RawStorage<int64>`. `barePointer<T>` obtains an address, allo
 
 Lengths in `memcpy<T,U>(destination, source, bytes)` and `memset<T>(destination, uint8 value, bytes)` are byte counts. Their implementation checks no element types, changes no raw-storage initialization bits, and invokes no copy, move or cleanup hooks. Nonempty ranges must lie within live allocations. Both complete copy ranges are validated before writing, and overlapping copies are rejected. Zero lengths allow null pointers. Bare pointers contain no allocation generation; callers must manage identity when freed addresses are reused.
 
-These types and operations belong to the implicit `std::lang` core; namespace qualification is optional. `memcpy`/`memset` lower directly from the checked AST to LLVM memory intrinsics, avoiding language wrappers and generic native dispatch. Necessary dynamic raw-storage checks use a scalar kernel, small pointer wrappers are preferred for inlining, and bare dereferences directly extract the address.
+These types and operations belong to the implicit `std::core` core; namespace qualification is optional. `memcpy`/`memset` lower directly from the checked AST to LLVM memory intrinsics, avoiding language wrappers and generic native dispatch. Necessary dynamic raw-storage checks use a scalar kernel, small pointer wrappers are preferred for inlining, and bare dereferences directly extract the address.
 
 Byte operations suit byte buffers and data the caller has established can be handled bitwise. Resource initialization, transfer and cleanup belong to operations such as `initAt`, `takeAt` and `dropAt`; copying handle bytes does not establish independent ownership. The bare-pointer String experiment uses bulk copy/fill. The earlier checked-slot implementation is retained as `bootstrap_string_checked.chl`, and reports distinguish the actual sources measured.
 
@@ -73,7 +73,7 @@ IEEE754 codecs use this method to reinterpret and dereference storage rather tha
 
 ## Default self-hosted standard library
 
-Default List, Map and Set growth, lookup, insertion, deletion, copying and clearing live in `source/std/lang.chl`. List removal and clearing retain capacity. Map combines dense key/value entries, occupied-slot encodings and cached HashKey values; Set owns independent slots. Existing `Equal`/`Hash` contracts and opaque public storage representations preserve host interoperability.
+Default List, Map and Set growth, lookup, insertion, deletion, copying and clearing live in `source/std/core.chl`. List removal and clearing retain capacity. Map combines dense key/value entries, occupied-slot encodings and cached HashKey values; Set owns independent slots. Existing `Equal`/`Hash` contracts and opaque public storage representations preserve host interoperability.
 
 Linked lists, stacks, queues, deques, ring buffers, binary search trees, red-black trees, general trees, min-heaps, graphs and union-find use ChaLi implementations in their standard modules. List traversal, function-value callbacks, folds, binary search, extremes and stable index-merge sorting also run in the language. Algorithm leases retain the source and prevent structural movement during callbacks. String ownership, search, comparison, classification, UTF-8 decoding, slicing, transformations, splitting, joining and byte conversion, together with IEEE754 codecs and KMP, are implemented in ChaLi.
 

@@ -223,6 +223,9 @@ struct Options
      */
     bool allowIncludes = true;
 
+    /** 允许识别 ChaLi 的文件级 #NoNamingCheck 指令。 */
+    bool allowNamingDirective = false;
+
     /**
      * `Syntax::Custom` 使用的前缀字符集合（默认给了两个都常见的）。
      */
@@ -453,6 +456,9 @@ struct Result
      * 按首次出现顺序排列的依赖文件（含主文件，绝对路径）。
      */
     Memory::Vector<Memory::String> dependencies;
+
+    /** 使用命名检查关闭指令的源码文件，作用范围限于各自文件。 */
+    Memory::Vector<Memory::String> namingSuppressedFiles;
 
     /**
      * 诊断列表（按发现顺序）。

@@ -34,9 +34,9 @@ def generate():
         '10.': 'if elif else while do for loop continue in',
         '12.': 'module import inline', '13.': 'mut',
         '15.': '@annotation', '16.': '#abi #export opcode #NonCopyable unsafe __rawSize __rawAlign', 'fn 捕获': 'fn copy move',
-        '返回控制表达式': 'return', '具名函数声明': 'fn mut copy move', '#derive': '#derive', '#borrow 与 #static 生命周期契约': '#borrow #static #ret',
+        '返回控制表达式': 'return', '具名函数声明': 'fn mut copy move', '#borrow 与 #static 生命周期契约': '#borrow #static #ret',
         'for-in 整数': 'for let in', '带值退出': 'break yield',
-        '指定层数退出': 'break', '块表达式': 'break',
+        '按标签退出循环': 'break', '块表达式': 'break',
     }
     token_source = (ROOT / 'source/chali_token.gram').read_text(encoding='utf-8')
     grammar = (ROOT / 'source/chali.gram').read_text(encoding='utf-8')
@@ -58,7 +58,7 @@ def generate():
             source = 'doc/book/26-与C互操作.md'
             selected = [(ROOT / source).read_text(encoding='utf-8')]
         assert selected, f'关键字缺少明确的文档映射：{word}'
-        if word in ('return', 'fn', 'copy', 'move', 'mut', '#derive'):
+        if word in ('return', 'fn', 'copy', 'move', 'mut'):
             selected.append((ROOT / 'doc/29-declaration-sugars.md').read_text(encoding='utf-8'))
         if word in ('uint8', 'uint16', 'uint32', 'uint64', 'float32', 'float64'):
             chapter = (ROOT / 'doc/book/03-变量与类型.md').read_text(encoding='utf-8')
@@ -66,6 +66,10 @@ def generate():
         syntax = '\n\n'.join(part.strip() for part in productions if re.search(r'\b' + re.escape(token) + r'\b', part))
         keywords[word] = dict(name=word, token=token, syntax=syntax,
                               documentation='\n\n'.join(selected), source=source)
+    naming = next(section for section in sections if section.startswith('## 关闭当前文件的命名检查'))
+    keywords['#NoNamingCheck'] = dict(name='#NoNamingCheck', token='#NoNamingCheck',
+                                      syntax='#NoNamingCheck', documentation=naming.strip(),
+                                      source='doc/04-language-reference.md')
     macro_source = 'doc/25-literals-operators-macros.md'
     macro_sections = re.split(r'(?=^## )', (ROOT / macro_source).read_text(encoding='utf-8'), flags=re.M)
     macro_start = next(index for index, section in enumerate(macro_sections) if section.startswith('## 编译期卫生'))

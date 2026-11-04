@@ -43,7 +43,7 @@ $end_macro
 $macro VALIDATE_FIELDS<T>(&value:value) -> expr
 bool valid=true;
 $for field in $fields<T>()
-$if field.type.name=="std::lang::String"
+$if field.type.name=="std::core::String"
 valid=valid && !$member(value,field).isEmpty();
 $else
 $if field.type.name=="int64"
@@ -65,7 +65,7 @@ $if field.index>0
 output+=",";
 $end_if
 output+=quoteJson(field.name)+":";
-$if field.type.name=="std::lang::String"
+$if field.type.name=="std::core::String"
 output+=quoteJson($member(value,field));
 $else_if field.type.name=="int64"
 output+=format("{}",$member(value,field));

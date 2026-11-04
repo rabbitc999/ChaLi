@@ -81,8 +81,8 @@ struct MType
      */
     Memory::Vector<std::shared_ptr<MType>> paramTypes;
     /**
-     * 第二个类型参数：`std::lang::Map<K,V>` 的 V（`elem` 放 K）。
-     * `std::lang::List<T>` / `std::lang::Set<T>` 只用 `elem`。
+     * 第二个类型参数：`std::core::Map<K,V>` 的 V（`elem` 放 K）。
+     * `std::core::List<T>` / `std::core::Set<T>` 只用 `elem`。
      */
     std::shared_ptr<MType> elem2;
     /**
@@ -101,7 +101,7 @@ struct MType
      */
     bool readOnly = false;
     /**
-     * 函数指针最后一个 paramTypes 项是否为 `T...` 打包后的 std::lang::List<T>。
+     * 函数指针最后一个 paramTypes 项是否为 `T...` 打包后的 std::core::List<T>。
      */
     bool variadic = false;
 };
@@ -237,6 +237,7 @@ struct MNode
         MacroCall,            ///< 保留实参语法结构的编译期调用。
         MacroHole,            ///< 已绑定到宏形参的语法占位，不按文字替换名字。
         MacroGeneric,         ///< 泛型名称及显式推导来源。
+        MacroImplement,       ///< 成员宏请求宿主类型实现的接口，type 保存类型实参。
         MacroMatch,           ///< 编译期语法类别匹配。
         MacroBranch,          ///< 语法匹配的有序候选分支。
         MacroRegex,           ///< 编译期原文正则匹配。
@@ -269,12 +270,8 @@ struct MNode
     int controlTarget = -1;                             ///< 降级时解析的控制出口语法身份，不持久化到标准库解析单元。
     std::shared_ptr<const chali_macro::MetadataValue> compileMetadata;  ///< 编译期元数据的不可变快照，不写入标准库解析单元。
     Memory::Vector<int> annotations;                    ///< 附着于本声明的注解使用节点。
-    Memory::Vector<Memory::String> derives;             ///< 请求按字段派生的接口名称。
-    std::size_t deriveLine = 0;                        ///< 派生指令起始行，供诊断和展开预览定位。
-    std::size_t deriveColumn = 0;                      ///< 派生指令的一基列号。
     Memory::Vector<Memory::String> noReplace;           ///< 编译器指令关闭自动推导的运算符接口名（`#NoAddReplace` → `Add`）。
     Memory::Vector<Memory::String> noRight;             ///< 编译器指令关闭右向推导的运算符接口名（`#NoRightAdd` → `Add`）。
-    bool derivesExpanded = false;                       ///< 已完成宏模板注入，泛型重放时不重复生成。
     Memory::Vector<MAnnotationValue> annotationValues;  ///< 按参数声明顺序归一后的常量。
     Memory::String s, s2;
     Memory::String abiLibrary;
@@ -416,12 +413,12 @@ int M_TypeObj();
 int M_TypeFile();
 int M_TypeProc();
 /**
- * `std::lang::List<T>` / `std::lang::Set<T>`：元素类型是 `elementId`。
+ * `std::core::List<T>` / `std::core::Set<T>`：元素类型是 `elementId`。
  */
 int M_TypeVec(int elementId);
 int M_TypeSet(int elementId);
 /**
- * `std::lang::Map<K,V>`：键 `keyId`、值 `valueId`。
+ * `std::core::Map<K,V>`：键 `keyId`、值 `valueId`。
  */
 int M_TypeMap(int keyId, int valueId);
 int M_Dims1(int a);
@@ -452,7 +449,7 @@ void M_ListAdd(int list, int item);
 int M_BinOp(int kind, int left, int right);
 int M_UnOp(int kind, int operand);
 /**
- * @brief 构造 `move 表达式`：把操作数包成内部移动调用（`std::lang::__move`）。
+ * @brief 构造 `move 表达式`：把操作数包成内部移动调用（`std::core::__move`）。
  * @param operand 被移动的位置表达式。
  * @retval 生成的语法节点在节点池中的编号。
  */
@@ -465,7 +462,7 @@ int M_Op(int which);
 /**
  * @brief **关键字当名字用**时的名字池下标（同样用序号取，动作里不写字符串字面量）。
  *
- * 目前只有一处：`o.set(x)` —— `set` 是容器类型的关键字（`std::lang::Set<int>`），但它也是
+ * 目前只有一处：`o.set(x)` —— `set` 是容器类型的关键字（`std::core::Set<int>`），但它也是
  * `obj` 的方法名。**关键字 Token 的词法路径不填 `text` / `pName`**（固定字面量不碰
  * 词法器的 scratch 缓冲），所以在动作里拿 `$n` 只会得到零值 —— 必须走这张表。
  * @param which 序号（0 = `set`）。
@@ -615,21 +612,18 @@ int M_Match(int subject, int cases);
  */
 int M_Break(int value);
 /**
- * @brief 构造指定循环层数的无值退出语句。
- * @param level 正整数节点编号；负一表示 ALL。
- * @retval 返回退出语句节点编号。
+ * @brief 登记具名循环。
+ * @param label 冒号左侧的标签语法节点。
+ * @param loop 循环语法节点。
+ * @return 已登记标签的循环节点或错误节点。
  */
-int M_BreakLevel(int level);
-/* 语法糖辅助：break level N; / break level all; 的层级名拼写判定（不占用 level / all 作为关键字）。
- * @param nameId 名称池编号；text 为目标文本（ASCII，大小写无关比较）。
- * @retval 名字与 text 大小写无关相等时返回 true。 */
-bool M_NameIs(int nameId, const char *text);
-/* 语法糖辅助：break level / break level all 的层级名判定与错误节点（文法动作不支持字符串字面量）。 */
-bool M_NameIsLevel(int nameId);
-bool M_NameIsAll(int nameId);
-int M_ParseBadLevelSugar();
-int M_ParseBadLevelAllSugar();
-int M_ParseBadBreakAllSugar();
+int M_LabeledLoop(int label, int loop);
+/**
+ * @brief 构造以活动循环标签为目标的无值退出。
+ * @param nameId 标签名称池编号。
+ * @return 退出节点编号。
+ */
+int M_BreakNamed(int nameId);
 /* 一个分支：value 是 case 的表达式（default 传 -1），stmts 是语句列表 */
 int M_Case(int value, int stmts);
 /**
@@ -726,20 +720,6 @@ int M_Return(int value);
  */
 int M_ReturnValue(int value);
 /**
- * @brief 把编译期派生请求附着于结构体或枚举声明。
- * @param traits 请求派生的接口名称列表。
- * @param declaration 目标类型声明。
- * @retval 带派生元数据的声明节点；非法请求返回诊断节点。
- */
-int M_Derived(int traits, int declaration);
-/**
- * @brief 将派生关键字的词法位置保存到请求列表。
- * @param marker 派生关键字位置节点。
- * @param traits 请求名称列表。
- * @return 带精确指令位置的原列表。
- */
-int M_DeriveDirective(int marker, int traits);
-/**
  * @brief 在语句位置声明具有确定返回类型的函数值。
  * @param resultType 返回类型编号。
  * @param name 函数绑定名称编号。
@@ -805,12 +785,6 @@ int M_Construct(int typeId, int args, int skipName);
  * @retval 生成的退出语句节点编号。
  */
 int M_Break(int value);
-/**
- * @brief 构造指定循环层数的无值退出语句。
- * @param level 正整数节点编号；负一表示 ALL。
- * @retval 返回退出语句节点编号。
- */
-int M_BreakLevel(int level);
 /**
  * @brief `continue;`：直接进入最内层循环的下一轮。
  *
@@ -1039,7 +1013,7 @@ int M_StdType(int moduleNameId, int kind);
 int M_StdNamedType(int moduleNameId, int typeNameId);
 int M_StdContainer(int moduleNameId, int kind, int firstType, int secondType);
 /**
- * @brief 解析省略 lang 的容器类型。
+ * @brief 解析省略 std::core 限定名的容器类型。
  * @param name 名字编号。
  * @param first 元素或键。
  * @param second 值或 -1。
@@ -1222,7 +1196,7 @@ std::size_t M_ParseDiagnosticCount();
  */
 void M_ShiftParseDiagnostics(std::size_t from, std::size_t lines);
 /**
- * 设置下一次 M_Compile 执行时传给 `main(std::lang::List<std::lang::String>)` 的参数。
+ * 设置下一次 M_Compile 执行时传给 `main(std::core::List<std::core::String>)` 的参数。
  */
 void M_SetSourceFiles(const Memory::Vector<Memory::String> &files, const Memory::String &fallback);
 void M_SetProgramArguments(int argc, const char *const *argv);

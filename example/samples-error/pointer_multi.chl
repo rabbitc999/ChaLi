@@ -26,14 +26,14 @@ void main() {
     /* 二级引用：指向结构体里的引用字段 */
     int32 mut& mut& indirect = &holder.slot;
     **indirect = 7;
-    std::lang::println("{} {}", *block, **indirect);
+    std::core::println("{} {}", *block, **indirect);
 
     /* 泛型修饰叠加：`T mut& link` 在 `Slot<int32 mut&>` 上就是 `int32 mut& mut&` */
     Slot<int32 mut&> nested;
     nested.value = block;
     nested.link = indirect;
     *nested.value = 11;
-    std::lang::println("{} {}", *block, **nested.link);
+    std::core::println("{} {}", *block, **nested.link);
 
     block.drop();
 }

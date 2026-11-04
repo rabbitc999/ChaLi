@@ -121,38 +121,38 @@ opcode TcpListener {
 /** @brief 拆开的 HTTP 地址。 */
 struct Url {
     bool ok;
-    std::lang::String host;
+    std::core::String host;
     int64 port;
-    std::lang::String path;
-    std::lang::String error;
+    std::core::String path;
+    std::core::String error;
 };
 
 /** @brief HTTP 响应：状态码、原因、头部原文、正文。 */
 struct HttpResponse {
     bool ok;
     int64 status;
-    std::lang::String reason;
-    std::lang::String headers;
-    std::lang::String body;
-    std::lang::String error;
+    std::core::String reason;
+    std::core::String headers;
+    std::core::String body;
+    std::core::String error;
 
     bool isSuccess() { return self.ok && self.status >= 200 && self.status < 300; }
 
     /** @brief 按名字取响应头（不分大小写），没有给空串。 */
-    std::lang::String header(std::lang::String name) {
-        std::lang::List<std::lang::String> lines = std::text::Text::split(self.headers, "\r\n");
-        std::lang::String wanted = std::text::Text::toLower(name);
+    std::core::String header(std::core::String name) {
+        std::core::List<std::core::String> lines = std::text::Text::split(self.headers, "\r\n");
+        std::core::String wanted = std::text::Text::toLower(name);
         {
             int64 i = 0;
-            while (i < std::lang::len(lines)) {
+            while (i < std::core::len(lines)) {
 
-            std::lang::String line = "";
+            std::core::String line = "";
             line = line + lines[i];
             int64 colon = std::text::Text::find(line, ":");
             if (colon < 0) { { i = i + 1; continue; } }
-            std::lang::String key = std::text::Text::toLower(line[0:colon]);
+            std::core::String key = std::text::Text::toLower(line[0:colon]);
             if (key == wanted) {
-                std::lang::String value = line[(colon + 1):];
+                std::core::String value = line[(colon + 1):];
                 return std::text::Text::trim(value);
             }
         
@@ -166,23 +166,23 @@ struct HttpResponse {
 /* ── 纯函数部分：地址、请求、响应都能脱离套接字单独测 ─────────────────── */
 
 /** @brief 只支持 http:// 的极简地址解析。 */
-std::lang::String httpScheme() { return "http://"; }
+std::core::String httpScheme() { return "http://"; }
 
-Url parseUrl(std::lang::String url) {
+Url parseUrl(std::core::String url) {
     Url result;
     result.ok = false;
     result.host = "";
     result.port = 80;
     result.path = "/";
-    std::lang::String scheme = "http://";
+    std::core::String scheme = "http://";
     if (!std::text::Text::startsWith(url, scheme)) {
         result.error = "只支持 http:// 开头的地址";
         return result;
     }
-    std::lang::String rest = url[7:];
+    std::core::String rest = url[7:];
     int64 slash = std::text::Text::find(rest, "/");
     /* ChaLi 字符串不要直接复制（`String a = b;` 会留下悬垂别名），一律从空串拼出来 */
-    std::lang::String authority = "";
+    std::core::String authority = "";
     authority = authority + rest;
     if (slash >= 0) {
         authority = "";
@@ -193,13 +193,13 @@ Url parseUrl(std::lang::String url) {
     if (colon >= 0) {
         result.host = "";
         result.host = result.host + authority[0:colon];
-        std::lang::String portText = authority[(colon + 1):];
+        std::core::String portText = authority[(colon + 1):];
         result.port = std::parse::Parse::parseInt64(portText).unwrapOr(80);
     } else {
         result.host = "";
         result.host = result.host + authority;
     }
-    if (std::lang::len(result.host) == 0) {
+    if (std::core::len(result.host) == 0) {
         result.error = "地址里没有主机名";
         return result;
     }
@@ -208,24 +208,24 @@ Url parseUrl(std::lang::String url) {
 }
 
 /** @brief 拼一条 HTTP/1.1 请求文本；body 为空时按 GET 处理。 */
-std::lang::String buildRequest(std::lang::String method, std::lang::String url, std::lang::String body, std::lang::String contentType) {
+std::core::String buildRequest(std::core::String method, std::core::String url, std::core::String body, std::core::String contentType) {
     Url target = parseUrl(url);
-    std::lang::String request = "";
+    std::core::String request = "";
     if (!target.ok) { return request; }
-    std::lang::String requestLine = method + " " + target.path + " HTTP/1.1\r\n";
+    std::core::String requestLine = method + " " + target.path + " HTTP/1.1\r\n";
     request = request + requestLine;
-    std::lang::String hostLine = "Host: " + target.host + "\r\n";
+    std::core::String hostLine = "Host: " + target.host + "\r\n";
     request = request + hostLine;
     request = request + "User-Agent: chali-std-net/1.0\r\n";
     request = request + "Accept: */*\r\n";
     request = request + "Connection: close\r\n";
-    if (std::lang::len(body) > 0) {
-        std::lang::String mediaType = "";
+    if (std::core::len(body) > 0) {
+        std::core::String mediaType = "";
         mediaType = mediaType + contentType;
-        if (std::lang::len(mediaType) == 0) { mediaType = "text/plain; charset=utf-8"; }
-        std::lang::String typeLine = "Content-Type: " + mediaType + "\r\n";
+        if (std::core::len(mediaType) == 0) { mediaType = "text/plain; charset=utf-8"; }
+        std::core::String typeLine = "Content-Type: " + mediaType + "\r\n";
         request = request + typeLine;
-        std::lang::String lengthLine = std::lang::format("Content-Length: {}\r\n", std::lang::len(body));
+        std::core::String lengthLine = std::core::format("Content-Length: {}\r\n", std::core::len(body));
         request = request + lengthLine;
     }
     request = request + "\r\n";
@@ -234,7 +234,7 @@ std::lang::String buildRequest(std::lang::String method, std::lang::String url, 
 }
 
 /** @brief 解析一段完整的 HTTP 响应文本。 */
-HttpResponse parseResponse(std::lang::String raw) {
+HttpResponse parseResponse(std::core::String raw) {
     HttpResponse response;
     response.ok = false;
     response.status = 0;
@@ -245,7 +245,7 @@ HttpResponse parseResponse(std::lang::String raw) {
 
     int64 split = std::text::Text::find(raw, "\r\n\r\n");
     /* 同上：局部串不要用形参直接初始化 */
-    std::lang::String head = "";
+    std::core::String head = "";
     head = head + raw;
     if (split >= 0) {
         head = raw[0:split];
@@ -253,7 +253,7 @@ HttpResponse parseResponse(std::lang::String raw) {
         response.body = raw[(split + 4):];
     }
     int64 lineEnd = std::text::Text::find(head, "\r\n");
-    std::lang::String statusLine = "";
+    std::core::String statusLine = "";
     statusLine = statusLine + head;
     if (lineEnd >= 0) {
         statusLine = head[0:lineEnd];
@@ -264,7 +264,7 @@ HttpResponse parseResponse(std::lang::String raw) {
         response.error = "响应缺少状态行";
         return response;
     }
-    std::lang::String codeText = statusLine[(firstSpace + 1):];
+    std::core::String codeText = statusLine[(firstSpace + 1):];
     int64 secondSpace = std::text::Text::find(codeText, " ");
     if (secondSpace >= 0) {
         response.reason = codeText[(secondSpace + 1):];
@@ -282,26 +282,26 @@ struct HttpClient {
     TcpSocket socket;
     bool connected;
 
-    bool connect(std::lang::String host, int32 port, int32 timeoutMs) {
+    bool connect(std::core::String host, int32 port, int32 timeoutMs) {
         self.socket = TcpSocket::connect(host, port, timeoutMs);
         self.connected = self.socket.isOpen();
         return self.connected;
     }
 
     /** @brief 读到对端关闭或超时为止（`Connection: close` 时正好是一整个响应）。 */
-    std::lang::String readAll() {
-        std::lang::String out = "";
+    std::core::String readAll() {
+        std::core::String out = "";
         bool done = false;
         while (!done) {
-            std::lang::String chunk = self.socket.receive((int32)4096);
-            if (std::lang::len(chunk) == 0) { done = true; }
+            std::core::String chunk = self.socket.receive((int32)4096);
+            if (std::core::len(chunk) == 0) { done = true; }
             else { out = out + chunk; }
         }
         return out;
     }
 
     /** @brief 在已连上的连接上发请求并读回响应。 */
-    HttpResponse exchange(std::lang::String method, std::lang::String url, std::lang::String body, std::lang::String contentType) {
+    HttpResponse exchange(std::core::String method, std::core::String url, std::core::String body, std::core::String contentType) {
         HttpResponse response;
         response.ok = false;
         response.status = 0;
@@ -310,8 +310,8 @@ struct HttpClient {
             response.error = "没有连上服务器";
             return response;
         }
-        std::lang::String request = buildRequest(method, url, body, contentType);
-        if (std::lang::len(request) == 0) {
+        std::core::String request = buildRequest(method, url, body, contentType);
+        if (std::core::len(request) == 0) {
             response.error = "请求地址不合法";
             return response;
         }
@@ -319,7 +319,7 @@ struct HttpClient {
             response.error = self.socket.lastError();
             return response;
         }
-        std::lang::String raw = self.readAll();
+        std::core::String raw = self.readAll();
         return parseResponse(raw);
     }
 
@@ -329,7 +329,12 @@ struct HttpClient {
     }
 
     /** @brief 一次性 GET：连上、发请求、读响应、关闭。 */
-    static HttpResponse fetch(std::lang::String url) {
+    static HttpResponse fetch(std::core::String url) {
+        return HttpClient::fetch_with_timeout(url, (int32)5000);
+    }
+
+    /** 为连接与套接字读写设置正毫秒超时，执行一次 GET。 */
+    static HttpResponse fetch_with_timeout(String url, int32 timeoutMs) {
         HttpResponse response;
         response.ok = false;
         response.status = 0;
@@ -337,14 +342,18 @@ struct HttpClient {
         Url target = parseUrl(url);
         if (!target.ok) {
             /* `字段 = 别的字段;` 是别名，这里自己拼一块新串。 */
-            std::lang::String message = "";
+            std::core::String message = "";
             message = message + target.error;
             response.error = message;
             return response;
         }
         HttpClient client;
         client.connected = false;
-        if (!client.connect(target.host, (int32)target.port, (int32)5000)) {
+        if (timeoutMs <= 0) {
+            response.error = "timeout must be positive";
+            return response;
+        }
+        if (!client.connect(target.host, (int32)target.port, timeoutMs)) {
             response.error = client.socket.lastError();
             return response;
         }
@@ -354,21 +363,30 @@ struct HttpClient {
     }
 
     /** @brief 一次性 POST。 */
-    static HttpResponse submit(std::lang::String url, std::lang::String body, std::lang::String contentType) {
+    static HttpResponse submit(std::core::String url, std::core::String body, std::core::String contentType) {
+        return HttpClient::submit_with_timeout(url, body, contentType, (int32)5000);
+    }
+
+    /** 为连接与套接字读写设置正毫秒超时，执行一次 POST。 */
+    static HttpResponse submit_with_timeout(String url, String body, String contentType, int32 timeoutMs) {
         HttpResponse response;
         response.ok = false;
         response.status = 0;
         response.error = "";
         Url target = parseUrl(url);
         if (!target.ok) {
-            std::lang::String message = "";
+            std::core::String message = "";
             message = message + target.error;
             response.error = message;
             return response;
         }
         HttpClient client;
         client.connected = false;
-        if (!client.connect(target.host, (int32)target.port, (int32)5000)) {
+        if (timeoutMs <= 0) {
+            response.error = "timeout must be positive";
+            return response;
+        }
+        if (!client.connect(target.host, (int32)target.port, timeoutMs)) {
             response.error = client.socket.lastError();
             return response;
         }

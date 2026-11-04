@@ -1,0 +1,58 @@
+import std::tree;
+int64 verify_height(TreeSnapshot const& snapshot, int64 node) {
+    if (node < 0) { return 0; }
+    assert(snapshot.live[node] == 1);
+    int64 left = verify_height(&snapshot, snapshot.lefts[node]);
+    int64 right = verify_height(&snapshot, snapshot.rights[node]);
+    assert(left - right >= -1 && left - right <= 1);
+    if (left > right) { return left + 1; }
+    return right + 1;
+}
+void rotation(int64 a, int64 b, int64 c) {
+    AvlTree tree = AvlTree::create();
+    assert(tree.insert(a) && tree.insert(b) && tree.insert(c));
+    TreeSnapshot snapshot = tree.snapshot();
+    assert(snapshot.keys[snapshot.root] == 20);
+    assert(verify_height(&snapshot, snapshot.root) == 2 && tree.height() == 2);
+}
+void main() {
+    rotation(30, 20, 10);
+    rotation(10, 20, 30);
+    rotation(30, 10, 20);
+    rotation(10, 30, 20);
+    AvlTree tree = AvlTree::create();
+    List<bool> present;
+    while (present.len() < 127) { present.push(false); }
+    int64 seed = 17;
+    int64 step = 0;
+    while (step < 1500) {
+        seed = (seed * 73 + 19) % 65521;
+        int64 index = seed % 127;
+        int64 key = index - 63;
+        if (seed % 2 == 0) {
+            assert(tree.insert(key) == !present[index]);
+            present[index] = true;
+        } else {
+            assert(tree.remove(key) == present[index]);
+            present[index] = false;
+        }
+        TreeSnapshot snapshot = tree.snapshot();
+        assert(verify_height(&snapshot, snapshot.root) == tree.height());
+        List<int64> ordered = tree.inorder();
+        int64 matched = 0;
+        int64 probe = 0;
+        while (probe < 127) {
+            if (present[probe]) {
+                assert(ordered[matched] == probe - 63);
+                matched = matched + 1;
+            }
+            probe = probe + 1;
+        }
+        assert(ordered.len() == matched && tree.len() == matched);
+        step = step + 1;
+    }
+    AvlTree independent = tree.copy();
+    tree.clear();
+    assert(tree.is_empty() && independent.len() > 0);
+    println("AVL rotations and 1500 mixed operations OK");
+}

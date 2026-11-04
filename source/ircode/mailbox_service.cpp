@@ -135,7 +135,7 @@ std::optional<bool> Machine::callMailboxService(runtimeDetail::ConcurrentCallSta
             }
             if (!sharedCreate && previous == nullptr)
             {
-                fail("std::lang::Shared 类型不匹配或句柄无效：" + type);
+                fail("std::core::Shared 类型不匹配或句柄无效：" + type);
                 return true;
             }
             if (sharedCreate)

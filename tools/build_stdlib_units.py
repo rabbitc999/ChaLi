@@ -15,6 +15,7 @@ def main():
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument('--compiler', type=Path)
     mode.add_argument('--sync-embedded-source', type=Path)
+    parser.add_argument('--runner', type=Path, help='通过宿主模拟器执行交叉编译的阶段编译器')
     parser.add_argument('--output', type=Path, default=ROOT / 'source/chali_precompiled_data.inc')
     options = parser.parse_args()
     if options.sync_embedded_source is not None:
@@ -38,30 +39,32 @@ def main():
                 temporary.unlink(missing_ok=True)
         print('已同步独立工程使用的内嵌标准库生成源')
         return
-    compiler = options.compiler.resolve()
+    compiler = [str(options.compiler.resolve())]
+    if options.runner is not None:
+        compiler.insert(0, str(options.runner.resolve()))
     with tempfile.TemporaryDirectory(prefix='stdlib-binary-') as folder:
         work = Path(folder)
         source = work / 'core.chl'
         source.write_text('void main() {}\n', encoding='utf-8')
         binary = work / 'core.unit'
         environment = dict(os.environ, CHALI_LANG='zh')
-        result = subprocess.run([str(compiler), 'check', str(source), '--build-stdlib-unit', str(binary)],
+        result = subprocess.run([*compiler, 'check', str(source), '--build-stdlib-unit', str(binary)],
                                 cwd=work, env=environment, capture_output=True, timeout=180)
         if result.returncode:
             raise RuntimeError(result.stderr.decode('utf-8', errors='replace'))
         data = binary.read_bytes()
         repeated = work / 'core-repeat.unit'
-        repeat = subprocess.run([str(compiler), 'check', str(source), '--build-stdlib-unit', str(repeated)],
+        repeat = subprocess.run([*compiler, 'check', str(source), '--build-stdlib-unit', str(repeated)],
                                 cwd=work, env=environment, capture_output=True, timeout=180)
         if repeat.returncode or repeated.read_bytes() != data:
             raise RuntimeError('相同阶段编译器生成的标准库二进制不确定')
         modules = []
-        catalog = [(module.stem, 'std::' + module.stem) for module in sorted((ROOT / 'source/std').glob('*.chl')) if module.stem != 'lang']
+        catalog = [(module.stem, 'std::' + module.stem) for module in sorted((ROOT / 'source/std').glob('*.chl')) if module.stem != 'core']
         catalog.append(('builtin_range', 'std::__range'))
         for stem, name in catalog:
             source.write_text(('import ' + name + ';\n' if name != 'std::__range' else '') + 'void main(){}\n', encoding='utf-8')
             output = work / (stem + '.unit')
-            command = [str(compiler), 'check', str(source), '--build-stdlib-module', name, str(output)]
+            command = [*compiler, 'check', str(source), '--build-stdlib-module', name, str(output)]
             result = subprocess.run(command, cwd=work, env=environment, capture_output=True, timeout=180)
             if result.returncode:
                 raise RuntimeError(name + ': ' + result.stderr.decode('utf-8', errors='replace'))
@@ -72,10 +75,10 @@ def main():
             modules.append((name, payload))
             print(name + ': ' + str(len(payload)) + ' 字节', flush=True)
         templates = []
-        for stem, name in [('core_templates', 'std::lang'), *catalog]:
-            source.write_text(('import ' + name + ';\n' if name not in ('std::lang', 'std::__range') else '') + 'void main(){}\n', encoding='utf-8')
+        for stem, name in [('core_templates', 'std::core'), *catalog]:
+            source.write_text(('import ' + name + ';\n' if name not in ('std::core', 'std::__range') else '') + 'void main(){}\n', encoding='utf-8')
             output = work / (stem + '.templates')
-            command = [str(compiler), 'check', str(source), '--build-stdlib-templates', name, str(output)]
+            command = [*compiler, 'check', str(source), '--build-stdlib-templates', name, str(output)]
             result = subprocess.run(command, cwd=work, env=environment, capture_output=True, timeout=180)
             if result.returncode:
                 raise RuntimeError(name + ': ' + result.stderr.decode('utf-8', errors='replace'))

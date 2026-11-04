@@ -5,7 +5,7 @@ $for field in $fields<T>()
 $if field.index > 0
 result = result + ",";
 $end_if
-$if field.type.name == "std::lang::String"
+$if field.type.name == "std::core::String"
 result = result + "\"" + field.name + "\": \"" + $member(value, field) + "\"";
 $else_if field.type.name == "int64"
 result = result + "\"" + field.name + "\": " + $member(value, field).toString();

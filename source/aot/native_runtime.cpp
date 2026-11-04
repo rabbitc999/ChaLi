@@ -1563,7 +1563,7 @@ std::int64_t chali_host_raw_storage(std::int64_t operation, std::int64_t handle,
         result = rawStorageOperation(context, operation, handle, index, value, alignment, tag);
     } catch (const std::exception &error)
     {
-        context.error = Memory::String("宿主函数 std::lang::__rawStorage 抛出异常：") + error.what();
+        context.error = Memory::String("宿主函数 std::core::__rawStorage 抛出异常：") + error.what();
     }
     if (!context.memoryFault.empty()) context.error = context.memoryFault;
     if (!context.error.empty()) chali_panic(context.error.c_str());

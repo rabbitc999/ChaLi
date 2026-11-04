@@ -26,10 +26,10 @@ int64 __fetchAdd(int64 handle, int64 delta);
 /* 每次 get/set/swap 原子；组合调用不构成原子事务。 */
 struct Shared<T> {
     int64 __identity;
-    static Shared<T> create(T value) { self.__identity = std::lang::__sharedCreate<T>(value); }
-    T get() { return std::lang::__sharedGet<T>(self.__identity); }
-    void set(T value) { std::lang::__sharedSet<T>(self.__identity, value); }
-    T swap(T value) { return std::lang::__sharedSwap<T>(self.__identity, value); }
+    static Shared<T> create(T value) { self.__identity = std::core::__sharedCreate<T>(value); }
+    T get() { return std::core::__sharedGet<T>(self.__identity); }
+    void set(T value) { std::core::__sharedSet<T>(self.__identity, value); }
+    T swap(T value) { return std::core::__sharedSwap<T>(self.__identity, value); }
     /** 共享槽的引用标识，不拥有槽内值。 */
     int64 id() { return self.__identity; }
 };

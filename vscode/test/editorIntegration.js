@@ -69,7 +69,7 @@ async function main() {
     async request(method, params) {
       if (method === 'chali/standardSource') return { uri: params.uri, readonly: true, text: 'module std::parse;\n' };
       if (method === 'chali/projectInfo') return { valid: true, exists: true, manifestUri: configUri.toString(),
-        compilerVersion: '1.0.12', llvm: 'static', output: 'object', target: 'windows-x64', targets: [
+        compilerVersion: '1.0.0', llvm: 'static', output: 'object', target: 'windows-x64', targets: [
           { label: 'windows-x64', target: 'windows-x64' }, { label: 'linux-arm64', target: 'linux-arm64' }],
       };
       assert.equal(method, 'chali/projectEdit');

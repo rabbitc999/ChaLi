@@ -1,5 +1,5 @@
-/* `format("…")` 的旧式百分号格式串已删除：现在统一是 `std::lang::format("…{}…", …)`。 */
+/* `format("…")` 的旧式百分号格式串已删除：现在统一是 `std::core::format("…{}…", …)`。 */
 void main() {
     int64 n = 7;
-    std::lang::println("{}", format("%d", n));
+    std::core::println("{}", format("%d", n));
 }

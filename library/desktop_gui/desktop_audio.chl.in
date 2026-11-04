@@ -1,0 +1,16 @@
+module desktop_audio;
+
+#abi("C", "./@LIBRARY@", "chali_audio_open")
+bool open();
+#abi("C", "./@LIBRARY@", "chali_audio_load")
+int64 load(String path);
+#abi("C", "./@LIBRARY@", "chali_audio_play")
+bool play(int64 id);
+#abi("C", "./@LIBRARY@", "chali_audio_stop")
+bool stop(int64 id);
+#abi("C", "./@LIBRARY@", "chali_audio_is_playing")
+bool is_playing(int64 id);
+#abi("C", "./@LIBRARY@", "chali_audio_unload")
+bool unload(int64 id);
+#abi("C", "./@LIBRARY@", "chali_audio_close")
+void close();

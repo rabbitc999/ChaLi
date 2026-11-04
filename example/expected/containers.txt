@@ -10,14 +10,14 @@ remove(5) 拿回 1，现在 len=1
 map: len=3 amy=11 has(bob)=1 cid=33
 没这个键：has(zoe)=0
 remove(bob) 拿回 1，现在 len=2
-std::lang::List<string> 遍历：ada bob cid （len=3，contains(bob)=1）
+std::core::List<string> 遍历：ada bob cid （len=3，contains(bob)=1）
 map 遍历：已核对键值关联（不保证顺序）
-std::lang::List<Pair>：4,9 contains=1
-std::lang::Map<Pair,int64>：has=1 value=13
-std::lang::List<std::lang::Any>：77 contains=1
-std::lang::Set<std::lang::Any> 取出再查：has=1 remove=1
-std::lang::Map<std::lang::Any,int64> 取出再查：has=1 值=88 副本=88
-std::lang::Map<std::lang::Any,int64> 同内容新对象：has=0
-std::lang::Map<std::lang::Any,int64> remove=1
+std::core::List<Pair>：4,9 contains=1
+std::core::Map<Pair,int64>：has=1 value=13
+std::core::List<std::core::Any>：77 contains=1
+std::core::Set<std::core::Any> 取出再查：has=1 remove=1
+std::core::Map<std::core::Any,int64> 取出再查：has=1 值=88 副本=88
+std::core::Map<std::core::Any,int64> 同内容新对象：has=0
+std::core::Map<std::core::Any,int64> remove=1
 块里的表：len=2
 值语义：a=1 b=2（a 没被 b 改动）

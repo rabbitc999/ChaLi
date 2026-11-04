@@ -1,8 +1,8 @@
 /**
  * @file abi_string.c
- * @brief `std::lang` 字符串构造原语的直通 C 实现。
+ * @brief `std::core` 字符串构造原语的直通 C 实现。
  *
- * 浮点 → 文本的完整规则（去尾随零、孤立小数点）在 std/lang.chl 的 ChaLi 函数
+ * 浮点 → 文本的完整规则（去尾随零、孤立小数点）在 std/core.chl 的 ChaLi 函数
  * `__std_str_of_flt` 里实现；本模块只保留不可约的格式化核心 `__std_str_fixed`：
  * 按 `%.*f` 输出固定小数位文本。AOT 直连降级时由生成代码直接调用 libc snprintf，
  * 不经过本表。
@@ -46,7 +46,7 @@ static void abiStrFixed(ChaliAbiFrame *frame)
  * @brief 本模块入口表，按名称升序排列。
  */
 static const ChaliAbiRecord kRecords[] = {
-    { "std::lang::__std_str_fixed", abiStrFixed, 2 },
+    { "std::core::__std_str_fixed", abiStrFixed, 2 },
 };
 
 const ChaliAbiRecord *abi_string_records(size_t *count)

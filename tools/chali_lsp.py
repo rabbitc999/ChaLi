@@ -42,6 +42,21 @@ def naming_warnings(text):
                            severity=2, source='chali', code='CHL2101' if is_type else 'CHL2102',
                            message=('类型名应使用大驼峰（PascalCase）：' if is_type else
                                     '函数或方法名应使用小驼峰（camelCase）：') + name))
+    masked = TOKEN.sub(lambda match: ''.join('\n' if c == '\n' else ' ' for c in match.group())
+                       if match.group().startswith(('/*', '//', '"', "'")) else match.group(), text)
+    module = r'\bmodule\s+([A-Za-z_]\w*(?:\s*::\s*[A-Za-z_]\w*)*)\s*;'
+    segment = r'[a-z][a-z0-9]*(?:_[a-z0-9]+)*'
+    for match in re.finditer(module, masked, re.ASCII):
+        name = re.sub(r'\s+', '', match[1])
+        if name == '__root' or all(re.fullmatch(segment, part) for part in name.split('::')):
+            continue
+        def position(offset):
+            """将源码偏移转换为 LSP 使用的 UTF-16 位置。"""
+            before = text[:offset]
+            return dict(line=before.count('\n'), character=len(before.rsplit('\n', 1)[-1].encode('utf-16-le')) // 2)
+        output.append(dict(range=dict(start=position(match.start(1)), end=position(match.end(1))),
+                           severity=2, source='chali', code='CHL2103',
+                           message='模块名建议使用小写下划线命名（snake_case）：' + name))
     return output
 
 
@@ -107,7 +122,7 @@ class ApiIndex:
         output = []
         symbols = []
         for entry in records:
-            if entry['kind'] not in ('struct', 'enum', 'interface', 'opcode', 'member'):
+            if entry['kind'] not in ('struct', 'enum', 'interface', 'opcode', 'member', 'constant'):
                 continue
             record = dict(entry)
             if record['kind'] == 'member':
@@ -144,7 +159,7 @@ class ApiIndex:
     def collect(self, uri, text, documents, uri_path):
         """读取当前文档和递归导入模块，并加入可见标准库声明。"""
         self.type_names=set(self.standard_type_names)
-        output, visited, modules = [], set(), {'std::lang', 'std'}
+        output, visited, modules = [], set(), {'std::core', 'std'}
         path = uri_path(uri)
         roots = project_paths(path)
         def visit(current_uri, current_text, current_path):
@@ -246,7 +261,7 @@ def inferred_type(records, name, text, cursor=None, depth=0):
     if stream[-1].group()=='?':
         source=inferred_type(records,name[:stream[-1].start()],text,cursor,depth+1)
         head=base(source)
-        if head in ('std::lang::Result','std::lang::Option','Result','Option'):
+        if head in ('std::core::Result','std::core::Option','Result','Option'):
             match=re.search(r'<(.*)>',source)
             if match:
                 level=0;argument=''
@@ -261,7 +276,7 @@ def inferred_type(records, name, text, cursor=None, depth=0):
                 match=re.search(r'\bTry(?:Move)?\s*<([^,>]+)',record['signature'])
                 if match:return qualify(match.group(1),record.get('module',''))
         return ''
-    if name.startswith('f"'):return 'std::lang::String'
+    if name.startswith('f"'):return 'std::core::String'
     if re.match(r'(?:if|match)\s*\(',name):
         results=set();tokens=list(TOKEN.finditer(name));i=0
         origin=text.find(name,cursor)
@@ -344,7 +359,7 @@ def inferred_type(records, name, text, cursor=None, depth=0):
             return inferred_type(records,suffix[1:end],text,binding.start(),depth+1)
         if name in ('true','false'): return 'bool'
         if len(stream)==1:
-            if name.startswith('"'): return 'std::lang::String'
+            if name.startswith('"'): return 'std::core::String'
             if name.startswith("'"): return 'char'
             if re.fullmatch(r'(?:\d+|0[xX][0-9A-Fa-f_]+|[bB]_?[01][01_]*)u', name): return 'uint64'
             if re.fullmatch(r'\d+(?:\.\d+)?(?:[eE][+-]?\d+)?f', name): return 'float32'
@@ -381,8 +396,8 @@ def matching(records, name, text, cursor=None):
     if '::' in name:
         return [r for r in records if r['qualified'] == name or r['qualified'].endswith('::' + name)]
     result = [r for r in records if r['name'] == name and not r['owner']]
-    if any(r['module'] != 'std::lang' and r.get('kind','function') == 'function' for r in result):
-        result = [r for r in result if r['module'] != 'std::lang' or r.get('kind','function') != 'function']
+    if any(r['module'] != 'std::core' and r.get('kind','function') == 'function' for r in result):
+        result = [r for r in result if r['module'] != 'std::core' or r.get('kind','function') != 'function']
     return result
 
 
@@ -497,7 +512,7 @@ def semantic_tokens(text, records, keywords, pos, extra_types=()):
         while j+1<len(words) and words[j]=='::':j+=2
         if j<len(words) and words[j]=='<':j=end_group(j,'<','>')
         while j<len(words) and words[j] in ('const','mut','&'):j+=1
-        if j>=len(words) or not words[j].isidentifier() or words[j] in keywords:continue
+        if j>=len(words) or not words[j].isidentifier() or (words[j] != 'copy' and words[j] in keywords):continue
         following=words[j+1] if j+1<len(words) else ''
         k=j+1
         if following=='<':
@@ -525,7 +540,6 @@ def semantic_tokens(text, records, keywords, pos, extra_types=()):
             region=next((b for a,b in parameter_regions if a<i<b),len(words))
             if region<len(words) and words[region]=='{':
                 bindings=[(n,j,scopes[region] if j==i else scope,kind) for n,j,scope,kind in bindings]
-    functions={r['name'] for r in records if r.get('kind', 'function') == 'function'}
     offsets={t.start():i for i,t in enumerate(stream)}
     spans=[]
     for token in raw:
@@ -535,17 +549,19 @@ def semantic_tokens(text, records, keywords, pos, extra_types=()):
         elif word[0].isdigit() or re.fullmatch(r'[bB]_[01_]+',word):kind='number'
         elif i in classified:kind,modifiers=classified[i]
         elif word in PRIMITIVES:kind='type'
-        elif word in keywords:kind='keyword'
+        elif word in keywords and word != 'copy':kind='keyword'
         elif word.isidentifier():
             previous=words[i-1] if i else '';following=words[i+1] if i+1<len(words) else ''
             visible=[b for b in bindings if b[0]==word and b[1]<=i and scopes[i][:len(b[2])]==b[2]]
-            if previous=='.':kind='function' if following=='(' else 'property'
-            elif visible:
+            if word=='copy' and (previous=='fn' or (previous==']' and following in ('[','(')) or (previous==')' and following=='{')):
+                kind='keyword'
+            elif previous=='.':kind='function' if following=='(' else 'property'
+            elif visible and previous!='::':
                 binding=max(visible,key=lambda b:(len(b[2]),b[1]));kind=classified[binding[1]][0]
             elif word in generic:kind='typeParameter'
             elif word in types:kind='type'
             elif following=='::' or previous in ('import','module'):kind='namespace'
-            elif following=='(' or word in functions:kind='function'
+            elif following=='(':kind='function'
             else:kind='variable'
         else:kind='operator'
         start=token.start()

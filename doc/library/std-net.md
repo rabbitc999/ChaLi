@@ -111,24 +111,29 @@ response ok=1 status=200 reason=OK len=5 type=text/plain body=hello
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-331"></a>`#NonCopyable opcode TcpSocket` | 独占 TCP 连接；复制被拒绝，显式 move 转移所有权。 |
-| 模块 | <a id="symbol-332"></a>`#NonCopyable opcode TcpListener` | 独占 TCP 监听器；端口为零时由系统分配。 |
-| 模块 | <a id="symbol-333"></a>`struct Url` | 拆开的 HTTP 地址。 |
-| Url | <a id="symbol-334"></a>`bool ok` | 当前解析或请求是否成功。 |
-| Url | <a id="symbol-335"></a>`std::lang::String host` | URL 中的主机名。 |
-| Url | <a id="symbol-336"></a>`int64 port` | 网络端口。 |
-| Url | <a id="symbol-337"></a>`std::lang::String path` | 请求目标路径。 |
-| Url | <a id="symbol-338"></a>`std::lang::String error` | 最近操作的错误说明。 |
-| 模块 | <a id="symbol-339"></a>`struct HttpResponse` | HTTP 响应：状态码、原因、头部原文、正文。 |
-| HttpResponse | <a id="symbol-340"></a>`bool ok` | 当前解析或请求是否成功。 |
-| HttpResponse | <a id="symbol-341"></a>`int64 status` | HTTP 响应状态码。 |
-| HttpResponse | <a id="symbol-342"></a>`std::lang::String reason` | HTTP 状态原因文本。 |
-| HttpResponse | <a id="symbol-343"></a>`std::lang::String headers` | HTTP 响应头。 |
-| HttpResponse | <a id="symbol-344"></a>`std::lang::String body` | HTTP 响应正文。 |
-| HttpResponse | <a id="symbol-345"></a>`std::lang::String error` | 最近操作的错误说明。 |
-| 模块 | <a id="symbol-346"></a>`struct HttpClient` | 一条连接上的 HTTP 客户端；也提供一次性便捷方法 `fetch`/`submit`。 |
-| HttpClient | <a id="symbol-347"></a>`TcpSocket socket` | HTTP 客户端使用的 TCP 连接。 |
-| HttpClient | <a id="symbol-348"></a>`bool connected` | 客户端是否已建立连接。 |
+| 模块 | <a id="symbol-351"></a>`const int64 NET_OK = 0` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-352"></a>`const int64 NET_CLOSED = 1` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-353"></a>`const int64 NET_TIMEOUT = 2` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-354"></a>`const int64 NET_ERROR = 3` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-355"></a>`const int64 NET_PENDING = 4` | 非阻塞操作尚未就绪，调用方可用 std::thread::sleepFor 有界暂停后继续轮询。 |
+| 模块 | <a id="symbol-356"></a>`#NonCopyable opcode TcpSocket` | 独占 TCP 连接；复制被拒绝，显式 move 转移所有权。 |
+| 模块 | <a id="symbol-357"></a>`#NonCopyable opcode TcpListener` | 独占 TCP 监听器；端口为零时由系统分配。 |
+| 模块 | <a id="symbol-358"></a>`struct Url` | 拆开的 HTTP 地址。 |
+| Url | <a id="symbol-359"></a>`bool ok` | 当前解析或请求是否成功。 |
+| Url | <a id="symbol-360"></a>`std::core::String host` | URL 中的主机名。 |
+| Url | <a id="symbol-361"></a>`int64 port` | 网络端口。 |
+| Url | <a id="symbol-362"></a>`std::core::String path` | 请求目标路径。 |
+| Url | <a id="symbol-363"></a>`std::core::String error` | 最近操作的错误说明。 |
+| 模块 | <a id="symbol-364"></a>`struct HttpResponse` | HTTP 响应：状态码、原因、头部原文、正文。 |
+| HttpResponse | <a id="symbol-365"></a>`bool ok` | 当前解析或请求是否成功。 |
+| HttpResponse | <a id="symbol-366"></a>`int64 status` | HTTP 响应状态码。 |
+| HttpResponse | <a id="symbol-367"></a>`std::core::String reason` | HTTP 状态原因文本。 |
+| HttpResponse | <a id="symbol-368"></a>`std::core::String headers` | HTTP 响应头。 |
+| HttpResponse | <a id="symbol-369"></a>`std::core::String body` | HTTP 响应正文。 |
+| HttpResponse | <a id="symbol-370"></a>`std::core::String error` | 最近操作的错误说明。 |
+| 模块 | <a id="symbol-371"></a>`struct HttpClient` | 一条连接上的 HTTP 客户端；也提供一次性便捷方法 `fetch`/`submit`。 |
+| HttpClient | <a id="symbol-372"></a>`TcpSocket socket` | HTTP 客户端使用的 TCP 连接。 |
+| HttpClient | <a id="symbol-373"></a>`bool connected` | 客户端是否已建立连接。 |
 
 ## 函数索引
 
@@ -160,17 +165,19 @@ response ok=1 status=200 reason=OK len=5 type=text/plain body=hello
 | [TcpListener::acceptAsync](#api-23) | `TcpSocket acceptAsync()` |
 | [TcpListener::close](#api-24) | `void close()` |
 | [HttpResponse::isSuccess](#api-25) | `bool isSuccess()` |
-| [HttpResponse::header](#api-26) | `std::lang::String header(std::lang::String name)` |
-| [httpScheme](#api-27) | `std::lang::String httpScheme()` |
-| [parseUrl](#api-28) | `Url parseUrl(std::lang::String url)` |
-| [buildRequest](#api-29) | `std::lang::String buildRequest(std::lang::String method, std::lang::String url, std::lang::String body, std::lang::String contentType)` |
-| [parseResponse](#api-30) | `HttpResponse parseResponse(std::lang::String raw)` |
-| [HttpClient::connect](#api-31) | `bool connect(std::lang::String host, int32 port, int32 timeoutMs)` |
-| [HttpClient::readAll](#api-32) | `std::lang::String readAll()` |
-| [HttpClient::exchange](#api-33) | `HttpResponse exchange(std::lang::String method, std::lang::String url, std::lang::String body, std::lang::String contentType)` |
+| [HttpResponse::header](#api-26) | `std::core::String header(std::core::String name)` |
+| [httpScheme](#api-27) | `std::core::String httpScheme()` |
+| [parseUrl](#api-28) | `Url parseUrl(std::core::String url)` |
+| [buildRequest](#api-29) | `std::core::String buildRequest(std::core::String method, std::core::String url, std::core::String body, std::core::String contentType)` |
+| [parseResponse](#api-30) | `HttpResponse parseResponse(std::core::String raw)` |
+| [HttpClient::connect](#api-31) | `bool connect(std::core::String host, int32 port, int32 timeoutMs)` |
+| [HttpClient::readAll](#api-32) | `std::core::String readAll()` |
+| [HttpClient::exchange](#api-33) | `HttpResponse exchange(std::core::String method, std::core::String url, std::core::String body, std::core::String contentType)` |
 | [HttpClient::close](#api-34) | `void close()` |
-| [HttpClient::fetch](#api-35) | `static HttpResponse fetch(std::lang::String url)` |
-| [HttpClient::submit](#api-36) | `static HttpResponse submit(std::lang::String url, std::lang::String body, std::lang::String contentType)` |
+| [HttpClient::fetch](#api-35) | `static HttpResponse fetch(std::core::String url)` |
+| [HttpClient::fetch_with_timeout](#api-36) | `static HttpResponse fetch_with_timeout(String url, int32 timeoutMs)` |
+| [HttpClient::submit](#api-37) | `static HttpResponse submit(std::core::String url, std::core::String body, std::core::String contentType)` |
+| [HttpClient::submit_with_timeout](#api-38) | `static HttpResponse submit_with_timeout(String url, String body, String contentType, int32 timeoutMs)` |
 
 <a id="api-0"></a>
 
@@ -1151,7 +1158,7 @@ obj.isSuccess();
 **声明**
 
 ```chali
-std::lang::String header(std::lang::String name);
+std::core::String header(std::core::String name);
 ```
 
 **行为**
@@ -1164,11 +1171,11 @@ std::lang::String header(std::lang::String name);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `name` | `std::lang::String name` | 名称 | 无 |
+| `name` | `std::core::String name` | 名称 | 无 |
 
 **返回值**
 
-`std::lang::String`。按名称查找响应头。
+`std::core::String`。按名称查找响应头。
 
 **错误与边界**
 
@@ -1191,7 +1198,7 @@ obj.header(name);
 **声明**
 
 ```chali
-std::lang::String httpScheme();
+std::core::String httpScheme();
 ```
 
 **行为**
@@ -1206,7 +1213,7 @@ std::lang::String httpScheme();
 
 **返回值**
 
-`std::lang::String`。返回 URL 的协议部分。
+`std::core::String`。返回 URL 的协议部分。
 
 **错误与边界**
 
@@ -1229,7 +1236,7 @@ std::net::httpScheme();
 **声明**
 
 ```chali
-Url parseUrl(std::lang::String url);
+Url parseUrl(std::core::String url);
 ```
 
 **行为**
@@ -1240,7 +1247,7 @@ Url parseUrl(std::lang::String url);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `url` | `std::lang::String url` | HTTP URL，仅支持 http:// | 无 |
+| `url` | `std::core::String url` | HTTP URL，仅支持 http:// | 无 |
 
 **返回值**
 
@@ -1267,7 +1274,7 @@ std::net::parseUrl(url);
 **声明**
 
 ```chali
-std::lang::String buildRequest(std::lang::String method, std::lang::String url, std::lang::String body, std::lang::String contentType);
+std::core::String buildRequest(std::core::String method, std::core::String url, std::core::String body, std::core::String contentType);
 ```
 
 **行为**
@@ -1280,14 +1287,14 @@ std::lang::String buildRequest(std::lang::String method, std::lang::String url, 
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `method` | `std::lang::String method` | HTTP 方法 | 无 |
-| `url` | `std::lang::String url` | HTTP URL，仅支持 http:// | 无 |
-| `body` | `std::lang::String body` | HTTP 正文 | 无 |
-| `contentType` | `std::lang::String contentType` | HTTP 正文媒体类型 | 无 |
+| `method` | `std::core::String method` | HTTP 方法 | 无 |
+| `url` | `std::core::String url` | HTTP URL，仅支持 http:// | 无 |
+| `body` | `std::core::String body` | HTTP 正文 | 无 |
+| `contentType` | `std::core::String contentType` | HTTP 正文媒体类型 | 无 |
 
 **返回值**
 
-`std::lang::String`。构造 HTTP 请求报文。
+`std::core::String`。构造 HTTP 请求报文。
 
 **错误与边界**
 
@@ -1310,20 +1317,20 @@ std::net::buildRequest(method, url, body, contentType);
 **声明**
 
 ```chali
-HttpResponse parseResponse(std::lang::String raw);
+HttpResponse parseResponse(std::core::String raw);
 ```
 
 **行为**
 
 解析原始 HTTP 响应报文。
 
-\r\n"; request = request + "Connection: close\r\n"; if (std::lang::len(body) > 0) { std::lang::String mediaType = ""; mediaType = mediaType + contentType; if (std::lang::len(mediaType) == 0) { mediaType = "text/plain; charset=utf-8"; } std::lang::String typeLine = "Content-Type: " + mediaType + "\r\n"; request = request + typeLine; std::lang::String lengthLine = std::lang::format("Content-Length: {}\r\n", std::lang::len(body)); request = request + lengthLine; } request = request + "\r\n"; request = request + body; return request; } /** 解析一段完整的 HTTP 响应文本。
+\r\n"; request = request + "Connection: close\r\n"; if (std::core::len(body) > 0) { std::core::String mediaType = ""; mediaType = mediaType + contentType; if (std::core::len(mediaType) == 0) { mediaType = "text/plain; charset=utf-8"; } std::core::String typeLine = "Content-Type: " + mediaType + "\r\n"; request = request + typeLine; std::core::String lengthLine = std::core::format("Content-Length: {}\r\n", std::core::len(body)); request = request + lengthLine; } request = request + "\r\n"; request = request + body; return request; } /** 解析一段完整的 HTTP 响应文本。
 
 **参数**
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `raw` | `std::lang::String raw` | 原始报文文本 | 无 |
+| `raw` | `std::core::String raw` | 原始报文文本 | 无 |
 
 **返回值**
 
@@ -1350,7 +1357,7 @@ std::net::parseResponse(raw);
 **声明**
 
 ```chali
-bool connect(std::lang::String host, int32 port, int32 timeoutMs);
+bool connect(std::core::String host, int32 port, int32 timeoutMs);
 ```
 
 **行为**
@@ -1361,7 +1368,7 @@ bool connect(std::lang::String host, int32 port, int32 timeoutMs);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `host` | `std::lang::String host` | 主机名或 IP 地址 | 无 |
+| `host` | `std::core::String host` | 主机名或 IP 地址 | 无 |
 | `port` | `int32 port` | 端口号 | 无 |
 | `timeoutMs` | `int32 timeoutMs` | 超时时间，毫秒 | 无 |
 
@@ -1390,7 +1397,7 @@ obj.connect(host, port, timeoutMs);
 **声明**
 
 ```chali
-std::lang::String readAll();
+std::core::String readAll();
 ```
 
 **行为**
@@ -1405,7 +1412,7 @@ std::lang::String readAll();
 
 **返回值**
 
-`std::lang::String`。持续读取 HTTP 响应原始文本。
+`std::core::String`。持续读取 HTTP 响应原始文本。
 
 **错误与边界**
 
@@ -1428,7 +1435,7 @@ obj.readAll();
 **声明**
 
 ```chali
-HttpResponse exchange(std::lang::String method, std::lang::String url, std::lang::String body, std::lang::String contentType);
+HttpResponse exchange(std::core::String method, std::core::String url, std::core::String body, std::core::String contentType);
 ```
 
 **行为**
@@ -1441,10 +1448,10 @@ HttpResponse exchange(std::lang::String method, std::lang::String url, std::lang
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `method` | `std::lang::String method` | HTTP 方法 | 无 |
-| `url` | `std::lang::String url` | HTTP URL，仅支持 http:// | 无 |
-| `body` | `std::lang::String body` | HTTP 正文 | 无 |
-| `contentType` | `std::lang::String contentType` | HTTP 正文媒体类型 | 无 |
+| `method` | `std::core::String method` | HTTP 方法 | 无 |
+| `url` | `std::core::String url` | HTTP URL，仅支持 http:// | 无 |
+| `body` | `std::core::String body` | HTTP 正文 | 无 |
+| `contentType` | `std::core::String contentType` | HTTP 正文媒体类型 | 无 |
 
 **返回值**
 
@@ -1507,7 +1514,7 @@ obj.close();
 **声明**
 
 ```chali
-static HttpResponse fetch(std::lang::String url);
+static HttpResponse fetch(std::core::String url);
 ```
 
 **行为**
@@ -1520,7 +1527,7 @@ static HttpResponse fetch(std::lang::String url);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `url` | `std::lang::String url` | HTTP URL，仅支持 http:// | 无 |
+| `url` | `std::core::String url` | HTTP URL，仅支持 http:// | 无 |
 
 **返回值**
 
@@ -1542,12 +1549,51 @@ std::net::HttpClient::fetch(url);
 
 <a id="api-36"></a>
 
-### HttpClient::submit（37）
+### HttpClient::fetch_with_timeout（37）
 
 **声明**
 
 ```chali
-static HttpResponse submit(std::lang::String url, std::lang::String body, std::lang::String contentType);
+static HttpResponse fetch_with_timeout(String url, int32 timeoutMs);
+```
+
+**行为**
+
+为连接与套接字读写设置正毫秒超时，执行一次 GET。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `url` | `String url` | HTTP URL，仅支持 http:// | 无 |
+| `timeoutMs` | `int32 timeoutMs` | 超时时间，毫秒 | 无 |
+
+**返回值**
+
+`HttpResponse`。为连接与套接字读写设置正毫秒超时，执行一次 GET。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::net::HttpClient::fetch_with_timeout(url, timeoutMs);
+```
+
+**源码**：[source/std/net.chl:337](../../source/std/net.chl#L337)。
+
+**完整示例**：[example/samples/std_net.chl](../../example/samples/std_net.chl)。
+
+<a id="api-37"></a>
+
+### HttpClient::submit（38）
+
+**声明**
+
+```chali
+static HttpResponse submit(std::core::String url, std::core::String body, std::core::String contentType);
 ```
 
 **行为**
@@ -1560,9 +1606,9 @@ static HttpResponse submit(std::lang::String url, std::lang::String body, std::l
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `url` | `std::lang::String url` | HTTP URL，仅支持 http:// | 无 |
-| `body` | `std::lang::String body` | HTTP 正文 | 无 |
-| `contentType` | `std::lang::String contentType` | HTTP 正文媒体类型 | 无 |
+| `url` | `std::core::String url` | HTTP URL，仅支持 http:// | 无 |
+| `body` | `std::core::String body` | HTTP 正文 | 无 |
+| `contentType` | `std::core::String contentType` | HTTP 正文媒体类型 | 无 |
 
 **返回值**
 
@@ -1578,6 +1624,47 @@ static HttpResponse submit(std::lang::String url, std::lang::String body, std::l
 std::net::HttpClient::submit(url, body, contentType);
 ```
 
-**源码**：[source/std/net.chl:357](../../source/std/net.chl#L357)。
+**源码**：[source/std/net.chl:366](../../source/std/net.chl#L366)。
+
+**完整示例**：[example/samples/std_net.chl](../../example/samples/std_net.chl)。
+
+<a id="api-38"></a>
+
+### HttpClient::submit_with_timeout（39）
+
+**声明**
+
+```chali
+static HttpResponse submit_with_timeout(String url, String body, String contentType, int32 timeoutMs);
+```
+
+**行为**
+
+为连接与套接字读写设置正毫秒超时，执行一次 POST。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `url` | `String url` | HTTP URL，仅支持 http:// | 无 |
+| `body` | `String body` | HTTP 正文 | 无 |
+| `contentType` | `String contentType` | HTTP 正文媒体类型 | 无 |
+| `timeoutMs` | `int32 timeoutMs` | 超时时间，毫秒 | 无 |
+
+**返回值**
+
+`HttpResponse`。为连接与套接字读写设置正毫秒超时，执行一次 POST。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::net::HttpClient::submit_with_timeout(url, body, contentType, timeoutMs);
+```
+
+**源码**：[source/std/net.chl:371](../../source/std/net.chl#L371)。
 
 **完整示例**：[example/samples/std_net.chl](../../example/samples/std_net.chl)。

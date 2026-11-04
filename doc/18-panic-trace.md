@@ -30,7 +30,7 @@ build/work/chali/chali run chali/example/samples-error/assert_failure.chl --debu
 
 | 部分 | 来源 | 缺什么时候没有 |
 | --- | --- | --- |
-| `chali aot: panic：<消息>` | 用户 `std::lang::panic` 的文本或运行期检查生成的文本 | 永远有 |
+| `chali aot: panic：<消息>` | 用户 `std::core::panic` 的文本或运行期检查生成的文本 | 永远有 |
 | `出错位置：文件:行（函数）` | 前端写进 `.quad` 的 `# chali-source` 元数据，随产物一起编入 | 四元式没有来源元数据时退化为四元式行号 |
 | `调用栈（内 → 外）` | 运行期帧采集，受 `STACKVM_WITH_PANIC_TRACE` 控制 | 关闭该宏时只剩前两行 |
 

@@ -2,8 +2,8 @@ void main() {
     BigInteger number = BigInteger(12);
     BigInteger number_copy = number.copy();
     number = number + 1;
-    println("std::lang::BigInteger={}/{}", (int64)number_copy, (int64)number);
-    BigInteger from_existing = std::lang::BigInteger(number_copy);
+    println("std::big_number::BigInteger={}/{}", (int64)number_copy, (int64)number);
+    BigInteger from_existing = std::big_number::BigInteger(number_copy);
     number_copy = number_copy + 1;
     println("BigInteger_ctor={}/{}", (int64)from_existing, (int64)number_copy);
 

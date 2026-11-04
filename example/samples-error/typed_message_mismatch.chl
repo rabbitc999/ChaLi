@@ -5,5 +5,5 @@ import std::message;
 void main() {
     std::message::sendThread<int64>(std::thread::current(), 4);
     String value = std::message::receiveThread<String>();
-    std::lang::println("{}", value);
+    std::core::println("{}", value);
 }

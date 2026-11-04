@@ -115,7 +115,7 @@ std::size_t g_cleanupBase = 0u;
  * 程序**正常停机**（`main` 返回）时由 `EmitGlobalCleanupStatements` 展开成语句，
  * 插在入口 `main` 的每条 `return` 之前。停机时**堆内存整体清空**，所以这里只对实现了
  * `Closeable` 的全局跑一次 `close()` 关掉宿主句柄 —— 不再跑 `drop()`，也不再逐个软释放
- * 堆对象。只在正常停机跑；`std::lang::panic` 之类的异常中止仍然不跑（与 `Drop` 的既有语义一致）。
+ * 堆对象。只在正常停机跑；`std::core::panic` 之类的异常中止仍然不跑（与 `Drop` 的既有语义一致）。
  *
  * 快照必须在函数体全部降级完**之后**才展开成语句：函数体里对全局写的
  * `g.close()` / `drop g;` 会通过 关闭路径标记 改这些项，展开早了会双重关闭。

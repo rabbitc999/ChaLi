@@ -311,11 +311,12 @@ function registerProviders(context, deps) {
           position: { line: position.line, character: position.character },
         }, token, document);
         if (!result) return [];
-        // 协议允许 Location / Location[] / LocationLink[]，`chali lsp` 返回单个 Location。
         const items = Array.isArray(result) ? result : [result];
-        return items
-          .filter((item) => item && item.uri && item.range)
-          .map((item) => new vscode.Location(vscode.Uri.parse(item.uri), toRange(item.range)));
+        return items.flatMap((item) => {
+          const uri = item?.targetUri || item?.uri;
+          const range = item?.targetSelectionRange || item?.range;
+          return uri && range ? [new vscode.Location(vscode.Uri.parse(uri), toRange(range))] : [];
+        });
       },
     }),
 

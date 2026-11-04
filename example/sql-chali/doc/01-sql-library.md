@@ -26,11 +26,11 @@
 ```mc
 import std::sql;
 Database db = Database::sqlite(":memory:");
-if (!db.isOpen()) { std::lang::panic(db.lastError()); }
+if (!db.isOpen()) { std::core::panic(db.lastError()); }
 ResultSet created = db.exec("CREATE TABLE items(id INTEGER PRIMARY KEY, name TEXT)");
 ResultSet inserted = db.exec("INSERT INTO items VALUES(1, " + db.quote("中文 O'Reilly") + ")");
 ResultSet rows = db.exec("SELECT id, name FROM items");
-std::lang::println("{}", rows.render());
+std::core::println("{}", rows.render());
 db.close();
 ```
 

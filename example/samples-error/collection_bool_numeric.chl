@@ -1,1 +1,1 @@
-void main() { std::lang::Set<bool> value = {1}; }
+void main() { std::core::Set<bool> value = {1}; }

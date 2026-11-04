@@ -343,9 +343,8 @@ bool ValidateAnnotations()
         if (!bindTarget(node) || !ValidateJsonFieldAnnotationTarget(node, false)) return false;
         if (node.kind == MNode::StructDecl || node.kind == MNode::InterfaceDecl)
         {
-            const bool json = node.kind == MNode::StructDecl && std::find(node.derives.begin(), node.derives.end(), "Json") != node.derives.end();
             for (int member : N(node.kids[0]).kids)
-                if (!bindTarget(N(member)) || !ValidateJsonFieldAnnotationTarget(N(member), json && N(member).kind == MNode::Field && N(member).type2 != 1)) return false;
+                if (!bindTarget(N(member)) || !ValidateJsonFieldAnnotationTarget(N(member), node.kind == MNode::StructDecl && N(member).kind == MNode::Field && N(member).type2 != 1)) return false;
         }
         else if (node.kind == MNode::EnumDecl && node.kids.size() > 1)
         {

@@ -14,7 +14,7 @@ const library = path.join(work, process.platform === 'win32' ? 'callback.dll' : 
 const host = path.join(work, 'host.c');
 fs.writeFileSync(host, '#include <stdint.h>\n/** @brief 同步调用语言回调。\n * @param function 回调跳板。\n * @param value 输入整数。\n * @return 回调返回值。 */\n#ifdef _WIN32\n__declspec(dllexport)\n#endif\nint64_t hostApply(int64_t (*function)(int64_t),int64_t value){return function(value);}\n');
 const compiled = spawnSync(cc, ['-shared', '-O2', host, '-o', library], { cwd: root, encoding: 'utf8', windowsHide: true });
-assert.equal(compiled.status, 0, compiled.stdout + compiled.stderr);
+assert.equal(compiled.status, 0, compiled.error?.message ?? [compiled.stdout, compiled.stderr].join(''));
 const source = path.join(work, 'main.chl');
 const lines = [
   'import std::thread;',

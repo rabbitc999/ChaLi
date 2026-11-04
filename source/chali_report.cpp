@@ -469,7 +469,7 @@ const std::vector<std::string> &cachedFileLines(const Memory::String &file)
 
 /**
  * @brief 这一行能不能从磁盘上读回来 —— 决定**要不要补"第 N 行"**。
- * 合成文件（`<内建 lang>` 之类）与前处理行映射失效时读不到，这时给行号等于指着空气。
+ * 合成文件（`<内建 std::core>` 之类）与前处理行映射失效时读不到，这时给行号等于指着空气。
  * @param file 源文件路径。
  * @param line 行号（1 基）。
  * @return 读得到返回 true。

@@ -74,7 +74,7 @@ async function testChaLiRun(chali) {
   const { spawnSync } = require('node:child_process');
   const dir = fs.mkdtempSync(path.join(require('./projectTemp').root, 'chali-run-'));
   const file = path.join(dir, 'demo.chl');
-  fs.writeFileSync(file, 'void main() { std::lang::println("run ok"); }\n', 'utf-8');
+  fs.writeFileSync(file, 'void main() { std::core::println("run ok"); }\n', 'utf-8');
   const report = spawnSync(chali, ['--build-info'], { encoding: 'utf-8' });
   check('编译器报告 LLVM 变体', report.status === 0, report.stderr);
   const args = ['run', file];
@@ -95,7 +95,7 @@ function testChaLiFolding() {
     '$macro SHAPE(...items)',       // 0
     '$for v in items',              // 1
     '$for w in items',              // 2
-    'std::lang::println("{}", w);',      // 3
+    'std::core::println("{}", w);',      // 3
     '$end_for',                     // 4
     '$end_for',                     // 5
     '$end_macro',                   // 6
@@ -107,7 +107,7 @@ function testChaLiFolding() {
   check('折叠：内层 for 块', blocks[2].start === 2 && blocks[2].end === 4 && blocks[2].name === 'for 展开');
 
   // 收尾没写完（编辑到一半）：按文件末尾收，块不消失。
-  const half = folding.planFoldingRanges(['$macro X()', 'std::lang::println("x");']);
+  const half = folding.planFoldingRanges(['$macro X()', 'std::core::println("x");']);
   check('折叠：缺 $end_macro 也能折到末尾', half.length === 1 && half[0].end === 1);
 
   // 词面要完整，单行开合不折，多余的收尾不炸。
@@ -211,10 +211,9 @@ async function testChaLiLsp(chali) {
   const definition = await client.request('textDocument/definition', {
     textDocument: { uri }, position: declaration,
   });
-  // `chali lsp` 返回单个 Location（协议允许单个或数组），两种都归一。
-  const locations = Array.isArray(definition) ? definition : definition ? [definition] : [];
-  check('跳转定义落在声明行',
-    locations.length > 0 && locations[0].range.start.line === 1, JSON.stringify(definition));
+  const link = Array.isArray(definition) ? definition[0] : undefined;
+  check('定义链接指向当前文件的声明行', link?.targetUri === uri
+    && link.targetSelectionRange?.start.line === 1, JSON.stringify(definition));
 
   const symbols = await client.request('textDocument/documentSymbol', { textDocument: { uri } });
   check('大纲含 main 与 value',

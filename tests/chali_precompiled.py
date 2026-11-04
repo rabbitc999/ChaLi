@@ -39,6 +39,11 @@ def main():
         (work / '.chali').write_text('blocked cache directory', encoding='utf-8')
         cases = [
             'void main(){println("embedded standard unit");}',
+            'import std::core;\nvoid main(){std::core::String qualified="core";'
+            'String implicit=qualified;std::core::List<String> items;items.push(implicit);'
+            'assert(items[0]=="core");}',
+            'import std::big_number;\nvoid main(){BigInteger value = BigInteger("9000000000000000000") + BigInteger(7);'
+            'assert(value.toString()=="9000000000000000007");}',
             'void main(){List<int64> a;a.push(4);a.push(5);assert(a[0]+a[1]==9);}',
             'import std::parse;\nvoid main(){assert(std::parse::Parse::parseInt64("42").unwrap()==42);}',
             '$macro twice(n)\nn+n\n$end_macro\nint64 calls=0;int64 next(){calls=calls+1;return 3;}void main(){assert($twice(next())==6 && calls==1);}',
@@ -61,7 +66,7 @@ def main():
                 results.append(result.stdout)
             assert results[0] == results[1], (index, results)
         for module in sorted((ROOT / 'source/std').glob('*.chl')):
-            if module.stem == 'lang':
+            if module.stem == 'core':
                 continue
             source = work / 'import.chl'
             source.write_text('import std::' + module.stem + ';\nvoid main(){}\n', encoding='utf-8')
@@ -70,7 +75,9 @@ def main():
             assert checked.returncode == 0 and '标准库预编译：命中' in checked.stderr, (module.name, checked)
             modules = re.search(r'标准模块二进制：(\d+) 命中，(\d+) 源码解析', checked.stderr)
             assert modules and int(modules[1]) >= 1 and int(modules[2]) == 0, (module.name, checked.stderr)
-            assert '标准模块二进制命中：std::' + module.stem in checked.stderr, checked.stderr
+            # std::core 预加载大数字模块，后者已在核心单元中恢复。
+            if module.stem != 'big_number':
+                assert '标准模块二进制命中：std::' + module.stem in checked.stderr, (module.name, checked.stderr)
             assert re.search(r'标准模板二进制：[1-9]\d* 命中，0 源码收集', checked.stderr), (module.name, checked.stderr)
         (work / 'middle.chl').write_text('module middle;\nimport std::parse;\n'
             'struct Record{int64 value;};\nint64 number(){return std::parse::Parse::parseInt64("42").unwrap();}\n', encoding='utf-8')
@@ -94,7 +101,16 @@ def main():
                     assert re.search(r'标准模块二进制：[1-9]\d* 命中，0 源码解析', result.stderr), result.stderr
                 values.append(result.stdout)
             assert values == ['mixed modules\n', 'mixed modules\n'], values
-        for statement in ('int64 value="wrong";', 'std::lang::__std_eprint("private");'):
+        for old_spelling in ('import std::lang;\nvoid main(){}',
+                             'void main(){std::lang::String value="legacy";}'):
+            source.write_text(old_spelling + '\n', encoding='utf-8')
+            for extra in ([], ['--no-stdlib-cache']):
+                rejected = subprocess.run([str(isolated), 'check', str(source), *extra], cwd=work,
+                                          env=env, capture_output=True, encoding='utf-8', timeout=180)
+                assert rejected.returncode != 0, rejected
+                if old_spelling.startswith('import'):
+                    assert 'std::lang' in rejected.stderr, rejected
+        for statement in ('int64 value="wrong";', 'std::core::__std_eprint("private");'):
             source.write_text('void main(){' + statement + '}\n', encoding='utf-8')
             failures = []
             for extra in ([], ['--no-stdlib-cache']):

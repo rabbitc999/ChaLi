@@ -212,7 +212,7 @@ void main()
     String token;
     token.code = 7;
     String copied = echo<String>(token);
-    std::lang::String label = echo<std::lang::String>("标签");
+    std::core::String label = echo<std::core::String>("标签");
     println("{} {}", copied.code, label);
 }
 ```
@@ -227,14 +227,16 @@ Containers, tuples, references and function types preserve the source of their c
 
 ### Derivation is checked for each concrete instance
 
-A derive directive on a generic type does not mean every T supports that operation. The compiler checks the fields after the concrete arguments are known.
+A member macro in a generic type generates methods for each concrete instance. The compiler checks the fields after the type arguments are known.
 
 <!-- verify-book -->
 ```chali
-#derive(Clone)
+import std::macro;
+
 struct Box<T>
 {
     T value;
+    $std::macro::Clone<Box<T>>(clone);
 }
 
 void main()
@@ -261,7 +263,25 @@ The first five lines define Box and request Clone. The field still has type T; a
 
 The second half selects String. The clone independently owns its text. Changing text.value leaves copiedText.value unchanged, so the second output remains kept. Ordinary copying, explicit cloning and resource transfer retain their usual rules.
 
-A user-defined field type must provide the required Clone protocol. Deriving the outer template does not supply the inner requirement. Modules may each declare Box; each definition retains its own derivation and operator settings. Diagnostics and previews point back to the original directive, and concrete instances are checked separately.
+A user-defined field type must provide the required Clone protocol. Deriving the outer template does not supply the inner requirement. Modules may each declare Box; each definition retains its own derivation and operator settings. Diagnostics and previews point back to the member macro call, and concrete instances are checked separately.
+### Call the same template on two types
+
+The calls infer integer and string types and preserve the respective result types.
+
+<!-- verify-book -->
+```chali
+T identity<T>(T value) {
+    return value;
+}
+void main() {
+    println("{} {}", identity(42), identity("tea"));
+}
+```
+
+```text
+42 tea
+```
+
 ### Summary
 
 Type parameters choose types, constants can determine array shape, constraints permit operations and associated types connect implementation choices to results. These are distinct static relationships rather than interchangeable runtime data.
@@ -333,19 +353,5 @@ void main()
 ```
 
 Step separates a usable integer from absence. branch maps its variants to Continue and Break under Try. addOne extracts 4 and returns Value(5), or propagates Empty into None without performing addition. main verifies both paths. The interface, success type and residual conversion must all agree.
-
-## 18.8 Exercises
-
-1. Identify what each Buffer parameter controls.
-2. How do constraints differ from casts?
-3. Add a branch to a generic return example.
-4. Choose three element types for a generic collection test.
-
-### Answers and checks
-
-1. T selects the element type and N the constant dimension.
-2. Constraints state capabilities; a cast does not implement them.
-3. Ensure the added path returns the declared type.
-4. For example an integer, String and a resource-bearing struct, checking copy and cleanup rules.
 
 Next: [Chapter 19](19-closures.md).

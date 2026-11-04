@@ -31,7 +31,7 @@ def main():
         result = run('''void main() {
             print("stdout");
             assert(eprint("err={2:x}:{1:2F}", 1.25, 255) == 0);
-            std::lang::eprintln(" 中文 {{}} {}", 7);
+            std::core::eprintln(" 中文 {{}} {}", 7);
             String literal = "{unchanged}";
             eprint(literal);
             eprintln();
@@ -103,8 +103,8 @@ def main():
         }''')
         assert not result.stdout and not result.stderr
         for source, reason in [
-            ('void main() { std::lang::__std_eprint("private"); }', 'inline 函数'),
-            ('void main() { std::lang::__std_eprintln("private"); }', 'inline 函数'),
+            ('void main() { std::core::__std_eprint("private"); }', 'inline 函数'),
+            ('void main() { std::core::__std_eprintln("private"); }', 'inline 函数'),
             ('void main() { eprintln("{}", 1, 2); }', '没有被占位符用到'),
             ('import std::io;\nvoid main() { FileStream s = FileStream::open("bad.txt", "wb").take(); s.print("{:bad}", 1); }', '格式仅支持'),
         ]:

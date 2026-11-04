@@ -14,6 +14,8 @@ Choose an explicit entry, then organize cooperating code by responsibility. Star
 
 Pages and configuration have runtime paths. Successful import establishes source availability, while relative application file access also depends on startup location. Record both during directory design to make deployment predictable.
 
+Mutable module globals are private to their declaring module. To publish a read-only value, declare a module constant such as `const int64 DEFAULT_PORT = 8080;`. Importers can write `config::DEFAULT_PORT`. Completion, hover and definition links use the declaration and its documentation comment.
+
 ## 11.2 Module declarations and qualified names
 
 Module declarations give names an owner. Import required modules and qualify names to choose declarations explicitly, especially with identically named types. Do not depend on import order to resolve ambiguity.
@@ -48,7 +50,7 @@ chali.toml records the entry and project options. When opening an existing proje
 
 Distinguish source text, precompiled frontend representation and final machine code. Source supports reading, diagnostics and export. Frontend representation preserves recognized declarations and syntax. Machine code depends on the target and instantiated types. Embedding one layer does not complete all subsequent work.
 
-Version 1.0.12 embeds the std::lang core, optional standard modules and template catalogs as binary assets. Imports restore parsing nodes and template definitions in process, checking the format, source identity and content digest. Distributed compilers do not need the original build directory for these assets, and default standard-library compilation does not read or write a disk standard-library cache.
+Version 1.0.0 embeds the std::core core, optional standard modules and template catalogs as binary assets. Imports restore parsing nodes and template definitions in process, checking the format, source identity and content digest. Distributed compilers do not need the original build directory for these assets, and default standard-library compilation does not read or write a disk standard-library cache.
 
 Concrete generic instantiation, macro expansion, user-program checking and target code generation still take place. For example, `List<int64>` and `List<String>` share an embedded template definition, while the current compilation checks their concrete types and generates target code. The embedded representation is relocatable frontend data, so it does not copy one target's container machine code to another. Source remains embedded for reading, diagnostics, export and parsing fallback when needed.
 
@@ -60,24 +62,30 @@ See the [toolchain reference](../../en/09-toolchain.md) for asset formats, sourc
 
 Document the working directory, external libraries, data files and target platform. Separate checking, example execution and packaging. Maintain generated files through their sources so later regeneration preserves changes.
 
+### Declare a module in source
+
+A single file can declare a module and qualify a function call with it.
+
+<!-- verify-book -->
+```chali
+module book_demo;
+
+int64 answer() {
+    return 42;
+}
+void main() {
+    println("{}", book_demo::answer());
+}
+```
+
+```text
+42
+```
+
 ### Summary
 
 Record source inputs, compiler-owned assets and runtime application files separately. Successful import does not validate a web path, and restored core library data does not mean optional modules and user generic instances are already machine code.
 
 Document the entry, configuration location, working directory, target and external libraries. Macro and reflection mechanisms retain these name and type ownership boundaries even when they generate code.
-
-## 11.5 Exercises
-
-1. Design src and web directories for a student system.
-2. Are source lookup and resource lookup the same?
-3. How do you choose between two Error declarations?
-4. Document project startup requirements.
-
-### Answers and checks
-
-1. Separate entry, HTTP, business, storage and web assets.
-2. No; import configuration and runtime paths govern them separately.
-3. Use a qualified name.
-4. Record the compiler, target, external libraries, configuration and working directory.
 
 Next: [Chapter 22](22-macros.md).

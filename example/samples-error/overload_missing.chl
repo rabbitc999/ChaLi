@@ -11,5 +11,5 @@ int64 size(int64 value) {
 void main() {
     Point p;
     p.x = 1;
-    std::lang::println("{}", size(p));
+    std::core::println("{}", size(p));
 }

@@ -55,7 +55,7 @@ def main():
                         result = self.run_tool([compiler, 'run', path, '--check'])
                         self.assertNotEqual(result.returncode, 0)
                         self.assertTrue(result.stderr)
-                        for expected in {'loop_mismatch': ('std::lang::String', 'int32'), 'loop_scope': ('hidden',), 'index_const': ('const&',)}[name]:
+                        for expected in {'loop_mismatch': ('std::core::String', 'int32'), 'loop_scope': ('hidden',), 'index_const': ('const&',)}[name]:
                             self.assertIn(expected, result.stderr)
         result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(TypeMemoryTests))
         return 0 if result.wasSuccessful() else 1

@@ -463,8 +463,8 @@ _MESSAGES = {
   "已生成 ChaLi 编译器工程：": [
     "Generated ChaLi compiler project: "
   ],
-  " 个文件，lang.chl 来自引用模板）\n": [
-    " files; lang.chl generated from the template)\n"
+  " 个文件，core.chl 来自引用模板）\n": [
+    " files; core.chl generated from the template)\n"
   ],
   "清理完成，共删除 ": [
     "Cleanup complete; removed "
@@ -1285,12 +1285,13 @@ class LanguageServer:
                     continue
                 start = position(document['text'], record['offset'])
                 end = position(document['text'], record['offset'] + len(record['name']))
-                result.append({'name': record['qualified'], 'kind': {'struct':23,'enum':10,'interface':11,'member':8}.get(record['kind'], 6 if record['owner'] else 12), 'location': {'uri': uri, 'range': {'start': start, 'end': end}}, 'containerName': record['module']})
+                result.append({'name': record['qualified'], 'kind': {'struct':23,'enum':10,'interface':11,'member':8,'constant':14}.get(record['kind'], 6 if record['owner'] else 12), 'location': {'uri': uri, 'range': {'start': start, 'end': end}}, 'containerName': record['module']})
         return result
 
     def query(self, method, params):
         if method == 'initialize':
             self.initialized = True
+            self.definition_links = params.get('capabilities', {}).get('textDocument', {}).get('definition', {}).get('linkSupport', False)
             self.workspace_roots = [uri_path(folder['uri']) for folder in params.get('workspaceFolders', []) or []]
             if not self.workspace_roots and params.get('rootUri'):
                 self.workspace_roots = [uri_path(params['rootUri'])]
@@ -1348,7 +1349,7 @@ class LanguageServer:
             qualifier = re.search(r'(.+)(::|\.)[A-Za-z_0-9]*$', expression_name(text,cursor))
             def with_import(item,module):
                 """补全未导入模块的声明时追加独立 import 编辑，保留 module 的首行位置。"""
-                if module not in ('std::lang','std',*imports(text)):
+                if module not in ('std::core','std',*imports(text)):
                     head=tokens(text);insertion=0
                     if head and head[0][0]=='module':
                         insertion=next((t.end() for t in head if t[0]==';'),0)
@@ -1358,7 +1359,7 @@ class LanguageServer:
             if qualifier and qualifier.group(2)=='::':
                 receiver=qualifier.group(1)
                 module=next((m for m in sorted(modules,key=len,reverse=True) if receiver==m or receiver.startswith(m+'::')),None)
-                if module and module not in ('std::lang','std'):
+                if module and module not in ('std::core','std'):
                     api=self.api_index.collect(uri,'import '+module+';\n'+text,self.documents,uri_path)
                     api=[*api, *(r for target in self.api_index.visible_uris for r in self.api_index.symbols.get(target, []))]
             if qualifier:
@@ -1389,9 +1390,9 @@ class LanguageServer:
                                     record.get('kind','function') == 'function' and binding['kind'] == 3 and len(binding['scope']) == 1))
                                for binding in visible)
                 owners = set(completion_names.get(record['name'], ()))
-                if record['module'] != 'std::lang': owners.discard('std::lang::'+record['name'])
+                if record['module'] != 'std::core': owners.discard('std::core::'+record['name'])
                 insertion = record['name'] if qualifier or (len(owners) == 1 and not shadowed) else record['qualified']
-                item={'label': label, 'kind': {'struct':22,'enum':13,'interface':8,'member':5}.get(record.get('kind'),3), 'detail': record['signature'], 'insertText': insertion, 'documentation': {'kind': 'markdown', 'value': record['documentation']}}
+                item={'label': label, 'kind': {'struct':22,'enum':13,'interface':8,'member':5,'constant':21}.get(record.get('kind'),3), 'detail': record['signature'], 'insertText': insertion, 'documentation': {'kind': 'markdown', 'value': record['documentation']}}
                 if qualifier and qualifier.group(2)=='::':with_import(item,record['module'])
                 result.append(item)
             if qualifier and qualifier.group(2)=='::':
@@ -1399,7 +1400,7 @@ class LanguageServer:
             if import_context or qualifier and qualifier.group(2)=='::':
                 prefix=module_prefix.rsplit('::',1)[0]+'::' if '::' in module_prefix else ''
                 choices={m[len(prefix):].split('::')[0] for m in modules if m.startswith(module_prefix) and len(m)>len(prefix)}
-                if import_context and prefix=='std::': choices.discard('lang')
+                if import_context and prefix=='std::': choices.discard('core')
                 if import_context:result=[]
                 result.extend({'label':name,'kind':9,'detail':'模块 '+prefix+name,'insertText':name} for name in sorted(choices))
             elif not qualifier:
@@ -1414,6 +1415,13 @@ class LanguageServer:
             api=[]
         if api and method == 'textDocument/hover':
             return {'contents': {'kind': 'markdown', 'value': '\n\n---\n\n'.join('```chali\n' + r['signature'] + '\n```\n\n' + r['documentation'] for r in api)}, 'range': {'start': position(text, token.start()), 'end': position(text, token.end())}}
+        def definition_result(locations):
+            if not getattr(self, 'definition_links', False):
+                return locations
+            origin = {'start': position(text, token.start()), 'end': position(text, token.end())}
+            return [{'originSelectionRange': origin, 'targetUri': item['uri'],
+                     'targetRange': item['range'], 'targetSelectionRange': item['range']} for item in locations]
+
         if api and method == 'textDocument/definition':
             locations = []
             for r in api:
@@ -1427,7 +1435,7 @@ class LanguageServer:
                     continue
                 locations.append({'uri': target, 'range': {'start': position(source, r['offset']), 'end': position(source, r['offset']+len(r['name']))}})
             if locations:
-                return locations
+                return definition_result(locations)
         if method == 'textDocument/hover' and token[0]=='let':
             following=re.match(r'\s*(?:(?:const|mut)\s*)?&?\s*(\w+)',text[token.end():])
             if following:
@@ -1445,7 +1453,8 @@ class LanguageServer:
             return None
         symbol = candidates[0]
         if method == 'textDocument/definition':
-            return {'uri': uri, 'range': symbol['range']}
+            location = {'uri': uri, 'range': symbol['range']}
+            return definition_result([location]) if getattr(self, 'definition_links', False) else location
         if method == 'textDocument/hover':
             inferred = inferred_type(records, token[0], text, cursor) if re.search(r'\blet\b',symbol['signature']) else ''
             signature = inferred+' '+token[0] if inferred else symbol['signature']

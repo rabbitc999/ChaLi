@@ -1,7 +1,7 @@
 struct BigDecimal { int64 number; };
 void main() {
     BigDecimal local; local.number = 8;
-    std::lang::BigDecimal decimal = std::lang::BigDecimal("7.5");
+    std::big_number::BigDecimal decimal = std::big_number::BigDecimal("7.5");
     Option<BigDecimal> wrapped = Option<BigDecimal>::Value(local);
     assert(wrapped.unwrap().number == 8);
     assert(local.number == 8 && (int64)decimal == 7);

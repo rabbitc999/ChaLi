@@ -24,8 +24,8 @@
 - 普通字符串字面量按内容共享生成期数据，字面量字节只能只读借用，不能直接写入。复制得到的 String 变量保留独立值和自身可变性。
 - 每个非 void 值有默认 `toString()` 和字符串转换，结构体/Set/Map 使用大括号、List/数组使用中括号、元组使用小括号；嵌套字符串转义。用户无参 String toString 与 ImplicitConvert<String> 补齐彼此缺失入口，专用显式转换优先。默认路径不依赖反射，不转移源值；引用和不透明资源不解引用。
 - 整数 match 的静态单值／区间模式重叠发出非致命警告；开闭端点、空区间与完整 64 位精度参与判断，分支顺序与守卫语义保持不变。
-- 枚举分支用 match；错误值使用 Option/Result 及显式传播协议。块表达式可通过 `yield value;` 给出结果；`yield (a, b);` 产生元组；显式 `yield i;` 优先移动内部可写局部变量，外部变量复制，元组中的直接变量逐项应用同一规则。带值退出穿透无值循环并交给最近接收结果的表达式，普通无值退出仍只结束最近循环；`break level N;` 退出第 N 层循环，`break all;` 退出当前函数内全部包围循环，非循环块不计层数且沿途清理。
-- 带值退出写 `yield 值;`；层级退出写 `break level N;` / `break all;` / `break level all;`；堆分配写 `new T;`、`new T(实参);`、`new[n]`。`new T` 赋给引用（`T mut&`），`new[n]` 赋给运行时数组；构造产生的拥有值按作用域自动清理，构造函数 / 工厂重载仍按实参与目标类型选取（不匹配照常报错）。`heap` 分配语法已删除，不再是保留关键字。
+- 枚举分支用 match；错误值使用 Option/Result 及显式传播协议。块表达式可通过 `yield value;` 给出结果；`yield (a, b);` 产生元组；显式 `yield i;` 优先移动内部可写局部变量，外部变量复制，元组中的直接变量逐项应用同一规则。带值退出穿透无值循环并交给最近接收结果的表达式，普通无值退出仍只结束最近循环；`break 标签;` 退出同一函数中包围当前位置的具名循环，沿途清理作用域。
+- 带值退出写 `yield 值;`；具名退出写 `break 标签;`；堆分配写 `new T;`、`new T(实参);`、`new[n]`。`new T` 赋给引用（`T mut&`），`new[n]` 赋给运行时数组；构造产生的拥有值按作用域自动清理，构造函数 / 工厂重载仍按实参与目标类型选取（不匹配照常报错）。`heap` 分配语法已删除，不再是保留关键字。
 
 ## 执行与构建契约
 
@@ -55,6 +55,6 @@ IR 指四元式。日常构建、运行和部署使用 LLVM `O3` 加完整 LTO�
 
 循环结构为 `while`、`loop` 和 `for (... in ...)`。`for-in` / `while` 的值表达式必须包含 `else`，以 `yield` 产生结果；仅含一个值的分支可省略分号。无结果结束或普通 `break` 进入后备分支，`continue` 继续下一轮。
 
-`std::lang::range<T>(a, b)` 为左闭右开，`rangeEq<T>(a, b)` 为闭区间。整数和 char 直接支持；其他类型实现 `NextValue<T>`，契约为 `Option<T> nextValue(T end, bool inclusive)`。`match` 区间仅支持整数和 char，普通自定义值模式使用 `Equal<T>`。
+`std::core::range<T>(a, b)` 为左闭右开，`rangeEq<T>(a, b)` 为闭区间。整数和 char 直接支持；其他类型实现 `NextValue<T>`，契约为 `Option<T> nextValue(T end, bool inclusive)`。`match` 区间仅支持整数和 char，普通自定义值模式使用 `Equal<T>`。
 
 List 字面量使用 `[a, b, c]`，Set 使用 `{a, b, c}`，Map 使用 `{key: value}`。空 `[]` 需要 List 上下文，空 `{}` 需要 Set 或 Map 上下文。字符串、数组与容器保持值语义。 List 使用 ArrayList；Map/Set 在键具有 Hash 时使用哈希存储，否则使用数组存储。自定义键仍需 Equal；Map/Set 的遍历、按位置访问及默认文本不保证顺序。

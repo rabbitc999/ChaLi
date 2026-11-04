@@ -93,7 +93,7 @@ def main():
             "runtime/data_capacity_index.hpp",
              "runtime/chali_pool.c", "runtime/chali_pool.h",
             "runtime/chali_allocator.hpp", "chali_runtime_allocator.hpp",
-            "runtime/ast.cpp", "runtime/ast.hpp", "aot/backend_profile.cpp", "CMakeLists.txt", "std/lang.chl",
+            "runtime/ast.cpp", "runtime/ast.hpp", "aot/backend_profile.cpp", "CMakeLists.txt", "std/core.chl",
             "abi/chali_standard_internal.h", "abi/chali_abi.h", "abi/abi_file.cpp",
             "abi/abi_big_number.cpp", "lztext/lztext.cpp",
             "tools/fetch_dependencies.py", "tools/dependencies.lock.json", "tools/cmake_dependencies.cmake",
@@ -103,7 +103,7 @@ def main():
             ".chali-generator-manifest",
         ]
         required += ["macro/metadata.hpp", "semantics/macro_metadata.cpp", "semantics/macro_type_metadata.cpp",
-                     "semantics/macro_associated_metadata.cpp", "semantics/macro_control_flow.cpp", "semantics/editor_macro_effects.cpp", "semantics/custom_derive.cpp"]
+                     "semantics/macro_associated_metadata.cpp", "semantics/macro_control_flow.cpp", "semantics/editor_macro_effects.cpp", "semantics/operator_switch_ast.cpp", "semantics/json_model.cpp"]
         required += ["runtime/" + name for name in (ROOT / "source/ircode/aot_sources.txt").read_text().splitlines()]
         required += ["runtime/" + path.name for path in (ROOT / "source/ircode").glob("*.hpp") if path.name != "register_core.hpp"]
         required += ["runtime/aot_sources.txt", "toml/toml_source.cpp", "toml/toml_source.hpp"]
@@ -123,8 +123,8 @@ def main():
             raise AssertionError("exported compiler must separate VM and host records")
         if "std::regex" not in (compiler / "RESULT.md").read_text(encoding="utf-8"):
             raise AssertionError("compiler generator must use the requested std::regex lexer")
-        if (compiler / "std/lang.chl").read_bytes() != (ROOT / "source/std/lang.chl").read_bytes():
-            raise AssertionError("compiler lang.chl does not match the referenced language library")
+        if (compiler / "std/core.chl").read_bytes() != (ROOT / "source/std/core.chl").read_bytes():
+            raise AssertionError("compiler core.chl does not match the referenced language library")
         assert not (compiler / "utils.chl").exists()
         assert not (compiler / "reflect.chl").exists()
         # 导出后构建完整编译器并运行 checked AOT/TOML，检查独立单元、相对 include 及静态库链接。
@@ -143,9 +143,9 @@ def main():
         probe = WORK / "export_probe.chl"
         probe.write_text('import std::toml;\n'
                          'interface CountFields{int64 countFields();}\n'
-                         '$macro CountFields<T>() -> member\nint64 countFields(){int64 result=0;\n'
+                         '$macro CountFields<T>(method:ident) -> member\n$implement CountFields;\nint64 method(){int64 result=0;\n'
                          '$for field in $fields<T>()\nresult+=1;\n$end_for\nreturn result;}\n$end_macro\n'
-                         '#derive(CountFields)\nstruct DerivedProbe{int64 number;String text;}\n'
+                         'struct DerivedProbe{int64 number;String text;$CountFields<DerivedProbe>(countFields);}\n'
                          '$macro Example<T:#res, U:b>(a,b)\ncast<T>(a)+cast<T>(b)\n$end_macro\n'
                          '$macro TwiceValue(x:value)\nx+x\n$end_macro\n'
                          '$macro TwiceExpr(x:expr)\nx+x\n$end_macro\n'
@@ -166,13 +166,13 @@ def main():
                          '    assert(($fields<Box<int64>>())[0].sourceLine>0);\n'
                          '    int64 visits=0;loop{visits+=1;$Escape({break;});visits+=100;break;}assert(visits==1);\n'
                          '    println("exported compiler AOT/TOML OK");\n}\n', encoding="utf-8")
-        result = subprocess.run([str(build / EXPORTED_COMPILER), "run", str(probe), "--out", str(WORK / "export_probe")],
+        result = subprocess.run([str(build / EXPORTED_COMPILER), "run", str(probe), "--quiet", "--out", str(WORK / "export_probe")],
                                 cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
         assert result.returncode == 0 and result.stdout == "exported compiler AOT/TOML OK\n" and not result.stderr, result
         aot_probe = WORK / "aot_probe.chl"
         aot_probe.write_text('void main()\n{\n    println("exported AOT entry OK");\n}\n', encoding="utf-8")
         aot_prefix = WORK / "aot_probe"
-        result = subprocess.run([str(build / EXPORTED_COMPILER), "aot", str(aot_probe), "--emit-llvm", "--out", str(aot_prefix)],
+        result = subprocess.run([str(build / EXPORTED_COMPILER), "aot", str(aot_probe), "--quiet", "--emit-llvm", "--out", str(aot_prefix)],
                                 cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
         assert result.returncode == 0 and aot_prefix.with_suffix(".ll").is_file(), result
 

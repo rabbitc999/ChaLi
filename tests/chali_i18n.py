@@ -56,7 +56,7 @@ def main():
     result = execute(compiler, '--lang')
     assert result.returncode == 2, result
     source = WORK / '中日文路径.chl'
-    source.write_text('void main(){std::lang::println("中文 / 日本語 / ChaLi");}\n', encoding='utf-8')
+    source.write_text('void main(){std::core::println("中文 / 日本語 / ChaLi");}\n', encoding='utf-8')
     for language in expected:
         result = execute(compiler, source, '--lang', 'ja', language=language)
         assert result.returncode == 0 and result.stdout == '中文 / 日本語 / ChaLi\n' and (not result.stderr), result

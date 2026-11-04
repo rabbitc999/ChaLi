@@ -1,5 +1,5 @@
 /* 系统断言宏失败：调用写作 `$assert(…)`；`$line` 把**调用点**那一行带进
- * `std::lang::assert`，所以文案里有行号。 */
+ * `std::core::assert`，所以文案里有行号。 */
 module assert_line;
 
 int64 helper(int64 n) {
@@ -8,5 +8,5 @@ int64 helper(int64 n) {
 }
 
 void main() {
-    std::lang::println("{}", helper(-3));
+    std::core::println("{}", helper(-3));
 }

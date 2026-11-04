@@ -120,24 +120,33 @@ New T creates manually allocated storage, optionally with constructor arguments.
 
 Closing, moving and release affect borrows. The compiler can merge known cleanup paths; repeated release is not a test of arbitrary pointer safety. Chapter 23 covers raw storage and unsafe operations.
 
+### Observe block exit order
+
+Compare output from the block, cleanup and outer scope to see when cleanup runs.
+
+<!-- verify-book -->
+```chali
+void main() {
+    {
+        defer {
+            println("cleanup");
+        }
+        println("body");
+    }
+    println("after");
+}
+```
+
+```text
+body
+cleanup
+after
+```
+
 ### Summary
 
 Track registered exit actions separately from the current owner of each resource. A move changes ownership; leaving scope executes exit actions and owning-value cleanup. References do not assume ownership of their sources.
 
 An absence of crashes does not prove correct closure. Verify order, ownership and outcomes on normal and early exits. Chapter 23 extends this reasoning to per-slot initialization and cleanup in raw storage.
-
-## 9.6 Exercises
-
-1. Explain why second is printed before first.
-2. Does a reference field own its source?
-3. How is a Closeable value transferred?
-4. Compare local values and new storage.
-
-### Answers and checks
-
-1. Exit actions run in reverse registration order.
-2. No; the source follows its own lifetime.
-3. Use a valid move and stop using the moved binding.
-4. Owning locals use scope cleanup; manual storage follows its release protocol.
 
 Next: [Chapter 6](06-structs.md).

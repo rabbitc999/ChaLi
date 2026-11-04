@@ -69,22 +69,22 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-421"></a>`enum RegexError : Error` | 复制共享不可变编译模式；匹配状态属于每次调用，最后一个值释放时回收模式。 |
+| 模块 | <a id="symbol-446"></a>`enum RegexError : Error` | 复制共享不可变编译模式；匹配状态属于每次调用，最后一个值释放时回收模式。 |
 | RegexError | `Invalid` | 复制共享不可变编译模式；匹配状态属于每次调用，最后一个值释放时回收模式。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-422"></a>`opcode Regex` | 共享不可变编译模式的 opcode，匹配状态按每次调用独立。 |
+| 模块 | <a id="symbol-447"></a>`opcode Regex` | 共享不可变编译模式的 opcode，匹配状态按每次调用独立。 |
 
 ## 函数索引
 
 | 名称 | 声明 |
 | --- | --- |
 | [RegexError::toString](#api-0) | `String toString()` |
-| [Regex::compile](#api-1) | `static Result<Regex, std::lang::Error> compile(std::lang::String pattern)` |
-| [Regex::fullMatch](#api-2) | `bool fullMatch(std::lang::String text)` |
-| [Regex::contains](#api-3) | `bool contains(std::lang::String text)` |
-| [Regex::find](#api-4) | `Option<int64> find(std::lang::String text)` |
-| [Regex::capture](#api-5) | `std::lang::String capture(std::lang::String text, int64 group)` |
-| [Regex::replaceFirst](#api-6) | `std::lang::String replaceFirst(std::lang::String text, std::lang::String replacement)` |
-| [Regex::replaceAll](#api-7) | `std::lang::String replaceAll(std::lang::String text, std::lang::String replacement)` |
+| [Regex::compile](#api-1) | `static Result<Regex, std::core::Error> compile(std::core::String pattern)` |
+| [Regex::fullMatch](#api-2) | `bool fullMatch(std::core::String text)` |
+| [Regex::contains](#api-3) | `bool contains(std::core::String text)` |
+| [Regex::find](#api-4) | `Option<int64> find(std::core::String text)` |
+| [Regex::capture](#api-5) | `std::core::String capture(std::core::String text, int64 group)` |
+| [Regex::replaceFirst](#api-6) | `std::core::String replaceFirst(std::core::String text, std::core::String replacement)` |
+| [Regex::replaceAll](#api-7) | `std::core::String replaceAll(std::core::String text, std::core::String replacement)` |
 
 <a id="api-0"></a>
 
@@ -131,7 +131,7 @@ obj.toString();
 **声明**
 
 ```chali
-static Result<Regex, std::lang::Error> compile(std::lang::String pattern);
+static Result<Regex, std::core::Error> compile(std::core::String pattern);
 ```
 
 **行为**
@@ -142,11 +142,11 @@ static Result<Regex, std::lang::Error> compile(std::lang::String pattern);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `pattern` | `std::lang::String pattern` | 正则模式 | 无 |
+| `pattern` | `std::core::String pattern` | 正则模式 | 无 |
 
 **返回值**
 
-`Result<Regex, std::lang::Error>`。编译正则模式；失败返回 Err(Invalid)。
+`Result<Regex, std::core::Error>`。编译正则模式；失败返回 Err(Invalid)。
 
 **错误与边界**
 
@@ -169,7 +169,7 @@ std::regex::Regex::compile(pattern);
 **声明**
 
 ```chali
-bool fullMatch(std::lang::String text);
+bool fullMatch(std::core::String text);
 ```
 
 **行为**
@@ -180,7 +180,7 @@ bool fullMatch(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
@@ -207,7 +207,7 @@ obj.fullMatch(text);
 **声明**
 
 ```chali
-bool contains(std::lang::String text);
+bool contains(std::core::String text);
 ```
 
 **行为**
@@ -218,7 +218,7 @@ bool contains(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
@@ -245,7 +245,7 @@ obj.contains(text);
 **声明**
 
 ```chali
-Option<int64> find(std::lang::String text);
+Option<int64> find(std::core::String text);
 ```
 
 **行为**
@@ -256,7 +256,7 @@ Option<int64> find(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
@@ -283,7 +283,7 @@ obj.find(text);
 **声明**
 
 ```chali
-std::lang::String capture(std::lang::String text, int64 group);
+std::core::String capture(std::core::String text, int64 group);
 ```
 
 **行为**
@@ -294,12 +294,12 @@ std::lang::String capture(std::lang::String text, int64 group);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 | `group` | `int64 group` | 捕获组编号，0 为完整匹配 | 无 |
 
 **返回值**
 
-`std::lang::String`。提取首次匹配的 group 捕获组。
+`std::core::String`。提取首次匹配的 group 捕获组。
 
 **错误与边界**
 
@@ -322,7 +322,7 @@ obj.capture(text, group);
 **声明**
 
 ```chali
-std::lang::String replaceFirst(std::lang::String text, std::lang::String replacement);
+std::core::String replaceFirst(std::core::String text, std::core::String replacement);
 ```
 
 **行为**
@@ -333,12 +333,12 @@ std::lang::String replaceFirst(std::lang::String text, std::lang::String replace
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `replacement` | `std::lang::String replacement` | 正则替换文本 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `replacement` | `std::core::String replacement` | 正则替换文本 | 无 |
 
 **返回值**
 
-`std::lang::String`。替换首次正则匹配。
+`std::core::String`。替换首次正则匹配。
 
 **错误与边界**
 
@@ -361,7 +361,7 @@ obj.replaceFirst(text, replacement);
 **声明**
 
 ```chali
-std::lang::String replaceAll(std::lang::String text, std::lang::String replacement);
+std::core::String replaceAll(std::core::String text, std::core::String replacement);
 ```
 
 **行为**
@@ -372,12 +372,12 @@ std::lang::String replaceAll(std::lang::String text, std::lang::String replaceme
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `replacement` | `std::lang::String replacement` | 正则替换文本 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `replacement` | `std::core::String replacement` | 正则替换文本 | 无 |
 
 **返回值**
 
-`std::lang::String`。替换全部正则匹配。
+`std::core::String`。替换全部正则匹配。
 
 **错误与边界**
 

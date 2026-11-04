@@ -32,7 +32,7 @@ function fixture(buffered = true, external = false, content = 'hello') {
 /** 核对类型与堆边界，并用适配器证明只写载荷且不执行目标表达式。 */
 async function main() {
   assert.equal(encodeStringAssignment(binding,layout,'"中文"').bytes.length,6);
-  assert.equal(encodeStringAssignment({...binding,type:'std::lang::String'},layout,'"world"').type,'std::lang::String');
+  assert.equal(encodeStringAssignment({...binding,type:'std::core::String'},layout,'"world"').type,'std::core::String');
   for (const text of ['null','12','text','"a"+"b"','"\\ud800"','"\\udfff"',JSON.stringify('a'.repeat(4097))])
     assert.throws(()=>encodeStringAssignment(binding,layout,text));
   for (const changed of [{stringOwner:false},{stringOwner:undefined},{readOnly:true},{type:'String const&'},{type:'custom::String'},{address:false},{nativeStorage:'double'}])

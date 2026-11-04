@@ -1,0 +1,50 @@
+import std::macro;
+
+struct Leaf {
+    int64 number;
+    String text;
+    $std::macro::Equal<Leaf>(leftEqual);
+    $std::macro::Hash<Leaf>(hash);
+    $std::macro::Clone<Leaf>(clone);
+}
+struct Box<T> {
+    T value;
+    $std::macro::Equal<Box<T>>(leftEqual);
+    $std::macro::Hash<Box<T>>(hash);
+    $std::macro::Clone<Box<T>>(clone);
+}
+struct Fraction {
+    float64 value;
+    $std::macro::Equal<Fraction>(leftEqual);
+    $std::macro::Hash<Fraction>(hash);
+}
+enum Choice {
+    Empty, Value(Leaf item, String label, int64 count);
+    $std::macro::Equal<Choice>(leftEqual);
+    $std::macro::Hash<Choice>(hash);
+    $std::macro::Clone<Choice>(clone);
+}
+void main() {
+    Box<Leaf> original;
+    original.value.number = 7;
+    original.value.text = "value";
+    Box<Leaf> duplicate = original.clone();
+    assert(original == duplicate);
+    assert(original.hash(original) == duplicate.hash(duplicate));
+    duplicate.value.text = "different";
+    assert(!(original == duplicate));
+    Fraction positive; positive.value = 0.0;
+    Fraction negative; negative.value = -0.0;
+    assert(positive == negative);
+    assert(positive.hash(positive) == negative.hash(negative));
+    Choice choice = Choice::Value(original.value, "label", 9);
+    Choice copy = choice.clone();
+    assert(choice == copy && choice.hash(choice) == copy.hash(copy));
+    assert(!(choice == Choice::Empty));
+    assert(Choice::Empty.clone() == Choice::Empty);
+    match (copy) {
+        Choice::Value(item, label, count) => { assert(item == original.value && label == "label" && count == 9); }
+        _ => { assert(false); }
+    }
+    println("{} {}", original.value.number, original.value.text);
+}

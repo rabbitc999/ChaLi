@@ -69,10 +69,10 @@ CSV quoting, delimiters and positions OK
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-50"></a>`struct CsvError : Error` | CSV 错误位置从一开始，column 是该行的字节列。 |
-| CsvError | <a id="symbol-51"></a>`int64 line` | 错误所在行号，从 1 开始。 |
-| CsvError | <a id="symbol-52"></a>`int64 column` | 错误所在列号，从 1 开始。 |
-| CsvError | <a id="symbol-53"></a>`String message` | 供用户阅读的错误原因。 |
+| 模块 | <a id="symbol-135"></a>`struct CsvError : Error` | CSV 错误位置从一开始，column 是该行的字节列。 |
+| CsvError | <a id="symbol-136"></a>`int64 line` | 错误所在行号，从 1 开始。 |
+| CsvError | <a id="symbol-137"></a>`int64 column` | 错误所在列号，从 1 开始。 |
+| CsvError | <a id="symbol-138"></a>`String message` | 供用户阅读的错误原因。 |
 
 ## 函数索引
 
@@ -80,8 +80,8 @@ CSV quoting, delimiters and positions OK
 | --- | --- |
 | [CsvError::toString](#api-0) | `String toString()` |
 | [csvError](#api-1) | `CsvError csvError(int64 line, int64 column, String message)` |
-| [parseCsv](#api-2) | `Result<List<List<String>>,std::lang::Error> parseCsv(String text, char delimiter=',')` |
-| [writeCsv](#api-3) | `Result<String,std::lang::Error> writeCsv(List<List<String>> rows, char delimiter=',')` |
+| [parseCsv](#api-2) | `Result<List<List<String>>,std::core::Error> parseCsv(String text, char delimiter=',')` |
+| [writeCsv](#api-3) | `Result<String,std::core::Error> writeCsv(List<List<String>> rows, char delimiter=',')` |
 
 <a id="api-0"></a>
 
@@ -168,7 +168,7 @@ std::csv::csvError(line, column, message);
 **声明**
 
 ```chali
-Result<List<List<String>>,std::lang::Error> parseCsv(String text, char delimiter=',');
+Result<List<List<String>>,std::core::Error> parseCsv(String text, char delimiter=',');
 ```
 
 **行为**
@@ -184,7 +184,7 @@ Result<List<List<String>>,std::lang::Error> parseCsv(String text, char delimiter
 
 **返回值**
 
-`Result<List<List<String>>,std::lang::Error>`。解析 CSV；支持字段内换行和双引号转义，保留空字段与空行。
+`Result<List<List<String>>,std::core::Error>`。解析 CSV；支持字段内换行和双引号转义，保留空字段与空行。
 
 **错误与边界**
 
@@ -207,7 +207,7 @@ std::csv::parseCsv(text, delimiter);
 **声明**
 
 ```chali
-Result<String,std::lang::Error> writeCsv(List<List<String>> rows, char delimiter=',');
+Result<String,std::core::Error> writeCsv(List<List<String>> rows, char delimiter=',');
 ```
 
 **行为**
@@ -223,7 +223,7 @@ Result<String,std::lang::Error> writeCsv(List<List<String>> rows, char delimiter
 
 **返回值**
 
-`Result<String,std::lang::Error>`。输出 CSV，字段需要时加引号；每条记录以 LF 结束。
+`Result<String,std::core::Error>`。输出 CSV，字段需要时加引号；每条记录以 LF 结束。
 
 **错误与边界**
 

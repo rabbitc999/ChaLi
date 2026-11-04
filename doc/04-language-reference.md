@@ -22,7 +22,7 @@
 | 整数字面量 | `42`、`0xFF`、`b1010`、`1u`、`0xffu`、`b_101u` | 小写 `u` 表示无符号，默认 `uint64`；禁止 `-1u` |
 | 浮点字面量 | `3.14`、`1e9`、`1.5f`、`1f` | 无后缀为 `float64`，小写 `f` 后缀为 `float32` |
 | 字符字面量 | `'M'`、`'\n'` | 类型是 `char` |
-| 字符串字面量 | `"hello"` | 类型是 `std::lang::String` |
+| 字符串字面量 | `"hello"` | 类型是 `std::core::String` |
 | 布尔 | `true` / `false` | |
 
 语句以 `;` 结尾，块用 `{ }`。预处理指令以 `%` 开头、宏以 `$` 开头，见 §14。
@@ -57,7 +57,7 @@ assert(buffer.isEmpty() && buffer.capacity() == capacity);
 | 无符号整数 | `uint8` `uint16` `uint32` `uint64` |
 | 浮点 | `float32` `float64` |
 | 其他标量 | `bool` `char` |
-| 字符串 | `String`（即 `std::lang::String`） |
+| 字符串 | `String`（即 `std::core::String`） |
 | 大数 / 高精度 | `BigInteger` `BigDecimal` |
 
 `char` 保存一个 UTF-8 字节，取值范围是 0–255，与 `uint8` 共用 u8 运算及单字节内存读写路径。
@@ -104,7 +104,7 @@ assert(buffer.isEmpty() && buffer.capacity() == capacity);
 | `Option<T>` | 可能有值：`Value(v)` / `None` |
 | `Result<T, E>` | 可能失败：`Ok(v)` / `Err(e)` |
 | `List<T>` `Map<K,V>` `Set<T>` | 内建容器 |
-| `std::lang::Any` | 类型擦除的盒子，用于运行期多态 |
+| `std::core::Any` | 类型擦除的盒子，用于运行期多态 |
 
 ---
 
@@ -155,7 +155,7 @@ void log(String message) { println("{}", message); }
 - 支持重载：按实参类型选。
 - 变长尾参写 `T... items`，配合 `for-in` 或 `std::iter`。
 - `static` 方法是类型级函数，用 `Type::method()` 调。
-- 入口名为 `main`，返回类型为 `void`，参数为空或 `std::lang::List<std::lang::String> arguments`。`void main` 正常完成或执行 `return;` 时，进程退出码为 0；panic 仍以失败退出。
+- 入口名为 `main`，返回类型为 `void`，参数为空或 `std::core::List<std::core::String> arguments`。`void main` 正常完成或执行 `return;` 时，进程退出码为 0；panic 仍以失败退出。
 
 ### 多值返回与泛型元组
 
@@ -462,8 +462,8 @@ match 检查**穷尽性**：漏掉变体是编译错误。`_` 兜底。
 int64 grade(int64 score) {
     match (score) {
         100 => { return 3; }
-        std::lang::rangeEq(90, 99) => { return 2; }
-        std::lang::rangeEq(60, 89) => { return 1; }
+        std::core::rangeEq(90, 99) => { return 2; }
+        std::core::rangeEq(60, 89) => { return 1; }
         _ => { return 0; }
     }
     return 0;
@@ -474,8 +474,8 @@ int64 grade(int64 score) {
 
 | 写法 | 含义 |
 | --- | --- |
-| `std::lang::range<T>(a, b)` | `a <= x < b` |
-| `std::lang::rangeEq<T>(a, b)` | `a <= x <= b` |
+| `std::core::range<T>(a, b)` | `a <= x < b` |
+| `std::core::rangeEq<T>(a, b)` | `a <= x <= b` |
 
 端点类型能够推导时可以省略 `<T>`。区间模式只适用于整数与 `char`；浮点和 String 的有序条件使用 `if` 守卫。自定义类型实现 `Equal<T>` 后可以作为 match 主体，分支值通过该协议比较；主体只求值一次，分支仍按源码顺序选择。
 
@@ -580,7 +580,7 @@ void main() {
 ```
 
 `TypeB<String>` 的字段会成为 `TypeA<String, TypeC>`；`TypeB<int64>` 得到独立的布局、方法与静态字段。
-同一模板与相同的归一化类型实参复用实例，例如 `String` 与 `std::lang::String` 不会重复生成；唯一的导入类型名称与其模块限定名称也复用同一实例。
+同一模板与相同的归一化类型实参复用实例，例如 `String` 与 `std::core::String` 不会重复生成；唯一的导入类型名称与其模块限定名称也复用同一实例。
 可以继续嵌套、交换参数位置，也可以把实例用于泛型函数、接口约束、枚举载荷、容器、元组、函数值和引用。
 方法里的 `item.first`、`item = value`、`&item` 与显式 `self.item` 使用相同的字段布局和所有权规则。
 
@@ -704,7 +704,7 @@ void main() {
 
 `Copy<T>` 的签名为 `T copy();`，用于显式返回独立副本。例如 `struct Packet: Copy<Packet> { String text; Packet copy() { return self; } };`。方法中的 `return self` 沿用现有值语义，字符串、拥有字段和数组独立复制；裸引用字段仍然是借用，不延长来源寿命。`DynamicArray<T>` 实现 `Copy<DynamicArray<T>>`，保留副本的长度和容量。
 
-泛型函数可写 `T duplicate<T: Copy<T>>(T const& value) { return value.copy(); }`，接口引用也可调用 `copy()`。类型需显式声明实现接口；仅仅有同名方法不会自动满足泛型约束。该接口不改变普通赋值和按值传参，不作为隐式复制资格标记，也不覆盖 `#NonCopyable` 或 `Closeable` 的复制禁令。`Copy<T>` 与 `#NonCopyable` 互斥：直接实现、经接口继承和宿主 `impl` 均检查；实现 `Closeable` 自动获得不可复制标记，也不能同时实现 `Copy<T>`，即使 `copy()` 返回新建对象也会被拒绝。现有 `Clone<T>::clone()` 保持原有行为，`#derive` 的支持项保持原样。
+泛型函数可写 `T duplicate<T: Copy<T>>(T const& value) { return value.copy(); }`，接口引用也可调用 `copy()`。类型需显式声明实现接口；仅仅有同名方法不会自动满足泛型约束。该接口不改变普通赋值和按值传参，不作为隐式复制资格标记，也不覆盖 `#NonCopyable` 或 `Closeable` 的复制禁令。`Copy<T>` 与 `#NonCopyable` 互斥：直接实现、经接口继承和宿主 `impl` 均检查；实现 `Closeable` 自动获得不可复制标记，也不能同时实现 `Copy<T>`，即使 `copy()` 返回新建对象也会被拒绝。现有 `Clone<T>::clone()` 保持原有行为。
 
 ## 12. 模块与导入
 
@@ -716,7 +716,7 @@ import std::text;
 
 - 模块用 `module 名字::子名字;` 声明，通常放在文件首行。用户文件省略声明时属于 `program` 模块，可用 `program::名字` 限定引用。
 - `import` 后可写完整限定名，也可使用唯一可见的短名；同名冲突时使用限定名明确归属。
-- 核心模块 `std::lang`（`println` / `format` / `assert` / `len` / `Any` …）自动加载，无需 `import`。
+- 核心模块 `std::core`（`println` / `format` / `assert` / `len` / `Any` …）自动加载，无需 `import`。
 - 可见性、导出与跨模块泛型见 [`example/samples/import_names.chl`](../example/samples/import_names.chl)。
 
 ---
@@ -825,8 +825,7 @@ opcode FileHandle {
 方法可读取 `self.opcode` 并将其传给胶水。该内部句柄仅允许在声明模块内访问，创建后只读，
 不能赋值、复合赋值或取得可写引用。反射沿用 `@Reflect` 暴露规则，可读取 opcode 对象及公开字段，
 但排除内部 `opcode` 句柄。语言服务不提示该内部句柄。这套机制不改变字符串与数组的值语义。
-`String`、`BigInteger`、`BigDecimal`、`File` 和 `Process` 均由 `std::lang` 中的
-`opcode` 声明定义，前端不为它们保留独立的 `Kind` 枚举项。`string` 不是 `String` 的类型别名。
+`String`、`File` 和 `Process` 由 `std::core` 中的 `opcode` 声明；`BigInteger` 和 `BigDecimal` 则由 `std::big_number` 中的 `opcode` 声明定义，前端不为它们保留独立的 `Kind` 枚举项。`string` 不是 `String` 的类型别名。
 
 ```chali
 #abi("C", "./native.dll", "c_function")
@@ -839,7 +838,7 @@ int64 c_function(int64 x);
 
 `unsafe { ... }` 为当前块授予原始操作权限；`unsafe T f(...)` 声明调用前置条件，安全上下文不能直接调用，也不能把它转换成安全函数值。闭包的函数体不继承创建位置的权限。普通数组、引用和算术检查继续生效。
 
-`std::lang::RawStorage<T>` 持有未构造的容量，`RawPtr<T>` 保存类型化的分配身份与下标；指针副本不延长存储寿命。`initAt`、`takeAt`、`dropAt`、`readAt`、`borrowAt` 和 `relocateNonOverlapping` 必须在 unsafe 上下文使用。公开的 `std::lang::rawSize<T>()` 无需 unsafe，返回当前 ChaLi 值布局的字节数，例如 `rawSize<uint8>()` 为 1，`rawSize<int64>()` 为 8；聚合按语言布局计算。它不表示动态对象的占用，也不等于宿主 C ABI 的 `sizeof`。直接数组、宿主别名及 void 不支持该查询，数组可放进具名结构体。内部 `__rawSize(T)` 与 `__rawAlign(T)` 仍只供 unsafe 内核使用。借出的引用不得超过存储寿命或相应元素生命周期。
+`std::core::RawStorage<T>` 持有未构造的容量，`RawPtr<T>` 保存类型化的分配身份与下标；指针副本不延长存储寿命。`initAt`、`takeAt`、`dropAt`、`readAt`、`borrowAt` 和 `relocateNonOverlapping` 必须在 unsafe 上下文使用。公开的 `std::core::rawSize<T>()` 无需 unsafe，返回当前 ChaLi 值布局的字节数，例如 `rawSize<uint8>()` 为 1，`rawSize<int64>()` 为 8；聚合按语言布局计算。它不表示动态对象的占用，也不等于宿主 C ABI 的 `sizeof`。直接数组、宿主别名及 void 不支持该查询，数组可放进具名结构体。内部 `__rawSize(T)` 与 `__rawAlign(T)` 仍只供 unsafe 内核使用。借出的引用不得超过存储寿命或相应元素生命周期。
 
 `BarePtr<T>` 仅保存逻辑字节地址，底层不检查元素类型或初始化状态。`p + n`、`n + p`、`p - n` 按静态元素大小偏移，`p - q` 返回完整元素距离；地址算术不访问内存。`barePointer`、`pointerFromAddress`、`dereference`、`memcpy` 和 `memset` 要求 unsafe。字节复制／填充的长度按字节计算，保留完整范围与分配存活检查，不更新初始化位图或调用资源清理。非零复制范围不得重叠。详见[原始存储与 C ABI 指令](41-unsafe-abi.md)和[书稿第 25 章](book/25-不安全代码.md)。
 
@@ -947,9 +946,9 @@ int32 useCallbacks<T>(int32 c) {
 
 ## for-in 区间与前进协议
 
-`for (let item in source)`、`for (item in source)` 与显式类型写法共用迭代协议。`std::lang::range(a, b)` 表示左闭右开区间，`std::lang::rangeEq(a, b)` 包含两端；两种调用均可显式指定 `<T>`。
+`for (let item in source)`、`for (item in source)` 与显式类型写法共用迭代协议。`std::core::range(a, b)` 表示左闭右开区间，`std::core::rangeEq(a, b)` 包含两端；两种调用均可显式指定 `<T>`。
 
-整数的八种固定宽度类型和 `char` 直接支持区间计算。`for (uint8 x in std::lang::rangeEq<uint8>(0, 255)) { ... }` 依次产生 256 项；换为 `range<uint8>` 则产生 255 项。两个端点从左到右各求值一次，均须能由 T 表示，包括半开区间的上端点。可折叠整数常量错误在编译期拒绝，动态端点在循环前检查；反向区间报错。`range(a, a)` 为空，`rangeEq(a, a)` 恰好产生一项。到达最大闭上界后直接结束，不计算最大值加一。
+整数的八种固定宽度类型和 `char` 直接支持区间计算。`for (uint8 x in std::core::rangeEq<uint8>(0, 255)) { ... }` 依次产生 256 项；换为 `range<uint8>` 则产生 255 项。两个端点从左到右各求值一次，均须能由 T 表示，包括半开区间的上端点。可折叠整数常量错误在编译期拒绝，动态端点在循环前检查；反向区间报错。`range(a, a)` 为空，`rangeEq(a, a)` 恰好产生一项。到达最大闭上界后直接结束，不计算最大值加一。
 
 其他值类型需要实现 `NextValue<T>`，其方法为 `Option<T> nextValue(T end, bool inclusive)`。区间独立保存起始游标与终点；每轮在游标上调用该方法，由实现产生下一项、推进接收者状态并判断是否结束，结束时返回 None。自定义前进协议用于遍历；match 的 range / rangeEq 模式仅支持整数和 char。
 
@@ -960,7 +959,7 @@ int32 useCallbacks<T>(int32 c) {
 ```chali
 void main()
 {
-    int64 first = for (let value in std::lang::range(1, 8))
+    int64 first = for (let value in std::core::range(1, 8))
     {
         if (value % 2 == 0)
         {
@@ -975,31 +974,26 @@ void main()
 
 所有可达结果分支按接收位置检查类型。String、数组与可复制聚合的结果保持值语义；不可复制 opcode 可以通过新建结果或显式 move 转移所有权，结果在循环局部资源清理之前保存。
 
-## 指定层数退出循环
+## 关闭当前文件的命名检查
 
-`break level N;` 从当前循环算起，退出第 N 层包围当前位置的循环，并从目标循环之后继续；`break level 1;` 等价于 `break;`。`break all;` 退出当前函数内所有包围当前位置的循环，从最外层循环之后继续；`break level all;` 与 `break all;` 等价。`level` / `all` 只在该语法位置识别，仍可作普通变量名。`break level` 之后必须跟正整数字面量层数或 `all`；`break level foo;`、`break level 0;`、`break level -1;` 均报错。
+在独立一行写 `#NoNamingCheck`，可附加行注释。该指令关闭当前文件的类型、函数、方法和模块命名警告。导入文件与其他警告各自处理。
 
-只计算 `loop`、`while` 和 `for-in`，普通块、赋值块、`if`、`match` 均不计层数。N 必须是正十进制整数字面量，不能使用变量或表达式；零、负数、超出当前嵌套层数以及在循环外使用均报错。退出不能跨越函数或 `fn` 边界。层级退出不携带值，目标若为需要结果的循环表达式则报错，仍应使用 `yield 值;` 提供结果。
+## 按标签退出循环
+
+`break;` 退出最近的循环。可在 `while`、`for-in` 或语句 `loop` 前写标签，用 `break 标签;` 退出该循环。标签在循环体内可见，不能跨函数边界。未知标签和重复的活动标签均报错。退出时从内到外执行 `defer`、`scope(exit)` 与资源清理。表达式需要结果时使用 `yield 值;`。
 
 ```chali
-loop {
-    while (true) {
-        {
-            int64 i = 0;
-            while (i < 10) {
-
-            if (i == 3) { break level 2; }
-
-                i++;
-            }
-        }
+void main() {
+    outer: while (true) {
+        loop { break outer; };
     }
-    // 已退出 for 和 while，仍在 loop 内。
-    break all;
-};
+    println("done");
+}
 ```
 
-跨层退出沿用作用域清理规则，从内到外执行 `defer`、`scope(exit)` 与资源清理，且不执行被跳过的循环后续语句或更新表达式。完整检查见[层级退出示例](../example/samples/break_level.chl)。
+```text
+done
+```
 
 ## 块表达式与插值输出
 
@@ -1104,15 +1098,15 @@ $end_macro
 
 ## 返回控制表达式
 
-`return { ... yield value; };`、`return if ...;`、`return match ...;` 和 `return loop ...;` 先在隐藏结果槽中接收值，再清理作用域并返回。所有结果分支类型必须完全一致。表达式内部的拥有值局部变量（包括 const 绑定）通过 `break` 隐式移动，外部变量复制；引用不能逃逸局部生命周期。禁止嵌套 return 和 break level / break all，仍借用移动来源的延迟清理也会报错。此处的专门规则区别于上面的普通带值退出；详见[声明与返回表达式](29-declaration-sugars.md)。
+`return { ... yield value; };`、`return if ...;`、`return match ...;` 和 `return loop ...;` 先在隐藏结果槽中接收值，再清理作用域并返回。所有结果分支类型必须完全一致。表达式内部的拥有值局部变量（包括 const 绑定）通过 `break` 隐式移动，外部变量复制；引用不能逃逸局部生命周期。禁止嵌套 return 和 按标签退出循环，仍借用移动来源的延迟清理也会报错。此处的专门规则区别于上面的普通带值退出；详见[声明与返回表达式](29-declaration-sugars.md)。
 
 ## 具名函数声明
 
 语句位置可声明 `int64 add(int64 x) { return x + 1; }`，或先声明 `int64 callback(int64 x);` 再赋函数值。返回类型提供检查锚点，默认捕获 const&；块前可显式写 mut、copy 或 move。捕获状态移入声明绑定，借用不能逃逸来源。该语法不进入表达式产生式，见[具名函数规则](29-declaration-sugars.md)。
 
-## #derive 字段派生
+## 成员宏生成的接口实现
 
-在 struct 或 enum 前写 `#derive(Equal, Hash, Clone)`，通过字段和载荷生成受限接口方法。也可用 `#derive(Trait)` 选择同模块同名接口与 `$macro Trait<T>() -> member`，或用模块限定名选择导入定义。签名匹配的方法公开，辅助方法保持卫生；不生成布局字段或覆盖已有同签名方法。嵌套字段须满足对应协议，禁止派生 Drop 或 Closeable。泛型类型按具体实例展开，生成代码仍执行通常的类型、借用和资源检查，见[派生规则](29-declaration-sugars.md)。
+`-> member` 宏可通过 `$implement 接口;` 为宿主结构体或枚举添加接口。接口可使用宏的具体类型实参，生成的方法按普通接口规则检查。见[声明语法](29-declaration-sugars.md)。
 
 ## #borrow 与 #static 生命周期契约
 

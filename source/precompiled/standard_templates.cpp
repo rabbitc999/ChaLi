@@ -192,7 +192,7 @@ int loadTemplate(const Memory::String &module, const preprocess::LineOrigin &ori
         auto restored = record;
         if (!RebindTemplateReferences(restored.declaration, references, restored.nameOffset)) continue;
         bool valid = true;
-        for (auto *field : { &restored.requiredQualifier, &restored.derivation, &restored.operatorSwitches })
+        for (auto *field : { &restored.requiredQualifier, &restored.operatorSwitches })
         {
             std::size_t ignored = 0;
             if (!RebindTemplateReferences(*field, references, ignored)) valid = false;

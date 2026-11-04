@@ -37,7 +37,7 @@ int FindMacroSyntaxConstant(const MNode &reference, std::string &error, int *dec
     const bool qualified = reference.kind == MNode::EnumCtor;
     const auto name = qualified ? reference.s2 : reference.s;
     const auto module = qualified ? reference.s : reference.module;
-    Memory::Set<Memory::String> visible{ "std::lang" };
+    Memory::Set<Memory::String> visible{ "std::core" };
     for (const int root : g_top)
         if (N(root).kind == MNode::ImportDecl && N(root).module == reference.module) visible.insert(N(root).s);
     int result = -1, best = 0;

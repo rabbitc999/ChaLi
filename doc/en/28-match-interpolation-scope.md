@@ -21,7 +21,7 @@ int64 f = 3;
 String text = f"value={f + 1}, nested={f"inner {f}"}, \{literal\}";
 ```
 
-Only f immediately followed by a double quote starts interpolation; f remains an ordinary identifier elsewhere. Each brace pair contains a complete expression. Arguments evaluate once from left to right. Lexical normalization separates text and expression boundaries, while the generated parser reads the expressions. Formatting uses the existing `std::lang::format` semantics and runtime implementation.
+Only f immediately followed by a double quote starts interpolation; f remains an ordinary identifier elsewhere. Each brace pair contains a complete expression. Arguments evaluate once from left to right. Lexical normalization separates text and expression boundaries, while the generated parser reads the expressions. Formatting uses the existing `std::core::format` semantics and runtime implementation.
 
 Ordinary string escapes apply; `\{` and `\}` produce literal braces. Ordinary strings do not interpolate. Nested interpolated strings expand from the inside out. Empty expressions and unmatched delimiters are compile errors.
 

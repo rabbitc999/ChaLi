@@ -10,7 +10,7 @@ Memory::String M_ReturnControlProblem(int id, Memory::Set<int> &visited)
     const auto node = g_nodes[id];
     if (node.kind == MNode::Lambda || node.kind == MNode::FuncDef) return {};
     if (node.kind == MNode::Return) return "return 表达式内部禁止嵌套 return；请使用 yield 值;";
-    if (node.kind == MNode::Break && node.i != 0) return "return 表达式内部禁止 break #level 跳转";
+    if (node.kind == MNode::Break && !node.s2.empty()) return "return 表达式内部禁止按循环标签退出";
     if (node.kind == MNode::Try) return "return 表达式内部禁止使用会提前返回的 ?；请显式匹配并使用 yield 值;";
     if (node.kind == MNode::Block)
     {

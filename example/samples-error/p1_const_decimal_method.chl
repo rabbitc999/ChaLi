@@ -1,1 +1,1 @@
-void main(){std::lang::BigDecimal source=std::lang::BigDecimal(1); const std::lang::BigDecimal frozen=source; frozen.setPrecision(5);}
+void main(){std::big_number::BigDecimal source=std::big_number::BigDecimal(1); const std::big_number::BigDecimal frozen=source; frozen.setPrecision(5);}

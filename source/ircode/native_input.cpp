@@ -168,11 +168,11 @@ bool standardInputIsInteractive()
 }
 
 /**
- * @brief `__std_pause() -> 0`：调试用"临时停一下"，等到一行输入再继续（`std::lang::pause()` 降到它）。
+ * @brief `__std_pause() -> 0`：调试用"临时停一下"，等到一行输入再继续（`std::core::pause()` 降到它）。
  *
  * **只在交互式终端里真的停**：标准输入不是终端（重定向、管道、CI、嵌入式宿主）时立刻返回，
  * 所以回归样例和自动化跑批不会被它挂住。停下时提示走 stderr，不污染程序的 stdout；
- * 读到的内容直接丢弃（它是"按回车继续"，不是数据输入——要数据请用 `std::lang::inputLine`）。
+ * 读到的内容直接丢弃（它是"按回车继续"，不是数据输入——要数据请用 `std::core::inputLine`）。
  * @retval 封装为原生值的运行时结果。
  */
 Slot pauseForDebug(NativeContext &, const Memory::Vector<Slot> &)
@@ -219,7 +219,7 @@ Slot inputInt(NativeContext &ctx, const Memory::Vector<Slot> &)
     const auto parsed = std::from_chars(text.data(), text.data() + text.size(), value, 10);
     if (parsed.ec != std::errc() || parsed.ptr != text.data() + text.size())
     {
-        ctx.error = "std::lang::inputInt 读到的不是合法 int：\"" + text + "\"";
+        ctx.error = "std::core::inputInt 读到的不是合法 int：\"" + text + "\"";
         return Slot::fromInt(0);
     }
     return Slot::fromInt(value);
@@ -238,7 +238,7 @@ Slot inputUInt(NativeContext &ctx, const Memory::Vector<Slot> &)
     const auto parsed = std::from_chars(text.data(), text.data() + text.size(), value, 10);
     if (parsed.ec != std::errc() || parsed.ptr != text.data() + text.size())
     {
-        ctx.error = "std::lang::inputUInt 读到的不是合法 uint：\"" + text + "\"";
+        ctx.error = "std::core::inputUInt 读到的不是合法 uint：\"" + text + "\"";
         return Slot::fromInt(0);
     }
     return Slot::fromInt(static_cast<std::int64_t>(value));
@@ -258,7 +258,7 @@ Slot inputFloat(NativeContext &ctx, const Memory::Vector<Slot> &)
     const double value = std::strtod(text.c_str(), &end);
     if (errno == ERANGE || end != text.c_str() + text.size() || !std::isfinite(value))
     {
-        ctx.error = "std::lang::inputFloat 读到的不是有限浮点数：\"" + text + "\"";
+        ctx.error = "std::core::inputFloat 读到的不是有限浮点数：\"" + text + "\"";
         return Slot::fromDouble(0.0);
     }
     return Slot::fromDouble(value);
@@ -275,7 +275,7 @@ Slot inputBool(NativeContext &ctx, const Memory::Vector<Slot> &)
     if (!takeInput(ctx, "inputBool", &text)) return Slot::fromInt(0);
     if (text == "true") return Slot::fromInt(1);
     if (text == "false") return Slot::fromInt(0);
-    ctx.error = "std::lang::inputBool 只接受 true 或 false，实际为：\"" + text + "\"";
+    ctx.error = "std::core::inputBool 只接受 true 或 false，实际为：\"" + text + "\"";
     return Slot::fromInt(0);
 }
 

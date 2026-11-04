@@ -3,7 +3,7 @@
 """把 ChaLi 标准库 .chl 源码 + 生成器运行时资产内嵌进编译器。
 
 读取（路径都以本项目根为基准）：
-  * lang.chl、std/*.chl —— 一张
+  * core.chl、std/*.chl —— 一张
     {模块名 → 源码} 静态表（加载器 chali_module.hpp 先查它，命中就不读文件）；
   * 生成独立程序要用的运行时资产（stackvm 独立模块、胶水、C
     分配器、大数后端）—— 一张 {仓库相对路径 → 源码} 静态表。独立编译器生成器读磁盘失败时
@@ -268,7 +268,9 @@ GENERATOR_ASSETS += ["ipage/LICENSE"]
 
 # 胶水接口及实现作为同一组资产导出，固定清单不能遗漏独立编译单元。
 GENERATOR_ASSETS += ["generic/standard_templates.cpp", "precompiled/standard_templates.cpp"]
-GENERATOR_ASSETS += ["chali_temp.hpp", "chali_temp.cpp", "chali_precompiled.hpp", "chali_precompiled.cpp", "semantics/editor_macro_effects.cpp", "semantics/custom_derive.cpp", "semantics/standard_module_units.cpp"]
+GENERATOR_ASSETS += ["chali_temp.hpp", "chali_temp.cpp", "chali_precompiled.hpp", "chali_precompiled.cpp",
+                     "semantics/editor_macro_effects.cpp", "semantics/standard_module_units.cpp",
+                     "semantics/operator_switch_ast.cpp", "semantics/json_model.cpp"]
 if Path(CHALI, "source/chali_precompiled_data.inc").exists():
     GENERATOR_ASSETS.append("chali_precompiled_data.inc")
 GENERATOR_ASSETS += [

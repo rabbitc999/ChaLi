@@ -60,26 +60,26 @@ def inventory():
                'interface ImplicitConvert<T> { T implicitConvert(); };',
                'interface Index<R,T> { R index(T key); };',
                'interface Iterator<R> { Option<R> iterator(int64 index); };']
-    for entry in declarations(path,'module std::lang;\n'+'\n'.join(traits)):
+    for entry in declarations(path,'module std::core;\n'+'\n'.join(traits)):
         entry['intrinsic']=True
         entry['line'] = source.count('\n', 0, source.index('addBuiltin("Copy",')) + 1 if entry['name'] == 'Copy' or entry['owner'] == 'Copy' else 827
-        data['std::lang'].append(entry)
+        data['std::core'].append(entry)
     # 核对手工等价签名与编译器方法/算法登记表，新增内建 API 不得静默遗漏。
     container_source=(ROOT/'source/semantics/aggregate_ownership.cpp').read_text(encoding='utf-8')
     for table,owner in (('kVecMethods','List'),('kSetMethods','Set'),('kMapMethods','Map')):
         block=re.search(table+r'\[\] = \{(.*?)\n\};',container_source,re.S).group(1)
         names=set(re.findall(r'\{\s*"(\w+)"',block))
-        documented={r['name'] for r in data['std::lang'] if r['kind']=='function' and r['owner']==owner}
+        documented={r['name'] for r in data['std::core'] if r['kind']=='function' and r['owner']==owner}
         if names!=documented: raise ValueError('容器内建清单不同步：'+owner+str(names^documented))
     intrinsic_names=set(re.findall(r'Memory::String\("(\w+Value)"\)',source[source.index('algorithmIntrinsics;'):source.index('const Memory::String rangeBuiltinRaw')]))
     documented={r['name'] for r in data['std::algorithms'] if r['kind']=='function'}
     if intrinsic_names-documented: raise ValueError('算法内建缺失：'+str(intrinsic_names-documented))
     # 泛型方法由语义层适配到顶层实现，公开签名独立登记为所属容器的方法。
-    adapters = declarations(ROOT/'source/std/lang.chl', 'module std::lang;\nstruct Result<T,E> { Result<T,F> mapErr<F>(F fn(E) mapper); };\nstruct Option<T> { Result<T,E> okOr<E>(E error); Result<T,E> okOrElse<E>(E fn() factory); };\nstruct BarePtr<T> { unsafe BarePtr<U> castTo<U>(); };')
+    adapters = declarations(ROOT/'source/std/core.chl', 'module std::core;\nstruct Result<T,E> { Result<T,F> mapErr<F>(F fn(E) mapper); };\nstruct Option<T> { Result<T,E> okOr<E>(E error); Result<T,E> okOrElse<E>(E fn() factory); };\nstruct BarePtr<T> { unsafe BarePtr<U> castTo<U>(); };')
     for row in adapters:
         if row['kind']=='function':
             row['intrinsic']=True
-            data['std::lang'].append(row)
+            data['std::core'].append(row)
     return data
 
 
@@ -87,7 +87,7 @@ def inventory():
 def comment_text(comment):
     """将库注释中的正文转成 Markdown 段落。"""
     text = re.sub(r'^/\*+|\*/$', '', comment.strip())
-    text = re.sub(r'^\s*\*\s?', '', text, flags=re.M)
+    text = re.sub(r'^\s*(?:\*|///|//!)\s?', '', text, flags=re.M)
     text = re.sub(r'@brief\s*', '', text)
     text = re.split(r'@param|@return', text)[0].strip()
     return re.sub(r'\s+', ' ', text)
@@ -96,7 +96,7 @@ def comment_text(comment):
 def behavior(entry):
     """合并人工语义说明、同族宿主入口与声明注释。"""
     module, owner, name = entry['module'], entry['owner'], entry['name']
-    if module == 'std::lang' and (owner in ('RawStorage', 'BarePtr') or name in ('initAt','readAt','borrowAt','takeAt','dropAt','relocateNonOverlapping','barePointer','pointerFromAddress','dereference','memcpy','memset')):
+    if module == 'std::core' and (owner in ('RawStorage', 'BarePtr') or name in ('initAt','readAt','borrowAt','takeAt','dropAt','relocateNonOverlapping','barePointer','pointerFromAddress','dereference','memcpy','memset')):
         return comment_text(entry['comment'])
 
     if module == 'std::sql' and not owner and name == 'insert':
@@ -115,7 +115,7 @@ def behavior(entry):
 
     if owner+'::'+name in BIG_BEHAVIOR: return BIG_BEHAVIOR[owner+'::'+name]
     if module=='std::iter' and name in ITER: return ITER[name]
-    if module=='std::linalg' and name=='add': return '返回同维向量/矩阵逐项相加的新值。'
+    if module=='std::linear_algebra' and name=='add': return '返回同维向量/矩阵逐项相加的新值。'
     if owner=='Any' and name=='clear': return '释放盒子拥有的载荷并恢复空状态；保留盒子自身的键身份。'
     if owner=='Any' and name=='set': return '以 value 的值副本和类型编号替换盒子内容。'
     if owner=='Any' and name=='get': return '依据接收上下文取得盒子内的值。'
@@ -179,27 +179,28 @@ def render(data):
                 expected=expected.with_suffix('.txt').read_text(encoding='utf-8'),language='chali')
     module_info={}
     capability={name:group for group,names in {
-        'core': ['std','std::lang','std::reflect'],
+        'core': ['std','std::core','std::reflect'],
         'collections': ['std::array','std::collections','std::iter','std::algorithms'],
         'text': ['std::text','std::utf8','std::encoding','std::parse','std::regex','std::json','std::toml','std::csv','std::binary','std::compress'],
-        'math': ['std::math','std::cas','std::complex','std::linalg','std::numerics','std::numtheory','std::signal','std::random'],
+        'math': ['std::math','std::cas','std::complex','std::linear_algebra','std::numerics','std::number_theory','std::signal','std::random'],
         'io': ['std::io','std::path','std::cli','std::net','std::sql','std::process'],
         'concurrency': ['std::concurrency','std::thread','std::message','std::event'],
-        'system': ['std::memory','std::clock','std::datetime','std::probe'],
+        'system': ['std::memory','std::clock','std::date_time','std::probe'],
     }.items() for name in names}
     index=['# 库函数 API 参考手册', '', '采用 C/C++ 参考手册常见的组织方式：模块 → 类型 → 函数/重载，逐项列出声明、参数、返回值、行为、边界及调用形式。语法仍为 ChaLi，不是 C++。', '',
-           '覆盖工具链自带的 `std::lang`、`std`、`std::*` 与可选 `std::reflect`；编译器注入的算法和核心容器另有来源标记。`__` 前缀胶水是实现细节，不作为应用 API。底层 C++ 依赖库与宿主 C ABI 见[宿主集成](../08-host-integration.md)。', '',
+           '覆盖工具链自带的 `std::core`、`std`、`std::*` 与可选 `std::reflect`；编译器注入的算法和核心容器另有来源标记。`__` 前缀胶水是实现细节，不作为应用 API。底层 C++ 依赖库与宿主 C ABI 见[宿主集成](../08-host-integration.md)。', '',
            '## 阅读约定', '', '签名中 `static` 使用 `类型::方法`，实例方法使用 `对象.方法`。重载分别编号；泛型参数必须满足源码接口约束。`T`、`U`、`R` 等为类型参数，不能直接作为完整程序的具体类型。内建函数用等价调用签名表示，其参数检查由编译器完成。', '',
            '参数为值时遵循值语义；`const&` 只读借用，`mut&` 可写借用。修改/释放资源会影响依赖它的借用；`const&` 不能调用 `drop`。显式释放统一使用 `value.drop();`，底层释放非幂等；编译器合并已知重复操作，释放后仍不能读取。', '',
            '每项的“调用形式”展示如何排列参数，参数名代表调用者已准备的值，不能单独运行。模块页链接的 `.chl` 是带入口的完整参考代码；有输入、线程、反射或外部服务条件时以示例说明为准。错误条件既包括库显式返回的 Option/Result，也包括断言、宿主检查和借用检查诊断。', '',
-           '## 模块目录', '', '| 模块 | 内容 | 函数重载数 |', '| --- | --- | ---: |']
+           '## 模块目录', '', '| 模块 | 内容 | 函数重载数 | 宏数 |', '| --- | --- | ---: | ---: |']
     for module, records in data.items():
         title, contract=MODULES[module]
         # `__` 前缀是编译器/宿主协议，不是应用 API：既不进参考页，也不进编辑器索引，
         # 否则 LSP 会把 `__Range` 这类内部类型当成可补全的公开符号。
         functions=[r for r in records if r['kind']=='function' and not r['owner'].startswith('__')]
-        index.append(f'| [`{module}`]({filename(module)}) | {title} | {len(functions)} |')
-        lines=[f'# {module} — {title}', '', '[返回库目录](README.md) · [全部符号](symbols.md)', '', '## 引入', '', '```chali', '// std::lang 自动加载' if module=='std::lang' else '// 编译器内建，无需 import std' if module=='std' else 'import '+module+';', '```', '', '## 公共约定与错误边界', '', contract, '']
+        macros=[r for r in records if r['kind']=='macro' and not r['owner'].startswith('__')]
+        index.append(f'| [`{module}`]({filename(module)}) | {title} | {len(functions)} | {len(macros)} |')
+        lines=[f'# {module} — {title}', '', '[返回库目录](README.md) · [全部符号](symbols.md)', '', '## 引入', '', '```chali', '// std::core 自动加载' if module=='std::core' else '// 编译器内建，无需 import std' if module=='std' else 'import '+module+';', '```', '', '## 公共约定与错误边界', '', contract, '']
         example=EXAMPLES.get(module)
         module_info[module]=dict(name=module,title=title,documentation=contract,capability=capability.get(module,'system'),sourceLanguage='zh',examples=([example] if example else [])+SUPPLEMENTAL.get(module,[]))
         lines+=['## 参考代码', '']
@@ -230,13 +231,26 @@ def render(data):
             lines+=['| `list.iter()` / `list.iterMut()` | `listIter(&list)` / `listIterMut(&list)` |','| `list.intoIter()` | `listIntoIter(&list)`，移动元素，源容器清空 |','| `set.iter()` / `map.iter()` | `setIter(&set)` / `mapIter(&map)`，借用快照，来源容器保持不变 |','| `set.intoIter()` / `map.intoIter()` | `setIntoIter(&set)` / `mapIntoIter(&map)`，移动元素，源容器清空 |','| `text.chars()` / `range.intoIter()` | `chars(text)` / `fromRange(range)` |','']
         else:
             lines += ['聚合入口的具体操作参见对应子模块；本页类型/方法的调用形式列在下方。', '']
-        types=[r for r in records if r['kind']!='function' and not r['name'].startswith('__') and not r['owner'].startswith('__')]
+        if macros:
+            lines+=['## 宏定义', '']
+            for r in macros:
+                name=(r['owner']+'::' if r['owner'] else '')+r['name']
+                description=comment_text(r['comment'])
+                symbol_anchor='symbol-'+str(len(symbol_index))
+                lines += [f'<a id="{symbol_anchor}"></a>', '', f'### `{name}`', '',
+                          '```chali', r['signature'], '```', '']
+                if description:
+                    lines += [description, '']
+                symbol_index.append(dict(module=module,name=name,owner=r['owner'],kind='macro',
+                    type='',signature=r['signature'],documentation=description,comment=r['comment'],
+                    parameters=[],source=r['source'],line=r['line'],page=filename(module),anchor=symbol_anchor))
+        types=[r for r in records if r['kind'] not in ('function','macro') and not r['name'].startswith('__') and not r['owner'].startswith('__')]
         if types:
             enum_types={r['name']:r for r in types if r['kind']=='enum'}
             lines+=['## 类型、枚举、常量与字段', '', '公开字段按源码原样列出；句柄和游标字段用于包装器状态，通常通过方法操作。枚举的括号表示变体载荷。', '', '| 所属类型 | 声明 | 说明 |', '| --- | --- | --- |']
             for r in types:
                 if r['name'].startswith('__') or r['owner'].startswith('__'): continue
-                if r['kind'] not in ('struct','enum','interface','opcode','member'): continue
+                if r['kind'] not in ('struct','enum','interface','opcode','member','constant'): continue
                 symbol=dict(r)
                 if r['kind']=='member':
                     if r['owner'] in enum_types:
@@ -253,7 +267,8 @@ def render(data):
                 lines.append('| '+(r['owner'] or '模块')+' | <a id="'+symbol_anchor+'"></a>`'+table_text(r['signature'])+'` | '+table_text(description)+' |')
                 symbol_index.append(dict(module=module,name=(r['owner']+'::' if r['owner'] else '')+symbol['name'],
                     owner=r['owner'],kind=r['kind'],type=symbol.get('type',''),signature=r['signature'],
-                    documentation=description,comment='',parameters=[],source=r['source'],line=r['line'],
+                    documentation=description,comment=r['comment'] if r['kind']=='constant' else '',
+                    parameters=[],source=r['source'],line=r['line'],
                     page=filename(module),anchor=symbol_anchor))
             lines.append('')
         lines+=['## 函数索引', '', '| 名称 | 声明 |', '| --- | --- |']
@@ -289,7 +304,7 @@ def render(data):
             if r['owner'] in ('Set','Map') and r['name']=='remove': return_text='找到并删除返回 1，键不存在返回 0。'
             if r['owner'] in ('Set','Map') and r['name'] in ('has','contains'): return_text='存在返回 1，不存在返回 0。'
             lines+=['', '**返回值**', '', '无返回值。' if result=='void' else f'`{result}`。'+(return_text or ('构造并初始化当前实例。' if not r['result'] else description)), '', '**错误与边界**', '', '遵循本页“公共约定与错误边界”。']
-            assertions=re.findall(r'std::lang::assert\((.*?)(?:\);)',r.get('body',''),re.S)
+            assertions=re.findall(r'std::core::assert\((.*?)(?:\);)',r.get('body',''),re.S)
             for assertion in assertions:
                 lines+=['显式前置检查：`'+re.sub(r'\s+',' ',assertion)+'`。']
             if 'panic(' in r.get('body',''): lines+=['实现包含 panic 分支；调用前应处理空值或失败状态。']
@@ -301,7 +316,7 @@ def render(data):
             owner_decl=next((t['signature'] for t in types if t['kind'] in ('struct','enum','interface','opcode') and t['name']==r['owner']), '')
             owner_type=re.match(r'(?:struct|enum|interface|opcode)\s+(\w+(?:<[^>]+>)?)',owner_decl)
             owner_type=owner_type.group(1) if owner_type else r['owner']
-            prefix='' if module=='std::lang' else module+'::'
+            prefix='' if module=='std::core' else module+'::'
             call=(prefix+owner_type+'::' if r['owner'] and r['signature'].startswith('static ') else 'obj.' if r['owner'] else prefix)+r['name']+type_args+'('+', '.join(p[0] for p in params)+')'
             if r['name']==r['owner']: call='// 构造：'+r['owner']+' obj = new('+', '.join(p[0] for p in params)+')'
             lines += [call+';', '```', '', f'**源码**：[{r["source"]}:{r["line"]}](../../{r["source"]}#L{r["line"]})'+('（编译器内建，签名为等价调用形式）。' if r.get('intrinsic') else '。'), '']

@@ -52,7 +52,7 @@ assert(n == 20);
 
 ## match 区间模式
 
-match 的区间模式使用 `std::lang::range<T>(a,b)`（左闭右开）和 `std::lang::rangeEq<T>(a,b)`（闭区间），仅支持整数与 char。自定义类型实现 `Equal<T>` 后可使用普通值模式；浮点和 String 的上下界判断使用守卫或 if/elif。普通元组表达式保持值语义。
+match 的区间模式使用 `std::core::range<T>(a,b)`（左闭右开）和 `std::core::rangeEq<T>(a,b)`（闭区间），仅支持整数与 char。自定义类型实现 `Equal<T>` 后可使用普通值模式；浮点和 String 的上下界判断使用守卫或 if/elif。普通元组表达式保持值语义。
 
 ## for-in 整数区间
 

@@ -67,7 +67,7 @@ void NormalizeFormattedOutputCall(int id)
     g_nodes[id].kids[1] = values;
     if (errorStream)
     {
-        const int target = M_EnumCtor(M_Name("std::lang"), M_Name(standard == "eprintln" ? "__std_eprintln" : "__std_eprint"), M_List());
+        const int target = M_EnumCtor(M_Name("std::core"), M_Name(standard == "eprintln" ? "__std_eprintln" : "__std_eprint"), M_List());
         g_nodes[target].sourceLine = call.sourceLine;
         g_nodes[target].sourceColumn = call.sourceColumn;
         g_nodes[target].module = call.module;

@@ -35,7 +35,7 @@ def bit_program():
                     code += ['assert(reader.seek(0));', f'List<float{width}> values=reader.readFloat{width}Array({len(values)});']
                 code += ['{int64 i=0;', f'while(i<{len(values)}){{',
                          f'float{width} value=' + ('values[i];' if array else f'reader.readFloat{width}();'),
-                         f'List<uint8> bytes=std::lang::float{width}ToBytes(value,false);',
+                         f'List<uint8> bytes=std::core::float{width}ToBytes(value,false);',
                          f'print("{width}:{endian}:{"array" if array else "scalar"}:{{}}",i);',
                          'int64 j=0;while(j<bytes.len()){print(":{}",(int64)bytes[j]);j=j+1;}println("");i=i+1;}}']
             code += ['assert(reader.remaining()==0);', '}']
@@ -109,11 +109,11 @@ def main():
                           f'{kind.lower()} value=reader.read{kind}();']
                 source = work / 'special.chl'
                 for width in (32, 64):
-                    check = ('assert(std::lang::toInt32(value).unwrap()==(int32)0);' if label == 'negative-zero' else 'assert(std::lang::toInt32(value).isNone());') if width == 32 else 'std::lang::toInt64(value);'
+                    check = ('assert(std::core::toInt32(value).unwrap()==(int32)0);' if label == 'negative-zero' else 'assert(std::core::toInt32(value).isNone());') if width == 32 else 'std::core::toInt64(value);'
                     source.write_text('\n'.join(setup + [check, '}']), encoding='utf-8')
                     result = execute(source, width == 32 or label == 'negative-zero')
                     if width == 64 and label != 'negative-zero':
-                        assert 'std::lang::toInt64：浮点值不是有限数或超出 int64 范围' in result.stderr
+                        assert 'std::core::toInt64：浮点值不是有限数或超出 int64 范围' in result.stderr
                     else:
                         assert not result.stderr, result.stderr
 

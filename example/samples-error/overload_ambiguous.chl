@@ -10,5 +10,5 @@ int64 pick(float64 a, int64 b) {
 }
 
 void main() {
-    std::lang::println("{}", pick(1, 1));
+    std::core::println("{}", pick(1, 1));
 }

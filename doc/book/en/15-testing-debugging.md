@@ -65,16 +65,18 @@ Keep inputs, expected results, and actual diagnostics. Investigate a disagreemen
 
 First distinguish syntax checking, type checking, and runtime assertions. Reduce a failure to the necessary data and functions. Temporary prints can expose an intermediate value; remove them after understanding the problem. Native debugging uses a build with debug information; the [documentation index](../../en/README.md) points to the tools.
 
-## 15.5 Exercises
+### Counterexample: an assertion reports a bad result
 
-1. Test a negative bonus.
-2. Break an expectation and verify the success message disappears.
-3. Add Unicode and empty-text search cases.
-4. Which part of a log tool can be tested without disk access?
+Use a fixed input and an incorrect expectation to see where execution stops. The diagnostic excerpt below uses the compiler’s Chinese language setting.
 
-### Answers and checks
+<!-- verify-book-error: run -->
+```chali
+void main() {
+    int64 total = 7;
+    assert(total == 8);
+}
+```
 
-1. For example, assert that adding minus five to 70 produces 65.
-2. Execution stops at the failed assertion and succeeds again after the fix.
-3. Match exact UTF-8 substrings; a nonempty query in empty text is absent.
-4. The pure search function can receive a literal string; file errors need separate checks.
+```text
+chali aot: panic：assert(x) 的 x 为假
+```

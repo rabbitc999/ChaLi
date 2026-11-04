@@ -247,7 +247,7 @@ std::shared_ptr<MType> RequireAlgorithmList(const Memory::Vector<int> &args, std
     const std::shared_ptr<MType> type = ExprType(args[index]);
     if (!type || !IsContainer(type) || type->name != "vec" || !type->elem)
     {
-        Fail("std::algorithms::" + name + " 的第 " + Memory::toString(index + 1u) + " 个参数必须是 std::lang::List<T>，现在是 " + Describe(type));
+        Fail("std::algorithms::" + name + " 的第 " + Memory::toString(index + 1u) + " 个参数必须是 std::core::List<T>，现在是 " + Describe(type));
         return nullptr;
     }
     return type;
@@ -306,7 +306,7 @@ ast::NodePtr BootstrapAlgorithmCall(const Memory::String &name,
         const auto expected = name == "__bootAlgorithmFold" && index == 1u ? types.front() : ExprType(args[index]);
         values.push_back(LowerArgumentValue(args[index], expected));
     }
-    return ast::Node::call("std::lang::" + specialized, names, values);
+    return ast::Node::call("std::core::" + specialized, names, values);
 }
 
 /**
@@ -372,7 +372,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
         const std::shared_ptr<MType> mapped = callback->elem;
         const int kind = AlgoElementKind(mapped);
         if (kind < 0)
-            return Fail("std::algorithms::map 的回调返回值放不进 std::lang::List：" + Describe(mapped)), Bad();
+            return Fail("std::algorithms::map 的回调返回值放不进 std::core::List：" + Describe(mapped)), Bad();
         return OwnedObjectTempNode(
             BootstrapAlgorithmCall("__bootAlgorithmMap", { element, mapped }, args),
             MakeListType(mapped));
@@ -481,7 +481,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
 }
 
 /**
- * @brief 这个声明落在**编译器内嵌的标准库**里吗（`lang` / `std::*` / 文法登记的标准模块）？
+ * @brief 这个声明落在**编译器内嵌的标准库**里吗（`std::core` / `std::*` / 文法登记的标准模块）？
  *
  * 标准库里那些"只有签名"的宿主函数由 VM 内建提供（`std::thread::wait`、
  * `std::io::__fileTryRead`、`std::memory::__memoryLiveBytes`…），不一定挂在
@@ -491,7 +491,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
 bool IsStandardLibraryModule(const Memory::String &module)
 {
     if (module.empty()) return false;
-    if (module == "std::lang" || module == "std") return true;
+    if (module == "std::core" || module == "std") return true;
     if (module.compare(0u, 5u, "std::") == 0) return true;
     return IsStandardModule(module); /* 文法登记的标准模块 */
 }
@@ -767,7 +767,7 @@ ast::NodePtr LowerCall(int id)
                         && OptionVariants(baseType, &valueVariant, nullptr)
                         && SameType(valueVariant->payloads[0].type, T(M_TypeIntBits(8, 1)))
                         && SameType(indexType, T(M_TypeIntBits(64, 0))))
-                        return ast::Node::call("std::lang::__bootStringByteAtUnwrap",
+                        return ast::Node::call("std::core::__bootStringByteAtUnwrap",
                                                { "address", "index" }, { LowerExpr(source), LowerExpr(byteArgs[0]) });
                 }
             }
@@ -1061,7 +1061,7 @@ ast::NodePtr LowerCall(int id)
             }
             if (methodName == "__isTypeTag")
             {
-                if (node.module != "std::lang") return Fail("内部 Any 类型标签仅供核心库使用；请使用 isType<T>"), Bad();
+                if (node.module != "std::core") return Fail("内部 Any 类型标签仅供核心库使用；请使用 isType<T>"), Bad();
                 if (argIds.size() != 1u) return Fail("内部 Any 类型判断需要一个标签"), Bad();
                 return ast::Node::call("__std_obj_has_tag", { "__chali_o", "__chali_t" },
                                        { receiver, LowerExpr(argIds[0]) });
@@ -1084,12 +1084,12 @@ ast::NodePtr LowerCall(int id)
             {
                 if (!argIds.empty())
                 {
-                    Fail("std::lang::Any." + methodName + "() 不带参数（要存进去用 set）");
+                    Fail("std::core::Any." + methodName + "() 不带参数（要存进去用 set）");
                     return Bad();
                 }
                 if (!g_expectedObjGet)
                 {
-                    Fail("std::lang::Any." + methodName + "() 的类型要从返回值上下文来，例如 `int x = o.getValue();`"
+                    Fail("std::core::Any." + methodName + "() 的类型要从返回值上下文来，例如 `int x = o.getValue();`"
                                                           "（盒子里装着什么是运行期才知道的，所以「取出来当什么用」要写明白）");
                     return Bad();
                 }
@@ -1100,7 +1100,7 @@ ast::NodePtr LowerCall(int id)
                     const MEnumVariantDef *none = nullptr;
                     if (!OptionVariants(target, &some, &none) || some->payloads.empty() || some->payloads[0].type->kind != MType::Ptr)
                     {
-                        Fail("getOptional() 的返回目标必须是 std::lang::Option<T const&> 或 std::lang::Option<T mut&>");
+                        Fail("getOptional() 的返回目标必须是 std::core::Option<T const&> 或 std::core::Option<T mut&>");
                         return Bad();
                     }
                     if (g_freshSink == nullptr)
@@ -1156,7 +1156,7 @@ ast::NodePtr LowerCall(int id)
                 }
                 if (methodName == "getValue" && target->kind == MType::Ptr)
                 {
-                    Fail("引用请使用 std::lang::Any.getReference()，不要使用 getValue()");
+                    Fail("引用请使用 std::core::Any.getReference()，不要使用 getValue()");
                     return Bad();
                 }
                 if (methodName == "getReference" && target->kind == MType::Ptr && !target->readOnly && !CheckMutableReceiver(receiverId)) return Bad();
@@ -1164,7 +1164,7 @@ ast::NodePtr LowerCall(int id)
                 Memory::String why;
                 if (!ObjGetAllowedTags(target, &allowed, &why))
                 {
-                    Fail("std::lang::Any." + methodName + "() 取不出 " + Describe(target) + "：" + why);
+                    Fail("std::core::Any." + methodName + "() 取不出 " + Describe(target) + "：" + why);
                     return Bad();
                 }
                 Memory::Vector<Memory::String> names{ "__chali_o", "__chali_n", "__chali_s", "__chali_f",
@@ -1186,7 +1186,7 @@ ast::NodePtr LowerCall(int id)
                 const char *native = IsInterfacePointer(target) ? "__std_obj_get_ptr" : "__std_obj_get";
                 return ast::Node::call(native, names, values);
             }
-            Fail("std::lang::Any 只有 set / getValue / getReference / getOptional / isEmpty / clear / copy 方法，没有 " + methodName);
+            Fail("std::core::Any 只有 set / getValue / getReference / getOptional / isEmpty / clear / copy 方法，没有 " + methodName);
             return Bad();
         }
         /* ---- 接口引用上的方法：运行期按"胖引用里的类型号"分派到具体实现 ----
@@ -1360,12 +1360,12 @@ ast::NodePtr LowerCall(int id)
     {
         if (callee.s == "print" || callee.s == "println")
             return BuildBracePrint(args, callee.s == "println");
-        /* `std::lang::format("…", 参数…)`：与 `std::lang::print` 共用同一套 `{}` 占位符规则，
+        /* `std::core::format("…", 参数…)`：与 `std::core::print` 共用同一套 `{}` 占位符规则，
          * 区别只在结果 —— 它拼出一个**新串**而不是写输出流。 */
         if (callee.s == "format") return BuildBraceFormat(args);
 
         /*
-         * `std::lang::pause()`：调试用"临时停一下"，等到一行输入再继续。
+         * `std::core::pause()`：调试用"临时停一下"，等到一行输入再继续。
          * 非交互式输入（管道 / CI / 嵌入式宿主）时 VM 直接返回，所以批量跑样例不会挂住。
          * 没参数，返回 0（和 `println` 一样，可以当表达式语句写）。
          */
@@ -1373,14 +1373,14 @@ ast::NodePtr LowerCall(int id)
         {
             if (!args.empty())
             {
-                Fail("std::lang::pause 不接受参数");
+                Fail("std::core::pause 不接受参数");
                 return Bad();
             }
             return ast::Node::call("__std_pause", {}, {});
         }
 
         /*
-         * `std::lang::BigInteger(x)` / `std::lang::BigDecimal(x)`：按名字构造大数。
+         * `std::big_number::BigInteger(x)` / `std::big_number::BigDecimal(x)`：按名字构造大数。
          *
          * 原来靠 `STD_BINT` / `STD_BFLOAT` 两个拼写 token 的专用文法规则；token 删掉之后
          * 在调用点按名字认，并且**复用同一套构造节点**（`M_BigIntCtor` / `M_BigFloatCtor`），
@@ -1390,19 +1390,19 @@ ast::NodePtr LowerCall(int id)
         {
             if (args.size() != 1u)
             {
-                Fail("std::lang::" + callee.s + " 需要一个参数：std::lang::" + callee.s + "(值)");
+                Fail("std::big_number::" + callee.s + " 需要一个参数：std::big_number::" + callee.s + "(值)");
                 return Bad();
             }
             /* 复用**原来的** `M_StdNumberCtor`：它按实参类型派发"从文本 / 整数 / 浮点 /
              * 已有大数"四条路（从已有大数走的是转发而不是重建），与 `bint(x)` 语义一致。 */
-            const int constructed = M_StdNumberCtor(M_Name("std::lang"),
+            const int constructed = M_StdNumberCtor(M_Name("std::big_number"),
                                                     callee.s == "BigInteger" ? 0 : 1, args[0]);
             return LowerExpr(constructed);
         }
         if (callee.s == "address")
         {
             if (args.size() != 1u || RawExprType(args[0])->kind != MType::Ptr)
-                return Fail("std::lang::address 需要一个引用参数"), Bad();
+                return Fail("std::core::address 需要一个引用参数"), Bad();
             if (IsInterfacePointer(RawExprType(args[0])))
                 return ast::Node::call("__std_obj_addr", { "__chali_o" }, { LowerRawExpr(args[0]) });
             // address 的语言结果为 uint64；不能把引用节点的底层类型带进整数运算。
@@ -1412,7 +1412,7 @@ ast::NodePtr LowerCall(int id)
         {
             if (args.size() != 1u || ExprType(args[0])->kind != MType::Char)
             {
-                Fail("std::lang::putChar 只接受 char；整数请显式写 `(char)value`");
+                Fail("std::core::putChar 只接受 char；整数请显式写 `(char)value`");
                 return Bad();
             }
             return ast::Node::call("__std_put_char", { "__chali_char" },
@@ -1422,7 +1422,7 @@ ast::NodePtr LowerCall(int id)
         {
             if (!args.empty())
             {
-                Fail("std::lang::" + callee.s + " 不接受参数");
+                Fail("std::core::" + callee.s + " 不接受参数");
                 return Bad();
             }
             const Memory::Map<Memory::String, Memory::String> natives{
@@ -1434,7 +1434,7 @@ ast::NodePtr LowerCall(int id)
          * `panic(message)`：唯一的不可恢复终止原语，直接降到 StackVM 的 `__std_panic`。
          *
          * `exit(n)` 与内建 `assert(x)` 都已删除 —— 需要断言时用标准库的
-         * `std::lang::assert(condition[, message])`，它自己调 `std::lang::panic`；语言层不再有
+         * `std::core::assert(condition[, message])`，它自己调 `std::core::panic`；语言层不再有
          * 第二条"绕开 panic 直接停机"的路，停机清理因此只有一处入口。
          */
         if (callee.s == "panic")
@@ -1447,7 +1447,7 @@ ast::NodePtr LowerCall(int id)
             const std::shared_ptr<MType> type = ExprType(args[0]);
             if (!type || !IsStandardOpcode(type, "String"))
             {
-                Fail("panic 的参数必须是 std::lang::String，现在给的是 " + Describe(type));
+                Fail("panic 的参数必须是 std::core::String，现在给的是 " + Describe(type));
                 return Bad();
             }
             return ast::Node::call(g_hasDefer ? "__chali_defer_panic" : "__std_panic",
@@ -1498,13 +1498,13 @@ ast::NodePtr LowerCall(int id)
             if (IsStandardOpcode(type, "String")) return LowerExpr(args[0]);
             if (type->kind == MType::Double)
             {
-                /* 完整格式化规则在 std/lang.chl 的 __std_str_of_flt（ChaLi 实现），C 侧只留定长核心。 */
-                return ast::Node::call("std::lang::__std_str_of_flt", { "__chali_v", "__chali_p" },
+                /* 完整格式化规则在 std/core.chl 的 __std_str_of_flt（ChaLi 实现），C 侧只留定长核心。 */
+                return ast::Node::call("std::core::__std_str_of_flt", { "__chali_v", "__chali_p" },
                                        { LowerExpr(args[0]), ast::Node::i(3) });
             }
             if (type->kind == MType::Int || type->kind == MType::Bool)
             {
-                return ast::Node::call("std::lang::__bootStringFromInt", { "__chali_v" },
+                return ast::Node::call("std::core::__bootStringFromInt", { "__chali_v" },
                                        { LowerExpr(args[0]) });
             }
             Fail("str 只能用在 BigInteger / BigDecimal / 整数 / 浮点 / 字符串上，现在给的是 " + Describe(type));
@@ -1519,7 +1519,7 @@ ast::NodePtr LowerCall(int id)
             }
             if (!IsStandardOpcode(ExprType(args[0]), "String") || !IsStandardOpcode(ExprType(args[1]), "String"))
             {
-                Fail("fopen 的路径和模式都必须是 std::lang::String");
+                Fail("fopen 的路径和模式都必须是 std::core::String");
                 return Bad();
             }
             return ast::Node::call(callee.s == "fopen" ? "__std_file_open" : "__std_file_try_open",
@@ -1559,7 +1559,7 @@ ast::NodePtr LowerCall(int id)
             }
             if (!IsStandardOpcode(ExprType(args[0]), "File") || !IsStandardOpcode(ExprType(args[1]), "String"))
             {
-                Fail("fwrite 需要 file 和 std::lang::String 参数");
+                Fail("fwrite 需要 file 和 std::core::String 参数");
                 return Bad();
             }
             return ast::Node::call("__std_file_write", { "__chali_f", "__chali_s" },
@@ -1589,7 +1589,7 @@ ast::NodePtr LowerCall(int id)
             }
             if (!IsStandardOpcode(ExprType(args[0]), "String"))
             {
-                Fail("prun 需要 std::lang::String 参数，现在给的是 " + Describe(ExprType(args[0])));
+                Fail("prun 需要 std::core::String 参数，现在给的是 " + Describe(ExprType(args[0])));
                 return Bad();
             }
             return ast::Node::call("std::process::__processRun", { "__chali_cmd" },
@@ -1619,7 +1619,7 @@ ast::NodePtr LowerCall(int id)
             }
             if (!IsStandardOpcode(ExprType(args[0]), "String"))
             {
-                Fail("psystem 需要 std::lang::String 参数，现在给的是 " + Describe(ExprType(args[0])));
+                Fail("psystem 需要 std::core::String 参数，现在给的是 " + Describe(ExprType(args[0])));
                 return Bad();
             }
             return ast::Node::call("std::process::__system", { "__chali_cmd" },
@@ -1651,7 +1651,7 @@ ast::NodePtr LowerCall(int id)
                 {
                     /* 字符串：直接读取堆上的显式长度头。实参是"造出来的串"时先落地，
                      * 否则 `len(x.str())` 里那个临时串没人释放。 */
-                    return ast::Node::call("std::lang::__bootStringLength", { "__chali_s" },
+                    return ast::Node::call("std::core::__bootStringLength", { "__chali_s" },
                                            { NeedsOwnedTemp(args[0]) ? OwnedStringTemp(args[0]) : LowerExpr(args[0]) });
                 }
                 if (IsContainer(type))
@@ -1712,13 +1712,13 @@ ast::NodePtr LowerCall(int id)
     const auto signature = g_funcs.find(label);
     if (signature == g_funcs.end()) return Fail("内部错误：调用签名不存在 " + label), Bad();
     // 字符串自举仅需要分配、归还和接管地址；直接产生四元式，不进入宿主胶水。
-    if (label == "std::lang::__stringAllocate" || label == "std::lang::__stringRelease"
-        || label == "std::lang::__stringAdopt")
+    if (label == "std::core::__stringAllocate" || label == "std::core::__stringRelease"
+        || label == "std::core::__stringAdopt")
     {
         if (args.size() != 1u) return Fail("字符串存储原语需要一个参数"), Bad();
         const auto value = LowerExpr(args[0]);
-        if (label == "std::lang::__stringAllocate") return ast::Node::alloc(value);
-        if (label == "std::lang::__stringRelease")
+        if (label == "std::core::__stringAllocate") return ast::Node::alloc(value);
+        if (label == "std::core::__stringRelease")
             return ast::Node::sequence({ ast::Node::release(value) }, ast::Node::i(0));
         return value;
     }
@@ -1732,14 +1732,14 @@ ast::NodePtr LowerCall(int id)
     const bool channelTake = transferCall("std::concurrency::__channelTake");
     const bool typedCreate = transferCall("std::thread::createWith");
 
-    /* 共享槽原语是**编译器注入的泛型宿主签名**（`chali_generic.hpp` 里 `module lang` 下
+    /* 共享槽原语是**编译器注入的泛型宿主签名**（`chali_generic.hpp` 里 `module std::core` 下
      * 那四个 `__shared*<T>`），不是用户可见的标准库 API —— `Shared<T>` 这个 struct
-     * 已经搬到 std::concurrency，但这些 `__` 前缀的 ABI 名字仍挂在 std::lang:: 下，改名要与
+     * 已经搬到 std::concurrency，但这些 `__` 前缀的 ABI 名字仍挂在 std::core:: 下，改名要与
      * 注入正文里的声明一起动，别只改一边。 */
-    const bool sharedCreate = transferCall("std::lang::__sharedCreate");
-    const bool sharedGet = transferCall("std::lang::__sharedGet");
-    const bool sharedSet = transferCall("std::lang::__sharedSet");
-    const bool sharedSwap = transferCall("std::lang::__sharedSwap");
+    const bool sharedCreate = transferCall("std::core::__sharedCreate");
+    const bool sharedGet = transferCall("std::core::__sharedGet");
+    const bool sharedSet = transferCall("std::core::__sharedSet");
+    const bool sharedSwap = transferCall("std::core::__sharedSwap");
     if (sendThread || receiveThread || channelSend || mailSend || channelTake || typedCreate || sharedCreate || sharedGet || sharedSet || sharedSwap)
     {
         const std::shared_ptr<MType> type =
@@ -1778,7 +1778,7 @@ ast::NodePtr LowerCall(int id)
             }
         };
         if (!supported(type))
-            return Fail("消息与 std::lang::Shared 不支持 " + Describe(type) + "：请改用标量、字符串、普通值结构体或容器；引用、数组、资源和 std::lang::Any 不能跨线程传递"), Bad();
+            return Fail("消息与 std::core::Shared 不支持 " + Describe(type) + "：请改用标量、字符串、普通值结构体或容器；引用、数组、资源和 std::core::Any 不能跨线程传递"), Bad();
         const int kind = IsStandardOpcode(type, "String") ? 2 :
                          type->kind == MType::Struct      ? 4 :
                          type->kind == MType::Func        ? 0 :
@@ -1822,13 +1822,13 @@ ast::NodePtr LowerCall(int id)
     }
     // 引用迭代租约携带元素布局，绑定到统一 VM 原生操作。
     const auto &sourceName = label;
-    if (sourceName.rfind("std::lang::__algorithmLease__", 0) == 0)
+    if (sourceName.rfind("std::core::__algorithmLease__", 0) == 0)
         return ast::Node::call("__std_iter_lease", { "source" }, { LowerExpr(args[0]) });
-    if (sourceName.rfind("std::lang::__algorithmCompareIndices__", 0) == 0)
-        return ast::Node::call("std::lang::__listStorageCompareIndex", { "source", "left", "right" },
+    if (sourceName.rfind("std::core::__algorithmCompareIndices__", 0) == 0)
+        return ast::Node::call("std::core::__listStorageCompareIndex", { "source", "left", "right" },
                                { LowerExpr(args[0]), LowerExpr(args[1]), LowerExpr(args[2]) });
-    if (sourceName.rfind("std::lang::__algorithmSwap__", 0) == 0)
-        return ast::Node::call("std::lang::__listStorageSwap", { "source", "left", "right" },
+    if (sourceName.rfind("std::core::__algorithmSwap__", 0) == 0)
+        return ast::Node::call("std::core::__listStorageSwap", { "source", "left", "right" },
                                { LowerExpr(args[0]), LowerExpr(args[1]), LowerExpr(args[2]) });
     if (sourceName.rfind("std::iter::__iter", 0) == 0)
     {
@@ -1886,7 +1886,7 @@ ast::NodePtr LowerCall(int id)
         names.push_back(params[index]);
         // 核心枚举内部转送已有借用；标准游标不保存到全局，允许借用跨度在
         // 调用链上继续传播。间接用户回调仍严格检查，不能隐藏来源后逃逸。
-        const bool libraryForward = (g_currentModule == "std::lang" && label.rfind("std::lang::", 0) == 0) || label.rfind("std::iter::", 0) == 0;
+        const bool libraryForward = (g_currentModule == "std::core" && label.rfind("std::core::", 0) == 0) || label.rfind("std::iter::", 0) == 0;
         values.push_back(index < args.size() ? LowerArgumentValue(args[index], signature->second.params[index].type, !libraryForward) : LowerDefaultArgument(signature->second.params[index]));
     }
     if (variadic)
@@ -1895,8 +1895,8 @@ ast::NodePtr LowerCall(int id)
         values.push_back(PackVariadicArguments(args, fixed, signature->second.params.back()));
     }
     // 字节操作成为专门的四元式；先按调用顺序求值全部实参，再读取指针字段。
-    const bool rawCopy = label.rfind("std::lang::memcpy__", 0u) == 0u;
-    const bool rawSet = label.rfind("std::lang::memset__", 0u) == 0u;
+    const bool rawCopy = label.rfind("std::core::memcpy__", 0u) == 0u;
+    const bool rawSet = label.rfind("std::core::memset__", 0u) == 0u;
     if ((rawCopy || rawSet) && values.size() == 3u && result && result->kind == MType::Void)
     {
         Memory::Vector<ast::NodePtr> prefix;
@@ -1915,7 +1915,7 @@ ast::NodePtr LowerCall(int id)
     }
 
     // 裸指针解引用仅提取地址字段；类型、unsafe 和借用检查已在上方完成，不生成语言包装调用。
-    if (label.rfind("std::lang::dereference__", 0u) == 0u && values.size() == 1u
+    if (label.rfind("std::core::dereference__", 0u) == 0u && values.size() == 1u
         && result && result->kind == MType::Ptr && signature->second.params.size() == 1u
         && IsBarePointerType(signature->second.params[0].type))
         return ast::Node::loadInt(values[0]);
@@ -1991,7 +1991,7 @@ int ElementBytes(const std::shared_ptr<MType> &type)
 ast::NodePtr LowerTypeTag(int id)
 {
     const auto &node = N(id);
-    if (node.module != "std::lang" && node.module != "std::reflect" && !node.reflectionBridge)
+    if (node.module != "std::core" && node.module != "std::reflect" && !node.reflectionBridge)
         return Fail("内部类型标签仅供核心库与反射桥接使用；请使用 isType<T> 或 std::reflect"), Bad();
     if (node.type < 0) return Fail("内部类型标签缺少具体类型"), Bad();
     const auto type = T(node.type);
@@ -2063,7 +2063,7 @@ ast::NodePtr LowerNewPtr(int id)
 ast::NodePtr LowerResourceDrop(int receiver)
 {
     const MNode target = N(receiver);
-    MVar *variable = target.kind == MNode::Var ? FindNodeVar(target) : (target.kind == MNode::EnumCtor ? FindQualifiedGlobal(target.s, target.s2) : nullptr);
+    MVar *variable = target.kind == MNode::Var ? FindNodeVar(target) : (target.kind == MNode::EnumCtor ? FindQualifiedGlobal(target.s, target.s2, target.module) : nullptr);
     if (variable != nullptr)
     {
         if (variable->isConst)
@@ -2122,7 +2122,7 @@ ast::NodePtr LowerResourceDrop(int receiver)
         clearOwner = true;
         const auto slot = AllocateName("__chali_drop_string_object");
         const auto pointer = ast::Node::var(slot);
-        const auto actions = ast::Node::block({ ast::Node::exprStmt(ast::Node::call("std::lang::__bootStringDrop", { "address" }, { ast::Node::loadInt(pointer) })),
+        const auto actions = ast::Node::block({ ast::Node::exprStmt(ast::Node::call("std::core::__bootStringDrop", { "address" }, { ast::Node::loadInt(pointer) })),
                                                 ast::Node::freeMemory(pointer) });
         removal = ast::Node::block({ ast::Node::declare(slot, ast::Type::i64()),
                                      ast::Node::assign(slot, LowerRawExpr(receiver)),
@@ -2157,7 +2157,7 @@ ast::NodePtr LowerResourceDrop(int receiver)
     {
         Fail("drop 只能用在可写引用（`T mut&`）、运行时数组（`T[]`）、"
              "`bint` / 容器 / obj 或 file / proc 资源句柄，"
-             "以及实现了 std::lang::Drop 的值上，现在给的是 "
+             "以及实现了 std::core::Drop 的值上，现在给的是 "
              + Describe(type));
         return nullptr;
     }
@@ -2557,7 +2557,7 @@ ast::NodePtr LowerTry(int id)
     /* 载荷若是源聚合占有的字符串 / 对象，复制一份给调用方 —— 源聚合随后就要释放。 */
     if (IsStandardOpcode(okPayload.type, "String"))
         okValue = ast::Node::call(
-            "std::lang::__bootStringSlice", { "__chali_s", "__chali_a", "__chali_b" },
+            "std::core::__bootStringSlice", { "__chali_s", "__chali_a", "__chali_b" },
             { okValue, ast::Node::i(0), ast::Node::i(-1) });
     else if (IsObjectLike(okPayload.type))
         okValue = ast::Node::call(ObjectCopyFunction(okPayload.type), { "__chali_v" }, { okValue });
@@ -2745,13 +2745,13 @@ ast::NodePtr LowerUncheckedExpr(int id)
         const Memory::String text = UnescapeText(inner);
         if (text.size() != 1u)
         {
-            Fail("char 只能保存一个 UTF-8 字节；完整 Unicode 字符请使用 std::lang::String：'" + inner + "'");
+            Fail("char 只能保存一个 UTF-8 字节；完整 Unicode 字符请使用 std::core::String：'" + inner + "'");
             return Bad();
         }
         return ast::Node::i(static_cast<long long>(static_cast<unsigned char>(text[0])));
     }
     case MNode::EnumCtor:
-        if (const MVar *global = FindQualifiedGlobal(node.s, node.s2); global != nullptr)
+        if (const MVar *global = FindQualifiedGlobal(node.s, node.s2, node.module); global != nullptr)
             return global->elementReference ? ast::Node::loadFrom(ast::Node::var(global->emitted), LowerType(global->type, global->emitted)) : ast::Node::var(global->emitted);
         if (IsQualifiedFunctionValue(node))
         {
@@ -3318,6 +3318,9 @@ ast::NodePtr LowerStmtImpl(int id)
 {
     if (id < 0) return nullptr;
     const MNode &node = N(id);
+    if (!node.s2.empty() && (node.kind == MNode::While || node.kind == MNode::Foreach || node.kind == MNode::Loop)
+        && FindNamedLoopContext(node))
+        return Fail("活动循环标签重复：" + node.s2), Bad();
     switch (node.kind)
     {
     case MNode::Defer:
@@ -3485,7 +3488,7 @@ ast::NodePtr LowerStmtImpl(int id)
         MBlockContext *const context = FindMacroControlTarget(id, false);
         if (context == nullptr)
         {
-            Fail(node.i != 0       ? "break #level 指定的循环层数超出当前函数的嵌套循环范围" :
+            Fail(!node.s2.empty()  ? "找不到可退出的循环标签：" + node.s2 :
                  node.kids.empty() ? "break 只能用在循环里面" :
                                      "yield 值; 需要外层值表达式接收结果");
             return nullptr;
@@ -3848,7 +3851,7 @@ bool ResolveCall(int id, Memory::String *label, Memory::Vector<Memory::String> *
         if (same && expected)
         {
             // 核心 memset 的字节参数允许范围内的整数字面量，与显式 uint8 转换一致。
-            const bool coreMemorySet = !candidates.empty() && std::all_of(candidates.begin(), candidates.end(), [](const Memory::String &candidate) { return candidate.rfind("std::lang::memset__", 0u) == 0u; });
+            const bool coreMemorySet = !candidates.empty() && std::all_of(candidates.begin(), candidates.end(), [](const Memory::String &candidate) { return candidate.rfind("std::core::memset__", 0u) == 0u; });
             if (index == 1u && coreMemorySet && !args.empty()
                 && IsBarePointerType(ExprType(args[0])) && expected->kind == MType::Int
                 && expected->isUnsigned && expected->bits == 8)
@@ -3866,7 +3869,7 @@ bool ResolveCall(int id, Memory::String *label, Memory::Vector<Memory::String> *
     for (const MFunctionDecl &declaration : g_functionDecls)
     {
         if (declaration.label != chosen || declaration.superseded) continue;
-        const bool formattedOutputBridge = node.formattedOutputBridge && declaration.module == "std::lang"
+        const bool formattedOutputBridge = node.formattedOutputBridge && declaration.module == "std::core"
                                            && (declaration.source == "__std_eprint" || declaration.source == "__std_eprintln");
         if (declaration.moduleLocal && declaration.module != g_currentModule && !formattedOutputBridge)
             return Fail("模块 " + declaration.module + " 的 inline 函数 " + declaration.source + " 不能从模块 " + (g_currentModule.empty() ? Memory::String("<root>") : g_currentModule) + " 访问");
@@ -4082,11 +4085,10 @@ enum MReturnFlow
 };
 
 /**
- * @brief 返回分析中的源出口；已解析身份不受宏新增循环影响，未解析时保留原层级。
+ * @brief 返回分析中的源出口；已解析身份不受宏新增循环影响。
  */
 struct MReturnExit
 {
-    long long level = 0;
     int target = -1;
     bool continuation = false;
     bool value = false;
@@ -4097,33 +4099,31 @@ struct MReturnExit
      */
     bool operator<(const MReturnExit &other) const
     {
-        if (level != other.level) return level < other.level;
         if (target != other.target) return target < other.target;
         if (continuation != other.continuation) return continuation < other.continuation;
         return value < other.value;
     }
 };
 
-int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<MReturnExit> *exits, std::size_t depth);
+int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<MReturnExit> *exits);
 
 /**
- * @brief 分析表达式求值期间的函数返回、值退出及层级退出路径。
+ * @brief 分析表达式求值期间的函数返回、值退出及具名退出路径。
  * @param id 表达式节点编号。
  * @param transparentLoops 是否让带值退出穿透语句循环。
- * @param exits 收集越出表达式的层级退出。
- * @param depth 当前分析根内已进入的循环层数。
+ * @param exits 收集越出表达式的具名退出。
  * @retval 返回表达式可能继续或提前退出的路径位掩码。
  */
-int ExpressionReturnFlow(int id, bool transparentLoops, Memory::Set<MReturnExit> *exits, std::size_t depth)
+int ExpressionReturnFlow(int id, bool transparentLoops, Memory::Set<MReturnExit> *exits)
 {
     if (id < 0) return FlowNext;
     const MNode node = N(id);
     if (node.kind == MNode::Lambda) return FlowNext;
     if (node.kind == MNode::Loop)
     {
-        if (node.s.empty()) return StatementReturnFlowImpl(id, transparentLoops, exits, depth);
+        if (node.s.empty()) return StatementReturnFlowImpl(id, transparentLoops, exits);
         Memory::Set<MReturnExit> nested;
-        int flow = StatementReturnFlowImpl(node.kids[0], true, &nested, depth);
+        int flow = StatementReturnFlowImpl(node.kids[0], true, &nested);
         for (const auto &exit : nested)
         {
             if (exit.target == id)
@@ -4137,7 +4137,7 @@ int ExpressionReturnFlow(int id, bool transparentLoops, Memory::Set<MReturnExit>
     for (const int child : node.kids)
     {
         if ((flow & FlowNext) == 0) break;
-        const int evaluated = ExpressionReturnFlow(child, transparentLoops, exits, depth);
+        const int evaluated = ExpressionReturnFlow(child, transparentLoops, exits);
         flow = (flow & ~FlowNext) | evaluated;
         if (node.kind == MNode::Bin && (node.s == "&&" || node.s == "||")) flow |= FlowNext;
     }
@@ -4148,18 +4148,17 @@ int ExpressionReturnFlow(int id, bool transparentLoops, Memory::Set<MReturnExit>
  * @brief 分析语句列表是否在所有路径上返回。
  * @param listId 语句列表在节点池中的编号。
  * @param transparentLoops 是否让带值退出穿透语句循环。
- * @param exits 收集仍需向外传递的层级退出。
- * @param depth 当前分析根内已进入的循环层数。
+ * @param exits 收集仍需向外传递的具名退出。
  * @retval 返回正常继续、函数返回及各类退出路径的位掩码。
  */
-int StatementListReturnFlow(int listId, bool transparentLoops, Memory::Set<MReturnExit> *exits, std::size_t depth)
+int StatementListReturnFlow(int listId, bool transparentLoops, Memory::Set<MReturnExit> *exits)
 {
     if (listId < 0) return FlowNext;
     int flow = FlowNext;
     for (const int statementId : N(listId).kids)
     {
         if ((flow & FlowNext) == 0) break;
-        flow = (flow & ~FlowNext) | StatementReturnFlowImpl(statementId, transparentLoops, exits, depth);
+        flow = (flow & ~FlowNext) | StatementReturnFlowImpl(statementId, transparentLoops, exits);
     }
     return flow;
 }
@@ -4168,11 +4167,10 @@ int StatementListReturnFlow(int listId, bool transparentLoops, Memory::Set<MRetu
  * @brief 分析单条语句的控制流返回情况。
  * @param statementId 语句在节点池中的编号。
  * @param transparentLoops 是否让带值退出穿透语句循环。
- * @param exits 收集仍需向外传递的层级退出。
- * @param depth 当前分析根内已进入的循环层数。
+ * @param exits 收集仍需向外传递的具名退出。
  * @retval 返回正常继续、函数返回及各类退出路径的位掩码。
  */
-int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<MReturnExit> *exits, std::size_t depth)
+int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<MReturnExit> *exits)
 {
     if (statementId < 0) return FlowNext;
     const MNode &statement = N(statementId);
@@ -4185,9 +4183,9 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
             if (value.kind == MNode::Call && !value.kids.empty() && StandardCallName(N(value.kids[0])) == "panic") return FlowReturn;
             // 与语句降级一致，独立花括号块不接管外层值出口。
             if (value.kind == MNode::Loop && value.s == "block")
-                return StatementReturnFlowImpl(value.kids[0], transparentLoops, exits, depth);
+                return StatementReturnFlowImpl(value.kids[0], transparentLoops, exits);
         }
-        return statement.kids.empty() ? FlowNext : ExpressionReturnFlow(statement.kids[0], transparentLoops, exits, depth);
+        return statement.kids.empty() ? FlowNext : ExpressionReturnFlow(statement.kids[0], transparentLoops, exits);
     case MNode::Declare:
     {
         int flow = FlowNext;
@@ -4195,45 +4193,40 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
         {
             if ((flow & FlowNext) == 0) break;
             const auto item = N(declaration);
-            if (!item.kids.empty()) flow = (flow & ~FlowNext) | ExpressionReturnFlow(item.kids[0], transparentLoops, exits, depth);
+            if (!item.kids.empty()) flow = (flow & ~FlowNext) | ExpressionReturnFlow(item.kids[0], transparentLoops, exits);
         }
         return flow;
     }
     case MNode::Destructure:
-        return ExpressionReturnFlow(statement.kids[1], transparentLoops, exits, depth);
+        return ExpressionReturnFlow(statement.kids[1], transparentLoops, exits);
     case MNode::Return:
     {
-        const int flow = statement.kids.empty() ? FlowNext : ExpressionReturnFlow(statement.kids[0], transparentLoops, exits, depth);
+        const int flow = statement.kids.empty() ? FlowNext : ExpressionReturnFlow(statement.kids[0], transparentLoops, exits);
         return (flow & ~FlowNext) | ((flow & FlowNext) ? FlowReturn : 0);
     }
     case MNode::Break:
         if (statement.controlTarget >= 0)
         {
-            const int flow = statement.kids.empty() ? FlowNext : ExpressionReturnFlow(statement.kids[0], transparentLoops, exits, depth);
-            if (flow & FlowNext) exits->insert({ 0, statement.controlTarget, false, !statement.kids.empty() });
+            const int flow = statement.kids.empty() ? FlowNext : ExpressionReturnFlow(statement.kids[0], transparentLoops, exits);
+            if (flow & FlowNext) exits->insert({ statement.controlTarget, false, !statement.kids.empty() });
             return flow & ~FlowNext;
-        }
-        if (statement.i != 0)
-        {
-            exits->insert({ statement.i });
-            return 0;
         }
         return statement.kids.empty() ? FlowEscape : FlowValueEscape;
     case MNode::Continue:
         if (statement.controlTarget >= 0)
         {
-            exits->insert({ 0, statement.controlTarget, true });
+            exits->insert({ statement.controlTarget, true });
             return 0;
         }
         return FlowContinue;
     case MNode::Block:
-        return StatementListReturnFlow(static_cast<int>(statement.i), transparentLoops, exits, depth);
+        return StatementListReturnFlow(static_cast<int>(statement.i), transparentLoops, exits);
     case MNode::If:
     {
-        int flow = StatementReturnFlowImpl(statement.kids[1], transparentLoops, exits, depth);
+        int flow = StatementReturnFlowImpl(statement.kids[1], transparentLoops, exits);
         for (const int elifId : N(statement.kids[2]).kids)
-            flow |= StatementReturnFlowImpl(N(elifId).kids[1], transparentLoops, exits, depth);
-        flow |= statement.kids[3] < 0 ? FlowNext : StatementReturnFlowImpl(statement.kids[3], transparentLoops, exits, depth);
+            flow |= StatementReturnFlowImpl(N(elifId).kids[1], transparentLoops, exits);
+        flow |= statement.kids[3] < 0 ? FlowNext : StatementReturnFlowImpl(statement.kids[3], transparentLoops, exits);
         return flow;
     }
     case MNode::While:
@@ -4246,26 +4239,14 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
                            statement.kind == MNode::Loop || statement.kind == MNode::DoWhile ? statement.kids[0] :
                                                                                                statement.kids[1];
         Memory::Set<MReturnExit> nested;
-        int body = StatementReturnFlowImpl(bodyId, transparentLoops, &nested, depth + 1);
-        for (auto exit : nested)
+        int body = StatementReturnFlowImpl(bodyId, transparentLoops, &nested);
+        for (const auto &exit : nested)
         {
-            if (exit.target >= 0)
-            {
-                if (exit.target == statementId)
-                    body |= exit.continuation ? FlowContinue : exit.value ? FlowValueEscape :
-                                                                            FlowEscape;
-                else
-                    exits->insert(exit);
-                continue;
-            }
-            const long long level = exit.level;
-            if (level == 1 || (level < 0 && depth == 0 && FindBreakContext(false, -1) == nullptr))
-                body |= FlowEscape;
+            if (exit.target == statementId)
+                body |= exit.continuation ? FlowContinue : exit.value ? FlowValueEscape :
+                                                                        FlowEscape;
             else
-            {
-                exit.level = level < 0 ? level : level - 1;
                 exits->insert(exit);
-            }
         }
         const int propagated = body & (FlowReturn | (transparentLoops ? FlowValueEscape : 0));
         if (statement.kind == MNode::While || statement.kind == MNode::For || statement.kind == MNode::Foreach)
@@ -4282,7 +4263,7 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
         {
             const MNode &item = N(caseId);
             if (item.i < 0 && item.guard < 0) hasDefault = true;
-            int branch = StatementListReturnFlow(item.kids[0], transparentLoops, exits, depth);
+            int branch = StatementListReturnFlow(item.kids[0], transparentLoops, exits);
             if (statement.s != "match" && (branch & FlowEscape) != 0)
                 branch = (branch & ~FlowEscape) | FlowNext;
             flow |= branch;
@@ -4332,7 +4313,7 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
 int StatementReturnFlow(int statementId, bool transparentLoops)
 {
     Memory::Set<MReturnExit> exits;
-    const int flow = StatementReturnFlowImpl(statementId, transparentLoops, &exits, 0);
+    const int flow = StatementReturnFlowImpl(statementId, transparentLoops, &exits);
     return flow | (exits.empty() ? 0 : FlowEscape);
 }
 
@@ -4670,8 +4651,8 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
         var.type = param.type;
         var.emitted = param.emitted;
         // 编译器算法适配器延续原 intrinsic 的借用约定；公开值参数仍按值复制。
-        const bool algorithmBorrow = module == "std::lang"
-                                     && (name.rfind("__bootAlgorithm", 0u) == 0u || name.rfind("std::lang::__bootAlgorithm", 0u) == 0u)
+        const bool algorithmBorrow = module == "std::core"
+                                     && (name.rfind("__bootAlgorithm", 0u) == 0u || name.rfind("std::core::__bootAlgorithm", 0u) == 0u)
                                      && (((param.source == "source" || param.source.rfind("source$", 0u) == 0u)
                                           && IsContainer(param.type) && param.type->name == "vec")
                                          || ((param.source == "callback" || param.source.rfind("callback$", 0u) == 0u)
@@ -4876,7 +4857,7 @@ void AddRuntimeHelpers(ast::Program &program)
         panic.name = "__chali_defer_panic";
         panic.result = LowerType(T(M_TypeVoid()), "panic");
         panic.parameters = { { "__chali_value", Type::i64() } };
-        panic.body = Node::block({ Node::assign("__chali_value", Node::call("std::lang::__bootStringSlice", { "string", "start", "end" },
+        panic.body = Node::block({ Node::assign("__chali_value", Node::call("std::core::__bootStringSlice", { "string", "start", "end" },
                                                                             { Node::var("__chali_value"), Node::i(0), Node::i(-1) })),
                                    Node::whileLoop(Node::binary("!=", Node::var("__chali_defer_top"), Node::i(0)),
                                                    Node::exprStmt(Node::call("__chali_defer_pop", { "frame" }, { Node::var("__chali_defer_top") }))),

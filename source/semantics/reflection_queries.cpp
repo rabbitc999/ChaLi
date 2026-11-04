@@ -136,7 +136,7 @@ struct MReflectionQueries
                 type = separator == Memory::String::npos ? id.key : id.key.substr(separator + 1u);
                 break;
             }
-        if (type == "std::lang::String") return "ReflectValue::Text(" + quote(value.text) + ")";
+        if (type == "std::core::String") return "ReflectValue::Text(" + quote(value.text) + ")";
         if (type == "bool") return "ReflectValue::Bool(" + boolean(value.bits != 0) + ")";
         if (type == "char") return "ReflectValue::Char((char)" + number(value.bits) + ")";
         if (type == "float32" || type == "float64")
@@ -241,7 +241,7 @@ struct MReflectionQueries
     {
         replaced.insert(name);
         Memory::String result = "Option<std::reflect::" + Memory::String(type) + ">";
-        functions += result + " " + name + (byName ? "(std::lang::String name){" : "(uint64 id){");
+        functions += result + " " + name + (byName ? "(std::core::String name){" : "(uint64 id){");
         Memory::Map<Memory::String, int> counts;
         for (const auto &v : values) ++counts[v.name];
         for (const auto &v : values)

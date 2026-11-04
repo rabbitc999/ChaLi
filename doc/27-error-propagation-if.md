@@ -28,7 +28,7 @@ value = if (p % 3 == 1) { 1 } elif (p % 3 == 2) { 2 } else {
 
 ## 用户自定义错误传播
 
-核心协议均位于自动导入的 `std::lang`：
+核心协议均位于自动导入的 `std::core`：
 
 ```chali
 enum TryBranch<T,R> { Continue(T value), Break(R residual); };
@@ -71,6 +71,6 @@ let user = findUser(id).okOr<AppError>(AppError::UserMissing)?;
 
 LSP 显示 if 和传播表达式的成功类型，并支持 let 悬停与成员补全。悬停 `?` 可查看来源、成功类型、失败载荷和当前函数返回出口。
 
-交互终端的程序文本实时输出，`std::lang::pause()` 在提示前刷新 stdout 与 stderr；非交互输入不等待回车。管道输出仍按宿主既有收集方式返回。
+交互终端的程序文本实时输出，`std::core::pause()` 在提示前刷新 stdout 与 stderr；非交互输入不等待回车。管道输出仍按宿主既有收集方式返回。
 
 `unwrap()` 和 `expect()` 按值复制成功载荷；载荷含有 `#NonCopyable opcode` 时，调用这两个复制方法会在编译期被拒绝。`Option<T>.take()` 与 `Result<T,E>.take()` 消费接收者并移动成功载荷，`Result<T,E>.takeError()` 消费接收者并移动错误载荷；分支不符时触发 panic。FileStream 和 File 使用 `take()` 交接所有权，普通 String 与数组仍保持值语义。

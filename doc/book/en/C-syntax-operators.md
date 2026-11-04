@@ -57,7 +57,7 @@ An incremented target cannot also be read or written by another operation in the
 
 ## C.4 Loops, Matching and Exits
 
-if, elif and else select branches; else if is equivalent to elif. while checks before each iteration, while loop expresses unconditional repetition. Exercises use loop for infinite loops.
+if, elif and else select branches; else if is equivalent to elif. while checks before each iteration, while loop expresses unconditional repetition.
 
 for-in uses the iteration protocol. range excludes its upper bound; rangeEq includes it. match supports variants, constants, ranges, concrete interface types and unions. _ is an unbound wildcard.
 
@@ -182,7 +182,7 @@ $macro and $replace define hygienic macros. Parameter categories constrain input
 
 $for, $if, $match and $regex repeat or select templates. $elif and $else_if are equivalent additional branches of one $if chain, closed by a single $end_if. $fields and $member generate static field operations; $compile_assert and $compile_error report compile-time conditions. Chapter 22 includes a complete JSON_FIELDS example using both branch spellings.
 
-Percent-prefixed definitions, symbols and conditional directives select source during preprocessing, distinct from runtime conditions and typed field selection. @annotation declares annotations and @Reflect selects runtime metadata. Hash-prefixed compiler directives such as #derive, #borrow, #abi and #NonCopyable have specific compiler-defined contracts.
+Percent-prefixed definitions, symbols and conditional directives select source during preprocessing, distinct from runtime conditions and typed field selection. @annotation declares annotations and @Reflect selects runtime metadata. Hash-prefixed compiler directives such as #borrow, #abi and #NonCopyable have specific compiler-defined contracts.
 
 ## C.8 Unsafe Operations and Host Boundaries
 

@@ -1,0 +1,13 @@
+import desktop_audio;
+import std::thread;
+void main(List<String> args) {
+    if (args.len() != 1) { println("pass one audio file path"); return; }
+    if (!desktop_audio::open()) { println("audio device unavailable"); return; }
+    int64 sound = desktop_audio::load(args[0]);
+    if (sound == 0) { desktop_audio::close(); println("audio file could not be loaded"); return; }
+    assert(desktop_audio::play(sound));
+    while (desktop_audio::is_playing(sound)) { std::thread::sleepFor(10); }
+    assert(desktop_audio::unload(sound));
+    desktop_audio::close();
+    println("playback finished");
+}

@@ -224,7 +224,7 @@ class DebugMetadata {
         } else if (variable.storageBytes !== undefined && variable.storageBytes !== 0) throw new Error('调试镜像缺少真实存储身份');
         if (variable.availabilityDwarf !== undefined && variable.availabilityDwarf !== '' && !/^__chali_available_[0-9]{1,6}$/.test(variable.availabilityDwarf)) throw new Error('调试绑定可用性描述无效');
         if (variable.stringOwner !== undefined && (typeof variable.stringOwner !== 'boolean'
-          || variable.stringOwner && (!['String', 'std::lang::String'].includes(variable.type) || variable.readOnly || !variable.address || variable.nativeStorage !== 'i64')))
+          || variable.stringOwner && (!['String', 'std::core::String'].includes(variable.type) || variable.readOnly || !variable.address || variable.nativeStorage !== 'i64')))
           throw new Error('String 拥有关系描述无效');
         if (variable.dwarf !== undefined) text(variable.dwarf);
         macroId(variable.macro);

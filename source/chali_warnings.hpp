@@ -17,6 +17,7 @@ struct Rule
 inline constexpr Rule rules[] = { { "CHL1601", "overlapping-pattern", true },
                                   { "CHL2101", "type-naming", false },
                                   { "CHL2102", "function-naming", false },
+                                  { "CHL2103", "module-naming", false },
                                   { "CHL2201", "unused-local", false } };
 /** @brief 一次编译的警告配置，不共享可变状态。 */
 struct Options
@@ -33,7 +34,7 @@ struct Options
     {
         bool found = false;
         for (const auto &rule : rules)
-            if (name == "all" || name == rule.id || name == rule.name || (name == "naming" && (Memory::String(rule.id) == "CHL2101" || Memory::String(rule.id) == "CHL2102")))
+            if (name == "all" || name == rule.id || name == rule.name || (name == "naming" && (Memory::String(rule.id) == "CHL2101" || Memory::String(rule.id) == "CHL2102" || Memory::String(rule.id) == "CHL2103")))
             {
                 levels[rule.id] = level;
                 found = true;
@@ -149,7 +150,17 @@ inline bool prepare(chali_diagnostics::Diagnostic &item, const Options &options,
     if (!line.empty() && line.back() == '\r') line.pop_back();
     item.hasSource = true;
     item.sourceText.assign(line.data(), line.size());
-    if (item.id == "CHL2101" || item.id == "CHL2102")
+    if (item.id == "CHL2103")
+    {
+        static const std::regex declaration(R"(\bmodule[ 	]+([A-Za-z_][A-Za-z0-9_]*(?:[ 	]*::[ 	]*[A-Za-z_][A-Za-z0-9_]*)*))");
+        std::smatch name;
+        if (std::regex_search(line, name, declaration))
+        {
+            item.column = static_cast<std::size_t>(name.position(1)) + 1;
+            item.endColumn = item.column + static_cast<std::size_t>(name.length(1));
+        }
+    }
+    else if (item.id == "CHL2101" || item.id == "CHL2102")
     {
         const auto separator = item.message.rfind("：");
         const auto name = separator == item.message.npos ? Memory::String() : item.message.substr(separator + Memory::String("：").size());

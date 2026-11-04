@@ -415,7 +415,7 @@ ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex = fals
     {
         /* 字符串变量与引用统一按字节下标访问。
          * 字符串按**字节**下标：`s[i]` 得到第 i 个字节（0..255）。
-         * 交给运行时的 `std::lang::__bootStringAt`：**一次读一个字节**（越界会报错，下标写到结尾的
+         * 交给运行时的 `std::core::__bootStringAt`：**一次读一个字节**（越界会报错，下标写到结尾的
          * `\0` 是允许的 —— `while (s[i] != 0)` 这种数长度写法要用它）。
          * 早先是"offset 算地址 + 读 8 字节 + & 255"，字符串搬到堆上之后那样读会
          * 越过块尾（堆块是紧的）。 */
@@ -425,7 +425,7 @@ ast::NodePtr LowerIndexChain(int baseId, int positionId, bool bufferIndex = fals
             return Bad();
         }
         return ast::Node::call(
-            "std::lang::__bootStringAt", { "__chali_s", "__chali_i" },
+            "std::core::__bootStringAt", { "__chali_s", "__chali_i" },
             { OwnedObjectTemp(cursor, base), LowerExpr(indices[0]) });
     }
     if (IsRuntimeArray(base))
@@ -736,7 +736,7 @@ ast::NodePtr LowerAddressOf(int id)
         return ast::Node::var(storage);
     }
     if (node.kind == MNode::EnumCtor)
-        if (const MVar *global = FindQualifiedGlobal(node.s, node.s2); global != nullptr && global->elementReference)
+        if (const MVar *global = FindQualifiedGlobal(node.s, node.s2, node.module); global != nullptr && global->elementReference)
             return ast::Node::var(global->emitted);
     if (node.kind == MNode::Var)
     {
@@ -779,7 +779,7 @@ ast::NodePtr LowerAddressOf(int id)
         const Memory::String label = NameOfExpr(node.kids[0]);
         if (IsStandardOpcode(base, "String")) /* `&s[i]`：字符串按字节 */
         {
-            return ast::Node::call("std::lang::__bootStringReference", { "__chali_s", "__chali_i" }, { target, position });
+            return ast::Node::call("std::core::__bootStringReference", { "__chali_s", "__chali_i" }, { target, position });
         }
         if (IsRuntimeArray(base))
         {
@@ -1175,7 +1175,7 @@ ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightId,
     }
     /* ---- 字符串内建：拼接（`+`）与比较（字典序）。
      *
-     * 两件事都由 std::lang 的字符串自举内核实现：
+     * 两件事都由 std::core 的字符串自举内核实现：
      * 语言侧不写逐字节的循环，拼接的结果是堆上的新串（"块作用域所有"，见 MarkOwned）。
      * ---- */
     if (IsStandardOpcode(leftType, "String") || IsStandardOpcode(rightType, "String"))
@@ -1188,7 +1188,7 @@ ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightId,
         }
         if (!IsStandardOpcode(leftType, "String") || !IsStandardOpcode(rightType, "String"))
         {
-            Fail("字符串只能和字符串做 " + op + "（另一边先转成 std::lang::String）");
+            Fail("字符串只能和字符串做 " + op + "（另一边先转成 std::core::String）");
             return Bad();
         }
         if (op == "+")
@@ -1205,7 +1205,7 @@ ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightId,
                 const std::shared_ptr<MType> partType = ExprType(parts[index]);
                 if (!partType || !IsStandardOpcode(partType, "String"))
                 {
-                    Fail("字符串拼接里每一项都得是 std::lang::String：第 " + Memory::toString(index + 1u) + " 项是 " + (partType ? Describe(partType) : Memory::String("?")) + "（要拼数字先 `format` 或强转）");
+                    Fail("字符串拼接里每一项都得是 std::core::String：第 " + Memory::toString(index + 1u) + " 项是 " + (partType ? Describe(partType) : Memory::String("?")) + "（要拼数字先 `format` 或强转）");
                     return Bad();
                 }
                 names.push_back("__chali_s" + Memory::toString(index + 1u));
@@ -1220,7 +1220,7 @@ ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightId,
             const ast::NodePtr left = NeedsOwnedTemp(leftId) ? OwnedStringTemp(leftId) : LowerExpr(leftId);
             const ast::NodePtr right = NeedsOwnedTemp(rightId) ? OwnedStringTemp(rightId) : LowerExpr(rightId);
             const ast::NodePtr diff =
-                ast::Node::call("std::lang::__bootStringCompare", { "__chali_sl", "__chali_sr" }, { left, right });
+                ast::Node::call("std::core::__bootStringCompare", { "__chali_sl", "__chali_sr" }, { left, right });
             return ast::Node::binary(op, diff, ast::Node::i(0));
         }
         Fail("字符串只支持 + 拼接与 == != < <= > >= 比较，不支持 " + op);
@@ -1336,7 +1336,7 @@ ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightId,
         return Bad();
     }
     if ((leftType->kind == MType::Ptr || rightType->kind == MType::Ptr) && op != "==" && op != "!=")
-        return Fail("引用不支持地址运算；请使用元素下标，地址仅由 std::lang::address 获取"), Bad();
+        return Fail("引用不支持地址运算；请使用元素下标，地址仅由 std::core::address 获取"), Bad();
     const MOperatorDecl *declaration = nullptr;
     MOperatorMatch match;
     /* 期望类型取这个节点自己钉住的类型 —— 它是推断期按上下文定的（见 InferExpression）。
@@ -1426,7 +1426,7 @@ ast::NodePtr LowerCast(int typeId, int valueId)
     const std::shared_ptr<MType> target = T(typeId);
     const std::shared_ptr<MType> source = target && target->kind == MType::Ptr ? RawExprType(valueId) : ExprType(valueId);
     if (g_unsafeDepth == 0 && ((target->kind == MType::Ptr && source->kind == MType::Int) || (target->kind == MType::Int && (source->kind == MType::Ptr || source->kind == MType::Array))))
-        return Fail("引用不能与整数地址互转；查看地址请使用 std::lang::address"), Bad();
+        return Fail("引用不能与整数地址互转；查看地址请使用 std::core::address"), Bad();
     if (const ast::NodePtr converted = LowerDeclaredConversion(valueId, target, true))
         return converted;
     const auto basicNumeric = [](const std::shared_ptr<MType> &type) {
@@ -1435,7 +1435,7 @@ ast::NodePtr LowerCast(int typeId, int valueId)
     /*
      * 下面几条"对象类 → 标量"的转换（`(int64)大数` / `(float64)大数` …）只把句柄交给
      * 运行期转一下，结果里**没有**任何东西接管源对象的所有权。源是"当场造出来的"
-     * （`(int64)std::lang::BigDecimal("42.9")`、`(int64)(a * b)`）时先落进一个归本块所有的
+     * （`(int64)std::big_number::BigDecimal("42.9")`、`(int64)(a * b)`）时先落进一个归本块所有的
      * 临时变量，随块释放；否则对象表里每次都漏一个。借来的变量 / 标量源原样返回。
      */
     /* `(int64)大整数` / `(float64)大整数`：走对象表里的转换（超 64 位按低 64 位截断，
@@ -1618,7 +1618,7 @@ Memory::String ConstRootOf(int targetId)
         }
         if (node.kind == MNode::EnumCtor)
         {
-            const MVar *found = FindQualifiedGlobal(node.s, node.s2);
+            const MVar *found = FindQualifiedGlobal(node.s, node.s2, node.module);
             return (found != nullptr && found->isConst) ? node.s + "::" + node.s2 : Memory::String();
         }
         if ((node.kind == MNode::Index || node.kind == MNode::Member || node.kind == MNode::Arrow || node.kind == MNode::Un) && !node.kids.empty())
@@ -1865,7 +1865,7 @@ bool MethodMutatesReceiver(const Memory::String &owner, const MMethod &method,
 bool IsCoreObjectReceiver(const Memory::String &owner)
 {
     const auto instance = chali_generic::session.made.find(owner);
-    return instance != chali_generic::session.made.end() && instance->second.generic->module == "std::lang" && (instance->second.generic->name == "Option" || instance->second.generic->name == "Result") && HasOpaqueObjectBorrow(NamedType(owner));
+    return instance != chali_generic::session.made.end() && instance->second.generic->module == "std::core" && (instance->second.generic->name == "Option" || instance->second.generic->name == "Result") && HasOpaqueObjectBorrow(NamedType(owner));
 }
 
 /**
@@ -1988,7 +1988,7 @@ ast::NodePtr StoreOwnedValueAt(const ast::NodePtr &address, int valueId,
     if (IsStandardOpcode(type, "String"))
     {
         if (valueId >= 0 && N(valueId).kind == MNode::Str)
-            stored = ast::Node::call("std::lang::__bootStringCopy", { "__chali_addr" }, { value });
+            stored = ast::Node::call("std::core::__bootStringCopy", { "__chali_addr" }, { value });
         else if (!(IsFreshValue(valueId) || IsImplicitConversionValue(valueId, type)))
             stored = ast::Node::call(ObjectCopyFunction(type), { "value" }, { value });
     }
@@ -2259,7 +2259,7 @@ ast::NodePtr LowerAssignImpl(int targetId, int valueId)
     }
     if (target.kind == MNode::EnumCtor && target.type2 != 1)
     {
-        if (MVar *global = FindQualifiedGlobal(target.s, target.s2); global != nullptr)
+        if (MVar *global = FindQualifiedGlobal(target.s, target.s2, target.module); global != nullptr)
         {
             if (global->isConst)
                 return Fail("不可变变量（const）不能再赋值：" + target.s + "::" + target.s2), Bad();
@@ -2505,7 +2505,7 @@ ast::NodePtr LowerAssignImpl(int targetId, int valueId)
         }
         /* `s[i] = 字符;`：字符串按字节写 —— 交给运行时（越界会报错，和数组下标同一个
          * 脾气）。`s[i]` 当右值时是"取第 i 个字节（& 255）"，当不了赋值目标，
-         * 所以这里单独走一条：`std::lang::__bootStringSet(串, 下标, 字符码)`。 */
+         * 所以这里单独走一条：`std::core::__bootStringSet(串, 下标, 字符码)`。 */
         if (target.kind == MNode::Index && target.s != "__chali_buffer_index" && IsStandardOpcode(ExprType(target.kids[0]), "String"))
         {
             const int baseId = target.kids[0];
@@ -2514,11 +2514,11 @@ ast::NodePtr LowerAssignImpl(int targetId, int valueId)
             const std::shared_ptr<MType> codeType = ExprType(valueId);
             if (!codeType || codeType->kind != MType::Char)
             {
-                Fail("std::lang::String 下标只能写 char（整数请显式强转）：现在写的是 " + Describe(codeType));
+                Fail("std::core::String 下标只能写 char（整数请显式强转）：现在写的是 " + Describe(codeType));
                 return Bad();
             }
             return ast::Node::exprStmt(ast::Node::call(
-                "std::lang::__bootStringSet", { "__chali_s", "__chali_i", "__chali_c" },
+                "std::core::__bootStringSet", { "__chali_s", "__chali_i", "__chali_c" },
                 { LowerExpr(baseId), LowerExpr(positionId), LowerExpr(valueId) }));
         }
         /* 结构体元素 / 字段同样是值语义：`arr[i] = b;` / `s.inner = b;` 深拷贝。 */
@@ -2670,7 +2670,7 @@ void InitializeDefaultContainers(const ast::NodePtr &address, const Memory::Stri
             out->push_back(ast::Node::storeAt(
                 target, NewContainerValue(field.type), LowerType(field.type, owner + "." + field.name)));
         else if (IsStandardOpcode(field.type, "String"))
-            out->push_back(ast::Node::storeAt(target, ast::Node::call("std::lang::__bootStringNew", {}, {}), ast::Type::i64()));
+            out->push_back(ast::Node::storeAt(target, ast::Node::call("std::core::__bootStringNew", {}, {}), ast::Type::i64()));
         else if (field.type->kind == MType::Struct)
             InitializeDefaultContainers(target, field.type->name, out);
         else if (field.type->kind == MType::Array && !IsRuntimeArray(field.type))
@@ -2685,7 +2685,7 @@ void InitializeDefaultContainers(const ast::NodePtr &address, const Memory::Stri
                 if (IsContainer(element))
                     out->push_back(ast::Node::storeAt(item, NewContainerValue(element), LowerType(element, field.name)));
                 else if (IsStandardOpcode(element, "String"))
-                    out->push_back(ast::Node::storeAt(item, ast::Node::call("std::lang::__bootStringNew", {}, {}), ast::Type::i64()));
+                    out->push_back(ast::Node::storeAt(item, ast::Node::call("std::core::__bootStringNew", {}, {}), ast::Type::i64()));
                 else if (element->kind == MType::Struct)
                     InitializeDefaultContainers(item, element->name, out);
             }
@@ -2719,7 +2719,7 @@ void InitializeArrayValues(const ast::NodePtr &address, const std::shared_ptr<MT
         InitializeDefaultContainers(item, element->name, out);
     }
     else if (IsStandardOpcode(element, "String"))
-        out->push_back(Node::storeAt(item, Node::call("std::lang::__bootStringNew", {}, {}), ast::Type::i64()));
+        out->push_back(Node::storeAt(item, Node::call("std::core::__bootStringNew", {}, {}), ast::Type::i64()));
     else
         out->push_back(Node::storeAt(item, NewContainerValue(element), LowerType(element, "array element")));
     out->push_back(Node::assign(index, Node::binary("+", Node::var(index), Node::i(1))));
@@ -2790,7 +2790,7 @@ ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared_ptr<MT
             out.push_back(Node::assign(emitted, Node::structNew(type->name, values)));
         out.push_back(BeginAggregateLifetime(Node::var(emitted), StructStride(type)));
         /* 容器字段不能停在 0 句柄上：默认构造时当场建一个空容器填进那个槽。
-         * 否则 `struct Bag { std::lang::List<int64> items; }; Bag b; b.items.push(7);`
+         * 否则 `struct Bag { std::core::List<int64> items; }; Bag b; b.items.push(7);`
          * 会直到运行期才报"拿到的是 0"。只在**真正默认构造**时建（拷贝 / 搬运用的
          * 临时结构体传 false），免得刚建出来的容器马上被覆盖、白白漏一个。 */
         if (initContainers)
@@ -2818,7 +2818,7 @@ ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared_ptr<MT
     }
     if (IsContainer(type))
     {
-        /* 容器声明出来就是**建好的空容器**：`std::lang::List<int> v;` 之后直接 `v.push(1)`。 */
+        /* 容器声明出来就是**建好的空容器**：`std::core::List<int> v;` 之后直接 `v.push(1)`。 */
         return Node::assign(emitted, NewContainerValue(type));
     }
     if (type->kind == MType::Obj || IsInterfacePointer(type))
@@ -2830,7 +2830,7 @@ ast::NodePtr DefaultInit(const Memory::String &emitted, const std::shared_ptr<MT
     if (type->kind == MType::Double)
         return Node::assign(emitted, Node::f(0.0));
     if (IsStandardOpcode(type, "String"))
-        return Node::assign(emitted, initContainers ? Node::call("std::lang::__bootStringNew", {}, {}) : Node::i(0));
+        return Node::assign(emitted, initContainers ? Node::call("std::core::__bootStringNew", {}, {}) : Node::i(0));
     if (type->kind == MType::Ptr || type->kind == MType::Func || type->kind == MType::Int || type->kind == MType::Opcode || IsResourceLike(type))
         return Node::assign(emitted, Node::i(0));
     return nullptr;
@@ -2857,7 +2857,7 @@ ast::NodePtr AllocateDefaultObject(const std::shared_ptr<MType> &type)
         InitializeDefaultContainers(Node::var(address), type->name, &out);
     }
     else if (IsStandardOpcode(type, "String"))
-        out.push_back(Node::storeAt(Node::var(address), Node::call("std::lang::__bootStringNew", {}, {}), ast::Type::i64()));
+        out.push_back(Node::storeAt(Node::var(address), Node::call("std::core::__bootStringNew", {}, {}), ast::Type::i64()));
     return Node::sequence(std::move(out), Node::var(address));
 }
 
@@ -3683,7 +3683,7 @@ bool ResolvePayloadPatternType(const Memory::String &name, Memory::String *key)
             *key = local;
             return true;
         }
-        Memory::Set<Memory::String> visible{ "std::lang" };
+        Memory::Set<Memory::String> visible{ "std::core" };
         if (const auto imported = g_moduleImports.find(g_currentModule); imported != g_moduleImports.end())
             visible.insert(imported->second.begin(), imported->second.end());
         Memory::String chosen;
@@ -3820,7 +3820,7 @@ bool NormalizeEnumMatchPattern(int patternId, const std::shared_ptr<MType> &subj
         Memory::String resolved;
         if (ResolvePayloadPatternType(pattern.s, &resolved))
             pattern.s = resolved;
-        else if (pattern.s.compare(0u, 11u, "std::lang::") == 0 && StandardGeneric(subjectType->name, BareTypeName(pattern.s)))
+        else if (pattern.s.compare(0u, 11u, "std::core::") == 0 && StandardGeneric(subjectType->name, BareTypeName(pattern.s)))
             pattern.s = subjectType->name;
     }
     const Memory::String genericPrefix = pattern.s + "__";
@@ -4105,7 +4105,7 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
                 {
                     if (valueMatch && IsStandardOpcode(payload.type, "String"))
                     {
-                        value = ast::Node::call("std::lang::__bootStringSlice", { "__chali_s", "__chali_a", "__chali_b" },
+                        value = ast::Node::call("std::core::__bootStringSlice", { "__chali_s", "__chali_a", "__chali_b" },
                                                 { value, ast::Node::i(0), ast::Node::i(-1) });
                         MarkOwned(emitted);
                     }
@@ -4250,7 +4250,7 @@ bool ReadStringPattern(int id, Memory::String *text)
 ast::NodePtr MakeStringPatternCondition(const Memory::String &subject, const MNode &pattern)
 {
     const auto compare = [&](const Memory::String &text, const char *op) {
-        const auto order = ast::Node::call("std::lang::__bootStringCompare", { "__chali_sl", "__chali_sr" },
+        const auto order = ast::Node::call("std::core::__bootStringCompare", { "__chali_sl", "__chali_sr" },
                                            { ast::Node::var(subject), ast::Node::str(text) });
         return ast::Node::binary(op, order, ast::Node::i(0));
     };
@@ -4517,7 +4517,7 @@ ast::NodePtr LowerSwitch(int id)
         if (!g_error.empty()) return Bad();
         const MNode pattern = N(static_cast<int>(item.i));
         if (pattern.kind == MNode::Tuple)
-            return Fail("match 区间使用 std::lang::range<T>(a,b) 或 std::lang::rangeEq<T>(a,b)"), Bad();
+            return Fail("match 区间使用 std::core::range<T>(a,b) 或 std::core::rangeEq<T>(a,b)"), Bad();
         bool loClosed = false;
         bool hiClosed = false;
         if (IsRangePattern(pattern, &loClosed, &hiClosed)
@@ -4553,7 +4553,7 @@ ast::NodePtr LowerSwitch(int id)
         {
             if (pattern.kids.size() != 2u)
             {
-                Fail("区间模式需要两个端点：std::lang::range(a,b) 或 std::lang::rangeEq(a,b)");
+                Fail("区间模式需要两个端点：std::core::range(a,b) 或 std::core::rangeEq(a,b)");
                 return Bad();
             }
             for (const int endpoint : pattern.kids)
@@ -4590,7 +4590,7 @@ ast::NodePtr LowerSwitch(int id)
         long long caseValue = 0;
         if (!ReadSwitchConstant(static_cast<int>(item.i), &caseIsBool, &caseValue))
         {
-            Fail("match 分支必须是整数、char、浮点、bool 常量，或 std::lang::range / rangeEq 区间模式");
+            Fail("match 分支必须是整数、char、浮点、bool 常量，或 std::core::range / rangeEq 区间模式");
             return Bad();
         }
         const bool subjectIsBool = subjectType->kind == MType::Bool;
@@ -4664,7 +4664,7 @@ ast::NodePtr LowerSwitch(int id)
         }
         const MNode pattern = N(static_cast<int>(item.i));
         if (pattern.kind == MNode::Tuple)
-            return Fail("match 区间使用 std::lang::range<T>(a,b) 或 std::lang::rangeEq<T>(a,b)"), Bad();
+            return Fail("match 区间使用 std::core::range<T>(a,b) 或 std::core::rangeEq<T>(a,b)"), Bad();
         bool loClosed = false;
         bool hiClosed = false;
         ast::NodePtr condition;
@@ -4773,7 +4773,7 @@ bool IntervalConstantTree(int id, Memory::Set<int> &active, bool negativeLiteral
         const auto bound = g_constantBindings.find(id);
         const auto variable = bound != g_constantBindings.end() ? &bound->second :
                               node.kind == MNode::Var           ? FindNodeVar(node) :
-                                                                  FindQualifiedGlobal(node.s, node.s2);
+                                                                  FindQualifiedGlobal(node.s, node.s2, node.module);
         result = variable && variable->isConst && variable->constantExpression >= 0 && IntervalConstantTree(variable->constantExpression, active);
     }
     else if (node.kind == MNode::Un || node.kind == MNode::Bin || node.kind == MNode::Cast)
@@ -4859,7 +4859,7 @@ ast::NodePtr LowerInterval(int id)
     }
     prefix.push_back(Node::ifThenElse(Node::binary("<=", Node::var(bounds[0]), Node::var(bounds[1])), Node::block({}),
                                       Node::exprStmt(Node::call("__std_panic", { "message" }, { Node::str(reverseMessage) }))));
-    const auto factory = "std::lang::__interval_" + Describe(element);
+    const auto factory = "std::core::__interval_" + Describe(element);
     const auto signature = g_funcs.find(factory);
     if (signature == g_funcs.end()) return Fail("内部区间迭代器工厂没有登记：" + factory), Bad();
     Memory::Vector<Memory::String> names;
@@ -5354,7 +5354,7 @@ ast::NodePtr BraceStringValue(int argId, const Memory::String &format)
 }
 
 /**
- * @brief 把大括号格式串翻成百分号格式串，并把实参降级（`std::lang::print` / `std::lang::format` 共用）。
+ * @brief 把大括号格式串翻成百分号格式串，并把实参降级（`std::core::print` / `std::core::format` 共用）。
  *
  * 语言侧只认 `{}` 占位符：`{}` / `{1}` 顺序或显式编号，`{1:2F}` 给浮点保留位数，
  * `{1:b}` / `{1:x}` / `{1:X}` 以二进制 / 十六进制输出整数，
@@ -5517,23 +5517,23 @@ ast::NodePtr BuildBracePrint(const Memory::Vector<int> &args, bool newline)
     }
     Memory::String target;
     Memory::Vector<ast::NodePtr> values;
-    if (!BuildFormatTarget(args, "std::lang::print/std::lang::println", target, values)) return Bad();
+    if (!BuildFormatTarget(args, "std::core::print/std::core::println", target, values)) return Bad();
     if (newline) target += '\n';
     return BuildFormatCall("__std_print", target, values);
 }
 
 /**
- * @brief `std::lang::format("…", 参数…)`：按 `{}` 占位符拼出一个**新串**（规则与 `std::lang::print` 完全一致）。
+ * @brief `std::core::format("…", 参数…)`：按 `{}` 占位符拼出一个**新串**（规则与 `std::core::print` 完全一致）。
  *
  * 结果是"当场造出来的新串"（`IsFreshValue` 认 `MNode::Call`），所有权交给通用的那套
  * 机制（`NeedsOwnedTemp` / `OwnedStringTemp` / `MarkOwned`）——**不要**在这儿自己开临时
- * 变量：那样会在拼接链（`text = text + std::lang::format(…)`）里把临时串提前还掉。
+ * 变量：那样会在拼接链（`text = text + std::core::format(…)`）里把临时串提前还掉。
  */
 ast::NodePtr BuildBraceFormat(const Memory::Vector<int> &args)
 {
     Memory::String target;
     Memory::Vector<ast::NodePtr> values;
-    if (!BuildFormatTarget(args, "std::lang::format", target, values)) return Bad();
+    if (!BuildFormatTarget(args, "std::core::format", target, values)) return Bad();
     return BuildFormatCall("__std_str_fmt", target, values);
 }
 
@@ -5549,7 +5549,7 @@ ast::NodePtr PackVariadicArguments(const Memory::Vector<int> &args, std::size_t 
 {
     if (!parameter.type || !IsContainer(parameter.type) || parameter.type->name != "vec" || !parameter.type->elem)
     {
-        Fail("内部错误：变长参数没有降为 std::lang::List<T>：" + parameter.source);
+        Fail("内部错误：变长参数没有降为 std::core::List<T>：" + parameter.source);
         return Bad();
     }
     if (g_freshSink == nullptr)
@@ -5569,7 +5569,7 @@ ast::NodePtr PackVariadicArguments(const Memory::Vector<int> &args, std::size_t 
         /*
          * `__std_vec_pack` 会把每个元素复制进容器，实参自己那份临时值归调用点：
          * 当场造出来的串 / 对象先落地、随块释放，否则变长调用的每个临时元素漏一块
-         * （`g("a" + "b")`、`g(std::lang::BigDecimal("2.5"))`）。借来的变量与标量原样传。
+         * （`g("a" + "b")`、`g(std::big_number::BigDecimal("2.5"))`）。借来的变量与标量原样传。
          */
         values.push_back(LowerArgumentValue(args[index], element));
     }
@@ -5588,14 +5588,14 @@ ast::NodePtr LowerSlice(int id)
     const std::shared_ptr<MType> base = ExprType(node.kids[0]);
     if (!base || !IsStandardOpcode(base, "String"))
     {
-        Fail("切片（`s[起:止]`）只能用在 std::lang::String 上：现在切的是 " + (base ? Describe(base) : Memory::String("?")));
+        Fail("切片（`s[起:止]`）只能用在 std::core::String 上：现在切的是 " + (base ? Describe(base) : Memory::String("?")));
         return Bad();
     }
     if (!CheckContainerIndex(node.kids[1], "切片起点") || (node.kids[2] >= 0 && !CheckContainerIndex(node.kids[2], "切片终点"))) return Bad();
     Memory::Vector<ast::NodePtr> values{ LowerExpr(node.kids[0]), LowerExpr(node.kids[1]) };
     /* `止` 省了就是"到末尾"：给 -1，运行时按串长收尾。 */
     values.push_back(node.kids[2] >= 0 ? LowerExpr(node.kids[2]) : ast::Node::i(-1));
-    return ast::Node::call("std::lang::__bootStringSlice", { "__chali_s", "__chali_b", "__chali_e" }, values);
+    return ast::Node::call("std::core::__bootStringSlice", { "__chali_s", "__chali_b", "__chali_e" }, values);
 }
 
 /**

@@ -21,9 +21,28 @@ def declarations(path, source=None, line_offset=0, root=None):
     module = module_match.group(1) if module_match else ''
     origin = path.relative_to(root).as_posix() if root else str(path)
 
+    def preceding_comment(offset):
+        preceding = source[:offset].rstrip()
+        comment = re.search(r'/\*([^*]|\*(?!/))*\*/\s*$|(?:(?:///|//!)[^\n]*\n?\s*)+$', preceding, re.S)
+        return comment.group() if comment else ''
+
     def visit(begin, end, owner='', owner_kind=''):
         i = begin
         while i < end:
+            if tokens[i][0] == '$macro':
+                start = tokens[i][1]
+                line_end = source.find('\n', start)
+                signature = without_comments(source[start:line_end if line_end >= 0 else len(source)]).strip()
+                name = re.match(r'\$macro\s+([A-Za-z_]\w*)', signature)
+                if name and not name[1].startswith('__'):
+                    records.append(dict(module=module, owner=owner, kind='macro', name=name[1],
+                                        signature=signature, comment=preceding_comment(start), source=origin,
+                                        line=source.count('\n', 0, start) + 1 + line_offset, offset=start))
+                i += 1
+                while i < end and tokens[i][0] != '$end_macro':
+                    i += 1
+                i += 1
+                continue
             if tokens[i][0] == '@':
                 # 注解定义及使用没有分号；其括号不能并入后续函数声明。
                 i += 1
@@ -77,7 +96,7 @@ def declarations(path, source=None, line_offset=0, root=None):
                     if tokens[body_end][0] == '{': depth += 1
                     elif tokens[body_end][0] == '}': depth -= 1
                     body_end += 1
-            kind_match = re.match(r'(?:(?:#\s*NonCopyable|#\s*derive\s*\([^)]*\))\s+)*(struct|enum|interface|opcode)\s+(\w+)', signature)
+            kind_match = re.match(r'(?:#\s*NonCopyable\s+)*(struct|enum|interface|opcode)\s+(\w+)', signature)
             function = None
             declaration_matches = list(TOKEN.finditer(signature))
             declaration_tokens = [m.group() for m in declaration_matches]
@@ -99,14 +118,16 @@ def declarations(path, source=None, line_offset=0, root=None):
                         break
                 if word == '(': depth += 1
                 elif word == ')': depth -= 1
-            preceding = source[:tokens[start][1]].rstrip()
-            comment = re.search(r'/\*([^*]|\*(?!/))*\*/\s*$|(?:(?:///|//!)[^\n]*\n?\s*)+$', preceding, re.S)
-            description = comment.group() if comment else ''
             entry = dict(module=module, owner=owner, signature=signature,
                          source=origin,
                          line=source.count('\n', 0, tokens[start][1]) + 1 + line_offset,
-                         comment=description, offset=tokens[start][1])
-            if kind_match:
+                         comment=preceding_comment(tokens[start][1]), offset=tokens[start][1])
+            constant = re.fullmatch(r'(?P<type>const\s+.+?)\s+(?P<name>[A-Za-z_]\w*)',
+                                    signature.partition('=')[0].strip()) if not owner else None
+            if constant:
+                entry.update(kind='constant', name=constant['name'], type=constant['type'])
+                records.append(entry)
+            elif kind_match:
                 kind, name = kind_match.groups()
                 entry.update(kind=kind, name=name)
                 records.append(entry)

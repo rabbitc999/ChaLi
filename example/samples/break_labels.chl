@@ -1,0 +1,15 @@
+void main()
+{
+    int64 visited = 0;
+    outer: for (item in range(0, 3)) {
+        inner: while (true) {
+            loop {
+                visited++;
+                break inner;
+            };
+        }
+        visited += 10;
+        if (item == 1) { break outer; }
+    }
+    println("{}", visited);
+}

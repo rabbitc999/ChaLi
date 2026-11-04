@@ -45,6 +45,7 @@ Complete examples have a main function and expected output. Interactive examples
 | [27](27-aot-export.md) | AOT Export |
 | [28](28-http-file-server.md) | An HTTP File Server |
 | [29](29-student-management.md) | Student Information Management |
+| [30](30-standard-library-tour.md) | A First Look at the Standard Library |
 
 See [Appendix A](A-common-errors.md) for common errors, [Appendix B](B-standard-library.md) for library tasks, and [Appendix C](C-syntax-operators.md) for syntax and operators. [Installation](../../en/39-installation-packages.md) explains how to run the compiler. The Chinese edition also includes the original literary extras and a [PDF](../latex/book.pdf); this English edition contains the technical text.
 

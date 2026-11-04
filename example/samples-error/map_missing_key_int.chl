@@ -2,5 +2,5 @@
 void main() {
     Map<int64, String> names;
     names.put(7, "ada");
-    std::lang::println("{}", names[9]);      /* 没有这个键 → 运行期错误 */
+    std::core::println("{}", names[9]);      /* 没有这个键 → 运行期错误 */
 }

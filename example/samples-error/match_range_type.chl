@@ -1,1 +1,1 @@
-void main() { match (1) { std::lang::rangeEq("a", "z") => { } _ => { } } }
+void main() { match (1) { std::core::rangeEq("a", "z") => { } _ => { } } }

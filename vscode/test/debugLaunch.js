@@ -23,7 +23,7 @@ async function outputUntil(client, expression) {
 
 async function main() {
   const source = path.join(work, 'input.chl');
-  fs.writeFileSync(source, 'void main(List<String> args) {\nfor(String item in args){println("ARG [{}]",item);}\nprintln("READY {}",len(args));\nString value=std::lang::readLine();\nprintln("INPUT [{}]",value);\nassert(std::lang::readLine()=="");\nprintln("INPUT EOF");\n}\n');
+  fs.writeFileSync(source, 'void main(List<String> args) {\nfor(String item in args){println("ARG [{}]",item);}\nprintln("READY {}",len(args));\nString value=std::core::readLine();\nprintln("INPUT [{}]",value);\nassert(std::core::readLine()=="");\nprintln("INPUT EOF");\n}\n');
   const prefix = path.join(work, 'input');
   const build = spawnSync(compiler, ['aot', source, '--checked', '--debug', '--out', prefix], { cwd: root, env: process.env, encoding: 'utf8', timeout: 180000, windowsHide: true });
   assert.equal(build.status, 0, build.stdout + build.stderr);

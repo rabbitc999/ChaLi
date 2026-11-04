@@ -1,1 +1,1 @@
-void main() { std::lang::Set<int64> value = {"text"}; }
+void main() { std::core::Set<int64> value = {"text"}; }

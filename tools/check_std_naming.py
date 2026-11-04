@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
-"""检查标准库公开函数/方法的小驼峰、类型的大驼峰，以及 `__` 内部函数的可见性。"""
+"""检查标准库公开函数、方法、类型的命名及 `__` 内部函数的可见性。"""
 import re
 from library_reference import ROOT, inventory
+
+UNDERSCORE_FUNCTIONS = frozenset(("std::date_time", "std::linear_algebra", "std::number_theory"))
+SNAKE_NAME = re.compile(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*")
+CAMEL_NAME = re.compile(r"[a-z][A-Za-z0-9]*")
+
 
 # `__` 内部函数的声明形态：可选 inline，返回类型里可以有 `::`、`<>`、`,`、空格。
 # 只约束顶格书写（顶层）的声明：文法只允许顶层函数写 `inline`，类型体里的成员方法无从声明。
@@ -29,7 +34,7 @@ def non_inline_bodies():
                 continue
             if match.group(1):
                 continue
-            if path.name == 'lang.chl' and match.group(2) in PROTOCOL_BODIES:
+            if path.name == 'core.chl' and match.group(2) in PROTOCOL_BODIES:
                 continue
             depth, index = 1, match.end()
             while index < len(text) and depth:
@@ -55,8 +60,11 @@ def main():
                 continue
             if kind == 'function':
                 functions += 1
-                if not re.fullmatch(r'[a-z][A-Za-z0-9]*', name):
-                    errors.append(f'{module}::{row["owner"]}::{name}：函数/方法必须使用小驼峰')
+                require_snake = not row["owner"] and module in UNDERSCORE_FUNCTIONS
+                if require_snake and not SNAKE_NAME.fullmatch(name):
+                    errors.append(f'{module}::{name}：模块级函数必须使用下划线命名')
+                elif not require_snake and not (CAMEL_NAME.fullmatch(name) or SNAKE_NAME.fullmatch(name)):
+                    errors.append(f'{module}::{row["owner"]}::{name}：名称须使用小驼峰或下划线命名')
             elif kind in ('struct', 'enum', 'interface', 'opcode'):
                 types += 1
                 if not re.fullmatch(r'[A-Z][a-z0-9]*(?:[A-Z][a-z0-9]+)*', name):

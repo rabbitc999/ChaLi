@@ -149,60 +149,14 @@ fn 名<类型形参>(形参)             =>  void 名<类型形参>(形参)
 
 核心入口为 [`fn_named` / `fn_result`](../source/chali.gram) 与 [`M_NamedFunctionOf`](../source/semantics/named_function_ast.cpp)。
 
-## 字段派生指令
+## 成员宏自动实现接口
 
-```chali
-#derive(Equal, Hash, Clone)
-struct Point { int64 x; String label; }
-
-#derive(Equal, Hash, Clone)
-enum Choice { None, Value(Point point) }
-```
-
-```text
-derive_directive := DERIVE '(' iface_list ')'
-top_decl := derive_directive struct_decl type_decl_end
-          | derive_directive enum_decl type_decl_end
-
-DerivedDecl(traits, declaration)
-  => declaration.derives = traits
-```
-
-`#derive` 只修饰结构体和枚举声明。Equal、Hash、Clone 使用内建的字段派生；其他名称选择同模块同名接口与成员宏配对的自定义派生，支持模块限定名。Drop、Closeable、重复请求、缺少定义和成员冲突会报错，不生成析构协议。
-
-内建字段派生分为两个步骤：
-
-1. 语义层从已解析声明读取字段和枚举载荷，生成受限的普通方法源码。
-2. 同一个生成解析器读取这些方法，附加到原类型 AST，并实例化正常的 `Equal<bool,T>`、`Hash<T>`、`Clone<T>` 接口。之后统一进行接口、类型、借用检查和 LLVM 代码生成。自定义派生则复用现有 AST 成员宏展开器。
-
-Equal 按字段生成短路比较，枚举先匹配变体再比较对应载荷。Hash 把变体标签和字段哈希组合；字符串按 UTF-8 字节处理，浮点零做一致化，确保相等值具有相同哈希。Clone 逐字段复制内建值，调用嵌套自定义字段的 Clone 接口；枚举只克隆当前活动变体。生成的方法执行正常的比较、哈希和复制，不包含派生解释器、运行时字段枚举或反射查找。
-
-三个派生只读取实例字段，静态字段是类型的共享状态，不参与比较、哈希或克隆。字符串哈希使用逐字节读取，中文和 emoji 的续字节不会经过字符边界下标。整数保持位宽和符号规则，float32／64 的正负零具有一致哈希，比较本身仍遵循普通浮点相等规则。
-
-手写 Equal 与 Hash 时，两者需要采用相同的值含义。例如相等只比较 id，哈希也应只使用 id；编译器核对接口签名和类型，不证明任意方法体的数学性质。嵌套字段使用已有协议，包含 Clone 的不可复制资源可以显式创建独立资源，派生继续调用该 Clone 并按普通规则移动与清理；缺少所需协议则拒绝生成。
-
-字段协议在全部类型和接口登记之后检查，未被调用的派生类型同样检查。标量和 String 有内建语义；嵌套自定义结构体或枚举必须已经实现对应接口，或自身也请求并完成了该接口派生。引用、函数值、原始数组及其他没有相应语义协议的字段不会按地址、内存字节或自动析构规则偷偷推导，必须明确提供合适的封装和接口。
-
-核心框架在 [`derive.cpp`](../source/semantics/derive.cpp)：
-
-```text
-ExpandDerivedDeclarations():
-    for each declared type with pending derives:
-        expand built-in fields or the paired AST member macro
-        attach generated methods and concrete interfaces to the original AST
-
-RegisterTop()
-ValidateDerivedFields()  // missing nested interface is always a compilation error
-LowerProgram()          // ordinary typed methods, normal ownership checks
-```
-
-### 自定义接口派生
-
-下面的例子在类型体内显式调用成员宏，将 `Record` 和公开方法名 `count` 作为实参。
+成员宏把接口添加到宿主类型，并生成接口方法。生成的签名由普通接口检查核对。
 
 ```chali
 interface Count { int64 count(); }
 $macro Count<T>(method:ident) -> member
+$implement Count;
 int64 method() {
     int64 result = 0;
     $for field in $fields<T>()
@@ -211,21 +165,13 @@ int64 method() {
     return result;
 }
 $end_macro
-struct Record : Count { int64 number; String text; $Count<Record>(count); }
+struct Record { int64 number; String text; $Count<Record>(count); }
 void main() { Record value; Count counted = value; println("fields={}", counted.count()); }
 ```
 
 ```text
 fields=2
 ```
-
-显式成员宏调用把 `method:ident` 用作方法名。下述同模块、同名接口与宏的约束适用于通用 `#derive` 指令。该指令使用一个类型形参和空实参组，结果类别为 `member`；生成内容只允许方法。类型的布局字段和关联类型由类型自身声明。`$fields<T>()` 读取实际实例字段，静态循环在编译期展开，运行时方法直接执行生成的语句。
-
-签名与接口要求一致的方法公开；其他辅助方法保持卫生名称。若一个方法名称下存在重载，匹配接口的名称会公开整个生成重载组。派生不覆盖已有同签名方法。接口默认实现、继承要求、方法体类型、借用、返回与资源清理继续执行普通规则；签名不匹配不会自动转换成满足接口的方法。
-
-`import derive_tools;` 后可用 `#derive(derive_tools::Describe)` 显式选择模块。未限定名沿用宏的本模块／导入查找规则；歧义必须限定。泛型结构体在每个具体实例上展开。配对接口也可有一个实现者类型形参，例如 `interface Describe<T> { String describe(T value); }` 对应 `$macro Describe<T>() -> member`。类型实参由编译器提供，指令只写 `#derive(Describe)`。
-
-派生中的字段、方法或变体元数据需要额外泛型实例时，编译器先补充该实例，再重试展开。递归宏和循环依赖受现有预算限制。编辑器的一层／全部展开可在 `#derive` 位置查询，保留宏定义、调用和元数据声明来源；辅助卫生名称不作为可手写的公共名称暴露。
 
 ## Closeable 与运算符推导开关
 
@@ -272,8 +218,7 @@ FindOperator(op, left, right):
 
 因此 `#NoAddReplace` 与 `#NoRightAdd` 分工明确：后者只堵右向那一条，前者关掉这个接口的全部
 推导，但直接写出的左向 / 右向调用都不受影响。两者都是**编译器指令**（写在声明前、不进继承
-列表），不再提供同名的空标记接口。泛型模板的指令在 `collectGenericDerives` 阶段随 `#derive`
-一起摘走，实例化时贴回展开文本之前。
+列表）。泛型模板收集时保存这些指令，实例化时把它们加回具体声明之前。
 
 
 

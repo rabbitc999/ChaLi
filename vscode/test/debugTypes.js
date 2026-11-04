@@ -28,7 +28,7 @@ const lines = [
   '        println("INNER");',
   '    }',
   '    println("AFTER");',
-  '    for(int64 loopIndex in std::lang::range(0,1)) {',
+  '    for(int64 loopIndex in std::core::range(0,1)) {',
   '        println("LOOP");',
   '    }',
   '    println("LOOP AFTER");',

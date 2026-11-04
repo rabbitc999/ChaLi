@@ -29,6 +29,78 @@ bool PrepareMacroMember(int id)
 }
 
 /**
+ * @brief 为宏生成的枚举载荷绑定保留普通模式绑定的词法名称。
+ * @param prefix 同一模式及其载荷读取共享的标识符。
+ * @param index 载荷声明序号。
+ * @return 随后仍由普通宏卫生规则解析的名称。
+ */
+Memory::String MacroVariantPayloadName(const Memory::String &prefix, std::size_t index)
+{
+    return "chali_macro_payload_" + prefix + "_" + Memory::toString(index);
+}
+
+/**
+ * @brief 根据枚举元数据生成模式、载荷读取或逐载荷克隆的构造表达式。
+ * @param id 待处理的内建宏调用。
+ * @return 非枚举内建或转换成功时返回真。
+ */
+bool PrepareMacroVariant(int id)
+{
+    using Meta = chali_macro::MetadataValue;
+    const auto node = N(id);
+    if (node.kind != MNode::MacroCall) return true;
+    const bool pattern = node.s == "variant_pattern";
+    const bool construct = node.s == "variant_clone";
+    const bool payload = node.s == "variant_payload";
+    if (!(pattern || construct || payload)) return true;
+    if (node.kids.size() != 1 || N(node.kids[0]).kids.size() != 1)
+        return Fail("$" + node.s + " 需要一组枚举描述符与绑定名称");
+    const auto arguments = N(N(node.kids[0]).kids[0]).kids;
+    if (arguments.size() != 2) return Fail("$" + node.s + " 的参数数量不符");
+    const auto descriptorArgument = N(arguments[0]);
+    const auto prefixArgument = N(arguments[1]);
+    if (descriptorArgument.kids.empty() || prefixArgument.kids.empty()
+        || descriptorArgument.kids[0] < 0 || prefixArgument.kids[0] < 0)
+        return Fail("$" + node.s + " 需要枚举描述符与绑定名称");
+    const auto descriptor = N(descriptorArgument.kids[0]).compileMetadata;
+    const auto prefix = N(prefixArgument.kids[0]);
+    if (!descriptor || descriptor->kind != (pattern || construct ? Meta::Variant : Meta::Payload) || prefix.kind != MNode::Var)
+        return Fail("$" + node.s + " 的描述符类型或绑定名称无效");
+    auto expanded = node;
+    expanded.kids.clear();
+    if (pattern || construct)
+    {
+        const auto &variant = descriptor->owner->variants[descriptor->variant];
+        expanded.kind = MNode::EnumCtor;
+        expanded.s = descriptor->owner->type->name;
+        expanded.s2 = variant.name;
+        for (std::size_t index = 0; index < variant.payloads.size(); ++index)
+        {
+            const auto name = MacroVariantPayloadName(prefix.s, index);
+            const int binding = M_Var(M_Name(name.c_str()));
+            g_nodes[binding].module = node.module;
+            g_nodes[binding].syntaxContext = node.syntaxContext;
+            auto type = Memory::makeShared<MType>(*variant.payloads[index].type);
+            if (construct && type->unresolvedName && !ResolveImportedTypeNames(false, type)) return false;
+            const bool copy = type->kind == MType::Int || type->kind == MType::Double
+                || type->kind == MType::Bool || type->kind == MType::Char
+                || type->name == "std::core::String";
+            expanded.kids.push_back(construct && !copy
+                ? M_CallOn(M_Member(binding, M_Name("clone")), M_List())
+                : binding);
+        }
+    }
+    else
+    {
+        expanded.kind = MNode::Var;
+        expanded.s = MacroVariantPayloadName(prefix.s, descriptor->payload);
+        expanded.s2.clear();
+    }
+    g_nodes[id] = std::move(expanded);
+    return true;
+}
+
+/**
  * @brief 按声明类型展开可证明的常量初始化式，保持窄整数语义并检测依赖环。
  * @param id 使用常量的节点。
  * @param initializer 常量初始化式。
@@ -97,7 +169,15 @@ bool MatchMacroType(const std::shared_ptr<const MType> &actual, const std::share
     if (!HasMacroTypeWildcard(pattern))
     {
         if (!ResolveAstGenericType(pattern)) return false;
-        matches = actual && TypeKey(Memory::makeShared<MType>(*actual)) == TypeKey(pattern);
+        matches = false;
+        if (!actual) return true;
+        auto concrete = Memory::makeShared<MType>(*actual);
+        if (concrete->unresolvedName && !ResolveImportedTypeNames(false, concrete)) return false;
+        if (!ResolveAstGenericType(concrete)) return false;
+        // 成员宏展开早于 opcode 登记，具名字段可能仍保留临时 Struct 类别。
+        const bool samePendingOpcode = concrete->unresolvedName && concrete->kind == MType::Struct
+            && pattern->kind == MType::Opcode && concrete->name == pattern->name;
+        matches = samePendingOpcode || TypeKey(concrete) == TypeKey(pattern);
         return true;
     }
 
@@ -320,6 +400,8 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             mask = [&](int current, bool payload, std::size_t level) {
                 if (current < 0) return true;
                 if (level >= 256 || !budget--) return Fail("字段模板模式遮蔽超过预算");
+                if (N(current).kind == MNode::MacroCall && N(current).s == "variant_pattern"
+                    && !visit(current, level + 1, constant)) return false;
                 const auto pattern = N(current);
                 if (payload && pattern.kind == MNode::Var)
                 {
@@ -377,7 +459,7 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             }
             g_nodes[id].kids = std::move(statements);
         }
-        if (!NormalizeMacroMetadata(id, 0) || !PrepareMacroMember(id)) return false;
+        if (!NormalizeMacroMetadata(id, 0) || !PrepareMacroMember(id) || !PrepareMacroVariant(id)) return false;
         if (constant && node.kind == MNode::Bin && (node.s == "==" || node.s == "!=") && node.kids.size() == 2)
         {
             const auto left = N(node.kids[0]).compileMetadata;

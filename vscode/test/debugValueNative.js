@@ -18,7 +18,7 @@ const lines = [
   '    Pair row; row.first=7; row.tag=3;',
   '    String text="hello";',
   '    int64 values[]=new[12];',
-  '    for (int64 i in std::lang::range(0, 12)) { values[i]=i*2; }',
+  '    for (int64 i in std::core::range(0, 12)) { values[i]=i*2; }',
   '    Pair const& alias=&row;',
   '    Line line; line.start.first=1; line.start.tag=2; line.end.first=9; line.end.tag=8; line.count=5;',
   '    Shape shape=Shape::Circle(4);',

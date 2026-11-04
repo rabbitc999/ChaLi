@@ -169,7 +169,7 @@ def main():
                     dependencies += ', libstdc++6'
                 if 'libgcc_s.so' in needed:
                     dependencies += ', libgcc-s1'
-                (control / 'control').write_text(f'Package: chali\nVersion: {version}\nArchitecture: {ARCH[args.arch][0]}\nMaintainer: 小兔糖糖_OvO <rabbitc999@outlook.com>\nSection: devel\nPriority: optional\nDepends: {dependencies}\nDescription: ChaLi compiler and shared VM with embedded standard library\n', encoding='utf-8')
+                (control / 'control').write_text(f'Package: chali\nVersion: {version}\nArchitecture: {ARCH[args.arch][0]}\nMaintainer: 小兔糖糖_OvO <rabbitc999@outlook.com>\nSection: devel\nPriority: optional\nDepends: {dependencies}\nDescription: ChaLi compiler with embedded standard library\n', encoding='utf-8')
                 # WSL 的 Windows 挂载盘常把暂存目录显示为 0777，直接构建会拒绝控制目录。
                 # 按 deb(5) 组装标准三成员归档，显式固定 tar 内权限，不降低 dpkg 的检查。
                 marker = work / 'debian-binary'
@@ -193,7 +193,7 @@ def main():
                 spec.write_text(f'''Name: chali
 Version: {version}
 Release: 1
-Summary: ChaLi compiler and shared VM
+Summary: ChaLi compiler
 License: Apache-2.0
 Packager: 小兔糖糖_OvO <rabbitc999@outlook.com>
 %description

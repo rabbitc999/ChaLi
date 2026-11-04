@@ -52,13 +52,13 @@ $end_macro
 int64 count=0;
 int64 next(){count=count+1;return count;}
 void main(){
-    std::lang::assert($Twice(next())==2 && count==1,"single evaluation",1);
-    count=0;std::lang::assert($Pair(next(),next())==123 && count==2,"argument order",1);
-    count=0;std::lang::assert($Nested(next())==4 && count==1,"nested evaluation",1);
-    count=0;std::lang::assert($Ignore(next())==42 && count==1,"unused argument",1);
-    int64 x=7;$Bump(x);std::lang::assert(x==7,"value copy",1);
-    $RefBump(x);std::lang::assert(x==8,"mutable reference",1);
-    std::lang::assert($Read(x)==16,"readonly reference",1);x=9;assert(x==9);
+    std::core::assert($Twice(next())==2 && count==1,"single evaluation",1);
+    count=0;std::core::assert($Pair(next(),next())==123 && count==2,"argument order",1);
+    count=0;std::core::assert($Nested(next())==4 && count==1,"nested evaluation",1);
+    count=0;std::core::assert($Ignore(next())==42 && count==1,"unused argument",1);
+    int64 x=7;$Bump(x);std::core::assert(x==7,"value copy",1);
+    $RefBump(x);std::core::assert(x==8,"mutable reference",1);
+    std::core::assert($Read(x)==16,"readonly reference",1);x=9;assert(x==9);
 }
 ''')
 

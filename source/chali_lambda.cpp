@@ -237,7 +237,7 @@ Memory::String inferArgument(const Memory::String &argument,
     const auto found = variables.find(value);
     if (found != variables.end()) return found->second;
     if (value == "true" || value == "false") return "bool";
-    if (!value.empty() && value.front() == '"') return "std::lang::String";
+    if (!value.empty() && value.front() == '"') return "std::core::String";
     if (std::regex_match(value, std::regex("[+-]?[0-9]+"))) return "int64";
     if (std::regex_match(value, std::regex("[+-]?[0-9]+\\.[0-9]+"))) return "float64";
     return {};

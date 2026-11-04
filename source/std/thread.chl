@@ -60,22 +60,22 @@ struct ThreadGroup : Drop {
     String error;
     static ThreadGroup create() { }
     Thread start(void fn() task) {
-        if (self.completed) { std::lang::panic("线程组已结束"); }
+        if (self.completed) { std::core::panic("线程组已结束"); }
         Thread handle = std::thread::create(task);
         self.tasks.push(handle);
         return handle;
     }
     void add(Thread task) {
-        if (self.completed) { std::lang::panic("线程组已结束"); }
+        if (self.completed) { std::core::panic("线程组已结束"); }
         Thread root;
-        if (task == root || task == current()) { std::lang::panic("线程组不能接管自身或主线程"); }
-        for (int64 i in std::lang::range(0, self.tasks.len())) {
-            if (self.tasks.at(i) == task) { std::lang::panic("线程组不能重复登记任务"); }
+        if (task == root || task == current()) { std::core::panic("线程组不能接管自身或主线程"); }
+        for (int64 i in std::core::range(0, self.tasks.len())) {
+            if (self.tasks.at(i) == task) { std::core::panic("线程组不能重复登记任务"); }
         }
         self.tasks.push(task);
     }
     void cancelAll() {
-        for (int64 i in std::lang::range(0, self.tasks.len())) { requestStop(self.tasks.at(i)); }
+        for (int64 i in std::core::range(0, self.tasks.len())) { requestStop(self.tasks.at(i)); }
     }
     bool waitAll() {
         if (self.completed) { return self.successful; }
@@ -83,7 +83,7 @@ struct ThreadGroup : Drop {
         bool failure = false;
         while (running) {
             running = false;
-            for (int64 i in std::lang::range(0, self.tasks.len())) {
+            for (int64 i in std::core::range(0, self.tasks.len())) {
                 int64 value = state(self.tasks.at(i));
                 if (value == RUNNING) { running = true; }
                 if (value == FAILED && !failure) { failure = true; self.cancelAll(); }
@@ -91,7 +91,7 @@ struct ThreadGroup : Drop {
             if (running) { sleepFor(1); }
         }
         self.successful = true;
-        for (int64 i in std::lang::range(0, self.tasks.len())) {
+        for (int64 i in std::core::range(0, self.tasks.len())) {
             ThreadResult result = waitResult(self.tasks.at(i));
             if (result.status != std::concurrency::READY) { self.successful = false; }
             if (result.status == std::concurrency::FAILED && self.error == "") { self.error = result.error; }
@@ -119,16 +119,16 @@ struct ThreadPool : Drop {
     ThreadGroup group;
     bool closed;
     static ThreadPool create(int64 workers, int64 capacity) {
-        if (workers < 1 || workers > 1024) { std::lang::panic("线程池工作线程数须为 1..1024"); }
+        if (workers < 1 || workers > 1024) { std::core::panic("线程池工作线程数须为 1..1024"); }
         self.jobs = std::concurrency::Channel<void fn()>::create(capacity);
-        for (int64 i in std::lang::range(0, workers)) { self.group.add(std::thread::createWith<std::concurrency::Channel<void fn()>>(__poolWorker, self.jobs)); }
+        for (int64 i in std::core::range(0, workers)) { self.group.add(std::thread::createWith<std::concurrency::Channel<void fn()>>(__poolWorker, self.jobs)); }
     }
     int64 submitFor(void fn() task, int64 millis) {
         if (self.closed) { return std::concurrency::CLOSED; }
-        if (millis < -1) { std::lang::panic("线程池提交超时不能小于 -1"); }
+        if (millis < -1) { std::core::panic("线程池提交超时不能小于 -1"); }
         int64 started = std::clock::nowMs();
         while (true) {
-            for (int64 i in std::lang::range(0, self.group.tasks.len())) {
+            for (int64 i in std::core::range(0, self.group.tasks.len())) {
                 int64 status = state(self.group.tasks.at(i));
                 if (status != RUNNING) { self.cancelAll(); return std::concurrency::FAILED; }
             }

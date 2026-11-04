@@ -1,1 +1,1 @@
-chali aot: 线程消息类型不匹配：期望 std::lang::String，收到 int64
+chali aot: 线程消息类型不匹配：期望 std::core::String，收到 int64

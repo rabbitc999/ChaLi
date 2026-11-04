@@ -114,7 +114,7 @@ modules and `$module::name`. VS Code discards cancelled requests and responses f
 
 ## Embedded standard-library binary
 
-The compiler carries a binary parse unit for the `std::lang` core. Normal compilation restores its nodes, type pool, identifier pool and top-level declarations from memory. It requires neither an external `.unit` file nor a `.chali/chali-stdlib-cache` directory. The assets include ordinary declarations, hygienic macro ASTs, uninstantiated generic-template records, and generated range/algorithm declarations. Separate compressed units load in import order, relocating node, type, interface-name, macro-invocation and source identities into the current session. User dependencies retain their order. Matching generic declarations restore parameters, constraints, defaults and source information, with internal macro references rebound to the current session. Concrete instances, interface implementations, expansion and semantic/borrow checks remain local to the current program. Preprocessing and name normalization may still scan embedded text; unmatched content uses the source path without writing a disk cache.
+The compiler carries a binary parse unit for the `std::core` core. Normal compilation restores its nodes, type pool, identifier pool and top-level declarations from memory. It requires neither an external `.unit` file nor a `.chali/chali-stdlib-cache` directory. The assets include ordinary declarations, hygienic macro ASTs, uninstantiated generic-template records, and generated range/algorithm declarations. Separate compressed units load in import order, relocating node, type, interface-name, macro-invocation and source identities into the current session. User dependencies retain their order. Matching generic declarations restore parameters, constraints, defaults and source information, with internal macro references rebound to the current session. Concrete instances, interface implementations, expansion and semantic/borrow checks remain local to the current program. Preprocessing and name normalization may still scan embedded text; unmatched content uses the source path without writing a disk cache.
 
 `make all` builds a separate standard-library stage compiler, generates each binary twice with `tools/build_stdlib_units.py` to check determinism, atomically updates the assets, and builds the final compiler. The package contains no user source, project paths or process pointers. Parse-unit format 7 preserves the complete type-reference graph and lifetime contracts. Template-record format 1 stores no user instances or process addresses. Package format 2 validates content/compiler identity, reflection configuration, lengths and integrity. Core source locations are canonicalized so unrelated user input lengths do not change the binary. A missing content profile uses in-memory source parsing; a damaged matching asset produces an error.
 
@@ -122,7 +122,7 @@ The compiler carries a binary parse unit for the `std::lang` core. Normal compil
 
 ## Warning configuration
 
-Warnings have stable codes. `CHL1601` (`overlapping-pattern`) is enabled by default. Naming rules `CHL2101`/`CHL2102` (`type-naming`/`function-naming`) and `CHL2201` (`unused-local`) are opt-in. Constructors and generated macro declarations are exempt. Unused-local analysis uses the checked AST and conservatively treats cleanup or borrowing reads as uses.
+Warnings have stable codes. `CHL1601` (`overlapping-pattern`) is enabled by default. Naming rules `CHL2101`/`CHL2102`/`CHL2103` (`type-naming`/`function-naming`/`module-naming`) and `CHL2201` (`unused-local`) are opt-in. Constructors and generated macro declarations are exempt. Unused-local analysis uses the checked AST and conservatively treats cleanup or borrowing reads as uses.
 
 ```console
 chali --check main.chl --warn=unused-local
@@ -136,6 +136,8 @@ chali --diagnostics=json main.chl --deny=CHL2201
 [warnings]
 unused-local = "warn"
 CHL2101 = "allow"
+Use `#NoNamingCheck` in a source file to suppress its type, function, method and module naming warnings. The compiler and LSP apply the same rule. Imported files and other warning rules are handled separately.
+
 ```
 
 Levels are `allow`, `warn`, and `error`. The editor preset enables naming; project settings override the preset, and explicit CLI rules override project settings in command-line order. A real line comment `// chali: allow-next-line CHL2201` suppresses the next line; `// chali: allow CHL2201` suppresses its own line. Strings and block comments do not act as directives.

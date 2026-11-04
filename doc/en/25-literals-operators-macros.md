@@ -337,7 +337,7 @@ See [declaration macro tests](../../tests/chali_macro_declarations.py).
 
 ## Compile-time enum, method and interface metadata
 
-`$variants<T>()`, `$methods<T>()` and `$interfaces<T>()` query a concrete enum's variants, a type's methods and its direct or inherited base interfaces. The `std::lang` qualified forms are equivalent. Each query requires one explicit, instantiated type argument and accepts no value arguments. Descriptors are read-only compile-time values: they cannot escape into runtime variables, use runtime indices or become callable machine addresses.
+`$variants<T>()`, `$methods<T>()` and `$interfaces<T>()` query a concrete enum's variants, a type's methods and its direct or inherited base interfaces. The `std::core` qualified forms are equivalent. Each query requires one explicit, instantiated type argument and accepts no value arguments. Descriptors are read-only compile-time values: they cannot escape into runtime variables, use runtime indices or become callable machine addresses.
 
 | Query or descriptor | Properties |
 | --- | --- |
@@ -362,7 +362,7 @@ Descriptors also expose read-only `sourceFile`, `sourceLine` and `sourceColumn`.
 
 Macro previews summarize result categories, introduced template bindings, shared or mutable parameter borrows and control exits. Full expansion uses resolved semantic targets to distinguish caller control from local control. One-step previews list unresolved exits separately. Creating a function or closure does not execute its body, so that body's exits and borrows are excluded from the current macro's direct effects. Summaries have a separate size limit and mark truncation. They neither establish call-chain purity nor change the existing stmt, expr or legacy control-flow rules.
 
-Interfaces follow source-order depth-first traversal with first-appearance deduplication. Explicitly listed bases have `isDirect == true`. Querying an interface includes its bases, not itself. Concrete generic arguments remain in type descriptors. Continue through a type's `fields`, `variants`, `methods` or `interfaces` only when the queried type supports that kind of metadata.
+Interfaces follow source-order depth-first traversal with first-appearance deduplication. Explicitly listed bases have `isDirect == true`. Querying an interface includes its bases, not itself. Concrete generic arguments remain in type descriptors. `type.qualifiedName` includes the declaring module and concrete generic arguments for nominal types. `type.name` retains its display spelling. Continue through a type's `fields`, `variants`, `methods` or `interfaces` only when the queried type supports that kind of metadata.
 
 ```chali
 enum Message { Quit, Text(String text), Move(int64 x, int64 y) };
@@ -378,7 +378,7 @@ $end_macro
 void main()
 {
     assert($PAYLOAD_COUNT<Message>() == 3);
-    assert(($variants<Message>())[1].payloads[0].type.name == "std::lang::String");
+    assert(($variants<Message>())[1].payloads[0].type.name == "std::core::String");
 }
 ```
 
@@ -395,7 +395,7 @@ struct Item{int64 code;String name;}
 void main(){
     assert($fields<Item>().count==2);
     assert(($fields<Item>())[0].name=="code");
-    assert(($fields<Item>())[1].type.name=="std::lang::String");
+    assert(($fields<Item>())[1].type.name=="std::core::String");
 }
 ```
 
@@ -466,9 +466,9 @@ $end_macro
 
 `$if condition` can be followed by repeated `$elif condition` or equivalent `$else_if condition` branches and one optional `$else`, closed by a single `$end_if`. The first true branch is selected; later conditions and unselected bodies are not evaluated or semantically checked. This applies to expression, statement, declaration and member macros, including nested chains. A conditional branch after `$else`, an orphan branch, a missing condition or a missing terminator is rejected. Conditions must be compile-time bool values. `$if condition`, optional `$else`, and `$end_if` require a compile-time bool constant. Conditions can use metadata properties, variadic counts, and constant arguments. String properties support `==` and `!=` after ordinary language escape decoding. Unselected branches do not undergo ordinary name, type, or borrowing checks; generated branches do. No arbitrary user function or host side effect is executed. Each field iteration has distinct local declaration identities. Empty field collections generate no body, and descriptors cannot escape as runtime values.
 
-A field type condition can use `field.type == String` or `field.type == std::lang::String`. Short names follow the type scope of the macro definition. Exact comparison includes concrete arguments, so `field.type != Map<String, int64>` can distinguish instances. In `Map<?, ?>`, `Set<?>`, and `Map<String, Set<?>>`, each `?` matches one type argument. In macro conditions, `Map` and `std::lang::Map` both mean `Map<?, ?>`.
+A field type condition can use `field.type == String` or `field.type == std::core::String`. Short names follow the type scope of the macro definition. Exact comparison includes concrete arguments, so `field.type != Map<String, int64>` can distinguish instances. In `Map<?, ?>`, `Set<?>`, and `Map<String, Set<?>>`, each `?` matches one type argument. In macro conditions, `Map` and `std::core::Map` both mean `Map<?, ?>`.
 
-`field.genericName` gives the qualified generic family, such as `std::lang::Map`, or an empty string for a non-generic type. `field.typeArguments` contains the concrete type descriptors in declaration order. Use `.count`, a constant index, or `$for arg in field.typeArguments`. After matching `Map<String, ?>`, pass `field.typeArguments[1]` to a macro's `type` parameter. Each descriptor also exposes its own `.typeArguments`. Compile-time integer parameters are omitted from this type collection.
+`field.genericName` gives the qualified generic family, such as `std::core::Map`, or an empty string for a non-generic type. `field.typeArguments` contains the concrete type descriptors in declaration order. Use `.count`, a constant index, or `$for arg in field.typeArguments`. After matching `Map<String, ?>`, pass `field.typeArguments[1]` to a macro's `type` parameter. Each descriptor also exposes its own `.typeArguments`. Compile-time integer parameters are omitted from this type collection.
 
 For a concrete record field, `field.chlids` and `field.type.fields` both give its instance fields in declaration order. Use `$member($member(value, field), child)` to generate an ordinary access to a child field. An empty record gives an empty collection. Unsupported field types such as scalars produce a compile-time diagnostic.
 
@@ -525,7 +525,7 @@ Control statements retain their origin from the first expansion. Loops and argum
 | `-> expr` template | Local template loops and value exits; the template cannot itself return or propagate into the caller or escape the expression |
 | Legacy template without a result category | Retains statement-style caller transfer; supplied fragments still retain their origin |
 
-A supplied `{ break; }` placed inside a generated while still exits the caller's loop. Continue, value exits and level-qualified exits follow the same origin rule. A template's `break level N` counts its source loops before transferring remaining levels to the caller. Caller-qualified levels do not count additional template loops. `break all` follows permitted caller origins to the current function's outermost loop, preserving legacy macro use. An explicit expr template stops at its own outermost loop.
+A supplied `{ break; }` inside a generated while still exits the caller’s loop. Continue and value exits follow the same origin rule. A named exit finds labels in its own syntax origin. A template sees its own labels, and a fragment supplied by the caller sees the caller’s labels.
 
 Functions declared by a template may use their own return and ?. A caller fragment cannot cross a newly generated function and then return to the original function. An expression macro can let the caller choose propagation by accepting an explicit caller expression, such as `leaf()?` passed to an identity macro. Adding ? in the expression template to return early into the caller is rejected.
 
@@ -547,12 +547,11 @@ The `chali/expandMacro` request accepts `mode: "one" | "all"` (default all) and 
 
 Use `--macro-backtrace short` for the nearest expansion frame while preserving the error, field, and argument location. `--macro-backtrace full` retains the full call/definition chain and remains the compatible default. See [production preview and diagnostic tests](../../tests/chali_macro_preview.py).
 
-Built-in #derive previews read the injected production methods and list their instance-field or enum-variant inputs, excluding static fields. Short labels connect field references, and metadata links return to declarations. Generic instances retain the original directive location and module identity and are checked separately. Similar names do not grant user types the behavior of standard Option/Result, and custom or built-in derivation cannot overwrite existing members.
 
 
 ## Debug inspection
 
-The standard Debug interface declares String debug(). #derive(Debug) generates ordinary methods from instance fields or active enum payloads in declaration order, excluding static fields. Nested user values must implement Debug, including handwritten borrowing implementations and inherited contracts. Strings preserve complete UTF-8 spans and escape quotes, backslashes and control bytes; characters use single quotes and booleans use true/false. The default program:: prefix is omitted; other module names and concrete generic identities remain.
+The standard Debug interface declares String debug(). Calling `$std::macro::Debug<T>(debug);` in the type body generates ordinary methods from instance fields or active enum payloads in declaration order, excluding static fields. Nested user values must implement Debug, including handwritten borrowing implementations and inherited contracts. Strings preserve complete UTF-8 spans and escape quotes, backslashes and control bytes; characters use single quotes and booleans use true/false. The default program:: prefix is omitted; other module names and concrete generic identities remain.
 
 Derivation rejects an existing debug method, arrays, references, function values and containers without a Debug contract. Inspection does not grant copy permission for resources. Its text is not a stable cross-version format, JSON encoding or Error.toString. Generated code follows normal type, borrowing and cleanup checks.
 
@@ -561,10 +560,43 @@ See the [macro tutorial](../book/en/22-macros.md) and [Debug regression](../../t
 
 ## Json derivation field protocol
 
-With std::json imported, #derive(Json) implements Json.toJson() and generates a static fromJson(String) on the concrete structure or enum. They return Result<String, Error> and Result<T, Error>. This currently requires reflection code generation but does not expose runtime fields through @Reflect.
+With std::json imported, `$std::json::Json<T>(toJson, fromJson);` implements Json.toJson() and generates a static fromJson(String) on the concrete structure or enum. They return Result<String, Error> and Result<T, Error>. This currently requires reflection code generation but does not expose runtime fields through @Reflect.
 
 Instance fields accept @std::json::Field(name:"external_name", skip:false). An empty name keeps the member name. Skipped fields are neither encoded nor reconstructed; they retain default-constructed values, and known skipped input keys are ignored. Duplicate mapped names or annotations, controls in key names, and use on functions/static fields/unrelated types fail at compile time. Missing required fields, unknown keys and type/range errors return Err. Enums use objects containing only $variant and $values, validating both tag and payload count.
 
 Supported values include all basic numerics, bool, char, standard String, List, Set, String-keyed Map and recursively supported Option/Result. char uses a byte number; uint64 above the signed range uses a precise decimal string. Nonfinite float encoding and out-of-range float decoding fail. Nested user types must also derive Json. References, functions, dynamic interfaces, arrays, noncopyable resources and other unsupported values are compile-time errors, even when skipped. Existing toJson/fromJson methods are not overwritten.
 
-Reflected types without Json derivation keep their existing field policy. Basic JSON parsing remains available with --no-reflection. See the [compiler-directives tutorial](../book/en/24-compiler-directives.md) and [JSON derive regression](../../tests/chali_json_derive.py).
+Reflected types without Json derivation keep their existing field policy. Basic JSON parsing remains available with --no-reflection. See the [macro tutorial](../book/en/22-macros.md) and [JSON derive regression](../../tests/chali_json_derive.py).
+
+## Implementing interfaces with member macros
+
+Use `$implement Interface;` in a `-> member` template to add the interface to the host struct or enum. Generic interfaces can use macro type arguments. Repeated requests use the ordinary interface-list deduplication. Generated methods must satisfy the interface signatures and visibility rules. This example calls generated methods through two interfaces on the same host type.
+
+For example, `$implement Count<T>;` uses the macro's type argument, and `$implement Count<String>;` uses String. The standard Equal, Hash, Clone, Debug, and Json member macros add their own interfaces.
+
+```chali
+interface Read<T> { T read(); }
+interface Named { String label(); }
+$macro AUTO<U>(reader:ident, labeler:ident) -> member
+$implement Read<U>;
+$implement Named;
+$implement Named;
+U reader() { return self.value; }
+String labeler() { return "auto"; }
+$end_macro
+struct Entry {
+    int64 value;
+    $AUTO<int64>(read, label);
+}
+void main() {
+    Entry entry;
+    entry.value = 42;
+    Read<int64> reader = entry;
+    Named named = entry;
+    println("{} {}", reader.read(), named.label());
+}
+```
+
+```text
+42 auto
+```

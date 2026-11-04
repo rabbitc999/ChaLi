@@ -88,14 +88,21 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-42"></a>`struct Receive<T>` | 操作状态与载荷；仅在 READY 时读取 value。 |
-| Receive | <a id="symbol-43"></a>`int64 status` | 统一操作状态码；载荷仅在 READY 时有效。 |
-| Receive | <a id="symbol-44"></a>`T value` | 保存的单个值。 |
-| 模块 | <a id="symbol-45"></a>`struct Shared<T>` | 每次 get/set/swap 原子；组合调用不构成原子事务。 |
-| 模块 | <a id="symbol-46"></a>`struct AtomicInt64` | 共享 int64 原子槽，fetchAdd 返回旧值。 |
-| AtomicInt64 | <a id="symbol-47"></a>`Shared<int64> slot` | 显式共享的 int64 原子槽。 |
-| 模块 | <a id="symbol-48"></a>`struct Channel<T>` | 跨线程有界传值通道；可复制句柄，显式关闭。 |
-| Channel | <a id="symbol-49"></a>`int64 handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
+| 模块 | <a id="symbol-44"></a>`const int64 READY = 0` | 统一跨线程结果：0 完成，1 超时，2 关闭，3 取消，4 队列满，5 失败，6 无效句柄。 |
+| 模块 | <a id="symbol-45"></a>`const int64 TIMEOUT = 1` | 等待预算已耗尽，目标任务仍可能运行。 |
+| 模块 | <a id="symbol-46"></a>`const int64 CLOSED = 2` | 队列已关闭且无可接收载荷。 |
+| 模块 | <a id="symbol-47"></a>`const int64 CANCELLED = 3` | 任务已取消的状态常量，数值见所属模块声明。 |
+| 模块 | <a id="symbol-48"></a>`const int64 FULL = 4` | 有界队列已满的状态常量。 |
+| 模块 | <a id="symbol-49"></a>`const int64 FAILED = 5` | 任务失败的状态常量，数值见所属模块声明。 |
+| 模块 | <a id="symbol-50"></a>`const int64 INVALID = 6` | 句柄无效的状态常量。 |
+| 模块 | <a id="symbol-51"></a>`struct Receive<T>` | 操作状态与载荷；仅在 READY 时读取 value。 |
+| Receive | <a id="symbol-52"></a>`int64 status` | 统一操作状态码；载荷仅在 READY 时有效。 |
+| Receive | <a id="symbol-53"></a>`T value` | 保存的单个值。 |
+| 模块 | <a id="symbol-54"></a>`struct Shared<T>` | 每次 get/set/swap 原子；组合调用不构成原子事务。 |
+| 模块 | <a id="symbol-55"></a>`struct AtomicInt64` | 共享 int64 原子槽，fetchAdd 返回旧值。 |
+| AtomicInt64 | <a id="symbol-56"></a>`Shared<int64> slot` | 显式共享的 int64 原子槽。 |
+| 模块 | <a id="symbol-57"></a>`struct Channel<T>` | 跨线程有界传值通道；可复制句柄，显式关闭。 |
+| Channel | <a id="symbol-58"></a>`int64 handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
 
 ## 函数索引
 

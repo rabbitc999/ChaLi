@@ -164,16 +164,18 @@ memory=ok
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-352"></a>`struct PathString` | 路径文本组合与拆分的静态入口。 |
+| 模块 | <a id="symbol-377"></a>`struct PathString` | 路径文本组合与拆分的静态入口。 |
 
 ## 函数索引
 
 | 名称 | 声明 |
 | --- | --- |
-| [PathString::join](#api-0) | `static std::lang::String join(std::lang::String left, std::lang::String right)` |
-| [PathString::fileName](#api-1) | `static std::lang::String fileName(std::lang::String path)` |
-| [PathString::extension](#api-2) | `static std::lang::String extension(std::lang::String path)` |
-| [PathString::normalize](#api-3) | `static std::lang::String normalize(std::lang::String path)` |
+| [PathString::join](#api-0) | `static std::core::String join(std::core::String left, std::core::String right)` |
+| [PathString::fileName](#api-1) | `static std::core::String fileName(std::core::String path)` |
+| [PathString::extension](#api-2) | `static std::core::String extension(std::core::String path)` |
+| [PathString::normalize](#api-3) | `static std::core::String normalize(std::core::String path)` |
+| [PathString::parent](#api-4) | `static String parent(String path)` |
+| [PathString::stem](#api-5) | `static String stem(String path)` |
 
 <a id="api-0"></a>
 
@@ -182,7 +184,7 @@ memory=ok
 **声明**
 
 ```chali
-static std::lang::String join(std::lang::String left, std::lang::String right);
+static std::core::String join(std::core::String left, std::core::String right);
 ```
 
 **行为**
@@ -193,12 +195,12 @@ static std::lang::String join(std::lang::String left, std::lang::String right);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `left` | `std::lang::String left` | 左操作数或区间左端 | 无 |
-| `right` | `std::lang::String right` | 右操作数或区间右端 | 无 |
+| `left` | `std::core::String left` | 左操作数或区间左端 | 无 |
+| `right` | `std::core::String right` | 右操作数或区间右端 | 无 |
 
 **返回值**
 
-`std::lang::String`。将 left 与 right 组合为路径字符串。
+`std::core::String`。将 left 与 right 组合为路径字符串。
 
 **错误与边界**
 
@@ -210,7 +212,7 @@ static std::lang::String join(std::lang::String left, std::lang::String right);
 std::path::PathString::join(left, right);
 ```
 
-**源码**：[source/std/path.chl:135](../../source/std/path.chl#L135)。
+**源码**：[source/std/path.chl:134](../../source/std/path.chl#L134)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
 
@@ -221,7 +223,7 @@ std::path::PathString::join(left, right);
 **声明**
 
 ```chali
-static std::lang::String fileName(std::lang::String path);
+static std::core::String fileName(std::core::String path);
 ```
 
 **行为**
@@ -232,11 +234,11 @@ static std::lang::String fileName(std::lang::String path);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `path` | `std::lang::String path` | 文件/数据库路径 | 无 |
+| `path` | `std::core::String path` | 文件/数据库路径 | 无 |
 
 **返回值**
 
-`std::lang::String`。返回路径末尾文件名。
+`std::core::String`。返回路径末尾文件名。
 
 **错误与边界**
 
@@ -248,7 +250,7 @@ static std::lang::String fileName(std::lang::String path);
 std::path::PathString::fileName(path);
 ```
 
-**源码**：[source/std/path.chl:136](../../source/std/path.chl#L136)。
+**源码**：[source/std/path.chl:135](../../source/std/path.chl#L135)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
 
@@ -259,7 +261,7 @@ std::path::PathString::fileName(path);
 **声明**
 
 ```chali
-static std::lang::String extension(std::lang::String path);
+static std::core::String extension(std::core::String path);
 ```
 
 **行为**
@@ -270,11 +272,11 @@ static std::lang::String extension(std::lang::String path);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `path` | `std::lang::String path` | 文件/数据库路径 | 无 |
+| `path` | `std::core::String path` | 文件/数据库路径 | 无 |
 
 **返回值**
 
-`std::lang::String`。返回路径的扩展名。
+`std::core::String`。返回路径的扩展名。
 
 **错误与边界**
 
@@ -286,7 +288,7 @@ static std::lang::String extension(std::lang::String path);
 std::path::PathString::extension(path);
 ```
 
-**源码**：[source/std/path.chl:137](../../source/std/path.chl#L137)。
+**源码**：[source/std/path.chl:136](../../source/std/path.chl#L136)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
 
@@ -297,7 +299,7 @@ std::path::PathString::extension(path);
 **声明**
 
 ```chali
-static std::lang::String normalize(std::lang::String path);
+static std::core::String normalize(std::core::String path);
 ```
 
 **行为**
@@ -308,11 +310,11 @@ static std::lang::String normalize(std::lang::String path);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `path` | `std::lang::String path` | 文件/数据库路径 | 无 |
+| `path` | `std::core::String path` | 文件/数据库路径 | 无 |
 
 **返回值**
 
-`std::lang::String`。返回宿主规则下的规范化路径字符串。
+`std::core::String`。返回宿主规则下的规范化路径字符串。
 
 **错误与边界**
 
@@ -324,6 +326,84 @@ static std::lang::String normalize(std::lang::String path);
 std::path::PathString::normalize(path);
 ```
 
-**源码**：[source/std/path.chl:138](../../source/std/path.chl#L138)。
+**源码**：[source/std/path.chl:137](../../source/std/path.chl#L137)。
+
+**完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
+
+<a id="api-4"></a>
+
+### PathString::parent（5）
+
+**声明**
+
+```chali
+static String parent(String path);
+```
+
+**行为**
+
+返回创建当前任务的父线程 Thread 句柄。
+
+返回归一化后的父路径；单段相对路径的父路径为点。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `path` | `String path` | 文件/数据库路径 | 无 |
+
+**返回值**
+
+`String`。返回创建当前任务的父线程 Thread 句柄。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::path::PathString::parent(path);
+```
+
+**源码**：[source/std/path.chl:140](../../source/std/path.chl#L140)。
+
+**完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
+
+<a id="api-5"></a>
+
+### PathString::stem（6）
+
+**声明**
+
+```chali
+static String stem(String path);
+```
+
+**行为**
+
+返回末段名称去掉最后一个扩展名后的文本。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `path` | `String path` | 文件/数据库路径 | 无 |
+
+**返回值**
+
+`String`。返回末段名称去掉最后一个扩展名后的文本。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::path::PathString::stem(path);
+```
+
+**源码**：[source/std/path.chl:156](../../source/std/path.chl#L156)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。

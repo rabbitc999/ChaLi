@@ -21,6 +21,13 @@ const chali_generic::Generic *FindAstGenericTypeDefinition(const MType &type, bo
     auto qualifier = split == Memory::String::npos ? type.lookupModule : type.genericBase.substr(0, split);
     if (requireUnique && qualifier == "__root") qualifier.clear();
     auto found = findScoped(qualifier, split == Memory::String::npos ? type.genericBase : type.genericBase.substr(split + 2));
+    if (found == generics.end() && split != Memory::String::npos && qualifier == "std::core")
+    {
+        const auto builtin = generics.find(type.genericBase.substr(split + 2));
+        if (builtin != generics.end() && builtin->second.module.empty()
+            && builtin->second.origin.file.rfind("<内建 ", 0) == 0)
+            found = builtin;
+    }
     if (requireUnique)
     {
         if (found == generics.end() && split == Memory::String::npos) found = findScoped({}, type.genericBase);
@@ -28,12 +35,12 @@ const chali_generic::Generic *FindAstGenericTypeDefinition(const MType &type, bo
     else
     {
         if (found == generics.end()) found = generics.find(type.genericBase);
-        if (found == generics.end()) found = findScoped("std::lang", type.genericBase);
+        if (found == generics.end()) found = findScoped("std::core", type.genericBase);
     }
     if (found == generics.end() && (!requireUnique || split == Memory::String::npos))
     {
         const auto imports = g_moduleImports.find(type.lookupModule);
-        if (requireUnique) found = findScoped("std::lang", type.genericBase);
+        if (requireUnique) found = findScoped("std::core", type.genericBase);
         if (imports != g_moduleImports.end())
             for (const auto &module : imports->second)
             {
@@ -173,7 +180,7 @@ Memory::String InferenceTypeText(const std::shared_ptr<MType> &type)
     if (type->kind == MType::Array) return InferenceTypeText(type->elem) + "[]";
     if (IsContainer(type))
     {
-        auto text = Memory::String("std::lang::") + (type->name == "vec" ? "List" : type->name == "set" ? "Set" :
+        auto text = Memory::String("std::core::") + (type->name == "vec" ? "List" : type->name == "set" ? "Set" :
                                                                                                           "Map")
                     + "<" + InferenceTypeText(type->elem);
         if (type->elem2) text += "," + InferenceTypeText(type->elem2);
@@ -1148,10 +1155,10 @@ bool RewriteErrorAdapter(int id)
     if (callee.kind != MNode::Member || callee.kids.empty()) return false;
     const auto type = ExprType(callee.kids[0]);
     const auto source = chali_generic::session.made.find(type->name);
-    if (source == chali_generic::session.made.end() || source->second.generic->module != "std::lang") return false;
+    if (source == chali_generic::session.made.end() || source->second.generic->module != "std::core") return false;
     Memory::String method = callee.s, explicitType;
     auto marker = chali_generic::session.made.find(method);
-    if (marker != chali_generic::session.made.end() && marker->second.generic->module == "std::lang")
+    if (marker != chali_generic::session.made.end() && marker->second.generic->module == "std::core")
     {
         auto name = marker->second.generic->name;
         if (name == "__chaliMapErr")
@@ -1180,7 +1187,7 @@ bool RewriteErrorAdapter(int id)
     const int arguments = M_New(MNode::List);
     g_nodes[arguments].kids = N(node.kids[1]).kids;
     g_nodes[arguments].kids.insert(g_nodes[arguments].kids.begin(), callee.kids[0]);
-    const int target = M_New(MNode::EnumCtor, "std::lang");
+    const int target = M_New(MNode::EnumCtor, "std::core");
     g_nodes[target].s2 = function;
     g_nodes[id].kids = { target, arguments };
     return true;
@@ -1198,7 +1205,7 @@ bool RewriteBarePointerCast(int id)
     const auto callee = N(node.kids[0]);
     if (callee.kind != MNode::Member || callee.kids.empty()) return false;
     const auto marker = chali_generic::session.made.find(callee.s);
-    if (marker == chali_generic::session.made.end() || marker->second.generic->module != "std::lang"
+    if (marker == chali_generic::session.made.end() || marker->second.generic->module != "std::core"
         || marker->second.generic->name != "__chaliCastTo") return false;
     const auto type = ExprType(callee.kids[0]);
     if (!IsBarePointerType(type)) return false;
@@ -1210,18 +1217,18 @@ bool RewriteBarePointerCast(int id)
     if (!chali_generic::session.made.count(specialized)) throw MInstantiationRequest{ "__pointerCast", types };
     const int arguments = M_New(MNode::List);
     g_nodes[arguments].kids = { callee.kids[0] };
-    const int target = M_New(MNode::EnumCtor, "std::lang");
+    const int target = M_New(MNode::EnumCtor, "std::core");
     g_nodes[target].s2 = specialized;
     g_nodes[id].kids = { target, arguments };
     return true;
 }
 
 /**
- * @brief 把 `map.getOption(键)` 归一为 std::lang 的泛型函数，结果就是 `Option<V>`。
+ * @brief 把 `map.getOption(键)` 归一为 std::core 的泛型函数，结果就是 `Option<V>`。
  *
  * 下标 `m[k]` 读不存在的键会报错（0.27.1 起），所以"键可能不在、想自己处理"的
  * 场合要有另一条路：这里改写成 `__mapGetOptionImpl(&m, k)`，实现写在
- * `source/std/lang.chl` 里（先 `has` 再取值），Option 的构造因此全部走 ChaLi 源码，
+ * `source/std/core.chl` 里（先 `has` 再取值），Option 的构造因此全部走 ChaLi 源码，
  * 不用在 opcode 侧碰泛型枚举的运行时布局。
  *
  * @param id 待归一的调用表达式。
@@ -1243,7 +1250,7 @@ bool RewriteMapGetOption(int id)
     const int arguments = M_New(MNode::List);
     g_nodes[arguments].kids = N(node.kids[1]).kids;
     g_nodes[arguments].kids.insert(g_nodes[arguments].kids.begin(), source);
-    const int target = M_New(MNode::EnumCtor, "std::lang");
+    const int target = M_New(MNode::EnumCtor, "std::core");
     g_nodes[target].s2 = "__mapGetOptionImpl";
     g_nodes[target].type2 = 0;
     g_nodes[id].kids = { target, arguments };
@@ -1262,9 +1269,9 @@ bool RewriteRangeCall(int id, bool pattern = false)
     if (node.kind != MNode::Call || node.kids.size() != 2u) return false;
     const auto callee = N(node.kids[0]);
     Memory::String name;
-    if (callee.kind == MNode::EnumCtor && callee.s == "std::lang")
+    if (callee.kind == MNode::EnumCtor && callee.s == "std::core")
         name = callee.s2;
-    else if (callee.kind == MNode::Var && CanUseImplicitLang(callee.module, callee.s))
+    else if (callee.kind == MNode::Var && CanUseImplicitCore(callee.module, callee.s))
         name = callee.s;
     else
         return false;
@@ -1336,7 +1343,7 @@ bool RewriteRangeCall(int id, bool pattern = false)
     if (pattern) return Fail("match 的 range 和 rangeEq 模式只支持整数或 char"), true;
     auto &target = g_nodes[node.kids[0]];
     target.kind = MNode::EnumCtor;
-    target.s = "std::lang";
+    target.s = "std::core";
     target.s2 = name == "rangeEq" ? "__customRangeEq" : "__customRange";
     return true;
 }
@@ -1744,7 +1751,7 @@ void InferExpression(int id, const std::shared_ptr<MType> &expected)
                 auto pattern = sig.params[std::min(i, sig.params.size() - 1)];
                 if (sig.variadic && i + 1 >= sig.params.size()) pattern = pattern->elem;
                 // memset 的固定字节参数沿用普通调用的字面量适配，不把 0／字符字面量当作泛型冲突。
-                if (i == 1u && generic->second.module == "std::lang" && generic->second.sourceName == "memset"
+                if (i == 1u && generic->second.module == "std::core" && generic->second.sourceName == "memset"
                     && pattern->kind == MType::Int && pattern->isUnsigned && pattern->bits == 8)
                 {
                     const auto &literal = N(arguments[i]);

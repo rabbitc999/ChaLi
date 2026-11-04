@@ -59,32 +59,36 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-423"></a>`struct SqlStatement` | 可独立保存、查看并执行的 SQL 与参数，参数为 JSON 标量数组。 |
-| SqlStatement | <a id="symbol-424"></a>`String sql` | 包含占位符的 SQL 文本，不含参数值。 |
-| SqlStatement | <a id="symbol-425"></a>`String parameters` | 按占位符顺序保存类型的 JSON 标量数组。 |
-| 模块 | <a id="symbol-426"></a>`struct Query` | 值语义的动态查询；复制后可独立修改条件。 |
-| Query | <a id="symbol-427"></a>`String model` | 从反射类型与注解构造的模型元数据 JSON。 |
-| Query | <a id="symbol-428"></a>`List<String> filters` | 按添加顺序合取的参数化过滤条件。 |
-| Query | <a id="symbol-429"></a>`List<String> orders` | 按添加顺序使用的字段排序声明。 |
-| Query | <a id="symbol-430"></a>`List<String> columns` | 结果集按顺序保存的列名。 |
-| Query | <a id="symbol-431"></a>`int64 limitValue` | 最大返回行数，零表示不限制。 |
-| Query | <a id="symbol-432"></a>`int64 offsetValue` | 分页跳过的行数。 |
-| 模块 | <a id="symbol-433"></a>`struct DataCell` | 结果集里的一个格子，保留类型与文本两种形态。 |
-| DataCell | <a id="symbol-434"></a>`int64 kind` | 单元格种类：NULL、整数、浮点或文本。 |
-| DataCell | <a id="symbol-435"></a>`int64 intValue` | 整数单元格保存的值。 |
-| DataCell | <a id="symbol-436"></a>`float64 realValue` | 浮点单元格保存的值。 |
-| DataCell | <a id="symbol-437"></a>`std::lang::String textValue` | 文本单元格保存的字符串。 |
-| 模块 | <a id="symbol-438"></a>`struct DataRow` | 结果集的一行。 |
-| DataRow | <a id="symbol-439"></a>`std::lang::List<DataCell> cells` | 该行按列顺序保存的单元格。 |
-| 模块 | <a id="symbol-440"></a>`struct ResultSet` | 一次 exec 的结果：状态、错误、影响行数、结果集。 |
-| ResultSet | <a id="symbol-441"></a>`bool ok` | 当前解析或请求是否成功。 |
-| ResultSet | <a id="symbol-442"></a>`std::lang::String error` | 最近操作的错误说明。 |
-| ResultSet | <a id="symbol-443"></a>`int64 affected` | 操作影响的记录数量。 |
-| ResultSet | <a id="symbol-444"></a>`std::lang::List<std::lang::String> columns` | 结果集按顺序保存的列名。 |
-| ResultSet | <a id="symbol-445"></a>`std::lang::List<DataRow> rows` | 按查询顺序保存的数据行。 |
-| 模块 | <a id="symbol-446"></a>`enum Driver` | std::sql 支持的数据库引擎。 |
+| 模块 | <a id="symbol-448"></a>`struct SqlStatement` | 可独立保存、查看并执行的 SQL 与参数，参数为 JSON 标量数组。 |
+| SqlStatement | <a id="symbol-449"></a>`String sql` | 包含占位符的 SQL 文本，不含参数值。 |
+| SqlStatement | <a id="symbol-450"></a>`String parameters` | 按占位符顺序保存类型的 JSON 标量数组。 |
+| 模块 | <a id="symbol-451"></a>`struct Query` | 值语义的动态查询；复制后可独立修改条件。 |
+| Query | <a id="symbol-452"></a>`String model` | 从反射类型与注解构造的模型元数据 JSON。 |
+| Query | <a id="symbol-453"></a>`List<String> filters` | 按添加顺序合取的参数化过滤条件。 |
+| Query | <a id="symbol-454"></a>`List<String> orders` | 按添加顺序使用的字段排序声明。 |
+| Query | <a id="symbol-455"></a>`List<String> columns` | 结果集按顺序保存的列名。 |
+| Query | <a id="symbol-456"></a>`int64 limitValue` | 最大返回行数，零表示不限制。 |
+| Query | <a id="symbol-457"></a>`int64 offsetValue` | 分页跳过的行数。 |
+| 模块 | <a id="symbol-458"></a>`const int64 CELL_NULL = 0` | ── 格子取值类型编号 ─────────────────────────────────────────────────── |
+| 模块 | <a id="symbol-459"></a>`const int64 CELL_INT = 1` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-460"></a>`const int64 CELL_REAL = 2` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-461"></a>`const int64 CELL_TEXT = 3` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-462"></a>`struct DataCell` | 结果集里的一个格子，保留类型与文本两种形态。 |
+| DataCell | <a id="symbol-463"></a>`int64 kind` | 单元格种类：NULL、整数、浮点或文本。 |
+| DataCell | <a id="symbol-464"></a>`int64 intValue` | 整数单元格保存的值。 |
+| DataCell | <a id="symbol-465"></a>`float64 realValue` | 浮点单元格保存的值。 |
+| DataCell | <a id="symbol-466"></a>`std::core::String textValue` | 文本单元格保存的字符串。 |
+| 模块 | <a id="symbol-467"></a>`struct DataRow` | 结果集的一行。 |
+| DataRow | <a id="symbol-468"></a>`std::core::List<DataCell> cells` | 该行按列顺序保存的单元格。 |
+| 模块 | <a id="symbol-469"></a>`struct ResultSet` | 一次 exec 的结果：状态、错误、影响行数、结果集。 |
+| ResultSet | <a id="symbol-470"></a>`bool ok` | 当前解析或请求是否成功。 |
+| ResultSet | <a id="symbol-471"></a>`std::core::String error` | 最近操作的错误说明。 |
+| ResultSet | <a id="symbol-472"></a>`int64 affected` | 操作影响的记录数量。 |
+| ResultSet | <a id="symbol-473"></a>`std::core::List<std::core::String> columns` | 结果集按顺序保存的列名。 |
+| ResultSet | <a id="symbol-474"></a>`std::core::List<DataRow> rows` | 按查询顺序保存的数据行。 |
+| 模块 | <a id="symbol-475"></a>`enum Driver` | std::sql 支持的数据库引擎。 |
 | Driver | `MySQL, SQLite, PostgreSQL, SqlServer, Odbc, MariaDB` | std::sql 支持的数据库引擎。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-447"></a>`#NonCopyable opcode Database` | 不可复制的数据库连接 opcode，状态和释放责任由宿主记录保存。 |
+| 模块 | <a id="symbol-476"></a>`#NonCopyable opcode Database` | 不可复制的数据库连接 opcode，状态和释放责任由宿主记录保存。 |
 
 ## 函数索引
 
@@ -93,10 +97,10 @@ void main() {
 | [Query::orderBy](#api-0) | `void orderBy(String field, bool descending = false)` |
 | [Query::select](#api-1) | `void select(String field)` |
 | [Query::page](#api-2) | `void page(int64 limit, int64 offset = 0)` |
-| [Query::build](#api-3) | `Result<SqlStatement,std::lang::Error> build(String operation = "select", String values = "{}")` |
+| [Query::build](#api-3) | `Result<SqlStatement,std::core::Error> build(String operation = "select", String values = "{}")` |
 | [DataCell::isNull](#api-4) | `bool isNull()` |
 | [DataCell::isNumber](#api-5) | `bool isNumber()` |
-| [DataCell::text](#api-6) | `std::lang::String text()` |
+| [DataCell::text](#api-6) | `std::core::String text()` |
 | [DataCell::asInt](#api-7) | `int64 asInt()` |
 | [DataCell::asReal](#api-8) | `float64 asReal()` |
 | [DataRow::size](#api-9) | `int64 size()` |
@@ -104,47 +108,47 @@ void main() {
 | [ResultSet::rowCount](#api-11) | `int64 rowCount()` |
 | [ResultSet::colCount](#api-12) | `int64 colCount()` |
 | [ResultSet::isEmpty](#api-13) | `bool isEmpty()` |
-| [ResultSet::columnName](#api-14) | `std::lang::String columnName(int64 index)` |
-| [ResultSet::columnIndex](#api-15) | `int64 columnIndex(std::lang::String name)` |
+| [ResultSet::columnName](#api-14) | `std::core::String columnName(int64 index)` |
+| [ResultSet::columnIndex](#api-15) | `int64 columnIndex(std::core::String name)` |
 | [ResultSet::at](#api-16) | `DataCell at(int64 row, int64 column)` |
-| [ResultSet::textAt](#api-17) | `std::lang::String textAt(int64 row, int64 column)` |
+| [ResultSet::textAt](#api-17) | `std::core::String textAt(int64 row, int64 column)` |
 | [ResultSet::intAt](#api-18) | `int64 intAt(int64 row, int64 column)` |
 | [ResultSet::realAt](#api-19) | `float64 realAt(int64 row, int64 column)` |
-| [ResultSet::scalar](#api-20) | `std::lang::String scalar()` |
+| [ResultSet::scalar](#api-20) | `std::core::String scalar()` |
 | [ResultSet::count](#api-21) | `int64 count()` |
-| [ResultSet::pad](#api-22) | `std::lang::String pad(std::lang::String text, int64 width)` |
-| [ResultSet::render](#api-23) | `std::lang::String render()` |
+| [ResultSet::pad](#api-22) | `std::core::String pad(std::core::String text, int64 width)` |
+| [ResultSet::render](#api-23) | `std::core::String render()` |
 | [Database::mysql](#api-24) | `static Database mysql(String host, String user, String password, String database, int32 port)` |
 | [Database::sqlite](#api-25) | `static Database sqlite(String path)` |
 | [Database::postgres](#api-26) | `static Database postgres(String options)` |
 | [Database::odbc](#api-27) | `static Database odbc(String options)` |
 | [Database::sqlServer](#api-28) | `static Database sqlServer(String options)` |
 | [Database::driver](#api-29) | `Driver driver()` |
-| [Database::quote](#api-30) | `std::lang::String quote(std::lang::String text)` |
-| [Database::backendName](#api-31) | `std::lang::String backendName()` |
-| [Database::mysql](#api-32) | `static Database mysql(std::lang::String host, std::lang::String user, std::lang::String password, std::lang::String database)` |
+| [Database::quote](#api-30) | `std::core::String quote(std::core::String text)` |
+| [Database::backendName](#api-31) | `std::core::String backendName()` |
+| [Database::mysql](#api-32) | `static Database mysql(std::core::String host, std::core::String user, std::core::String password, std::core::String database)` |
 | [Database::maria](#api-33) | `static Database maria(String host, String user, String password, String database, int32 port = (int32)3306)` |
-| [Database::local](#api-34) | `static Database local(std::lang::String database)` |
+| [Database::local](#api-34) | `static Database local(std::core::String database)` |
 | [Database::isOpen](#api-35) | `bool isOpen()` |
-| [Database::lastError](#api-36) | `std::lang::String lastError()` |
+| [Database::lastError](#api-36) | `std::core::String lastError()` |
 | [Database::affectedRows](#api-37) | `int64 affectedRows()` |
 | [Database::close](#api-38) | `void close()` |
-| [Database::exec](#api-39) | `ResultSet exec(std::lang::String sql)` |
+| [Database::exec](#api-39) | `ResultSet exec(std::core::String sql)` |
 | [Database::exec](#api-40) | `ResultSet exec(SqlStatement statement)` |
-| [Database::execOk](#api-41) | `bool execOk(std::lang::String sql)` |
-| [Database::scalar](#api-42) | `std::lang::String scalar(std::lang::String sql)` |
-| [Database::count](#api-43) | `int64 count(std::lang::String sql)` |
-| [Database::hasTable](#api-44) | `bool hasTable(std::lang::String tableName)` |
-| [quote](#api-45) | `std::lang::String quote(std::lang::String text, bool escapeBackslash)` |
-| [quote](#api-46) | `std::lang::String quote(std::lang::String text)` |
-| [intLiteral](#api-47) | `std::lang::String intLiteral(int64 value)` |
-| [realLiteral](#api-48) | `std::lang::String realLiteral(float64 value)` |
-| [displayWidth](#api-49) | `int64 displayWidth(std::lang::String text)` |
-| [query](#api-50) | `Result<Query,std::lang::Error> query<T>()` |
-| [filter](#api-51) | `Result<bool,std::lang::Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0)` |
-| [filterMany](#api-52) | `Result<bool,std::lang::Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11)` |
-| [insert](#api-53) | `Result<SqlStatement,std::lang::Error> insert<T>(Query mut& query, T const& value)` |
-| [update](#api-54) | `Result<SqlStatement,std::lang::Error> update<T>(Query mut& query, T const& value)` |
+| [Database::execOk](#api-41) | `bool execOk(std::core::String sql)` |
+| [Database::scalar](#api-42) | `std::core::String scalar(std::core::String sql)` |
+| [Database::count](#api-43) | `int64 count(std::core::String sql)` |
+| [Database::hasTable](#api-44) | `bool hasTable(std::core::String tableName)` |
+| [quote](#api-45) | `std::core::String quote(std::core::String text, bool escapeBackslash)` |
+| [quote](#api-46) | `std::core::String quote(std::core::String text)` |
+| [intLiteral](#api-47) | `std::core::String intLiteral(int64 value)` |
+| [realLiteral](#api-48) | `std::core::String realLiteral(float64 value)` |
+| [displayWidth](#api-49) | `int64 displayWidth(std::core::String text)` |
+| [query](#api-50) | `Result<Query,std::core::Error> query<T>()` |
+| [filter](#api-51) | `Result<bool,std::core::Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0)` |
+| [filterMany](#api-52) | `Result<bool,std::core::Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11)` |
+| [insert](#api-53) | `Result<SqlStatement,std::core::Error> insert<T>(Query mut& query, T const& value)` |
+| [update](#api-54) | `Result<SqlStatement,std::core::Error> update<T>(Query mut& query, T const& value)` |
 
 <a id="api-0"></a>
 
@@ -271,7 +275,7 @@ obj.page(limit, offset);
 **声明**
 
 ```chali
-Result<SqlStatement,std::lang::Error> build(String operation = "select", String values = "{}");
+Result<SqlStatement,std::core::Error> build(String operation = "select", String values = "{}");
 ```
 
 **行为**
@@ -289,7 +293,7 @@ Result<SqlStatement,std::lang::Error> build(String operation = "select", String 
 
 **返回值**
 
-`Result<SqlStatement,std::lang::Error>`。生成带参数列表的动态 SQL。
+`Result<SqlStatement,std::core::Error>`。生成带参数列表的动态 SQL。
 
 **错误与边界**
 
@@ -384,7 +388,7 @@ obj.isNumber();
 **声明**
 
 ```chali
-std::lang::String text();
+std::core::String text();
 ```
 
 **行为**
@@ -399,7 +403,7 @@ std::lang::String text();
 
 **返回值**
 
-`std::lang::String`。返回单元格的文本表示。
+`std::core::String`。返回单元格的文本表示。
 
 **错误与边界**
 
@@ -676,7 +680,7 @@ obj.isEmpty();
 **声明**
 
 ```chali
-std::lang::String columnName(int64 index);
+std::core::String columnName(int64 index);
 ```
 
 **行为**
@@ -691,7 +695,7 @@ std::lang::String columnName(int64 index);
 
 **返回值**
 
-`std::lang::String`。按列下标读取列名。
+`std::core::String`。按列下标读取列名。
 
 **错误与边界**
 
@@ -714,7 +718,7 @@ obj.columnName(index);
 **声明**
 
 ```chali
-int64 columnIndex(std::lang::String name);
+int64 columnIndex(std::core::String name);
 ```
 
 **行为**
@@ -727,7 +731,7 @@ int64 columnIndex(std::lang::String name);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `name` | `std::lang::String name` | 名称 | 无 |
+| `name` | `std::core::String name` | 名称 | 无 |
 
 **返回值**
 
@@ -793,7 +797,7 @@ obj.at(row, column);
 **声明**
 
 ```chali
-std::lang::String textAt(int64 row, int64 column);
+std::core::String textAt(int64 row, int64 column);
 ```
 
 **行为**
@@ -809,7 +813,7 @@ std::lang::String textAt(int64 row, int64 column);
 
 **返回值**
 
-`std::lang::String`。读取指定单元格的文本表示。
+`std::core::String`。读取指定单元格的文本表示。
 
 **错误与边界**
 
@@ -910,7 +914,7 @@ obj.realAt(row, column);
 **声明**
 
 ```chali
-std::lang::String scalar();
+std::core::String scalar();
 ```
 
 **行为**
@@ -925,7 +929,7 @@ std::lang::String scalar();
 
 **返回值**
 
-`std::lang::String`。读取结果首行首列的文本表示。
+`std::core::String`。读取结果首行首列的文本表示。
 
 **错误与边界**
 
@@ -986,7 +990,7 @@ obj.count();
 **声明**
 
 ```chali
-std::lang::String pad(std::lang::String text, int64 width);
+std::core::String pad(std::core::String text, int64 width);
 ```
 
 **行为**
@@ -999,12 +1003,12 @@ std::lang::String pad(std::lang::String text, int64 width);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 | `width` | `int64 width` | 目标字节宽度或定宽字段大小 | 无 |
 
 **返回值**
 
-`std::lang::String`。按显示宽度补齐单元格文本。
+`std::core::String`。按显示宽度补齐单元格文本。
 
 **错误与边界**
 
@@ -1027,7 +1031,7 @@ obj.pad(text, width);
 **声明**
 
 ```chali
-std::lang::String render();
+std::core::String render();
 ```
 
 **行为**
@@ -1042,7 +1046,7 @@ std::lang::String render();
 
 **返回值**
 
-`std::lang::String`。将结果集渲染为文本表格。
+`std::core::String`。将结果集渲染为文本表格。
 
 **错误与边界**
 
@@ -1305,7 +1309,7 @@ obj.driver();
 **声明**
 
 ```chali
-std::lang::String quote(std::lang::String text);
+std::core::String quote(std::core::String text);
 ```
 
 **行为**
@@ -1318,11 +1322,11 @@ std::lang::String quote(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::lang::String`。生成带单引号的 SQL 字符串字面量，按驱动处理反斜杠。
+`std::core::String`。生成带单引号的 SQL 字符串字面量，按驱动处理反斜杠。
 
 **错误与边界**
 
@@ -1345,7 +1349,7 @@ obj.quote(text);
 **声明**
 
 ```chali
-std::lang::String backendName();
+std::core::String backendName();
 ```
 
 **行为**
@@ -1360,7 +1364,7 @@ std::lang::String backendName();
 
 **返回值**
 
-`std::lang::String`。返回驱动标识字符串。
+`std::core::String`。返回驱动标识字符串。
 
 **错误与边界**
 
@@ -1383,7 +1387,7 @@ obj.backendName();
 **声明**
 
 ```chali
-static Database mysql(std::lang::String host, std::lang::String user, std::lang::String password, std::lang::String database);
+static Database mysql(std::core::String host, std::core::String user, std::core::String password, std::core::String database);
 ```
 
 **行为**
@@ -1396,10 +1400,10 @@ static Database mysql(std::lang::String host, std::lang::String user, std::lang:
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `host` | `std::lang::String host` | 主机名或 IP 地址 | 无 |
-| `user` | `std::lang::String user` | 数据库用户名 | 无 |
-| `password` | `std::lang::String password` | 数据库连接密码 | 无 |
-| `database` | `std::lang::String database` | 数据库名 | 无 |
+| `host` | `std::core::String host` | 主机名或 IP 地址 | 无 |
+| `user` | `std::core::String user` | 数据库用户名 | 无 |
+| `password` | `std::core::String password` | 数据库连接密码 | 无 |
+| `database` | `std::core::String database` | 数据库名 | 无 |
 
 **返回值**
 
@@ -1470,7 +1474,7 @@ std::sql::Database::maria(host, user, password, database, port);
 **声明**
 
 ```chali
-static Database local(std::lang::String database);
+static Database local(std::core::String database);
 ```
 
 **行为**
@@ -1483,7 +1487,7 @@ static Database local(std::lang::String database);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `database` | `std::lang::String database` | 数据库名 | 无 |
+| `database` | `std::core::String database` | 数据库名 | 无 |
 
 **返回值**
 
@@ -1546,7 +1550,7 @@ obj.isOpen();
 **声明**
 
 ```chali
-std::lang::String lastError();
+std::core::String lastError();
 ```
 
 **行为**
@@ -1559,7 +1563,7 @@ std::lang::String lastError();
 
 **返回值**
 
-`std::lang::String`。返回连接/网络操作最近的错误文本。
+`std::core::String`。返回连接/网络操作最近的错误文本。
 
 **错误与边界**
 
@@ -1656,7 +1660,7 @@ obj.close();
 **声明**
 
 ```chali
-ResultSet exec(std::lang::String sql);
+ResultSet exec(std::core::String sql);
 ```
 
 **行为**
@@ -1669,7 +1673,7 @@ ResultSet exec(std::lang::String sql);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `sql` | `std::lang::String sql` | SQL 文本；可以包含多条语句，用分号分隔。 | 无 |
+| `sql` | `std::core::String sql` | SQL 文本；可以包含多条语句，用分号分隔。 | 无 |
 
 **返回值**
 
@@ -1736,7 +1740,7 @@ obj.exec(statement);
 **声明**
 
 ```chali
-bool execOk(std::lang::String sql);
+bool execOk(std::core::String sql);
 ```
 
 **行为**
@@ -1749,7 +1753,7 @@ bool execOk(std::lang::String sql);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `sql` | `std::lang::String sql` | SQL 语句文本，可包含多条语句 | 无 |
+| `sql` | `std::core::String sql` | SQL 语句文本，可包含多条语句 | 无 |
 
 **返回值**
 
@@ -1776,7 +1780,7 @@ obj.execOk(sql);
 **声明**
 
 ```chali
-std::lang::String scalar(std::lang::String sql);
+std::core::String scalar(std::core::String sql);
 ```
 
 **行为**
@@ -1789,11 +1793,11 @@ std::lang::String scalar(std::lang::String sql);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `sql` | `std::lang::String sql` | SQL 语句文本，可包含多条语句 | 无 |
+| `sql` | `std::core::String sql` | SQL 语句文本，可包含多条语句 | 无 |
 
 **返回值**
 
-`std::lang::String`。读取结果首行首列的文本表示。
+`std::core::String`。读取结果首行首列的文本表示。
 
 **错误与边界**
 
@@ -1816,7 +1820,7 @@ obj.scalar(sql);
 **声明**
 
 ```chali
-int64 count(std::lang::String sql);
+int64 count(std::core::String sql);
 ```
 
 **行为**
@@ -1829,7 +1833,7 @@ int64 count(std::lang::String sql);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `sql` | `std::lang::String sql` | SQL 语句文本，可包含多条语句 | 无 |
+| `sql` | `std::core::String sql` | SQL 语句文本，可包含多条语句 | 无 |
 
 **返回值**
 
@@ -1856,7 +1860,7 @@ obj.count(sql);
 **声明**
 
 ```chali
-bool hasTable(std::lang::String tableName);
+bool hasTable(std::core::String tableName);
 ```
 
 **行为**
@@ -1869,7 +1873,7 @@ bool hasTable(std::lang::String tableName);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `tableName` | `std::lang::String tableName` | 数据库表名 | 无 |
+| `tableName` | `std::core::String tableName` | 数据库表名 | 无 |
 
 **返回值**
 
@@ -1896,7 +1900,7 @@ obj.hasTable(tableName);
 **声明**
 
 ```chali
-std::lang::String quote(std::lang::String text, bool escapeBackslash);
+std::core::String quote(std::core::String text, bool escapeBackslash);
 ```
 
 **行为**
@@ -1909,12 +1913,12 @@ std::lang::String quote(std::lang::String text, bool escapeBackslash);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 | `escapeBackslash` | `bool escapeBackslash` | 是否对反斜杠进行 MySQL 风格转义 | 无 |
 
 **返回值**
 
-`std::lang::String`。生成带单引号的 SQL 字符串字面量，按驱动处理反斜杠。
+`std::core::String`。生成带单引号的 SQL 字符串字面量，按驱动处理反斜杠。
 
 **错误与边界**
 
@@ -1937,7 +1941,7 @@ std::sql::quote(text, escapeBackslash);
 **声明**
 
 ```chali
-std::lang::String quote(std::lang::String text);
+std::core::String quote(std::core::String text);
 ```
 
 **行为**
@@ -1950,11 +1954,11 @@ std::lang::String quote(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::lang::String`。生成带单引号的 SQL 字符串字面量，按驱动处理反斜杠。
+`std::core::String`。生成带单引号的 SQL 字符串字面量，按驱动处理反斜杠。
 
 **错误与边界**
 
@@ -1977,7 +1981,7 @@ std::sql::quote(text);
 **声明**
 
 ```chali
-std::lang::String intLiteral(int64 value);
+std::core::String intLiteral(int64 value);
 ```
 
 **行为**
@@ -1994,7 +1998,7 @@ std::lang::String intLiteral(int64 value);
 
 **返回值**
 
-`std::lang::String`。生成整数 SQL 字面量。
+`std::core::String`。生成整数 SQL 字面量。
 
 **错误与边界**
 
@@ -2017,7 +2021,7 @@ std::sql::intLiteral(value);
 **声明**
 
 ```chali
-std::lang::String realLiteral(float64 value);
+std::core::String realLiteral(float64 value);
 ```
 
 **行为**
@@ -2034,7 +2038,7 @@ std::lang::String realLiteral(float64 value);
 
 **返回值**
 
-`std::lang::String`。生成实数 SQL 字面量。
+`std::core::String`。生成实数 SQL 字面量。
 
 **错误与边界**
 
@@ -2057,7 +2061,7 @@ std::sql::realLiteral(value);
 **声明**
 
 ```chali
-int64 displayWidth(std::lang::String text);
+int64 displayWidth(std::core::String text);
 ```
 
 **行为**
@@ -2070,7 +2074,7 @@ int64 displayWidth(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
@@ -2097,7 +2101,7 @@ std::sql::displayWidth(text);
 **声明**
 
 ```chali
-Result<Query,std::lang::Error> query<T>();
+Result<Query,std::core::Error> query<T>();
 ```
 
 **行为**
@@ -2112,7 +2116,7 @@ Result<Query,std::lang::Error> query<T>();
 
 **返回值**
 
-`Result<Query,std::lang::Error>`。从模型注解与反射元数据建立 ipage 查询。
+`Result<Query,std::core::Error>`。从模型注解与反射元数据建立 ipage 查询。
 
 **错误与边界**
 
@@ -2135,7 +2139,7 @@ std::sql::query<T>();
 **声明**
 
 ```chali
-Result<bool,std::lang::Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0);
+Result<bool,std::core::Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0);
 ```
 
 **行为**
@@ -2155,7 +2159,7 @@ Result<bool,std::lang::Error> filter<V>(Query mut& query, String field, V value,
 
 **返回值**
 
-`Result<bool,std::lang::Error>`。为动态 SQL 添加参数化单值条件。
+`Result<bool,std::core::Error>`。为动态 SQL 添加参数化单值条件。
 
 **错误与边界**
 
@@ -2178,7 +2182,7 @@ std::sql::filter<V>(query, field, value, operation);
 **声明**
 
 ```chali
-Result<bool,std::lang::Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11);
+Result<bool,std::core::Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11);
 ```
 
 **行为**
@@ -2198,7 +2202,7 @@ Result<bool,std::lang::Error> filterMany<V>(Query mut& query, String field, List
 
 **返回值**
 
-`Result<bool,std::lang::Error>`。为动态 SQL 添加多参数或空值条件。
+`Result<bool,std::core::Error>`。为动态 SQL 添加多参数或空值条件。
 
 **错误与边界**
 
@@ -2221,7 +2225,7 @@ std::sql::filterMany<V>(query, field, values, operation);
 **声明**
 
 ```chali
-Result<SqlStatement,std::lang::Error> insert<T>(Query mut& query, T const& value);
+Result<SqlStatement,std::core::Error> insert<T>(Query mut& query, T const& value);
 ```
 
 **行为**
@@ -2239,7 +2243,7 @@ Result<SqlStatement,std::lang::Error> insert<T>(Query mut& query, T const& value
 
 **返回值**
 
-`Result<SqlStatement,std::lang::Error>`。按反射模型值生成参数化 INSERT，返回 SQL 与有序参数列表。
+`Result<SqlStatement,std::core::Error>`。按反射模型值生成参数化 INSERT，返回 SQL 与有序参数列表。
 
 **错误与边界**
 
@@ -2262,7 +2266,7 @@ std::sql::insert<T>(query, value);
 **声明**
 
 ```chali
-Result<SqlStatement,std::lang::Error> update<T>(Query mut& query, T const& value);
+Result<SqlStatement,std::core::Error> update<T>(Query mut& query, T const& value);
 ```
 
 **行为**
@@ -2280,7 +2284,7 @@ Result<SqlStatement,std::lang::Error> update<T>(Query mut& query, T const& value
 
 **返回值**
 
-`Result<SqlStatement,std::lang::Error>`。按反射模型值生成参数化更新。
+`Result<SqlStatement,std::core::Error>`。按反射模型值生成参数化更新。
 
 **错误与边界**
 

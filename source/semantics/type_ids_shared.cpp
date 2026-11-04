@@ -139,7 +139,7 @@ std::shared_ptr<MType> NamedType(const Memory::String &name)
  *
  * 类型号就是拿它去查表的键，所以这里必须把"看起来一样、其实不是一回事"的分开写：
  * `int64` 与 `uint64`、`T const&` 与 `T mut&`、`T[3]` 与运行时长度数组 `T[]`、
- * `std::lang::List<int64>` 与 `std::lang::List<float64>`……都在串里能分出来。
+ * `std::core::List<int64>` 与 `std::core::List<float64>`……都在串里能分出来。
  */
 Memory::String TypeKey(const std::shared_ptr<MType> &type);
 
@@ -381,7 +381,7 @@ void AddDiagnostic(const Memory::String &message, std::size_t line, std::size_t 
             const auto originalLine = sourceLine && sourceLine <= g_sourceLines.size() && g_sourceLines[sourceLine - 1] ? g_sourceLines[sourceLine - 1] : sourceLine;
             return file + ":" + Memory::toString(originalLine) + ":" + Memory::toString(sourceColumn);
         };
-        detailed += (origin.s.rfind("#derive(", 0) == 0 ? "\n  派生 " : "\n  展开宏 $")
+        detailed += Memory::String("\n  展开宏 $")
                     + origin.s + "，调用于 " + location(origin.sourceLine, origin.sourceColumn);
         if (origin.i >= 0 && static_cast<std::size_t>(origin.i) < g_nodes.size())
             detailed += "，定义于 " + location(N(static_cast<int>(origin.i)).sourceLine, N(static_cast<int>(origin.i)).sourceColumn);
@@ -576,8 +576,8 @@ bool TypeNonCopyable(const std::shared_ptr<MType> &type)
  */
 const char *ObjectCopyFunction(const std::shared_ptr<MType> &type)
 {
-    if (IsContainer(type) && type->name == "vec") return "std::lang::__bootListCopy";
-    if (IsContainer(type) && (type->name == "map" || type->name == "set")) return "std::lang::__bootMapCopy";
+    if (IsContainer(type) && type->name == "vec") return "std::core::__bootListCopy";
+    if (IsContainer(type) && (type->name == "map" || type->name == "set")) return "std::core::__bootMapCopy";
     if (const auto *definition = FindOpcodeDefinition(type); definition && !definition->copy.empty())
         return definition->copy.c_str();
     return type && type->kind == MType::Func ? "__std_function_copy" : "__std_object_copy";
@@ -643,7 +643,8 @@ void RefreshMacroActiveSyntax();
 /**
  * 只认**模块限定全局**（`模块::名`），不兜底裸名 —— 给 `mod::x` 这种限定写法用。
  */
-MVar *FindQualifiedGlobal(const Memory::String &module, const Memory::String &name);
+MVar *FindQualifiedGlobal(const Memory::String &module, const Memory::String &name,
+                          const Memory::String &callerModule);
 /**
  * 模块感知的函数重载解析（先 `模块::名`，再根模块裸名）；找不到返回 nullptr。
  */
@@ -663,7 +664,7 @@ bool IsQualifiedFunctionValue(const MNode &node)
 {
     if (node.kind != MNode::EnumCtor || node.type2 == 1 || !node.kids.empty() || node.s.empty()) return false;
     const auto found = g_functionIndex.find(ModuleSymbol(node.s, node.s2));
-    return found != g_functionIndex.end() && !found->second.empty() && !FindQualifiedGlobal(node.s, node.s2);
+    return found != g_functionIndex.end() && !found->second.empty() && !FindQualifiedGlobal(node.s, node.s2, node.module);
 }
 
 /**
@@ -896,7 +897,7 @@ std::shared_ptr<MType> InferCollectionLiteral(int id, const std::shared_ptr<MTyp
  *
  * 表达式里**当场造出来的堆串**（拼出来的、切出来的、`format` 出来的、函数返回的）
  * 在"它是不是某个变量的值"这件事上没人管 —— 不落进一个归**当前块所有**的临时变量，
- * 就没人释放（循环 / 递归里一直涨）。语句级别（`x = …` / `return …` / `std::lang::print(…)`）
+ * 就没人释放（循环 / 递归里一直涨）。语句级别（`x = …` / `return …` / `std::core::print(…)`）
  * 有地方插语句，就把这些临时串先算出来、登记成当前块所有；表达式级别（比如
  * `format("…", s[0:2])` 里那个切片）没法插，就只能是"留着"。
  */

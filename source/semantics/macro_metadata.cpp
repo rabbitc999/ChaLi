@@ -137,8 +137,9 @@ bool IsMacroMetadataSource(int id)
 {
     if (id < 0 || N(id).kind != MNode::MacroCall) return false;
     const auto &name = N(id).s;
-    return name == "fields" || name == "std::lang::fields" || name == "variants" || name == "std::lang::variants"
-           || name == "methods" || name == "std::lang::methods" || name == "interfaces" || name == "std::lang::interfaces";
+    return name == "fields" || name == "std::core::fields" || name == "variants" || name == "std::core::variants"
+           || name == "methods" || name == "std::core::methods" || name == "interfaces" || name == "std::core::interfaces"
+           || name == "type" || name == "std::core::type";
 }
 
 #include "macro_type_metadata.cpp"
@@ -161,9 +162,9 @@ Memory::String MacroGenericFamily(const chali_generic::Generic &definition)
  */
 Memory::String MacroContainerFamily(const MType &type)
 {
-    if (type.name == "vec") return "std::lang::List";
-    if (type.name == "set") return "std::lang::Set";
-    return "std::lang::Map";
+    if (type.name == "vec") return "std::core::List";
+    if (type.name == "set") return "std::core::Set";
+    return "std::core::Map";
 }
 
 /**
@@ -398,6 +399,19 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
         if (original.kids[0] < 0 || N(original.kids[0]).kids.size() != 1 || !N(N(original.kids[0]).kids[0]).kids.empty())
             return Fail(query + " 不接受值实参");
         const auto type = T(N(N(original.kids[1]).kids[0]).type);
+        if (name == "type")
+        {
+            auto concrete = Memory::makeShared<MType>(*type);
+            if (!ResolveAstGenericType(concrete)) return false;
+            auto owner = Memory::makeShared<chali_macro::MetadataType>();
+            owner->type = concrete;
+            chali_macro::MetadataValue value;
+            value.kind = chali_macro::MetadataValue::Type;
+            value.owner = std::move(owner);
+            value.type = std::move(concrete);
+            SetMacroMetadata(id, std::move(value));
+            return true;
+        }
         auto fields = variants ? ReadMacroVariants(type) : methods || interfaces ? ReadMacroTypeMembers(type, methods) :
                                                                                    ReadMacroFields(type);
         if (!fields) return false;
@@ -774,8 +788,29 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
         auto type = Memory::makeShared<MType>(*value.type);
         if (property == "name")
             SetMacroMetadataString(id, EditorTypeText(type));
+        else if (property == "qualifiedName")
+        {
+            const auto named = names.names.find(type->name);
+            SetMacroMetadataString(id, named == names.names.end() ? EditorTypeText(type) : named->second);
+        }
         else if (property == "id")
             SetMacroMetadataInteger(id, MacroMetadataIdentity("macro-type:" + names.key(type)), true);
+        else if (property == "isScalar")
+        {
+            SetMacroMetadataInteger(id, type->kind == MType::Int || type->kind == MType::Double
+                || type->kind == MType::Bool || type->kind == MType::Char);
+            g_nodes[id].kind = MNode::Bool;
+            g_nodes[id].type = M_TypeBool();
+        }
+        else if (property == "isEnum")
+        {
+            const bool found = std::any_of(g_top.begin(), g_top.end(), [&](int declaration) {
+                return N(declaration).kind == MNode::EnumDecl && N(declaration).s == type->name;
+            });
+            SetMacroMetadataInteger(id, found);
+            g_nodes[id].kind = MNode::Bool;
+            g_nodes[id].type = M_TypeBool();
+        }
         else if (property == "fields")
         {
             value.owner = ReadMacroFields(value.type);

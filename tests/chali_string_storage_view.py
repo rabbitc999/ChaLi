@@ -60,14 +60,14 @@ def main():
                 ('short-length', 0, '__stringStorageLength'),
             ):
                 if name == 'short-length':
-                    initialize = 'int64 p=std::lang::__stringAllocate(8);'
+                    initialize = 'int64 p=std::core::__stringAllocate(8);'
                 else:
-                    initialize = ('int64 p=std::lang::__bootStringBuffer(0);'
-                                  'int64 warm=std::lang::__stringStorageLength(p);')
+                    initialize = ('int64 p=std::core::__bootStringBuffer(0);'
+                                  'int64 warm=std::core::__stringStorageLength(p);')
                 failure_source = work / (label + '-' + name + '.chl')
                 failure_source.write_text('void main(){unsafe{' + initialize +
                     'int64 mut& field=(int64 mut&)(p+' + str(offset) + ');*field=0-1;'
-                    'println("{}",std::lang::' + query + '(p));}}\n', encoding='utf-8')
+                    'println("{}",std::core::' + query + '(p));}}\n', encoding='utf-8')
                 failure = execute([compiler, 'run', failure_source, '--allocator', allocator,
                                    '--out', work / (label + '-' + name)], name, success=False)
                 assert '取字符串存储时读不到它' in failure.stderr and not failure.stdout, (failure, work)

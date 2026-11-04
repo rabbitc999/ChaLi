@@ -41,7 +41,7 @@ def draw() -> Canvas:
 
     columns = (
         (
-            "① CHALI 语言", "source/std/lang.chl · example/samples/",
+            "① CHALI 语言", "source/std/core.chl · example/samples/",
             (
                 ("类型与数据", (
                     ("静态类型与值语义", "struct / enum / tuple"),
@@ -55,7 +55,7 @@ def draw() -> Canvas:
                 ("复用与扩展", (
                     ("模块", "module / import / inline"),
                     ("宏与泛型", "$macro · name<T> · 类型实参推导"),
-                    ("接口协议", "运算、索引、迭代与 std::lang::Drop"),
+                    ("接口协议", "运算、索引、迭代与 std::core::Drop"),
                 )),
             ),
         ),
@@ -91,7 +91,7 @@ def draw() -> Canvas:
                     ("消息与共享", "有界邮箱 · Shared<T> · 原子更新"),
                 )),
                 ("标准库分层", (
-                    ("核心 lang", "List / Set / Map · 查找 / 排序 · 宿主服务"),
+                    ("核心 std::core", "List / Set / Map · 查找 / 排序 · 宿主服务"),
                     ("std 模块", "math / random / regex / text / linalg …"),
                     ("集合与反射", "std::collections · std::reflect"),
                 )),

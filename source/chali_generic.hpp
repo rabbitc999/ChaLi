@@ -38,9 +38,7 @@ struct Generic
     Memory::Vector<preprocess::LineOrigin> declarationOrigins;  ///< 声明逐行来源，保留字段和方法的原始行。
     bool intrinsic = false;
     Memory::String requiredQualifier;
-    Memory::String derivation;        ///< 保留到具体实例的 #derive 指令，不交给文本宏做语义检查。
-    Memory::Vector<preprocess::LineOrigin> derivationOrigins;  ///< 派生指令逐行来源，与模板声明行分开保存。
-    Memory::String operatorSwitches;  ///< 实例声明前的编译器指令 `#No<接口>Replace` / `#NoRight<接口>`，必须排在 `#derive` 之前。
+    Memory::String operatorSwitches;  ///< 实例声明前的编译器指令 `#No<接口>Replace` / `#NoRight<接口>`。
 };
 /** @brief 标准模板恢复回调：1 为命中，0 为源码回退，-1 为资产错误。 */
 using TemplateLoader = int (*)(const Memory::String &, const preprocess::LineOrigin &, const Memory::String &,
@@ -349,11 +347,22 @@ Memory::String canonicalType(Memory::String value);
  * @param generated 接收本次新增声明。
  * @param error 失败时接收诊断。
  * @param origins 可选输出，按生成文本行序追加原始来源。
- * @return 类型实参和约束有效且展开成功时返回 true。
+ * @return 类型实参有效且展开成功时返回 true。
  */
 bool instantiate(const Memory::String &name, const Memory::Vector<Memory::String> &args,
                  Memory::String &generated, Memory::String &error,
                  Memory::Vector<preprocess::LineOrigin> *origins = nullptr);
+
+/** 查询具体类型、接口及模板所在模块的语义接口登记。 */
+using RegisteredInterfaceCheck = bool (*)(const Memory::String &, const Memory::String &, const Memory::String &);
+
+/**
+ * @brief 在 AST 已登记成员宏接口后，核对泛型约束。
+ * @param registered 查询宿主及接口的普通语义登记。
+ * @param error 失败时接收具体实参与约束诊断。
+ * @return 约束全部满足时返回真。
+ */
+bool validateRegisteredConstraints(RegisteredInterfaceCheck registered, Memory::String &error);
 
 }  // namespace chali_generic
 

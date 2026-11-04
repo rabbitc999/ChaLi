@@ -63,74 +63,78 @@ void main(List<String> args) {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-105"></a>`enum IoError : Error` | 从 lang.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::io;` 才能用）。 |
-| IoError | `OpenFailed(std::lang::String message), ReadFailed(std::lang::String message), WriteFailed(std::lang::String message), SeekFailed(std::lang::String message), Closed` | 从 lang.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::io;` 才能用）。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-106"></a>`enum SeekOrigin` | 文件定位的基准：文件开始、当前位置或文件末尾。 |
+| 模块 | <a id="symbol-193"></a>`enum IoError : Error` | 从 core.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::io;` 才能用）。 |
+| IoError | `OpenFailed(std::core::String message), ReadFailed(std::core::String message), WriteFailed(std::core::String message), SeekFailed(std::core::String message), Closed` | 从 core.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::io;` 才能用）。 变体及载荷见声明。 |
+| 模块 | <a id="symbol-194"></a>`enum SeekOrigin` | 文件定位的基准：文件开始、当前位置或文件末尾。 |
 | SeekOrigin | `Begin, Current, End` | 文件定位的基准：文件开始、当前位置或文件末尾。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-107"></a>`interface Reader` | 按字节读取数据的接口。 |
-| 模块 | <a id="symbol-108"></a>`interface Writer` | 按字节写入数据的接口。 |
-| 模块 | <a id="symbol-109"></a>`interface Seek` | 改变资源读写位置的接口。 |
-| 模块 | <a id="symbol-110"></a>`interface ToString` | 将值转换成拥有字符串的接口。 |
-| 模块 | <a id="symbol-111"></a>`interface Formattable` | 按格式说明生成文本的接口。 |
-| 模块 | <a id="symbol-112"></a>`struct FileStream : Reader, Writer, Seek` | 拥有文件句柄的字节流；通过 Result 报告读写与定位错误。 |
-| FileStream | <a id="symbol-113"></a>`std::lang::File handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
-| 模块 | <a id="symbol-114"></a>`struct FileInfo` | 文件信息，时间为 Unix 秒；目录的 size 为零。 |
-| FileInfo | <a id="symbol-115"></a>`int64 size` | 文件或响应报告的字节长度。 |
-| FileInfo | <a id="symbol-116"></a>`bool isFile` | 目标是否为普通文件。 |
-| FileInfo | <a id="symbol-117"></a>`bool isDirectory` | 目标是否为目录。 |
-| FileInfo | <a id="symbol-118"></a>`int64 modifiedUnixSeconds` | 最后修改时间，以 Unix 秒表示。 |
-| 模块 | <a id="symbol-119"></a>`struct IoReply` | 宿主回调的拥有型结果；字段顺序是胶水 ABI 的一部分。 |
-| IoReply | <a id="symbol-120"></a>`String error` | 最近操作的错误说明。 |
-| IoReply | <a id="symbol-121"></a>`List<uint8> bytes` | 字节数据，保留零字节。 |
-| IoReply | <a id="symbol-122"></a>`List<String> paths` | 目录枚举返回的路径。 |
-| IoReply | <a id="symbol-123"></a>`int64 count` | 本次操作实际处理的数量。 |
-| IoReply | <a id="symbol-124"></a>`int64 size` | 文件或响应报告的字节长度。 |
-| IoReply | <a id="symbol-125"></a>`bool isFile` | 目标是否为普通文件。 |
-| IoReply | <a id="symbol-126"></a>`bool isDirectory` | 目标是否为目录。 |
-| IoReply | <a id="symbol-127"></a>`int64 modifiedUnixSeconds` | 最后修改时间，以 Unix 秒表示。 |
+| 模块 | <a id="symbol-195"></a>`interface Reader` | 按字节读取数据的接口。 |
+| 模块 | <a id="symbol-196"></a>`interface Writer` | 按字节写入数据的接口。 |
+| 模块 | <a id="symbol-197"></a>`interface Seek` | 改变资源读写位置的接口。 |
+| 模块 | <a id="symbol-198"></a>`interface ToString` | 将值转换成拥有字符串的接口。 |
+| 模块 | <a id="symbol-199"></a>`interface Formattable` | 按格式说明生成文本的接口。 |
+| 模块 | <a id="symbol-200"></a>`struct FileStream : Reader, Writer, Seek` | 拥有文件句柄的字节流；通过 Result 报告读写与定位错误。 |
+| FileStream | <a id="symbol-201"></a>`std::core::File handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
+| 模块 | <a id="symbol-202"></a>`struct FileInfo` | 文件信息，时间为 Unix 秒；目录的 size 为零。 |
+| FileInfo | <a id="symbol-203"></a>`int64 size` | 文件或响应报告的字节长度。 |
+| FileInfo | <a id="symbol-204"></a>`bool isFile` | 目标是否为普通文件。 |
+| FileInfo | <a id="symbol-205"></a>`bool isDirectory` | 目标是否为目录。 |
+| FileInfo | <a id="symbol-206"></a>`int64 modifiedUnixSeconds` | 最后修改时间，以 Unix 秒表示。 |
+| 模块 | <a id="symbol-207"></a>`struct IoReply` | 宿主回调的拥有型结果；字段顺序是胶水 ABI 的一部分。 |
+| IoReply | <a id="symbol-208"></a>`String error` | 最近操作的错误说明。 |
+| IoReply | <a id="symbol-209"></a>`List<uint8> bytes` | 字节数据，保留零字节。 |
+| IoReply | <a id="symbol-210"></a>`List<String> paths` | 目录枚举返回的路径。 |
+| IoReply | <a id="symbol-211"></a>`int64 count` | 本次操作实际处理的数量。 |
+| IoReply | <a id="symbol-212"></a>`int64 size` | 文件或响应报告的字节长度。 |
+| IoReply | <a id="symbol-213"></a>`bool isFile` | 目标是否为普通文件。 |
+| IoReply | <a id="symbol-214"></a>`bool isDirectory` | 目标是否为目录。 |
+| IoReply | <a id="symbol-215"></a>`int64 modifiedUnixSeconds` | 最后修改时间，以 Unix 秒表示。 |
 
 ## 函数索引
 
 | 名称 | 声明 |
 | --- | --- |
 | [IoError::toString](#api-0) | `String toString()` |
-| [Reader::read](#api-1) | `Result<std::lang::String, std::lang::Error> read()` |
-| [Writer::write](#api-2) | `Result<int64, std::lang::Error> write(std::lang::String text)` |
-| [Writer::flush](#api-3) | `Result<int64, std::lang::Error> flush()` |
-| [Seek::seek](#api-4) | `Result<int64, std::lang::Error> seek(int64 offset, SeekOrigin origin)` |
-| [ToString::toString](#api-5) | `std::lang::String toString()` |
-| [Formattable::toString](#api-6) | `std::lang::String toString(std::lang::String style)` |
-| [FileStream::open](#api-7) | `static Result<FileStream, std::lang::Error> open(std::lang::String path, std::lang::String mode)` |
-| [FileStream::read](#api-8) | `Result<std::lang::String, std::lang::Error> read()` |
-| [FileStream::readLine](#api-9) | `Result<String,std::lang::Error> readLine()` |
-| [FileStream::readString](#api-10) | `Result<String,std::lang::Error> readString(int64 count)` |
-| [FileStream::readAllString](#api-11) | `Result<String,std::lang::Error> readAllString(int64 maxBytes=16777216)` |
-| [FileStream::write](#api-12) | `Result<int64, std::lang::Error> write(std::lang::String text)` |
-| [FileStream::print](#api-13) | `Result<int64, std::lang::Error> print(String text)` |
-| [FileStream::println](#api-14) | `Result<int64, std::lang::Error> println(String text = "")` |
-| [FileStream::readBytes](#api-15) | `Result<List<uint8>,std::lang::Error> readBytes(int64 count)` |
-| [FileStream::writeBytes](#api-16) | `Result<int64,std::lang::Error> writeBytes(List<uint8> bytes)` |
-| [FileStream::flush](#api-17) | `Result<int64, std::lang::Error> flush()` |
-| [FileStream::seek](#api-18) | `Result<int64, std::lang::Error> seek(int64 offset, SeekOrigin origin)` |
+| [Reader::read](#api-1) | `Result<std::core::String, std::core::Error> read()` |
+| [Writer::write](#api-2) | `Result<int64, std::core::Error> write(std::core::String text)` |
+| [Writer::flush](#api-3) | `Result<int64, std::core::Error> flush()` |
+| [Seek::seek](#api-4) | `Result<int64, std::core::Error> seek(int64 offset, SeekOrigin origin)` |
+| [ToString::toString](#api-5) | `std::core::String toString()` |
+| [Formattable::toString](#api-6) | `std::core::String toString(std::core::String style)` |
+| [FileStream::open](#api-7) | `static Result<FileStream, std::core::Error> open(std::core::String path, std::core::String mode)` |
+| [FileStream::read](#api-8) | `Result<std::core::String, std::core::Error> read()` |
+| [FileStream::readLine](#api-9) | `Result<String,std::core::Error> readLine()` |
+| [FileStream::readString](#api-10) | `Result<String,std::core::Error> readString(int64 count)` |
+| [FileStream::readAllString](#api-11) | `Result<String,std::core::Error> readAllString(int64 maxBytes=16777216)` |
+| [FileStream::write](#api-12) | `Result<int64, std::core::Error> write(std::core::String text)` |
+| [FileStream::print](#api-13) | `Result<int64, std::core::Error> print(String text)` |
+| [FileStream::println](#api-14) | `Result<int64, std::core::Error> println(String text = "")` |
+| [FileStream::readBytes](#api-15) | `Result<List<uint8>,std::core::Error> readBytes(int64 count)` |
+| [FileStream::writeBytes](#api-16) | `Result<int64,std::core::Error> writeBytes(List<uint8> bytes)` |
+| [FileStream::flush](#api-17) | `Result<int64, std::core::Error> flush()` |
+| [FileStream::seek](#api-18) | `Result<int64, std::core::Error> seek(int64 offset, SeekOrigin origin)` |
 | [FileStream::close](#api-19) | `int64 close()` |
-| [fileOpen](#api-20) | `Result<std::lang::File, std::lang::Error> fileOpen(std::lang::String path, std::lang::String mode)` |
-| [fileRead](#api-21) | `std::lang::String fileRead(file const& handle)` |
+| [fileOpen](#api-20) | `Result<std::core::File, std::core::Error> fileOpen(std::core::String path, std::core::String mode)` |
+| [fileRead](#api-21) | `std::core::String fileRead(file const& handle)` |
 | [fileReadLine](#api-22) | `String fileReadLine(File const& handle)` |
 | [fileReadString](#api-23) | `String fileReadString(File const& handle, int64 count)` |
 | [fileReadAllString](#api-24) | `String fileReadAllString(File const& handle, int64 maxBytes = 16777216)` |
-| [fileWrite](#api-25) | `int64 fileWrite(file const& handle, std::lang::String text)` |
+| [fileWrite](#api-25) | `int64 fileWrite(file const& handle, std::core::String text)` |
 | [filePrint](#api-26) | `int64 filePrint(file const& handle, String text)` |
 | [filePrintln](#api-27) | `int64 filePrintln(file const& handle, String text = "")` |
 | [fileEof](#api-28) | `int64 fileEof(file const& handle)` |
 | [fileClose](#api-29) | `int64 fileClose(file const& handle)` |
-| [readAllBytes](#api-30) | `Result<List<uint8>,std::lang::Error> readAllBytes(String path, int64 maxBytes=16777216)` |
-| [writeAllBytes](#api-31) | `Result<int64,std::lang::Error> writeAllBytes(String path, List<uint8> bytes)` |
-| [readAllText](#api-32) | `Result<String,std::lang::Error> readAllText(String path, int64 maxBytes=16777216)` |
-| [writeAllText](#api-33) | `Result<int64,std::lang::Error> writeAllText(String path, String text)` |
-| [listDirectory](#api-34) | `Result<List<String>,std::lang::Error> listDirectory(String path)` |
-| [fileInfo](#api-35) | `Result<FileInfo,std::lang::Error> fileInfo(String path)` |
-| [createDirectories](#api-36) | `Result<int64,std::lang::Error> createDirectories(String path)` |
-| [renamePath](#api-37) | `Result<int64,std::lang::Error> renamePath(String from, String to)` |
+| [readAllBytes](#api-30) | `Result<List<uint8>,std::core::Error> readAllBytes(String path, int64 maxBytes=16777216)` |
+| [writeAllBytes](#api-31) | `Result<int64,std::core::Error> writeAllBytes(String path, List<uint8> bytes)` |
+| [readAllText](#api-32) | `Result<String,std::core::Error> readAllText(String path, int64 maxBytes=16777216)` |
+| [writeAllText](#api-33) | `Result<int64,std::core::Error> writeAllText(String path, String text)` |
+| [listDirectory](#api-34) | `Result<List<String>,std::core::Error> listDirectory(String path)` |
+| [fileInfo](#api-35) | `Result<FileInfo,std::core::Error> fileInfo(String path)` |
+| [createDirectories](#api-36) | `Result<int64,std::core::Error> createDirectories(String path)` |
+| [renamePath](#api-37) | `Result<int64,std::core::Error> renamePath(String from, String to)` |
+| [copy_to](#api-38) | `Result<int64,Error> copy_to(FileStream mut& source, FileStream mut& destination)` |
+| [walk_directory](#api-39) | `Result<List<String>,Error> walk_directory(String path)` |
+| [create_temp_file](#api-40) | `Result<String,Error> create_temp_file(String path)` |
+| [replace_file](#api-41) | `Result<int64,Error> replace_file(String from, String to)` |
 
 <a id="api-0"></a>
 
@@ -177,7 +181,7 @@ obj.toString();
 **声明**
 
 ```chali
-Result<std::lang::String, std::lang::Error> read();
+Result<std::core::String, std::core::Error> read();
 ```
 
 **行为**
@@ -190,7 +194,7 @@ Result<std::lang::String, std::lang::Error> read();
 
 **返回值**
 
-`Result<std::lang::String, std::lang::Error>`。读取一行文本，失败返回 ReadFailed。
+`Result<std::core::String, std::core::Error>`。读取一行文本，失败返回 ReadFailed。
 
 **错误与边界**
 
@@ -213,7 +217,7 @@ obj.read();
 **声明**
 
 ```chali
-Result<int64, std::lang::Error> write(std::lang::String text);
+Result<int64, std::core::Error> write(std::core::String text);
 ```
 
 **行为**
@@ -224,11 +228,11 @@ Result<int64, std::lang::Error> write(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<int64, std::lang::Error>`。写入文本，返回写入字节数或 WriteFailed。
+`Result<int64, std::core::Error>`。写入文本，返回写入字节数或 WriteFailed。
 
 **错误与边界**
 
@@ -251,7 +255,7 @@ obj.write(text);
 **声明**
 
 ```chali
-Result<int64, std::lang::Error> flush();
+Result<int64, std::core::Error> flush();
 ```
 
 **行为**
@@ -264,7 +268,7 @@ Result<int64, std::lang::Error> flush();
 
 **返回值**
 
-`Result<int64, std::lang::Error>`。刷新输出缓冲，失败返回 WriteFailed。
+`Result<int64, std::core::Error>`。刷新输出缓冲，失败返回 WriteFailed。
 
 **错误与边界**
 
@@ -287,7 +291,7 @@ obj.flush();
 **声明**
 
 ```chali
-Result<int64, std::lang::Error> seek(int64 offset, SeekOrigin origin);
+Result<int64, std::core::Error> seek(int64 offset, SeekOrigin origin);
 ```
 
 **行为**
@@ -303,7 +307,7 @@ Result<int64, std::lang::Error> seek(int64 offset, SeekOrigin origin);
 
 **返回值**
 
-`Result<int64, std::lang::Error>`。按 origin 与 offset 定位，返回新位置或 SeekFailed。
+`Result<int64, std::core::Error>`。按 origin 与 offset 定位，返回新位置或 SeekFailed。
 
 **错误与边界**
 
@@ -326,7 +330,7 @@ obj.seek(offset, origin);
 **声明**
 
 ```chali
-std::lang::String toString();
+std::core::String toString();
 ```
 
 **行为**
@@ -339,7 +343,7 @@ std::lang::String toString();
 
 **返回值**
 
-`std::lang::String`。由实现者将当前值转换为文本，Formattable 重载接收 style。
+`std::core::String`。由实现者将当前值转换为文本，Formattable 重载接收 style。
 
 **错误与边界**
 
@@ -362,7 +366,7 @@ obj.toString();
 **声明**
 
 ```chali
-std::lang::String toString(std::lang::String style);
+std::core::String toString(std::core::String style);
 ```
 
 **行为**
@@ -373,11 +377,11 @@ std::lang::String toString(std::lang::String style);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `style` | `std::lang::String style` | 格式化风格 | 无 |
+| `style` | `std::core::String style` | 格式化风格 | 无 |
 
 **返回值**
 
-`std::lang::String`。由实现者将当前值转换为文本，Formattable 重载接收 style。
+`std::core::String`。由实现者将当前值转换为文本，Formattable 重载接收 style。
 
 **错误与边界**
 
@@ -400,7 +404,7 @@ obj.toString(style);
 **声明**
 
 ```chali
-static Result<FileStream, std::lang::Error> open(std::lang::String path, std::lang::String mode);
+static Result<FileStream, std::core::Error> open(std::core::String path, std::core::String mode);
 ```
 
 **行为**
@@ -411,12 +415,12 @@ static Result<FileStream, std::lang::Error> open(std::lang::String path, std::la
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `path` | `std::lang::String path` | 文件/数据库路径 | 无 |
-| `mode` | `std::lang::String mode` | 宿主文件打开模式 | 无 |
+| `path` | `std::core::String path` | 文件/数据库路径 | 无 |
+| `mode` | `std::core::String mode` | 宿主文件打开模式 | 无 |
 
 **返回值**
 
-`Result<FileStream, std::lang::Error>`。按 path/mode 打开文件，返回流或 OpenFailed。
+`Result<FileStream, std::core::Error>`。按 path/mode 打开文件，返回流或 OpenFailed。
 
 **错误与边界**
 
@@ -439,7 +443,7 @@ std::io::FileStream::open(path, mode);
 **声明**
 
 ```chali
-Result<std::lang::String, std::lang::Error> read();
+Result<std::core::String, std::core::Error> read();
 ```
 
 **行为**
@@ -452,7 +456,7 @@ Result<std::lang::String, std::lang::Error> read();
 
 **返回值**
 
-`Result<std::lang::String, std::lang::Error>`。读取一行文本，失败返回 ReadFailed。
+`Result<std::core::String, std::core::Error>`。读取一行文本，失败返回 ReadFailed。
 
 **错误与边界**
 
@@ -475,7 +479,7 @@ obj.read();
 **声明**
 
 ```chali
-Result<String,std::lang::Error> readLine();
+Result<String,std::core::Error> readLine();
 ```
 
 **行为**
@@ -488,7 +492,7 @@ Result<String,std::lang::Error> readLine();
 
 **返回值**
 
-`Result<String,std::lang::Error>`。行文本或 ReadFailed，不隐式关闭文件。
+`Result<String,std::core::Error>`。行文本或 ReadFailed，不隐式关闭文件。
 
 **错误与边界**
 
@@ -511,7 +515,7 @@ obj.readLine();
 **声明**
 
 ```chali
-Result<String,std::lang::Error> readString(int64 count);
+Result<String,std::core::Error> readString(int64 count);
 ```
 
 **行为**
@@ -526,7 +530,7 @@ Result<String,std::lang::Error> readString(int64 count);
 
 **返回值**
 
-`Result<String,std::lang::Error>`。文本或 ReadFailed；含零字节时返回错误，应改用 readBytes。
+`Result<String,std::core::Error>`。文本或 ReadFailed；含零字节时返回错误，应改用 readBytes。
 
 **错误与边界**
 
@@ -549,7 +553,7 @@ obj.readString(count);
 **声明**
 
 ```chali
-Result<String,std::lang::Error> readAllString(int64 maxBytes=16777216);
+Result<String,std::core::Error> readAllString(int64 maxBytes=16777216);
 ```
 
 **行为**
@@ -564,7 +568,7 @@ Result<String,std::lang::Error> readAllString(int64 maxBytes=16777216);
 
 **返回值**
 
-`Result<String,std::lang::Error>`。剩余完整文本或 ReadFailed；预算失败时可能已消费一个额外字节。
+`Result<String,std::core::Error>`。剩余完整文本或 ReadFailed；预算失败时可能已消费一个额外字节。
 
 **错误与边界**
 
@@ -587,7 +591,7 @@ obj.readAllString(maxBytes);
 **声明**
 
 ```chali
-Result<int64, std::lang::Error> write(std::lang::String text);
+Result<int64, std::core::Error> write(std::core::String text);
 ```
 
 **行为**
@@ -598,11 +602,11 @@ Result<int64, std::lang::Error> write(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<int64, std::lang::Error>`。写入文本，返回写入字节数或 WriteFailed。
+`Result<int64, std::core::Error>`。写入文本，返回写入字节数或 WriteFailed。
 
 **错误与边界**
 
@@ -625,7 +629,7 @@ obj.write(text);
 **声明**
 
 ```chali
-Result<int64, std::lang::Error> print(String text);
+Result<int64, std::core::Error> print(String text);
 ```
 
 **行为**
@@ -640,7 +644,7 @@ Result<int64, std::lang::Error> print(String text);
 
 **返回值**
 
-`Result<int64, std::lang::Error>`。写入字节数或 WriteFailed，保留关闭和只读错误。
+`Result<int64, std::core::Error>`。写入字节数或 WriteFailed，保留关闭和只读错误。
 
 **错误与边界**
 
@@ -663,7 +667,7 @@ obj.print(text);
 **声明**
 
 ```chali
-Result<int64, std::lang::Error> println(String text = "");
+Result<int64, std::core::Error> println(String text = "");
 ```
 
 **行为**
@@ -678,7 +682,7 @@ Result<int64, std::lang::Error> println(String text = "");
 
 **返回值**
 
-`Result<int64, std::lang::Error>`。包括换行的写入字节数或 WriteFailed。
+`Result<int64, std::core::Error>`。包括换行的写入字节数或 WriteFailed。
 
 **错误与边界**
 
@@ -701,7 +705,7 @@ obj.println(text);
 **声明**
 
 ```chali
-Result<List<uint8>,std::lang::Error> readBytes(int64 count);
+Result<List<uint8>,std::core::Error> readBytes(int64 count);
 ```
 
 **行为**
@@ -716,7 +720,7 @@ Result<List<uint8>,std::lang::Error> readBytes(int64 count);
 
 **返回值**
 
-`Result<List<uint8>,std::lang::Error>`。读取至多 count 个字节；EOF 返回较短列表。
+`Result<List<uint8>,std::core::Error>`。读取至多 count 个字节；EOF 返回较短列表。
 
 **错误与边界**
 
@@ -739,7 +743,7 @@ obj.readBytes(count);
 **声明**
 
 ```chali
-Result<int64,std::lang::Error> writeBytes(List<uint8> bytes);
+Result<int64,std::core::Error> writeBytes(List<uint8> bytes);
 ```
 
 **行为**
@@ -754,7 +758,7 @@ Result<int64,std::lang::Error> writeBytes(List<uint8> bytes);
 
 **返回值**
 
-`Result<int64,std::lang::Error>`。写入所有字节，保留零字节。
+`Result<int64,std::core::Error>`。写入所有字节，保留零字节。
 
 **错误与边界**
 
@@ -777,7 +781,7 @@ obj.writeBytes(bytes);
 **声明**
 
 ```chali
-Result<int64, std::lang::Error> flush();
+Result<int64, std::core::Error> flush();
 ```
 
 **行为**
@@ -790,7 +794,7 @@ Result<int64, std::lang::Error> flush();
 
 **返回值**
 
-`Result<int64, std::lang::Error>`。刷新输出缓冲，失败返回 WriteFailed。
+`Result<int64, std::core::Error>`。刷新输出缓冲，失败返回 WriteFailed。
 
 **错误与边界**
 
@@ -813,7 +817,7 @@ obj.flush();
 **声明**
 
 ```chali
-Result<int64, std::lang::Error> seek(int64 offset, SeekOrigin origin);
+Result<int64, std::core::Error> seek(int64 offset, SeekOrigin origin);
 ```
 
 **行为**
@@ -829,7 +833,7 @@ Result<int64, std::lang::Error> seek(int64 offset, SeekOrigin origin);
 
 **返回值**
 
-`Result<int64, std::lang::Error>`。按 origin 与 offset 定位，返回新位置或 SeekFailed。
+`Result<int64, std::core::Error>`。按 origin 与 offset 定位，返回新位置或 SeekFailed。
 
 **错误与边界**
 
@@ -888,7 +892,7 @@ obj.close();
 **声明**
 
 ```chali
-Result<std::lang::File, std::lang::Error> fileOpen(std::lang::String path, std::lang::String mode);
+Result<std::core::File, std::core::Error> fileOpen(std::core::String path, std::core::String mode);
 ```
 
 **行为**
@@ -899,12 +903,12 @@ Result<std::lang::File, std::lang::Error> fileOpen(std::lang::String path, std::
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `path` | `std::lang::String path` | 文件/数据库路径 | 无 |
-| `mode` | `std::lang::String mode` | 宿主文件打开模式 | 无 |
+| `path` | `std::core::String path` | 文件/数据库路径 | 无 |
+| `mode` | `std::core::String mode` | 宿主文件打开模式 | 无 |
 
 **返回值**
 
-`Result<std::lang::File, std::lang::Error>`。按路径和模式打开文件，返回 Result<File,Error>，失败为 Err。
+`Result<std::core::File, std::core::Error>`。按路径和模式打开文件，返回 Result<File,Error>，失败为 Err。
 
 **错误与边界**
 
@@ -927,7 +931,7 @@ std::io::fileOpen(path, mode);
 **声明**
 
 ```chali
-std::lang::String fileRead(file const& handle);
+std::core::String fileRead(file const& handle);
 ```
 
 **行为**
@@ -942,7 +946,7 @@ std::lang::String fileRead(file const& handle);
 
 **返回值**
 
-`std::lang::String`。从已打开文件读取文本行。
+`std::core::String`。从已打开文件读取文本行。
 
 **错误与边界**
 
@@ -1084,7 +1088,7 @@ std::io::fileReadAllString(handle, maxBytes);
 **声明**
 
 ```chali
-int64 fileWrite(file const& handle, std::lang::String text);
+int64 fileWrite(file const& handle, std::core::String text);
 ```
 
 **行为**
@@ -1096,7 +1100,7 @@ int64 fileWrite(file const& handle, std::lang::String text);
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
 | `handle` | `file const& handle` | 本模块创建且仍有效的宿主句柄 | 无 |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
@@ -1277,7 +1281,7 @@ std::io::fileClose(handle);
 **声明**
 
 ```chali
-Result<List<uint8>,std::lang::Error> readAllBytes(String path, int64 maxBytes=16777216);
+Result<List<uint8>,std::core::Error> readAllBytes(String path, int64 maxBytes=16777216);
 ```
 
 **行为**
@@ -1293,7 +1297,7 @@ Result<List<uint8>,std::lang::Error> readAllBytes(String path, int64 maxBytes=16
 
 **返回值**
 
-`Result<List<uint8>,std::lang::Error>`。读完整文件，保留零字节；默认最多 16 MiB，调用者可以指定预算。
+`Result<List<uint8>,std::core::Error>`。读完整文件，保留零字节；默认最多 16 MiB，调用者可以指定预算。
 
 **错误与边界**
 
@@ -1316,7 +1320,7 @@ std::io::readAllBytes(path, maxBytes);
 **声明**
 
 ```chali
-Result<int64,std::lang::Error> writeAllBytes(String path, List<uint8> bytes);
+Result<int64,std::core::Error> writeAllBytes(String path, List<uint8> bytes);
 ```
 
 **行为**
@@ -1332,7 +1336,7 @@ Result<int64,std::lang::Error> writeAllBytes(String path, List<uint8> bytes);
 
 **返回值**
 
-`Result<int64,std::lang::Error>`。覆盖写完整文件，返回字节数量；不隐式创建父目录。
+`Result<int64,std::core::Error>`。覆盖写完整文件，返回字节数量；不隐式创建父目录。
 
 **错误与边界**
 
@@ -1355,7 +1359,7 @@ std::io::writeAllBytes(path, bytes);
 **声明**
 
 ```chali
-Result<String,std::lang::Error> readAllText(String path, int64 maxBytes=16777216);
+Result<String,std::core::Error> readAllText(String path, int64 maxBytes=16777216);
 ```
 
 **行为**
@@ -1371,7 +1375,7 @@ Result<String,std::lang::Error> readAllText(String path, int64 maxBytes=16777216
 
 **返回值**
 
-`Result<String,std::lang::Error>`。读取完整文本；String 不支持内嵌零字节，此类文件应使用 readAllBytes。
+`Result<String,std::core::Error>`。读取完整文本；String 不支持内嵌零字节，此类文件应使用 readAllBytes。
 
 **错误与边界**
 
@@ -1394,7 +1398,7 @@ std::io::readAllText(path, maxBytes);
 **声明**
 
 ```chali
-Result<int64,std::lang::Error> writeAllText(String path, String text);
+Result<int64,std::core::Error> writeAllText(String path, String text);
 ```
 
 **行为**
@@ -1410,7 +1414,7 @@ Result<int64,std::lang::Error> writeAllText(String path, String text);
 
 **返回值**
 
-`Result<int64,std::lang::Error>`。覆盖写完整文本，不自动追加换行。
+`Result<int64,std::core::Error>`。覆盖写完整文本，不自动追加换行。
 
 **错误与边界**
 
@@ -1433,7 +1437,7 @@ std::io::writeAllText(path, text);
 **声明**
 
 ```chali
-Result<List<String>,std::lang::Error> listDirectory(String path);
+Result<List<String>,std::core::Error> listDirectory(String path);
 ```
 
 **行为**
@@ -1448,7 +1452,7 @@ Result<List<String>,std::lang::Error> listDirectory(String path);
 
 **返回值**
 
-`Result<List<String>,std::lang::Error>`。列出一层目录的完整路径，按字节字典序排序，不递归。
+`Result<List<String>,std::core::Error>`。列出一层目录的完整路径，按字节字典序排序，不递归。
 
 **错误与边界**
 
@@ -1471,7 +1475,7 @@ std::io::listDirectory(path);
 **声明**
 
 ```chali
-Result<FileInfo,std::lang::Error> fileInfo(String path);
+Result<FileInfo,std::core::Error> fileInfo(String path);
 ```
 
 **行为**
@@ -1486,7 +1490,7 @@ Result<FileInfo,std::lang::Error> fileInfo(String path);
 
 **返回值**
 
-`Result<FileInfo,std::lang::Error>`。查询跟随符号链接后的文件信息；不存在时返回错误。
+`Result<FileInfo,std::core::Error>`。查询跟随符号链接后的文件信息；不存在时返回错误。
 
 **错误与边界**
 
@@ -1509,7 +1513,7 @@ std::io::fileInfo(path);
 **声明**
 
 ```chali
-Result<int64,std::lang::Error> createDirectories(String path);
+Result<int64,std::core::Error> createDirectories(String path);
 ```
 
 **行为**
@@ -1524,7 +1528,7 @@ Result<int64,std::lang::Error> createDirectories(String path);
 
 **返回值**
 
-`Result<int64,std::lang::Error>`。创建目录及缺失的父目录，已存在的目录视为成功。
+`Result<int64,std::core::Error>`。创建目录及缺失的父目录，已存在的目录视为成功。
 
 **错误与边界**
 
@@ -1547,7 +1551,7 @@ std::io::createDirectories(path);
 **声明**
 
 ```chali
-Result<int64,std::lang::Error> renamePath(String from, String to);
+Result<int64,std::core::Error> renamePath(String from, String to);
 ```
 
 **行为**
@@ -1563,7 +1567,7 @@ Result<int64,std::lang::Error> renamePath(String from, String to);
 
 **返回值**
 
-`Result<int64,std::lang::Error>`。按宿主文件系统规则重命名；目标覆盖规则由平台决定。
+`Result<int64,std::core::Error>`。按宿主文件系统规则重命名；目标覆盖规则由平台决定。
 
 **错误与边界**
 
@@ -1576,6 +1580,160 @@ std::io::renamePath(from, to);
 ```
 
 **源码**：[source/std/io.chl:309](../../source/std/io.chl#L309)。
+
+**完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
+
+<a id="api-38"></a>
+
+### copy_to（39）
+
+**声明**
+
+```chali
+Result<int64,Error> copy_to(FileStream mut& source, FileStream mut& destination);
+```
+
+**行为**
+
+从当前读位置复制到目标流，分块处理，成功返回总字节数。两端保持打开。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `source` | `FileStream mut& source` | 输入游标、存储或事件来源值 | 无 |
+| `destination` | `FileStream mut& destination` | 可写目标存储首地址 | 无 |
+
+**返回值**
+
+`Result<int64,Error>`。从当前读位置复制到目标流，分块处理，成功返回总字节数。两端保持打开。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::io::copy_to(source, destination);
+```
+
+**源码**：[source/std/io.chl:317](../../source/std/io.chl#L317)。
+
+**完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
+
+<a id="api-39"></a>
+
+### walk_directory（40）
+
+**声明**
+
+```chali
+Result<List<String>,Error> walk_directory(String path);
+```
+
+**行为**
+
+递归列出目录后代，按 UTF-8 路径排序，不递归进入符号链接。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `path` | `String path` | 文件/数据库路径 | 无 |
+
+**返回值**
+
+`Result<List<String>,Error>`。递归列出目录后代，按 UTF-8 路径排序，不递归进入符号链接。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::io::walk_directory(path);
+```
+
+**源码**：[source/std/io.chl:336](../../source/std/io.chl#L336)。
+
+**完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
+
+<a id="api-40"></a>
+
+### create_temp_file（41）
+
+**声明**
+
+```chali
+Result<String,Error> create_temp_file(String path);
+```
+
+**行为**
+
+在目录内独占创建空临时文件，成功后调用者拥有路径。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `path` | `String path` | 文件/数据库路径 | 无 |
+
+**返回值**
+
+`Result<String,Error>`。在目录内独占创建空临时文件，成功后调用者拥有路径。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::io::create_temp_file(path);
+```
+
+**源码**：[source/std/io.chl:343](../../source/std/io.chl#L343)。
+
+**完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
+
+<a id="api-41"></a>
+
+### replace_file（42）
+
+**声明**
+
+```chali
+Result<int64,Error> replace_file(String from, String to);
+```
+
+**行为**
+
+以同一文件系统内的普通文件原子替换目标，成功后来源路径消失。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `from` | `String from` | 被替换的子串 | 无 |
+| `to` | `String to` | 替换文本 | 无 |
+
+**返回值**
+
+`Result<int64,Error>`。以同一文件系统内的普通文件原子替换目标，成功后来源路径消失。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::io::replace_file(from, to);
+```
+
+**源码**：[source/std/io.chl:350](../../source/std/io.chl#L350)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 

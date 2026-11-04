@@ -19,7 +19,7 @@ void main() {
     NamedReader const& view = &first;
     NamedReader const& saved = view;
     assert(consume(&view) == 12 && consume(&saved) == 12);
-    assert(std::lang::address(&view) == std::lang::address(&first));
+    assert(std::core::address(&view) == std::core::address(&first));
     Writer mut& writer = &first;
     writer.write(11);
     assert(saved.read() == 11);

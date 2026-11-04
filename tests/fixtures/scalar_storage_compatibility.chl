@@ -1,7 +1,7 @@
-import std::linalg;
+import std::linear_algebra;
 import std::parse;
 void checkStorage<T>(T first,T second) {
-    std::linalg::ScalarArray<T> values;
+    std::linear_algebra::ScalarArray<T> values;
     values.push(first); values.push(second);
     assert(values.len()==2 && values[0]==first && values[1]==second);
     let copy=values.copy();

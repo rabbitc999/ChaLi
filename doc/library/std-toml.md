@@ -205,14 +205,14 @@ JSON and TOML parsing OK
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-471"></a>`struct TomlValue : Iterator<TomlValue>` | 独立拥有 TOML 子树的值，关闭不影响副本，根序列化保留原文注释。 |
+| 模块 | <a id="symbol-504"></a>`struct TomlValue : Iterator<TomlValue>` | 独立拥有 TOML 子树的值，关闭不影响副本，根序列化保留原文注释。 |
 
 ## 函数索引
 
 | 名称 | 声明 |
 | --- | --- |
-| [serialize](#api-0) | `Result<String,std::lang::Error> serialize<T>(T const& value)` |
-| [deserialize](#api-1) | `Result<T,std::lang::Error> deserialize<T>(String text)` |
+| [serialize](#api-0) | `Result<String,std::core::Error> serialize<T>(T const& value)` |
+| [deserialize](#api-1) | `Result<T,std::core::Error> deserialize<T>(String text)` |
 | [TomlValue::isValid](#api-2) | `bool isValid()` |
 | [TomlValue::close](#api-3) | `bool close()` |
 | [TomlValue::kind](#api-4) | `int64 kind()` |
@@ -229,17 +229,17 @@ JSON and TOML parsing OK
 | [TomlValue::asInt](#api-15) | `Option<int64> asInt()` |
 | [TomlValue::asFloat64](#api-16) | `Option<float64> asFloat64()` |
 | [TomlValue::asBool](#api-17) | `Option<bool> asBool()` |
-| [TomlValue::asString](#api-18) | `Option<std::lang::String> asString()` |
-| [TomlValue::asBytes](#api-19) | `Option<std::lang::List<uint8>> asBytes()` |
-| [TomlValue::asDateTime](#api-20) | `Option<std::lang::String> asDateTime()` |
-| [TomlValue::find](#api-21) | `Option<TomlValue> find(std::lang::String key)` |
-| [TomlValue::findBytes](#api-22) | `Option<TomlValue> findBytes(std::lang::List<uint8> key)` |
+| [TomlValue::asString](#api-18) | `Option<std::core::String> asString()` |
+| [TomlValue::asBytes](#api-19) | `Option<std::core::List<uint8>> asBytes()` |
+| [TomlValue::asDateTime](#api-20) | `Option<std::core::String> asDateTime()` |
+| [TomlValue::find](#api-21) | `Option<TomlValue> find(std::core::String key)` |
+| [TomlValue::findBytes](#api-22) | `Option<TomlValue> findBytes(std::core::List<uint8> key)` |
 | [TomlValue::at](#api-23) | `Option<TomlValue> at(int64 index)` |
 | [TomlValue::iterator](#api-24) | `Option<TomlValue> iterator(int64 index)` |
-| [TomlValue::keyAt](#api-25) | `Option<std::lang::String> keyAt(int64 index)` |
-| [TomlValue::keyBytesAt](#api-26) | `Option<std::lang::List<uint8>> keyBytesAt(int64 index)` |
-| [TomlValue::dump](#api-27) | `std::lang::String dump()` |
-| [parse](#api-28) | `Result<TomlValue, std::lang::Error> parse(std::lang::String text)` |
+| [TomlValue::keyAt](#api-25) | `Option<std::core::String> keyAt(int64 index)` |
+| [TomlValue::keyBytesAt](#api-26) | `Option<std::core::List<uint8>> keyBytesAt(int64 index)` |
+| [TomlValue::dump](#api-27) | `std::core::String dump()` |
+| [parse](#api-28) | `Result<TomlValue, std::core::Error> parse(std::core::String text)` |
 
 <a id="api-0"></a>
 
@@ -248,7 +248,7 @@ JSON and TOML parsing OK
 **声明**
 
 ```chali
-Result<String,std::lang::Error> serialize<T>(T const& value);
+Result<String,std::core::Error> serialize<T>(T const& value);
 ```
 
 **行为**
@@ -265,7 +265,7 @@ Result<String,std::lang::Error> serialize<T>(T const& value);
 
 **返回值**
 
-`Result<String,std::lang::Error>`。按具体反射类型编码独立值，失败返回诊断。
+`Result<String,std::core::Error>`。按具体反射类型编码独立值，失败返回诊断。
 
 **错误与边界**
 
@@ -288,7 +288,7 @@ std::toml::serialize<T>(value);
 **声明**
 
 ```chali
-Result<T,std::lang::Error> deserialize<T>(String text);
+Result<T,std::core::Error> deserialize<T>(String text);
 ```
 
 **行为**
@@ -305,7 +305,7 @@ Result<T,std::lang::Error> deserialize<T>(String text);
 
 **返回值**
 
-`Result<T,std::lang::Error>`。按具体反射类型严格校验并恢复独立拥有的值。
+`Result<T,std::core::Error>`。按具体反射类型严格校验并恢复独立拥有的值。
 
 **错误与边界**
 
@@ -910,7 +910,7 @@ obj.asBool();
 **声明**
 
 ```chali
-Option<std::lang::String> asString();
+Option<std::core::String> asString();
 ```
 
 **行为**
@@ -925,7 +925,7 @@ Option<std::lang::String> asString();
 
 **返回值**
 
-`Option<std::lang::String>`。提取不含零字节的字符串；否则 None。
+`Option<std::core::String>`。提取不含零字节的字符串；否则 None。
 
 **错误与边界**
 
@@ -948,7 +948,7 @@ obj.asString();
 **声明**
 
 ```chali
-Option<std::lang::List<uint8>> asBytes();
+Option<std::core::List<uint8>> asBytes();
 ```
 
 **行为**
@@ -961,7 +961,7 @@ Option<std::lang::List<uint8>> asBytes();
 
 **返回值**
 
-`Option<std::lang::List<uint8>>`。提取字符串的原始字节，包括零字节。
+`Option<std::core::List<uint8>>`。提取字符串的原始字节，包括零字节。
 
 **错误与边界**
 
@@ -984,7 +984,7 @@ obj.asBytes();
 **声明**
 
 ```chali
-Option<std::lang::String> asDateTime();
+Option<std::core::String> asDateTime();
 ```
 
 **行为**
@@ -997,7 +997,7 @@ Option<std::lang::String> asDateTime();
 
 **返回值**
 
-`Option<std::lang::String>`。提取日期时间的文本表示。
+`Option<std::core::String>`。提取日期时间的文本表示。
 
 **错误与边界**
 
@@ -1020,7 +1020,7 @@ obj.asDateTime();
 **声明**
 
 ```chali
-Option<TomlValue> find(std::lang::String key);
+Option<TomlValue> find(std::core::String key);
 ```
 
 **行为**
@@ -1031,7 +1031,7 @@ Option<TomlValue> find(std::lang::String key);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `key` | `std::lang::String key` | 查找键或下标 | 无 |
+| `key` | `std::core::String key` | 查找键或下标 | 无 |
 
 **返回值**
 
@@ -1058,7 +1058,7 @@ obj.find(key);
 **声明**
 
 ```chali
-Option<TomlValue> findBytes(std::lang::List<uint8> key);
+Option<TomlValue> findBytes(std::core::List<uint8> key);
 ```
 
 **行为**
@@ -1071,7 +1071,7 @@ Option<TomlValue> findBytes(std::lang::List<uint8> key);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `key` | `std::lang::List<uint8> key` | 查找键或下标 | 无 |
+| `key` | `std::core::List<uint8> key` | 查找键或下标 | 无 |
 
 **返回值**
 
@@ -1176,7 +1176,7 @@ obj.iterator(index);
 **声明**
 
 ```chali
-Option<std::lang::String> keyAt(int64 index);
+Option<std::core::String> keyAt(int64 index);
 ```
 
 **行为**
@@ -1193,7 +1193,7 @@ Option<std::lang::String> keyAt(int64 index);
 
 **返回值**
 
-`Option<std::lang::String>`。按遍历位置读取键。
+`Option<std::core::String>`。按遍历位置读取键。
 
 **错误与边界**
 
@@ -1216,7 +1216,7 @@ obj.keyAt(index);
 **声明**
 
 ```chali
-Option<std::lang::List<uint8>> keyBytesAt(int64 index);
+Option<std::core::List<uint8>> keyBytesAt(int64 index);
 ```
 
 **行为**
@@ -1231,7 +1231,7 @@ Option<std::lang::List<uint8>> keyBytesAt(int64 index);
 
 **返回值**
 
-`Option<std::lang::List<uint8>>`。按成员位置读取原始字节键。
+`Option<std::core::List<uint8>>`。按成员位置读取原始字节键。
 
 **错误与边界**
 
@@ -1254,7 +1254,7 @@ obj.keyBytesAt(index);
 **声明**
 
 ```chali
-std::lang::String dump();
+std::core::String dump();
 ```
 
 **行为**
@@ -1267,7 +1267,7 @@ std::lang::String dump();
 
 **返回值**
 
-`std::lang::String`。将节点序列化为文本。
+`std::core::String`。将节点序列化为文本。
 
 **错误与边界**
 
@@ -1290,7 +1290,7 @@ obj.dump();
 **声明**
 
 ```chali
-Result<TomlValue, std::lang::Error> parse(std::lang::String text);
+Result<TomlValue, std::core::Error> parse(std::core::String text);
 ```
 
 **行为**
@@ -1303,11 +1303,11 @@ Result<TomlValue, std::lang::Error> parse(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<TomlValue, std::lang::Error>`。解析TOML 文本；成功返回根节点，失败返回诊断字符串。
+`Result<TomlValue, std::core::Error>`。解析TOML 文本；成功返回根节点，失败返回诊断字符串。
 
 **错误与边界**
 

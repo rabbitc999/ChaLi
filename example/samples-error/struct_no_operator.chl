@@ -9,5 +9,5 @@ void main() {
     Money b;
     a.cents = 1;
     b.cents = 2;
-    std::lang::println("{}", (a + b).cents);
+    std::core::println("{}", (a + b).cents);
 }

@@ -29,7 +29,7 @@ const lines = [
   '  Item recipient=move original;',
   '  released.drop();',
   '  println("MOVED");',
-  '  int64 total=0;for(int64 i in std::lang::range(0,4)){total=total+once(i);}assert(total==10);',
+  '  int64 total=0;for(int64 i in std::core::range(0,4)){total=total+once(i);}assert(total==10);',
   '  println("RESULT {} {} {}",node.next.value,alias,recipient.value);',
   '}',
 ];

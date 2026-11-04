@@ -72,7 +72,7 @@ Thread invalid;
             assert result.returncode != 0 and error in result.stderr, result.stderr
 
         result = run('''import std::thread;
-void leaf() { std::lang::panic("wait failure"); }
+void leaf() { std::core::panic("wait failure"); }
 void main() {
 Thread task = std::thread::create(leaf);
 std::thread::waitFor(task, 5000);

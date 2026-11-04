@@ -54,7 +54,7 @@ Result<String, Error> encodeRows(std::sql::ResultSet const& rows)
 {
     let fields = std::reflect::getStructInfo<Student>().unwrap().fields;
     List<String> records;
-    for (int64 row in std::lang::range(0, rows.rowCount()))
+    for (int64 row in std::core::range(0, rows.rowCount()))
     {
         List<String> values;
         for (let field in fields)

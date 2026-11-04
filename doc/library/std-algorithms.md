@@ -119,10 +119,10 @@ float64    3.75
 
 | 名称 | 声明 |
 | --- | --- |
-| [choiceValue](#api-0) | `T choiceValue<T>(std::lang::List<T> items, uint64 seed)` |
-| [shuffleValue](#api-1) | `std::lang::List<T> shuffleValue<T>(std::lang::List<T> items, uint64 seed)` |
+| [choiceValue](#api-0) | `T choiceValue<T>(std::core::List<T> items, uint64 seed)` |
+| [shuffleValue](#api-1) | `std::core::List<T> shuffleValue<T>(std::core::List<T> items, uint64 seed)` |
 | [shuffleReference](#api-2) | `void shuffleReference<T>(T mut& data, int64 count, uint64 seed)` |
-| [zipValue](#api-3) | `std::lang::List<(T, U)> zipValue<T, U>(std::lang::List<T> left, std::lang::List<U> right)` |
+| [zipValue](#api-3) | `std::core::List<(T, U)> zipValue<T, U>(std::core::List<T> left, std::core::List<U> right)` |
 | [sortReference](#api-4) | `void sortReference<T>(T mut& data, int64 count)` |
 | [reverseReference](#api-5) | `void reverseReference<T>(T mut& data, int64 count)` |
 | [findReference](#api-6) | `int64 findReference<T>(T const& data, int64 count, T value)` |
@@ -155,7 +155,7 @@ float64    3.75
 **声明**
 
 ```chali
-T choiceValue<T>(std::lang::List<T> items, uint64 seed);
+T choiceValue<T>(std::core::List<T> items, uint64 seed);
 ```
 
 **行为**
@@ -166,7 +166,7 @@ T choiceValue<T>(std::lang::List<T> items, uint64 seed);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `items` | `std::lang::List<T> items` | 参与处理的列表元素 | 无 |
+| `items` | `std::core::List<T> items` | 参与处理的列表元素 | 无 |
 | `seed` | `uint64 seed` | 随机种子 | 无 |
 
 **返回值**
@@ -184,7 +184,7 @@ T choiceValue<T>(std::lang::List<T> items, uint64 seed);
 std::algorithms::choiceValue<T>(items, seed);
 ```
 
-**源码**：[source/chali_generic.cpp:2096](../../source/chali_generic.cpp#L2096)。
+**源码**：[source/chali_generic.cpp:1995](../../source/chali_generic.cpp#L1995)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -195,7 +195,7 @@ std::algorithms::choiceValue<T>(items, seed);
 **声明**
 
 ```chali
-std::lang::List<T> shuffleValue<T>(std::lang::List<T> items, uint64 seed);
+std::core::List<T> shuffleValue<T>(std::core::List<T> items, uint64 seed);
 ```
 
 **行为**
@@ -206,12 +206,12 @@ Fisher-Yates 洗牌，返回**打乱后的副本**（原表不动）。 从后�
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `items` | `std::lang::List<T> items` | 参与处理的列表元素 | 无 |
+| `items` | `std::core::List<T> items` | 参与处理的列表元素 | 无 |
 | `seed` | `uint64 seed` | 随机种子 | 无 |
 
 **返回值**
 
-`std::lang::List<T>`。Fisher-Yates 洗牌，返回**打乱后的副本**（原表不动）。 从后往前逐个和前面 `[0, i]` 里的一个随机位置交换；同一个 `seed` 结果可复现。
+`std::core::List<T>`。Fisher-Yates 洗牌，返回**打乱后的副本**（原表不动）。 从后往前逐个和前面 `[0, i]` 里的一个随机位置交换；同一个 `seed` 结果可复现。
 
 **错误与边界**
 
@@ -223,7 +223,7 @@ Fisher-Yates 洗牌，返回**打乱后的副本**（原表不动）。 从后�
 std::algorithms::shuffleValue<T>(items, seed);
 ```
 
-**源码**：[source/chali_generic.cpp:2105](../../source/chali_generic.cpp#L2105)。
+**源码**：[source/chali_generic.cpp:2004](../../source/chali_generic.cpp#L2004)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -263,7 +263,7 @@ Fisher-Yates 洗牌的**引用形式**：直接在 `data` 里 `count` 个元素�
 std::algorithms::shuffleReference<T>(data, count, seed);
 ```
 
-**源码**：[source/chali_generic.cpp:2125](../../source/chali_generic.cpp#L2125)。
+**源码**：[source/chali_generic.cpp:2024](../../source/chali_generic.cpp#L2024)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -274,7 +274,7 @@ std::algorithms::shuffleReference<T>(data, count, seed);
 **声明**
 
 ```chali
-std::lang::List<(T, U)> zipValue<T, U>(std::lang::List<T> left, std::lang::List<U> right);
+std::core::List<(T, U)> zipValue<T, U>(std::core::List<T> left, std::core::List<U> right);
 ```
 
 **行为**
@@ -287,12 +287,12 @@ Pair corresponding elements; excess elements in the longer list are ignored.
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `left` | `std::lang::List<T> left` | 左操作数或区间左端 | 无 |
-| `right` | `std::lang::List<U> right` | 右操作数或区间右端 | 无 |
+| `left` | `std::core::List<T> left` | 左操作数或区间左端 | 无 |
+| `right` | `std::core::List<U> right` | 右操作数或区间右端 | 无 |
 
 **返回值**
 
-`std::lang::List<(T, U)>`。按较短列表长度配对元素并返回元组列表，较长列表的多余元素忽略。
+`std::core::List<(T, U)>`。按较短列表长度配对元素并返回元组列表，较长列表的多余元素忽略。
 
 **错误与边界**
 
@@ -304,7 +304,7 @@ Pair corresponding elements; excess elements in the longer list are ignored.
 std::algorithms::zipValue<T, U>(left, right);
 ```
 
-**源码**：[source/chali_generic.cpp:2139](../../source/chali_generic.cpp#L2139)。
+**源码**：[source/chali_generic.cpp:2038](../../source/chali_generic.cpp#L2038)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -343,7 +343,7 @@ void sortReference<T>(T mut& data, int64 count);
 std::algorithms::sortReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2169](../../source/chali_generic.cpp#L2169)。
+**源码**：[source/chali_generic.cpp:2068](../../source/chali_generic.cpp#L2068)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -382,7 +382,7 @@ void reverseReference<T>(T mut& data, int64 count);
 std::algorithms::reverseReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2174](../../source/chali_generic.cpp#L2174)。
+**源码**：[source/chali_generic.cpp:2073](../../source/chali_generic.cpp#L2073)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -422,7 +422,7 @@ int64 findReference<T>(T const& data, int64 count, T value);
 std::algorithms::findReference<T>(data, count, value);
 ```
 
-**源码**：[source/chali_generic.cpp:2187](../../source/chali_generic.cpp#L2187)。
+**源码**：[source/chali_generic.cpp:2086](../../source/chali_generic.cpp#L2086)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -462,7 +462,7 @@ int64 binarySearchReference<T>(T const& data, int64 count, T value);
 std::algorithms::binarySearchReference<T>(data, count, value);
 ```
 
-**源码**：[source/chali_generic.cpp:2197](../../source/chali_generic.cpp#L2197)。
+**源码**：[source/chali_generic.cpp:2096](../../source/chali_generic.cpp#L2096)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -501,7 +501,7 @@ Option<T mut&> minReference<T>(T mut& data, int64 count);
 std::algorithms::minReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2209](../../source/chali_generic.cpp#L2209)。
+**源码**：[source/chali_generic.cpp:2108](../../source/chali_generic.cpp#L2108)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -540,7 +540,7 @@ Option<T mut&> maxReference<T>(T mut& data, int64 count);
 std::algorithms::maxReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2221](../../source/chali_generic.cpp#L2221)。
+**源码**：[source/chali_generic.cpp:2120](../../source/chali_generic.cpp#L2120)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -580,7 +580,7 @@ int64 countReference<T>(T const& data, int64 count, T value);
 std::algorithms::countReference<T>(data, count, value);
 ```
 
-**源码**：[source/chali_generic.cpp:2233](../../source/chali_generic.cpp#L2233)。
+**源码**：[source/chali_generic.cpp:2132](../../source/chali_generic.cpp#L2132)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 
@@ -620,7 +620,7 @@ T sumReference<T>(T mut& data, int64 count);
 std::algorithms::sumReference<T>(data, count);
 ```
 
-**源码**：[source/chali_generic.cpp:2244](../../source/chali_generic.cpp#L2244)。
+**源码**：[source/chali_generic.cpp:2143](../../source/chali_generic.cpp#L2143)。
 
 **完整示例**：[example/samples/std_algorithms_extra.chl](../../example/samples/std_algorithms_extra.chl)。
 

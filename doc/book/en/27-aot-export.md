@@ -154,24 +154,28 @@ Make acceptance reproducible: prepare dependencies on the target, enter the docu
 
 The shared runtime core requires C++17 and operating-system services. It targets desktop and supported embedded Linux hosts, without promising bare-metal support. A target triple does not replace system libraries, startup assets or real-device validation.
 
+### Check an artifact with fixed input
+
+Use a program with stable output to check behavior after native compilation and linking.
+
+<!-- verify-book -->
+```chali
+int64 result() {
+    return 6 * 7;
+}
+void main() {
+    println("artifact={}", result());
+}
+```
+
+```text
+artifact=42
+```
+
 ### Summary
 
 Use run to observe checked native execution, then validate the actual aot release configuration. Compiler LLVM components, application library dependencies and target startup are separate questions.
 
 Retain commands, source/binary identities, target conditions and business outcomes. Report object generation, linking and execution with their respective evidence. Chapter 25 applies these requirements to a complete web/database application.
-
-## 27.5 Exercises
-
-1. Give one compiler dependency and one application dependency.
-2. Does unchecked remove static borrow checking?
-3. What remains after cross-target object generation?
-4. Which resources accompany a deployed web service?
-
-### Answers and checks
-
-1. For example LLVM tools and a MySQL client library; inspect actual linkage.
-2. No; runtime defaults and static rules are separate.
-3. Target linking and execution in the target environment.
-4. Web assets, configuration, external libraries and data setup, with paths checked against the working directory.
 
 Next: [Chapter 29](29-student-management.md).

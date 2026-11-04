@@ -27,7 +27,7 @@
       "patterns": [
         {
           "name": "keyword.control.chali",
-          "match": "#level\\s*\\(\\s*[aA][lL][lL]\\s*\\)|#level\\b|#abi\\b|#export\\b|#derive\\b|#NonCopyable\\b|#borrow\\b|#static\\b|#ret\\b"
+          "match": "#abi\\b|#export\\b|#NonCopyable\\b|#borrow\\b|#static\\b|#ret\\b"
         },
         {
           "name": "comment.block.chali",
@@ -97,7 +97,7 @@
         },
         {
           "name": "keyword.control.macro.chali",
-          "match": "\\$(?:end_macro|end_for|if|elif|else_if|end_if|match|regex|else|end_match|end_regex)\\b"
+          "match": "\\$(?:end_macro|end_for|if|elif|else_if|implement|end_if|match|regex|else|end_match|end_regex)\\b"
         },
         {
           "name": "keyword.control.for.chali",
@@ -113,7 +113,11 @@
         },
         {
           "name": "keyword.control.chali",
-          "match": "\\b(?:_|unsafe|__rawSize|__rawAlign|break|cast|const|continue|copy|defer|drop|elif|else|enum|export|fn|for|if|impl|import|in|inline|interface|let|loop|match|module|move|mut|new|opcode|return|scope|static|struct|type|while|yield)\\b"
+          "match": "\\b(fn)(?:\\s*<[^>]*>)?\\s+(copy)\\b"
+        },
+        {
+          "name": "keyword.control.chali",
+          "match": "\\b(?:_|unsafe|__rawSize|__rawAlign|break|cast|const|continue|defer|drop|elif|else|enum|export|fn|for|if|impl|import|in|inline|interface|let|loop|match|module|move|mut|new|opcode|return|scope|static|struct|type|while|yield)\\b"
         },
         {
           "name": "keyword.declaration.annotation.chali",

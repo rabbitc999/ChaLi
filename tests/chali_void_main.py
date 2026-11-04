@@ -10,7 +10,7 @@ def main():
     work = ROOT / 'build/void-main'
     work.mkdir(parents=True, exist_ok=True)
     compiler = compiler_path()
-    cases = {'fallthrough': ('void main(){println("OK");}', False), 'return': ('void main(){println("OK");return;}', False), 'arguments': ('void main(std::lang::List<std::lang::String> args){println("OK");}', False), 'panic': ('void main(){panic("void-main-panic");}', True)}
+    cases = {'fallthrough': ('void main(){println("OK");}', False), 'return': ('void main(){println("OK");return;}', False), 'arguments': ('void main(std::core::List<std::core::String> args){println("OK");}', False), 'panic': ('void main(){panic("void-main-panic");}', True)}
     for label, (text, fails) in cases.items():
         source = work / (label + '.chl')
         source.write_text(text, encoding='utf-8')

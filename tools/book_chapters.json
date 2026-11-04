@@ -209,6 +209,13 @@
       "en": "29-student-management.md",
       "title": "学生信息管理系统",
       "description": "把登录、权限和教务数据组织成应用"
+    },
+    {
+      "id": 30,
+      "zh": "30-标准库初探.md",
+      "en": "30-standard-library-tour.md",
+      "title": "标准库初探",
+      "description": "按任务选择集合、文件、时间和可选模块"
     }
   ]
 }

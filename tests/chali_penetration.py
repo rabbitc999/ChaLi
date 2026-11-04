@@ -264,7 +264,7 @@ Result<String, String> level1(bool fail)
 }
 void main()
 {
-    for (int64 index in std::lang::range(0, 100))
+    for (int64 index in std::core::range(0, 100))
     {
         assert(level1(false).unwrap() == "深层值");
         assert(level1(true).error() == "深层错误");
@@ -298,7 +298,7 @@ void main()
 }
 Result<String, String> scan()
 {
-    for (int64 index in std::lang::range(0, 10))
+    for (int64 index in std::core::range(0, 10))
     {
         if (index == 3)
         {
@@ -353,7 +353,7 @@ void main()
     ("deep_json_nesting", True, ""),
     ("deep_expression_chain", True, ""),
     ("deep_paren_constant", True, ""),
-    ("bigfloat_huge_exponent_to_int", False, """import std::lang;
+    ("bigfloat_huge_exponent_to_int", False, """import std::core;
 void main()
 {
     BigDecimal value = BigDecimal("1E2000000000");
@@ -362,7 +362,7 @@ void main()
 
 }
 """),
-    ("bint_from_huge_float", False, """import std::lang;
+    ("bint_from_huge_float", False, """import std::core;
 void main()
 {
     BigInteger value = bint(1e30);
@@ -379,9 +379,9 @@ def deep_json_nesting():
     return ("import std::json;\n"
             "void main()\n{\n"
             "    String text = \"\";\n"
-            "    for (int64 index in std::lang::range(0, %d))\n    {\n"
+            "    for (int64 index in std::core::range(0, %d))\n    {\n"
             "        text = text + \"[\";\n    }\n"
-            "    for (int64 index in std::lang::range(0, %d))\n    {\n"
+            "    for (int64 index in std::core::range(0, %d))\n    {\n"
             "        text = text + \"]\";\n    }\n"
             "    let parsed = std::json::parse(text);\n"
             "    println(\"{}\", parsed.isOk());\n"

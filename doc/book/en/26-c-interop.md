@@ -120,24 +120,28 @@ To invoke a captured ChaLi function value, use `chali_abi_invoke`, provide slot 
 
 Follow the [actual C host](../../../tests/fixtures/c_api_library_host.c) and [C callback library](../../../tests/fixtures/c_api_owned_callback.c) for a full round trip. A C function table calls an exported ChaLi function, which captures an offset in a closure. The C library invokes its synchronous trampoline and returns owned text. The language adapter releases that C buffer under its contract before propagating the result or failure. The normal result is 42, and the buffer is released once.
 
+### Check a boundary function independently
+
+Run the fixed-width scalar function before connecting it to a host interface.
+
+<!-- verify-book -->
+```chali
+int32 next_code(int32 value) {
+    return value+(int32)1;
+}
+void main() {
+    println("{}", next_code((int32)41));
+}
+```
+
+```text
+42
+```
+
 ### Summary
 
 Review agreement of prototypes, data transfer, ownership and failure reporting. Distinguish input from output pointers, object references from contiguous arrays, and borrowed buffers from owned copies.
 
 Environment-bearing functions require supported callback protocols. Pointer casts cannot remove environment or failure-propagation obligations. Contain low-level complexity behind small, checkable interfaces for business code.
-
-## 26.5 Exercises
-
-1. What must be checked before declaring an external function?
-2. Are array parameters and single-object references interchangeable?
-3. What must a failure path do after opening a handle?
-4. Does embedded LLVM remove application library dependencies?
-
-### Answers and checks
-
-1. Check prototypes, layout, lengths, ownership, threading and errors.
-2. No; match the actual ABI.
-3. Close successfully acquired resources under the library contract.
-4. No; toolchain and application dependencies are separate.
 
 Next: [Chapter 27](27-aot-export.md).

@@ -35,13 +35,13 @@ assert(($variants<Choice>())[2].payloads[0].id!=($variants<Choice>())[2].payload
 }''', None),
         ('generic', declarations + '''void main(){
 assert(($variants<Box<int16>>())[0].payloads[0].type.name=="int16");
-assert(($variants<Box<String>>())[0].payloads[0].type.name=="std::lang::String");
+assert(($variants<Box<String>>())[0].payloads[0].type.name=="std::core::String");
 assert(($variants<Box<Item>>())[0].payloads[0].type.fields[0].name=="score");
 assert(($variants<Box<int16>>())[0].id!=($variants<Box<int32>>())[0].id);
 }''', None),
         ('nested_types', declarations + '''enum Nested{Wrap(Choice value)};
 void main(){assert(($variants<Nested>())[0].payloads[0].type.variants.count==3);}''', None),
-        ('qualified', declarations + 'void main(){assert($std::lang::variants<Choice>().count==3);}', None),
+        ('qualified', declarations + 'void main(){assert($std::core::variants<Choice>().count==3);}', None),
         ('loop', declarations + '''
 $macro COUNT<T>() -> expr
 int64 total=0;
@@ -156,7 +156,7 @@ assert(($methods<Reader>())[2].isInherited);
         ('overloaded', '''struct Data{int64 read(int8 x){return cast<int64>(x);} int64 read(int16 x){return cast<int64>(x);}}
 void main(){assert($methods<Data>().count==2);assert(($methods<Data>())[0].id!=($methods<Data>())[1].id);assert(($methods<Data>())[0].parameters[0].type.name=="int8");}''', None),
         ('generic_methods', '''struct Box<T>{T value;T read(){return self.value;}}
-void main(){assert(($methods<Box<int16>>())[0].result.name=="int16");assert(($methods<Box<String>>())[0].result.name=="std::lang::String");}''', None),
+void main(){assert(($methods<Box<int16>>())[0].result.name=="int16");assert(($methods<Box<String>>())[0].result.name=="std::core::String");}''', None),
         ('generic_interfaces', '''interface Read<T>{T get();}struct Box<T>:Read<T>{T value;T get(){return self.value;}}
 void main(){assert($interfaces<Box<int16>>().count==1);assert(($interfaces<Box<int16>>())[0].type.methods[0].result.name=="int16");}''', None),
         ('method_loop', member_declarations + '''

@@ -363,7 +363,7 @@ std::size_t lineOf(const Memory::String &text, std::size_t offset)
 /**
  * @brief 识别编译器指令 `#No<接口>Replace` / `#NoRight<接口>` 的范围。
  *
- * 指令本身不带括号，没法套用 `#derive(...)` 的分组解析；这里按「`#No` + 标识符 +
+ * 指令本身不带括号，这里按「`#No` + 标识符 +
  * `Replace`」或「`#NoRight` + 标识符」逐段比对，尾后必须是词边界，避免把
  * `#NoAddReplaceX` 当成指令。
  *
@@ -392,19 +392,11 @@ bool operatorSwitchRange(const Memory::String &text, std::size_t at, std::size_t
 }
 
 /**
- * @brief 暂存泛型类型前的派生指令，在产生具体实例时恢复原文。
- * @param source 待单态化源码；移走的指令以空白占位保持行号。
- * @param lines 源码逐行来源。
- * @param directives 输出模板名到派生指令文本的映射。
- * @param switches 输出模板名到 `#No<接口>Replace` 指令文本的映射（实例声明前必须排在 `#derive` 之前）。
- * @param origins 接收按模块隔离的派生指令逐行来源。
- * @param error 失败时接收非法派生请求的诊断。
- * @return 指令扫描成功返回 true，不执行字段或接口语义检查。
+ * @brief 保存泛型结构体的运算符替代开关并在原位置保留行号。
+ * @param source 待单态化源码。
+ * @param switches 接收每个模板的运算符开关文本。
  */
-bool collectGenericDerives(Memory::String &source, const Memory::Vector<preprocess::LineOrigin> &lines,
-                           Memory::Map<Memory::String, Memory::String> &directives,
-                           Memory::Map<Memory::String, Memory::String> &switches,
-                           Memory::Map<Memory::String, Memory::Vector<preprocess::LineOrigin>> &origins, Memory::String &error)
+void collectGenericOperatorSwitches(Memory::String &source, Memory::Map<Memory::String, Memory::String> &switches)
 {
     auto mask = chali_lambda::codeMask(source);
     Memory::String currentModule;
@@ -417,59 +409,6 @@ bool collectGenericDerives(Memory::String &source, const Memory::Vector<preproce
         if (currentModule == "__root") currentModule.clear();
     };
     int depth = 0;
-    for (std::size_t at = 0; at < mask.size(); ++at)
-    {
-        if (mask[at] == '{') ++depth;
-        if (mask[at] == '}') --depth;
-        if (!depth) updateModule(at);
-        if (depth || !wordAt(mask, at, "#derive")) continue;
-        std::size_t open = at + 7;
-        skipSpace(mask, open);
-        Memory::Vector<Memory::String> traits;
-        std::size_t end = open;
-        if (open >= mask.size() || mask[open] != '(' || !chali_syntax::groupArguments(mask, open, traits, end)) continue;
-        auto type = end;
-        skipSpace(mask, type);
-        const bool structure = wordAt(mask, type, "struct");
-        if (!structure && !wordAt(mask, type, "enum")) continue;
-        type += structure ? 6 : 4;
-        skipSpace(mask, type);
-        const auto begin = type;
-        while (type < mask.size() && identPart(mask[type])) ++type;
-        const auto name = mask.substr(begin, type - begin);
-        skipSpace(mask, type);
-        if (type >= mask.size() || mask[type] != '<') continue;
-        Memory::Set<Memory::String> seenTraits;
-        if (traits.empty()) return error = "#derive 至少需要一个接口", false;
-        for (const auto &item : traits)
-        {
-            const auto trait = trim(item);
-            if (!seenTraits.insert(trait).second) return error = "#derive 重复请求接口：" + trait, false;
-            const auto separator = trait.rfind("::");
-            const auto bare = separator == Memory::String::npos ? trait : trait.substr(separator + 2);
-            if (bare == "Drop" || bare == "drop" || bare == "Closeable")
-                return error = "#derive 禁止生成 Drop 或 Closeable：值语义已经自动递归清理字段", false;
-        }
-        const auto key = currentModule.empty() ? name : currentModule + "::" + name;
-        const auto newline = at ? source.rfind('\n', at - 1) : Memory::String::npos;
-        const auto column = at - (newline == Memory::String::npos ? 0 : newline + 1);
-        directives[key] = Memory::String(column, ' ') + source.substr(at, end - at) + "\n";
-        const auto firstLine = lineOf(source, at);
-        const auto lineCount = static_cast<std::size_t>(std::count(directives[key].begin(), directives[key].end(), '\n'));
-        auto &locations = origins[key];
-        for (std::size_t line = 0; line < lineCount; ++line)
-            locations.push_back(firstLine + line < lines.size() ? lines[firstLine + line] : preprocess::LineOrigin{});
-        for (auto i = at; i < end; ++i)
-            if (source[i] != '\n') source[i] = mask[i] = ' ';
-        at = end - 1;
-        continue;
-    }
-    /* 编译器指令 `#No<接口>Replace` / `#NoRight<接口>` 同样要在泛型模板收集前摘走：
-     * 它写在 `struct Name<T>` 前面，留着会把声明头搅成 `#NoAddReplace struct`，模板
-     * 识别不到。摘下来的文本按名字记进同一张表，实例化时和 `#derive` 一起贴回实例
-     * 声明前面。 */
-    depth = 0;
-    currentModule.clear();
     for (std::size_t at = 0; at < mask.size(); ++at)
     {
         if (mask[at] == '{') ++depth;
@@ -497,7 +436,6 @@ bool collectGenericDerives(Memory::String &source, const Memory::Vector<preproce
             if (source[i] != '\n') source[i] = mask[i] = ' ';
         at = switchEnd - 1u;
     }
-    return true;
 }
 
 /**
@@ -1019,18 +957,8 @@ void collectInterfaces(const Memory::String &source,
         }
     }
     Memory::String module;
-    Memory::Vector<Memory::String> derived;
     for (std::size_t at = 0; at < text.size(); ++at)
     {
-        if (wordAt(text, at, "#derive"))
-        {
-            auto open = at + 7;
-            skipSpace(text, open);
-            auto end = open;
-            derived.clear();
-            if (open < text.size() && text[open] == '(' && chali_syntax::groupArguments(text, open, derived, end)) at = end - 1;
-            continue;
-        }
         if (wordAt(text, at, "module"))
         {
             at += 6u;
@@ -1058,31 +986,6 @@ void collectInterfaces(const Memory::String &source,
         }
         if (isInterface && name == "ToString")
             implemented["#string-protocol-declarations"].insert(module.empty() ? name : module + "::" + name);
-        for (const auto &item : derived)
-        {
-            const auto trait = trim(item);
-            const auto owner = module.empty() ? name : module + "::" + name;
-            if (trait != "Equal" && trait != "Hash" && trait != "Clone")
-            {
-                // 此处只预测约束身份；实际宏、配对接口及方法仍由派生语义完整验证。
-                const auto qualified = trait.find("::") != Memory::String::npos || module.empty() ? trait : module + "::" + trait;
-                auto generic = session.generics.find(qualified);
-                if (generic == session.generics.end()) generic = session.generics.find(trait);
-                const auto identity = generic == session.generics.end() ? qualified : mangle(generic->second.name, { owner });
-                implemented[name].insert(identity);
-                implemented[owner].insert(identity);
-                if (generic == session.generics.end())
-                {
-                    implemented[name].insert(trait);
-                    implemented[owner].insert(trait);
-                }
-                continue;
-            }
-            const auto interface = trait == "Equal" ? mangle(trait, { "bool", owner }) : mangle(trait, { owner });
-            implemented[name].insert(interface);
-            implemented[owner].insert(interface);
-        }
-        derived.clear();
         skipSpace(text, at);
         if (at >= text.size() || text[at] != ':') continue;
         ++at;
@@ -1218,7 +1121,7 @@ void collectCoreAliasShadows(const Memory::String &source)
         const auto name = at;
         while (at < source.size() && identPart(source[at])) ++at;
         const auto bare = source.substr(name, at - name);
-        if (word != "opcode" || module != "std::lang") coreAliasShadows.insert(bare);
+        if (word != "opcode" || module != "std::core") coreAliasShadows.insert(bare);
         nominalTypeNames[bare].insert(module.empty() ? bare : module + "::" + bare);
         std::size_t open = at;
         skipSpace(source, open);
@@ -1306,15 +1209,15 @@ Memory::String canonicalTypeImpl(Memory::String value, const Memory::String *mod
             return instance.name;
     }
     const Memory::Map<Memory::String, Memory::String> aliases = {
-        { "std::lang::String", "std::lang::String" },
-        { "std::lang::BigInteger", "std::lang::BigInteger" },
-        { "std::lang::BigDecimal", "std::lang::BigDecimal" },
-        { "std::lang::File", "std::lang::File" },
-        { "std::lang::Process", "std::lang::Process" },
-        { "std::lang::Any", "std::lang::Any" },
+        { "std::core::String", "std::core::String" },
+        { "std::big_number::BigInteger", "std::big_number::BigInteger" },
+        { "std::big_number::BigDecimal", "std::big_number::BigDecimal" },
+        { "std::core::File", "std::core::File" },
+        { "std::core::Process", "std::core::Process" },
+        { "std::core::Any", "std::core::Any" },
     };
     const Memory::Map<Memory::String, Memory::String> implicitAliases = {
-        { "String", "std::lang::String" }, { "BigInteger", "std::lang::BigInteger" }, { "BigDecimal", "std::lang::BigDecimal" }, { "File", "std::lang::File" }, { "Process", "std::lang::Process" }, { "Any", "std::lang::Any" }
+        { "String", "std::core::String" }, { "BigInteger", "std::big_number::BigInteger" }, { "BigDecimal", "std::big_number::BigDecimal" }, { "File", "std::core::File" }, { "Process", "std::core::Process" }, { "Any", "std::core::Any" }
     };
     const auto implicit = implicitAliases.find(value);
     const auto scopedNominal = nominalTypeNames.find(value);
@@ -1324,7 +1227,8 @@ Memory::String canonicalTypeImpl(Memory::String value, const Memory::String *mod
         if (scopedNominal->second.count(local))
             return module->empty() && scopedNominal->second.size() > 1u ? "__root::" + value : local;
         if (scopedNominal->second.count(value)) return "__root::" + value;
-        Memory::Set<Memory::String> imports{ "std::lang" }, candidates;
+        Memory::Set<Memory::String> imports{ "std::core" }, candidates;
+        if (value == "BigInteger" || value == "BigDecimal") imports.insert("std::big_number");
         const auto imported = nominalTypeImports.find(*module);
         if (imported != nominalTypeImports.end()) imports.insert(imported->second.begin(), imported->second.end());
         for (const auto &owner : imports)
@@ -1337,8 +1241,8 @@ Memory::String canonicalTypeImpl(Memory::String value, const Memory::String *mod
     for (const auto &container : { Memory::String("List"), Memory::String("Set"), Memory::String("Map") })
     {
         Memory::String prefix = container + "<";
-        if (value.compare(0, prefix.size(), prefix) == 0) value = "std::lang::" + value;
-        prefix = "std::lang::" + prefix;
+        if (value.compare(0, prefix.size(), prefix) == 0) value = "std::core::" + value;
+        prefix = "std::core::" + prefix;
         if (value.compare(0, prefix.size(), prefix) != 0 || value.back() != '>') continue;
         auto parts = splitTop(value.substr(prefix.size(), value.size() - prefix.size() - 1));
         value = prefix;
@@ -1369,13 +1273,13 @@ Memory::String canonicalTypeImpl(Memory::String value, const Memory::String *mod
         if (nominal.second.count(value)) return value;
     /* `std::模块::类型` 一律按**裸类型名**参与改名与类型同一性：同一份
      * `Result<FileStream, IoError>` 不能因为写成了限定形式就变成另一个类型。 */
-    if (value.compare(0u, 5u, "std::") == 0u && value.compare(0u, 11u, "std::lang::") != 0u)
+    if (value.compare(0u, 5u, "std::") == 0u && value.compare(0u, 11u, "std::core::") != 0u)
     {
         const std::size_t last = value.rfind("::");
         if (last != Memory::String::npos && value.find('<', last) == Memory::String::npos)
             return value.substr(last + 2u);
     }
-    if (value.compare(0u, 11u, "std::lang::") == 0u && value.compare(0u, 16u, "std::lang::List<") != 0u && value.compare(0u, 15u, "std::lang::Set<") != 0u && value.compare(0u, 15u, "std::lang::Map<") != 0u && value.find("::", 11u) == Memory::String::npos)
+    if (value.compare(0u, 11u, "std::core::") == 0u && value.compare(0u, 16u, "std::core::List<") != 0u && value.compare(0u, 15u, "std::core::Set<") != 0u && value.compare(0u, 15u, "std::core::Map<") != 0u && value.find("::", 11u) == Memory::String::npos)
         return value.substr(11u);
     return value;
 }
@@ -1508,11 +1412,11 @@ Memory::String substitute(const Expansion &expansion)
             replaceAll(reference + " result = fallback;", "");
             replaceAll("result = value;", "return value;");
             replaceAll("result = error;", "return error;");
-            replaceAll("return result;", method == "unwrapOr" ? "return fallback;" : "std::lang::panic(\"不可从空的可选值获取引用\");");
+            replaceAll("return result;", method == "unwrapOr" ? "return fallback;" : "std::core::panic(\"不可从空的可选值获取引用\");");
             result.replace(open, close - open + 1, body);
         }
     }
-    return expansion.generic->operatorSwitches + expansion.generic->derivation + result;
+    return expansion.generic->operatorSwitches + result;
 }
 
 /**
@@ -1783,11 +1687,12 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
  * @param made 本次编译的实例记录。
  * @param implemented 普通声明与生成声明实现的接口。
  * @param error 失败时接收具体实例的诊断。
+ * @param registered 查询文本阶段尚未知晓的普通语义接口登记。
  * @return 所有具体类型实参满足约束时返回 true。
  */
 bool validateConstraints(const Memory::Map<Memory::String, Expansion> &made,
                          const Memory::Map<Memory::String, Memory::Set<Memory::String>> &implemented,
-                         Memory::String &error)
+                         Memory::String &error, RegisteredInterfaceCheck registered)
 {
     for (const auto &item : made)
     {
@@ -1800,12 +1705,13 @@ bool validateConstraints(const Memory::Map<Memory::String, Expansion> &made,
             const auto declarations = implemented.find("#string-protocol-declarations");
             bool stringCapability = constraint == "std::io::ToString" || (constraint == "ToString" && declarations != implemented.end() && declarations->second.size() == 1 && declarations->second.count("std::io::ToString"));
             const auto protocol = made.find(constraint);
-            if (protocol != made.end() && (protocol->second.generic->module == "std::lang" || protocol->second.generic->origin.file == "<内建 ImplicitConvert>") && protocol->second.generic->name == "ImplicitConvert" && protocol->second.args.size() == 1 && (protocol->second.args[0] == "String" || protocol->second.args[0] == "std::lang::String"))
+            if (protocol != made.end() && (protocol->second.generic->module == "std::core" || protocol->second.generic->origin.file == "<内建 ImplicitConvert>") && protocol->second.generic->name == "ImplicitConvert" && protocol->second.args.size() == 1 && (protocol->second.args[0] == "String" || protocol->second.args[0] == "std::core::String"))
                 stringCapability = true;
             if (stringCapability && expansion.args[i] != "void") continue;
             const auto concrete = implemented.find(expansion.args[i]);
             if (concrete == implemented.end() || !concrete->second.count(constraint))
             {
+                if (registered(expansion.args[i], constraint, expansion.generic->module)) continue;
                 error = expansion.generic->name + " 的类型实参 " + expansion.args[i] + " 未实现接口 " + constraint;
                 return false;
             }
@@ -1825,17 +1731,13 @@ void appendInstantiationOrigins(const Expansion &expansion, const Memory::String
                                 Memory::Vector<preprocess::LineOrigin> &origins)
 {
     const auto &generic = *expansion.generic;
-    const auto prefix = generic.operatorSwitches + generic.derivation;
-    const auto deriveBegin = 3u + static_cast<std::size_t>(std::count(generic.operatorSwitches.begin(), generic.operatorSwitches.end(), '\n'));
+    const auto prefix = generic.operatorSwitches;
     const auto headers = 3u + static_cast<std::size_t>(std::count(prefix.begin(), prefix.end(), '\n'));
     const auto count = 3u + static_cast<std::size_t>(std::count(declaration.begin(), declaration.end(), '\n'));
     for (std::size_t line = 0; line < count; ++line)
     {
         const auto index = line >= headers ? line - headers : generic.declarationOrigins.size();
-        if (line >= deriveBegin && line - deriveBegin < generic.derivationOrigins.size())
-            origins.push_back(generic.derivationOrigins[line - deriveBegin]);
-        else
-            origins.push_back(index < generic.declarationOrigins.size() ? generic.declarationOrigins[index] : generic.origin);
+        origins.push_back(index < generic.declarationOrigins.size() ? generic.declarationOrigins[index] : generic.origin);
     }
 }
 
@@ -1850,10 +1752,8 @@ bool run(preprocess::Result &result, Memory::String &error)
     collectConstantArguments(result.text);
     session = Session{};
     collectCoreAliasShadows(result.text);
-    Memory::Map<Memory::String, Memory::String> derivedGenerics;
     Memory::Map<Memory::String, Memory::String> operatorSwitches;
-    Memory::Map<Memory::String, Memory::Vector<preprocess::LineOrigin>> deriveOrigins;
-    if (!collectGenericDerives(result.text, result.lineMap, derivedGenerics, operatorSwitches, deriveOrigins, error)) return false;
+    collectGenericOperatorSwitches(result.text, operatorSwitches);
     // 泛型方法的显式错误类型交给语义层补齐其余参数；跳过注释与字符串。
     for (std::size_t at = 0; at < result.text.size(); ++at)
     {
@@ -1910,8 +1810,8 @@ bool run(preprocess::Result &result, Memory::String &error)
         builtin.origin.line = 1u;
         generics.emplace(name, std::move(builtin));
     };
-    const Parameter resultType{ "R", "", "std::lang::Any" };
-    const Parameter operand{ "T", "", "std::lang::Any" };
+    const Parameter resultType{ "R", "", "std::core::Any" };
+    const Parameter operand{ "T", "", "std::core::Any" };
     /* 名字约定：左边机器（接收者在左）**不带方向前缀**、用全名（`Add` / `Subtract` /
      * `Multiply` / `Divide` / `Modulo` / `Equal` / `NotEqual` / `Less` / `LessOrEqual` /
      * `Greater` / `GreaterOrEqual` / `And` / `Or` / `Xor` / `ShiftLeft` / `ShiftRight`）；
@@ -1958,26 +1858,26 @@ bool run(preprocess::Result &result, Memory::String &error)
         addBuiltin(item.first, { resultType, operand },
                    "interface " + item.first + " { R " + item.second + "(T value); };", 10u);
     }
-    addBuiltin("Hash", { Parameter{ "T", "", "std::lang::Any" } },
+    addBuiltin("Hash", { Parameter{ "T", "", "std::core::Any" } },
                "interface Hash { uint64 hash(T value); };", 10u);
-    addBuiltin("Clone", { Parameter{ "T", "", "std::lang::Any" } },
+    addBuiltin("Clone", { Parameter{ "T", "", "std::core::Any" } },
                "interface Clone { T clone(); };", 10u);
-    addBuiltin("Copy", { Parameter{ "T", "", "std::lang::Any" } },
+    addBuiltin("Copy", { Parameter{ "T", "", "std::core::Any" } },
                "interface Copy { T copy(); };", 10u);
-    addBuiltin("ExplicitConvert", { Parameter{ "T", "", "std::lang::Any" } },
+    addBuiltin("ExplicitConvert", { Parameter{ "T", "", "std::core::Any" } },
                "interface ExplicitConvert { T explicitConvert(); };", 10u);
-    addBuiltin("ImplicitConvert", { Parameter{ "T", "", "std::lang::Any" } },
+    addBuiltin("ImplicitConvert", { Parameter{ "T", "", "std::core::Any" } },
                "interface ImplicitConvert { T implicitConvert(); };", 10u);
-    addBuiltin("Index", { Parameter{ "R", "", "std::lang::Any" }, Parameter{ "T", "", "std::lang::Any" } },
+    addBuiltin("Index", { Parameter{ "R", "", "std::core::Any" }, Parameter{ "T", "", "std::core::Any" } },
                "interface Index { R index(T key); };", 10u);
-    addBuiltin("Iterator", { Parameter{ "R", "", "std::lang::Any" } },
+    addBuiltin("Iterator", { Parameter{ "R", "", "std::core::Any" } },
                R"CHALI(interface Iterator {
     Option<R> iterator(int64 index);
 };)CHALI",
                10u);
     const auto addPointerConversion = [&](const Memory::String &name, const Memory::String &declaration) {
-        addBuiltin(name, { Parameter{ "T", "", "std::lang::Any" } }, declaration, declaration.find(name));
-        generics[name].module = "std::lang";
+        addBuiltin(name, { Parameter{ "T", "", "std::core::Any" } }, declaration, declaration.find(name));
+        generics[name].module = "std::core";
     };
     addPointerConversion("toReference", R"CHALI(T mut& toReference(Option<T mut&> value) {
     return value.unwrap();
@@ -1990,7 +1890,7 @@ bool run(preprocess::Result &result, Memory::String &error)
     /* 标准算法是编译器 intrinsic：这里仅让泛型预处理器吃掉显式 `<T>`，不生成
      * ChaLi 包装函数。限定名约束避免误改用户自己的 `findValue<T>` 等泛型。
      *
-     * 算法分两组：`xxxValue` 收 / 返回 `std::lang::List<T>`（保持原有的列表语义），
+     * 算法分两组：`xxxValue` 收 / 返回 `std::core::List<T>`（保持原有的列表语义），
      * `xxxPointer` 收 `T mut&` / `T const&` + 个数、直接在调用者缓冲区上操作
      * （见下面 `module std::algorithms;` 里的那批泛型函数）。 */
     Memory::Map<Memory::String, Generic> algorithmIntrinsics;
@@ -1998,10 +1898,10 @@ bool run(preprocess::Result &result, Memory::String &error)
     {
         Generic range;
         range.name = name;
-        range.params = { Parameter{ "T", "", "std::lang::Any" } };
+        range.params = { Parameter{ "T", "", "std::core::Any" } };
         range.intrinsic = true;
-        range.requiredQualifier = "std::lang::";
-        range.origin.file = "<内建 std::lang::" + name + ">";
+        range.requiredQualifier = "std::core::";
+        range.origin.file = "<内建 std::core::" + name + ">";
         range.origin.line = 1u;
         algorithmIntrinsics.emplace(name, std::move(range));
     }
@@ -2018,7 +1918,7 @@ bool run(preprocess::Result &result, Memory::String &error)
     {
         Generic algorithm;
         algorithm.name = name;
-        algorithm.params = { Parameter{ "T", "", "std::lang::Any" } };
+        algorithm.params = { Parameter{ "T", "", "std::core::Any" } };
         algorithm.intrinsic = true;
         algorithm.requiredQualifier = "std::algorithms::";
         algorithm.origin.file = "<内建 std::algorithms::" + name + ">";
@@ -2027,7 +1927,7 @@ bool run(preprocess::Result &result, Memory::String &error)
     }
 
     const Memory::String rangeBuiltinRaw = R"CHALI(
-module std::lang;
+module std::core;
 
 struct __Range : Iterator<int64> {
     int64 start;
@@ -2051,7 +1951,7 @@ __Range range(int64 start, int64 stop) {
 }
 
 __Range range(int64 start, int64 stop, int64 step) {
-    std::lang::assert(step != 0, "range 的步长不能为 0");
+    std::core::assert(step != 0, "range 的步长不能为 0");
     __Range result;
     result.start = start;
     result.stop = stop;
@@ -2072,7 +1972,6 @@ __Interval_int64 rangeEq(int64 start, int64 stop) {
 /* fileOpen / fileRead / … 与 processRun / system 已迁到 std/io.chl 与 std/process.chl：
  * 现在要 `import std::io;` / `import std::process;` 才可见。 */
 
-/* `std::lang::Math` 已迁到 std/math.chl：现在要 `import std::math;` 才可见。 */
 
 /* 已迁到 std/：见下面的说明注释。 */
 
@@ -2083,9 +1982,9 @@ module std::algorithms;
  * `choice` / `shuffle` 放这儿不是随手挑的，两条语言约束逼出来的：
  *   ① CHALI **不支持泛型方法**（`T pick<T>(...)` 是语法错；`impl` 只用来实现宿主接口、
  *      不能给 struct 加方法），所以它们没法做成 `Random::choice` 这样的成员；
- *   ② `std::lang::Random` 这个名字已经被同名的 **struct** 占着（withSeed / fromEntropy /
+ *   ② `std::core::Random` 这个名字已经被同名的 **struct** 占着（withSeed / fromEntropy /
  *      nextUInt64 / nextInt / nextFloat64），再开一个同名模块会让
- *      `std::lang::Random::withSeed(…)` 被当成"模块函数"而找不到。
+ *      `std::core::Random::withSeed(…)` 被当成"模块函数"而找不到。
  * 放 `std::algorithms` 也顺理成章：`shuffleValue` 本来就是 <algorithm> 里的东西。
  *
  * 两个函数都**不改 Random 的状态**，而是收一个随机数当种子 —— 调用点自己
@@ -2093,8 +1992,8 @@ module std::algorithms;
  */
 
 /** 从表里随机取一个元素；空表直接停机（和 `at` 越界一个口径）。 */
-T choiceValue<T>(std::lang::List<T> items, uint64 seed) {
-    std::lang::assert(items.len() > 0, "std::algorithms::choiceValue 不能作用在空表上");
+T choiceValue<T>(std::core::List<T> items, uint64 seed) {
+    std::core::assert(items.len() > 0, "std::algorithms::choiceValue 不能作用在空表上");
     return items.at((int64)(seed % (uint64)items.len()));
 }
 
@@ -2102,8 +2001,8 @@ T choiceValue<T>(std::lang::List<T> items, uint64 seed) {
  * Fisher-Yates 洗牌，返回**打乱后的副本**（原表不动）。
  * 从后往前逐个和前面 `[0, i]` 里的一个随机位置交换；同一个 `seed` 结果可复现。
  */
-std::lang::List<T> shuffleValue<T>(std::lang::List<T> items, uint64 seed) {
-    std::lang::List<T> result = items;
+std::core::List<T> shuffleValue<T>(std::core::List<T> items, uint64 seed) {
+    std::core::List<T> result = items;
     uint64 state = seed;
     int64 index = result.len() - 1;
     while (index > 0) {
@@ -2128,16 +2027,16 @@ void shuffleReference<T>(T mut& data, int64 count, uint64 seed) {
     while (index > 0) {
         state = state * 6364136223846793005 + 1442695040888963407;
         int64 other = (int64)(state % (uint64)(index + 1));
-        T swap = std::lang::index(data, index);
-        std::lang::index(data, index) = std::lang::index(data, other);
-        std::lang::index(data, other) = swap;
+        T swap = std::core::index(data, index);
+        std::core::index(data, index) = std::core::index(data, other);
+        std::core::index(data, other) = swap;
         index = index - 1;
     }
 }
 
 /** Pair corresponding elements; excess elements in the longer list are ignored. */
-std::lang::List<(T, U)> zipValue<T, U>(std::lang::List<T> left, std::lang::List<U> right) {
-    std::lang::List<(T, U)> result;
+std::core::List<(T, U)> zipValue<T, U>(std::core::List<T> left, std::core::List<U> right) {
+    std::core::List<(T, U)> result;
     int64 count = left.len();
     if (right.len() < count) { count = right.len(); }
     int64 index = 0;
@@ -2152,12 +2051,12 @@ std::lang::List<(T, U)> zipValue<T, U>(std::lang::List<T> left, std::lang::List<
 
 /* ---- 引用形式的算法族 ----
  *
- * 上面这批（`sortValue` / `findValue` / `binarySearchValue` / `foldValue` …）都收 `std::lang::List<T>`，
+ * 上面这批（`sortValue` / `findValue` / `binarySearchValue` / `foldValue` …）都收 `std::core::List<T>`，
  * `sortValue` 还要复制一份；这里给对照：统一收 `T mut& data, int64 count`，直接在调用者的
  * 缓冲区上读写，不造列表副本、不经过 VM 容器对象。`&raw[0]` / `raw`（运行时数组会
  * 自动退化）/ `std::memory::Span<T>.data` 都能直接喂进来。
  *
- * 约定和 `std::lang::List` 版一致：
+ * 约定和 `std::core::List` 版一致：
  *   * 比较用 `>`（内建数值 / 字符串直接可用；结构体实现 `Greater<bool,T>` 定顺序）；
  *   * 返回下标的找不到时给 -1；返回可选引用的（`minReference` / `maxReference`）空区间给 `None`；
  *   * 调用点要写 `std::algorithms::` 前缀，并 `import std::algorithms;`。
@@ -2175,9 +2074,9 @@ void reverseReference<T>(T mut& data, int64 count) {
     int64 left = 0;
     int64 right = count - 1;
     while (left < right) {
-        T swap = std::lang::index(data, left);
-        std::lang::index(data, left) = std::lang::index(data, right);
-        std::lang::index(data, right) = swap;
+        T swap = std::core::index(data, left);
+        std::core::index(data, left) = std::core::index(data, right);
+        std::core::index(data, right) = swap;
         left = left + 1;
         right = right - 1;
     }
@@ -2187,7 +2086,7 @@ void reverseReference<T>(T mut& data, int64 count) {
 int64 findReference<T>(T const& data, int64 count, T value) {
     int64 index = 0;
     while (index < count) {
-        if (std::lang::index(data, index) == value) { return index; }
+        if (std::core::index(data, index) == value) { return index; }
         index = index + 1;
     }
     return -1;
@@ -2199,8 +2098,8 @@ int64 binarySearchReference<T>(T const& data, int64 count, T value) {
     int64 high = count - 1;
     while (low <= high) {
         int64 middle = low + (high - low) / 2;
-        if (std::lang::index(data, middle) == value) { return middle; }
-        if (std::lang::index(data, middle) > value) { high = middle - 1; } else { low = middle + 1; }
+        if (std::core::index(data, middle) == value) { return middle; }
+        if (std::core::index(data, middle) > value) { high = middle - 1; } else { low = middle + 1; }
     }
     return -1;
 }
@@ -2211,7 +2110,7 @@ Option<T mut&> minReference<T>(T mut& data, int64 count) {
     T mut& best = data;
     int64 index = 1;
     while (index < count) {
-        if (*best > std::lang::index(data, index)) { best = &std::lang::index(data, index); }
+        if (*best > std::core::index(data, index)) { best = &std::core::index(data, index); }
         index = index + 1;
     }
     return Option<T mut&>::Value(best);
@@ -2223,7 +2122,7 @@ Option<T mut&> maxReference<T>(T mut& data, int64 count) {
     T mut& best = data;
     int64 index = 1;
     while (index < count) {
-        if (std::lang::index(data, index) > *best) { best = &std::lang::index(data, index); }
+        if (std::core::index(data, index) > *best) { best = &std::core::index(data, index); }
         index = index + 1;
     }
     return Option<T mut&>::Value(best);
@@ -2234,7 +2133,7 @@ int64 countReference<T>(T const& data, int64 count, T value) {
     int64 total = 0;
     int64 index = 0;
     while (index < count) {
-        if (std::lang::index(data, index) == value) { total = total + 1; }
+        if (std::core::index(data, index) == value) { total = total + 1; }
         index = index + 1;
     }
     return total;
@@ -2242,22 +2141,22 @@ int64 countReference<T>(T const& data, int64 count, T value) {
 
 /** 求和；空区间直接停机（泛型里没有通用的"零值"可造）。 */
 T sumReference<T>(T mut& data, int64 count) {
-    std::lang::assert(count > 0, "std::algorithms::sumReference 需要至少一个元素");
-    T total = std::lang::index(data, 0);
+    std::core::assert(count > 0, "std::algorithms::sumReference 需要至少一个元素");
+    T total = std::core::index(data, 0);
     int64 index = 1;
     while (index < count) {
-        total = total + std::lang::index(data, index);
+        total = total + std::core::index(data, index);
         index = index + 1;
     }
     return total;
 }
 
-module std::lang;
+module std::core;
 
 /* 已迁到 std/：见下面的说明注释。 */
 
 
-module std::lang;
+module std::core;
 
 /* 已迁到 std/：见下面的说明注释。 */
 
@@ -2265,7 +2164,7 @@ module std::lang;
 /* 已迁到 std/：见下面的说明注释。 */
 
 
-module std::lang;
+module std::core;
 
 int64 __sharedCreate<T>(T value);
 T __sharedGet<T>(int64 handle);
@@ -2295,13 +2194,13 @@ interface Closeable { void close(); };
     while (gap > 0) {
         int64 index = gap;
         while (index < count) {
-            T key = std::lang::index(data, index);
+            T key = std::core::index(data, index);
             int64 slot = index;
-            while (slot >= gap && std::lang::index(data, slot - gap) > key) {
-                std::lang::index(data, slot) = std::lang::index(data, slot - gap);
+            while (slot >= gap && std::core::index(data, slot - gap) > key) {
+                std::core::index(data, slot) = std::core::index(data, slot - gap);
                 slot = slot - gap;
             }
-            std::lang::index(data, slot) = key;
+            std::core::index(data, slot) = key;
             index = index + 1;
         }
         gap = gap / 2;
@@ -2310,20 +2209,20 @@ interface Closeable { void close(); };
 #else
     const Memory::String sortReferenceImpl = R"CHALI(    int64 index = 1;
     while (index < count) {
-        T key = std::lang::index(data, index);
+        T key = std::core::index(data, index);
         int64 slot = index - 1;
-        while (slot >= 0 && std::lang::index(data, slot) > key) {
-            std::lang::index(data, slot + 1) = std::lang::index(data, slot);
+        while (slot >= 0 && std::core::index(data, slot) > key) {
+            std::core::index(data, slot + 1) = std::core::index(data, slot);
             slot = slot - 1;
         }
-        std::lang::index(data, slot + 1) = key;
+        std::core::index(data, slot + 1) = key;
         index = index + 1;
     }
 )CHALI";
 #endif
     Memory::String rangeBuiltin = rangeBuiltinRaw;
     // 每种固定宽度整型使用内部状态迭代器；到达闭区间上界后不再递增。
-    rangeBuiltin += "\nmodule std::lang;\n";
+    rangeBuiltin += "\nmodule std::core;\n";
     for (const auto &type : { "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64", "char" })
     {
         const Memory::String valueType = type;
@@ -2358,12 +2257,6 @@ interface Closeable { void close(); };
     {
         auto &generic = entry.second;
         const auto key = generic.module.empty() ? generic.sourceName : generic.module + "::" + generic.sourceName;
-        const auto derived = derivedGenerics.find(key);
-        if (derived != derivedGenerics.end())
-        {
-            generic.derivation = derived->second;
-            generic.derivationOrigins = deriveOrigins[key];
-        }
         const auto switched = operatorSwitches.find(key);
         if (switched != operatorSwitches.end()) generic.operatorSwitches = switched->second;
     }
@@ -2384,7 +2277,6 @@ interface Closeable { void close(); };
         appendInstantiationOrigins(expansion, declaration, generatedOrigins);
     }
     collectInterfaces(result.text + generated, implemented);
-    if (!validateConstraints(made, implemented, error)) return false;
     result.text += generated;
     result.lineMap.insert(result.lineMap.end(), generatedOrigins.begin(), generatedOrigins.end());
     session.emitted = pending.size();
@@ -2423,10 +2315,20 @@ bool instantiate(const Memory::String &name, const Memory::Vector<Memory::String
         if (origins) appendInstantiationOrigins(expansion, declaration, *origins);
     }
     collectInterfaces(generated, session.implemented);
-    if (!validateConstraints(session.made, session.implemented, error)) return false;
     markContainerTypeArguments(generated);
     chali_lambda::markClosureTypeArguments(generated);
     return true;
+}
+
+/**
+ * @brief 在 AST 已登记成员宏接口后，核对泛型约束。
+ * @param registered 查询宿主及接口的普通语义登记。
+ * @param error 失败时接收具体实参与约束诊断。
+ * @return 约束全部满足时返回真。
+ */
+bool validateRegisteredConstraints(RegisteredInterfaceCheck registered, Memory::String &error)
+{
+    return validateConstraints(session.made, session.implemented, error, registered);
 }
 
 #include "generic/standard_templates.cpp"

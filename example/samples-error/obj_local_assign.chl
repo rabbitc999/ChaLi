@@ -2,6 +2,6 @@ struct Pair { int64 x; int64 y; };
 
 void main() {
     Pair local;
-    std::lang::Any box;
+    std::core::Any box;
     box = local;
 }

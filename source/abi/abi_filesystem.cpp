@@ -6,6 +6,15 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include <cerrno>
+#include <random>
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 
 namespace
 {
@@ -70,8 +79,71 @@ enum class Operation
     List,
     Info,
     Create,
-    Rename
+    Rename,
+    Walk,
+    Temporary,
+    Replace
 };
+/**
+ * @brief 在指定目录以独占方式创建空临时文件。
+ * @param directory 临时文件的父目录。
+ * @param error 接收创建或关闭错误。
+ * @return 新文件路径，失败返回空路径。
+ */
+std::filesystem::path createTemporary(const std::filesystem::path &directory, std::error_code &error)
+{
+    namespace fs = std::filesystem;
+    std::random_device random;
+    for (int attempt = 0; attempt < 128; ++attempt)
+    {
+        const auto name = ".chali-" + std::to_string(random()) + "-" + std::to_string(random()) + ".tmp";
+        const fs::path candidate = directory / name;
+#ifdef _WIN32
+        HANDLE file = CreateFileW(candidate.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW,
+                                  FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (file != INVALID_HANDLE_VALUE)
+        {
+            if (CloseHandle(file)) return candidate;
+            error = {static_cast<int>(GetLastError()), std::system_category()};
+            DeleteFileW(candidate.c_str());
+            return {};
+        }
+        const auto reason = GetLastError();
+        if (reason == ERROR_FILE_EXISTS || reason == ERROR_ALREADY_EXISTS) continue;
+        error = {static_cast<int>(reason), std::system_category()};
+#else
+        const int file = ::open(candidate.c_str(), O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC, 0600);
+        if (file >= 0)
+        {
+            if (::close(file) == 0) return candidate;
+            error = {errno, std::generic_category()};
+            ::unlink(candidate.c_str());
+            return {};
+        }
+        if (errno == EEXIST) continue;
+        error = {errno, std::generic_category()};
+#endif
+        return {};
+    }
+    error = std::make_error_code(std::errc::file_exists);
+    return {};
+}
+
+/**
+ * @brief 将路径列表写入 IoReply 的列表槽。
+ * @param frame 当前宿主帧。
+ * @param reply 调用方结果结构体。
+ * @param paths 已准备的 UTF-8 路径。
+ * @return 全部写入时为真。
+ */
+bool writePaths(const ChaliAbiFrame *frame, int64_t reply, const std::vector<std::string> &paths)
+{
+    int64_t address = 0, list = 0;
+    if (!slotAddress(frame, reply, 2, address) || !chali_abi_read(frame, address, &list, sizeof(list))) return false;
+    for (const auto &item : paths)
+        if (!chali_abi_list_append_text(frame, list, item.data(), item.size())) return false;
+    return true;
+}
 /** @brief 执行宿主文件系统服务，仅通过 C 逻辑内存和集合服务访问语言数据。
  * @tparam op 编译期固定操作。
  * @param frame 路径、IoReply 引用及返回帧。
@@ -84,9 +156,15 @@ try
     std::string path, destination;
     int64_t reply = 0;
     if (!readPath(frame, 0, path)) return;
-    if constexpr (op == Operation::Rename)
+    constexpr bool twoPaths = op == Operation::Rename || op == Operation::Replace;
+    if constexpr (twoPaths)
         if (!readPath(frame, 1, destination)) return;
-    if (!chali_abi_argument_integer(frame, op == Operation::Rename ? 2 : 1, &reply)) return;
+    if (!chali_abi_argument_integer(frame, twoPaths ? 2 : 1, &reply)) return;
+    if (path.find('\0') != std::string::npos || destination.find('\0') != std::string::npos)
+    {
+        failReply(frame, reply, "file path contains a zero byte");
+        return;
+    }
     std::error_code error;
     if constexpr (op == Operation::List)
     {
@@ -112,10 +190,50 @@ try
             return;
         }
         std::sort(paths.begin(), paths.end());
-        int64_t address = 0, list = 0;
-        if (!slotAddress(frame, reply, 2, address) || !chali_abi_read(frame, address, &list, sizeof(list))) return;
-        for (const auto &item : paths)
-            if (!chali_abi_list_append_text(frame, list, item.data(), item.size())) return;
+        if (!writePaths(frame, reply, paths)) return;
+    }
+    if constexpr (op == Operation::Walk)
+    {
+        fs::recursive_directory_iterator cursor(fs::u8path(path), error), end;
+        std::vector<std::string> paths;
+        for (; !error && cursor != end; cursor.increment(error))
+        {
+            if (paths.size() >= 100000 || cursor.depth() >= 128)
+            {
+                failReply(frame, reply, "directory walk limit exceeded");
+                return;
+            }
+            paths.push_back(cursor->path().generic_u8string());
+        }
+        if (!error)
+        {
+            std::sort(paths.begin(), paths.end());
+            if (!writePaths(frame, reply, paths)) return;
+        }
+    }
+    if constexpr (op == Operation::Temporary)
+    {
+        const auto file = createTemporary(fs::u8path(path), error);
+        if (!error && !writePaths(frame, reply, {file.generic_u8string()}))
+        {
+            fs::remove(file, error);
+            return;
+        }
+    }
+    if constexpr (op == Operation::Replace)
+    {
+        const auto from = fs::u8path(path), to = fs::u8path(destination);
+        if (!fs::is_regular_file(fs::symlink_status(from, error)))
+        {
+            failReply(frame, reply, error ? error.message() : "replacement source must be a regular file");
+            return;
+        }
+#ifdef _WIN32
+        if (!MoveFileExW(from.c_str(), to.c_str(), MOVEFILE_REPLACE_EXISTING))
+            error = {static_cast<int>(GetLastError()), std::system_category()};
+#else
+        fs::rename(from, to, error);
+#endif
     }
     if constexpr (op == Operation::Info)
     {
@@ -173,11 +291,14 @@ void CHALI_ABI_CALL utcNow(ChaliAbiFrame *frame)
 extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_filesystem_records(size_t *count)
 {
     static const ChaliAbiRecord records[] = {
-        { "std::datetime::__utcNow", utcNow, 0 },
+        { "std::date_time::__utcNow", utcNow, 0 },
         { "std::io::__createDirectories", filesystemEntry<Operation::Create>, 2 },
         { "std::io::__fileInfo", filesystemEntry<Operation::Info>, 2 },
         { "std::io::__listDirectory", filesystemEntry<Operation::List>, 2 },
         { "std::io::__renamePath", filesystemEntry<Operation::Rename>, 3 },
+        { "std::io::__walkDirectory", filesystemEntry<Operation::Walk>, 2 },
+        { "std::io::__createTempFile", filesystemEntry<Operation::Temporary>, 2 },
+        { "std::io::__replaceFile", filesystemEntry<Operation::Replace>, 3 },
     };
     if (count) *count = sizeof(records) / sizeof(records[0]);
     return records;

@@ -2,7 +2,7 @@
 #static(local)
 void keep(int64 mut& a) {
     int64 local = 1;
-    std::lang::println("{} {}", a, local);
+    std::core::println("{} {}", a, local);
 }
 void main() {
     int64 x = 1;

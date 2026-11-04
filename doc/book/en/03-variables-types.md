@@ -110,16 +110,19 @@ Braces can define a local scope. A name declared inside it is not automatically 
 
 When reading a variable, ask for its name, type, current value, and whether the binding permits modification.
 
-## 3.5 Exercises
+### Name an intermediate result
 
-1. Change the initial score to 60 and predict the output.
-2. Replace count's inferred declaration with an explicit one.
-3. Why does const restrict later assignment to limit?
-4. Store whether the updated score is at least 60 in a bool.
+Store an intermediate result before computing the subtotal.
 
-### Answers and checks
+<!-- verify-book -->
+```chali
+void main() {
+    int64 count = 3;
+    int64 subtotal = count * 4;
+    println("{}", subtotal);
+}
+```
 
-1. The first output becomes 65; the other items remain unchanged.
-2. Write `int64 count = 2;`.
-3. const imposes a checked read-only restriction on the binding.
-4. `bool passed = score >= 60;` stores the comparison result without changing score.
+```text
+12
+```

@@ -33,7 +33,7 @@ def main():
                 print(f'{allocator}/{checks}: {10 if options.legacy_only else 12} scalar buffers, extrema, copies, clear and iteration passed',flush=True)
         if not options.legacy_only:
             for index,statement in enumerate(('a.set(-1,(int64)1);','a.set(1,(int64)1);','a.at(-1);','a.at(1);')):
-                source=work/f'bad-{index}.chl';source.write_text('import std::linalg;\nvoid main(){std::linalg::ScalarArray<int64> a;a.push((int64)7);'+statement+'}',encoding='utf-8')
+                source=work/f'bad-{index}.chl';source.write_text('import std::linear_algebra;\nvoid main(){std::linear_algebra::ScalarArray<int64> a;a.push((int64)7);'+statement+'}',encoding='utf-8')
                 result=run([compiler,'run',source,'--out',work/f'bad-{index}'],False)
                 assert '线性代数存储下标越界' in result.stderr,result.stderr
             print('set and read bounds checks passed')

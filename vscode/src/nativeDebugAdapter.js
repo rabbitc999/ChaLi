@@ -1284,7 +1284,7 @@ class Adapter {
           if (!/^[\p{L}_][\p{L}\p{N}_]*$/u.test(name)) throw new Error('变量原生名称不可安全定位');
           if ((binding.storage || binding.boxed) && frame.level !== 0) throw new Error('真实绑定镜像仅支持栈顶开发源码帧修改');
           const layout = this.layoutAt(binding.layout);
-          const stringValue = ['String', 'std::lang::String'].includes(binding.type) && layout?.kind === 's';
+          const stringValue = ['String', 'std::core::String'].includes(binding.type) && layout?.kind === 's';
           if (stringValue && frame.level !== 0) throw new Error('拥有 String 修改仅支持栈顶开发源码帧');
           const value = stringValue ? encodeStringAssignment(binding, layout, args.value) : await encodeAssignment(binding, layout, args.value);
           this.stopped(epoch);

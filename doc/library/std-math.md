@@ -77,6 +77,15 @@ symbolic = cos(x)
 
 聚合入口的具体操作参见对应子模块；本页类型/方法的调用形式列在下方。
 
+## 类型、枚举、常量与字段
+
+公开字段按源码原样列出；句柄和游标字段用于包装器状态，通常通过方法操作。枚举的括号表示变体载荷。
+
+| 所属类型 | 声明 | 说明 |
+| --- | --- | --- |
+| 模块 | <a id="symbol-341"></a>`const float64 PI = 3.14159265358979323846` | 圆周率 π 的 float64 近似值。 |
+| 模块 | <a id="symbol-342"></a>`const float64 E = 2.71828182845904523536` | 自然对数的底 e 的 float64 近似值。 |
+
 ## 函数索引
 
 | 名称 | 声明 |
@@ -140,7 +149,7 @@ BigDecimal pi(int64 digits = 50);
 std::math::pi(digits);
 ```
 
-**源码**：[source/std/math.chl:7](../../source/std/math.chl#L7)。
+**源码**：[source/std/math.chl:14](../../source/std/math.chl#L14)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -180,7 +189,7 @@ let sin<T>(T value);
 std::math::sin<T>(value);
 ```
 
-**源码**：[source/std/math.chl:10](../../source/std/math.chl#L10)。
+**源码**：[source/std/math.chl:17](../../source/std/math.chl#L17)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -220,7 +229,7 @@ let cos<T>(T value);
 std::math::cos<T>(value);
 ```
 
-**源码**：[source/std/math.chl:26](../../source/std/math.chl#L26)。
+**源码**：[source/std/math.chl:33](../../source/std/math.chl#L33)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -260,7 +269,7 @@ let tan<T>(T value);
 std::math::tan<T>(value);
 ```
 
-**源码**：[source/std/math.chl:42](../../source/std/math.chl#L42)。
+**源码**：[source/std/math.chl:49](../../source/std/math.chl#L49)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -300,7 +309,7 @@ let asin<T>(T value);
 std::math::asin<T>(value);
 ```
 
-**源码**：[source/std/math.chl:58](../../source/std/math.chl#L58)。
+**源码**：[source/std/math.chl:65](../../source/std/math.chl#L65)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -340,7 +349,7 @@ let acos<T>(T value);
 std::math::acos<T>(value);
 ```
 
-**源码**：[source/std/math.chl:74](../../source/std/math.chl#L74)。
+**源码**：[source/std/math.chl:81](../../source/std/math.chl#L81)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -380,7 +389,7 @@ let atan<T>(T value);
 std::math::atan<T>(value);
 ```
 
-**源码**：[source/std/math.chl:90](../../source/std/math.chl#L90)。
+**源码**：[source/std/math.chl:97](../../source/std/math.chl#L97)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -420,7 +429,7 @@ let exp<T>(T value);
 std::math::exp<T>(value);
 ```
 
-**源码**：[source/std/math.chl:106](../../source/std/math.chl#L106)。
+**源码**：[source/std/math.chl:113](../../source/std/math.chl#L113)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -460,7 +469,7 @@ let ln<T>(T value);
 std::math::ln<T>(value);
 ```
 
-**源码**：[source/std/math.chl:122](../../source/std/math.chl#L122)。
+**源码**：[source/std/math.chl:129](../../source/std/math.chl#L129)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -500,7 +509,7 @@ let log10<T>(T value);
 std::math::log10<T>(value);
 ```
 
-**源码**：[source/std/math.chl:138](../../source/std/math.chl#L138)。
+**源码**：[source/std/math.chl:145](../../source/std/math.chl#L145)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -540,7 +549,7 @@ let sqrt<T>(T value);
 std::math::sqrt<T>(value);
 ```
 
-**源码**：[source/std/math.chl:154](../../source/std/math.chl#L154)。
+**源码**：[source/std/math.chl:161](../../source/std/math.chl#L161)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -580,7 +589,7 @@ let floor<T>(T value);
 std::math::floor<T>(value);
 ```
 
-**源码**：[source/std/math.chl:170](../../source/std/math.chl#L170)。
+**源码**：[source/std/math.chl:177](../../source/std/math.chl#L177)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -620,7 +629,7 @@ let ceil<T>(T value);
 std::math::ceil<T>(value);
 ```
 
-**源码**：[source/std/math.chl:186](../../source/std/math.chl#L186)。
+**源码**：[source/std/math.chl:193](../../source/std/math.chl#L193)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -660,7 +669,7 @@ let round<T>(T value);
 std::math::round<T>(value);
 ```
 
-**源码**：[source/std/math.chl:202](../../source/std/math.chl#L202)。
+**源码**：[source/std/math.chl:209](../../source/std/math.chl#L209)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -700,7 +709,7 @@ let trunc<T>(T value);
 std::math::trunc<T>(value);
 ```
 
-**源码**：[source/std/math.chl:218](../../source/std/math.chl#L218)。
+**源码**：[source/std/math.chl:225](../../source/std/math.chl#L225)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -741,7 +750,7 @@ let pow<T, U>(T value, U other);
 std::math::pow<T, U>(value, other);
 ```
 
-**源码**：[source/std/math.chl:234](../../source/std/math.chl#L234)。
+**源码**：[source/std/math.chl:241](../../source/std/math.chl#L241)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -782,7 +791,7 @@ let fmod<T, U>(T value, U other);
 std::math::fmod<T, U>(value, other);
 ```
 
-**源码**：[source/std/math.chl:383](../../source/std/math.chl#L383)。
+**源码**：[source/std/math.chl:390](../../source/std/math.chl#L390)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -822,7 +831,7 @@ bool isNaN<T>(T value);
 std::math::isNaN<T>(value);
 ```
 
-**源码**：[source/std/math.chl:531](../../source/std/math.chl#L531)。
+**源码**：[source/std/math.chl:538](../../source/std/math.chl#L538)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -862,7 +871,7 @@ bool isInf<T>(T value);
 std::math::isInf<T>(value);
 ```
 
-**源码**：[source/std/math.chl:546](../../source/std/math.chl#L546)。
+**源码**：[source/std/math.chl:553](../../source/std/math.chl#L553)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -902,7 +911,7 @@ T abs<T>(T value);
 std::math::abs<T>(value);
 ```
 
-**源码**：[source/std/math.chl:560](../../source/std/math.chl#L560)。
+**源码**：[source/std/math.chl:567](../../source/std/math.chl#L567)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -942,7 +951,7 @@ T min<T>(T... values);
 std::math::min<T>(values);
 ```
 
-**源码**：[source/std/math.chl:567](../../source/std/math.chl#L567)。
+**源码**：[source/std/math.chl:574](../../source/std/math.chl#L574)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -982,7 +991,7 @@ T max<T>(T... values);
 std::math::max<T>(values);
 ```
 
-**源码**：[source/std/math.chl:579](../../source/std/math.chl#L579)。
+**源码**：[source/std/math.chl:586](../../source/std/math.chl#L586)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -1025,7 +1034,7 @@ int64 clamp(int64 value, int64 low, int64 high);
 std::math::clamp(value, low, high);
 ```
 
-**源码**：[source/std/math.chl:591](../../source/std/math.chl#L591)。
+**源码**：[source/std/math.chl:598](../../source/std/math.chl#L598)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。
 
@@ -1068,6 +1077,6 @@ float64 clamp(float64 value, float64 low, float64 high);
 std::math::clamp(value, low, high);
 ```
 
-**源码**：[source/std/math.chl:603](../../source/std/math.chl#L603)。
+**源码**：[source/std/math.chl:610](../../source/std/math.chl#L610)。
 
 **完整示例**：[example/samples/math_generic.chl](../../example/samples/math_generic.chl)。

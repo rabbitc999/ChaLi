@@ -41,7 +41,7 @@ bool RelocateModuleUnit(ParsedStandardUnit &unit, const Memory::Map<std::size_t,
     for (std::size_t index = 0; index < unit.nodes.size(); ++index)
     {
         auto &node = unit.nodes[index];
-        for (auto *line : { &node.sourceLine, &node.metadataLine, &node.macroDefinitionLine, &node.expansionLine, &node.deriveLine })
+        for (auto *line : { &node.sourceLine, &node.metadataLine, &node.macroDefinitionLine, &node.expansionLine })
         {
             if (!*line) continue;
             const auto found = positions.find(*line);
@@ -115,7 +115,7 @@ bool M_WriteModuleUnit(std::ostream &out)
     Memory::Map<std::size_t, chali_macro::SourceInvocation> fragments;
     for (const auto &node : g_nodes)
     {
-        for (const auto line : { node.sourceLine, node.metadataLine, node.macroDefinitionLine, node.expansionLine, node.deriveLine })
+        for (const auto line : { node.sourceLine, node.metadataLine, node.macroDefinitionLine, node.expansionLine })
             if (line)
             {
                 const auto origin = ModuleUnitOrigin(line);

@@ -139,7 +139,7 @@ chali: 子命令与 --mode=%s 冲突\n|chali: command conflicts with --mode=%s\n
   --no-panic-details 隐藏 panic 路径及调用记录（上游符号压缩时自动启用）。\n|  --no-panic-details Hide panic paths and call traces (automatic with compressed symbols).\n
 已生成 |Generated\x20
 已生成 ChaLi 编译器工程：|Generated ChaLi compiler project:\x20
- 个文件，lang.chl 来自引用模板）\n| files; lang.chl generated from the template)\n
+ 个文件，core.chl 来自引用模板）\n| files; core.chl generated from the template)\n
 清理完成，共删除 |Cleanup complete; removed\x20
  个编译器文件\n| compiler files\n
 编译器工程导出失败：|Compiler project export failed:\x20

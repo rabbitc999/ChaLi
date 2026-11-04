@@ -9,27 +9,30 @@ bool IsContainer(const std::shared_ptr<MType> &type)
 }
 
 /**
- * @brief 识别 std::lang 声明的具名 opcode，避免与用户同名类型混淆。
+ * @brief 识别标准库声明的具名 opcode，避免与用户同名类型混淆。
  * @param type 待查询的类型。
- * @param name lang 包中的公开类型名称。
+ * @param name 标准模块中的公开类型名称。
  * @return 类型是指定标准 opcode 时返回 true。
  */
 bool IsStandardOpcode(const std::shared_ptr<MType> &type, const char *name)
 {
-    return type && type->kind == MType::Opcode && type->name == Memory::String("std::lang::") + name;
+    if (!type || type->kind != MType::Opcode) return false;
+    const std::string_view shortName(name);
+    const char *prefix = shortName == "BigInteger" || shortName == "BigDecimal" ? "std::big_number::" : "std::core::";
+    return type->name == Memory::String(prefix) + name;
 }
 /**
  * @brief 识别核心裸指针表示，只用于编译期选择内存 intrinsic 的地址形式。
  * @param type 静态类型。
- * @return 类型是 std::lang::BarePtr 的具体实例时为真。
+ * @return 类型是 std::core::BarePtr 的具体实例时为真。
  */
 bool IsBarePointerType(const std::shared_ptr<MType> &type)
 {
     if (!type || type->kind != MType::Struct) return false;
-    if (type->name.rfind("std::lang::BarePtr__", 0u) == 0u) return true;
+    if (type->name.rfind("std::core::BarePtr__", 0u) == 0u) return true;
     const auto instance = chali_generic::session.made.find(type->name);
     return instance != chali_generic::session.made.end() && instance->second.generic
-        && instance->second.generic->module == "std::lang" && instance->second.generic->sourceName == "BarePtr";
+        && instance->second.generic->module == "std::core" && instance->second.generic->sourceName == "BarePtr";
 }
 /* ---------- 内部执行期类型标签 ---------- */
 
@@ -116,7 +119,7 @@ Memory::String CallSymbol(const MNode &callee)
 /**
  * @brief 裸核心库调用是否未被当前作用域变量或用户函数遮蔽。
  */
-bool CanUseImplicitLang(const Memory::String &module, const Memory::String &name);
+bool CanUseImplicitCore(const Memory::String &module, const Memory::String &name);
 
 /**
  * @brief 将标准库调用名转换为规范名称。
@@ -125,7 +128,7 @@ bool CanUseImplicitLang(const Memory::String &module, const Memory::String &name
  */
 Memory::String StandardCallName(const MNode &callee)
 {
-    if (callee.kind == MNode::Var && CanUseImplicitLang(callee.module, callee.s))
+    if (callee.kind == MNode::Var && CanUseImplicitCore(callee.module, callee.s))
         return callee.s;
     /* `__` 前缀是**编译器内部名字**（`__fileTryOpen`、`__processRun`、`__stringBytes` …）：
      * 标准库模块（`chali/source/std/*.chl`）里也要能直接调，所以不按模块过滤，
@@ -133,7 +136,11 @@ Memory::String StandardCallName(const MNode &callee)
      * 用户侧不可能声明 `__` 开头的公开 API，所以放宽这一步不会让用户拿到不该有的名字。 */
     if (callee.kind == MNode::Var && callee.s.compare(0u, 2u, "__") == 0)
         return callee.s;
-    if (callee.kind == MNode::EnumCtor && callee.s == "std::lang") return callee.s2;
+    if (callee.kind == MNode::EnumCtor)
+    {
+        const bool bigNumber = callee.s2 == "BigInteger" || callee.s2 == "BigDecimal";
+        if (callee.s == (bigNumber ? "std::big_number" : "std::core")) return callee.s2;
+    }
     return {};
 }
 
@@ -265,7 +272,7 @@ Memory::String g_owner;                                    /* 正在降级的方
 Memory::String g_currentModule;                            /* 正在检查/降级的函数所属模块 */
 
 /**
- * @brief 合成一个 `std::lang::List<element>` 类型。
+ * @brief 合成一个 `std::core::List<element>` 类型。
  *
  * 给 `map` / `filter` 这类"结果表"用：`TypeKey` 对参数化集合 opcode 会写成
  * `vec<T>`，所以合成的类型照样能发类型号、能 `LowerType` 成 i64 句柄。

@@ -1,0 +1,49 @@
+module std::log;
+
+/** 日志严重性。 */
+enum LogLevel {
+    Debug, Info, Warn, Error;
+
+    /** 取得稳定的 JSON 严重性名称。 */
+    String label() {
+        match (self) {
+            LogLevel::Debug => { return "debug"; }
+            LogLevel::Info => { return "info"; }
+            LogLevel::Warn => { return "warn"; }
+            LogLevel::Error => { return "error"; }
+        }
+    }
+};
+
+/** 将 UTF-8 文字编码为带引号的 JSON 字符串。 */
+inline String __quote(String input) {
+    String out = "\"";
+    String hex = "0123456789abcdef";
+    for (uint8 byte in stringBytes(input)) {
+        if (byte == (uint8)34) { out = out + "\\\""; }
+        elif (byte == (uint8)92) { out = out + "\\\\"; }
+        elif (byte < (uint8)32) {
+            int64 high = (int64)byte / 16;
+            int64 low = (int64)byte % 16;
+            out = out + "\\u00" + hex[high:high+1] + hex[low:low+1];
+        } else {
+            out = out + format("{}", (char)byte);
+        }
+    }
+    return out + "\"";
+}
+
+/** 编码一条 JSON 日志记录；字段保存在独立的 fields 对象中。 */
+String format_record(LogLevel level, String message, Map<String,String> fields) {
+    String line = "{\"level\":" + __quote(level.label()) + ",\"message\":" + __quote(message) + ",\"fields\":{";
+    for (int64 index in range(0,fields.len())) {
+        if (index > 0) { line = line + ","; }
+        line = line + __quote(fields.keyAt(index)) + ":" + __quote(fields.valAt(index));
+    }
+    return line + "}}";
+}
+
+/** 将一条结构化记录写到标准错误，附加一个换行。 */
+void write_record(LogLevel level, String message, Map<String,String> fields) {
+    eprintln(format_record(level, message, fields));
+}

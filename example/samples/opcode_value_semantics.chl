@@ -1,6 +1,6 @@
 import std::graph;
 import std::tree;
-import std::linkedlist;
+import std::linked_list;
 import std::random;
 import std::json;
 import std::toml;

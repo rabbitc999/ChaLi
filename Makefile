@@ -141,6 +141,6 @@ $(CHALI_STDLIB_BOOTSTRAP): $(DEMO_OBJS) $(LIB) $(AST_LIB) $(VM_LIB) $(HOST_LIB) 
 # 先链接独立阶段编译器，再生成确定性核心单元，最后构建发行编译器。
 .PHONY: stdlib-embedded
 stdlib-embedded: $(CHALI_STDLIB_BOOTSTRAP)
-	$(PYTHON) tools/build_stdlib_units.py --compiler "$(abspath $(CHALI_STDLIB_BOOTSTRAP))"
+	$(PYTHON) tools/build_stdlib_units.py --compiler "$(abspath $(CHALI_STDLIB_BOOTSTRAP))" $(if $(CHALI_STDLIB_RUNNER),--runner "$(CHALI_STDLIB_RUNNER)")
 	$(MAKE) $(TARGET)
 	$(PYTHON) tools/build_stdlib_units.py --sync-embedded-source "$(CHALI_EMBED_SOURCE)"

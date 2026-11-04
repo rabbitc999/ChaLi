@@ -14,7 +14,7 @@ def category(site):
         return 'recursive_cleanup'
     if event == 'call:__chali_copy_struct':
         return 'slot_transfer'
-    if event == 'call:std::lang::__stringCopy':
+    if event == 'call:std::core::__stringCopy':
         return 'string_copy'
     if event.startswith('call:'):
         return 'other_call'

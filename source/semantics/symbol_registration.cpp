@@ -335,7 +335,8 @@ bool ResolveImportedTypeNames(bool registerOpcodes = true, const std::shared_ptr
             *result = local->second;
             return true;
         }
-        Memory::Set<Memory::String> imports{ "std::lang" };
+        Memory::Set<Memory::String> imports{ "std::core" };
+        if (name == "BigInteger" || name == "BigDecimal") imports.insert("std::big_number");
         const auto imported = g_moduleImports.find(module);
         if (imported != g_moduleImports.end()) imports.insert(imported->second.begin(), imported->second.end());
         Memory::String chosen;
@@ -509,6 +510,64 @@ std::shared_ptr<MType> DeclaredFieldType(const MNode &member)
     return field;
 }
 
+/** @brief 本轮登记中显式使用标准 JSON 成员宏的具体类型。 */
+Memory::Set<Memory::String> g_jsonModelOwners;
+
+/**
+ * @brief 将成员宏请求合入宿主声明的普通接口列表。
+ * @param owner 类型声明节点。
+ * @return 接口类型可解析时返回真。
+ */
+bool RegisterMacroInterfaces(int owner)
+{
+    const auto declaration = N(owner);
+    if (declaration.kind != MNode::StructDecl && declaration.kind != MNode::EnumDecl) return true;
+    const std::size_t slot = declaration.kind == MNode::EnumDecl ? 1 : 0;
+    if (slot >= declaration.kids.size()) return true;
+    const int list = declaration.kids[slot];
+    const auto original = N(list).kids;
+    Memory::Vector<int> members;
+    Memory::Vector<int> interfaces;
+    for (const int id : original)
+    {
+        const auto &request = N(id);
+        if (request.kind != MNode::MacroImplement)
+        {
+            members.push_back(id);
+            continue;
+        }
+        ReductionSourceScope source(id);
+        auto type = T(request.type);
+        const MNode *macro = nullptr;
+        if (request.macroExpansion >= 0)
+        {
+            const auto &frame = N(request.macroExpansion);
+            if (frame.i >= 0) macro = &N(static_cast<int>(frame.i));
+        }
+        if (request.s == "Equal"
+            && macro && macro->module == "std::macro" && BareTypeName(macro->s) == "Equal")
+        {
+            // 标准相等宏的短名采用普通运算符协议的返回类型及宿主类型。
+            type = Memory::makeShared<MType>();
+            type->kind = MType::Struct;
+            type->genericBase = "std::core::Equal";
+            type->genericArguments = { T(M_TypeBool()), NamedType(declaration.s) };
+            if (!ResolveAstGenericType(type)) return false;
+        }
+        if (!type || type->kind != MType::Obj || type->name.empty() || type->unresolvedName)
+            return Fail("$implement 需要已声明的接口类型");
+        interfaces.push_back(M_Name(type->name.c_str()));
+        if (macro && macro->module == "std::json" && BareTypeName(macro->s) == "Json")
+            g_jsonModelOwners.insert(declaration.s);
+    }
+    if (interfaces.empty()) return true;
+    const int bases = declaration.i >= 0 ? static_cast<int>(declaration.i) : M_List();
+    for (const int interfaceName : interfaces) M_ListAdd(bases, interfaceName);
+    g_nodes[owner].i = bases;
+    g_nodes[list].kids = std::move(members);
+    return true;
+}
+
 /**
  * @brief 登记所有顶层声明及方法，建立完整类型、重载和默认参数环境。
  * @return 登记成功时返回真；失败保留实际声明位置的诊断。
@@ -526,6 +585,9 @@ bool RegisterTop()
     if (!ResolveImportedTypeNames() || !ValidateAnnotations()) return false;
     for (const auto &type : g_types)
         if ((!g_macroSyntaxFiltering || g_macroActiveTypes.count(type.get())) && !ResolveAstGenericType(type)) return false;
+    g_jsonModelOwners.clear();
+    for (const int id : g_top)
+        if (!RegisterMacroInterfaces(id)) return false;
     g_associatedDefinitions.clear();
     g_associatedRequirements.clear();
     g_associatedMethods.clear();
@@ -644,7 +706,7 @@ bool RegisterTop()
     {
         const MType::Kind kind = item.second->kind;
         if (kind != MType::Bool && kind != MType::Int && kind != MType::Double && !IsStandardOpcode(item.second, "String") && kind != MType::Ptr)
-            return Fail("宿主类型 " + item.first + " 的 ABI 必须是 bool、整数、浮点、std::lang::String 或引用；复杂对象请用 uint64 句柄");
+            return Fail("宿主类型 " + item.first + " 的 ABI 必须是 bool、整数、浮点、std::core::String 或引用；复杂对象请用 uint64 句柄");
     }
     /* 泛型参数和字段中的宿主类型同样保留名义身份，并递归绑定 ABI。 */
     Memory::Set<const MType *> boundHostTypes;
@@ -1022,7 +1084,7 @@ bool RegisterTop()
         if (TypeNonCopyable(NamedType(item.first)))
             for (const auto &interfaceName : item.second.interfaces)
                 if (!InheritedInterfaceWithPrefix(interfaceName, "Copy__").empty()
-                    || !InheritedInterfaceWithPrefix(interfaceName, "std::lang::Copy__").empty())
+                    || !InheritedInterfaceWithPrefix(interfaceName, "std::core::Copy__").empty())
                     return Fail("Copy<T> 与 #NonCopyable 不能同时使用：" + item.first);
 
     /* 旧 operator+ 自由函数已由左右方向的运算符接口取代。 */
@@ -1093,6 +1155,14 @@ bool RegisterTop()
             for (std::size_t before = 0; before < index; ++before)
             {
                 if (definition.methods[before].name != method.name) continue;
+                const int previousBody = definition.methods[before].bodyId;
+                const int generatedBody = method.bodyId >= 0 && N(method.bodyId).macroExpansion >= 0
+                    ? method.bodyId : previousBody;
+                if (generatedBody >= 0 && N(generatedBody).macroExpansion >= 0)
+                {
+                    ReductionSourceScope source(generatedBody);
+                    return Fail("生成成员名称或签名冲突：" + method.source);
+                }
                 /* **重复定义：后面的覆盖前面的**（同一 struct 里重名同签名的方法）。 */
                 definition.methods[before].superseded = true;
                 Note("struct " + item.first + " 的方法 " + method.source + " 重复定义，后面的覆盖前面的");
@@ -1267,7 +1337,7 @@ bool RegisterTop()
             return Fail("宿主 impl 的接口没有声明：" + top.s2);
         if (TypeNonCopyable(owner)
             && (!InheritedInterfaceWithPrefix(top.s2, "Copy__").empty()
-                || !InheritedInterfaceWithPrefix(top.s2, "std::lang::Copy__").empty()))
+                || !InheritedInterfaceWithPrefix(top.s2, "std::core::Copy__").empty()))
             return Fail("Copy<T> 与 #NonCopyable 不能同时使用：" + Describe(owner));
         if (interfaceIt->second.empty())
             return Fail("宿主 impl 的接口没有方法：" + top.s2);
@@ -1579,7 +1649,7 @@ bool RegisterTop()
             const std::shared_ptr<MType> type = declaration.signature.params.size() == 1u ? declaration.signature.params[0].type : nullptr;
             if (!type || !IsContainer(type) || type->name != "vec" || !type->elem || !IsStandardOpcode(type->elem, "String") || declaration.signature.params[0].variadic)
             {
-                return Fail("main 只允许无参数，或单个 std::lang::List<std::lang::String> 参数");
+                return Fail("main 只允许无参数，或单个 std::core::List<std::core::String> 参数");
             }
         }
         g_funcs[declaration.label] = declaration.signature;
@@ -1622,6 +1692,27 @@ bool RegisterTop()
                 if (!method.isStatic || method.params.size() != 1u || !SameType(method.result, NamedType(entry.first)))
                     return Fail("FromResidual<F,R> 的 F 必须是实现类型自身，且 fromResidual 必须是单参数静态方法：" + entry.first);
     }
+    Memory::String constraintError;
+    const auto registered = [](const Memory::String &argument, const Memory::String &constraint,
+                               const Memory::String &module) {
+        const auto bareOwner = BareTypeName(argument);
+        if (std::none_of(g_top.begin(), g_top.end(), [&](int id) {
+                const auto &declaration = N(id);
+                return (declaration.kind == MNode::StructDecl || declaration.kind == MNode::EnumDecl
+                        || declaration.kind == MNode::InterfaceDecl) && BareTypeName(declaration.s) == bareOwner;
+            })) return false;
+        auto owner = Memory::makeShared<MType>();
+        auto requirement = Memory::makeShared<MType>();
+        owner->kind = requirement->kind = MType::Struct;
+        owner->name = argument;
+        requirement->name = constraint;
+        owner->unresolvedName = requirement->unresolvedName = true;
+        owner->lookupModule = requirement->lookupModule = module;
+        return ResolveImportedTypeNames(false, owner) && ResolveImportedTypeNames(false, requirement)
+            && requirement->kind == MType::Obj && StructHasInterface(owner->name, requirement->name);
+    };
+    if (!chali_generic::validateRegisteredConstraints(registered, constraintError))
+        return Fail(constraintError);
     RegisterNamedTypeIds();
     const std::size_t parsedNodes = g_nodes.size();
     for (std::size_t id = 0; id < parsedNodes; ++id)

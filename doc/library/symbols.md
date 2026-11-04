@@ -12,7 +12,7 @@
 | [std::algorithms::anyValue](std-algorithms.md#api-19) | `bool anyValue<T>(List<T> items,bool fn(T) predicate)` |
 | [std::algorithms::binarySearchReference](std-algorithms.md#api-7) | `int64 binarySearchReference<T>(T const& data, int64 count, T value)` |
 | [std::algorithms::binarySearchValue](std-algorithms.md#api-14) | `int64 binarySearchValue<T>(List<T> items,T value)` |
-| [std::algorithms::choiceValue](std-algorithms.md#api-0) | `T choiceValue<T>(std::lang::List<T> items, uint64 seed)` |
+| [std::algorithms::choiceValue](std-algorithms.md#api-0) | `T choiceValue<T>(std::core::List<T> items, uint64 seed)` |
 | [std::algorithms::clampValue](std-algorithms.md#api-17) | `T clampValue<T>(T value,T low,T high)` |
 | [std::algorithms::countReference](std-algorithms.md#api-10) | `int64 countReference<T>(T const& data, int64 count, T value)` |
 | [std::algorithms::countValue](std-algorithms.md#api-26) | `int64 countValue<T>(List<T> items,T value)` |
@@ -30,12 +30,12 @@
 | [std::algorithms::reduceValue](std-algorithms.md#api-24) | `T reduceValue<T>(List<T> items,T initial,T fn(T,T) folder)` |
 | [std::algorithms::reverseReference](std-algorithms.md#api-5) | `void reverseReference<T>(T mut& data, int64 count)` |
 | [std::algorithms::shuffleReference](std-algorithms.md#api-2) | `void shuffleReference<T>(T mut& data, int64 count, uint64 seed)` |
-| [std::algorithms::shuffleValue](std-algorithms.md#api-1) | `std::lang::List<T> shuffleValue<T>(std::lang::List<T> items, uint64 seed)` |
+| [std::algorithms::shuffleValue](std-algorithms.md#api-1) | `std::core::List<T> shuffleValue<T>(std::core::List<T> items, uint64 seed)` |
 | [std::algorithms::sortReference](std-algorithms.md#api-4) | `void sortReference<T>(T mut& data, int64 count)` |
 | [std::algorithms::sortValue](std-algorithms.md#api-12) | `List<T> sortValue<T>(List<T> items)` |
 | [std::algorithms::sumReference](std-algorithms.md#api-11) | `T sumReference<T>(T mut& data, int64 count)` |
 | [std::algorithms::sumValue](std-algorithms.md#api-25) | `T sumValue<T>(List<T> items)` |
-| [std::algorithms::zipValue](std-algorithms.md#api-3) | `std::lang::List<(T, U)> zipValue<T, U>(std::lang::List<T> left, std::lang::List<U> right)` |
+| [std::algorithms::zipValue](std-algorithms.md#api-3) | `std::core::List<(T, U)> zipValue<T, U>(std::core::List<T> left, std::core::List<U> right)` |
 | [std::array::DynamicArray::at](std-array.md#api-10) | `T at(int64 position)` |
 | [std::array::DynamicArray::capacity](std-array.md#api-3) | `int64 capacity()` |
 | [std::array::DynamicArray::clear](std-array.md#api-9) | `void clear()` |
@@ -52,36 +52,63 @@
 | [std::array::DynamicArray::set](std-array.md#api-12) | `void set(int64 position, T value)` |
 | [std::array::DynamicArray::toArray](std-array.md#api-15) | `T[] toArray()` |
 | [std::array::DynamicArray::withCapacity](std-array.md#api-1) | `static DynamicArray<T> withCapacity(int64 capacity)` |
+| [std::big_number::BigDecimal::abs](std-big_number.md#api-20) | `BigDecimal abs()` |
+| [std::big_number::BigDecimal::ceil](std-big_number.md#api-23) | `BigInteger ceil()` |
+| [std::big_number::BigDecimal::copy](std-big_number.md#api-17) | `BigDecimal copy()` |
+| [std::big_number::BigDecimal::floor](std-big_number.md#api-22) | `BigInteger floor()` |
+| [std::big_number::BigDecimal::isInteger](std-big_number.md#api-21) | `bool isInteger()` |
+| [std::big_number::BigDecimal::pow](std-big_number.md#api-19) | `BigDecimal pow(int64 exponent)` |
+| [std::big_number::BigDecimal::root](std-big_number.md#api-26) | `BigDecimal root(int64 k, int64 digits)` |
+| [std::big_number::BigDecimal::setPrecision](std-big_number.md#api-18) | `int64 setPrecision(int64 digits)` |
+| [std::big_number::BigDecimal::sqrt](std-big_number.md#api-25) | `BigDecimal sqrt(int64 digits)` |
+| [std::big_number::BigDecimal::str](std-big_number.md#api-16) | `String str()` |
+| [std::big_number::BigDecimal::trunc](std-big_number.md#api-24) | `BigInteger trunc()` |
+| [std::big_number::BigInteger::bitAnd](std-big_number.md#api-11) | `BigInteger bitAnd(BigInteger other)` |
+| [std::big_number::BigInteger::bitLength](std-big_number.md#api-10) | `int64 bitLength()` |
+| [std::big_number::BigInteger::bitOr](std-big_number.md#api-12) | `BigInteger bitOr(BigInteger other)` |
+| [std::big_number::BigInteger::bitXor](std-big_number.md#api-13) | `BigInteger bitXor(BigInteger other)` |
+| [std::big_number::BigInteger::copy](std-big_number.md#api-1) | `BigInteger copy()` |
+| [std::big_number::BigInteger::gcd](std-big_number.md#api-4) | `BigInteger gcd(BigInteger other)` |
+| [std::big_number::BigInteger::iroot](std-big_number.md#api-15) | `BigInteger iroot(int64 k)` |
+| [std::big_number::BigInteger::isProbablePrime](std-big_number.md#api-8) | `bool isProbablePrime(int64 rounds)` |
+| [std::big_number::BigInteger::lcm](std-big_number.md#api-5) | `BigInteger lcm(BigInteger other)` |
+| [std::big_number::BigInteger::mod](std-big_number.md#api-6) | `BigInteger mod(BigInteger modulus)` |
+| [std::big_number::BigInteger::modInverse](std-big_number.md#api-7) | `BigInteger modInverse(BigInteger modulus)` |
+| [std::big_number::BigInteger::nextProbablePrime](std-big_number.md#api-9) | `BigInteger nextProbablePrime()` |
+| [std::big_number::BigInteger::pow](std-big_number.md#api-2) | `BigInteger pow(int64 exponent)` |
+| [std::big_number::BigInteger::powmod](std-big_number.md#api-3) | `BigInteger powmod(BigInteger exponent, BigInteger modulus)` |
+| [std::big_number::BigInteger::str](std-big_number.md#api-0) | `String str()` |
+| [std::big_number::BigInteger::strRadix](std-big_number.md#api-14) | `String strRadix(int64 base)` |
 | [std::binary::BinaryReader::drop](std-binary.md#api-0) | `void drop()` |
 | [std::binary::BinaryReader::fromArray](std-binary.md#api-3) | `static BinaryReader fromArray(uint8 bytes[])` |
 | [std::binary::BinaryReader::fromArray](std-binary.md#api-2) | `static BinaryReader fromArray(uint8 const& bytes, int64 count)` |
-| [std::binary::BinaryReader::fromBytes](std-binary.md#api-1) | `static BinaryReader fromBytes(std::lang::List<uint8> bytes)` |
+| [std::binary::BinaryReader::fromBytes](std-binary.md#api-1) | `static BinaryReader fromBytes(std::core::List<uint8> bytes)` |
 | [std::binary::BinaryReader::position](std-binary.md#api-4) | `int64 position()` |
 | [std::binary::BinaryReader::readBool](std-binary.md#api-30) | `bool readBool()` |
-| [std::binary::BinaryReader::readBoolArray](std-binary.md#api-31) | `std::lang::List<bool> readBoolArray(int64 count)` |
-| [std::binary::BinaryReader::readBytes](std-binary.md#api-32) | `std::lang::List<uint8> readBytes(int64 count)` |
+| [std::binary::BinaryReader::readBoolArray](std-binary.md#api-31) | `std::core::List<bool> readBoolArray(int64 count)` |
+| [std::binary::BinaryReader::readBytes](std-binary.md#api-32) | `std::core::List<uint8> readBytes(int64 count)` |
 | [std::binary::BinaryReader::readFloat32](std-binary.md#api-26) | `float32 readFloat32()` |
-| [std::binary::BinaryReader::readFloat32Array](std-binary.md#api-27) | `std::lang::List<float32> readFloat32Array(int64 count)` |
+| [std::binary::BinaryReader::readFloat32Array](std-binary.md#api-27) | `std::core::List<float32> readFloat32Array(int64 count)` |
 | [std::binary::BinaryReader::readFloat64](std-binary.md#api-28) | `float64 readFloat64()` |
-| [std::binary::BinaryReader::readFloat64Array](std-binary.md#api-29) | `std::lang::List<float64> readFloat64Array(int64 count)` |
+| [std::binary::BinaryReader::readFloat64Array](std-binary.md#api-29) | `std::core::List<float64> readFloat64Array(int64 count)` |
 | [std::binary::BinaryReader::readInt16](std-binary.md#api-14) | `int16 readInt16()` |
-| [std::binary::BinaryReader::readInt16Array](std-binary.md#api-15) | `std::lang::List<int16> readInt16Array(int64 count)` |
+| [std::binary::BinaryReader::readInt16Array](std-binary.md#api-15) | `std::core::List<int16> readInt16Array(int64 count)` |
 | [std::binary::BinaryReader::readInt32](std-binary.md#api-18) | `int32 readInt32()` |
-| [std::binary::BinaryReader::readInt32Array](std-binary.md#api-19) | `std::lang::List<int32> readInt32Array(int64 count)` |
+| [std::binary::BinaryReader::readInt32Array](std-binary.md#api-19) | `std::core::List<int32> readInt32Array(int64 count)` |
 | [std::binary::BinaryReader::readInt64](std-binary.md#api-22) | `int64 readInt64()` |
-| [std::binary::BinaryReader::readInt64Array](std-binary.md#api-23) | `std::lang::List<int64> readInt64Array(int64 count)` |
+| [std::binary::BinaryReader::readInt64Array](std-binary.md#api-23) | `std::core::List<int64> readInt64Array(int64 count)` |
 | [std::binary::BinaryReader::readInt8](std-binary.md#api-10) | `int8 readInt8()` |
-| [std::binary::BinaryReader::readInt8Array](std-binary.md#api-11) | `std::lang::List<int8> readInt8Array(int64 count)` |
-| [std::binary::BinaryReader::readString](std-binary.md#api-33) | `std::lang::String readString(int64 length)` |
-| [std::binary::BinaryReader::readStringArray](std-binary.md#api-34) | `std::lang::List<std::lang::String> readStringArray(int64 count, int64 width)` |
+| [std::binary::BinaryReader::readInt8Array](std-binary.md#api-11) | `std::core::List<int8> readInt8Array(int64 count)` |
+| [std::binary::BinaryReader::readString](std-binary.md#api-33) | `std::core::String readString(int64 length)` |
+| [std::binary::BinaryReader::readStringArray](std-binary.md#api-34) | `std::core::List<std::core::String> readStringArray(int64 count, int64 width)` |
 | [std::binary::BinaryReader::readUint16](std-binary.md#api-16) | `uint16 readUint16()` |
-| [std::binary::BinaryReader::readUint16Array](std-binary.md#api-17) | `std::lang::List<uint16> readUint16Array(int64 count)` |
+| [std::binary::BinaryReader::readUint16Array](std-binary.md#api-17) | `std::core::List<uint16> readUint16Array(int64 count)` |
 | [std::binary::BinaryReader::readUint32](std-binary.md#api-20) | `uint32 readUint32()` |
-| [std::binary::BinaryReader::readUint32Array](std-binary.md#api-21) | `std::lang::List<uint32> readUint32Array(int64 count)` |
+| [std::binary::BinaryReader::readUint32Array](std-binary.md#api-21) | `std::core::List<uint32> readUint32Array(int64 count)` |
 | [std::binary::BinaryReader::readUint64](std-binary.md#api-24) | `uint64 readUint64()` |
-| [std::binary::BinaryReader::readUint64Array](std-binary.md#api-25) | `std::lang::List<uint64> readUint64Array(int64 count)` |
+| [std::binary::BinaryReader::readUint64Array](std-binary.md#api-25) | `std::core::List<uint64> readUint64Array(int64 count)` |
 | [std::binary::BinaryReader::readUint8](std-binary.md#api-12) | `uint8 readUint8()` |
-| [std::binary::BinaryReader::readUint8Array](std-binary.md#api-13) | `std::lang::List<uint8> readUint8Array(int64 count)` |
+| [std::binary::BinaryReader::readUint8Array](std-binary.md#api-13) | `std::core::List<uint8> readUint8Array(int64 count)` |
 | [std::binary::BinaryReader::remaining](std-binary.md#api-5) | `int64 remaining()` |
 | [std::binary::BinaryReader::seek](std-binary.md#api-8) | `bool seek(int64 position)` |
 | [std::binary::BinaryReader::setBigEndian](std-binary.md#api-7) | `void setBigEndian(bool enabled)` |
@@ -138,66 +165,75 @@
 | [std::cas::Expr::trunc](std-cas.md#api-47) | `Expr trunc()` |
 | [std::cas::parse](std-cas.md#api-49) | `Expr parse(String text)` |
 | [std::cli::CliArguments::get](std-cli.md#api-1) | `Option<String> get(String name)` |
-| [std::cli::CliArguments::getInt](std-cli.md#api-2) | `Result<int64,std::lang::Error> getInt(String name)` |
+| [std::cli::CliArguments::getInt](std-cli.md#api-2) | `Result<int64,std::core::Error> getInt(String name)` |
 | [std::cli::CliError::toString](std-cli.md#api-0) | `String toString()` |
 | [std::cli::CliParser::add](std-cli.md#api-5) | `bool add(CliOption option)` |
 | [std::cli::CliParser::help](std-cli.md#api-6) | `String help()` |
-| [std::cli::CliParser::parse](std-cli.md#api-7) | `Result<CliArguments,std::lang::Error> parse(List<String> arguments)` |
+| [std::cli::CliParser::parse](std-cli.md#api-7) | `Result<CliArguments,std::core::Error> parse(List<String> arguments)` |
 | [std::cli::cliError](std-cli.md#api-3) | `CliError cliError(String argument, String message)` |
 | [std::cli::cliTail](std-cli.md#api-4) | `String cliTail(String text,int64 start)` |
 | [std::clock::nowMs](std-clock.md#api-0) | `int64 nowMs()` |
 | [std::clock::nowNanos](std-clock.md#api-1) | `int64 nowNanos()` |
-| [std::collections::Channel::create](std-collections.md#api-44) | `static Channel<T> create()` |
-| [std::collections::Channel::drop](std-collections.md#api-50) | `void drop()` |
-| [std::collections::Channel::isEmpty](std-collections.md#api-49) | `bool isEmpty()` |
-| [std::collections::Channel::iterator](std-collections.md#api-47) | `Option<T> iterator(int64 index)` |
-| [std::collections::Channel::len](std-collections.md#api-48) | `int64 len()` |
-| [std::collections::Channel::receive](std-collections.md#api-46) | `Option<T> receive()` |
-| [std::collections::Channel::send](std-collections.md#api-45) | `void send(T value)` |
-| [std::collections::Deque::clear](std-collections.md#api-9) | `void clear()` |
+| [std::collections::Channel::create](std-collections.md#api-53) | `static Channel<T> create()` |
+| [std::collections::Channel::drop](std-collections.md#api-59) | `void drop()` |
+| [std::collections::Channel::isEmpty](std-collections.md#api-58) | `bool isEmpty()` |
+| [std::collections::Channel::iterator](std-collections.md#api-56) | `Option<T> iterator(int64 index)` |
+| [std::collections::Channel::len](std-collections.md#api-57) | `int64 len()` |
+| [std::collections::Channel::receive](std-collections.md#api-55) | `Option<T> receive()` |
+| [std::collections::Channel::send](std-collections.md#api-54) | `void send(T value)` |
+| [std::collections::Deque::clear](std-collections.md#api-12) | `void clear()` |
 | [std::collections::Deque::create](std-collections.md#api-0) | `static Deque<T> create()` |
-| [std::collections::Deque::drop](std-collections.md#api-10) | `void drop()` |
+| [std::collections::Deque::drop](std-collections.md#api-13) | `void drop()` |
 | [std::collections::Deque::index](std-collections.md#api-5) | `T index(int64 key)` |
-| [std::collections::Deque::isEmpty](std-collections.md#api-8) | `bool isEmpty()` |
+| [std::collections::Deque::isEmpty](std-collections.md#api-11) | `bool isEmpty()` |
 | [std::collections::Deque::iterator](std-collections.md#api-6) | `Option<T> iterator(int64 index)` |
-| [std::collections::Deque::len](std-collections.md#api-7) | `int64 len()` |
+| [std::collections::Deque::len](std-collections.md#api-10) | `int64 len()` |
+| [std::collections::Deque::peek_back](std-collections.md#api-8) | `Option<T> peek_back()` |
+| [std::collections::Deque::peek_front](std-collections.md#api-7) | `Option<T> peek_front()` |
 | [std::collections::Deque::popBack](std-collections.md#api-3) | `Option<T> popBack()` |
 | [std::collections::Deque::popFront](std-collections.md#api-4) | `Option<T> popFront()` |
 | [std::collections::Deque::pushBack](std-collections.md#api-1) | `void pushBack(T value)` |
 | [std::collections::Deque::pushFront](std-collections.md#api-2) | `void pushFront(T value)` |
-| [std::collections::FixedVector::capacityValue](std-collections.md#api-42) | `int64 capacityValue()` |
-| [std::collections::FixedVector::drop](std-collections.md#api-43) | `void drop()` |
-| [std::collections::FixedVector::index](std-collections.md#api-39) | `T index(int64 key)` |
-| [std::collections::FixedVector::iterator](std-collections.md#api-40) | `Option<T> iterator(int64 index)` |
-| [std::collections::FixedVector::len](std-collections.md#api-41) | `int64 len()` |
-| [std::collections::FixedVector::pop](std-collections.md#api-38) | `Option<T> pop()` |
-| [std::collections::FixedVector::push](std-collections.md#api-37) | `bool push(T value)` |
-| [std::collections::FixedVector::withCapacity](std-collections.md#api-36) | `static FixedVector<T> withCapacity(int64 capacity)` |
-| [std::collections::Queue::clear](std-collections.md#api-18) | `void clear()` |
-| [std::collections::Queue::create](std-collections.md#api-11) | `static Queue<T> create()` |
-| [std::collections::Queue::drop](std-collections.md#api-19) | `void drop()` |
-| [std::collections::Queue::isEmpty](std-collections.md#api-17) | `bool isEmpty()` |
-| [std::collections::Queue::iterator](std-collections.md#api-15) | `Option<T> iterator(int64 index)` |
-| [std::collections::Queue::len](std-collections.md#api-16) | `int64 len()` |
-| [std::collections::Queue::peek](std-collections.md#api-14) | `Option<T> peek()` |
-| [std::collections::Queue::pop](std-collections.md#api-13) | `Option<T> pop()` |
-| [std::collections::Queue::push](std-collections.md#api-12) | `void push(T value)` |
-| [std::collections::RingBuffer::available](std-collections.md#api-34) | `int64 available()` |
-| [std::collections::RingBuffer::drop](std-collections.md#api-35) | `void drop()` |
-| [std::collections::RingBuffer::iterator](std-collections.md#api-32) | `Option<T> iterator(int64 index)` |
-| [std::collections::RingBuffer::len](std-collections.md#api-33) | `int64 len()` |
-| [std::collections::RingBuffer::pop](std-collections.md#api-31) | `Option<T> pop()` |
-| [std::collections::RingBuffer::push](std-collections.md#api-30) | `bool push(T value)` |
-| [std::collections::RingBuffer::withCapacity](std-collections.md#api-29) | `static RingBuffer<T> withCapacity(int64 capacity)` |
-| [std::collections::Stack::clear](std-collections.md#api-27) | `void clear()` |
-| [std::collections::Stack::create](std-collections.md#api-20) | `static Stack<T> create()` |
-| [std::collections::Stack::drop](std-collections.md#api-28) | `void drop()` |
-| [std::collections::Stack::isEmpty](std-collections.md#api-26) | `bool isEmpty()` |
-| [std::collections::Stack::iterator](std-collections.md#api-24) | `Option<T> iterator(int64 index)` |
-| [std::collections::Stack::len](std-collections.md#api-25) | `int64 len()` |
-| [std::collections::Stack::peek](std-collections.md#api-23) | `Option<T> peek()` |
-| [std::collections::Stack::pop](std-collections.md#api-22) | `Option<T> pop()` |
-| [std::collections::Stack::push](std-collections.md#api-21) | `void push(T value)` |
+| [std::collections::Deque::to_list](std-collections.md#api-9) | `List<T> to_list()` |
+| [std::collections::FixedVector::capacityValue](std-collections.md#api-51) | `int64 capacityValue()` |
+| [std::collections::FixedVector::drop](std-collections.md#api-52) | `void drop()` |
+| [std::collections::FixedVector::index](std-collections.md#api-48) | `T index(int64 key)` |
+| [std::collections::FixedVector::iterator](std-collections.md#api-49) | `Option<T> iterator(int64 index)` |
+| [std::collections::FixedVector::len](std-collections.md#api-50) | `int64 len()` |
+| [std::collections::FixedVector::pop](std-collections.md#api-47) | `Option<T> pop()` |
+| [std::collections::FixedVector::push](std-collections.md#api-46) | `bool push(T value)` |
+| [std::collections::FixedVector::withCapacity](std-collections.md#api-45) | `static FixedVector<T> withCapacity(int64 capacity)` |
+| [std::collections::Queue::clear](std-collections.md#api-22) | `void clear()` |
+| [std::collections::Queue::create](std-collections.md#api-14) | `static Queue<T> create()` |
+| [std::collections::Queue::drop](std-collections.md#api-23) | `void drop()` |
+| [std::collections::Queue::isEmpty](std-collections.md#api-21) | `bool isEmpty()` |
+| [std::collections::Queue::iterator](std-collections.md#api-19) | `Option<T> iterator(int64 index)` |
+| [std::collections::Queue::len](std-collections.md#api-20) | `int64 len()` |
+| [std::collections::Queue::peek](std-collections.md#api-17) | `Option<T> peek()` |
+| [std::collections::Queue::peek_back](std-collections.md#api-18) | `Option<T> peek_back()` |
+| [std::collections::Queue::pop](std-collections.md#api-16) | `Option<T> pop()` |
+| [std::collections::Queue::push](std-collections.md#api-15) | `void push(T value)` |
+| [std::collections::RingBuffer::available](std-collections.md#api-39) | `int64 available()` |
+| [std::collections::RingBuffer::clear](std-collections.md#api-43) | `void clear()` |
+| [std::collections::RingBuffer::drop](std-collections.md#api-44) | `void drop()` |
+| [std::collections::RingBuffer::is_empty](std-collections.md#api-40) | `bool is_empty()` |
+| [std::collections::RingBuffer::is_full](std-collections.md#api-41) | `bool is_full()` |
+| [std::collections::RingBuffer::iterator](std-collections.md#api-37) | `Option<T> iterator(int64 index)` |
+| [std::collections::RingBuffer::len](std-collections.md#api-38) | `int64 len()` |
+| [std::collections::RingBuffer::peek](std-collections.md#api-42) | `Option<T> peek()` |
+| [std::collections::RingBuffer::pop](std-collections.md#api-36) | `Option<T> pop()` |
+| [std::collections::RingBuffer::push](std-collections.md#api-35) | `bool push(T value)` |
+| [std::collections::RingBuffer::withCapacity](std-collections.md#api-34) | `static RingBuffer<T> withCapacity(int64 capacity)` |
+| [std::collections::Stack::clear](std-collections.md#api-32) | `void clear()` |
+| [std::collections::Stack::create](std-collections.md#api-24) | `static Stack<T> create()` |
+| [std::collections::Stack::drop](std-collections.md#api-33) | `void drop()` |
+| [std::collections::Stack::isEmpty](std-collections.md#api-31) | `bool isEmpty()` |
+| [std::collections::Stack::iterator](std-collections.md#api-29) | `Option<T> iterator(int64 index)` |
+| [std::collections::Stack::len](std-collections.md#api-30) | `int64 len()` |
+| [std::collections::Stack::peek](std-collections.md#api-27) | `Option<T> peek()` |
+| [std::collections::Stack::peek_bottom](std-collections.md#api-28) | `Option<T> peek_bottom()` |
+| [std::collections::Stack::pop](std-collections.md#api-26) | `Option<T> pop()` |
+| [std::collections::Stack::push](std-collections.md#api-25) | `void push(T value)` |
 | [std::complex::Complex::conjugate](std-complex.md#api-1) | `Complex<T> conjugate()` |
 | [std::complex::Complex::leftAdd](std-complex.md#api-4) | `Complex<T> leftAdd(Complex<T> right)` |
 | [std::complex::Complex::leftDiv](std-complex.md#api-7) | `Complex<T> leftDiv(Complex<T> right)` |
@@ -206,8 +242,8 @@
 | [std::complex::Complex::normSquared](std-complex.md#api-2) | `T normSquared()` |
 | [std::complex::Complex::of](std-complex.md#api-0) | `static Complex<T> of(T real, T imaginary)` |
 | [std::complex::Complex::scale](std-complex.md#api-3) | `Complex<T> scale(T factor)` |
-| [std::compress::compress](std-compress.md#api-0) | `std::lang::List<uint8> compress(std::lang::String text)` |
-| [std::compress::decompress](std-compress.md#api-1) | `std::lang::String decompress(std::lang::List<uint8> bytes)` |
+| [std::compress::compress](std-compress.md#api-0) | `std::core::List<uint8> compress(std::core::String text)` |
+| [std::compress::decompress](std-compress.md#api-1) | `std::core::String decompress(std::core::List<uint8> bytes)` |
 | [std::concurrency::AtomicInt64::create](std-concurrency.md#api-6) | `static AtomicInt64 create(int64 value)` |
 | [std::concurrency::AtomicInt64::fetchAdd](std-concurrency.md#api-9) | `int64 fetchAdd(int64 delta)` |
 | [std::concurrency::AtomicInt64::get](std-concurrency.md#api-7) | `int64 get()` |
@@ -226,25 +262,300 @@
 | [std::concurrency::Shared::id](std-concurrency.md#api-5) | `int64 id()` |
 | [std::concurrency::Shared::set](std-concurrency.md#api-3) | `void set(T value)` |
 | [std::concurrency::Shared::swap](std-concurrency.md#api-4) | `T swap(T value)` |
+| [std::core::Add::leftAdd](std-core.md#api-226) | `R leftAdd(T value)` |
+| [std::core::And::leftBitAnd](std-core.md#api-248) | `R leftBitAnd(T value)` |
+| [std::core::Any::clear](std-core.md#api-209) | `void clear()` |
+| [std::core::Any::copy](std-core.md#api-207) | `Any copy()` |
+| [std::core::Any::getOptional](std-core.md#api-213) | `Option<T mut&> getOptional()` |
+| [std::core::Any::getReference](std-core.md#api-212) | `T mut& getReference()` |
+| [std::core::Any::getValue](std-core.md#api-211) | `T getValue()` |
+| [std::core::Any::isEmpty](std-core.md#api-208) | `bool isEmpty()` |
+| [std::core::Any::set](std-core.md#api-210) | `int64 set(T value)` |
+| [std::core::BarePtr::castTo](std-core.md#api-270) | `unsafe BarePtr<U> castTo<U>()` |
+| [std::core::BarePtr::leftAdd](std-core.md#api-133) | `BarePtr<T> leftAdd(int64 elements)` |
+| [std::core::BarePtr::leftSub](std-core.md#api-135) | `BarePtr<T> leftSub(int64 elements)` |
+| [std::core::BarePtr::leftSub](std-core.md#api-136) | `int64 leftSub(BarePtr<T> other)` |
+| [std::core::BarePtr::rightAdd](std-core.md#api-134) | `BarePtr<T> rightAdd(int64 elements)` |
+| [std::core::BitNot::bitNot](std-core.md#api-259) | `R bitNot(T value)` |
+| [std::core::Closeable::close](std-core.md#api-157) | `void close()` |
+| [std::core::Copy::copy](std-core.md#api-262) | `T copy()` |
+| [std::core::Debug::debug](std-core.md#api-55) | `String debug()` |
+| [std::core::Divide::leftDiv](std-core.md#api-232) | `R leftDiv(T value)` |
+| [std::core::Drop::drop](std-core.md#api-156) | `void drop()` |
+| [std::core::Equal::leftEqual](std-core.md#api-236) | `R leftEqual(T value)` |
+| [std::core::Error::toString](std-core.md#api-56) | `String toString()` |
+| [std::core::ExplicitConvert::explicitConvert](std-core.md#api-263) | `T explicitConvert()` |
+| [std::core::File::print](std-core.md#api-59) | `int64 print(String text)` |
+| [std::core::File::println](std-core.md#api-60) | `int64 println(String text = "")` |
+| [std::core::FromResidual::fromResidual](std-core.md#api-98) | `static F fromResidual(R residual)` |
+| [std::core::Greater::leftGreater](std-core.md#api-244) | `R leftGreater(T value)` |
+| [std::core::GreaterOrEqual::leftGreaterEqual](std-core.md#api-246) | `R leftGreaterEqual(T value)` |
+| [std::core::Hash::hash](std-core.md#api-261) | `uint64 hash(T value)` |
+| [std::core::ImplicitConvert::implicitConvert](std-core.md#api-264) | `T implicitConvert()` |
+| [std::core::Index::index](std-core.md#api-265) | `R index(T key)` |
+| [std::core::Iterator::iterator](std-core.md#api-266) | `Option<R> iterator(int64 index)` |
+| [std::core::Less::leftLess](std-core.md#api-240) | `R leftLess(T value)` |
+| [std::core::LessOrEqual::leftLessEqual](std-core.md#api-242) | `R leftLessEqual(T value)` |
+| [std::core::List::at](std-core.md#api-182) | `T at(int64 index)` |
+| [std::core::List::clear](std-core.md#api-188) | `int64 clear()` |
+| [std::core::List::contains](std-core.md#api-186) | `bool contains(T value)` |
+| [std::core::List::copy](std-core.md#api-179) | `List<T> copy()` |
+| [std::core::List::has](std-core.md#api-187) | `bool has(T value)` |
+| [std::core::List::indexOf](std-core.md#api-185) | `int64 indexOf(T value)` |
+| [std::core::List::insert](std-core.md#api-181) | `int64 insert(int64 index, T value)` |
+| [std::core::List::len](std-core.md#api-189) | `int64 len()` |
+| [std::core::List::pop](std-core.md#api-183) | `T pop()` |
+| [std::core::List::push](std-core.md#api-180) | `int64 push(T value)` |
+| [std::core::List::remove](std-core.md#api-184) | `int64 remove(int64 index)` |
+| [std::core::Map::clear](std-core.md#api-205) | `int64 clear()` |
+| [std::core::Map::contains](std-core.md#api-201) | `int64 contains(K key)` |
+| [std::core::Map::copy](std-core.md#api-198) | `Map<K,V> copy()` |
+| [std::core::Map::has](std-core.md#api-200) | `int64 has(K key)` |
+| [std::core::Map::keyAt](std-core.md#api-203) | `K keyAt(int64 index)` |
+| [std::core::Map::len](std-core.md#api-206) | `int64 len()` |
+| [std::core::Map::put](std-core.md#api-199) | `int64 put(K key,V value)` |
+| [std::core::Map::remove](std-core.md#api-202) | `int64 remove(K key)` |
+| [std::core::Map::valAt](std-core.md#api-204) | `V valAt(int64 index)` |
+| [std::core::MessageError::from](std-core.md#api-58) | `static MessageError from(String text)` |
+| [std::core::MessageError::toString](std-core.md#api-57) | `String toString()` |
+| [std::core::Modulo::leftMod](std-core.md#api-234) | `R leftMod(T value)` |
+| [std::core::Multiply::leftMul](std-core.md#api-230) | `R leftMul(T value)` |
+| [std::core::Negate::negate](std-core.md#api-258) | `R negate(T value)` |
+| [std::core::NextValue::nextValue](std-core.md#api-124) | `Option<T> nextValue(T end, bool inclusive)` |
+| [std::core::NotEqual::leftNotEqual](std-core.md#api-238) | `R leftNotEqual(T value)` |
+| [std::core::Option::andThen](std-core.md#api-109) | `Option<T> andThen(Option<T> fn(T) mapper)` |
+| [std::core::Option::branch](std-core.md#api-99) | `TryBranch<T, NoneResidual> branch()` |
+| [std::core::Option::expect](std-core.md#api-107) | `T expect(std::core::String message)` |
+| [std::core::Option::fromResidual](std-core.md#api-101) | `static Option<T> fromResidual(NoneResidual residual)` |
+| [std::core::Option::intoBranch](std-core.md#api-100) | `TryBranch<T, NoneResidual> intoBranch()` |
+| [std::core::Option::isNone](std-core.md#api-103) | `bool isNone()` |
+| [std::core::Option::isValue](std-core.md#api-102) | `bool isValue()` |
+| [std::core::Option::okOr](std-core.md#api-268) | `Result<T,E> okOr<E>(E error)` |
+| [std::core::Option::okOrElse](std-core.md#api-269) | `Result<T,E> okOrElse<E>(E fn() factory)` |
+| [std::core::Option::take](std-core.md#api-104) | `T take()` |
+| [std::core::Option::transform](std-core.md#api-108) | `Option<T> transform(T fn(T) mapper)` |
+| [std::core::Option::unwrap](std-core.md#api-105) | `T unwrap()` |
+| [std::core::Option::unwrapOr](std-core.md#api-106) | `T unwrapOr(T fallback)` |
+| [std::core::Or::leftBitOr](std-core.md#api-250) | `R leftBitOr(T value)` |
+| [std::core::Pair::create](std-core.md#api-126) | `static Pair<K, V> create((K, V) value)` |
+| [std::core::Pair::create](std-core.md#api-125) | `static Pair<K, V> create(K first, V second)` |
+| [std::core::Pair::toTuple](std-core.md#api-127) | `(K, V) toTuple()` |
+| [std::core::Positive::positive](std-core.md#api-260) | `R positive(T value)` |
+| [std::core::RawStorage::allocate](std-core.md#api-148) | `static RawStorage<T> allocate(int64 capacity)` |
+| [std::core::RawStorage::capacity](std-core.md#api-149) | `int64 capacity()` |
+| [std::core::RawStorage::close](std-core.md#api-152) | `void close()` |
+| [std::core::RawStorage::isInitialized](std-core.md#api-151) | `bool isInitialized(int64 index)` |
+| [std::core::RawStorage::pointer](std-core.md#api-150) | `RawPtr<T> pointer(int64 index)` |
+| [std::core::Result::andThen](std-core.md#api-123) | `Result<T, E> andThen(Result<T, E> fn(T) mapper)` |
+| [std::core::Result::branch](std-core.md#api-110) | `TryBranch<T, ErrorResidual<E>> branch()` |
+| [std::core::Result::error](std-core.md#api-121) | `E error()` |
+| [std::core::Result::expect](std-core.md#api-119) | `T expect(std::core::String message)` |
+| [std::core::Result::fromResidual](std-core.md#api-112) | `static Result<T,E> fromResidual(ErrorResidual<E> residual)` |
+| [std::core::Result::intoBranch](std-core.md#api-111) | `TryBranch<T, ErrorResidual<E>> intoBranch()` |
+| [std::core::Result::isErr](std-core.md#api-115) | `bool isErr()` |
+| [std::core::Result::isOk](std-core.md#api-114) | `bool isOk()` |
+| [std::core::Result::mapErr](std-core.md#api-267) | `Result<T,F> mapErr<F>(F fn(E) mapper)` |
+| [std::core::Result::ok](std-core.md#api-113) | `Option<T> ok()` |
+| [std::core::Result::take](std-core.md#api-116) | `T take()` |
+| [std::core::Result::takeError](std-core.md#api-120) | `E takeError()` |
+| [std::core::Result::transform](std-core.md#api-122) | `Result<T, E> transform(T fn(T) mapper)` |
+| [std::core::Result::unwrap](std-core.md#api-117) | `T unwrap()` |
+| [std::core::Result::unwrapOr](std-core.md#api-118) | `T unwrapOr(T fallback)` |
+| [std::core::RightAdd::rightAdd](std-core.md#api-227) | `R rightAdd(T value)` |
+| [std::core::RightAnd::rightBitAnd](std-core.md#api-249) | `R rightBitAnd(T value)` |
+| [std::core::RightDivide::rightDiv](std-core.md#api-233) | `R rightDiv(T value)` |
+| [std::core::RightEqual::rightEqual](std-core.md#api-237) | `R rightEqual(T value)` |
+| [std::core::RightGreater::rightGreater](std-core.md#api-245) | `R rightGreater(T value)` |
+| [std::core::RightGreaterOrEqual::rightGreaterEqual](std-core.md#api-247) | `R rightGreaterEqual(T value)` |
+| [std::core::RightLess::rightLess](std-core.md#api-241) | `R rightLess(T value)` |
+| [std::core::RightLessOrEqual::rightLessEqual](std-core.md#api-243) | `R rightLessEqual(T value)` |
+| [std::core::RightModulo::rightMod](std-core.md#api-235) | `R rightMod(T value)` |
+| [std::core::RightMultiply::rightMul](std-core.md#api-231) | `R rightMul(T value)` |
+| [std::core::RightNotEqual::rightNotEqual](std-core.md#api-239) | `R rightNotEqual(T value)` |
+| [std::core::RightOr::rightBitOr](std-core.md#api-251) | `R rightBitOr(T value)` |
+| [std::core::RightShiftLeft::rightShiftLeft](std-core.md#api-255) | `R rightShiftLeft(T value)` |
+| [std::core::RightShiftRight::rightShiftRight](std-core.md#api-257) | `R rightShiftRight(T value)` |
+| [std::core::RightSubtract::rightSub](std-core.md#api-229) | `R rightSub(T value)` |
+| [std::core::RightXor::rightBitXor](std-core.md#api-253) | `R rightBitXor(T value)` |
+| [std::core::Set::add](std-core.md#api-191) | `int64 add(T value)` |
+| [std::core::Set::at](std-core.md#api-195) | `T at(int64 index)` |
+| [std::core::Set::clear](std-core.md#api-196) | `int64 clear()` |
+| [std::core::Set::contains](std-core.md#api-193) | `int64 contains(T value)` |
+| [std::core::Set::copy](std-core.md#api-190) | `Set<T> copy()` |
+| [std::core::Set::has](std-core.md#api-192) | `int64 has(T value)` |
+| [std::core::Set::len](std-core.md#api-197) | `int64 len()` |
+| [std::core::Set::remove](std-core.md#api-194) | `int64 remove(T value)` |
+| [std::core::ShiftLeft::leftShiftLeft](std-core.md#api-254) | `R leftShiftLeft(T value)` |
+| [std::core::ShiftRight::leftShiftRight](std-core.md#api-256) | `R leftShiftRight(T value)` |
+| [std::core::String::append](std-core.md#api-7) | `void append(String text)` |
+| [std::core::String::byteAt](std-core.md#api-24) | `Option<uint8> byteAt(int64 index)` |
+| [std::core::String::byteLength](std-core.md#api-3) | `int64 byteLength()` |
+| [std::core::String::bytes](std-core.md#api-51) | `List<uint8> bytes()` |
+| [std::core::String::capacity](std-core.md#api-4) | `int64 capacity()` |
+| [std::core::String::charAt](std-core.md#api-46) | `Option<String> charAt(int64 index)` |
+| [std::core::String::charLength](std-core.md#api-16) | `int64 charLength()` |
+| [std::core::String::clear](std-core.md#api-8) | `void clear()` |
+| [std::core::String::compare](std-core.md#api-23) | `int64 compare(String text)` |
+| [std::core::String::concat](std-core.md#api-53) | `String concat(String text)` |
+| [std::core::String::contains](std-core.md#api-19) | `bool contains(String text)` |
+| [std::core::String::count](std-core.md#api-22) | `int64 count(String text)` |
+| [std::core::String::endsWith](std-core.md#api-21) | `bool endsWith(String text)` |
+| [std::core::String::indexOf](std-core.md#api-17) | `int64 indexOf(String text, int64 start = 0)` |
+| [std::core::String::insert](std-core.md#api-43) | `String insert(int64 index, String text)` |
+| [std::core::String::isAlnum](std-core.md#api-14) | `bool isAlnum()` |
+| [std::core::String::isAlpha](std-core.md#api-13) | `bool isAlpha()` |
+| [std::core::String::isAscii](std-core.md#api-15) | `bool isAscii()` |
+| [std::core::String::isBlank](std-core.md#api-11) | `bool isBlank()` |
+| [std::core::String::isDigit](std-core.md#api-12) | `bool isDigit()` |
+| [std::core::String::isEmpty](std-core.md#api-10) | `bool isEmpty()` |
+| [std::core::String::join](std-core.md#api-52) | `String join(List<String> items)` |
+| [std::core::String::lastIndexOf](std-core.md#api-18) | `int64 lastIndexOf(String text, int64 start = 0 - 1)` |
+| [std::core::String::left](std-core.md#api-27) | `String left(int64 count)` |
+| [std::core::String::length](std-core.md#api-1) | `int64 length()` |
+| [std::core::String::lines](std-core.md#api-49) | `List<String> lines(bool keepEmpty = true)` |
+| [std::core::String::maxCapacity](std-core.md#api-5) | `int64 maxCapacity()` |
+| [std::core::String::padEnd](std-core.md#api-40) | `String padEnd(int64 length, String fill = " ")` |
+| [std::core::String::padStart](std-core.md#api-39) | `String padStart(int64 length, String fill = " ")` |
+| [std::core::String::prepend](std-core.md#api-54) | `String prepend(String text)` |
+| [std::core::String::remove](std-core.md#api-44) | `String remove(int64 start, int64 count = 0 - 1)` |
+| [std::core::String::removePrefix](std-core.md#api-41) | `String removePrefix(String prefix)` |
+| [std::core::String::removeSuffix](std-core.md#api-42) | `String removeSuffix(String suffix)` |
+| [std::core::String::repeat](std-core.md#api-37) | `String repeat(int64 count)` |
+| [std::core::String::replace](std-core.md#api-36) | `String replace(String before, String after)` |
+| [std::core::String::replaceAll](std-core.md#api-35) | `String replaceAll(String before, String after)` |
+| [std::core::String::replaceFirst](std-core.md#api-34) | `String replaceFirst(String before, String after)` |
+| [std::core::String::reserve](std-core.md#api-6) | `void reserve(int64 bytes)` |
+| [std::core::String::reverse](std-core.md#api-38) | `String reverse()` |
+| [std::core::String::right](std-core.md#api-28) | `String right(int64 count)` |
+| [std::core::String::size](std-core.md#api-2) | `int64 size()` |
+| [std::core::String::slice](std-core.md#api-26) | `String slice(int64 start, int64 end)` |
+| [std::core::String::split](std-core.md#api-47) | `List<String> split(String separator, bool keepEmpty = true)` |
+| [std::core::String::splitWhitespace](std-core.md#api-48) | `List<String> splitWhitespace()` |
+| [std::core::String::startsWith](std-core.md#api-20) | `bool startsWith(String text)` |
+| [std::core::String::substring](std-core.md#api-25) | `String substring(int64 start, int64 count = 0 - 1)` |
+| [std::core::String::toLower](std-core.md#api-32) | `String toLower()` |
+| [std::core::String::toUpper](std-core.md#api-33) | `String toUpper()` |
+| [std::core::String::trim](std-core.md#api-29) | `String trim()` |
+| [std::core::String::trimEnd](std-core.md#api-31) | `String trimEnd()` |
+| [std::core::String::trimStart](std-core.md#api-30) | `String trimStart()` |
+| [std::core::String::truncate](std-core.md#api-9) | `void truncate(int64 bytes)` |
+| [std::core::String::unicodeChars](std-core.md#api-50) | `List<String> unicodeChars()` |
+| [std::core::String::utf8Substring](std-core.md#api-45) | `String utf8Substring(int64 start, int64 count = 0 - 1)` |
+| [std::core::Subtract::leftSub](std-core.md#api-228) | `R leftSub(T value)` |
+| [std::core::Try::branch](std-core.md#api-96) | `TryBranch<T, R> branch()` |
+| [std::core::TryMove::intoBranch](std-core.md#api-97) | `TryBranch<T, R> intoBranch()` |
+| [std::core::Xor::leftBitXor](std-core.md#api-252) | `R leftBitXor(T value)` |
+| [std::core::add](std-core.md#api-220) | `R add(T left,U right)` |
+| [std::core::assert](std-core.md#api-92) | `void assert(bool condition)` |
+| [std::core::assert](std-core.md#api-94) | `void assert(bool condition, int64 line)` |
+| [std::core::assert](std-core.md#api-93) | `void assert(bool condition, std::core::String message)` |
+| [std::core::assert](std-core.md#api-95) | `void assert(bool condition, std::core::String message, int64 line)` |
+| [std::core::barePointer](std-core.md#api-137) | `unsafe BarePtr<T> barePointer<T>(RawPtr<T> pointer)` |
+| [std::core::borrowAt](std-core.md#api-144) | `unsafe T mut& borrowAt<T>(RawPtr<T> pointer)` |
+| [std::core::bytesToFloat32](std-core.md#api-71) | `Option<float32> bytesToFloat32(std::core::List<uint8> bytes)` |
+| [std::core::bytesToFloat32](std-core.md#api-70) | `Option<float32> bytesToFloat32(std::core::List<uint8> bytes, bool bigEndian)` |
+| [std::core::bytesToFloat32](std-core.md#api-75) | `Option<float32> bytesToFloat32(uint8 bytes[])` |
+| [std::core::bytesToFloat32](std-core.md#api-74) | `Option<float32> bytesToFloat32(uint8 bytes[], bool bigEndian)` |
+| [std::core::bytesToFloat32](std-core.md#api-73) | `Option<float32> bytesToFloat32(uint8 const& bytes, int64 count)` |
+| [std::core::bytesToFloat32](std-core.md#api-72) | `Option<float32> bytesToFloat32(uint8 const& bytes, int64 count, bool bigEndian)` |
+| [std::core::bytesToFloat64](std-core.md#api-83) | `Option<float64> bytesToFloat64(std::core::List<uint8> bytes)` |
+| [std::core::bytesToFloat64](std-core.md#api-82) | `Option<float64> bytesToFloat64(std::core::List<uint8> bytes, bool bigEndian)` |
+| [std::core::bytesToFloat64](std-core.md#api-87) | `Option<float64> bytesToFloat64(uint8 bytes[])` |
+| [std::core::bytesToFloat64](std-core.md#api-86) | `Option<float64> bytesToFloat64(uint8 bytes[], bool bigEndian)` |
+| [std::core::bytesToFloat64](std-core.md#api-85) | `Option<float64> bytesToFloat64(uint8 const& bytes, int64 count)` |
+| [std::core::bytesToFloat64](std-core.md#api-84) | `Option<float64> bytesToFloat64(uint8 const& bytes, int64 count, bool bigEndian)` |
+| [std::core::dereference](std-core.md#api-139) | `unsafe T mut& dereference<T>(BarePtr<T> pointer)` |
+| [std::core::div](std-core.md#api-223) | `R div(T left,U right)` |
+| [std::core::dropAt](std-core.md#api-146) | `unsafe void dropAt<T>(RawPtr<T> pointer)` |
+| [std::core::eprint](std-core.md#api-160) | `int64 eprint(String format, Any args...)` |
+| [std::core::eprintln](std-core.md#api-161) | `int64 eprintln(String format, Any args...)` |
+| [std::core::eq](std-core.md#api-214) | `bool eq(T left,T right)` |
+| [std::core::float32ToBytes](std-core.md#api-77) | `bool float32ToBytes(float32 value, uint8 mut& bytes, int64 count)` |
+| [std::core::float32ToBytes](std-core.md#api-76) | `bool float32ToBytes(float32 value, uint8 mut& bytes, int64 count, bool bigEndian)` |
+| [std::core::float32ToBytes](std-core.md#api-79) | `bool float32ToBytes(float32 value, uint8[] mut& bytes)` |
+| [std::core::float32ToBytes](std-core.md#api-78) | `bool float32ToBytes(float32 value, uint8[] mut& bytes, bool bigEndian)` |
+| [std::core::float32ToBytes](std-core.md#api-69) | `std::core::List<uint8> float32ToBytes(float32 value)` |
+| [std::core::float32ToBytes](std-core.md#api-68) | `std::core::List<uint8> float32ToBytes(float32 value, bool bigEndian)` |
+| [std::core::float64ToBytes](std-core.md#api-89) | `bool float64ToBytes(float64 value, uint8 mut& bytes, int64 count)` |
+| [std::core::float64ToBytes](std-core.md#api-88) | `bool float64ToBytes(float64 value, uint8 mut& bytes, int64 count, bool bigEndian)` |
+| [std::core::float64ToBytes](std-core.md#api-91) | `bool float64ToBytes(float64 value, uint8[] mut& bytes)` |
+| [std::core::float64ToBytes](std-core.md#api-90) | `bool float64ToBytes(float64 value, uint8[] mut& bytes, bool bigEndian)` |
+| [std::core::float64ToBytes](std-core.md#api-81) | `std::core::List<uint8> float64ToBytes(float64 value)` |
+| [std::core::float64ToBytes](std-core.md#api-80) | `std::core::List<uint8> float64ToBytes(float64 value, bool bigEndian)` |
+| [std::core::format](std-core.md#api-162) | `String format(String format, Any args...)` |
+| [std::core::ge](std-core.md#api-219) | `bool ge(T left,T right)` |
+| [std::core::gt](std-core.md#api-218) | `bool gt(T left,T right)` |
+| [std::core::index](std-core.md#api-225) | `T index(T const& data,int64 index)` |
+| [std::core::initAt](std-core.md#api-142) | `unsafe void initAt<T>(RawPtr<T> pointer, T value)` |
+| [std::core::inputBigDecimal](std-core.md#api-172) | `BigDecimal inputBigDecimal()` |
+| [std::core::inputBigInteger](std-core.md#api-171) | `BigInteger inputBigInteger()` |
+| [std::core::inputBool](std-core.md#api-169) | `bool inputBool()` |
+| [std::core::inputChar](std-core.md#api-170) | `char inputChar()` |
+| [std::core::inputFloat](std-core.md#api-168) | `float64 inputFloat()` |
+| [std::core::inputInt](std-core.md#api-166) | `int64 inputInt()` |
+| [std::core::inputLine](std-core.md#api-165) | `String inputLine()` |
+| [std::core::inputUInt](std-core.md#api-167) | `uint64 inputUInt()` |
+| [std::core::isType](std-core.md#api-128) | `bool isType<T>(Any const& value)` |
+| [std::core::le](std-core.md#api-217) | `bool le(T left,T right)` |
+| [std::core::len](std-core.md#api-174) | `int64 len(Any value)` |
+| [std::core::lt](std-core.md#api-216) | `bool lt(T left,T right)` |
+| [std::core::memcpy](std-core.md#api-177) | `int64 memcpy(char mut& destination, char const& source, int64 bytes)` |
+| [std::core::memcpy](std-core.md#api-140) | `unsafe void memcpy<T,U>(BarePtr<T> destination, BarePtr<U> source, int64 bytes)` |
+| [std::core::memset](std-core.md#api-178) | `int64 memset(char mut& destination, int64 value, int64 bytes)` |
+| [std::core::memset](std-core.md#api-141) | `unsafe void memset<T>(BarePtr<T> destination, uint8 value, int64 bytes)` |
+| [std::core::mod](std-core.md#api-224) | `R mod(T left,U right)` |
+| [std::core::mul](std-core.md#api-222) | `R mul(T left,U right)` |
+| [std::core::ne](std-core.md#api-215) | `bool ne(T left,T right)` |
+| [std::core::panic](std-core.md#api-173) | `int64 panic(String message)` |
+| [std::core::pause](std-core.md#api-164) | `int64 pause()` |
+| [std::core::pointerFromAddress](std-core.md#api-138) | `unsafe BarePtr<T> pointerFromAddress<T>(int64 address)` |
+| [std::core::print](std-core.md#api-158) | `int64 print(String format, Any args...)` |
+| [std::core::println](std-core.md#api-159) | `int64 println(String format, Any args...)` |
+| [std::core::putChar](std-core.md#api-163) | `int64 putChar(char value)` |
+| [std::core::range](std-core.md#api-153) | `__Range range(int64 start, int64 stop)` |
+| [std::core::range](std-core.md#api-154) | `__Range range(int64 start, int64 stop, int64 step)` |
+| [std::core::rangeEq](std-core.md#api-155) | `__Interval_int64 rangeEq(int64 start, int64 stop)` |
+| [std::core::rawSize](std-core.md#api-0) | `int64 rawSize<T>()` |
+| [std::core::readAt](std-core.md#api-143) | `unsafe T readAt<T>(RawPtr<T> pointer)` |
+| [std::core::readLine](std-core.md#api-61) | `String readLine()` |
+| [std::core::readLines](std-core.md#api-62) | `String readLines(int32 N)` |
+| [std::core::readLines](std-core.md#api-63) | `String readLines(int64 N)` |
+| [std::core::relocateNonOverlapping](std-core.md#api-147) | `unsafe void relocateNonOverlapping<T>(RawPtr<T> destination, RawPtr<T> source, int64 count)` |
+| [std::core::stringBytes](std-core.md#api-132) | `List<uint8> stringBytes(String text)` |
+| [std::core::sub](std-core.md#api-221) | `R sub(T left,U right)` |
+| [std::core::takeAt](std-core.md#api-145) | `unsafe T takeAt<T>(RawPtr<T> pointer)` |
+| [std::core::toInt32](std-core.md#api-65) | `Option<int32> toInt32(float32 value)` |
+| [std::core::toInt32](std-core.md#api-64) | `Option<int32> toInt32(float64 value)` |
+| [std::core::toInt64](std-core.md#api-67) | `int64 toInt64(float32 value)` |
+| [std::core::toInt64](std-core.md#api-66) | `int64 toInt64(float64 value)` |
+| [std::core::toOptional](std-core.md#api-176) | `Option<T mut&> toOptional<T>(T mut& value)` |
+| [std::core::toReference](std-core.md#api-175) | `T mut& toReference<T>(Option<T mut&> value)` |
+| [std::core::tryGet](std-core.md#api-129) | `Option<T> tryGet<T>(Any const& value)` |
+| [std::core::tryGetMut](std-core.md#api-131) | `Option<T mut&> tryGetMut<T>(Any mut& value)` |
+| [std::core::tryGetReference](std-core.md#api-130) | `Option<T const&> tryGetReference<T>(Any const& value)` |
 | [std::csv::CsvError::toString](std-csv.md#api-0) | `String toString()` |
 | [std::csv::csvError](std-csv.md#api-1) | `CsvError csvError(int64 line, int64 column, String message)` |
-| [std::csv::parseCsv](std-csv.md#api-2) | `Result<List<List<String>>,std::lang::Error> parseCsv(String text, char delimiter=',')` |
-| [std::csv::writeCsv](std-csv.md#api-3) | `Result<String,std::lang::Error> writeCsv(List<List<String>> rows, char delimiter=',')` |
-| [std::datetime::DateTimeError::toString](std-datetime.md#api-0) | `String toString()` |
-| [std::datetime::addDays](std-datetime.md#api-9) | `Result<DateTime,std::lang::Error> addDays(DateTime value, int64 days)` |
-| [std::datetime::addSeconds](std-datetime.md#api-8) | `Result<DateTime,std::lang::Error> addSeconds(DateTime value, int64 delta)` |
-| [std::datetime::dateDigits](std-datetime.md#api-5) | `String dateDigits(int64 value, int64 width)` |
-| [std::datetime::daysInMonth](std-datetime.md#api-2) | `int64 daysInMonth(int64 year, int64 month)` |
-| [std::datetime::formatUtc](std-datetime.md#api-6) | `Result<String,std::lang::Error> formatUtc(DateTime value)` |
-| [std::datetime::fromUnixSeconds](std-datetime.md#api-4) | `Result<DateTime,std::lang::Error> fromUnixSeconds(int64 seconds)` |
-| [std::datetime::isLeapYear](std-datetime.md#api-1) | `bool isLeapYear(int64 year)` |
-| [std::datetime::nowUtc](std-datetime.md#api-10) | `Result<DateTime,std::lang::Error> nowUtc()` |
-| [std::datetime::parseUtc](std-datetime.md#api-7) | `Result<DateTime,std::lang::Error> parseUtc(String text)` |
-| [std::datetime::toUnixSeconds](std-datetime.md#api-3) | `Result<int64,std::lang::Error> toUnixSeconds(DateTime value)` |
+| [std::csv::parseCsv](std-csv.md#api-2) | `Result<List<List<String>>,std::core::Error> parseCsv(String text, char delimiter=',')` |
+| [std::csv::writeCsv](std-csv.md#api-3) | `Result<String,std::core::Error> writeCsv(List<List<String>> rows, char delimiter=',')` |
+| [std::date_time::DateTimeError::toString](std-date_time.md#api-0) | `String toString()` |
+| [std::date_time::DateTimeOffset::utc](std-date_time.md#api-11) | `Result<DateTime,Error> utc()` |
+| [std::date_time::add_days](std-date_time.md#api-9) | `Result<DateTime,std::core::Error> add_days(DateTime value, int64 days)` |
+| [std::date_time::add_seconds](std-date_time.md#api-8) | `Result<DateTime,std::core::Error> add_seconds(DateTime value, int64 delta)` |
+| [std::date_time::at_offset](std-date_time.md#api-12) | `Result<DateTimeOffset,Error> at_offset(DateTime utc, int64 offset_minutes)` |
+| [std::date_time::date_digits](std-date_time.md#api-5) | `String date_digits(int64 value, int64 width)` |
+| [std::date_time::days_in_month](std-date_time.md#api-2) | `int64 days_in_month(int64 year, int64 month)` |
+| [std::date_time::format_offset](std-date_time.md#api-13) | `Result<String,Error> format_offset(DateTimeOffset value)` |
+| [std::date_time::format_utc](std-date_time.md#api-6) | `Result<String,std::core::Error> format_utc(DateTime value)` |
+| [std::date_time::from_unix_seconds](std-date_time.md#api-4) | `Result<DateTime,std::core::Error> from_unix_seconds(int64 seconds)` |
+| [std::date_time::is_leap_year](std-date_time.md#api-1) | `bool is_leap_year(int64 year)` |
+| [std::date_time::now_utc](std-date_time.md#api-10) | `Result<DateTime,std::core::Error> now_utc()` |
+| [std::date_time::parse_offset](std-date_time.md#api-14) | `Result<DateTimeOffset,Error> parse_offset(String text)` |
+| [std::date_time::parse_utc](std-date_time.md#api-7) | `Result<DateTime,std::core::Error> parse_utc(String text)` |
+| [std::date_time::to_unix_seconds](std-date_time.md#api-3) | `Result<int64,std::core::Error> to_unix_seconds(DateTime value)` |
 | [std::encoding::EncodingError::toString](std-encoding.md#api-0) | `String toString()` |
-| [std::encoding::decodeBase64](std-encoding.md#api-6) | `Result<List<uint8>,std::lang::Error> decodeBase64(String text, bool url=false)` |
-| [std::encoding::decodeBase64Url](std-encoding.md#api-7) | `Result<List<uint8>,std::lang::Error> decodeBase64Url(String text)` |
-| [std::encoding::decodeHex](std-encoding.md#api-3) | `Result<List<uint8>,std::lang::Error> decodeHex(String text)` |
+| [std::encoding::decodeBase64](std-encoding.md#api-6) | `Result<List<uint8>,std::core::Error> decodeBase64(String text, bool url=false)` |
+| [std::encoding::decodeBase64Url](std-encoding.md#api-7) | `Result<List<uint8>,std::core::Error> decodeBase64Url(String text)` |
+| [std::encoding::decodeHex](std-encoding.md#api-3) | `Result<List<uint8>,std::core::Error> decodeHex(String text)` |
 | [std::encoding::encodeBase64](std-encoding.md#api-4) | `String encodeBase64(List<uint8> bytes, bool url=false, bool padding=true)` |
 | [std::encoding::encodeBase64Url](std-encoding.md#api-5) | `String encodeBase64Url(List<uint8> bytes, bool padding=false)` |
 | [std::encoding::encodeHex](std-encoding.md#api-1) | `String encodeHex(List<uint8> bytes, bool uppercase=false)` |
@@ -285,69 +596,73 @@
 | [std::graph::UnionFind::sizeOf](std-graph.md#api-5) | `int64 sizeOf(int64 x)` |
 | [std::graph::UnionFind::sizes](std-graph.md#api-9) | `List<int64> sizes()` |
 | [std::graph::UnionFind::unionSets](std-graph.md#api-3) | `bool unionSets(int64 a,int64 b)` |
-| [std::image::Image::binarize](std-image.md#api-23) | `static Result<List<uint8>, std::lang::Error> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold)` |
-| [std::image::Image::convolve](std-image.md#api-14) | `Result<Image, std::lang::Error> convolve(List<float64> kernel, int64 kw, int64 kh)` |
-| [std::image::Image::decode](std-image.md#api-4) | `static Result<Image, std::lang::Error> decode(List<uint8> bytes)` |
-| [std::image::Image::encodeBmp](std-image.md#api-6) | `Result<List<uint8>, std::lang::Error> encodeBmp()` |
-| [std::image::Image::encodePgm](std-image.md#api-8) | `Result<List<uint8>, std::lang::Error> encodePgm()` |
-| [std::image::Image::encodePpm](std-image.md#api-7) | `Result<List<uint8>, std::lang::Error> encodePpm()` |
-| [std::image::Image::fromARGB](std-image.md#api-19) | `static Result<Image, std::lang::Error> fromARGB(int64 width, int64 height, List<uint32> argb)` |
-| [std::image::Image::fromGray](std-image.md#api-17) | `static Result<Image, std::lang::Error> fromGray(int64 width, int64 height, List<uint8> gray)` |
-| [std::image::Image::fromRGB565](std-image.md#api-21) | `static Result<Image, std::lang::Error> fromRGB565(int64 width, int64 height, List<uint16> rgb565)` |
-| [std::image::Image::getPixel](std-image.md#api-12) | `Result<Pixel, std::lang::Error> getPixel(int64 x, int64 y)` |
+| [std::image::Image::binarize](std-image.md#api-23) | `static Result<List<uint8>, std::core::Error> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold)` |
+| [std::image::Image::convolve](std-image.md#api-14) | `Result<Image, std::core::Error> convolve(List<float64> kernel, int64 kw, int64 kh)` |
+| [std::image::Image::decode](std-image.md#api-4) | `static Result<Image, std::core::Error> decode(List<uint8> bytes)` |
+| [std::image::Image::encodeBmp](std-image.md#api-6) | `Result<List<uint8>, std::core::Error> encodeBmp()` |
+| [std::image::Image::encodePgm](std-image.md#api-8) | `Result<List<uint8>, std::core::Error> encodePgm()` |
+| [std::image::Image::encodePpm](std-image.md#api-7) | `Result<List<uint8>, std::core::Error> encodePpm()` |
+| [std::image::Image::fromARGB](std-image.md#api-19) | `static Result<Image, std::core::Error> fromARGB(int64 width, int64 height, List<uint32> argb)` |
+| [std::image::Image::fromGray](std-image.md#api-17) | `static Result<Image, std::core::Error> fromGray(int64 width, int64 height, List<uint8> gray)` |
+| [std::image::Image::fromRGB565](std-image.md#api-21) | `static Result<Image, std::core::Error> fromRGB565(int64 width, int64 height, List<uint16> rgb565)` |
+| [std::image::Image::getPixel](std-image.md#api-12) | `Result<Pixel, std::core::Error> getPixel(int64 x, int64 y)` |
 | [std::image::Image::height](std-image.md#api-1) | `int64 height()` |
-| [std::image::Image::make](std-image.md#api-3) | `static Result<Image, std::lang::Error> make(int64 width, int64 height)` |
-| [std::image::Image::open](std-image.md#api-5) | `static Result<Image, std::lang::Error> open(String path)` |
-| [std::image::Image::otsuBinarize](std-image.md#api-24) | `Result<List<uint8>, std::lang::Error> otsuBinarize()` |
-| [std::image::Image::otsuThreshold](std-image.md#api-22) | `Result<int64, std::lang::Error> otsuThreshold()` |
+| [std::image::Image::make](std-image.md#api-3) | `static Result<Image, std::core::Error> make(int64 width, int64 height)` |
+| [std::image::Image::open](std-image.md#api-5) | `static Result<Image, std::core::Error> open(String path)` |
+| [std::image::Image::otsuBinarize](std-image.md#api-24) | `Result<List<uint8>, std::core::Error> otsuBinarize()` |
+| [std::image::Image::otsuThreshold](std-image.md#api-22) | `Result<int64, std::core::Error> otsuThreshold()` |
 | [std::image::Image::pixels](std-image.md#api-2) | `List<uint8> pixels()` |
-| [std::image::Image::pool](std-image.md#api-15) | `Result<Image, std::lang::Error> pool(int64 mode, int64 kw, int64 kh)` |
-| [std::image::Image::saveBmp](std-image.md#api-9) | `Result<int64, std::lang::Error> saveBmp(String path)` |
-| [std::image::Image::savePgm](std-image.md#api-11) | `Result<int64, std::lang::Error> savePgm(String path)` |
-| [std::image::Image::savePpm](std-image.md#api-10) | `Result<int64, std::lang::Error> savePpm(String path)` |
-| [std::image::Image::setPixel](std-image.md#api-13) | `Result<int64, std::lang::Error> setPixel(int64 x, int64 y, int64 r, int64 g, int64 b, int64 a)` |
-| [std::image::Image::toARGB](std-image.md#api-18) | `Result<List<uint32>, std::lang::Error> toARGB()` |
-| [std::image::Image::toGray](std-image.md#api-16) | `Result<List<uint8>, std::lang::Error> toGray()` |
-| [std::image::Image::toRGB565](std-image.md#api-20) | `Result<List<uint16>, std::lang::Error> toRGB565()` |
+| [std::image::Image::pool](std-image.md#api-15) | `Result<Image, std::core::Error> pool(int64 mode, int64 kw, int64 kh)` |
+| [std::image::Image::saveBmp](std-image.md#api-9) | `Result<int64, std::core::Error> saveBmp(String path)` |
+| [std::image::Image::savePgm](std-image.md#api-11) | `Result<int64, std::core::Error> savePgm(String path)` |
+| [std::image::Image::savePpm](std-image.md#api-10) | `Result<int64, std::core::Error> savePpm(String path)` |
+| [std::image::Image::setPixel](std-image.md#api-13) | `Result<int64, std::core::Error> setPixel(int64 x, int64 y, int64 r, int64 g, int64 b, int64 a)` |
+| [std::image::Image::toARGB](std-image.md#api-18) | `Result<List<uint32>, std::core::Error> toARGB()` |
+| [std::image::Image::toGray](std-image.md#api-16) | `Result<List<uint8>, std::core::Error> toGray()` |
+| [std::image::Image::toRGB565](std-image.md#api-20) | `Result<List<uint16>, std::core::Error> toRGB565()` |
 | [std::image::Image::width](std-image.md#api-0) | `int64 width()` |
 | [std::io::FileStream::close](std-io.md#api-19) | `int64 close()` |
-| [std::io::FileStream::flush](std-io.md#api-17) | `Result<int64, std::lang::Error> flush()` |
-| [std::io::FileStream::open](std-io.md#api-7) | `static Result<FileStream, std::lang::Error> open(std::lang::String path, std::lang::String mode)` |
-| [std::io::FileStream::print](std-io.md#api-13) | `Result<int64, std::lang::Error> print(String text)` |
-| [std::io::FileStream::println](std-io.md#api-14) | `Result<int64, std::lang::Error> println(String text = "")` |
-| [std::io::FileStream::read](std-io.md#api-8) | `Result<std::lang::String, std::lang::Error> read()` |
-| [std::io::FileStream::readAllString](std-io.md#api-11) | `Result<String,std::lang::Error> readAllString(int64 maxBytes=16777216)` |
-| [std::io::FileStream::readBytes](std-io.md#api-15) | `Result<List<uint8>,std::lang::Error> readBytes(int64 count)` |
-| [std::io::FileStream::readLine](std-io.md#api-9) | `Result<String,std::lang::Error> readLine()` |
-| [std::io::FileStream::readString](std-io.md#api-10) | `Result<String,std::lang::Error> readString(int64 count)` |
-| [std::io::FileStream::seek](std-io.md#api-18) | `Result<int64, std::lang::Error> seek(int64 offset, SeekOrigin origin)` |
-| [std::io::FileStream::write](std-io.md#api-12) | `Result<int64, std::lang::Error> write(std::lang::String text)` |
-| [std::io::FileStream::writeBytes](std-io.md#api-16) | `Result<int64,std::lang::Error> writeBytes(List<uint8> bytes)` |
-| [std::io::Formattable::toString](std-io.md#api-6) | `std::lang::String toString(std::lang::String style)` |
+| [std::io::FileStream::flush](std-io.md#api-17) | `Result<int64, std::core::Error> flush()` |
+| [std::io::FileStream::open](std-io.md#api-7) | `static Result<FileStream, std::core::Error> open(std::core::String path, std::core::String mode)` |
+| [std::io::FileStream::print](std-io.md#api-13) | `Result<int64, std::core::Error> print(String text)` |
+| [std::io::FileStream::println](std-io.md#api-14) | `Result<int64, std::core::Error> println(String text = "")` |
+| [std::io::FileStream::read](std-io.md#api-8) | `Result<std::core::String, std::core::Error> read()` |
+| [std::io::FileStream::readAllString](std-io.md#api-11) | `Result<String,std::core::Error> readAllString(int64 maxBytes=16777216)` |
+| [std::io::FileStream::readBytes](std-io.md#api-15) | `Result<List<uint8>,std::core::Error> readBytes(int64 count)` |
+| [std::io::FileStream::readLine](std-io.md#api-9) | `Result<String,std::core::Error> readLine()` |
+| [std::io::FileStream::readString](std-io.md#api-10) | `Result<String,std::core::Error> readString(int64 count)` |
+| [std::io::FileStream::seek](std-io.md#api-18) | `Result<int64, std::core::Error> seek(int64 offset, SeekOrigin origin)` |
+| [std::io::FileStream::write](std-io.md#api-12) | `Result<int64, std::core::Error> write(std::core::String text)` |
+| [std::io::FileStream::writeBytes](std-io.md#api-16) | `Result<int64,std::core::Error> writeBytes(List<uint8> bytes)` |
+| [std::io::Formattable::toString](std-io.md#api-6) | `std::core::String toString(std::core::String style)` |
 | [std::io::IoError::toString](std-io.md#api-0) | `String toString()` |
-| [std::io::Reader::read](std-io.md#api-1) | `Result<std::lang::String, std::lang::Error> read()` |
-| [std::io::Seek::seek](std-io.md#api-4) | `Result<int64, std::lang::Error> seek(int64 offset, SeekOrigin origin)` |
-| [std::io::ToString::toString](std-io.md#api-5) | `std::lang::String toString()` |
-| [std::io::Writer::flush](std-io.md#api-3) | `Result<int64, std::lang::Error> flush()` |
-| [std::io::Writer::write](std-io.md#api-2) | `Result<int64, std::lang::Error> write(std::lang::String text)` |
-| [std::io::createDirectories](std-io.md#api-36) | `Result<int64,std::lang::Error> createDirectories(String path)` |
+| [std::io::Reader::read](std-io.md#api-1) | `Result<std::core::String, std::core::Error> read()` |
+| [std::io::Seek::seek](std-io.md#api-4) | `Result<int64, std::core::Error> seek(int64 offset, SeekOrigin origin)` |
+| [std::io::ToString::toString](std-io.md#api-5) | `std::core::String toString()` |
+| [std::io::Writer::flush](std-io.md#api-3) | `Result<int64, std::core::Error> flush()` |
+| [std::io::Writer::write](std-io.md#api-2) | `Result<int64, std::core::Error> write(std::core::String text)` |
+| [std::io::copy_to](std-io.md#api-38) | `Result<int64,Error> copy_to(FileStream mut& source, FileStream mut& destination)` |
+| [std::io::createDirectories](std-io.md#api-36) | `Result<int64,std::core::Error> createDirectories(String path)` |
+| [std::io::create_temp_file](std-io.md#api-40) | `Result<String,Error> create_temp_file(String path)` |
 | [std::io::fileClose](std-io.md#api-29) | `int64 fileClose(file const& handle)` |
 | [std::io::fileEof](std-io.md#api-28) | `int64 fileEof(file const& handle)` |
-| [std::io::fileInfo](std-io.md#api-35) | `Result<FileInfo,std::lang::Error> fileInfo(String path)` |
-| [std::io::fileOpen](std-io.md#api-20) | `Result<std::lang::File, std::lang::Error> fileOpen(std::lang::String path, std::lang::String mode)` |
+| [std::io::fileInfo](std-io.md#api-35) | `Result<FileInfo,std::core::Error> fileInfo(String path)` |
+| [std::io::fileOpen](std-io.md#api-20) | `Result<std::core::File, std::core::Error> fileOpen(std::core::String path, std::core::String mode)` |
 | [std::io::filePrint](std-io.md#api-26) | `int64 filePrint(file const& handle, String text)` |
 | [std::io::filePrintln](std-io.md#api-27) | `int64 filePrintln(file const& handle, String text = "")` |
-| [std::io::fileRead](std-io.md#api-21) | `std::lang::String fileRead(file const& handle)` |
+| [std::io::fileRead](std-io.md#api-21) | `std::core::String fileRead(file const& handle)` |
 | [std::io::fileReadAllString](std-io.md#api-24) | `String fileReadAllString(File const& handle, int64 maxBytes = 16777216)` |
 | [std::io::fileReadLine](std-io.md#api-22) | `String fileReadLine(File const& handle)` |
 | [std::io::fileReadString](std-io.md#api-23) | `String fileReadString(File const& handle, int64 count)` |
-| [std::io::fileWrite](std-io.md#api-25) | `int64 fileWrite(file const& handle, std::lang::String text)` |
-| [std::io::listDirectory](std-io.md#api-34) | `Result<List<String>,std::lang::Error> listDirectory(String path)` |
-| [std::io::readAllBytes](std-io.md#api-30) | `Result<List<uint8>,std::lang::Error> readAllBytes(String path, int64 maxBytes=16777216)` |
-| [std::io::readAllText](std-io.md#api-32) | `Result<String,std::lang::Error> readAllText(String path, int64 maxBytes=16777216)` |
-| [std::io::renamePath](std-io.md#api-37) | `Result<int64,std::lang::Error> renamePath(String from, String to)` |
-| [std::io::writeAllBytes](std-io.md#api-31) | `Result<int64,std::lang::Error> writeAllBytes(String path, List<uint8> bytes)` |
-| [std::io::writeAllText](std-io.md#api-33) | `Result<int64,std::lang::Error> writeAllText(String path, String text)` |
+| [std::io::fileWrite](std-io.md#api-25) | `int64 fileWrite(file const& handle, std::core::String text)` |
+| [std::io::listDirectory](std-io.md#api-34) | `Result<List<String>,std::core::Error> listDirectory(String path)` |
+| [std::io::readAllBytes](std-io.md#api-30) | `Result<List<uint8>,std::core::Error> readAllBytes(String path, int64 maxBytes=16777216)` |
+| [std::io::readAllText](std-io.md#api-32) | `Result<String,std::core::Error> readAllText(String path, int64 maxBytes=16777216)` |
+| [std::io::renamePath](std-io.md#api-37) | `Result<int64,std::core::Error> renamePath(String from, String to)` |
+| [std::io::replace_file](std-io.md#api-41) | `Result<int64,Error> replace_file(String from, String to)` |
+| [std::io::walk_directory](std-io.md#api-39) | `Result<List<String>,Error> walk_directory(String path)` |
+| [std::io::writeAllBytes](std-io.md#api-31) | `Result<int64,std::core::Error> writeAllBytes(String path, List<uint8> bytes)` |
+| [std::io::writeAllText](std-io.md#api-33) | `Result<int64,std::core::Error> writeAllText(String path, String text)` |
 | [std::iter::Iter::all](std-iter.md#api-9) | `bool all(bool fn(T) predicate)` |
 | [std::iter::Iter::any](std-iter.md#api-10) | `bool any(bool fn(T) predicate)` |
 | [std::iter::Iter::count](std-iter.md#api-6) | `int64 count()` |
@@ -414,8 +729,9 @@
 | [std::iter::all](std-iter.md#api-84) | `bool all<T>(Iter<T> mut& source, bool fn(T) predicate)` |
 | [std::iter::any](std-iter.md#api-85) | `bool any<T>(Iter<T> mut& source, bool fn(T) predicate)` |
 | [std::iter::chain](std-iter.md#api-50) | `Iter<T> chain<T>(Iter<T> left, Iter<T> right)` |
-| [std::iter::chars](std-iter.md#api-105) | `Iter<char> chars(std::lang::String source)` |
-| [std::iter::collect](std-iter.md#api-72) | `std::lang::List<T> collect<T>(Iter<T> source)` |
+| [std::iter::chars](std-iter.md#api-105) | `Iter<char> chars(std::core::String source)` |
+| [std::iter::chunk](std-iter.md#api-110) | `Iter<List<T>> chunk<T>(Iter<T> source, int64 length)` |
+| [std::iter::collect](std-iter.md#api-72) | `std::core::List<T> collect<T>(Iter<T> source)` |
 | [std::iter::countIter](std-iter.md#api-81) | `int64 countIter<T>(Iter<T> mut& source)` |
 | [std::iter::cycle](std-iter.md#api-68) | `Iter<T> cycle<T>(Iter<T> source)` |
 | [std::iter::enumerate](std-iter.md#api-56) | `Iter<(int64,T)> enumerate<T>(Iter<T> source)` |
@@ -426,19 +742,20 @@
 | [std::iter::fold](std-iter.md#api-73) | `A fold<T,A>(Iter<T> source, A initial, A fn(A, T) callback)` |
 | [std::iter::forEach](std-iter.md#api-87) | `void forEach<T>(Iter<T> mut& source, void fn(T) action)` |
 | [std::iter::fromIterator](std-iter.md#api-16) | `Iter<T> fromIterator<T,S : Iterator<T>>(S source)` |
-| [std::iter::fromList](std-iter.md#api-19) | `Iter<T> fromList<T>(std::lang::List<T> values)` |
-| [std::iter::fromRange](std-iter.md#api-89) | `Iter<int64> fromRange(std::lang::__Range source)` |
+| [std::iter::fromList](std-iter.md#api-19) | `Iter<T> fromList<T>(std::core::List<T> values)` |
+| [std::iter::fromRange](std-iter.md#api-89) | `Iter<int64> fromRange(std::core::__Range source)` |
 | [std::iter::fromSpan](std-iter.md#api-102) | `Iter<T const&> fromSpan<T>(T const& source, int64 length)` |
 | [std::iter::fromState](std-iter.md#api-13) | `Iter<T> fromState<T,S>(S state)` |
 | [std::iter::fuse](std-iter.md#api-62) | `Iter<T> fuse<T>(Iter<T> source)` |
+| [std::iter::group_by](std-iter.md#api-109) | `Map<K,List<T>> group_by<T,K>(Iter<T> source, K fn(T) key_of)` |
 | [std::iter::inspect](std-iter.md#api-65) | `Iter<T> inspect<T>(Iter<T> source, void fn(T) action)` |
 | [std::iter::last](std-iter.md#api-83) | `Option<T> last<T>(Iter<T> mut& source)` |
-| [std::iter::listIntoIter](std-iter.md#api-88) | `Iter<T> listIntoIter<T>(std::lang::List<T> mut& source)` |
-| [std::iter::listIter](std-iter.md#api-94) | `Iter<T const&> listIter<T>(std::lang::List<T> const& source)` |
-| [std::iter::listIterMut](std-iter.md#api-95) | `Iter<T mut&> listIterMut<T>(std::lang::List<T> mut& source)` |
+| [std::iter::listIntoIter](std-iter.md#api-88) | `Iter<T> listIntoIter<T>(std::core::List<T> mut& source)` |
+| [std::iter::listIter](std-iter.md#api-94) | `Iter<T const&> listIter<T>(std::core::List<T> const& source)` |
+| [std::iter::listIterMut](std-iter.md#api-95) | `Iter<T mut&> listIterMut<T>(std::core::List<T> mut& source)` |
 | [std::iter::map](std-iter.md#api-26) | `Iter<U> map<T,U>(Iter<T> source, U fn(T) callback)` |
-| [std::iter::mapIntoIter](std-iter.md#api-98) | `Iter<Pair<K,V>> mapIntoIter<K,V>(std::lang::Map<K,V> mut& source)` |
-| [std::iter::mapIter](std-iter.md#api-99) | `Iter<Pair<K,V>> mapIter<K,V>(std::lang::Map<K,V> const& source)` |
+| [std::iter::mapIntoIter](std-iter.md#api-98) | `Iter<Pair<K,V>> mapIntoIter<K,V>(std::core::Map<K,V> mut& source)` |
+| [std::iter::mapIter](std-iter.md#api-99) | `Iter<Pair<K,V>> mapIter<K,V>(std::core::Map<K,V> const& source)` |
 | [std::iter::mapWhile](std-iter.md#api-35) | `Iter<U> mapWhile<T,U>(Iter<T> source, Option<U> fn(T) callback)` |
 | [std::iter::nth](std-iter.md#api-82) | `Option<T> nth<T>(Iter<T> mut& source, int64 index)` |
 | [std::iter::peekingTakeWhile](std-iter.md#api-80) | `(Iter<T>,Iter<T>) peekingTakeWhile<T>(Iter<T> source, bool fn(T) predicate)` |
@@ -448,8 +765,8 @@
 | [std::iter::rev](std-iter.md#api-79) | `Iter<T> rev<T>(Iter<T> source)` |
 | [std::iter::sameItems](std-iter.md#api-76) | `bool sameItems<T>(Iter<T> left, Iter<T> right)` |
 | [std::iter::scan](std-iter.md#api-71) | `Iter<U> scan<T,A,U>(Iter<T> source, A initial, Option<U> fn(A mut&, T) callback)` |
-| [std::iter::setIntoIter](std-iter.md#api-96) | `Iter<T> setIntoIter<T>(std::lang::Set<T> mut& source)` |
-| [std::iter::setIter](std-iter.md#api-97) | `Iter<T> setIter<T>(std::lang::Set<T> const& source)` |
+| [std::iter::setIntoIter](std-iter.md#api-96) | `Iter<T> setIntoIter<T>(std::core::Set<T> mut& source)` |
+| [std::iter::setIter](std-iter.md#api-97) | `Iter<T> setIter<T>(std::core::Set<T> const& source)` |
 | [std::iter::skip](std-iter.md#api-47) | `Iter<T> skip<T>(Iter<T> source, int64 amount)` |
 | [std::iter::skipWhile](std-iter.md#api-41) | `Iter<T> skipWhile<T>(Iter<T> source, bool fn(T) predicate)` |
 | [std::iter::stepBy](std-iter.md#api-59) | `Iter<T> stepBy<T>(Iter<T> source, int64 step)` |
@@ -457,18 +774,18 @@
 | [std::iter::takeWhile](std-iter.md#api-38) | `Iter<T> takeWhile<T>(Iter<T> source, bool fn(T) predicate)` |
 | [std::iter::tryFold](std-iter.md#api-74) | `Result<A,E> tryFold<T,A,E>(Iter<T> source, A initial, Result<A,E> fn(A, T) callback)` |
 | [std::iter::zip](std-iter.md#api-53) | `Iter<(T,U)> zip<T,U>(Iter<T> left, Iter<U> right)` |
-| [std::json::Json::toJson](std-json.md#api-0) | `Result<String,std::lang::Error> toJson()` |
+| [std::json::Json::toJson](std-json.md#api-0) | `Result<String,std::core::Error> toJson()` |
 | [std::json::JsonValue::asBool](std-json.md#api-18) | `Option<bool> asBool()` |
-| [std::json::JsonValue::asBytes](std-json.md#api-20) | `Option<std::lang::List<uint8>> asBytes()` |
-| [std::json::JsonValue::asDateTime](std-json.md#api-21) | `Option<std::lang::String> asDateTime()` |
+| [std::json::JsonValue::asBytes](std-json.md#api-20) | `Option<std::core::List<uint8>> asBytes()` |
+| [std::json::JsonValue::asDateTime](std-json.md#api-21) | `Option<std::core::String> asDateTime()` |
 | [std::json::JsonValue::asFloat64](std-json.md#api-17) | `Option<float64> asFloat64()` |
 | [std::json::JsonValue::asInt](std-json.md#api-16) | `Option<int64> asInt()` |
-| [std::json::JsonValue::asString](std-json.md#api-19) | `Option<std::lang::String> asString()` |
+| [std::json::JsonValue::asString](std-json.md#api-19) | `Option<std::core::String> asString()` |
 | [std::json::JsonValue::at](std-json.md#api-24) | `Option<JsonValue> at(int64 index)` |
 | [std::json::JsonValue::close](std-json.md#api-4) | `bool close()` |
-| [std::json::JsonValue::dump](std-json.md#api-28) | `std::lang::String dump()` |
-| [std::json::JsonValue::find](std-json.md#api-22) | `Option<JsonValue> find(std::lang::String key)` |
-| [std::json::JsonValue::findBytes](std-json.md#api-23) | `Option<JsonValue> findBytes(std::lang::List<uint8> key)` |
+| [std::json::JsonValue::dump](std-json.md#api-28) | `std::core::String dump()` |
+| [std::json::JsonValue::find](std-json.md#api-22) | `Option<JsonValue> find(std::core::String key)` |
+| [std::json::JsonValue::findBytes](std-json.md#api-23) | `Option<JsonValue> findBytes(std::core::List<uint8> key)` |
 | [std::json::JsonValue::isArray](std-json.md#api-11) | `bool isArray()` |
 | [std::json::JsonValue::isBool](std-json.md#api-7) | `bool isBool()` |
 | [std::json::JsonValue::isDateTime](std-json.md#api-14) | `bool isDateTime()` |
@@ -480,386 +797,92 @@
 | [std::json::JsonValue::isTable](std-json.md#api-13) | `bool isTable()` |
 | [std::json::JsonValue::isValid](std-json.md#api-3) | `bool isValid()` |
 | [std::json::JsonValue::iterator](std-json.md#api-25) | `Option<JsonValue> iterator(int64 index)` |
-| [std::json::JsonValue::keyAt](std-json.md#api-26) | `Option<std::lang::String> keyAt(int64 index)` |
-| [std::json::JsonValue::keyBytesAt](std-json.md#api-27) | `Option<std::lang::List<uint8>> keyBytesAt(int64 index)` |
+| [std::json::JsonValue::keyAt](std-json.md#api-26) | `Option<std::core::String> keyAt(int64 index)` |
+| [std::json::JsonValue::keyBytesAt](std-json.md#api-27) | `Option<std::core::List<uint8>> keyBytesAt(int64 index)` |
 | [std::json::JsonValue::kind](std-json.md#api-5) | `int64 kind()` |
 | [std::json::JsonValue::len](std-json.md#api-15) | `int64 len()` |
-| [std::json::deserialize](std-json.md#api-2) | `Result<T,std::lang::Error> deserialize<T>(String text)` |
-| [std::json::parse](std-json.md#api-29) | `Result<JsonValue, std::lang::Error> parse(std::lang::String text)` |
-| [std::json::serialize](std-json.md#api-1) | `Result<String,std::lang::Error> serialize<T>(T const& value)` |
-| [std::lang::Add::leftAdd](std-lang.md#api-252) | `R leftAdd(T value)` |
-| [std::lang::And::leftBitAnd](std-lang.md#api-274) | `R leftBitAnd(T value)` |
-| [std::lang::Any::clear](std-lang.md#api-235) | `void clear()` |
-| [std::lang::Any::copy](std-lang.md#api-233) | `Any copy()` |
-| [std::lang::Any::getOptional](std-lang.md#api-239) | `Option<T mut&> getOptional()` |
-| [std::lang::Any::getReference](std-lang.md#api-238) | `T mut& getReference()` |
-| [std::lang::Any::getValue](std-lang.md#api-237) | `T getValue()` |
-| [std::lang::Any::isEmpty](std-lang.md#api-234) | `bool isEmpty()` |
-| [std::lang::Any::set](std-lang.md#api-236) | `int64 set(T value)` |
-| [std::lang::BarePtr::castTo](std-lang.md#api-296) | `unsafe BarePtr<U> castTo<U>()` |
-| [std::lang::BarePtr::leftAdd](std-lang.md#api-132) | `BarePtr<T> leftAdd(int64 elements)` |
-| [std::lang::BarePtr::leftSub](std-lang.md#api-134) | `BarePtr<T> leftSub(int64 elements)` |
-| [std::lang::BarePtr::leftSub](std-lang.md#api-135) | `int64 leftSub(BarePtr<T> other)` |
-| [std::lang::BarePtr::rightAdd](std-lang.md#api-133) | `BarePtr<T> rightAdd(int64 elements)` |
-| [std::lang::BigDecimal::abs](std-lang.md#api-226) | `BigDecimal abs()` |
-| [std::lang::BigDecimal::ceil](std-lang.md#api-229) | `BigInteger ceil()` |
-| [std::lang::BigDecimal::copy](std-lang.md#api-223) | `BigDecimal copy()` |
-| [std::lang::BigDecimal::floor](std-lang.md#api-228) | `BigInteger floor()` |
-| [std::lang::BigDecimal::isInteger](std-lang.md#api-227) | `bool isInteger()` |
-| [std::lang::BigDecimal::pow](std-lang.md#api-225) | `BigDecimal pow(int64 exponent)` |
-| [std::lang::BigDecimal::root](std-lang.md#api-232) | `BigDecimal root(int64 k, int64 digits)` |
-| [std::lang::BigDecimal::setPrecision](std-lang.md#api-224) | `int64 setPrecision(int64 digits)` |
-| [std::lang::BigDecimal::sqrt](std-lang.md#api-231) | `BigDecimal sqrt(int64 digits)` |
-| [std::lang::BigDecimal::str](std-lang.md#api-222) | `String str()` |
-| [std::lang::BigDecimal::trunc](std-lang.md#api-230) | `BigInteger trunc()` |
-| [std::lang::BigInteger::bitAnd](std-lang.md#api-217) | `BigInteger bitAnd(BigInteger other)` |
-| [std::lang::BigInteger::bitLength](std-lang.md#api-216) | `int64 bitLength()` |
-| [std::lang::BigInteger::bitOr](std-lang.md#api-218) | `BigInteger bitOr(BigInteger other)` |
-| [std::lang::BigInteger::bitXor](std-lang.md#api-219) | `BigInteger bitXor(BigInteger other)` |
-| [std::lang::BigInteger::copy](std-lang.md#api-207) | `BigInteger copy()` |
-| [std::lang::BigInteger::gcd](std-lang.md#api-210) | `BigInteger gcd(BigInteger other)` |
-| [std::lang::BigInteger::iroot](std-lang.md#api-221) | `BigInteger iroot(int64 k)` |
-| [std::lang::BigInteger::isProbablePrime](std-lang.md#api-214) | `bool isProbablePrime(int64 rounds)` |
-| [std::lang::BigInteger::lcm](std-lang.md#api-211) | `BigInteger lcm(BigInteger other)` |
-| [std::lang::BigInteger::mod](std-lang.md#api-212) | `BigInteger mod(BigInteger modulus)` |
-| [std::lang::BigInteger::modInverse](std-lang.md#api-213) | `BigInteger modInverse(BigInteger modulus)` |
-| [std::lang::BigInteger::nextProbablePrime](std-lang.md#api-215) | `BigInteger nextProbablePrime()` |
-| [std::lang::BigInteger::pow](std-lang.md#api-208) | `BigInteger pow(int64 exponent)` |
-| [std::lang::BigInteger::powmod](std-lang.md#api-209) | `BigInteger powmod(BigInteger exponent, BigInteger modulus)` |
-| [std::lang::BigInteger::str](std-lang.md#api-206) | `String str()` |
-| [std::lang::BigInteger::strRadix](std-lang.md#api-220) | `String strRadix(int64 base)` |
-| [std::lang::BitNot::bitNot](std-lang.md#api-285) | `R bitNot(T value)` |
-| [std::lang::Closeable::close](std-lang.md#api-156) | `void close()` |
-| [std::lang::Copy::copy](std-lang.md#api-288) | `T copy()` |
-| [std::lang::Debug::debug](std-lang.md#api-55) | `String debug()` |
-| [std::lang::Divide::leftDiv](std-lang.md#api-258) | `R leftDiv(T value)` |
-| [std::lang::Drop::drop](std-lang.md#api-155) | `void drop()` |
-| [std::lang::Equal::leftEqual](std-lang.md#api-262) | `R leftEqual(T value)` |
-| [std::lang::Error::toString](std-lang.md#api-56) | `String toString()` |
-| [std::lang::ExplicitConvert::explicitConvert](std-lang.md#api-289) | `T explicitConvert()` |
-| [std::lang::File::print](std-lang.md#api-59) | `int64 print(String text)` |
-| [std::lang::File::println](std-lang.md#api-60) | `int64 println(String text = "")` |
-| [std::lang::FromResidual::fromResidual](std-lang.md#api-98) | `static F fromResidual(R residual)` |
-| [std::lang::Greater::leftGreater](std-lang.md#api-270) | `R leftGreater(T value)` |
-| [std::lang::GreaterOrEqual::leftGreaterEqual](std-lang.md#api-272) | `R leftGreaterEqual(T value)` |
-| [std::lang::Hash::hash](std-lang.md#api-287) | `uint64 hash(T value)` |
-| [std::lang::ImplicitConvert::implicitConvert](std-lang.md#api-290) | `T implicitConvert()` |
-| [std::lang::Index::index](std-lang.md#api-291) | `R index(T key)` |
-| [std::lang::Iterator::iterator](std-lang.md#api-292) | `Option<R> iterator(int64 index)` |
-| [std::lang::Less::leftLess](std-lang.md#api-266) | `R leftLess(T value)` |
-| [std::lang::LessOrEqual::leftLessEqual](std-lang.md#api-268) | `R leftLessEqual(T value)` |
-| [std::lang::List::at](std-lang.md#api-181) | `T at(int64 index)` |
-| [std::lang::List::clear](std-lang.md#api-187) | `int64 clear()` |
-| [std::lang::List::contains](std-lang.md#api-185) | `bool contains(T value)` |
-| [std::lang::List::copy](std-lang.md#api-178) | `List<T> copy()` |
-| [std::lang::List::has](std-lang.md#api-186) | `bool has(T value)` |
-| [std::lang::List::indexOf](std-lang.md#api-184) | `int64 indexOf(T value)` |
-| [std::lang::List::insert](std-lang.md#api-180) | `int64 insert(int64 index, T value)` |
-| [std::lang::List::len](std-lang.md#api-188) | `int64 len()` |
-| [std::lang::List::pop](std-lang.md#api-182) | `T pop()` |
-| [std::lang::List::push](std-lang.md#api-179) | `int64 push(T value)` |
-| [std::lang::List::remove](std-lang.md#api-183) | `int64 remove(int64 index)` |
-| [std::lang::Map::clear](std-lang.md#api-204) | `int64 clear()` |
-| [std::lang::Map::contains](std-lang.md#api-200) | `int64 contains(K key)` |
-| [std::lang::Map::copy](std-lang.md#api-197) | `Map<K,V> copy()` |
-| [std::lang::Map::has](std-lang.md#api-199) | `int64 has(K key)` |
-| [std::lang::Map::keyAt](std-lang.md#api-202) | `K keyAt(int64 index)` |
-| [std::lang::Map::len](std-lang.md#api-205) | `int64 len()` |
-| [std::lang::Map::put](std-lang.md#api-198) | `int64 put(K key,V value)` |
-| [std::lang::Map::remove](std-lang.md#api-201) | `int64 remove(K key)` |
-| [std::lang::Map::valAt](std-lang.md#api-203) | `V valAt(int64 index)` |
-| [std::lang::MessageError::from](std-lang.md#api-58) | `static MessageError from(String text)` |
-| [std::lang::MessageError::toString](std-lang.md#api-57) | `String toString()` |
-| [std::lang::Modulo::leftMod](std-lang.md#api-260) | `R leftMod(T value)` |
-| [std::lang::Multiply::leftMul](std-lang.md#api-256) | `R leftMul(T value)` |
-| [std::lang::Negate::negate](std-lang.md#api-284) | `R negate(T value)` |
-| [std::lang::NextValue::nextValue](std-lang.md#api-124) | `Option<T> nextValue(T end, bool inclusive)` |
-| [std::lang::NotEqual::leftNotEqual](std-lang.md#api-264) | `R leftNotEqual(T value)` |
-| [std::lang::Option::andThen](std-lang.md#api-109) | `Option<T> andThen(Option<T> fn(T) mapper)` |
-| [std::lang::Option::branch](std-lang.md#api-99) | `TryBranch<T, NoneResidual> branch()` |
-| [std::lang::Option::expect](std-lang.md#api-107) | `T expect(std::lang::String message)` |
-| [std::lang::Option::fromResidual](std-lang.md#api-101) | `static Option<T> fromResidual(NoneResidual residual)` |
-| [std::lang::Option::intoBranch](std-lang.md#api-100) | `TryBranch<T, NoneResidual> intoBranch()` |
-| [std::lang::Option::isNone](std-lang.md#api-103) | `bool isNone()` |
-| [std::lang::Option::isValue](std-lang.md#api-102) | `bool isValue()` |
-| [std::lang::Option::okOr](std-lang.md#api-294) | `Result<T,E> okOr<E>(E error)` |
-| [std::lang::Option::okOrElse](std-lang.md#api-295) | `Result<T,E> okOrElse<E>(E fn() factory)` |
-| [std::lang::Option::take](std-lang.md#api-104) | `T take()` |
-| [std::lang::Option::transform](std-lang.md#api-108) | `Option<T> transform(T fn(T) mapper)` |
-| [std::lang::Option::unwrap](std-lang.md#api-105) | `T unwrap()` |
-| [std::lang::Option::unwrapOr](std-lang.md#api-106) | `T unwrapOr(T fallback)` |
-| [std::lang::Or::leftBitOr](std-lang.md#api-276) | `R leftBitOr(T value)` |
-| [std::lang::Pair::create](std-lang.md#api-126) | `static Pair<K, V> create((K, V) value)` |
-| [std::lang::Pair::create](std-lang.md#api-125) | `static Pair<K, V> create(K first, V second)` |
-| [std::lang::Pair::toTuple](std-lang.md#api-127) | `(K, V) toTuple()` |
-| [std::lang::Positive::positive](std-lang.md#api-286) | `R positive(T value)` |
-| [std::lang::RawStorage::allocate](std-lang.md#api-147) | `static RawStorage<T> allocate(int64 capacity)` |
-| [std::lang::RawStorage::capacity](std-lang.md#api-148) | `int64 capacity()` |
-| [std::lang::RawStorage::close](std-lang.md#api-151) | `void close()` |
-| [std::lang::RawStorage::isInitialized](std-lang.md#api-150) | `bool isInitialized(int64 index)` |
-| [std::lang::RawStorage::pointer](std-lang.md#api-149) | `RawPtr<T> pointer(int64 index)` |
-| [std::lang::Result::andThen](std-lang.md#api-123) | `Result<T, E> andThen(Result<T, E> fn(T) mapper)` |
-| [std::lang::Result::branch](std-lang.md#api-110) | `TryBranch<T, ErrorResidual<E>> branch()` |
-| [std::lang::Result::error](std-lang.md#api-121) | `E error()` |
-| [std::lang::Result::expect](std-lang.md#api-119) | `T expect(std::lang::String message)` |
-| [std::lang::Result::fromResidual](std-lang.md#api-112) | `static Result<T,E> fromResidual(ErrorResidual<E> residual)` |
-| [std::lang::Result::intoBranch](std-lang.md#api-111) | `TryBranch<T, ErrorResidual<E>> intoBranch()` |
-| [std::lang::Result::isErr](std-lang.md#api-115) | `bool isErr()` |
-| [std::lang::Result::isOk](std-lang.md#api-114) | `bool isOk()` |
-| [std::lang::Result::mapErr](std-lang.md#api-293) | `Result<T,F> mapErr<F>(F fn(E) mapper)` |
-| [std::lang::Result::ok](std-lang.md#api-113) | `Option<T> ok()` |
-| [std::lang::Result::take](std-lang.md#api-116) | `T take()` |
-| [std::lang::Result::takeError](std-lang.md#api-120) | `E takeError()` |
-| [std::lang::Result::transform](std-lang.md#api-122) | `Result<T, E> transform(T fn(T) mapper)` |
-| [std::lang::Result::unwrap](std-lang.md#api-117) | `T unwrap()` |
-| [std::lang::Result::unwrapOr](std-lang.md#api-118) | `T unwrapOr(T fallback)` |
-| [std::lang::RightAdd::rightAdd](std-lang.md#api-253) | `R rightAdd(T value)` |
-| [std::lang::RightAnd::rightBitAnd](std-lang.md#api-275) | `R rightBitAnd(T value)` |
-| [std::lang::RightDivide::rightDiv](std-lang.md#api-259) | `R rightDiv(T value)` |
-| [std::lang::RightEqual::rightEqual](std-lang.md#api-263) | `R rightEqual(T value)` |
-| [std::lang::RightGreater::rightGreater](std-lang.md#api-271) | `R rightGreater(T value)` |
-| [std::lang::RightGreaterOrEqual::rightGreaterEqual](std-lang.md#api-273) | `R rightGreaterEqual(T value)` |
-| [std::lang::RightLess::rightLess](std-lang.md#api-267) | `R rightLess(T value)` |
-| [std::lang::RightLessOrEqual::rightLessEqual](std-lang.md#api-269) | `R rightLessEqual(T value)` |
-| [std::lang::RightModulo::rightMod](std-lang.md#api-261) | `R rightMod(T value)` |
-| [std::lang::RightMultiply::rightMul](std-lang.md#api-257) | `R rightMul(T value)` |
-| [std::lang::RightNotEqual::rightNotEqual](std-lang.md#api-265) | `R rightNotEqual(T value)` |
-| [std::lang::RightOr::rightBitOr](std-lang.md#api-277) | `R rightBitOr(T value)` |
-| [std::lang::RightShiftLeft::rightShiftLeft](std-lang.md#api-281) | `R rightShiftLeft(T value)` |
-| [std::lang::RightShiftRight::rightShiftRight](std-lang.md#api-283) | `R rightShiftRight(T value)` |
-| [std::lang::RightSubtract::rightSub](std-lang.md#api-255) | `R rightSub(T value)` |
-| [std::lang::RightXor::rightBitXor](std-lang.md#api-279) | `R rightBitXor(T value)` |
-| [std::lang::Set::add](std-lang.md#api-190) | `int64 add(T value)` |
-| [std::lang::Set::at](std-lang.md#api-194) | `T at(int64 index)` |
-| [std::lang::Set::clear](std-lang.md#api-195) | `int64 clear()` |
-| [std::lang::Set::contains](std-lang.md#api-192) | `int64 contains(T value)` |
-| [std::lang::Set::copy](std-lang.md#api-189) | `Set<T> copy()` |
-| [std::lang::Set::has](std-lang.md#api-191) | `int64 has(T value)` |
-| [std::lang::Set::len](std-lang.md#api-196) | `int64 len()` |
-| [std::lang::Set::remove](std-lang.md#api-193) | `int64 remove(T value)` |
-| [std::lang::ShiftLeft::leftShiftLeft](std-lang.md#api-280) | `R leftShiftLeft(T value)` |
-| [std::lang::ShiftRight::leftShiftRight](std-lang.md#api-282) | `R leftShiftRight(T value)` |
-| [std::lang::String::append](std-lang.md#api-7) | `void append(String text)` |
-| [std::lang::String::byteAt](std-lang.md#api-24) | `Option<uint8> byteAt(int64 index)` |
-| [std::lang::String::byteLength](std-lang.md#api-3) | `int64 byteLength()` |
-| [std::lang::String::bytes](std-lang.md#api-51) | `List<uint8> bytes()` |
-| [std::lang::String::capacity](std-lang.md#api-4) | `int64 capacity()` |
-| [std::lang::String::charAt](std-lang.md#api-46) | `Option<String> charAt(int64 index)` |
-| [std::lang::String::charLength](std-lang.md#api-16) | `int64 charLength()` |
-| [std::lang::String::clear](std-lang.md#api-8) | `void clear()` |
-| [std::lang::String::compare](std-lang.md#api-23) | `int64 compare(String text)` |
-| [std::lang::String::concat](std-lang.md#api-53) | `String concat(String text)` |
-| [std::lang::String::contains](std-lang.md#api-19) | `bool contains(String text)` |
-| [std::lang::String::count](std-lang.md#api-22) | `int64 count(String text)` |
-| [std::lang::String::endsWith](std-lang.md#api-21) | `bool endsWith(String text)` |
-| [std::lang::String::indexOf](std-lang.md#api-17) | `int64 indexOf(String text, int64 start = 0)` |
-| [std::lang::String::insert](std-lang.md#api-43) | `String insert(int64 index, String text)` |
-| [std::lang::String::isAlnum](std-lang.md#api-14) | `bool isAlnum()` |
-| [std::lang::String::isAlpha](std-lang.md#api-13) | `bool isAlpha()` |
-| [std::lang::String::isAscii](std-lang.md#api-15) | `bool isAscii()` |
-| [std::lang::String::isBlank](std-lang.md#api-11) | `bool isBlank()` |
-| [std::lang::String::isDigit](std-lang.md#api-12) | `bool isDigit()` |
-| [std::lang::String::isEmpty](std-lang.md#api-10) | `bool isEmpty()` |
-| [std::lang::String::join](std-lang.md#api-52) | `String join(List<String> items)` |
-| [std::lang::String::lastIndexOf](std-lang.md#api-18) | `int64 lastIndexOf(String text, int64 start = 0 - 1)` |
-| [std::lang::String::left](std-lang.md#api-27) | `String left(int64 count)` |
-| [std::lang::String::length](std-lang.md#api-1) | `int64 length()` |
-| [std::lang::String::lines](std-lang.md#api-49) | `List<String> lines(bool keepEmpty = true)` |
-| [std::lang::String::maxCapacity](std-lang.md#api-5) | `int64 maxCapacity()` |
-| [std::lang::String::padEnd](std-lang.md#api-40) | `String padEnd(int64 length, String fill = " ")` |
-| [std::lang::String::padStart](std-lang.md#api-39) | `String padStart(int64 length, String fill = " ")` |
-| [std::lang::String::prepend](std-lang.md#api-54) | `String prepend(String text)` |
-| [std::lang::String::remove](std-lang.md#api-44) | `String remove(int64 start, int64 count = 0 - 1)` |
-| [std::lang::String::removePrefix](std-lang.md#api-41) | `String removePrefix(String prefix)` |
-| [std::lang::String::removeSuffix](std-lang.md#api-42) | `String removeSuffix(String suffix)` |
-| [std::lang::String::repeat](std-lang.md#api-37) | `String repeat(int64 count)` |
-| [std::lang::String::replace](std-lang.md#api-36) | `String replace(String before, String after)` |
-| [std::lang::String::replaceAll](std-lang.md#api-35) | `String replaceAll(String before, String after)` |
-| [std::lang::String::replaceFirst](std-lang.md#api-34) | `String replaceFirst(String before, String after)` |
-| [std::lang::String::reserve](std-lang.md#api-6) | `void reserve(int64 bytes)` |
-| [std::lang::String::reverse](std-lang.md#api-38) | `String reverse()` |
-| [std::lang::String::right](std-lang.md#api-28) | `String right(int64 count)` |
-| [std::lang::String::size](std-lang.md#api-2) | `int64 size()` |
-| [std::lang::String::slice](std-lang.md#api-26) | `String slice(int64 start, int64 end)` |
-| [std::lang::String::split](std-lang.md#api-47) | `List<String> split(String separator, bool keepEmpty = true)` |
-| [std::lang::String::splitWhitespace](std-lang.md#api-48) | `List<String> splitWhitespace()` |
-| [std::lang::String::startsWith](std-lang.md#api-20) | `bool startsWith(String text)` |
-| [std::lang::String::substring](std-lang.md#api-25) | `String substring(int64 start, int64 count = 0 - 1)` |
-| [std::lang::String::toLower](std-lang.md#api-32) | `String toLower()` |
-| [std::lang::String::toUpper](std-lang.md#api-33) | `String toUpper()` |
-| [std::lang::String::trim](std-lang.md#api-29) | `String trim()` |
-| [std::lang::String::trimEnd](std-lang.md#api-31) | `String trimEnd()` |
-| [std::lang::String::trimStart](std-lang.md#api-30) | `String trimStart()` |
-| [std::lang::String::truncate](std-lang.md#api-9) | `void truncate(int64 bytes)` |
-| [std::lang::String::unicodeChars](std-lang.md#api-50) | `List<String> unicodeChars()` |
-| [std::lang::String::utf8Substring](std-lang.md#api-45) | `String utf8Substring(int64 start, int64 count = 0 - 1)` |
-| [std::lang::Subtract::leftSub](std-lang.md#api-254) | `R leftSub(T value)` |
-| [std::lang::Try::branch](std-lang.md#api-96) | `TryBranch<T, R> branch()` |
-| [std::lang::TryMove::intoBranch](std-lang.md#api-97) | `TryBranch<T, R> intoBranch()` |
-| [std::lang::Xor::leftBitXor](std-lang.md#api-278) | `R leftBitXor(T value)` |
-| [std::lang::add](std-lang.md#api-246) | `R add(T left,U right)` |
-| [std::lang::assert](std-lang.md#api-92) | `void assert(bool condition)` |
-| [std::lang::assert](std-lang.md#api-94) | `void assert(bool condition, int64 line)` |
-| [std::lang::assert](std-lang.md#api-93) | `void assert(bool condition, std::lang::String message)` |
-| [std::lang::assert](std-lang.md#api-95) | `void assert(bool condition, std::lang::String message, int64 line)` |
-| [std::lang::barePointer](std-lang.md#api-136) | `unsafe BarePtr<T> barePointer<T>(RawPtr<T> pointer)` |
-| [std::lang::borrowAt](std-lang.md#api-143) | `unsafe T mut& borrowAt<T>(RawPtr<T> pointer)` |
-| [std::lang::bytesToFloat32](std-lang.md#api-71) | `Option<float32> bytesToFloat32(std::lang::List<uint8> bytes)` |
-| [std::lang::bytesToFloat32](std-lang.md#api-70) | `Option<float32> bytesToFloat32(std::lang::List<uint8> bytes, bool bigEndian)` |
-| [std::lang::bytesToFloat32](std-lang.md#api-75) | `Option<float32> bytesToFloat32(uint8 bytes[])` |
-| [std::lang::bytesToFloat32](std-lang.md#api-74) | `Option<float32> bytesToFloat32(uint8 bytes[], bool bigEndian)` |
-| [std::lang::bytesToFloat32](std-lang.md#api-73) | `Option<float32> bytesToFloat32(uint8 const& bytes, int64 count)` |
-| [std::lang::bytesToFloat32](std-lang.md#api-72) | `Option<float32> bytesToFloat32(uint8 const& bytes, int64 count, bool bigEndian)` |
-| [std::lang::bytesToFloat64](std-lang.md#api-83) | `Option<float64> bytesToFloat64(std::lang::List<uint8> bytes)` |
-| [std::lang::bytesToFloat64](std-lang.md#api-82) | `Option<float64> bytesToFloat64(std::lang::List<uint8> bytes, bool bigEndian)` |
-| [std::lang::bytesToFloat64](std-lang.md#api-87) | `Option<float64> bytesToFloat64(uint8 bytes[])` |
-| [std::lang::bytesToFloat64](std-lang.md#api-86) | `Option<float64> bytesToFloat64(uint8 bytes[], bool bigEndian)` |
-| [std::lang::bytesToFloat64](std-lang.md#api-85) | `Option<float64> bytesToFloat64(uint8 const& bytes, int64 count)` |
-| [std::lang::bytesToFloat64](std-lang.md#api-84) | `Option<float64> bytesToFloat64(uint8 const& bytes, int64 count, bool bigEndian)` |
-| [std::lang::dereference](std-lang.md#api-138) | `unsafe T mut& dereference<T>(BarePtr<T> pointer)` |
-| [std::lang::div](std-lang.md#api-249) | `R div(T left,U right)` |
-| [std::lang::dropAt](std-lang.md#api-145) | `unsafe void dropAt<T>(RawPtr<T> pointer)` |
-| [std::lang::eprint](std-lang.md#api-159) | `int64 eprint(String format, Any args...)` |
-| [std::lang::eprintln](std-lang.md#api-160) | `int64 eprintln(String format, Any args...)` |
-| [std::lang::eq](std-lang.md#api-240) | `bool eq(T left,T right)` |
-| [std::lang::float32ToBytes](std-lang.md#api-77) | `bool float32ToBytes(float32 value, uint8 mut& bytes, int64 count)` |
-| [std::lang::float32ToBytes](std-lang.md#api-76) | `bool float32ToBytes(float32 value, uint8 mut& bytes, int64 count, bool bigEndian)` |
-| [std::lang::float32ToBytes](std-lang.md#api-79) | `bool float32ToBytes(float32 value, uint8[] mut& bytes)` |
-| [std::lang::float32ToBytes](std-lang.md#api-78) | `bool float32ToBytes(float32 value, uint8[] mut& bytes, bool bigEndian)` |
-| [std::lang::float32ToBytes](std-lang.md#api-69) | `std::lang::List<uint8> float32ToBytes(float32 value)` |
-| [std::lang::float32ToBytes](std-lang.md#api-68) | `std::lang::List<uint8> float32ToBytes(float32 value, bool bigEndian)` |
-| [std::lang::float64ToBytes](std-lang.md#api-89) | `bool float64ToBytes(float64 value, uint8 mut& bytes, int64 count)` |
-| [std::lang::float64ToBytes](std-lang.md#api-88) | `bool float64ToBytes(float64 value, uint8 mut& bytes, int64 count, bool bigEndian)` |
-| [std::lang::float64ToBytes](std-lang.md#api-91) | `bool float64ToBytes(float64 value, uint8[] mut& bytes)` |
-| [std::lang::float64ToBytes](std-lang.md#api-90) | `bool float64ToBytes(float64 value, uint8[] mut& bytes, bool bigEndian)` |
-| [std::lang::float64ToBytes](std-lang.md#api-81) | `std::lang::List<uint8> float64ToBytes(float64 value)` |
-| [std::lang::float64ToBytes](std-lang.md#api-80) | `std::lang::List<uint8> float64ToBytes(float64 value, bool bigEndian)` |
-| [std::lang::format](std-lang.md#api-161) | `String format(String format, Any args...)` |
-| [std::lang::ge](std-lang.md#api-245) | `bool ge(T left,T right)` |
-| [std::lang::gt](std-lang.md#api-244) | `bool gt(T left,T right)` |
-| [std::lang::index](std-lang.md#api-251) | `T index(T const& data,int64 index)` |
-| [std::lang::initAt](std-lang.md#api-141) | `unsafe void initAt<T>(RawPtr<T> pointer, T value)` |
-| [std::lang::inputBigDecimal](std-lang.md#api-171) | `BigDecimal inputBigDecimal()` |
-| [std::lang::inputBigInteger](std-lang.md#api-170) | `BigInteger inputBigInteger()` |
-| [std::lang::inputBool](std-lang.md#api-168) | `bool inputBool()` |
-| [std::lang::inputChar](std-lang.md#api-169) | `char inputChar()` |
-| [std::lang::inputFloat](std-lang.md#api-167) | `float64 inputFloat()` |
-| [std::lang::inputInt](std-lang.md#api-165) | `int64 inputInt()` |
-| [std::lang::inputLine](std-lang.md#api-164) | `String inputLine()` |
-| [std::lang::inputUInt](std-lang.md#api-166) | `uint64 inputUInt()` |
-| [std::lang::le](std-lang.md#api-243) | `bool le(T left,T right)` |
-| [std::lang::len](std-lang.md#api-173) | `int64 len(Any value)` |
-| [std::lang::lt](std-lang.md#api-242) | `bool lt(T left,T right)` |
-| [std::lang::memcpy](std-lang.md#api-176) | `int64 memcpy(char mut& destination, char const& source, int64 bytes)` |
-| [std::lang::memcpy](std-lang.md#api-139) | `unsafe void memcpy<T,U>(BarePtr<T> destination, BarePtr<U> source, int64 bytes)` |
-| [std::lang::memset](std-lang.md#api-177) | `int64 memset(char mut& destination, int64 value, int64 bytes)` |
-| [std::lang::memset](std-lang.md#api-140) | `unsafe void memset<T>(BarePtr<T> destination, uint8 value, int64 bytes)` |
-| [std::lang::mod](std-lang.md#api-250) | `R mod(T left,U right)` |
-| [std::lang::mul](std-lang.md#api-248) | `R mul(T left,U right)` |
-| [std::lang::ne](std-lang.md#api-241) | `bool ne(T left,T right)` |
-| [std::lang::panic](std-lang.md#api-172) | `int64 panic(String message)` |
-| [std::lang::pause](std-lang.md#api-163) | `int64 pause()` |
-| [std::lang::pointerFromAddress](std-lang.md#api-137) | `unsafe BarePtr<T> pointerFromAddress<T>(int64 address)` |
-| [std::lang::print](std-lang.md#api-157) | `int64 print(String format, Any args...)` |
-| [std::lang::println](std-lang.md#api-158) | `int64 println(String format, Any args...)` |
-| [std::lang::putChar](std-lang.md#api-162) | `int64 putChar(char value)` |
-| [std::lang::range](std-lang.md#api-152) | `__Range range(int64 start, int64 stop)` |
-| [std::lang::range](std-lang.md#api-153) | `__Range range(int64 start, int64 stop, int64 step)` |
-| [std::lang::rangeEq](std-lang.md#api-154) | `__Interval_int64 rangeEq(int64 start, int64 stop)` |
-| [std::lang::rawSize](std-lang.md#api-0) | `int64 rawSize<T>()` |
-| [std::lang::readAt](std-lang.md#api-142) | `unsafe T readAt<T>(RawPtr<T> pointer)` |
-| [std::lang::readLine](std-lang.md#api-61) | `String readLine()` |
-| [std::lang::readLines](std-lang.md#api-62) | `String readLines(int32 N)` |
-| [std::lang::readLines](std-lang.md#api-63) | `String readLines(int64 N)` |
-| [std::lang::relocateNonOverlapping](std-lang.md#api-146) | `unsafe void relocateNonOverlapping<T>(RawPtr<T> destination, RawPtr<T> source, int64 count)` |
-| [std::lang::stringBytes](std-lang.md#api-131) | `List<uint8> stringBytes(String text)` |
-| [std::lang::sub](std-lang.md#api-247) | `R sub(T left,U right)` |
-| [std::lang::takeAt](std-lang.md#api-144) | `unsafe T takeAt<T>(RawPtr<T> pointer)` |
-| [std::lang::toInt32](std-lang.md#api-65) | `Option<int32> toInt32(float32 value)` |
-| [std::lang::toInt32](std-lang.md#api-64) | `Option<int32> toInt32(float64 value)` |
-| [std::lang::toInt64](std-lang.md#api-67) | `int64 toInt64(float32 value)` |
-| [std::lang::toInt64](std-lang.md#api-66) | `int64 toInt64(float64 value)` |
-| [std::lang::toOptional](std-lang.md#api-175) | `Option<T mut&> toOptional<T>(T mut& value)` |
-| [std::lang::toReference](std-lang.md#api-174) | `T mut& toReference<T>(Option<T mut&> value)` |
-| [std::lang::tryGet](std-lang.md#api-128) | `Option<T> tryGet<T>(Any const& value)` |
-| [std::lang::tryGetMut](std-lang.md#api-130) | `Option<T mut&> tryGetMut<T>(Any mut& value)` |
-| [std::lang::tryGetReference](std-lang.md#api-129) | `Option<T const&> tryGetReference<T>(Any const& value)` |
-| [std::linalg::Matrix::add](std-linalg.md#api-39) | `Matrix<T> add(Matrix<T> other)` |
-| [std::linalg::Matrix::apply](std-linalg.md#api-43) | `Vector<T> apply(Vector<T> vector)` |
-| [std::linalg::Matrix::at](std-linalg.md#api-36) | `T at(int64 row, int64 col)` |
-| [std::linalg::Matrix::column](std-linalg.md#api-32) | `Vector<T> column(int64 key)` |
-| [std::linalg::Matrix::drop](std-linalg.md#api-27) | `void drop()` |
-| [std::linalg::Matrix::fromArray](std-linalg.md#api-29) | `static Matrix<T> fromArray(T const& data, int64 count, int64 rows, int64 cols)` |
-| [std::linalg::Matrix::fromArray](std-linalg.md#api-30) | `static Matrix<T> fromArray(T data[], int64 rows, int64 cols)` |
-| [std::linalg::Matrix::identity](std-linalg.md#api-35) | `static Matrix<T> identity(int64 n)` |
-| [std::linalg::Matrix::index](std-linalg.md#api-33) | `Vector<T> index(int64 key)` |
-| [std::linalg::Matrix::iterator](std-linalg.md#api-34) | `Option<Vector<T>> iterator(int64 position)` |
-| [std::linalg::Matrix::leftAdd](std-linalg.md#api-45) | `Matrix<T> leftAdd(Matrix<T> right)` |
-| [std::linalg::Matrix::leftMul](std-linalg.md#api-47) | `Matrix<T> leftMul(Matrix<T> right)` |
-| [std::linalg::Matrix::leftMul](std-linalg.md#api-49) | `Matrix<T> leftMul(T right)` |
-| [std::linalg::Matrix::leftMul](std-linalg.md#api-48) | `Vector<T> leftMul(Vector<T> right)` |
-| [std::linalg::Matrix::leftSub](std-linalg.md#api-46) | `Matrix<T> leftSub(Matrix<T> right)` |
-| [std::linalg::Matrix::multiply](std-linalg.md#api-42) | `Matrix<T> multiply(Matrix<T> other)` |
-| [std::linalg::Matrix::scale](std-linalg.md#api-41) | `Matrix<T> scale(T factor)` |
-| [std::linalg::Matrix::set](std-linalg.md#api-37) | `void set(int64 row, int64 col, T value)` |
-| [std::linalg::Matrix::solve](std-linalg.md#api-44) | `Vector<T> solve(Vector<T> rhs)` |
-| [std::linalg::Matrix::subtract](std-linalg.md#api-40) | `Matrix<T> subtract(Matrix<T> other)` |
-| [std::linalg::Matrix::toArray](std-linalg.md#api-31) | `T[] toArray()` |
-| [std::linalg::Matrix::transpose](std-linalg.md#api-38) | `Matrix<T> transpose()` |
-| [std::linalg::Matrix::zeros](std-linalg.md#api-28) | `static Matrix<T> zeros(int64 rows, int64 cols)` |
-| [std::linalg::ScalarArray::at](std-linalg.md#api-2) | `T at(int64 index)` |
-| [std::linalg::ScalarArray::clear](std-linalg.md#api-1) | `void clear()` |
-| [std::linalg::ScalarArray::copy](std-linalg.md#api-6) | `ScalarArray<T> copy()` |
-| [std::linalg::ScalarArray::index](std-linalg.md#api-3) | `T index(int64 key)` |
-| [std::linalg::ScalarArray::iterator](std-linalg.md#api-7) | `Option<T> iterator(int64 position)` |
-| [std::linalg::ScalarArray::len](std-linalg.md#api-0) | `int64 len()` |
-| [std::linalg::ScalarArray::push](std-linalg.md#api-5) | `void push(T value)` |
-| [std::linalg::ScalarArray::set](std-linalg.md#api-4) | `void set(int64 index, T value)` |
-| [std::linalg::Vector::add](std-linalg.md#api-21) | `Vector<T> add(Vector<T> other)` |
-| [std::linalg::Vector::at](std-linalg.md#api-16) | `T at(int64 i)` |
-| [std::linalg::Vector::dot](std-linalg.md#api-18) | `T dot(Vector<T> other)` |
-| [std::linalg::Vector::drop](std-linalg.md#api-8) | `void drop()` |
-| [std::linalg::Vector::fromArray](std-linalg.md#api-10) | `static Vector<T> fromArray(T const& data, int64 count)` |
-| [std::linalg::Vector::fromArray](std-linalg.md#api-11) | `static Vector<T> fromArray(T data[])` |
-| [std::linalg::Vector::index](std-linalg.md#api-13) | `T index(int64 key)` |
-| [std::linalg::Vector::iterator](std-linalg.md#api-14) | `Option<T> iterator(int64 position)` |
-| [std::linalg::Vector::leftAdd](std-linalg.md#api-24) | `Vector<T> leftAdd(Vector<T> right)` |
-| [std::linalg::Vector::leftMul](std-linalg.md#api-26) | `Vector<T> leftMul(T right)` |
-| [std::linalg::Vector::leftSub](std-linalg.md#api-25) | `Vector<T> leftSub(Vector<T> right)` |
-| [std::linalg::Vector::len](std-linalg.md#api-15) | `int64 len()` |
-| [std::linalg::Vector::norm](std-linalg.md#api-19) | `float64 norm()` |
-| [std::linalg::Vector::normalized](std-linalg.md#api-20) | `Vector<T> normalized()` |
-| [std::linalg::Vector::scale](std-linalg.md#api-23) | `Vector<T> scale(T amount)` |
-| [std::linalg::Vector::set](std-linalg.md#api-17) | `void set(int64 i, T value)` |
-| [std::linalg::Vector::subtract](std-linalg.md#api-22) | `Vector<T> subtract(Vector<T> other)` |
-| [std::linalg::Vector::toArray](std-linalg.md#api-12) | `T[] toArray()` |
-| [std::linalg::Vector::zeros](std-linalg.md#api-9) | `static Vector<T> zeros(int64 n)` |
-| [std::linalg::diagonalize2](std-linalg.md#api-55) | `JordanDecomposition diagonalize2(Matrix<float64> input)` |
-| [std::linalg::jordan2](std-linalg.md#api-54) | `JordanDecomposition jordan2(Matrix<float64> input)` |
-| [std::linalg::luDecompose](std-linalg.md#api-50) | `LuFactorization luDecompose(Matrix<float64> input)` |
-| [std::linalg::lurDecompose](std-linalg.md#api-51) | `LuFactorization lurDecompose(Matrix<float64> input)` |
-| [std::linalg::svd](std-linalg.md#api-53) | `SingularValueDecomposition svd(Matrix<float64> input)` |
-| [std::linalg::symmetricEigen](std-linalg.md#api-52) | `EigenDecomposition symmetricEigen(Matrix<float64> input)` |
-| [std::linkedlist::LinkedList::back](std-linkedlist.md#api-15) | `Option<int64> back()` |
-| [std::linkedlist::LinkedList::clear](std-linkedlist.md#api-19) | `void clear()` |
-| [std::linkedlist::LinkedList::contains](std-linkedlist.md#api-13) | `bool contains(int64 value)` |
-| [std::linkedlist::LinkedList::copy](std-linkedlist.md#api-1) | `LinkedList copy()` |
-| [std::linkedlist::LinkedList::create](std-linkedlist.md#api-0) | `static LinkedList create()` |
-| [std::linkedlist::LinkedList::find](std-linkedlist.md#api-12) | `int64 find(int64 value)` |
-| [std::linkedlist::LinkedList::fromArray](std-linkedlist.md#api-11) | `static LinkedList fromArray(List<int64> items)` |
-| [std::linkedlist::LinkedList::front](std-linkedlist.md#api-14) | `Option<int64> front()` |
-| [std::linkedlist::LinkedList::insertAfter](std-linkedlist.md#api-5) | `int64 insertAfter(int64 cursor, int64 value)` |
-| [std::linkedlist::LinkedList::insertBefore](std-linkedlist.md#api-4) | `int64 insertBefore(int64 cursor, int64 value)` |
-| [std::linkedlist::LinkedList::isEmpty](std-linkedlist.md#api-17) | `bool isEmpty()` |
-| [std::linkedlist::LinkedList::iterator](std-linkedlist.md#api-18) | `Option<int64> iterator(int64 index)` |
-| [std::linkedlist::LinkedList::len](std-linkedlist.md#api-16) | `int64 len()` |
-| [std::linkedlist::LinkedList::popBack](std-linkedlist.md#api-8) | `Option<int64> popBack()` |
-| [std::linkedlist::LinkedList::popFront](std-linkedlist.md#api-7) | `Option<int64> popFront()` |
-| [std::linkedlist::LinkedList::pushBack](std-linkedlist.md#api-3) | `int64 pushBack(int64 value)` |
-| [std::linkedlist::LinkedList::pushFront](std-linkedlist.md#api-2) | `int64 pushFront(int64 value)` |
-| [std::linkedlist::LinkedList::removeAt](std-linkedlist.md#api-6) | `Option<int64> removeAt(int64 cursor)` |
-| [std::linkedlist::LinkedList::reverse](std-linkedlist.md#api-9) | `void reverse()` |
-| [std::linkedlist::LinkedList::toArray](std-linkedlist.md#api-10) | `List<int64> toArray()` |
+| [std::json::deserialize](std-json.md#api-2) | `Result<T,std::core::Error> deserialize<T>(String text)` |
+| [std::json::parse](std-json.md#api-29) | `Result<JsonValue, std::core::Error> parse(std::core::String text)` |
+| [std::json::serialize](std-json.md#api-1) | `Result<String,std::core::Error> serialize<T>(T const& value)` |
+| [std::linear_algebra::Matrix::add](std-linear_algebra.md#api-39) | `Matrix<T> add(Matrix<T> other)` |
+| [std::linear_algebra::Matrix::apply](std-linear_algebra.md#api-43) | `Vector<T> apply(Vector<T> vector)` |
+| [std::linear_algebra::Matrix::at](std-linear_algebra.md#api-36) | `T at(int64 row, int64 col)` |
+| [std::linear_algebra::Matrix::column](std-linear_algebra.md#api-32) | `Vector<T> column(int64 key)` |
+| [std::linear_algebra::Matrix::drop](std-linear_algebra.md#api-27) | `void drop()` |
+| [std::linear_algebra::Matrix::fromArray](std-linear_algebra.md#api-29) | `static Matrix<T> fromArray(T const& data, int64 count, int64 rows, int64 cols)` |
+| [std::linear_algebra::Matrix::fromArray](std-linear_algebra.md#api-30) | `static Matrix<T> fromArray(T data[], int64 rows, int64 cols)` |
+| [std::linear_algebra::Matrix::identity](std-linear_algebra.md#api-35) | `static Matrix<T> identity(int64 n)` |
+| [std::linear_algebra::Matrix::index](std-linear_algebra.md#api-33) | `Vector<T> index(int64 key)` |
+| [std::linear_algebra::Matrix::iterator](std-linear_algebra.md#api-34) | `Option<Vector<T>> iterator(int64 position)` |
+| [std::linear_algebra::Matrix::leftAdd](std-linear_algebra.md#api-45) | `Matrix<T> leftAdd(Matrix<T> right)` |
+| [std::linear_algebra::Matrix::leftMul](std-linear_algebra.md#api-47) | `Matrix<T> leftMul(Matrix<T> right)` |
+| [std::linear_algebra::Matrix::leftMul](std-linear_algebra.md#api-49) | `Matrix<T> leftMul(T right)` |
+| [std::linear_algebra::Matrix::leftMul](std-linear_algebra.md#api-48) | `Vector<T> leftMul(Vector<T> right)` |
+| [std::linear_algebra::Matrix::leftSub](std-linear_algebra.md#api-46) | `Matrix<T> leftSub(Matrix<T> right)` |
+| [std::linear_algebra::Matrix::multiply](std-linear_algebra.md#api-42) | `Matrix<T> multiply(Matrix<T> other)` |
+| [std::linear_algebra::Matrix::scale](std-linear_algebra.md#api-41) | `Matrix<T> scale(T factor)` |
+| [std::linear_algebra::Matrix::set](std-linear_algebra.md#api-37) | `void set(int64 row, int64 col, T value)` |
+| [std::linear_algebra::Matrix::solve](std-linear_algebra.md#api-44) | `Vector<T> solve(Vector<T> rhs)` |
+| [std::linear_algebra::Matrix::subtract](std-linear_algebra.md#api-40) | `Matrix<T> subtract(Matrix<T> other)` |
+| [std::linear_algebra::Matrix::toArray](std-linear_algebra.md#api-31) | `T[] toArray()` |
+| [std::linear_algebra::Matrix::transpose](std-linear_algebra.md#api-38) | `Matrix<T> transpose()` |
+| [std::linear_algebra::Matrix::zeros](std-linear_algebra.md#api-28) | `static Matrix<T> zeros(int64 rows, int64 cols)` |
+| [std::linear_algebra::ScalarArray::at](std-linear_algebra.md#api-2) | `T at(int64 index)` |
+| [std::linear_algebra::ScalarArray::clear](std-linear_algebra.md#api-1) | `void clear()` |
+| [std::linear_algebra::ScalarArray::copy](std-linear_algebra.md#api-6) | `ScalarArray<T> copy()` |
+| [std::linear_algebra::ScalarArray::index](std-linear_algebra.md#api-3) | `T index(int64 key)` |
+| [std::linear_algebra::ScalarArray::iterator](std-linear_algebra.md#api-7) | `Option<T> iterator(int64 position)` |
+| [std::linear_algebra::ScalarArray::len](std-linear_algebra.md#api-0) | `int64 len()` |
+| [std::linear_algebra::ScalarArray::push](std-linear_algebra.md#api-5) | `void push(T value)` |
+| [std::linear_algebra::ScalarArray::set](std-linear_algebra.md#api-4) | `void set(int64 index, T value)` |
+| [std::linear_algebra::Vector::add](std-linear_algebra.md#api-21) | `Vector<T> add(Vector<T> other)` |
+| [std::linear_algebra::Vector::at](std-linear_algebra.md#api-16) | `T at(int64 i)` |
+| [std::linear_algebra::Vector::dot](std-linear_algebra.md#api-18) | `T dot(Vector<T> other)` |
+| [std::linear_algebra::Vector::drop](std-linear_algebra.md#api-8) | `void drop()` |
+| [std::linear_algebra::Vector::fromArray](std-linear_algebra.md#api-10) | `static Vector<T> fromArray(T const& data, int64 count)` |
+| [std::linear_algebra::Vector::fromArray](std-linear_algebra.md#api-11) | `static Vector<T> fromArray(T data[])` |
+| [std::linear_algebra::Vector::index](std-linear_algebra.md#api-13) | `T index(int64 key)` |
+| [std::linear_algebra::Vector::iterator](std-linear_algebra.md#api-14) | `Option<T> iterator(int64 position)` |
+| [std::linear_algebra::Vector::leftAdd](std-linear_algebra.md#api-24) | `Vector<T> leftAdd(Vector<T> right)` |
+| [std::linear_algebra::Vector::leftMul](std-linear_algebra.md#api-26) | `Vector<T> leftMul(T right)` |
+| [std::linear_algebra::Vector::leftSub](std-linear_algebra.md#api-25) | `Vector<T> leftSub(Vector<T> right)` |
+| [std::linear_algebra::Vector::len](std-linear_algebra.md#api-15) | `int64 len()` |
+| [std::linear_algebra::Vector::norm](std-linear_algebra.md#api-19) | `float64 norm()` |
+| [std::linear_algebra::Vector::normalized](std-linear_algebra.md#api-20) | `Vector<T> normalized()` |
+| [std::linear_algebra::Vector::scale](std-linear_algebra.md#api-23) | `Vector<T> scale(T amount)` |
+| [std::linear_algebra::Vector::set](std-linear_algebra.md#api-17) | `void set(int64 i, T value)` |
+| [std::linear_algebra::Vector::subtract](std-linear_algebra.md#api-22) | `Vector<T> subtract(Vector<T> other)` |
+| [std::linear_algebra::Vector::toArray](std-linear_algebra.md#api-12) | `T[] toArray()` |
+| [std::linear_algebra::Vector::zeros](std-linear_algebra.md#api-9) | `static Vector<T> zeros(int64 n)` |
+| [std::linear_algebra::diagonalize2](std-linear_algebra.md#api-55) | `JordanDecomposition diagonalize2(Matrix<float64> input)` |
+| [std::linear_algebra::jordan2](std-linear_algebra.md#api-54) | `JordanDecomposition jordan2(Matrix<float64> input)` |
+| [std::linear_algebra::lu_decompose](std-linear_algebra.md#api-50) | `LuFactorization lu_decompose(Matrix<float64> input)` |
+| [std::linear_algebra::lur_decompose](std-linear_algebra.md#api-51) | `LuFactorization lur_decompose(Matrix<float64> input)` |
+| [std::linear_algebra::svd](std-linear_algebra.md#api-53) | `SingularValueDecomposition svd(Matrix<float64> input)` |
+| [std::linear_algebra::symmetric_eigen](std-linear_algebra.md#api-52) | `EigenDecomposition symmetric_eigen(Matrix<float64> input)` |
+| [std::linked_list::LinkedList::back](std-linked_list.md#api-15) | `Option<int64> back()` |
+| [std::linked_list::LinkedList::clear](std-linked_list.md#api-19) | `void clear()` |
+| [std::linked_list::LinkedList::contains](std-linked_list.md#api-13) | `bool contains(int64 value)` |
+| [std::linked_list::LinkedList::copy](std-linked_list.md#api-1) | `LinkedList copy()` |
+| [std::linked_list::LinkedList::create](std-linked_list.md#api-0) | `static LinkedList create()` |
+| [std::linked_list::LinkedList::find](std-linked_list.md#api-12) | `int64 find(int64 value)` |
+| [std::linked_list::LinkedList::fromArray](std-linked_list.md#api-11) | `static LinkedList fromArray(List<int64> items)` |
+| [std::linked_list::LinkedList::front](std-linked_list.md#api-14) | `Option<int64> front()` |
+| [std::linked_list::LinkedList::insertAfter](std-linked_list.md#api-5) | `int64 insertAfter(int64 cursor, int64 value)` |
+| [std::linked_list::LinkedList::insertBefore](std-linked_list.md#api-4) | `int64 insertBefore(int64 cursor, int64 value)` |
+| [std::linked_list::LinkedList::isEmpty](std-linked_list.md#api-17) | `bool isEmpty()` |
+| [std::linked_list::LinkedList::iterator](std-linked_list.md#api-18) | `Option<int64> iterator(int64 index)` |
+| [std::linked_list::LinkedList::len](std-linked_list.md#api-16) | `int64 len()` |
+| [std::linked_list::LinkedList::popBack](std-linked_list.md#api-8) | `Option<int64> popBack()` |
+| [std::linked_list::LinkedList::popFront](std-linked_list.md#api-7) | `Option<int64> popFront()` |
+| [std::linked_list::LinkedList::pushBack](std-linked_list.md#api-3) | `int64 pushBack(int64 value)` |
+| [std::linked_list::LinkedList::pushFront](std-linked_list.md#api-2) | `int64 pushFront(int64 value)` |
+| [std::linked_list::LinkedList::removeAt](std-linked_list.md#api-6) | `Option<int64> removeAt(int64 cursor)` |
+| [std::linked_list::LinkedList::reverse](std-linked_list.md#api-9) | `void reverse()` |
+| [std::linked_list::LinkedList::toArray](std-linked_list.md#api-10) | `List<int64> toArray()` |
+| [std::log::LogLevel::label](std-log.md#api-0) | `String label()` |
+| [std::log::format_record](std-log.md#api-1) | `String format_record(LogLevel level, String message, Map<String,String> fields)` |
+| [std::log::write_record](std-log.md#api-2) | `void write_record(LogLevel level, String message, Map<String,String> fields)` |
 | [std::math::abs](std-math.md#api-19) | `T abs<T>(T value)` |
 | [std::math::acos](std-math.md#api-5) | `let acos<T>(T value)` |
 | [std::math::asin](std-math.md#api-4) | `let asin<T>(T value)` |
@@ -896,12 +919,14 @@
 | [std::message::tryReceive](std-message.md#api-5) | `std::concurrency::Receive<T> tryReceive<T>()` |
 | [std::message::trySend](std-message.md#api-3) | `int64 trySend<T>(Thread thread, T value)` |
 | [std::net::HttpClient::close](std-net.md#api-34) | `void close()` |
-| [std::net::HttpClient::connect](std-net.md#api-31) | `bool connect(std::lang::String host, int32 port, int32 timeoutMs)` |
-| [std::net::HttpClient::exchange](std-net.md#api-33) | `HttpResponse exchange(std::lang::String method, std::lang::String url, std::lang::String body, std::lang::String contentType)` |
-| [std::net::HttpClient::fetch](std-net.md#api-35) | `static HttpResponse fetch(std::lang::String url)` |
-| [std::net::HttpClient::readAll](std-net.md#api-32) | `std::lang::String readAll()` |
-| [std::net::HttpClient::submit](std-net.md#api-36) | `static HttpResponse submit(std::lang::String url, std::lang::String body, std::lang::String contentType)` |
-| [std::net::HttpResponse::header](std-net.md#api-26) | `std::lang::String header(std::lang::String name)` |
+| [std::net::HttpClient::connect](std-net.md#api-31) | `bool connect(std::core::String host, int32 port, int32 timeoutMs)` |
+| [std::net::HttpClient::exchange](std-net.md#api-33) | `HttpResponse exchange(std::core::String method, std::core::String url, std::core::String body, std::core::String contentType)` |
+| [std::net::HttpClient::fetch](std-net.md#api-35) | `static HttpResponse fetch(std::core::String url)` |
+| [std::net::HttpClient::fetch_with_timeout](std-net.md#api-36) | `static HttpResponse fetch_with_timeout(String url, int32 timeoutMs)` |
+| [std::net::HttpClient::readAll](std-net.md#api-32) | `std::core::String readAll()` |
+| [std::net::HttpClient::submit](std-net.md#api-37) | `static HttpResponse submit(std::core::String url, std::core::String body, std::core::String contentType)` |
+| [std::net::HttpClient::submit_with_timeout](std-net.md#api-38) | `static HttpResponse submit_with_timeout(String url, String body, String contentType, int32 timeoutMs)` |
+| [std::net::HttpResponse::header](std-net.md#api-26) | `std::core::String header(std::core::String name)` |
 | [std::net::HttpResponse::isSuccess](std-net.md#api-25) | `bool isSuccess()` |
 | [std::net::TcpListener::accept](std-net.md#api-22) | `TcpSocket accept()` |
 | [std::net::TcpListener::accept](std-net.md#api-21) | `TcpSocket accept(int32 timeoutMs)` |
@@ -928,38 +953,40 @@
 | [std::net::TcpSocket::sendAsync](std-net.md#api-6) | `int64 sendAsync(String data)` |
 | [std::net::TcpSocket::sendAsync](std-net.md#api-5) | `int64 sendAsync(String data, int64 offset)` |
 | [std::net::TcpSocket::status](std-net.md#api-11) | `int64 status()` |
-| [std::net::buildRequest](std-net.md#api-29) | `std::lang::String buildRequest(std::lang::String method, std::lang::String url, std::lang::String body, std::lang::String contentType)` |
-| [std::net::httpScheme](std-net.md#api-27) | `std::lang::String httpScheme()` |
-| [std::net::parseResponse](std-net.md#api-30) | `HttpResponse parseResponse(std::lang::String raw)` |
-| [std::net::parseUrl](std-net.md#api-28) | `Url parseUrl(std::lang::String url)` |
+| [std::net::buildRequest](std-net.md#api-29) | `std::core::String buildRequest(std::core::String method, std::core::String url, std::core::String body, std::core::String contentType)` |
+| [std::net::httpScheme](std-net.md#api-27) | `std::core::String httpScheme()` |
+| [std::net::parseResponse](std-net.md#api-30) | `HttpResponse parseResponse(std::core::String raw)` |
+| [std::net::parseUrl](std-net.md#api-28) | `Url parseUrl(std::core::String url)` |
+| [std::number_theory::add_mod](std-number_theory.md#api-2) | `T add_mod<T>(T left, T right, T modulus)` |
+| [std::number_theory::gcd](std-number_theory.md#api-0) | `T gcd<T>(T... values)` |
+| [std::number_theory::is_prime](std-number_theory.md#api-6) | `bool is_prime<T>(T value)` |
+| [std::number_theory::lcm](std-number_theory.md#api-1) | `T lcm<T>(T... values)` |
+| [std::number_theory::mod_inverse](std-number_theory.md#api-5) | `T mod_inverse<T>(T value, T modulus)` |
+| [std::number_theory::mul_mod](std-number_theory.md#api-3) | `T mul_mod<T>(T left, T right, T modulus)` |
+| [std::number_theory::pow_mod](std-number_theory.md#api-4) | `T pow_mod<T>(T base, T exponent, T modulus)` |
 | [std::numerics::Numerics::bisect](std-numerics.md#api-2) | `static float64 bisect(float64 fn(float64) function, float64 left, float64 right, float64 tolerance, int64 maxIterations)` |
 | [std::numerics::Numerics::derivative](std-numerics.md#api-0) | `static float64 derivative(float64 fn(float64) function, float64 x, float64 step)` |
 | [std::numerics::Numerics::integrateSimpson](std-numerics.md#api-1) | `static float64 integrateSimpson(float64 fn(float64) function, float64 begin, float64 end, int64 intervals)` |
 | [std::numerics::Numerics::newton](std-numerics.md#api-4) | `static float64 newton(float64 fn(float64) function, float64 initial, float64 tolerance, int64 maxIterations)` |
 | [std::numerics::Numerics::rk4Step](std-numerics.md#api-3) | `static float64 rk4Step(float64 fn(float64, float64) derivative, float64 time, float64 value, float64 step)` |
-| [std::numerics::Numerics::solveOdeEuler](std-numerics.md#api-5) | `static std::lang::List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
-| [std::numerics::Numerics::solveOdeRK4](std-numerics.md#api-6) | `static std::lang::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
-| [std::numtheory::addMod](std-numtheory.md#api-2) | `T addMod<T>(T left, T right, T modulus)` |
-| [std::numtheory::gcd](std-numtheory.md#api-0) | `T gcd<T>(T... values)` |
-| [std::numtheory::isPrime](std-numtheory.md#api-6) | `bool isPrime<T>(T value)` |
-| [std::numtheory::lcm](std-numtheory.md#api-1) | `T lcm<T>(T... values)` |
-| [std::numtheory::modInverse](std-numtheory.md#api-5) | `T modInverse<T>(T value, T modulus)` |
-| [std::numtheory::mulMod](std-numtheory.md#api-3) | `T mulMod<T>(T left, T right, T modulus)` |
-| [std::numtheory::powMod](std-numtheory.md#api-4) | `T powMod<T>(T base, T exponent, T modulus)` |
-| [std::parse::Parse::parseBool](std-parse.md#api-4) | `static Result<bool, std::lang::Error> parseBool(std::lang::String text)` |
-| [std::parse::Parse::parseFloat64](std-parse.md#api-3) | `static Result<float64, std::lang::Error> parseFloat64(std::lang::String text)` |
-| [std::parse::Parse::parseInt64](std-parse.md#api-1) | `static Result<int64, std::lang::Error> parseInt64(std::lang::String text)` |
-| [std::parse::Parse::parseUInt64](std-parse.md#api-2) | `static Result<uint64, std::lang::Error> parseUInt64(std::lang::String text)` |
+| [std::numerics::Numerics::solveOdeEuler](std-numerics.md#api-5) | `static std::core::List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
+| [std::numerics::Numerics::solveOdeRK4](std-numerics.md#api-6) | `static std::core::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
+| [std::parse::Parse::parseBool](std-parse.md#api-4) | `static Result<bool, std::core::Error> parseBool(std::core::String text)` |
+| [std::parse::Parse::parseFloat64](std-parse.md#api-3) | `static Result<float64, std::core::Error> parseFloat64(std::core::String text)` |
+| [std::parse::Parse::parseInt64](std-parse.md#api-1) | `static Result<int64, std::core::Error> parseInt64(std::core::String text)` |
+| [std::parse::Parse::parseUInt64](std-parse.md#api-2) | `static Result<uint64, std::core::Error> parseUInt64(std::core::String text)` |
 | [std::parse::ParseError::toString](std-parse.md#api-0) | `String toString()` |
-| [std::path::PathString::extension](std-path.md#api-2) | `static std::lang::String extension(std::lang::String path)` |
-| [std::path::PathString::fileName](std-path.md#api-1) | `static std::lang::String fileName(std::lang::String path)` |
-| [std::path::PathString::join](std-path.md#api-0) | `static std::lang::String join(std::lang::String left, std::lang::String right)` |
-| [std::path::PathString::normalize](std-path.md#api-3) | `static std::lang::String normalize(std::lang::String path)` |
+| [std::path::PathString::extension](std-path.md#api-2) | `static std::core::String extension(std::core::String path)` |
+| [std::path::PathString::fileName](std-path.md#api-1) | `static std::core::String fileName(std::core::String path)` |
+| [std::path::PathString::join](std-path.md#api-0) | `static std::core::String join(std::core::String left, std::core::String right)` |
+| [std::path::PathString::normalize](std-path.md#api-3) | `static std::core::String normalize(std::core::String path)` |
+| [std::path::PathString::parent](std-path.md#api-4) | `static String parent(String path)` |
+| [std::path::PathString::stem](std-path.md#api-5) | `static String stem(String path)` |
 | [std::probe::twice](std-probe.md#api-0) | `int64 twice(int64 x)` |
 | [std::process::processClose](std-process.md#api-2) | `int64 processClose(Process const& process)` |
-| [std::process::processRead](std-process.md#api-1) | `std::lang::String processRead(Process const& process)` |
-| [std::process::processRun](std-process.md#api-0) | `Process processRun(std::lang::String command)` |
-| [std::process::system](std-process.md#api-3) | `int64 system(std::lang::String command)` |
+| [std::process::processRead](std-process.md#api-1) | `std::core::String processRead(Process const& process)` |
+| [std::process::processRun](std-process.md#api-0) | `Process processRun(std::core::String command)` |
+| [std::process::system](std-process.md#api-3) | `int64 system(std::core::String command)` |
 | [std::random::Random::fromEntropy](std-random.md#api-9) | `static Random fromEntropy()` |
 | [std::random::Random::nextBool](std-random.md#api-14) | `bool nextBool()` |
 | [std::random::Random::nextFloat64](std-random.md#api-12) | `float64 nextFloat64()` |
@@ -976,56 +1003,56 @@
 | [std::random::randomNextUInt64](std-random.md#api-2) | `uint64 randomNextUInt64(uint64 handle)` |
 | [std::random::randomWithSeed](std-random.md#api-0) | `Random randomWithSeed(uint64 seed)` |
 | [std::reflect::ReflectError::toString](std-reflect.md#api-1) | `String toString()` |
-| [std::reflect::ReflectValue::asBool](std-reflect.md#api-3) | `Result<bool,std::lang::Error> asBool()` |
-| [std::reflect::ReflectValue::asChar](std-reflect.md#api-4) | `Result<char,std::lang::Error> asChar()` |
-| [std::reflect::ReflectValue::asF32](std-reflect.md#api-13) | `Result<float32,std::lang::Error> asF32()` |
-| [std::reflect::ReflectValue::asF64](std-reflect.md#api-14) | `Result<float64,std::lang::Error> asF64()` |
-| [std::reflect::ReflectValue::asI16](std-reflect.md#api-6) | `Result<int16,std::lang::Error> asI16()` |
-| [std::reflect::ReflectValue::asI32](std-reflect.md#api-7) | `Result<int32,std::lang::Error> asI32()` |
-| [std::reflect::ReflectValue::asI64](std-reflect.md#api-8) | `Result<int64,std::lang::Error> asI64()` |
-| [std::reflect::ReflectValue::asI8](std-reflect.md#api-5) | `Result<int8,std::lang::Error> asI8()` |
-| [std::reflect::ReflectValue::asText](std-reflect.md#api-15) | `Result<std::lang::String,std::lang::Error> asText()` |
-| [std::reflect::ReflectValue::asU16](std-reflect.md#api-10) | `Result<uint16,std::lang::Error> asU16()` |
-| [std::reflect::ReflectValue::asU32](std-reflect.md#api-11) | `Result<uint32,std::lang::Error> asU32()` |
-| [std::reflect::ReflectValue::asU64](std-reflect.md#api-12) | `Result<uint64,std::lang::Error> asU64()` |
-| [std::reflect::ReflectValue::asU8](std-reflect.md#api-9) | `Result<uint8,std::lang::Error> asU8()` |
+| [std::reflect::ReflectValue::asBool](std-reflect.md#api-3) | `Result<bool,std::core::Error> asBool()` |
+| [std::reflect::ReflectValue::asChar](std-reflect.md#api-4) | `Result<char,std::core::Error> asChar()` |
+| [std::reflect::ReflectValue::asF32](std-reflect.md#api-13) | `Result<float32,std::core::Error> asF32()` |
+| [std::reflect::ReflectValue::asF64](std-reflect.md#api-14) | `Result<float64,std::core::Error> asF64()` |
+| [std::reflect::ReflectValue::asI16](std-reflect.md#api-6) | `Result<int16,std::core::Error> asI16()` |
+| [std::reflect::ReflectValue::asI32](std-reflect.md#api-7) | `Result<int32,std::core::Error> asI32()` |
+| [std::reflect::ReflectValue::asI64](std-reflect.md#api-8) | `Result<int64,std::core::Error> asI64()` |
+| [std::reflect::ReflectValue::asI8](std-reflect.md#api-5) | `Result<int8,std::core::Error> asI8()` |
+| [std::reflect::ReflectValue::asText](std-reflect.md#api-15) | `Result<std::core::String,std::core::Error> asText()` |
+| [std::reflect::ReflectValue::asU16](std-reflect.md#api-10) | `Result<uint16,std::core::Error> asU16()` |
+| [std::reflect::ReflectValue::asU32](std-reflect.md#api-11) | `Result<uint32,std::core::Error> asU32()` |
+| [std::reflect::ReflectValue::asU64](std-reflect.md#api-12) | `Result<uint64,std::core::Error> asU64()` |
+| [std::reflect::ReflectValue::asU8](std-reflect.md#api-9) | `Result<uint8,std::core::Error> asU8()` |
 | [std::reflect::ReflectValue::typeId](std-reflect.md#api-2) | `uint64 typeId()` |
-| [std::reflect::call](std-reflect.md#api-29) | `Result<std::reflect::ReflectValue,std::lang::Error> call(std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callEnumMethod](std-reflect.md#api-33) | `Result<std::reflect::ReflectValue,std::lang::Error> callEnumMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callEnumMethodConst](std-reflect.md#api-34) | `Result<std::reflect::ReflectValue,std::lang::Error> callEnumMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callEnumStatic](std-reflect.md#api-35) | `Result<std::reflect::ReflectValue,std::lang::Error> callEnumStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callInterface](std-reflect.md#api-39) | `Result<std::reflect::ReflectValue,std::lang::Error> callInterface<I>(I mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callInterfaceConst](std-reflect.md#api-40) | `Result<std::reflect::ReflectValue,std::lang::Error> callInterfaceConst<I>(I const& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callMethod](std-reflect.md#api-30) | `Result<std::reflect::ReflectValue,std::lang::Error> callMethod<T>(T mut& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callMethodConst](std-reflect.md#api-31) | `Result<std::reflect::ReflectValue,std::lang::Error> callMethodConst<T>(T const& obj, std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callStatic](std-reflect.md#api-32) | `Result<std::reflect::ReflectValue,std::lang::Error> callStatic<T>(std::lang::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::construct](std-reflect.md#api-36) | `Result<T,std::lang::Error> construct<T>(List<std::reflect::ReflectValue> args)` |
-| [std::reflect::getAnnotationInfo](std-reflect.md#api-17) | `Option<std::reflect::AnnotationInfo> getAnnotationInfo(std::lang::String name)` |
+| [std::reflect::call](std-reflect.md#api-29) | `Result<std::reflect::ReflectValue,std::core::Error> call(std::core::String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callEnumMethod](std-reflect.md#api-33) | `Result<std::reflect::ReflectValue,std::core::Error> callEnumMethod<T>(T mut& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callEnumMethodConst](std-reflect.md#api-34) | `Result<std::reflect::ReflectValue,std::core::Error> callEnumMethodConst<T>(T const& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callEnumStatic](std-reflect.md#api-35) | `Result<std::reflect::ReflectValue,std::core::Error> callEnumStatic<T>(std::core::String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callInterface](std-reflect.md#api-39) | `Result<std::reflect::ReflectValue,std::core::Error> callInterface<I>(I mut& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callInterfaceConst](std-reflect.md#api-40) | `Result<std::reflect::ReflectValue,std::core::Error> callInterfaceConst<I>(I const& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callMethod](std-reflect.md#api-30) | `Result<std::reflect::ReflectValue,std::core::Error> callMethod<T>(T mut& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callMethodConst](std-reflect.md#api-31) | `Result<std::reflect::ReflectValue,std::core::Error> callMethodConst<T>(T const& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callStatic](std-reflect.md#api-32) | `Result<std::reflect::ReflectValue,std::core::Error> callStatic<T>(std::core::String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::construct](std-reflect.md#api-36) | `Result<T,std::core::Error> construct<T>(List<std::reflect::ReflectValue> args)` |
+| [std::reflect::getAnnotationInfo](std-reflect.md#api-17) | `Option<std::reflect::AnnotationInfo> getAnnotationInfo(std::core::String name)` |
 | [std::reflect::getAnnotations](std-reflect.md#api-24) | `List<std::reflect::Annotation> getAnnotations<T>()` |
 | [std::reflect::getEnumInfo](std-reflect.md#api-21) | `Option<std::reflect::EnumInfo> getEnumInfo<T>()` |
-| [std::reflect::getField](std-reflect.md#api-37) | `Result<F,std::lang::Error> getField<T,F>(T const& obj, std::lang::String name)` |
-| [std::reflect::getFieldAnnotations](std-reflect.md#api-25) | `List<std::reflect::Annotation> getFieldAnnotations<T>(std::lang::String name)` |
-| [std::reflect::getFuncAnnotations](std-reflect.md#api-26) | `List<std::reflect::Annotation> getFuncAnnotations(std::lang::String name)` |
-| [std::reflect::getFuncInfo](std-reflect.md#api-16) | `Option<std::reflect::FuncInfo> getFuncInfo(std::lang::String name)` |
+| [std::reflect::getField](std-reflect.md#api-37) | `Result<F,std::core::Error> getField<T,F>(T const& obj, std::core::String name)` |
+| [std::reflect::getFieldAnnotations](std-reflect.md#api-25) | `List<std::reflect::Annotation> getFieldAnnotations<T>(std::core::String name)` |
+| [std::reflect::getFuncAnnotations](std-reflect.md#api-26) | `List<std::reflect::Annotation> getFuncAnnotations(std::core::String name)` |
+| [std::reflect::getFuncInfo](std-reflect.md#api-16) | `Option<std::reflect::FuncInfo> getFuncInfo(std::core::String name)` |
 | [std::reflect::getInterfaceId](std-reflect.md#api-19) | `uint64 getInterfaceId<I>()` |
 | [std::reflect::getInterfaceInfo](std-reflect.md#api-22) | `Option<std::reflect::InterfaceInfo> getInterfaceInfo<I>()` |
-| [std::reflect::getMethodAnnotations](std-reflect.md#api-27) | `List<std::reflect::Annotation> getMethodAnnotations<T>(std::lang::String name)` |
-| [std::reflect::getStaticMemberAnnotations](std-reflect.md#api-28) | `List<std::reflect::Annotation> getStaticMemberAnnotations<T>(std::lang::String name)` |
+| [std::reflect::getMethodAnnotations](std-reflect.md#api-27) | `List<std::reflect::Annotation> getMethodAnnotations<T>(std::core::String name)` |
+| [std::reflect::getStaticMemberAnnotations](std-reflect.md#api-28) | `List<std::reflect::Annotation> getStaticMemberAnnotations<T>(std::core::String name)` |
 | [std::reflect::getStructInfo](std-reflect.md#api-20) | `Option<std::reflect::StructInfo> getStructInfo<T>()` |
 | [std::reflect::getTypeId](std-reflect.md#api-18) | `uint64 getTypeId<T>()` |
 | [std::reflect::implementsInterface](std-reflect.md#api-23) | `bool implementsInterface<T>(uint64 interfaceId)` |
 | [std::reflect::requireReflection](std-reflect.md#api-0) | `void requireReflection()` |
-| [std::reflect::setField](std-reflect.md#api-38) | `Result<bool,std::lang::Error> setField<T,F>(T mut& obj, std::lang::String name, F value)` |
-| [std::regex::Regex::capture](std-regex.md#api-5) | `std::lang::String capture(std::lang::String text, int64 group)` |
-| [std::regex::Regex::compile](std-regex.md#api-1) | `static Result<Regex, std::lang::Error> compile(std::lang::String pattern)` |
-| [std::regex::Regex::contains](std-regex.md#api-3) | `bool contains(std::lang::String text)` |
-| [std::regex::Regex::find](std-regex.md#api-4) | `Option<int64> find(std::lang::String text)` |
-| [std::regex::Regex::fullMatch](std-regex.md#api-2) | `bool fullMatch(std::lang::String text)` |
-| [std::regex::Regex::replaceAll](std-regex.md#api-7) | `std::lang::String replaceAll(std::lang::String text, std::lang::String replacement)` |
-| [std::regex::Regex::replaceFirst](std-regex.md#api-6) | `std::lang::String replaceFirst(std::lang::String text, std::lang::String replacement)` |
+| [std::reflect::setField](std-reflect.md#api-38) | `Result<bool,std::core::Error> setField<T,F>(T mut& obj, std::core::String name, F value)` |
+| [std::regex::Regex::capture](std-regex.md#api-5) | `std::core::String capture(std::core::String text, int64 group)` |
+| [std::regex::Regex::compile](std-regex.md#api-1) | `static Result<Regex, std::core::Error> compile(std::core::String pattern)` |
+| [std::regex::Regex::contains](std-regex.md#api-3) | `bool contains(std::core::String text)` |
+| [std::regex::Regex::find](std-regex.md#api-4) | `Option<int64> find(std::core::String text)` |
+| [std::regex::Regex::fullMatch](std-regex.md#api-2) | `bool fullMatch(std::core::String text)` |
+| [std::regex::Regex::replaceAll](std-regex.md#api-7) | `std::core::String replaceAll(std::core::String text, std::core::String replacement)` |
+| [std::regex::Regex::replaceFirst](std-regex.md#api-6) | `std::core::String replaceFirst(std::core::String text, std::core::String replacement)` |
 | [std::regex::RegexError::toString](std-regex.md#api-0) | `String toString()` |
-| [std::serialization::deserialize](std-serialization.md#api-1) | `Result<T,std::lang::Error> deserialize<T>(List<uint8> bytes)` |
-| [std::serialization::serialize](std-serialization.md#api-0) | `Result<List<uint8>,std::lang::Error> serialize<T>(T const& value)` |
+| [std::serialization::deserialize](std-serialization.md#api-1) | `Result<T,std::core::Error> deserialize<T>(List<uint8> bytes)` |
+| [std::serialization::serialize](std-serialization.md#api-0) | `Result<List<uint8>,std::core::Error> serialize<T>(T const& value)` |
 | [std::signal::dft](std-signal.md#api-4) | `List<Complex<float64>> dft(List<Complex<float64>> input)` |
 | [std::signal::fft](std-signal.md#api-6) | `List<Complex<float64>> fft(List<Complex<float64>> input)` |
 | [std::signal::idft](std-signal.md#api-5) | `List<Complex<float64>> idft(List<Complex<float64>> input)` |
@@ -1038,90 +1065,94 @@
 | [std::sql::DataCell::asReal](std-sql.md#api-8) | `float64 asReal()` |
 | [std::sql::DataCell::isNull](std-sql.md#api-4) | `bool isNull()` |
 | [std::sql::DataCell::isNumber](std-sql.md#api-5) | `bool isNumber()` |
-| [std::sql::DataCell::text](std-sql.md#api-6) | `std::lang::String text()` |
+| [std::sql::DataCell::text](std-sql.md#api-6) | `std::core::String text()` |
 | [std::sql::DataRow::at](std-sql.md#api-10) | `DataCell at(int64 index)` |
 | [std::sql::DataRow::size](std-sql.md#api-9) | `int64 size()` |
 | [std::sql::Database::affectedRows](std-sql.md#api-37) | `int64 affectedRows()` |
-| [std::sql::Database::backendName](std-sql.md#api-31) | `std::lang::String backendName()` |
+| [std::sql::Database::backendName](std-sql.md#api-31) | `std::core::String backendName()` |
 | [std::sql::Database::close](std-sql.md#api-38) | `void close()` |
-| [std::sql::Database::count](std-sql.md#api-43) | `int64 count(std::lang::String sql)` |
+| [std::sql::Database::count](std-sql.md#api-43) | `int64 count(std::core::String sql)` |
 | [std::sql::Database::driver](std-sql.md#api-29) | `Driver driver()` |
 | [std::sql::Database::exec](std-sql.md#api-40) | `ResultSet exec(SqlStatement statement)` |
-| [std::sql::Database::exec](std-sql.md#api-39) | `ResultSet exec(std::lang::String sql)` |
-| [std::sql::Database::execOk](std-sql.md#api-41) | `bool execOk(std::lang::String sql)` |
-| [std::sql::Database::hasTable](std-sql.md#api-44) | `bool hasTable(std::lang::String tableName)` |
+| [std::sql::Database::exec](std-sql.md#api-39) | `ResultSet exec(std::core::String sql)` |
+| [std::sql::Database::execOk](std-sql.md#api-41) | `bool execOk(std::core::String sql)` |
+| [std::sql::Database::hasTable](std-sql.md#api-44) | `bool hasTable(std::core::String tableName)` |
 | [std::sql::Database::isOpen](std-sql.md#api-35) | `bool isOpen()` |
-| [std::sql::Database::lastError](std-sql.md#api-36) | `std::lang::String lastError()` |
-| [std::sql::Database::local](std-sql.md#api-34) | `static Database local(std::lang::String database)` |
+| [std::sql::Database::lastError](std-sql.md#api-36) | `std::core::String lastError()` |
+| [std::sql::Database::local](std-sql.md#api-34) | `static Database local(std::core::String database)` |
 | [std::sql::Database::maria](std-sql.md#api-33) | `static Database maria(String host, String user, String password, String database, int32 port = (int32)3306)` |
 | [std::sql::Database::mysql](std-sql.md#api-24) | `static Database mysql(String host, String user, String password, String database, int32 port)` |
-| [std::sql::Database::mysql](std-sql.md#api-32) | `static Database mysql(std::lang::String host, std::lang::String user, std::lang::String password, std::lang::String database)` |
+| [std::sql::Database::mysql](std-sql.md#api-32) | `static Database mysql(std::core::String host, std::core::String user, std::core::String password, std::core::String database)` |
 | [std::sql::Database::odbc](std-sql.md#api-27) | `static Database odbc(String options)` |
 | [std::sql::Database::postgres](std-sql.md#api-26) | `static Database postgres(String options)` |
-| [std::sql::Database::quote](std-sql.md#api-30) | `std::lang::String quote(std::lang::String text)` |
-| [std::sql::Database::scalar](std-sql.md#api-42) | `std::lang::String scalar(std::lang::String sql)` |
+| [std::sql::Database::quote](std-sql.md#api-30) | `std::core::String quote(std::core::String text)` |
+| [std::sql::Database::scalar](std-sql.md#api-42) | `std::core::String scalar(std::core::String sql)` |
 | [std::sql::Database::sqlServer](std-sql.md#api-28) | `static Database sqlServer(String options)` |
 | [std::sql::Database::sqlite](std-sql.md#api-25) | `static Database sqlite(String path)` |
-| [std::sql::Query::build](std-sql.md#api-3) | `Result<SqlStatement,std::lang::Error> build(String operation = "select", String values = "{}")` |
+| [std::sql::Query::build](std-sql.md#api-3) | `Result<SqlStatement,std::core::Error> build(String operation = "select", String values = "{}")` |
 | [std::sql::Query::orderBy](std-sql.md#api-0) | `void orderBy(String field, bool descending = false)` |
 | [std::sql::Query::page](std-sql.md#api-2) | `void page(int64 limit, int64 offset = 0)` |
 | [std::sql::Query::select](std-sql.md#api-1) | `void select(String field)` |
 | [std::sql::ResultSet::at](std-sql.md#api-16) | `DataCell at(int64 row, int64 column)` |
 | [std::sql::ResultSet::colCount](std-sql.md#api-12) | `int64 colCount()` |
-| [std::sql::ResultSet::columnIndex](std-sql.md#api-15) | `int64 columnIndex(std::lang::String name)` |
-| [std::sql::ResultSet::columnName](std-sql.md#api-14) | `std::lang::String columnName(int64 index)` |
+| [std::sql::ResultSet::columnIndex](std-sql.md#api-15) | `int64 columnIndex(std::core::String name)` |
+| [std::sql::ResultSet::columnName](std-sql.md#api-14) | `std::core::String columnName(int64 index)` |
 | [std::sql::ResultSet::count](std-sql.md#api-21) | `int64 count()` |
 | [std::sql::ResultSet::intAt](std-sql.md#api-18) | `int64 intAt(int64 row, int64 column)` |
 | [std::sql::ResultSet::isEmpty](std-sql.md#api-13) | `bool isEmpty()` |
-| [std::sql::ResultSet::pad](std-sql.md#api-22) | `std::lang::String pad(std::lang::String text, int64 width)` |
+| [std::sql::ResultSet::pad](std-sql.md#api-22) | `std::core::String pad(std::core::String text, int64 width)` |
 | [std::sql::ResultSet::realAt](std-sql.md#api-19) | `float64 realAt(int64 row, int64 column)` |
-| [std::sql::ResultSet::render](std-sql.md#api-23) | `std::lang::String render()` |
+| [std::sql::ResultSet::render](std-sql.md#api-23) | `std::core::String render()` |
 | [std::sql::ResultSet::rowCount](std-sql.md#api-11) | `int64 rowCount()` |
-| [std::sql::ResultSet::scalar](std-sql.md#api-20) | `std::lang::String scalar()` |
-| [std::sql::ResultSet::textAt](std-sql.md#api-17) | `std::lang::String textAt(int64 row, int64 column)` |
-| [std::sql::displayWidth](std-sql.md#api-49) | `int64 displayWidth(std::lang::String text)` |
-| [std::sql::filter](std-sql.md#api-51) | `Result<bool,std::lang::Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0)` |
-| [std::sql::filterMany](std-sql.md#api-52) | `Result<bool,std::lang::Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11)` |
-| [std::sql::insert](std-sql.md#api-53) | `Result<SqlStatement,std::lang::Error> insert<T>(Query mut& query, T const& value)` |
-| [std::sql::intLiteral](std-sql.md#api-47) | `std::lang::String intLiteral(int64 value)` |
-| [std::sql::query](std-sql.md#api-50) | `Result<Query,std::lang::Error> query<T>()` |
-| [std::sql::quote](std-sql.md#api-46) | `std::lang::String quote(std::lang::String text)` |
-| [std::sql::quote](std-sql.md#api-45) | `std::lang::String quote(std::lang::String text, bool escapeBackslash)` |
-| [std::sql::realLiteral](std-sql.md#api-48) | `std::lang::String realLiteral(float64 value)` |
-| [std::sql::update](std-sql.md#api-54) | `Result<SqlStatement,std::lang::Error> update<T>(Query mut& query, T const& value)` |
-| [std::text::StringBuilder::append](std-text.md#api-25) | `void append(std::lang::String text)` |
-| [std::text::StringBuilder::appendBool](std-text.md#api-30) | `void appendBool(bool value)` |
-| [std::text::StringBuilder::appendChar](std-text.md#api-27) | `void appendChar(char value)` |
-| [std::text::StringBuilder::appendFloat](std-text.md#api-29) | `void appendFloat(float64 value)` |
-| [std::text::StringBuilder::appendInt](std-text.md#api-28) | `void appendInt(int64 value)` |
-| [std::text::StringBuilder::appendLine](std-text.md#api-26) | `void appendLine(std::lang::String text)` |
-| [std::text::StringBuilder::clear](std-text.md#api-31) | `void clear()` |
-| [std::text::StringBuilder::create](std-text.md#api-22) | `static StringBuilder create()` |
-| [std::text::StringBuilder::drop](std-text.md#api-21) | `void drop()` |
-| [std::text::StringBuilder::isEmpty](std-text.md#api-24) | `bool isEmpty()` |
-| [std::text::StringBuilder::len](std-text.md#api-23) | `int64 len()` |
-| [std::text::StringBuilder::toString](std-text.md#api-32) | `std::lang::String toString()` |
-| [std::text::Text::charAt](std-text.md#api-15) | `static char charAt(std::lang::String text, int64 index)` |
-| [std::text::Text::compare](std-text.md#api-5) | `static int64 compare(std::lang::String left, std::lang::String right)` |
-| [std::text::Text::contains](std-text.md#api-2) | `static bool contains(std::lang::String text, std::lang::String needle)` |
-| [std::text::Text::endsWith](std-text.md#api-4) | `static bool endsWith(std::lang::String text, std::lang::String suffix)` |
-| [std::text::Text::find](std-text.md#api-0) | `static int64 find(std::lang::String text, std::lang::String needle)` |
-| [std::text::Text::join](std-text.md#api-17) | `static std::lang::String join(std::lang::List<std::lang::String> parts, std::lang::String separator)` |
-| [std::text::Text::kmpFailureTable](std-text.md#api-20) | `static std::lang::List<int64> kmpFailureTable(std::lang::String needle)` |
-| [std::text::Text::kmpFind](std-text.md#api-18) | `static int64 kmpFind(std::lang::String text, std::lang::String needle)` |
-| [std::text::Text::kmpFindAll](std-text.md#api-19) | `static std::lang::List<int64> kmpFindAll(std::lang::String text, std::lang::String needle)` |
-| [std::text::Text::ltrim](std-text.md#api-9) | `static std::lang::String ltrim(std::lang::String text)` |
-| [std::text::Text::padEnd](std-text.md#api-14) | `static std::lang::String padEnd(std::lang::String text, int64 width, char fill)` |
-| [std::text::Text::padStart](std-text.md#api-13) | `static std::lang::String padStart(std::lang::String text, int64 width, char fill)` |
-| [std::text::Text::repeat](std-text.md#api-12) | `static std::lang::String repeat(std::lang::String text, int64 count)` |
-| [std::text::Text::replace](std-text.md#api-11) | `static std::lang::String replace(std::lang::String text, std::lang::String from, std::lang::String to)` |
-| [std::text::Text::rfind](std-text.md#api-1) | `static int64 rfind(std::lang::String text, std::lang::String needle)` |
-| [std::text::Text::rtrim](std-text.md#api-10) | `static std::lang::String rtrim(std::lang::String text)` |
-| [std::text::Text::split](std-text.md#api-16) | `static std::lang::List<std::lang::String> split(std::lang::String text, std::lang::String separator)` |
-| [std::text::Text::startsWith](std-text.md#api-3) | `static bool startsWith(std::lang::String text, std::lang::String prefix)` |
-| [std::text::Text::toLower](std-text.md#api-7) | `static std::lang::String toLower(std::lang::String text)` |
-| [std::text::Text::toUpper](std-text.md#api-6) | `static std::lang::String toUpper(std::lang::String text)` |
-| [std::text::Text::trim](std-text.md#api-8) | `static std::lang::String trim(std::lang::String text)` |
+| [std::sql::ResultSet::scalar](std-sql.md#api-20) | `std::core::String scalar()` |
+| [std::sql::ResultSet::textAt](std-sql.md#api-17) | `std::core::String textAt(int64 row, int64 column)` |
+| [std::sql::displayWidth](std-sql.md#api-49) | `int64 displayWidth(std::core::String text)` |
+| [std::sql::filter](std-sql.md#api-51) | `Result<bool,std::core::Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0)` |
+| [std::sql::filterMany](std-sql.md#api-52) | `Result<bool,std::core::Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11)` |
+| [std::sql::insert](std-sql.md#api-53) | `Result<SqlStatement,std::core::Error> insert<T>(Query mut& query, T const& value)` |
+| [std::sql::intLiteral](std-sql.md#api-47) | `std::core::String intLiteral(int64 value)` |
+| [std::sql::query](std-sql.md#api-50) | `Result<Query,std::core::Error> query<T>()` |
+| [std::sql::quote](std-sql.md#api-46) | `std::core::String quote(std::core::String text)` |
+| [std::sql::quote](std-sql.md#api-45) | `std::core::String quote(std::core::String text, bool escapeBackslash)` |
+| [std::sql::realLiteral](std-sql.md#api-48) | `std::core::String realLiteral(float64 value)` |
+| [std::sql::update](std-sql.md#api-54) | `Result<SqlStatement,std::core::Error> update<T>(Query mut& query, T const& value)` |
+| [std::text::StringBuilder::append](std-text.md#api-29) | `void append(std::core::String text)` |
+| [std::text::StringBuilder::appendBool](std-text.md#api-34) | `void appendBool(bool value)` |
+| [std::text::StringBuilder::appendChar](std-text.md#api-31) | `void appendChar(char value)` |
+| [std::text::StringBuilder::appendFloat](std-text.md#api-33) | `void appendFloat(float64 value)` |
+| [std::text::StringBuilder::appendInt](std-text.md#api-32) | `void appendInt(int64 value)` |
+| [std::text::StringBuilder::appendLine](std-text.md#api-30) | `void appendLine(std::core::String text)` |
+| [std::text::StringBuilder::clear](std-text.md#api-35) | `void clear()` |
+| [std::text::StringBuilder::create](std-text.md#api-26) | `static StringBuilder create()` |
+| [std::text::StringBuilder::drop](std-text.md#api-25) | `void drop()` |
+| [std::text::StringBuilder::isEmpty](std-text.md#api-28) | `bool isEmpty()` |
+| [std::text::StringBuilder::len](std-text.md#api-27) | `int64 len()` |
+| [std::text::StringBuilder::toString](std-text.md#api-36) | `std::core::String toString()` |
+| [std::text::Text::charAt](std-text.md#api-19) | `static char charAt(std::core::String text, int64 index)` |
+| [std::text::Text::compare](std-text.md#api-9) | `static int64 compare(std::core::String left, std::core::String right)` |
+| [std::text::Text::contains](std-text.md#api-2) | `static bool contains(std::core::String text, std::core::String needle)` |
+| [std::text::Text::count_matches](std-text.md#api-8) | `static int64 count_matches(std::core::String text, std::core::String needle)` |
+| [std::text::Text::endsWith](std-text.md#api-4) | `static bool endsWith(std::core::String text, std::core::String suffix)` |
+| [std::text::Text::find](std-text.md#api-0) | `static int64 find(std::core::String text, std::core::String needle)` |
+| [std::text::Text::is_blank](std-text.md#api-7) | `static bool is_blank(std::core::String text)` |
+| [std::text::Text::join](std-text.md#api-21) | `static std::core::String join(std::core::List<std::core::String> parts, std::core::String separator)` |
+| [std::text::Text::kmpFailureTable](std-text.md#api-24) | `static std::core::List<int64> kmpFailureTable(std::core::String needle)` |
+| [std::text::Text::kmpFind](std-text.md#api-22) | `static int64 kmpFind(std::core::String text, std::core::String needle)` |
+| [std::text::Text::kmpFindAll](std-text.md#api-23) | `static std::core::List<int64> kmpFindAll(std::core::String text, std::core::String needle)` |
+| [std::text::Text::ltrim](std-text.md#api-13) | `static std::core::String ltrim(std::core::String text)` |
+| [std::text::Text::padEnd](std-text.md#api-18) | `static std::core::String padEnd(std::core::String text, int64 width, char fill)` |
+| [std::text::Text::padStart](std-text.md#api-17) | `static std::core::String padStart(std::core::String text, int64 width, char fill)` |
+| [std::text::Text::repeat](std-text.md#api-16) | `static std::core::String repeat(std::core::String text, int64 count)` |
+| [std::text::Text::replace](std-text.md#api-15) | `static std::core::String replace(std::core::String text, std::core::String from, std::core::String to)` |
+| [std::text::Text::rfind](std-text.md#api-1) | `static int64 rfind(std::core::String text, std::core::String needle)` |
+| [std::text::Text::rtrim](std-text.md#api-14) | `static std::core::String rtrim(std::core::String text)` |
+| [std::text::Text::split](std-text.md#api-20) | `static std::core::List<std::core::String> split(std::core::String text, std::core::String separator)` |
+| [std::text::Text::startsWith](std-text.md#api-3) | `static bool startsWith(std::core::String text, std::core::String prefix)` |
+| [std::text::Text::strip_prefix](std-text.md#api-5) | `static std::core::String strip_prefix(std::core::String text, std::core::String prefix)` |
+| [std::text::Text::strip_suffix](std-text.md#api-6) | `static std::core::String strip_suffix(std::core::String text, std::core::String suffix)` |
+| [std::text::Text::toLower](std-text.md#api-11) | `static std::core::String toLower(std::core::String text)` |
+| [std::text::Text::toUpper](std-text.md#api-10) | `static std::core::String toUpper(std::core::String text)` |
+| [std::text::Text::trim](std-text.md#api-12) | `static std::core::String trim(std::core::String text)` |
 | [std::thread::ThreadGroup::add](std-thread.md#api-21) | `void add(Thread task)` |
 | [std::thread::ThreadGroup::cancelAll](std-thread.md#api-22) | `void cancelAll()` |
 | [std::thread::ThreadGroup::create](std-thread.md#api-19) | `static ThreadGroup create()` |
@@ -1154,16 +1185,16 @@
 | [std::thread::waitResult](std-thread.md#api-11) | `ThreadResult waitResult(Thread thread)` |
 | [std::thread::waitResultFor](std-thread.md#api-10) | `ThreadResult waitResultFor(Thread thread, int64 millis)` |
 | [std::toml::TomlValue::asBool](std-toml.md#api-17) | `Option<bool> asBool()` |
-| [std::toml::TomlValue::asBytes](std-toml.md#api-19) | `Option<std::lang::List<uint8>> asBytes()` |
-| [std::toml::TomlValue::asDateTime](std-toml.md#api-20) | `Option<std::lang::String> asDateTime()` |
+| [std::toml::TomlValue::asBytes](std-toml.md#api-19) | `Option<std::core::List<uint8>> asBytes()` |
+| [std::toml::TomlValue::asDateTime](std-toml.md#api-20) | `Option<std::core::String> asDateTime()` |
 | [std::toml::TomlValue::asFloat64](std-toml.md#api-16) | `Option<float64> asFloat64()` |
 | [std::toml::TomlValue::asInt](std-toml.md#api-15) | `Option<int64> asInt()` |
-| [std::toml::TomlValue::asString](std-toml.md#api-18) | `Option<std::lang::String> asString()` |
+| [std::toml::TomlValue::asString](std-toml.md#api-18) | `Option<std::core::String> asString()` |
 | [std::toml::TomlValue::at](std-toml.md#api-23) | `Option<TomlValue> at(int64 index)` |
 | [std::toml::TomlValue::close](std-toml.md#api-3) | `bool close()` |
-| [std::toml::TomlValue::dump](std-toml.md#api-27) | `std::lang::String dump()` |
-| [std::toml::TomlValue::find](std-toml.md#api-21) | `Option<TomlValue> find(std::lang::String key)` |
-| [std::toml::TomlValue::findBytes](std-toml.md#api-22) | `Option<TomlValue> findBytes(std::lang::List<uint8> key)` |
+| [std::toml::TomlValue::dump](std-toml.md#api-27) | `std::core::String dump()` |
+| [std::toml::TomlValue::find](std-toml.md#api-21) | `Option<TomlValue> find(std::core::String key)` |
+| [std::toml::TomlValue::findBytes](std-toml.md#api-22) | `Option<TomlValue> findBytes(std::core::List<uint8> key)` |
 | [std::toml::TomlValue::isArray](std-toml.md#api-10) | `bool isArray()` |
 | [std::toml::TomlValue::isBool](std-toml.md#api-6) | `bool isBool()` |
 | [std::toml::TomlValue::isDateTime](std-toml.md#api-13) | `bool isDateTime()` |
@@ -1175,13 +1206,30 @@
 | [std::toml::TomlValue::isTable](std-toml.md#api-12) | `bool isTable()` |
 | [std::toml::TomlValue::isValid](std-toml.md#api-2) | `bool isValid()` |
 | [std::toml::TomlValue::iterator](std-toml.md#api-24) | `Option<TomlValue> iterator(int64 index)` |
-| [std::toml::TomlValue::keyAt](std-toml.md#api-25) | `Option<std::lang::String> keyAt(int64 index)` |
-| [std::toml::TomlValue::keyBytesAt](std-toml.md#api-26) | `Option<std::lang::List<uint8>> keyBytesAt(int64 index)` |
+| [std::toml::TomlValue::keyAt](std-toml.md#api-25) | `Option<std::core::String> keyAt(int64 index)` |
+| [std::toml::TomlValue::keyBytesAt](std-toml.md#api-26) | `Option<std::core::List<uint8>> keyBytesAt(int64 index)` |
 | [std::toml::TomlValue::kind](std-toml.md#api-4) | `int64 kind()` |
 | [std::toml::TomlValue::len](std-toml.md#api-14) | `int64 len()` |
-| [std::toml::deserialize](std-toml.md#api-1) | `Result<T,std::lang::Error> deserialize<T>(String text)` |
-| [std::toml::parse](std-toml.md#api-28) | `Result<TomlValue, std::lang::Error> parse(std::lang::String text)` |
-| [std::toml::serialize](std-toml.md#api-0) | `Result<String,std::lang::Error> serialize<T>(T const& value)` |
+| [std::toml::deserialize](std-toml.md#api-1) | `Result<T,std::core::Error> deserialize<T>(String text)` |
+| [std::toml::parse](std-toml.md#api-28) | `Result<TomlValue, std::core::Error> parse(std::core::String text)` |
+| [std::toml::serialize](std-toml.md#api-0) | `Result<String,std::core::Error> serialize<T>(T const& value)` |
+| [std::tree::AvlTree::clear](std-tree.md#api-31) | `void clear()` |
+| [std::tree::AvlTree::contains](std-tree.md#api-30) | `bool contains(int64 key)` |
+| [std::tree::AvlTree::copy](std-tree.md#api-27) | `AvlTree copy()` |
+| [std::tree::AvlTree::create](std-tree.md#api-26) | `static AvlTree create()` |
+| [std::tree::AvlTree::height](std-tree.md#api-32) | `int64 height()` |
+| [std::tree::AvlTree::inorder](std-tree.md#api-33) | `List<int64> inorder()` |
+| [std::tree::AvlTree::insert](std-tree.md#api-41) | `bool insert(int64 key)` |
+| [std::tree::AvlTree::is_empty](std-tree.md#api-29) | `bool is_empty()` |
+| [std::tree::AvlTree::len](std-tree.md#api-28) | `int64 len()` |
+| [std::tree::AvlTree::lower_bound](std-tree.md#api-37) | `Option<int64> lower_bound(int64 key)` |
+| [std::tree::AvlTree::max](std-tree.md#api-36) | `Option<int64> max()` |
+| [std::tree::AvlTree::min](std-tree.md#api-35) | `Option<int64> min()` |
+| [std::tree::AvlTree::pop_max](std-tree.md#api-40) | `Option<int64> pop_max()` |
+| [std::tree::AvlTree::pop_min](std-tree.md#api-39) | `Option<int64> pop_min()` |
+| [std::tree::AvlTree::remove](std-tree.md#api-42) | `bool remove(int64 key)` |
+| [std::tree::AvlTree::snapshot](std-tree.md#api-34) | `TreeSnapshot snapshot()` |
+| [std::tree::AvlTree::upper_bound](std-tree.md#api-38) | `Option<int64> upper_bound(int64 key)` |
 | [std::tree::BinarySearchTree::clear](std-tree.md#api-3) | `void clear()` |
 | [std::tree::BinarySearchTree::contains](std-tree.md#api-6) | `bool contains(int64 key)` |
 | [std::tree::BinarySearchTree::copy](std-tree.md#api-1) | `BinarySearchTree copy()` |
@@ -1196,30 +1244,30 @@
 | [std::tree::BinarySearchTree::preorder](std-tree.md#api-11) | `List<int64> preorder()` |
 | [std::tree::BinarySearchTree::remove](std-tree.md#api-5) | `bool remove(int64 key)` |
 | [std::tree::BinarySearchTree::snapshot](std-tree.md#api-13) | `TreeSnapshot snapshot()` |
-| [std::tree::GeneralTree::addChild](std-tree.md#api-40) | `int64 addChild(int64 cursor,int64 value)` |
-| [std::tree::GeneralTree::addRoot](std-tree.md#api-39) | `int64 addRoot(int64 value)` |
-| [std::tree::GeneralTree::children](std-tree.md#api-43) | `List<int64> children(int64 cursor)` |
-| [std::tree::GeneralTree::clear](std-tree.md#api-38) | `void clear()` |
-| [std::tree::GeneralTree::copy](std-tree.md#api-36) | `GeneralTree copy()` |
-| [std::tree::GeneralTree::create](std-tree.md#api-35) | `static GeneralTree create()` |
-| [std::tree::GeneralTree::fromBinary](std-tree.md#api-48) | `static GeneralTree fromBinary(BinarySearchTree tree)` |
-| [std::tree::GeneralTree::height](std-tree.md#api-46) | `int64 height()` |
-| [std::tree::GeneralTree::len](std-tree.md#api-37) | `int64 len()` |
-| [std::tree::GeneralTree::levelOrder](std-tree.md#api-45) | `List<int64> levelOrder()` |
-| [std::tree::GeneralTree::preorder](std-tree.md#api-44) | `List<int64> preorder()` |
-| [std::tree::GeneralTree::rootNode](std-tree.md#api-42) | `int64 rootNode()` |
-| [std::tree::GeneralTree::snapshot](std-tree.md#api-49) | `GeneralTreeSnapshot snapshot()` |
-| [std::tree::GeneralTree::toBinary](std-tree.md#api-47) | `BinarySearchTree toBinary()` |
-| [std::tree::GeneralTree::valueAt](std-tree.md#api-41) | `int64 valueAt(int64 cursor)` |
-| [std::tree::MinHeap::clear](std-tree.md#api-30) | `void clear()` |
-| [std::tree::MinHeap::copy](std-tree.md#api-27) | `MinHeap copy()` |
-| [std::tree::MinHeap::create](std-tree.md#api-26) | `static MinHeap create()` |
-| [std::tree::MinHeap::isEmpty](std-tree.md#api-29) | `bool isEmpty()` |
-| [std::tree::MinHeap::len](std-tree.md#api-28) | `int64 len()` |
-| [std::tree::MinHeap::peek](std-tree.md#api-32) | `Option<int64> peek()` |
-| [std::tree::MinHeap::pop](std-tree.md#api-33) | `Option<int64> pop()` |
-| [std::tree::MinHeap::push](std-tree.md#api-31) | `void push(int64 value)` |
-| [std::tree::MinHeap::snapshot](std-tree.md#api-34) | `List<int64> snapshot()` |
+| [std::tree::GeneralTree::addChild](std-tree.md#api-57) | `int64 addChild(int64 cursor,int64 value)` |
+| [std::tree::GeneralTree::addRoot](std-tree.md#api-56) | `int64 addRoot(int64 value)` |
+| [std::tree::GeneralTree::children](std-tree.md#api-60) | `List<int64> children(int64 cursor)` |
+| [std::tree::GeneralTree::clear](std-tree.md#api-55) | `void clear()` |
+| [std::tree::GeneralTree::copy](std-tree.md#api-53) | `GeneralTree copy()` |
+| [std::tree::GeneralTree::create](std-tree.md#api-52) | `static GeneralTree create()` |
+| [std::tree::GeneralTree::fromBinary](std-tree.md#api-65) | `static GeneralTree fromBinary(BinarySearchTree tree)` |
+| [std::tree::GeneralTree::height](std-tree.md#api-63) | `int64 height()` |
+| [std::tree::GeneralTree::len](std-tree.md#api-54) | `int64 len()` |
+| [std::tree::GeneralTree::levelOrder](std-tree.md#api-62) | `List<int64> levelOrder()` |
+| [std::tree::GeneralTree::preorder](std-tree.md#api-61) | `List<int64> preorder()` |
+| [std::tree::GeneralTree::rootNode](std-tree.md#api-59) | `int64 rootNode()` |
+| [std::tree::GeneralTree::snapshot](std-tree.md#api-66) | `GeneralTreeSnapshot snapshot()` |
+| [std::tree::GeneralTree::toBinary](std-tree.md#api-64) | `BinarySearchTree toBinary()` |
+| [std::tree::GeneralTree::valueAt](std-tree.md#api-58) | `int64 valueAt(int64 cursor)` |
+| [std::tree::MinHeap::clear](std-tree.md#api-47) | `void clear()` |
+| [std::tree::MinHeap::copy](std-tree.md#api-44) | `MinHeap copy()` |
+| [std::tree::MinHeap::create](std-tree.md#api-43) | `static MinHeap create()` |
+| [std::tree::MinHeap::isEmpty](std-tree.md#api-46) | `bool isEmpty()` |
+| [std::tree::MinHeap::len](std-tree.md#api-45) | `int64 len()` |
+| [std::tree::MinHeap::peek](std-tree.md#api-49) | `Option<int64> peek()` |
+| [std::tree::MinHeap::pop](std-tree.md#api-50) | `Option<int64> pop()` |
+| [std::tree::MinHeap::push](std-tree.md#api-48) | `void push(int64 value)` |
+| [std::tree::MinHeap::snapshot](std-tree.md#api-51) | `List<int64> snapshot()` |
 | [std::tree::RedBlackTree::clear](std-tree.md#api-18) | `void clear()` |
 | [std::tree::RedBlackTree::contains](std-tree.md#api-17) | `bool contains(int64 key)` |
 | [std::tree::RedBlackTree::copy](std-tree.md#api-15) | `RedBlackTree copy()` |
@@ -1233,10 +1281,10 @@
 | [std::tree::RedBlackTree::remove](std-tree.md#api-24) | `bool remove(int64 key)` |
 | [std::tree::RedBlackTree::validate](std-tree.md#api-25) | `bool validate()` |
 | [std::utf8::Utf8Error::toString](std-utf8.md#api-0) | `String toString()` |
-| [std::utf8::codePointCount](std-utf8.md#api-6) | `Result<int64,std::lang::Error> codePointCount(String text)` |
-| [std::utf8::decodeUtf8](std-utf8.md#api-2) | `Result<List<uint32>,std::lang::Error> decodeUtf8(String text)` |
-| [std::utf8::decodeUtf8Bytes](std-utf8.md#api-1) | `Result<List<uint32>,std::lang::Error> decodeUtf8Bytes(List<uint8> text)` |
-| [std::utf8::encodeUtf8](std-utf8.md#api-5) | `Result<String,std::lang::Error> encodeUtf8(List<uint32> points)` |
-| [std::utf8::encodeUtf8Bytes](std-utf8.md#api-4) | `Result<List<uint8>,std::lang::Error> encodeUtf8Bytes(List<uint32> points)` |
+| [std::utf8::codePointCount](std-utf8.md#api-6) | `Result<int64,std::core::Error> codePointCount(String text)` |
+| [std::utf8::decodeUtf8](std-utf8.md#api-2) | `Result<List<uint32>,std::core::Error> decodeUtf8(String text)` |
+| [std::utf8::decodeUtf8Bytes](std-utf8.md#api-1) | `Result<List<uint32>,std::core::Error> decodeUtf8Bytes(List<uint8> text)` |
+| [std::utf8::encodeUtf8](std-utf8.md#api-5) | `Result<String,std::core::Error> encodeUtf8(List<uint32> points)` |
+| [std::utf8::encodeUtf8Bytes](std-utf8.md#api-4) | `Result<List<uint8>,std::core::Error> encodeUtf8Bytes(List<uint32> points)` |
 | [std::utf8::isValidUtf8](std-utf8.md#api-3) | `bool isValidUtf8(String text)` |
-| [std::utf8::sliceCodePoints](std-utf8.md#api-7) | `Result<String,std::lang::Error> sliceCodePoints(String text, int64 start, int64 count)` |
+| [std::utf8::sliceCodePoints](std-utf8.md#api-7) | `Result<String,std::core::Error> sliceCodePoints(String text, int64 start, int64 count)` |

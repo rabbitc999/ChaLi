@@ -156,6 +156,31 @@ Compile-time tools can enumerate a type's implemented interfaces while retaining
 
 Call the interface directly when every implementation supplies the required behavior. Refine types when recovery, payload access or handling actually differs. Avoid duplicating identical toString calls for every known implementation. Chapter 16 handles interface payloads inside Result and propagation.
 
+### Call a method through an interface
+
+Assign a concrete value to an interface variable and call its published method.
+
+<!-- verify-book -->
+```chali
+interface Score {
+    int64 points();
+}
+struct Quiz : Score {
+    int64 points() {
+        return 42;
+    }
+}
+void main() {
+    Quiz quiz;
+    Score view = quiz;
+    println("{}", view.points());
+}
+```
+
+```text
+42
+```
+
 ### Summary
 
 Interfaces promise callable behavior rather than a particular field layout. Borrowed implementations still need live sources, and value payloads retain concrete copy and resource semantics. Refine types only when recovery or extra data requires it.
@@ -281,18 +306,5 @@ The third widens concrete errors through propagation. Option propagation tests V
 Method names, parameters, results, receivers and default bodies can also be queried during compilation. Chapter 22 uses $methods and $interfaces to read these descriptions. Querying an interface describes its requirements; querying an implementation can additionally expose concrete associated-type bindings. A query neither executes a method nor constructs an interface object.
 
 Derived ordinary methods must satisfy the same requirements. Debug requires debug to return String; a method with the same name and a different result cannot substitute for it. Runtime interface dispatch follows the rules in this chapter, while field traversal and method generation happen during compilation.
-## 17.7 Exercises
-
-1. Add another error implementation and check fallback.
-2. How do you write a wildcard without a binding?
-3. Does interface inheritance inherit fields?
-4. When should you call instead of matching?
-
-### Answers and checks
-
-1. Retain _ and confirm the fallback executes.
-2. Write _ => {...}.
-3. No; it combines behavioral requirements.
-4. When the interface fully expresses the operation without concrete payload access.
 
 Next: [Chapter 18](18-generics.md).

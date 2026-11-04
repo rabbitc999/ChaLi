@@ -47,7 +47,7 @@ sum=10
 
 ---
 
-## B.2 核心模块 `std::lang`（不用 import）
+## B.2 核心模块 `std::core`（不用 import）
 
 这几样任何程序里都能直接用：
 
@@ -56,17 +56,16 @@ sum=10
 | 输出 | `println(fmt, …)`、`format(fmt, …)` |
 | 断言 | `assert(cond)` |
 | 取长度 | `len(x)`（字符串 / 容器） |
-| 字符串 | `std::lang::String` |
+| 字符串 | `std::core::String` |
 | 容器 | `List<T>`、`Map<K, V>`、`Set<T>`、`Pair<K, V>` |
 | 可选值与错误 | `Option<T>`、`Result<T, E>`；标准库错误实现 `Error.toString()`，文本错误使用 `MessageError`，配合模式匹配、查询和取值方法 |
 | 类型擦除盒子 | `Any`（第 13 章的运行期多态） |
-| 数学常数 | `Math::PI`、`Math::E` |
 | 大数 | `BigInteger`、`BigDecimal` |
 | 输入 | `inputInt()`、`inputUInt()`、`inputFloat()`、`inputBool()`、`inputChar()`、`inputBigInteger()`、`inputBigDecimal()` |
 | 整行输入 | `readLine()`，保留空格，不含 LF/CRLF |
 | 多行输入 | `readLines(int32 N)`，LF 连接，EOF 提前结束 |
 
-完整类型、接口与内建入口见[核心库参考](../library/std-lang.md)。其余模块按需显式 `import`。
+完整类型、接口与内建入口见[核心库参考](../library/std-core.md)。其余模块按需显式 `import`。
 
 ---
 
@@ -76,11 +75,11 @@ sum=10
 
 | 模块 | 能干什么 |
 | --- | --- |
-| [`std::math`](../library/std-math.md) | `sin` `cos` `sqrt` 等常用函数；`abs` `min` `max` 是泛型入口，`min`/`max` 可以给任意多个实参（常数见 `std::lang::Math`） |
+| [`std::math`](../library/std-math.md) | `sin` `cos` `sqrt` 等常用函数；`abs` `min` `max` 是泛型入口，`min`/`max` 可以给任意多个实参（常数 `std::math::PI`、`std::math::E`） |
 | [`std::numerics`](../library/std-numerics.md) | 标量数值方法：导数、辛普森积分、二分、RK4、牛顿迭代 |
-| [`std::numtheory`](../library/std-numtheory.md) | 整数数论：模块级泛型 `gcd` `lcm`（任意多个实参）、`addMod` `mulMod` `powMod` `modInverse`，以及确定性的 `isPrime`（Miller-Rabin） |
+| [`std::number_theory`](../library/std-number_theory.md) | 整数数论：模块级泛型 `gcd` `lcm`（任意多个实参）、`add_mod` `mul_mod` `pow_mod` `mod_inverse`，以及确定性的 `is_prime`（Miller-Rabin） |
 | [`std::complex`](../library/std-complex.md) | 复数 `Complex<T>` 及对应算术运算 |
-| [`std::linalg`](../library/std-linalg.md) | 稠密向量与矩阵：`luDecompose` `symmetricEigen` `svd` `jordan2` `diagonalize2` |
+| [`std::linear_algebra`](../library/std-linear_algebra.md) | 稠密向量与矩阵：`lu_decompose` `symmetric_eigen` `svd` `jordan2` `diagonalize2` |
 | [`std::random`](../library/std-random.md) | 确定性随机数（LCG）与熵播种；句柄型状态，实现 `Drop` |
 | [`std::signal`](../library/std-signal.md) | DFT / FFT 与逆变换；基 2 的 FFT 只接受 2 的幂长度 |
 | [`std::cas`](../library/std-cas.md) | `Expr` 精确符号表达式：解析、节点遍历、化简、求导、积分、替换、极限和 Taylor 展开 |
@@ -106,8 +105,8 @@ sum=10
 | 模块 | 能干什么 |
 | --- | --- |
 | [`std::collections`](../library/std-collections.md) | `Deque`、`Queue`、当前上下文的 `Channel`、`FixedVector` 和 `RingBuffer` |
-| [`std::linkedlist`](../library/std-linkedlist.md) | 双向链表，头尾操作、插入、删除、查找和遍历 |
-| [`std::tree`](../library/std-tree.md) | 二叉搜索树、红黑树、最小堆和普通树；删除、遍历、校验与快照 |
+| [`std::linked_list`](../library/std-linked_list.md) | 双向链表，头尾操作、插入、删除、查找和遍历 |
+| [`std::tree`](../library/std-tree.md) | 二叉搜索树、AVL 树、红黑树、最小堆和普通树；有序查询、删除、遍历与快照 |
 | [`std::graph`](../library/std-graph.md) | `Graph`、`UnionFind`，BFS、DFS、拓扑排序、最短路、环检测和最小生成树 |
 | [`std::algorithms`](../library/std-algorithms.md) | 排序、查找、折叠、映射、过滤、计数和聚合；回调遵循函数值的借用与生命周期规则 |
 | [`std::image`](../library/std-image.md) | `Image`、RGBA 像素，BMP/PGM/PPM 读写、颜色转换、卷积、池化和大津法二值化 |
@@ -145,7 +144,7 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 | [`std::sql`](../library/std-sql.md) | `Database`、事务与模型操作；连接 MySQL / SQLite / PostgreSQL / SQL Server。参数绑定与后端能力分别核对，MySQL 文本使用 quote |
 | [`std::process`](../library/std-process.md) | `Process`，宿主进程创建、命令管道、等待与结果读取 |
 | [`std::clock`](../library/std-clock.md) | 单调时钟 `steady_clock`，只用来做差值，别当挂钟用 |
-| [`std::datetime`](../library/std-datetime.md) | `DateTime`、UTC 公历日期、Unix 秒、格式化和解析；不表示闰秒 |
+| [`std::date_time`](../library/std-date_time.md) | `DateTime`、UTC 公历日期、Unix 秒、格式化和解析；不表示闰秒 |
 | [`std::cli`](../library/std-cli.md) | 长短选项、组合短选项、位置参数、`--` 分隔、参数查询和帮助生成 |
 | [`std::memory`](../library/std-memory.md) | `Span<T>` 借用视图与 `MemoryStats`；缓冲区用 `new` 分配，视图受底层存储有效期约束 |
 
@@ -166,7 +165,7 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 转移所有权写 `move value`。复制是否深复制、借用何时失效，查对应类型的参考页。
 
 **二、压缩结果是二进制，不是文本。** `std::compress` 的输出含 `\0` 字节，类型是
-`List<uint8>`；**别拿它当字符串打印**，解压出来的才是 `std::lang::String`。
+`List<uint8>`；**别拿它当字符串打印**，解压出来的才是 `std::core::String`。
 
 **三、字节与码点分清。** `String` 的长度和切片端点按字节计算，切片可以截取多字节编码的一部分；
 普通字符串下标仍要求 UTF-8 字符边界。按 Unicode 码点处理时使用显式码点接口或 `std::utf8`。
@@ -194,3 +193,79 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 ## B.6 组合与验证
 
 选择模块后检查输入类型、返回的 Result／Option、资源关闭及目标平台条件。先运行最小正常例程，再验证一个失败路径；跨模块组合时重新检查所有权与借用关系。数据库组合示例见[第 29 章](29-学生信息管理系统.md)，接口错误匹配见[第 14 章](14-错误处理.md)。
+
+## 标准宏与精确大数
+
+导入 `std::macro` 后可以使用 `$MIN`、`$MAX` 和 `$CLAMP`。每个实参求值一次。下面第一次调用共执行两次 `next`，最后一次把 9 限制在 0 到 6 的闭区间内。
+
+<!-- verify-book -->
+```chali
+import std::macro;
+
+int64 calls = 0;
+int64 next(int64 value) {
+    calls++;
+    return value;
+}
+void main() {
+    println("{} {} {}", $std::macro::MIN(next(7), next(3)), $MAX(7, 3), $CLAMP(9, 0, 6));
+    println("{}", calls);
+}
+```
+
+```text
+3 7 6
+2
+```
+
+公开的大数类型位于 `std::big_number`。下面的程序在编译期核对类型身份，并用 JSON 序列化和反序列化验证两种数值都能精确往返。
+
+<!-- verify-book -->
+```chali
+import std::big_number;
+import std::json;
+import std::reflect;
+
+@Reflect
+struct Numbers {
+    std::big_number::BigInteger integer;
+    std::big_number::BigDecimal decimal;
+}
+
+$macro CHECK_IDENTITIES<T>() -> stmt
+$if ($fields<T>())[0].type != std::big_number::BigInteger
+$compile_error("unexpected BigInteger identity");
+$end_if
+$if ($fields<T>())[1].type != std::big_number::BigDecimal
+$compile_error("unexpected BigDecimal identity");
+$end_if
+$end_macro
+
+void main() {
+    $CHECK_IDENTITIES<Numbers>();
+    Numbers values;
+    values.integer = std::big_number::BigInteger("9000000000000000000") + BigInteger(7);
+    values.decimal = std::big_number::BigDecimal("1.25") + BigDecimal("2.50");
+    Option<BigInteger> boxed = Option<BigInteger>::Value(values.integer);
+    uint64 integerId = std::reflect::getTypeId<std::big_number::BigInteger>();
+    assert(integerId != 0 && integerId == std::reflect::getTypeId<BigInteger>());
+    String encoded = std::json::serialize<Numbers>(&values).unwrap();
+    Numbers decoded = std::json::deserialize<Numbers>(encoded).unwrap();
+    assert(decoded.integer == boxed.unwrap() && decoded.decimal == values.decimal);
+    println("{} {}", decoded.integer, decoded.decimal);
+}
+```
+
+```text
+9000000000000000007 3.75
+```
+
+## B.7 工程常用操作
+
+- `std::math::PI` 与 `std::math::E` 是模块常量，导入 `std::math` 后可直接读取。高精度圆周率使用 `std::math::pi(digits)`。
+- `std::date_time::parse_offset` 读取 ISO 8601 的显式 UTC 偏移，`utc()` 转回同一时刻的 UTC。偏移是固定数值。
+- `std::iter::group_by` 消费有限游标并按键分组，`chunk` 惰性分块并保留尾块，`zip` 在较短输入结束时停止。
+- `std::log::format_record` 编码结构化 JSON 行，`write_record` 输出到标准错误。
+- `std::io::copy_to` 分块复制；`walk_directory` 递归列出路径；`create_temp_file` 与 `replace_file` 可组合成同目录替换流程。
+
+桌面窗体、音频、XML、密码学和 HTTP 流式客户端按需构建。安装命令、完整程序、输出和失败行为见[可选宿主库](../45-optional-libraries.md)。

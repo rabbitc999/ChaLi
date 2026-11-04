@@ -12,3 +12,7 @@ their source code is not distributed in this repository.
 The non-finite complex multiplication recovery in source/std/signal.chl is
 adapted from LLVM compiler-rt muldc3 (The LLVM Project), licensed under
 Apache License v2.0 with LLVM Exceptions; see licenses/llvm/LICENSE.TXT.
+
+Optional host libraries preserve the corresponding notices in their build outputs:
+raylib and raygui (zlib), Expat (MIT), libsodium (ISC), and libcurl (curl license).
+These dependencies are used only by the optional host modules.

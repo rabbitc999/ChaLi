@@ -2,5 +2,5 @@
 void main(){
     int64 mut& first = new int64;int64 mut& stale=first;first.drop();
     int64 mut& second = new int64;*second=22;
-    std::lang::println("{}",*stale);second.drop();
+    std::core::println("{}",*stale);second.drop();
 }

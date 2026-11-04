@@ -20,19 +20,19 @@ struct SqlStatement {
 };
 
 /** 从反射元数据构造模型；没有 @Reflect 或 @ModelClass 时返回诊断。 */
-Result<String,std::lang::Error> __model<T>() {
+Result<String,std::core::Error> __model<T>() {
     std::reflect::requireReflection();
     let reflected = std::reflect::getStructInfo<T>();
-    if (reflected.isNone()) { return Result<String,std::lang::Error>::Err(MessageError::from("SQL 模型需要 @Reflect")); }
+    if (reflected.isNone()) { return Result<String,std::core::Error>::Err(MessageError::from("SQL 模型需要 @Reflect")); }
     let info = reflected.unwrap();
     let classInfo = std::reflect::getAnnotationInfo("std::sql::ModelClass");
     let fieldInfo = std::reflect::getAnnotationInfo("std::sql::ModelField");
-    if (classInfo.isNone() || fieldInfo.isNone()) { return Result<String,std::lang::Error>::Err(MessageError::from("SQL 注解元数据不可用")); }
+    if (classInfo.isNone() || fieldInfo.isNone()) { return Result<String,std::core::Error>::Err(MessageError::from("SQL 注解元数据不可用")); }
     String table;
     for (std::reflect::Annotation annotation in info.annotations) {
         if (annotation.annotationId == classInfo.unwrap().typeId) { table = annotation.args.at(0).asText().unwrap(); }
     }
-    if (table == "") { return Result<String,std::lang::Error>::Err(MessageError::from("SQL 模型需要 @ModelClass(table)")); }
+    if (table == "") { return Result<String,std::core::Error>::Err(MessageError::from("SQL 模型需要 @ModelClass(table)")); }
     String output = "{\"name\":" + std::reflect::__serdeQuote(info.name) + ",\"table\":" + std::reflect::__serdeQuote(table) + ",\"fields\":[";
     bool first = true;
     for (std::reflect::FieldInfo field in info.fields) {
@@ -52,13 +52,13 @@ Result<String,std::lang::Error> __model<T>() {
             elif (field.typeId == std::reflect::getTypeId<bool>()) { kind = "bool"; }
             elif (field.typeId == std::reflect::getTypeId<float32>() || field.typeId == std::reflect::getTypeId<float64>()) { kind = "real"; }
             elif (field.typeId == std::reflect::getTypeId<int8>() || field.typeId == std::reflect::getTypeId<int16>() || field.typeId == std::reflect::getTypeId<int32>() || field.typeId == std::reflect::getTypeId<int64>() || field.typeId == std::reflect::getTypeId<uint8>() || field.typeId == std::reflect::getTypeId<uint16>() || field.typeId == std::reflect::getTypeId<uint32>()) { kind = "int"; }
-            else { return Result<String,std::lang::Error>::Err(MessageError::from("无法推断 SQL 字段存储类型：" + field.name)); }
+            else { return Result<String,std::core::Error>::Err(MessageError::from("无法推断 SQL 字段存储类型：" + field.name)); }
         }
         if (!first) { output = output + ","; }
         first = false;
         output = output + "{\"name\":" + std::reflect::__serdeQuote(field.name) + ",\"column\":" + std::reflect::__serdeQuote(column) + ",\"kind\":" + std::reflect::__serdeQuote(kind) + ",\"id\":" + primary.toString() + "}";
     }
-    return Result<String,std::lang::Error>::Ok(output + "]}");
+    return Result<String,std::core::Error>::Ok(output + "]}");
 }
 
 /** 值语义的动态查询；复制后可独立修改条件。 */
@@ -83,19 +83,19 @@ struct Query {
     /** 设置非负分页参数。 */
     void page(int64 limit, int64 offset = 0) { self.limitValue = limit; self.offsetValue = offset; }
     /** 生成 SQL 与参数；UPDATE/DELETE 强制要求过滤条件。 */
-    Result<SqlStatement,std::lang::Error> build(String operation = "select", String values = "{}") {
-        if (self.limitValue < 0 || self.offsetValue < 0) { return Result<SqlStatement,std::lang::Error>::Err(MessageError::from("分页参数不能为负数")); }
+    Result<SqlStatement,std::core::Error> build(String operation = "select", String values = "{}") {
+        if (self.limitValue < 0 || self.offsetValue < 0) { return Result<SqlStatement,std::core::Error>::Err(MessageError::from("分页参数不能为负数")); }
         String separator = ",";
         String options = "{\"filters\":[" + separator.join(self.filters) + "],\"orders\":[" + separator.join(self.orders) + "],\"columns\":[" + separator.join(self.columns) + "],\"limit\":" + self.limitValue.toString() + ",\"offset\":" + self.offsetValue.toString() + "}";
         let parsed = std::json::parse(__ipageBuild(self.model, operation, options, values));
-        if (parsed.isErr()) { return Result<SqlStatement,std::lang::Error>::Err(MessageError::from(parsed.error())); }
+        if (parsed.isErr()) { return Result<SqlStatement,std::core::Error>::Err(MessageError::from(parsed.error())); }
         let response = parsed.unwrap();
         String error = response.find("error").unwrap().asString().unwrap();
-        if (error != "") { return Result<SqlStatement,std::lang::Error>::Err(MessageError::from(error)); }
+        if (error != "") { return Result<SqlStatement,std::core::Error>::Err(MessageError::from(error)); }
         SqlStatement statement;
         statement.sql = response.find("sql").unwrap().asString().unwrap();
         statement.parameters = response.find("params").unwrap().dump();
-        return Result<SqlStatement,std::lang::Error>::Ok(statement);
+        return Result<SqlStatement,std::core::Error>::Ok(statement);
     }
 
 };
@@ -118,7 +118,7 @@ struct Query {
  *   db.exec("CREATE TABLE IF NOT EXISTS t (id INT PRIMARY KEY, name VARCHAR(32))");
  *   db.exec("INSERT INTO t (id, name) VALUES (1, '张三')");
  *   std::sql::ResultSet rs = db.exec("SELECT id, name FROM t ORDER BY id");
- *   std::lang::println("{}", rs.render());
+ *   std::core::println("{}", rs.render());
  *   db.close();
  *
  * 客户端库在运行期动态加载，不需要在构建时链接；找不到时 `lastError()` 会说明原因，
@@ -129,19 +129,19 @@ struct Query {
  */
 
 /* ── 宿主签名（由 abi/abi_sql.cpp 注册） ─────────────────────────────── */
-int32 __sqlConnect(std::lang::String host, std::lang::String user, std::lang::String password, std::lang::String database, int32 port);
-int32 __sqlOpenSqlite(std::lang::String path);
-int32 __sqlOpenPostgres(std::lang::String options);
-int32 __sqlOpenOdbc(std::lang::String options);
+int32 __sqlConnect(std::core::String host, std::core::String user, std::core::String password, std::core::String database, int32 port);
+int32 __sqlOpenSqlite(std::core::String path);
+int32 __sqlOpenPostgres(std::core::String options);
+int32 __sqlOpenOdbc(std::core::String options);
 int32 __sqlClose(int32 db);
-int32 __sqlExec(int32 db, std::lang::String sql);
+int32 __sqlExec(int32 db, std::core::String sql);
 int64 __sqlAffected(int32 db);
-std::lang::String __sqlError(int32 db);
+std::core::String __sqlError(int32 db);
 int32 __sqlRowCount(int32 rs);
 int32 __sqlColCount(int32 rs);
 int64 __sqlResultAffected(int32 rs);
-std::lang::String __sqlColName(int32 rs, int32 col);
-std::lang::String __sqlCellText(int32 rs, int32 row, int32 col);
+std::core::String __sqlColName(int32 rs, int32 col);
+std::core::String __sqlCellText(int32 rs, int32 row, int32 col);
 int64 __sqlCellInt(int32 rs, int32 row, int32 col);
 float64 __sqlCellReal(int32 rs, int32 row, int32 col);
 int32 __sqlCellKind(int32 rs, int32 row, int32 col);
@@ -158,13 +158,13 @@ struct DataCell {
     int64 kind;        /**< CELL_NULL / CELL_INT / CELL_REAL / CELL_TEXT */
     int64 intValue;
     float64 realValue;
-    std::lang::String textValue;
+    std::core::String textValue;
 
     bool isNull() { return self.kind == CELL_NULL; }
     bool isNumber() { return self.kind == CELL_INT || self.kind == CELL_REAL; }
 
     /** @brief 取文本形态；空值给 "NULL"。 */
-    std::lang::String text() {
+    std::core::String text() {
         if (self.kind == CELL_NULL) { return "NULL"; }
         return self.textValue;
     }
@@ -184,30 +184,30 @@ struct DataCell {
 
 /** @brief 结果集的一行。 */
 struct DataRow {
-    std::lang::List<DataCell> cells;
+    std::core::List<DataCell> cells;
 
-    int64 size() { return std::lang::len(self.cells); }
+    int64 size() { return std::core::len(self.cells); }
     DataCell at(int64 index) { return self.cells[index]; }
 };
 
 /** @brief 一次 exec 的结果：状态、错误、影响行数、结果集。 */
 struct ResultSet {
     bool ok;
-    std::lang::String error;
+    std::core::String error;
     int64 affected;                    /**< 最近一次写的影响行数 */
-    std::lang::List<std::lang::String> columns;
-    std::lang::List<DataRow> rows;
+    std::core::List<std::core::String> columns;
+    std::core::List<DataRow> rows;
 
-    int64 rowCount() { return std::lang::len(self.rows); }
-    int64 colCount() { return std::lang::len(self.columns); }
-    bool isEmpty() { return std::lang::len(self.rows) == 0; }
-    std::lang::String columnName(int64 index) { return self.columns[index]; }
+    int64 rowCount() { return std::core::len(self.rows); }
+    int64 colCount() { return std::core::len(self.columns); }
+    bool isEmpty() { return std::core::len(self.rows) == 0; }
+    std::core::String columnName(int64 index) { return self.columns[index]; }
 
     /** @brief 按列名找下标，找不到给 -1。 */
-    int64 columnIndex(std::lang::String name) {
+    int64 columnIndex(std::core::String name) {
         {
             int64 i = 0;
-            while (i < std::lang::len(self.columns)) {
+            while (i < std::core::len(self.columns)) {
 
             if (self.columns[i] == name) { return i; }
         
@@ -218,27 +218,27 @@ struct ResultSet {
     }
 
     DataCell at(int64 row, int64 column) { return self.rows[row].cells[column]; }
-    std::lang::String textAt(int64 row, int64 column) { return self.rows[row].cells[column].text(); }
+    std::core::String textAt(int64 row, int64 column) { return self.rows[row].cells[column].text(); }
     int64 intAt(int64 row, int64 column) { return self.rows[row].cells[column].asInt(); }
     float64 realAt(int64 row, int64 column) { return self.rows[row].cells[column].asReal(); }
 
     /** @brief 第一行第一列文本（常用作标量查询）。 */
-    std::lang::String scalar() {
-        if (std::lang::len(self.rows) == 0 || std::lang::len(self.columns) == 0) { return ""; }
+    std::core::String scalar() {
+        if (std::core::len(self.rows) == 0 || std::core::len(self.columns) == 0) { return ""; }
         return self.rows[0].cells[0].text();
     }
 
     /** @brief 第一行第一列整数。 */
     int64 count() {
-        if (std::lang::len(self.rows) == 0 || std::lang::len(self.columns) == 0) { return 0; }
+        if (std::core::len(self.rows) == 0 || std::core::len(self.columns) == 0) { return 0; }
         return self.rows[0].cells[0].asInt();
     }
 
     /** @brief 补空格到指定显示宽度。 */
-    std::lang::String pad(std::lang::String text, int64 width) {
+    std::core::String pad(std::core::String text, int64 width) {
         /* 注意：不要写 `String out = text;`（用形参初始化局部串会让运行时漏堆），
          * 先从空串拼接出副本，再逐格补空格。 */
-        std::lang::String out = "";
+        std::core::String out = "";
         out = out + text;
         int64 current = displayWidth(text);
         while (current < width) {
@@ -249,11 +249,11 @@ struct ResultSet {
     }
 
     /** @brief 把结果集渲染成等宽文本表格（方便命令行查看）。 */
-    std::lang::String render() {
+    std::core::String render() {
         if (!self.ok) { return "错误：" + self.error; }
-        if (self.colCount() == 0) { return std::lang::format("影响 {} 行", self.affected); }
+        if (self.colCount() == 0) { return std::core::format("影响 {} 行", self.affected); }
 
-        std::lang::List<int64> widths;
+        std::core::List<int64> widths;
         {
             int64 c = 0;
             while (c < self.colCount()) {
@@ -282,7 +282,7 @@ struct ResultSet {
                 r = r + 1;
             }
         }
-        std::lang::String bar = "+";
+        std::core::String bar = "+";
         {
             int64 c = 0;
             while (c < self.colCount()) {
@@ -300,13 +300,13 @@ struct ResultSet {
                 c = c + 1;
             }
         }
-        std::lang::String out = bar + "\n";
+        std::core::String out = bar + "\n";
         {
             int64 c = 0;
             while (c < self.colCount()) {
 
-            std::lang::String raw = self.columnName(c);
-            std::lang::String cell = self.pad(raw, widths[c]);
+            std::core::String raw = self.columnName(c);
+            std::core::String cell = self.pad(raw, widths[c]);
             out = out + "| " + cell + " ";
         
                 c = c + 1;
@@ -322,8 +322,8 @@ struct ResultSet {
                 int64 c = 0;
                 while (c < self.colCount()) {
 
-                std::lang::String raw = self.textAt(r, c);
-                std::lang::String cell = self.pad(raw, widths[c]);
+                std::core::String raw = self.textAt(r, c);
+                std::core::String cell = self.pad(raw, widths[c]);
                 out = out + "| " + cell + " ";
             
                     c = c + 1;
@@ -379,7 +379,7 @@ opcode Database {
     }
 
     /** @brief 按当前数据库规则生成字符串字面量。 */
-    std::lang::String quote(std::lang::String text) {
+    std::core::String quote(std::core::String text) {
         match (self.driver()) {
             Driver::MySQL => { return std::sql::quote(text, true); }
             Driver::MariaDB => { return std::sql::quote(text, true); }
@@ -389,7 +389,7 @@ opcode Database {
     }
 
     /** @brief 返回当前数据库后端名称。 */
-    std::lang::String backendName() {
+    std::core::String backendName() {
         match (self.driver()) {
             Driver::MySQL => { return "mysql"; }
             Driver::MariaDB => { return "mariadb"; }
@@ -402,7 +402,7 @@ opcode Database {
     }
 
     /** @brief 默认端口 3306 的连接。 */
-    static Database mysql(std::lang::String host, std::lang::String user, std::lang::String password, std::lang::String database) {
+    static Database mysql(std::core::String host, std::core::String user, std::core::String password, std::core::String database) {
         return Database::mysql(host, user, password, database, (int32)3306);
     }
 
@@ -412,12 +412,12 @@ opcode Database {
     }
 
     /** @brief 本机开发用的默认连接：127.0.0.1:3306，用户 root，口令 123456。 */
-    static Database local(std::lang::String database) {
+    static Database local(std::core::String database) {
         return Database::mysql("127.0.0.1", "root", "123456", database, (int32)3306);
     }
 
     bool isOpen() { return __sqlOwnerState(self.opcode, 3) != 0; }
-    std::lang::String lastError() { return __sqlOwnerError(self.opcode); }
+    std::core::String lastError() { return __sqlOwnerError(self.opcode); }
     int64 affectedRows() { return __sqlOwnerState(self.opcode, 2); }
 
     /** @brief 关闭连接；重复调用安全。 */
@@ -428,7 +428,7 @@ opcode Database {
      * @param sql SQL 文本；可以包含多条语句，用分号分隔。
      * @return 结果集；`ok` 为假时 `error` 里是服务器给出的诊断。
      */
-    ResultSet exec(std::lang::String sql) {
+    ResultSet exec(std::core::String sql) {
         int32 rs = __sqlExec((int32)__sqlOwnerState(self.opcode, 0), sql);
         return self.__result(rs);
     }
@@ -501,28 +501,28 @@ opcode Database {
     }
 
     /** @brief 执行并只关心成败。 */
-    bool execOk(std::lang::String sql) {
+    bool execOk(std::core::String sql) {
         ResultSet result = self.exec(sql);
         return result.ok;
     }
 
     /** @brief 执行一个"取一行一列"的查询，返回文本。 */
-    std::lang::String scalar(std::lang::String sql) {
+    std::core::String scalar(std::core::String sql) {
         ResultSet result = self.exec(sql);
         if (!result.ok) { return ""; }
         return result.scalar();
     }
 
     /** @brief 执行一个 `SELECT COUNT(...)` 之类的查询，返回整数。 */
-    int64 count(std::lang::String sql) {
+    int64 count(std::core::String sql) {
         ResultSet result = self.exec(sql);
         if (!result.ok) { return 0; }
         return result.count();
     }
 
     /** @brief 当前所选库里表是否存在。 */
-    bool hasTable(std::lang::String tableName) {
-        std::lang::String name = self.quote(tableName);
+    bool hasTable(std::core::String tableName) {
+        std::core::String name = self.quote(tableName);
         match (self.driver()) {
             Driver::SQLite => {
                 return self.count("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = " + name) > 0;
@@ -539,7 +539,7 @@ opcode Database {
             }
             _ => { }
         }
-        std::lang::String sql = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()"
+        std::core::String sql = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()"
                      " AND table_name = " + name;
         return self.count(sql) > 0;
     }
@@ -548,10 +548,10 @@ opcode Database {
 /* ── 辅助函数 ─────────────────────────────────────────────────────────── */
 
 /** @brief 把文本包成 SQL 字符串字面量，始终转义单引号，可选择转义反斜杠。 */
-std::lang::String quote(std::lang::String text, bool escapeBackslash) {
-    std::lang::String out = "'";
+std::core::String quote(std::core::String text, bool escapeBackslash) {
+    std::core::String out = "'";
     int64 start = 0, i = 0;
-    while (i < std::lang::len(text)) {
+    while (i < std::core::len(text)) {
         char c = text[i];
         if (c == '\'' || (escapeBackslash && c == '\\')) {
             out = out + text[start:i];
@@ -565,25 +565,25 @@ std::lang::String quote(std::lang::String text, bool escapeBackslash) {
         elif (byte >= 192) { i += 2; }
         else { i += 1; }
     }
-    out = out + text[start:std::lang::len(text)];
+    out = out + text[start:std::core::len(text)];
     out = out + "'";
     return out;
 }
 
 /** @brief 按 MySQL 规则转义；跨后端代码请调用 db.quote(text)。 */
-std::lang::String quote(std::lang::String text) { return quote(text, true); }
+std::core::String quote(std::core::String text) { return quote(text, true); }
 
 /** @brief 把整数写成 SQL 字面量。 */
-std::lang::String intLiteral(int64 value) { return std::lang::format("{}", value); }
+std::core::String intLiteral(int64 value) { return std::core::format("{}", value); }
 
 /** @brief 把实数写成 SQL 字面量。 */
-std::lang::String realLiteral(float64 value) { return std::lang::format("{}", value); }
+std::core::String realLiteral(float64 value) { return std::core::format("{}", value); }
 
 /** @brief 按终端显示宽度算长度：ASCII 一列，中日韩等宽字符两列。 */
-int64 displayWidth(std::lang::String text) {
+int64 displayWidth(std::core::String text) {
     int64 width = 0;
     int64 i = 0;
-    while (i < std::lang::len(text)) {
+    while (i < std::core::len(text)) {
         int64 byte = (int64)text[i];
         if (byte >= 240) { width += 2; i += 4; }
         elif (byte >= 224) { width += 2; i += 3; }
@@ -594,37 +594,37 @@ int64 displayWidth(std::lang::String text) {
 }
 
     /** 从带模型注解的反射类型创建查询。 */
-    Result<Query,std::lang::Error> query<T>() {
+    Result<Query,std::core::Error> query<T>() {
         let metadata = __model<T>();
-        if (metadata.isErr()) { return Result<Query,std::lang::Error>::Err(MessageError::from(metadata.error())); }
+        if (metadata.isErr()) { return Result<Query,std::core::Error>::Err(MessageError::from(metadata.error())); }
         Query query;
         query.model = metadata.unwrap();
-        return Result<Query,std::lang::Error>::Ok(query);
+        return Result<Query,std::core::Error>::Ok(query);
     }
     /** 添加参数化条件；操作符编号与 ipage OperatorType 一致，默认相等。 */
-    Result<bool,std::lang::Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0) {
+    Result<bool,std::core::Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0) {
         let encoded = std::json::serialize<V>(&value);
-        if (encoded.isErr()) { return Result<bool,std::lang::Error>::Err(MessageError::from(encoded.error())); }
+        if (encoded.isErr()) { return Result<bool,std::core::Error>::Err(MessageError::from(encoded.error())); }
         query.filters.push("{\"field\":" + std::reflect::__serdeQuote(field) + ",\"op\":" + operation.toString() + ",\"values\":[" + encoded.unwrap() + "]}");
-        return Result<bool,std::lang::Error>::Ok(true);
+        return Result<bool,std::core::Error>::Ok(true);
     }
     /** 添加 IN 或 NOT IN 等多参数条件。 */
-    Result<bool,std::lang::Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11) {
+    Result<bool,std::core::Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11) {
         let encoded = std::json::serialize<List<V>>(&values);
-        if (encoded.isErr()) { return Result<bool,std::lang::Error>::Err(MessageError::from(encoded.error())); }
+        if (encoded.isErr()) { return Result<bool,std::core::Error>::Err(MessageError::from(encoded.error())); }
         query.filters.push("{\"field\":" + std::reflect::__serdeQuote(field) + ",\"op\":" + operation.toString() + ",\"values\":" + encoded.unwrap() + "}");
-        return Result<bool,std::lang::Error>::Ok(true);
+        return Result<bool,std::core::Error>::Ok(true);
     }
 
     /** 使用模型值生成参数化 INSERT。 */
-    Result<SqlStatement,std::lang::Error> insert<T>(Query mut& query, T const& value) {
+    Result<SqlStatement,std::core::Error> insert<T>(Query mut& query, T const& value) {
         let encoded = std::json::serialize<T>(value);
-        if (encoded.isErr()) { return Result<SqlStatement,std::lang::Error>::Err(MessageError::from(encoded.error())); }
+        if (encoded.isErr()) { return Result<SqlStatement,std::core::Error>::Err(MessageError::from(encoded.error())); }
         return query.build("insert", encoded.unwrap());
     }
     /** 使用模型值生成参数化 UPDATE，主键不会被修改。 */
-    Result<SqlStatement,std::lang::Error> update<T>(Query mut& query, T const& value) {
+    Result<SqlStatement,std::core::Error> update<T>(Query mut& query, T const& value) {
         let encoded = std::json::serialize<T>(value);
-        if (encoded.isErr()) { return Result<SqlStatement,std::lang::Error>::Err(MessageError::from(encoded.error())); }
+        if (encoded.isErr()) { return Result<SqlStatement,std::core::Error>::Err(MessageError::from(encoded.error())); }
         return query.build("update", encoded.unwrap());
     }

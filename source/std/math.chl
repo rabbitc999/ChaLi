@@ -1,5 +1,12 @@
 module std::math;
+import std::big_number;
 import std::cas;
+
+/** 圆周率 π 的 float64 近似值。 */
+const float64 PI = 3.14159265358979323846;
+
+/** 自然对数的底 e 的 float64 近似值。 */
+const float64 E = 2.71828182845904523536;
 
 BigDecimal __std_bfloat_math(BigDecimal value, int64 operation, BigDecimal other);
 BigDecimal __std_bfloat_pi(int64 digits);
@@ -591,7 +598,7 @@ T max<T>(T... values)
 int64 clamp(int64 value, int64 low, int64 high)
 {
     if (!(low <= high)) {
-        std::lang::panic("std::math::clamp 的 low 不能大于 high");
+        std::core::panic("std::math::clamp 的 low 不能大于 high");
         return value;
     }
     if (value < low) { return low; }
@@ -603,7 +610,7 @@ int64 clamp(int64 value, int64 low, int64 high)
 float64 clamp(float64 value, float64 low, float64 high)
 {
     if (!(low <= high)) {
-        std::lang::panic("std::math::clamp 的 low 不能大于 high");
+        std::core::panic("std::math::clamp 的 low 不能大于 high");
         return value;
     }
     if (value < low) { return low; }

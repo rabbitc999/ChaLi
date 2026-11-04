@@ -21,6 +21,6 @@ assert.throws(() => new DebugSourceMap({ '/a/../b': local, '/b': path.join(local
 assert.throws(() => new DebugSourceMap({ 'C:/Build': local, 'c:/build': path.join(local, 'other') }), /目标.*不唯一/);
 assert.equal(root.toTarget(path.join(local, 'a.chl')), '/a.chl');
 assert.equal(root.toLocal('/a.chl'), path.join(local, 'a.chl'));
-assert.equal(new DebugSourceMap().toLocal('<std::lang>'), '<std::lang>');
-assert.equal(new DebugSourceMap({ '/builder': process.cwd() }).toTarget('<std::lang>'), '<std::lang>');
+assert.equal(new DebugSourceMap().toLocal('<std::core>'), '<std::core>');
+assert.equal(new DebugSourceMap({ '/builder': process.cwd() }).toTarget('<std::core>'), '<std::core>');
 console.log('源码映射：双向最长前缀、目录边界、中文、大小写、根路径与歧义拒绝通过');

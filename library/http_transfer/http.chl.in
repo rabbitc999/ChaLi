@@ -1,0 +1,51 @@
+module std::net::http;
+
+#abi("C", "./@LIBRARY@", "chali_http_open")
+int64 __open();
+#abi("C", "./@LIBRARY@", "chali_http_close")
+void __close(int64 id);
+#abi("C", "./@LIBRARY@", "chali_http_transfer")
+int64 __transfer(int64 id, String url, String upload, String download, int64 timeout_ms,
+                 int64 fn(int64, int64) cancel);
+
+/** 返回零，适用于只需超时而无需主动取消的传输。 */
+int64 keep_going(int64 downloaded, int64 uploaded) { return 0; }
+
+/** 持有可重用连接的可选 HTTP／HTTPS 客户端。 */
+struct HttpClient {
+    int64 __id;
+
+    /** 建立会话；第一次请求才建立连接。 */
+    static Result<HttpClient,Error> open() {
+        HttpClient client;
+        client.__id = __open();
+        if (client.__id == 0) { return Result<HttpClient,Error>::Err(MessageError::from("cannot create HTTP session")); }
+        return Result<HttpClient,Error>::Ok(move client);
+    }
+
+    /** 关闭会话并释放连接；允许重复调用。 */
+    void close() {
+        if (self.__id == 0) { return; }
+        __close(self.__id);
+        self.__id = 0;
+    }
+
+
+    /** 流式下载到新文件；返回 HTTP 状态，取消回调返回非零时终止。 */
+    Result<int64,Error> download_to(String url, String destination, int64 timeout_ms, int64 fn(int64, int64) cancel) {
+        return self.__request(url, "", destination, timeout_ms, cancel);
+    }
+
+    /** 使用 PUT 流式上传普通文件，读取并丢弃响应正文。 */
+    Result<int64,Error> upload_file(String url, String source, int64 timeout_ms, int64 fn(int64, int64) cancel) {
+        if (len(source) == 0) { return Result<int64,Error>::Err(MessageError::from("upload path is empty")); }
+        return self.__request(url, source, "", timeout_ms, cancel);
+    }
+
+    Result<int64,Error> __request(String url, String upload, String download, int64 timeout_ms,
+                                 int64 fn(int64, int64) cancel) {
+        int64 status = __transfer(self.__id, url, upload, download, timeout_ms, cancel);
+        if (status < 0) { return Result<int64,Error>::Err(MessageError::from(format("HTTP transfer failed ({})", 0 - status))); }
+        return Result<int64,Error>::Ok(status);
+    }
+};

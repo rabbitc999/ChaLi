@@ -185,16 +185,23 @@ The eight-slot capacity differs from acceptLimit, which is a process-wide stoppi
 
 A fragmented-request case leaves one header incomplete while another client retrieves a file, then completes the first header. This directly checks nonblocking progression. Tests use port 0 and a bounded server that exits after its configured requests, avoiding fixed-port assumptions.
 
-## 28.10 Exercises
+### Check path dispatch first
 
-1. Why use bytes for Content-Length?
-2. Why retain sent after sendAsync?
-3. What happens to /../secret.txt?
-4. Why not pass sockets through createWith?
+Verify status dispatch with two fixed paths before starting a server.
 
-### Answers and checks
+<!-- verify-book -->
+```chali
+int64 status(String route) {
+    if (route == "/health") {
+        return 200;
+    }
+    return 404;
+}
+void main() {
+    println("{} {}", status("/health"), status("/missing"));
+}
+```
 
-1. HTTP lengths count representation bytes, not visual characters.
-2. Writes may be partial and must resume at the remaining suffix.
-3. It misses the fixed table and produces 404 without disk path construction.
-4. Sockets have ownership; this event loop advances them within their creating context.
+```text
+200 404
+```

@@ -164,19 +164,19 @@ memory=ok
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-350"></a>`enum ParseError : Error` | 区分空输入、格式错误与数值范围错误，作为标准 Error 接口返回。 |
+| 模块 | <a id="symbol-375"></a>`enum ParseError : Error` | 区分空输入、格式错误与数值范围错误，作为标准 Error 接口返回。 |
 | ParseError | `Empty, Invalid, Overflow` | 区分空输入、格式错误与数值范围错误，作为标准 Error 接口返回。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-351"></a>`struct Parse` | 文本到数值和布尔值的解析入口。 |
+| 模块 | <a id="symbol-376"></a>`struct Parse` | 文本到数值和布尔值的解析入口。 |
 
 ## 函数索引
 
 | 名称 | 声明 |
 | --- | --- |
 | [ParseError::toString](#api-0) | `String toString()` |
-| [Parse::parseInt64](#api-1) | `static Result<int64, std::lang::Error> parseInt64(std::lang::String text)` |
-| [Parse::parseUInt64](#api-2) | `static Result<uint64, std::lang::Error> parseUInt64(std::lang::String text)` |
-| [Parse::parseFloat64](#api-3) | `static Result<float64, std::lang::Error> parseFloat64(std::lang::String text)` |
-| [Parse::parseBool](#api-4) | `static Result<bool, std::lang::Error> parseBool(std::lang::String text)` |
+| [Parse::parseInt64](#api-1) | `static Result<int64, std::core::Error> parseInt64(std::core::String text)` |
+| [Parse::parseUInt64](#api-2) | `static Result<uint64, std::core::Error> parseUInt64(std::core::String text)` |
+| [Parse::parseFloat64](#api-3) | `static Result<float64, std::core::Error> parseFloat64(std::core::String text)` |
+| [Parse::parseBool](#api-4) | `static Result<bool, std::core::Error> parseBool(std::core::String text)` |
 
 <a id="api-0"></a>
 
@@ -223,7 +223,7 @@ obj.toString();
 **声明**
 
 ```chali
-static Result<int64, std::lang::Error> parseInt64(std::lang::String text);
+static Result<int64, std::core::Error> parseInt64(std::core::String text);
 ```
 
 **行为**
@@ -234,11 +234,11 @@ static Result<int64, std::lang::Error> parseInt64(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<int64, std::lang::Error>`。严格解析有符号 64 位十进制整数。
+`Result<int64, std::core::Error>`。严格解析有符号 64 位十进制整数。
 
 **错误与边界**
 
@@ -261,7 +261,7 @@ std::parse::Parse::parseInt64(text);
 **声明**
 
 ```chali
-static Result<uint64, std::lang::Error> parseUInt64(std::lang::String text);
+static Result<uint64, std::core::Error> parseUInt64(std::core::String text);
 ```
 
 **行为**
@@ -272,11 +272,11 @@ static Result<uint64, std::lang::Error> parseUInt64(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<uint64, std::lang::Error>`。严格解析无符号 64 位十进制整数。
+`Result<uint64, std::core::Error>`。严格解析无符号 64 位十进制整数。
 
 **错误与边界**
 
@@ -299,7 +299,7 @@ std::parse::Parse::parseUInt64(text);
 **声明**
 
 ```chali
-static Result<float64, std::lang::Error> parseFloat64(std::lang::String text);
+static Result<float64, std::core::Error> parseFloat64(std::core::String text);
 ```
 
 **行为**
@@ -310,11 +310,11 @@ static Result<float64, std::lang::Error> parseFloat64(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<float64, std::lang::Error>`。解析 64 位浮点数并报告非法输入/溢出。
+`Result<float64, std::core::Error>`。解析 64 位浮点数并报告非法输入/溢出。
 
 **错误与边界**
 
@@ -337,7 +337,7 @@ std::parse::Parse::parseFloat64(text);
 **声明**
 
 ```chali
-static Result<bool, std::lang::Error> parseBool(std::lang::String text);
+static Result<bool, std::core::Error> parseBool(std::core::String text);
 ```
 
 **行为**
@@ -348,11 +348,11 @@ static Result<bool, std::lang::Error> parseBool(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<bool, std::lang::Error>`。解析布尔文本并报告非法输入。
+`Result<bool, std::core::Error>`。解析布尔文本并报告非法输入。
 
 **错误与边界**
 

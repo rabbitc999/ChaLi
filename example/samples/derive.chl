@@ -1,13 +1,37 @@
-#derive(Equal, Hash, Clone)
-struct DerivedLeaf { int64 number; String text; }
-#derive(Equal, Hash, Clone)
-struct DerivedPair { DerivedLeaf leaf; bool active; }
-#derive(Equal, Hash, Clone)
-enum DerivedChoice { None, Value(DerivedLeaf leaf, String text) }
-#derive(Equal, Hash, Clone)
-struct DerivedFloat { float64 value; }
-#derive(Equal, Hash, Clone)
-struct DerivedBox<T> { T value; }
+import std::macro;
+
+struct DerivedLeaf {
+    int64 number;
+    String text;
+    $std::macro::Equal<DerivedLeaf>(leftEqual);
+    $std::macro::Hash<DerivedLeaf>(hash);
+    $std::macro::Clone<DerivedLeaf>(clone);
+}
+struct DerivedPair {
+    DerivedLeaf leaf;
+    bool active;
+    $std::macro::Equal<DerivedPair>(leftEqual);
+    $std::macro::Hash<DerivedPair>(hash);
+    $std::macro::Clone<DerivedPair>(clone);
+}
+enum DerivedChoice {
+    None, Value(DerivedLeaf leaf, String text);
+    $std::macro::Equal<DerivedChoice>(leftEqual);
+    $std::macro::Hash<DerivedChoice>(hash);
+    $std::macro::Clone<DerivedChoice>(clone);
+}
+struct DerivedFloat {
+    float64 value;
+    $std::macro::Equal<DerivedFloat>(leftEqual);
+    $std::macro::Hash<DerivedFloat>(hash);
+}
+struct DerivedBox<T> {
+    T value;
+    $std::macro::Equal<DerivedBox<T>>(leftEqual);
+    $std::macro::Hash<DerivedBox<T>>(hash);
+    $std::macro::Clone<DerivedBox<T>>(clone);
+}
+
 void main() {
     DerivedPair left; left.leaf.number = -4; left.leaf.text = "leaf"; left.active = true;
     DerivedPair right = left.clone();

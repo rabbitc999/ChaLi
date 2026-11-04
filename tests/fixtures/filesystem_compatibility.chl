@@ -1,5 +1,5 @@
 import std::io;
-import std::datetime;
+import std::date_time;
 void main() {
     String root = __ROOT__;
     assert(createDirectories(root).isOk());
@@ -28,7 +28,7 @@ void main() {
     assert(directory.size == 0 && !directory.isFile && directory.isDirectory);
     FileInfo stamp = fileInfo(root + "/stamp.txt").unwrap();
     assert(stamp.modifiedUnixSeconds >= 946684799 && stamp.modifiedUnixSeconds <= 946684801);
-    int64 now = std::datetime::__utcNow();
+    int64 now = std::date_time::__utcNow();
     assert(now > 946684800 && file.modifiedUnixSeconds <= now + 2);
     assert(renamePath(root + "/z.txt", root + "/renamed.txt").isOk());
     assert(fileInfo(root + "/z.txt").isErr());

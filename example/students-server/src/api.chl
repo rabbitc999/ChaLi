@@ -37,7 +37,7 @@ int64 parseId(String text)
 {
     if (text.isEmpty() || len(text) > 18) { return -1; }
     int64 value = 0;
-    for (int64 index in std::lang::range(0, len(text)))
+    for (int64 index in std::core::range(0, len(text)))
     {
         char item = text[index];
         if (item < '0' || item > '9') { return -1; }

@@ -112,47 +112,24 @@ json::Value templateParameter(const chali_generic::Parameter &parameter)
     return json::Value(std::move(object));
 }
 /**
- * @brief 校验前缀只能是派生请求或无参数运算符开关，禁止普通代码注入。
+ * @brief 校验前缀只能是无参数运算符开关，禁止普通代码注入。
  * @param text 前缀文本。
- * @param derive 是否只允许派生请求。
  * @return 前缀有效时正常返回，否则抛出错误。
  */
-void templatePrefix(const std::string &text, bool derive)
+void templatePrefix(const std::string &text)
 {
     std::size_t at = 0;
     while (at < text.size())
     {
         if (std::isspace(static_cast<unsigned char>(text[at]))) { ++at; continue; }
-        if (derive)
-        {
-            if (text.compare(at, 7, "#derive") != 0) throw std::runtime_error("泛型库派生前缀非法");
-            at += 7;
-            while (at < text.size() && std::isspace(static_cast<unsigned char>(text[at]))) ++at;
-            if (at == text.size() || text[at++] != '(') throw std::runtime_error("泛型库派生请求缺少括号");
-            unsigned depth = 1;
-            while (at < text.size() && depth)
-            {
-                const auto ch = text[at++];
-                if (ch == '(') ++depth;
-                else if (ch == ')') --depth;
-                else if (!(std::isalnum(static_cast<unsigned char>(ch)) || std::isspace(static_cast<unsigned char>(ch))
-                           || ch == '_' || ch == ':' || ch == ',' || ch == '<' || ch == '>' || ch == '[' || ch == ']'))
-                    throw std::runtime_error("泛型库派生请求含非法词素");
-                if (depth > 256) throw std::runtime_error("泛型库派生请求嵌套过深");
-            }
-            if (depth) throw std::runtime_error("泛型库派生请求括号不完整");
-        }
-        else
-        {
-            const auto begin = at;
-            if (text.compare(at, 3, "#No") != 0) throw std::runtime_error("泛型库运算符开关非法");
-            at += 3;
-            while (at < text.size() && (std::isalnum(static_cast<unsigned char>(text[at])) || text[at] == '_')) ++at;
-            const auto token = text.substr(begin, at - begin);
-            if (!((token.size() > 10 && token.compare(token.size() - 7, 7, "Replace") == 0)
-                  || (token.size() > 8 && token.compare(0, 8, "#NoRight") == 0)))
-                throw std::runtime_error("泛型库运算符开关名称非法");
-        }
+        const auto begin = at;
+        if (text.compare(at, 3, "#No") != 0) throw std::runtime_error("泛型库运算符开关非法");
+        at += 3;
+        while (at < text.size() && (std::isalnum(static_cast<unsigned char>(text[at])) || text[at] == '_')) ++at;
+        const auto token = text.substr(begin, at - begin);
+        if (!((token.size() > 10 && token.compare(token.size() - 7, 7, "Replace") == 0)
+              || (token.size() > 8 && token.compare(0, 8, "#NoRight") == 0)))
+            throw std::runtime_error("泛型库运算符开关名称非法");
     }
 }
 }  // namespace
@@ -210,11 +187,9 @@ std::string templateSource(const Manifest &manifest, std::string_view bytes)
     }
     for (const auto &definition : *definitions)
     {
-        templateKeys(definition, { "name", "parameters", "declaration", "derivation", "operatorSwitches" });
-        const auto derivation = templateText(templateField(definition, "derivation"), 65536);
+        templateKeys(definition, { "name", "parameters", "declaration", "operatorSwitches" });
         const auto switches = templateText(templateField(definition, "operatorSwitches"), 65536);
-        templatePrefix(derivation, true);
-        templatePrefix(switches, false);
+        templatePrefix(switches);
         const auto name = templateText(templateField(definition, "name"));
         const auto declaration = templateText(templateField(definition, "declaration"), 4u * 1024u * 1024u);
         const auto parameters = templateField(definition, "parameters").asArray();
@@ -260,7 +235,7 @@ std::string templateSource(const Manifest &manifest, std::string_view bytes)
             throw std::runtime_error("泛型库声明与形参元数据不一致：" + name);
         const auto nameEnd = actual.nameOffset + name.size();
         const auto parametersText = header.substr(std::string_view("__chali_template").size()) + ">";
-        const auto restoredSource = switches + "\n" + derivation + "\n" + declaration.substr(0, nameEnd) + parametersText + declaration.substr(nameEnd) + "\n";
+        const auto restoredSource = switches + "\n" + declaration.substr(0, nameEnd) + parametersText + declaration.substr(nameEnd) + "\n";
         if (source.size() + restoredSource.size() > 32u * 1024u * 1024u) throw std::runtime_error("泛型库恢复源码超过预算");
         source += restoredSource;
     }

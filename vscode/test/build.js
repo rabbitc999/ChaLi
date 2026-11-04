@@ -19,8 +19,8 @@ async function main() {
   let saved = 0; let cancel = false;
   const uri = (fsPath) => ({ scheme: 'file', fsPath });
   const document = { uri: uri(source), isDirty: true, async save() { ++saved; this.isDirty = false; return true; } };
-  const settings = { 'build.outputDirectory': 'output & space', 'build.llvmPath': process.platform === 'win32'
-    ? path.join(root, 'build/dependencies/llvm/toolchain/bin/clang.exe') : '', 'build.checked': true };
+  const settings = { 'build.outputDirectory': 'output & space', 'build.llvmPath': process.env.CHALI_LLVM_CLANG || (process.platform === 'win32'
+    ? path.join(root, 'build/dependencies/llvm/toolchain/bin/clang.exe') : ''), 'build.checked': true };
   const disposable = { dispose() {} };
   const context = { extensionPath: path.join(root, 'vscode'), subscriptions: [] };
   const vscode = {
@@ -45,7 +45,7 @@ async function main() {
     assert.deepEqual(buildArguments('exe', source, 'prefix', { llvmPath: 'clang space', checked: true }), ['aot', source, '--out', 'prefix', '--llvm', 'clang space', '--checked']);
     assert.deepEqual(buildArguments('exe', source, 'prefix', { checked: false }), ['aot', source, '--out', 'prefix', '--unchecked']);
     await commands.get('chali.build')();
-    assert.deepEqual(errors, []); assert.equal(saved, 1);
+    assert.deepEqual(errors, [], logs.join('')); assert.equal(saved, 1);
     const prefix = path.join(directory, settings['build.outputDirectory'], 'hello & 中文');
     assert.ok(fs.statSync(prefix + '.exe').size > 0);
     let result;

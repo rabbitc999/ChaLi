@@ -4,7 +4,7 @@ struct LayoutNested { LayoutPair pair; int64 values[3]; String label; };
 enum LayoutChoice { Empty, Value(int64 value), Pair(LayoutPair value) };
 
 void checkLayout<T>() {
-    int64 size = std::lang::rawSize<T>();
+    int64 size = std::core::rawSize<T>();
     assert(size > 0);
     RawStorage<T> storage = RawStorage<T>::allocate(2);
     unsafe {
@@ -16,10 +16,10 @@ void checkLayout<T>() {
 }
 
 #export("raw_size_int64")
-int64 fixedSize() { return std::lang::rawSize<int64>(); }
+int64 fixedSize() { return std::core::rawSize<int64>(); }
 
 void main() {
-    assert(rawSize<uint8>() == 1 && std::lang::rawSize<int64>() == 8);
+    assert(rawSize<uint8>() == 1 && std::core::rawSize<int64>() == 8);
     assert(rawSize<int8>() == 8 && rawSize<bool>() == 8 && rawSize<char>() == 1);
     assert(rawSize<float32>() == 8 && rawSize<float64>() == 8);
     assert(rawSize<String>() == 8 && rawSize<List<int64>>() == 8);

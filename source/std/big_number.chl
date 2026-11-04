@@ -1,0 +1,14 @@
+module std::big_number;
+
+/** 任意精度有符号整数。 */
+opcode BigInteger {
+    new = __std_bint_from_int;
+    drop = __std_bint_drop;
+    copy = __std_bint_copy;
+};
+/** 可设置有效位数的任意精度十进制数。 */
+opcode BigDecimal {
+    new = __std_bfloat_from_int;
+    drop = __std_bfloat_drop;
+    copy = __std_bfloat_copy;
+};

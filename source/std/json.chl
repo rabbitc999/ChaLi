@@ -3,33 +3,44 @@ module std::json;
 import std::reflect;
 import std::parse;
 
-/** 结构化 JSON 编码协议；解码由派生类型的静态 fromJson 入口提供。 */
+/** 结构化 JSON 编码协议；配套的成员宏可生成静态解码入口。 */
 interface Json {
     /** 将当前值编码为 JSON；失败返回统一 Error，具体字段格式由实现决定。 */
-    Result<String,std::lang::Error> toJson();
+    Result<String,std::core::Error> toJson();
 };
 
-/** 派生结构体字段的 JSON 名称与忽略规则；空名称沿用字段名。 */
+/** 实现 JSON 协议的结构体字段名称与忽略规则；空名称沿用字段名。 */
 @annotation Field(name:String="",skip:bool=false)
 
+/** 为具体类型 T 生成实例编码方法和静态解码方法。两个名称由调用者指定，编解码使用反射并返回 Result。 */
+$macro Json<T>(encode:ident, decode:ident) -> member
+$implement std::json::Json;
+Result<std::core::String,std::core::Error> encode() {
+    return std::json::serialize<T>(&self);
+}
+static Result<T,std::core::Error> decode(std::core::String text) {
+    return std::json::deserialize<T>(text);
+}
+$end_macro
+
 /** 将已暴露给反射的值编码为 JSON，数字和字段类型保持精确。 */
-Result<String,std::lang::Error> serialize<T>(T const& value) {
+Result<String,std::core::Error> serialize<T>(T const& value) {
     std::reflect::requireReflection();
     let result = std::reflect::__serializeJson<T>(value);
-    if (result.isErr()) { return Result<String,std::lang::Error>::Err(result.error()); }
-    return Result<String,std::lang::Error>::Ok(result.unwrap());
+    if (result.isErr()) { return Result<String,std::core::Error>::Err(result.error()); }
+    return Result<String,std::core::Error>::Ok(result.unwrap());
 }
 /** 按具体类型验证并恢复拥有独立存储的值。 */
-Result<T,std::lang::Error> deserialize<T>(String text) {
+Result<T,std::core::Error> deserialize<T>(String text) {
     std::reflect::requireReflection();
     let result = std::reflect::__deserializeJson<T>(text);
-    if (result.isErr()) { return Result<T,std::lang::Error>::Err(result.error()); }
-    return Result<T,std::lang::Error>::Ok(result.take());
+    if (result.isErr()) { return Result<T,std::core::Error>::Err(result.error()); }
+    return Result<T,std::core::Error>::Ok(result.take());
 }
 
-__JsonValueStorage __parse(std::lang::String text);
+__JsonValueStorage __parse(std::core::String text);
 bool __valid(int64 document);
-std::lang::String __takeError(int64 document);
+std::core::String __takeError(int64 document);
 bool __close(int64 document);
 int64 __kind(int64 document, int64 node);
 int64 __size(int64 document, int64 node);
@@ -37,16 +48,16 @@ int64 __int(int64 document, int64 node);
 float64 __float(int64 document, int64 node);
 bool __bool(int64 document, int64 node);
 bool __textAvailable(int64 document, int64 node);
-std::lang::String __string(int64 document, int64 node);
-std::lang::List<uint8> __bytes(int64 document, int64 node);
-std::lang::String __dateTime(int64 document, int64 node);
-std::lang::String __dump(int64 document, int64 node);
-__JsonValueStorage __find(int64 document, int64 node, std::lang::String key);
-__JsonValueStorage __findBytes(int64 document, int64 node, std::lang::List<uint8> key);
+std::core::String __string(int64 document, int64 node);
+std::core::List<uint8> __bytes(int64 document, int64 node);
+std::core::String __dateTime(int64 document, int64 node);
+std::core::String __dump(int64 document, int64 node);
+__JsonValueStorage __find(int64 document, int64 node, std::core::String key);
+__JsonValueStorage __findBytes(int64 document, int64 node, std::core::List<uint8> key);
 __JsonValueStorage __at(int64 document, int64 node, int64 index);
 bool __keyAvailable(int64 document, int64 node, int64 index);
-std::lang::String __key(int64 document, int64 node, int64 index);
-std::lang::List<uint8> __keyBytes(int64 document, int64 node, int64 index);
+std::core::String __key(int64 document, int64 node, int64 index);
+std::core::List<uint8> __keyBytes(int64 document, int64 node, int64 index);
 
 int64 __valueNew();
 int64 __valueCopy(int64 handle);
@@ -89,29 +100,29 @@ struct JsonValue : Iterator<JsonValue> {
         return Option<bool>::Value(__bool(self.__storage.opcode, 0));
     }
     /** 非字符串或含零字节时返回 None；含零字节的文本使用 asBytes。 */
-    Option<std::lang::String> asString() {
-        if (!__textAvailable(self.__storage.opcode, 0)) { return Option<std::lang::String>::None; }
-        std::lang::String result = __string(self.__storage.opcode, 0);
-        return Option<std::lang::String>::Value(result);
+    Option<std::core::String> asString() {
+        if (!__textAvailable(self.__storage.opcode, 0)) { return Option<std::core::String>::None; }
+        std::core::String result = __string(self.__storage.opcode, 0);
+        return Option<std::core::String>::Value(result);
     }
-    Option<std::lang::List<uint8>> asBytes() {
-        if (!self.isString()) { return Option<std::lang::List<uint8>>::None; }
-        std::lang::List<uint8> result = __bytes(self.__storage.opcode, 0);
-        return Option<std::lang::List<uint8>>::Value(result);
+    Option<std::core::List<uint8>> asBytes() {
+        if (!self.isString()) { return Option<std::core::List<uint8>>::None; }
+        std::core::List<uint8> result = __bytes(self.__storage.opcode, 0);
+        return Option<std::core::List<uint8>>::Value(result);
     }
-    Option<std::lang::String> asDateTime() {
-        if (!self.isDateTime()) { return Option<std::lang::String>::None; }
-        std::lang::String result = __dateTime(self.__storage.opcode, 0);
-        return Option<std::lang::String>::Value(result);
+    Option<std::core::String> asDateTime() {
+        if (!self.isDateTime()) { return Option<std::core::String>::None; }
+        std::core::String result = __dateTime(self.__storage.opcode, 0);
+        return Option<std::core::String>::Value(result);
     }
-    Option<JsonValue> find(std::lang::String key) {
+    Option<JsonValue> find(std::core::String key) {
         __JsonValueStorage child = __find(self.__storage.opcode, 0, key);
         if (!__valid(child.opcode)) { return Option<JsonValue>::None; }
         JsonValue value; value.__storage = move child;
         return Option<JsonValue>::Value(move value);
     }
     /** 允许包含零字节的 UTF-8 键名。 */
-    Option<JsonValue> findBytes(std::lang::List<uint8> key) {
+    Option<JsonValue> findBytes(std::core::List<uint8> key) {
         __JsonValueStorage child = __findBytes(self.__storage.opcode, 0, key);
         if (!__valid(child.opcode)) { return Option<JsonValue>::None; }
         JsonValue value; value.__storage = move child;
@@ -126,23 +137,23 @@ struct JsonValue : Iterator<JsonValue> {
     }
     Option<JsonValue> iterator(int64 index) { return self.at(index); }
     /** 对象成员的键名；越界或键中含零字节时返回 None。 */
-    Option<std::lang::String> keyAt(int64 index) {
-        if (!__keyAvailable(self.__storage.opcode, 0, index)) { return Option<std::lang::String>::None; }
-        std::lang::String result = __key(self.__storage.opcode, 0, index);
-        return Option<std::lang::String>::Value(result);
+    Option<std::core::String> keyAt(int64 index) {
+        if (!__keyAvailable(self.__storage.opcode, 0, index)) { return Option<std::core::String>::None; }
+        std::core::String result = __key(self.__storage.opcode, 0, index);
+        return Option<std::core::String>::Value(result);
     }
-    Option<std::lang::List<uint8>> keyBytesAt(int64 index) {
-        if (!self.isObject() || index < 0 || index >= self.len()) { return Option<std::lang::List<uint8>>::None; }
-        std::lang::List<uint8> result = __keyBytes(self.__storage.opcode, 0, index);
-        return Option<std::lang::List<uint8>>::Value(result);
+    Option<std::core::List<uint8>> keyBytesAt(int64 index) {
+        if (!self.isObject() || index < 0 || index >= self.len()) { return Option<std::core::List<uint8>>::None; }
+        std::core::List<uint8> result = __keyBytes(self.__storage.opcode, 0, index);
+        return Option<std::core::List<uint8>>::Value(result);
     }
-    std::lang::String dump() { return __dump(self.__storage.opcode, 0); }
+    std::core::String dump() { return __dump(self.__storage.opcode, 0); }
 };
 
 /** 解析文本；失败返回包含行列信息的诊断。 */
-Result<JsonValue, std::lang::Error> parse(std::lang::String text) {
+Result<JsonValue, std::core::Error> parse(std::core::String text) {
     __JsonValueStorage handle = __parse(text);
-    if (!__valid(handle.opcode)) { std::lang::String message = __takeError(handle.opcode); return Result<JsonValue, std::lang::Error>::Err(MessageError::from(message)); }
+    if (!__valid(handle.opcode)) { std::core::String message = __takeError(handle.opcode); return Result<JsonValue, std::core::Error>::Err(MessageError::from(message)); }
     JsonValue value; value.__storage = move handle;
-    return Result<JsonValue, std::lang::Error>::Ok(move value);
+    return Result<JsonValue, std::core::Error>::Ok(move value);
 }

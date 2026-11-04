@@ -46,9 +46,6 @@ top_decl := struct_decl type_decl_end { $$ = $1; }
      | opcode_decl type_decl_end { $$ = $1; }
      | NONCOPYABLE opcode_decl type_decl_end { $$ = M_NonCopyableOpcode($2); }
      | switch_directives struct_decl type_decl_end { $$ = M_OperatorSwitchList($1, $2); }
-     | derive_directive struct_decl type_decl_end { $$ = M_Derived($1, $2); }
-     | switch_directives derive_directive struct_decl type_decl_end { $$ = M_Derived($2, M_OperatorSwitchList($1, $3)); }
-     | derive_directive enum_decl type_decl_end { $$ = M_Derived($1, $2); }
      | MODULE module_name SEMI { $$ = M_Module($2); }
      | IMPORT module_name SEMI { $$ = M_Import($2); }
      | enum_decl type_decl_end { $$ = $1; }
@@ -82,11 +79,6 @@ top_decl := struct_decl type_decl_end { $$ = $1; }
 /* 带花括号的类型声明在右花括号处结束；顶层兼容其后的可选分号。 */
 type_decl_end := %empty { $$ = -1; }
                | SEMI { $$ = -1; } ;
-
-/* 编译器指令仅修饰类型声明，白名单和字段接口约束由语义层检查。 */
-derive_directive := DERIVE LPAREN derive_names RPAREN { $$ = M_DeriveDirective($1, $3); } ;
-derive_names := module_name { $$ = M_List1($1); }
-              | derive_names COMMA module_name { M_ListAdd($1, $3); $$ = $1; } ;
 
 /* 显式生命周期契约指令：写在函数声明之前，可连写多条；名字与返回来源由语义层核对。
  *   #borrow(out, in)         out 借用 in
@@ -480,6 +472,9 @@ stmt := block                  { $$ = $1; }
       | while_stmt             { $$ = $1; }
       | loop_stmt              { $$ = $1;}
       | for_in_stmt            { $$ = $1; }
+      | expr COLON while_stmt  { $$ = M_LabeledLoop($1, $3); }
+      | expr COLON loop_stmt   { $$ = M_LabeledLoop($1, $3); }
+      | expr COLON for_in_stmt { $$ = M_LabeledLoop($1, $3); }
       | match_stmt %prec SEMI  { $$ = $1; }
       | match_stmt SEMI        { $$ = $1; }
       | RETURN expr SEMI       { $$ = M_ReturnValue($2); }
@@ -488,9 +483,7 @@ stmt := block                  { $$ = $1; }
 
       | BREAK SEMI             { $$ = M_Break(-1); }
       | YIELD expr SEMI        { $$ = M_Break($2); }
-      | BREAK name_token SEMI  { $$ = M_NameIsAll($2) ? M_BreakLevel(-1) : M_ParseBadBreakAllSugar(); }
-      | BREAK name_token NUMBER SEMI { $$ = M_NameIsLevel($2) ? M_BreakLevel($3) : M_ParseBadLevelSugar(); }
-      | BREAK name_token name_token SEMI { $$ = (M_NameIsLevel($2) && M_NameIsAll($3)) ? M_BreakLevel(-1) : M_ParseBadLevelAllSugar(); }
+      | BREAK name_token SEMI  { $$ = M_BreakNamed($2); }
       | CONTINUE SEMI          { $$ = M_Continue(); }
       | expression_items SEMI { $$ = M_AssignTuple($1); } ;
 
@@ -878,6 +871,7 @@ macro_definition := MACRO_DEFINE name_token macro_generics macro_parameters MACR
     { $$ = M_MacroResultDefinition($2, $4, M_MacroTemplate($8, -1), $3, -2); } ;
 macro_member_list := %empty { $$ = M_List(); }
     | macro_member_list member { M_ListAdd($1, $2); $$ = $1; }
+    | macro_member_list MACRO_IMPLEMENT type SEMI { M_ListAdd($1, M_MacroImplement($3)); $$ = $1; }
     | macro_member_list TYPE_KW name_token SEMI
     { M_ListAdd($1, M_AssociatedDecl($3)); $$ = $1; }
     | macro_member_list type name_token LPAREN param_list RPAREN SEMI

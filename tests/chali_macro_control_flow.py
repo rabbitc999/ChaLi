@@ -74,11 +74,7 @@ void main(){int64 value=loop{int64 ignored=$EXPR({yield 42;});yield 0;};assert(v
         ('continue_cleanup',loop+'''int64 cleaned=0;void cleanup(){cleaned+=1;}void main(){int64 turns=0;while(turns<3){defer cleanup();turns+=1;$WRAP({continue;});}assert(cleaned==3);}''',None),
         ('break_cleanup',loop+'''int64 cleaned=0;void cleanup(){cleaned+=1;}void main(){loop{defer cleanup();$WRAP({break;});}assert(cleaned==1);}''',None),
         ('return_cleanup',loop+'''int64 cleaned=0;void cleanup(){cleaned+=1;}int64 read(){defer cleanup();$WRAP({return 42;});return 0;}void main(){assert(read()==42&&cleaned==1);}''',None),
-        ('caller_level',loop+'''void main(){int64 value=0;loop{loop{value+=1;$WRAP({break level 2;});value+=100;break;}value+=1000;break;}assert(value==1);}''',None),
-        ('template_level','''$macro STOP() -> stmt
-loop{break level 2;};
-$end_macro
-void main(){int64 value=0;loop{value+=1;$STOP();value+=100;break;}assert(value==1);}''',None),
+        ('caller_named',loop+'''void main(){int64 value=0;outer:loop{loop{value+=1;$WRAP({break outer;});value+=100;break;}value+=1000;break;}assert(value==1);}''',None),
         ('borrow_reachability','''$macro WRAP(body:block) -> stmt
 loop{body;break;};
 $end_macro
@@ -124,17 +120,9 @@ $end_macro
         ('owned_break',owned+'void main(){Item item;item.score=7;loop{$OWN(item,{break;});}assert(item.score==7&&drops==1);}',None),
         ('owned_continue',owned+'void main(){Item item;item.score=7;int64 turns=0;while(turns<3){turns+=1;$OWN(item,{continue;});}assert(item.score==7&&drops==3);}',None),
         ('owned_return',owned+'void run(){Item item;item.score=7;$OWN(item,{return;});}void main(){run();assert(drops==2);}',None),
-        ('legacy_all','''$macro STOP()
-loop{break all;};
-$end_macro
-void main(){int64 value=0;loop{value+=1;$STOP();value+=100;break;}assert(value==1);}''',None),
-        ('template_all','''$macro STOP() -> stmt
-loop{break all;};
-$end_macro
-void main(){int64 value=0;loop{loop{value+=1;$STOP();value+=100;break;}value+=1000;break;}assert(value==1);}''',None),
-        ('caller_all',loop+'void main(){int64 value=0;loop{loop{value+=1;$WRAP({break all;});value+=100;break;}value+=1000;break;}assert(value==1);}',None),
-        ('expression_local_all','''$macro VALUE() -> expr
-loop{break all;};
+        ('caller_named_while',loop+'void main(){int64 value=0;outer:while(true){loop{value+=1;$WRAP({break outer;});value+=100;break;}value+=1000;break;}assert(value==1);}',None),
+        ('expression_local_named','''$macro VALUE() -> expr
+local: loop{break local;}
 42
 $end_macro
 void main(){int64 value=0;loop{value=$VALUE();value+=1;break;}assert(value==43);}''',None),
@@ -142,10 +130,10 @@ void main(){int64 value=0;loop{value=$VALUE();value+=1;break;}assert(value==43);
 return 42;
 $end_macro
 int64 read(){return {$DONE();yield 0;};}void main(){assert(read()==42);}''',['禁止嵌套 return']),
-        ('return_expression_level','''$macro EXIT() -> stmt
-break level 1;
+        ('return_expression_label','''$macro EXIT() -> stmt
+break local;
 $end_macro
-int64 read(){return {loop{$EXIT();};yield 0;};}void main(){read();}''',['禁止 break #level']),
+int64 read(){return {local: loop{$EXIT();}yield 0;};}void main(){read();}''',['禁止按循环标签退出']),
         ('return_expression_local_function','''$macro FUNCTION() -> expr
 fn(){return 42;}
 $end_macro

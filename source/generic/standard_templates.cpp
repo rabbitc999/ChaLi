@@ -1,7 +1,7 @@
 /* 随 chali_generic.cpp 编译；二进制记录只包含未实例化的声明。 */
 namespace
 {
-constexpr std::uint64_t kTemplateUnitMagic = 0x3154504d544843ull;
+constexpr std::uint64_t kTemplateUnitMagic = 0x3254504d544843ull;
 
 /**
  * @brief 取得模板目录项允许保存的唯一内嵌来源。
@@ -21,7 +21,7 @@ Memory::String TemplateUnitFile(const Memory::String &module)
  */
 bool TemplateUnitOwner(const Memory::String &asset, const Memory::String &owner)
 {
-    return asset == "std::__range" ? owner == "std::lang" || owner == "std::algorithms" : owner == asset;
+    return asset == "std::__range" ? owner == "std::core" || owner == "std::algorithms" : owner == asset;
 }
 
 /**
@@ -88,7 +88,7 @@ bool writeTemplateUnit(std::ostream &out, const Memory::String &module)
         const auto &item = *entry;
         if (item.intrinsic || !TemplateUnitOwner(module, item.module)) return false;
         for (const auto *field : { &item.sourceName, &item.module, &item.declaration, &item.sourceTemplate,
-                                  &item.requiredQualifier, &item.derivation, &item.operatorSwitches }) chali_incremental::writeString(out, *field);
+                                  &item.requiredQualifier, &item.operatorSwitches }) chali_incremental::writeString(out, *field);
         chali_incremental::writeNumber(out, item.nameOffset);
         WriteTemplateOrigin(out, item.origin);
         chali_incremental::writeNumber(out, item.params.size());
@@ -112,12 +112,6 @@ bool writeTemplateUnit(std::ostream &out, const Memory::String &module)
                 if (part.find_first_not_of(" \t\r") != Memory::String::npos) return false;
                 origin = item.origin;
             }
-            WriteTemplateOrigin(out, origin);
-        }
-        chali_incremental::writeNumber(out, item.derivationOrigins.size());
-        for (const auto &origin : item.derivationOrigins)
-        {
-            if (origin.file != file) return false;
             WriteTemplateOrigin(out, origin);
         }
     }
@@ -145,7 +139,7 @@ bool readTemplateUnit(std::istream &in, const Memory::String &module, Memory::Ve
     {
         Generic item;
         for (auto *field : { &item.sourceName, &item.module, &item.declaration, &item.sourceTemplate,
-                            &item.requiredQualifier, &item.derivation, &item.operatorSwitches })
+                            &item.requiredQualifier, &item.operatorSwitches })
             if (!chali_incremental::readString(in, *field)) return false;
         item.name = item.sourceName;
         if (!TemplateUnitOwner(module, item.module) || item.sourceName.empty()
@@ -169,16 +163,13 @@ bool readTemplateUnit(std::istream &in, const Memory::String &module, Memory::Ve
             if ((parameter.hasDefault && parameter.fallback.empty()) || (parameter.constant && parameter.constantType.empty())) return false;
             item.params.push_back(std::move(parameter));
         }
-        for (auto *origins : { &item.declarationOrigins, &item.derivationOrigins })
+        std::uint64_t positions = 0;
+        if (!ReadTemplateCount(in, positions, 16)) return false;
+        for (std::uint64_t i = 0; i < positions; ++i)
         {
-            std::uint64_t positions = 0;
-            if (!ReadTemplateCount(in, positions, 16)) return false;
-            for (std::uint64_t i = 0; i < positions; ++i)
-            {
-                preprocess::LineOrigin origin;
-                if (!ReadTemplateOrigin(in, file, origin)) return false;
-                origins->push_back(std::move(origin));
-            }
+            preprocess::LineOrigin origin;
+            if (!ReadTemplateOrigin(in, file, origin)) return false;
+            item.declarationOrigins.push_back(std::move(origin));
         }
         if (item.declarationOrigins.size() != static_cast<std::size_t>(std::count(item.declaration.begin(), item.declaration.end(), '\n')) + 1) return false;
         restored.push_back(std::move(item));

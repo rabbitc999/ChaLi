@@ -223,8 +223,8 @@ bool SourceFragments::capture(Memory::String &source, std::string &error, std::s
         }
         ++at;
         while (at < text.size() && identifierChar(text[at])) ++at;
-        /* 限定名宏调用（`$std::lang::assert`）：模块路径要一起吃进来。否则片段捕获把
-         * `$std` 当成完整名字、在它后面插 `@!编号`，`::lang::assert` 留在原文里挨着，
+        /* 限定名宏调用（`$std::core::assert`）：模块路径要一起吃进来。否则片段捕获把
+         * `$std` 当成完整名字、在它后面插 `@!编号`，`::core::assert` 留在原文里挨着，
          * 词法只能切成「宏名 + 作用域」两个 token，解析必然报错。 */
         while (at + 1 < text.size() && text[at] == ':' && text[at + 1] == ':' &&
                (std::isalpha(static_cast<unsigned char>(text[at + 2])) || text[at + 2] == '_'))
@@ -240,7 +240,7 @@ bool SourceFragments::capture(Memory::String &source, std::string &error, std::s
             output.append(text, start, at - start);
             continue;
         }
-        const bool control = name == "macro" || name == "replace" || name == "end_macro" || name == "match" || name == "else" || name == "elif" || name == "else_if" || name == "end_match" || name == "regex" || name == "end_regex" || name == "for" || name == "end_for" || name == "if" || name == "end_if";
+        const bool control = name == "macro" || name == "replace" || name == "end_macro" || name == "match" || name == "else" || name == "elif" || name == "else_if" || name == "end_match" || name == "regex" || name == "end_regex" || name == "for" || name == "end_for" || name == "if" || name == "end_if" || name == "implement";
         if (control)
         {
             if (name == "for" || name == "if" || name == "match" || name == "regex" || name == "else" || name == "elif" || name == "else_if")

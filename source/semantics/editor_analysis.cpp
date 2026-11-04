@@ -177,26 +177,6 @@ Memory::String EditorGenericSymbol(const Memory::String &symbol, bool includeMod
 
 #include "editor_macro_effects.cpp"
 
-/** @brief 单次预览中，真实字段声明位置到简短可读引用名的映射。 */
-using EditorFieldSymbols = Memory::Map<Memory::String, Memory::String>;
-
-/**
- * @brief 为字段或变体分配预览内稳定的可读名称，不暴露节点编号。
- * @param symbols 当前预览的字段引用表。
- * @param line 原始声明在合并源码中的行号。
- * @param column 原始声明列号。
- * @param name 声明或首次引用的名称。
- * @return 简短引用名。
- */
-Memory::String EditorFieldSymbol(EditorFieldSymbols &symbols, std::size_t line, std::size_t column, const Memory::String &name)
-{
-    const auto location = EditorMacroLocation(line, column);
-    const Memory::String key(location.data(), location.size());
-    auto found = symbols.find(key);
-    if (found == symbols.end()) found = symbols.emplace(key, EditorMacroName(name) + "@field" + Memory::toString(symbols.size() + 1)).first;
-    return found->second;
-}
-
 /**
  * @brief 将宏生成的节点显示为有界的结构树，不重新打印或重新解析可执行源码。
  * @param id 节点编号。
@@ -204,10 +184,9 @@ Memory::String EditorFieldSymbol(EditorFieldSymbols &symbols, std::size_t line, 
  * @param budget 剩余节点预算。
  * @param symbols 本树内卫生身份到稳定可读符号的映射。
  * @param actualExpression 根宏在语义检查后的实际表达式，负值沿用首次展开树。
- * @param fields 派生预览的字段来源表；普通宏不提供该表。
  * @return 合法 JSON 结构树。
  */
-std::string EditorMacroTree(int id, std::size_t depth, std::size_t &budget, Memory::Map<std::uint32_t, Memory::String> &symbols, int actualExpression = -1, EditorFieldSymbols *fields = nullptr)
+std::string EditorMacroTree(int id, std::size_t depth, std::size_t &budget, Memory::Map<std::uint32_t, Memory::String> &symbols, int actualExpression = -1)
 {
     if (id < 0 || static_cast<std::size_t>(id) >= g_nodes.size()) return "null";
     if (!budget || depth >= 128) return "{\"kind\":\"truncated\"}";
@@ -218,6 +197,7 @@ std::string EditorMacroTree(int id, std::size_t depth, std::size_t &budget, Memo
     {
     case MNode::MacroTemplate: kind = "template"; break;
     case MNode::MacroCall: kind = "macro_call"; break;
+    case MNode::MacroImplement: kind = "implements"; break;
     case MNode::MacroArgument: kind = "source_fragment"; break;
     case MNode::List: kind = "sequence"; break;
     case MNode::Var: kind = "identifier"; break;
@@ -260,25 +240,10 @@ std::string EditorMacroTree(int id, std::size_t depth, std::size_t &budget, Memo
     }
     const auto name = EditorMacroName(node.s);
     auto result = std::string("{\"kind\":") + chali_editor::jsonString(kind) + ",\"name\":" + chali_editor::jsonString(std::string_view(name.data(), name.size()));
-    const bool derived = node.generatedDeclaration && node.macroExpansion >= 0
-                         && static_cast<std::size_t>(node.macroExpansion) < g_nodes.size()
-                         && N(node.macroExpansion).s.rfind("#derive(", 0) == 0;
-    result += ",\"origin\":" + chali_editor::jsonString(derived || MacroControlContext(node) ? "definition" : "argument");
+    result += ",\"origin\":" + chali_editor::jsonString(MacroControlContext(node) ? "definition" : "argument");
     result += ",\"source\":" + EditorMacroLocation(node.sourceLine, node.sourceColumn);
     if (node.metadataLine)
         result += ",\"metadataSource\":" + EditorMacroLocation(node.metadataLine, node.metadataColumn);
-    if (fields && derived && node.metadataLine && !node.bindingIdentity)
-    {
-        const auto symbol = EditorFieldSymbol(*fields, node.metadataLine, node.metadataColumn, node.kind == MNode::EnumCtor ? node.s2 : node.s);
-        result += ",\"symbol\":" + chali_editor::jsonString(std::string_view(symbol.data(), symbol.size())) + ",\"declares\":false";
-    }
-    const bool fieldDeclaration = fields && !derived
-                                  && (node.kind == MNode::Field || node.kind == MNode::EnumVariant || node.kind == MNode::Params);
-    if (fieldDeclaration && !node.bindingIdentity)
-    {
-        const auto symbol = EditorFieldSymbol(*fields, node.sourceLine, node.sourceColumn, node.s);
-        result += ",\"symbol\":" + chali_editor::jsonString(std::string_view(symbol.data(), symbol.size())) + ",\"declares\":true";
-    }
     if (depth == 0) result += ",\"effects\":" + EditorMacroEffects(id, actualExpression);
     if (node.controlTarget >= 0 && static_cast<std::size_t>(node.controlTarget) < g_nodes.size())
     {
@@ -299,11 +264,6 @@ std::string EditorMacroTree(int id, std::size_t depth, std::size_t &budget, Memo
         auto found = symbols.find(node.bindingIdentity);
         const auto symbolName = node.kind == MNode::EnumCtor || node.kind == MNode::TypeQualifiedRef ? EditorMacroName(node.s2) : name;
         if (found == symbols.end()) found = symbols.emplace(node.bindingIdentity, symbolName + "@" + Memory::toString(symbols.size() + 1)).first;
-        if (fieldDeclaration)
-        {
-            const auto location = EditorMacroLocation(node.sourceLine, node.sourceColumn);
-            (*fields)[Memory::String(location.data(), location.size())] = found->second;
-        }
         result += ",\"symbol\":" + chali_editor::jsonString(std::string_view(found->second.data(), found->second.size()));
         const bool declaration = node.kind == MNode::AssociatedDef || node.kind == MNode::AssociatedDecl || node.kind == MNode::Declare || node.kind == MNode::Params || node.kind == MNode::Field || node.kind == MNode::MethodDef || node.kind == MNode::FuncDef || node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl;
         result += declaration ? ",\"declares\":true" : ",\"declares\":false";
@@ -356,7 +316,7 @@ std::string EditorMacroTree(int id, std::size_t depth, std::size_t &budget, Memo
         {
             if (!first) result += ',';
             first = false;
-            result += EditorMacroTree(child, depth + 1, budget, symbols, -1, fields);
+            result += EditorMacroTree(child, depth + 1, budget, symbols);
         }
     }
     return result + "]}";

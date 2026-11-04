@@ -12,7 +12,7 @@ SAMPLES = [
     'std_utf8', 'std_csv', 'std_datetime', 'std_collections_algorithms',
     'thread_messages', 'thread_channel', 'thread_pool', 'event_timer',
     'std_algorithms_extra', 'std_cli', 'std_complex_fft', 'std_compress', 'std_image',
-    'std_io_extended', 'std_lang', 'std_linalg_solve_glue', 'std_linkedlist',
+    'std_io_extended', 'std_core', 'std_linalg_solve_glue', 'std_linkedlist',
     'std_math_clock_random', 'std_net', 'std_numerics_number_theory',
     'std_parse_random_path_memory', 'std_process_probe', 'std_red_black_delete',
     'std_string_builder', 'std_text_kmp',

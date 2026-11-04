@@ -160,6 +160,51 @@ take owns the original string and appends a marker on every call. The new String
 
 Move capture can transfer noncopyable resources into the environment. Their lifetime follows that owner. Borrowing closures cannot access a moved or destroyed source; their last use may precede the move if analysis permits.
 
+### Counterexample: moving and then capturing the same value with mut
+
+Creating owned transfers text into its environment. Creating writer then attempts to borrow the original binding mutably, so the borrow checker rejects the program. The diagnostic excerpt below uses the compiler’s Chinese language setting.
+
+<!-- verify-book-error: check -->
+```chali
+void main() {
+    String text = "ready";
+    let owned = String fn move() {
+        return text;
+    };
+    println("{}", owned());
+    let writer = String fn mut() {
+        text += "!";
+        return text;
+    };
+    println("{}", writer());
+}
+```
+
+```text
+[CHL1205] 借用来源已移动或销毁，不能继续访问
+```
+
+### Counterexample: returning a mut closure that borrows a local
+
+The closure next mutably borrows total. The factory’s local total expires on return, so the caller cannot receive that closure. Move total into the closure environment to give it independent state. The diagnostic excerpt below uses the compiler’s Chinese language setting.
+
+<!-- verify-book-error: check -->
+```chali
+int64 fn() bad() {
+    int64 total = 0;
+    let next = int64 fn mut() {
+        total += 1;
+        return total;
+    };
+    return next;
+}
+void main() {}
+```
+
+```text
+[CHL1204] 返回值中的引用不能超过局部来源的生命周期
+```
+
 ## 19.7 Per-Variable Capture Lists
 
 <!-- verify-book -->
@@ -322,16 +367,23 @@ let identity = fn<T>(T value) { value }; supports inferred or explicit type argu
 
 Named functions support leading result types or fn name(...) -> Type. Consult Appendix C for deeply nested signatures. Environment construction, copying and indirect calls have costs; use the supported host function-value protocol rather than casting a closure into a machine function pointer.
 
-## 19.11 Exercises
+### Pass a function as an argument
 
-1. Does default capture take a snapshot?
-2. Does each copy-closure call recopy the caller's value?
-3. Why redeclare String text after moving?
-4. Does copying a borrowing closure copy its target?
+The parameter states a function signature and accepts an ordinary function of that signature.
 
-### Answers and checks
+<!-- verify-book -->
+```chali
+int64 twice(int64 n) {
+    return n * 2;
+}
+int64 apply(int64 fn(int64) action, int64 n) {
+    return action(n);
+}
+void main() {
+    println("{}", apply(twice, 21));
+}
+```
 
-1. No; the default is a read-only reference.
-2. No; calls retain and update the existing environment.
-3. The original binding was moved; the declaration creates another binding.
-4. No; the same source and lifetime requirements remain.
+```text
+42
+```

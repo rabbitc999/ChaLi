@@ -66,8 +66,7 @@ Memory::String MacroDiagnosticDisplay(const Memory::String &message, bool full)
     {
         const auto end = message.find('\n', begin);
         const auto line = message.substr(begin, end == Memory::String::npos ? Memory::String::npos : end - begin);
-        const bool frame = line.rfind("  展开宏 $", 0) == 0 || line.rfind("  expanding macro $", 0) == 0
-                           || line.rfind("  派生 #derive(", 0) == 0;
+        const bool frame = line.rfind("  展开宏 $", 0) == 0 || line.rfind("  expanding macro $", 0) == 0;
         if (frame && seen) omitted = true;
         else
         {
@@ -1010,6 +1009,7 @@ try
     {
         preprocess::Options options = preprocess::Preprocessor::forMetro();
         options.allowIncludes = false;
+        options.allowNamingDirective = true;
         options.includeDirs = includeDirs;
         if (!sourceOverlays.empty()) options.includeLoader = [&](const preprocess::IncludeRequest &request) {
             const auto found = sourceOverlays.find(chali_incremental::canonical(request.resolvedPath));
@@ -1393,9 +1393,24 @@ try
         auto candidates = warningOptions.level("CHL2201") == "allow" ? Memory::Vector<chali_diagnostics::Diagnostic>() : chali_warnings::collect(M_AotSyntax());
         warnings.insert(warnings.end(), candidates.begin(), candidates.end());
         const std::regex typeName("[A-Z][a-z0-9]*([A-Z][a-z0-9]+)*"), methodName("[a-z][A-Za-z0-9]*");
+        const std::regex moduleName("[a-z][a-z0-9]*(_[a-z0-9]+)*(::[a-z][a-z0-9]*(_[a-z0-9]+)*)*");
         for (std::size_t i = 0; i < M_NodeCount(); ++i)
         {
             const auto &node = M_ParsedNode(static_cast<int>(i));
+            if (node.kind == MNode::ModuleDecl)
+            {
+                if (warningOptions.level("CHL2103") == "allow" || node.s == "__root"
+                    || std::regex_match(std::string(node.s.data(), node.s.size()), moduleName)) continue;
+                const auto origin = node.sourceLine && node.sourceLine <= processed.lineMap.size()
+                    ? processed.lineMap[node.sourceLine - 1] : preprocess::LineOrigin{ sourceLabel, node.sourceLine };
+                chali_diagnostics::Diagnostic d;
+                d.message = Memory::String("模块名建议使用小写下划线命名（snake_case）：") + node.s;
+                d.file = origin.file;
+                d.line = origin.line;
+                d.id = "CHL2103";
+                warnings.push_back(std::move(d));
+                continue;
+            }
             const bool type = node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl || node.kind == MNode::OpcodeDecl;
             if (warningOptions.level(type ? "CHL2101" : "CHL2102") == "allow") continue;
             if ((!type && node.kind != MNode::FuncDef && node.kind != MNode::MethodDef) || node.macroExpansion >= 0 || node.nameParameter || node.s.empty()) continue;
@@ -1432,10 +1447,14 @@ try
     };
     Memory::Vector<chali_diagnostics::Diagnostic> filteredWarnings;
     bool deniedWarning = false;
-    Memory::Set<Memory::String> seenWarnings;
+    Memory::Set<Memory::String> seenWarnings, namingSuppressedFiles;
+    for (const auto &file : processed.namingSuppressedFiles)
+        namingSuppressedFiles.insert(chali_incremental::canonical(file));
     for (auto &item : warnings)
     {
         if (item.file.empty() || item.file[0] == '<') continue;
+        if ((item.id == "CHL2101" || item.id == "CHL2102" || item.id == "CHL2103")
+            && namingSuppressedFiles.count(chali_incremental::canonical(item.file))) continue;
         if (!chali_warnings::prepare(item, warningOptions, originalBody(item.file))) continue;
         if (!seenWarnings.insert(item.file + ":" + std::to_string(item.line).c_str() + ":" + item.id + ":" + item.message).second) continue;
         deniedWarning |= !item.warning;
@@ -1491,7 +1510,7 @@ try
             diagnostics.back().bindSource(originalBody(original.file));
             if (!jsonDiagnostics)
             {
-                /* `<内建 lang>` 这类合成文件是编译器自己拼出来的源码（前处理的行映射会翻
+                /* `<内建 std::core>` 这类合成文件是编译器自己拼出来的源码（前处理的行映射会翻
                  * 到它），行号对用户没有意义；真正读不到原文（renderSnippet 返回空）也一样，
                  * 那就维持原来"只有一句话"的写法 —— 宁可不给位置，也不给一个错的位置。 */
                 const bool positioned = item.line && !original.file.empty() && original.file.front() != '<' && chali_report::hasSourceLine(original.file, original.line);

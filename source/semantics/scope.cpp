@@ -31,7 +31,7 @@ MVar *Find(const Memory::String &name)
  * @brief 模块感知的名字解析：局部作用域按裸名，全局先看 `模块::名`，再兜底裸名。
  *
  * 全局变量按**模块限定名**登记（见 `RegisterTop`），所以模块里的 `x` 会先命中
- * 本模块的 `mod::x`；根模块与 prelude（`lang`）仍可按裸名兜底。两个模块各写一个
+ * 本模块的 `mod::x`；根模块与 prelude（`std::core`）仍可按裸名兜底。两个模块各写一个
  * 同名全局时，各自的代码解析到各自的槽，不会再互相覆盖。
  * @param module 引用所在的定义模块。
  * @param name 源码名称。
@@ -54,8 +54,8 @@ MVar *FindIn(const Memory::String &module, const Memory::String &name, bool glob
         if (qualified != g_scope.front().end()) return &qualified->second;
     }
     const auto bare = g_scope.front().find(name);
-    if (bare != g_scope.front().end()) return &bare->second;
-    Memory::Set<Memory::String> owners{ "std::lang" };
+    if (bare != g_scope.front().end() && (module.empty() || bare->second.isConst)) return &bare->second;
+    Memory::Set<Memory::String> owners{ "std::core" };
     const auto imported = g_moduleImports.find(module);
     if (imported != g_moduleImports.end()) owners.insert(imported->second.begin(), imported->second.end());
     MVar *result = nullptr;
@@ -63,7 +63,7 @@ MVar *FindIn(const Memory::String &module, const Memory::String &name, bool glob
     for (const auto &owner : owners)
     {
         const auto candidate = g_scope.front().find(ModuleSymbol(owner, name));
-        if (candidate == g_scope.front().end()) continue;
+        if (candidate == g_scope.front().end() || !candidate->second.isConst) continue;
         if (result)
         {
             Fail("名称 " + name + " 有歧义：" + chosen + " 与 " + candidate->first + "；请使用作用域限定名");
@@ -149,16 +149,19 @@ Memory::String CaptureBindingKey(const MParam &capture, const Memory::Vector<MPa
 }
 
 /**
- * @brief 只认模块限定全局（`模块::名`），不兜底裸名。
- * @param module 当前模块的名称。
+ * @brief 查找模块限定全局，跨模块时只允许常量。
+ * @param module 声明所在模块。
  * @param name 名称文本。
- * @retval 对应对象的指针。
+ * @param callerModule 引用所在模块。
+ * @return 可见变量的指针，找不到时返回空指针。
  */
-MVar *FindQualifiedGlobal(const Memory::String &module, const Memory::String &name)
+MVar *FindQualifiedGlobal(const Memory::String &module, const Memory::String &name,
+                          const Memory::String &callerModule)
 {
     if (module.empty() || g_scope.empty()) return nullptr;
     const auto found = g_scope.front().find(module + "::" + name);
-    return found == g_scope.front().end() ? nullptr : &found->second;
+    if (found == g_scope.front().end() || (module != callerModule && !found->second.isConst)) return nullptr;
+    return &found->second;
 }
 
 /**
@@ -167,16 +170,16 @@ MVar *FindQualifiedGlobal(const Memory::String &module, const Memory::String &na
  * @param name 未限定名称。
  * @return 可以回退核心库时为 true。
  */
-bool CanUseImplicitLang(const Memory::String &module, const Memory::String &name)
+bool CanUseImplicitCore(const Memory::String &module, const Memory::String &name)
 {
     if (FindIn(module, name) != nullptr) return false;
     if (g_structs.count(name) || g_hostTypes.count(name)) return false;
-    if (!module.empty() && module != "std::lang" && g_functionIndex.count(ModuleSymbol(module, name))) return false;
+    if (!module.empty() && module != "std::core" && g_functionIndex.count(ModuleSymbol(module, name))) return false;
     if (g_functionIndex.count(name)) return false;
     const auto imported = g_moduleImports.find(module);
     if (imported != g_moduleImports.end())
         for (const auto &owner : imported->second)
-            if (owner != "std::lang" && g_functionIndex.count(ModuleSymbol(owner, name))) return false;
+            if (owner != "std::core" && g_functionIndex.count(ModuleSymbol(owner, name))) return false;
     return true;
 }
 
@@ -196,7 +199,7 @@ const Memory::Vector<Memory::String> *FindFunctionOverloads(const Memory::String
     }
     const auto bare = g_functionIndex.find(name);
     if (bare != g_functionIndex.end()) return &bare->second;
-    Memory::Set<Memory::String> owners{ "std::lang" };
+    Memory::Set<Memory::String> owners{ "std::core" };
     const auto imported = g_moduleImports.find(module);
     if (imported != g_moduleImports.end()) owners.insert(imported->second.begin(), imported->second.end());
     const Memory::Vector<Memory::String> *result = nullptr;
@@ -233,7 +236,7 @@ const MFuncSig *FindInferenceFunction(const Memory::String &module, const Memory
     if (bare != g_inferenceFunctions.end()) return &bare->second;
     const auto imported = g_moduleImports.find(module);
     const MFuncSig *result = nullptr;
-    Memory::Set<Memory::String> owners{ "std::lang" };
+    Memory::Set<Memory::String> owners{ "std::core" };
     if (imported != g_moduleImports.end()) owners.insert(imported->second.begin(), imported->second.end());
     for (const auto &owner : owners)
     {

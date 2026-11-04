@@ -53,7 +53,7 @@ total=55
 
 ## 常见决策
 
-- 核心 `std::lang` 自动加载，可直接使用 `String`、`List<T>`、`println`、`assert`。其他模块按实际文档导入，查到真实 API 再调用；`chali man api` 没有的东西不要凭印象写。
+- 核心 `std::core` 自动加载，可直接使用 `String`、`List<T>`、`println`、`assert`。其他模块按实际文档导入，查到真实 API 再调用；`chali man api` 没有的东西不要凭印象写。
 - `int32`、`int64`、`uint64`、`float32` 等是具体类型。未标记整数字面量可按上下文定型；浮点无后缀默认 `float64`，`1.25f` 为 `float32`，`1u` 为无符号整数。`-1u` 和 `-(1u)` 是编译错误，不用它们表示回绕；按需求选择有符号值、显式转换或无符号减法。
 - 普通赋值和按值传参复制值；字符串、列表和聚合也遵守值语义。要避免大对象复制就传引用（`T&` 只读、`T mut&` 可写），要转移资源就写 `move x`。
 - 用 `if (condition) { value } else { value }` 取条件值，简单分支的值不带分号。多语句分支用 `yield value;`。不要生成 `?:`、`choose` 或 `chooseLazy`。

@@ -61,10 +61,10 @@ int main()
 {
     checkModuleHeaders();
     preprocess::Result core;
-    core.text = "module std::lang;";
+    core.text = "module std::core;";
     core.lineMap.push_back({ "core", 1 });
     chali_module::markStandardCore(core);
-    assert(chali_module::findStandardCoreBoundary(core.text) == Memory::String("module std::lang;\n").size());
+    assert(chali_module::findStandardCoreBoundary(core.text) == Memory::String("module std::core;\n").size());
     assert(core.lineMap.size() == 2);
     const int id = M_New(MNode::Int, "snapshot", 37);
     auto &node = const_cast<MNode &>(M_ParsedNode(id));
@@ -73,8 +73,6 @@ int main()
     node.controlTarget = id;
     node.metadataLine = 7;
     node.metadataColumn = 13;
-    node.deriveLine = 9;
-    node.deriveColumn = 3;
     node.bindingIdentity = 456;
     node.bindingContext = 789;
     node.formattedOutputBridge = true;
@@ -83,7 +81,7 @@ int main()
     node.unsafeScope = true;
     node.implicitExitMove = true;
     node.s2 = "macro-category";
-    node.module = "std::lang";
+    node.module = "std::core";
     node.kids = { id };
     const int integerType = M_TypeInt();
     M_TypeKind(MType::Ptr, "unit-pointer-marker");
@@ -155,19 +153,6 @@ int main()
     std::istringstream incompleteMetadataInput(invalidMetadata, std::ios::binary);
     assert(!M_ReadStandardUnit(incompleteMetadataInput));
     assert(M_NodeCount() == count && M_ParsedNode(id).metadataColumn == 13);
-    std::ostringstream derivePosition(std::ios::binary);
-    chali_incremental::writeNumber(derivePosition, 9);
-    chali_incremental::writeNumber(derivePosition, 3);
-    const auto deriveOffset = bytes.find(derivePosition.str());
-    assert(deriveOffset != bytes.npos);
-    for (const auto malformed : { false, true })
-    {
-        auto invalid = bytes;
-        invalid.replace(deriveOffset + (malformed ? 0 : 8), 8, 8, malformed ? static_cast<char>(0xff) : '\0');
-        std::istringstream brokenDerive(invalid, std::ios::binary);
-        assert(!M_ReadStandardUnit(brokenDerive));
-        assert(M_NodeCount() == count && M_ParsedNode(id).deriveLine == 9 && M_ParsedNode(id).deriveColumn == 3);
-    }
     auto invalidContext = bytes;
     invalidContext.replace(provenanceOffset + 8, 8, 8, static_cast<char>(0xff));
     std::istringstream invalidProvenance(invalidContext, std::ios::binary);
@@ -201,7 +186,6 @@ int main()
     assert(restored.syntaxContext == 123 && restored.bindingIdentity == 456 && restored.bindingContext == 789);
     assert(restored.controlContext == 321 && restored.controlTarget == -1);
     assert(restored.metadataLine == 7 && restored.metadataColumn == 13);
-    assert(restored.deriveLine == 9 && restored.deriveColumn == 3);
     assert(restored.i == 37 && restored.s2 == "macro-category" && restored.kids[0] == id);
     std::ostringstream package(std::ios::binary);
     const Memory::String text = "standard core identity";
@@ -257,7 +241,6 @@ int main()
     assert(M_NodeCount() == count * 2);
     assert(M_ParsedNode(static_cast<int>(count) + id).kids[0] == static_cast<int>(count) + id);
     assert(M_ParsedNode(static_cast<int>(count) + id).metadataLine == 10);
-    assert(M_ParsedNode(static_cast<int>(count) + id).deriveLine == 12);
     assert(chali_lifetime::g_directiveNodes.at(static_cast<int>(count) + id) == static_cast<int>(count) + id);
     const Memory::String templateSource = "module std::unit;\nstruct Demo<T=int64>{T value;};\n";
     const Memory::Vector<preprocess::LineOrigin> templateOrigins = {

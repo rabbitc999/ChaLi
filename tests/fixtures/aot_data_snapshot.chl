@@ -51,8 +51,8 @@ export int64 pointerSum(int64 const& values, int64 count) {
     return total;
 }
 
-export int64 matrixAddress() { return (int64)std::lang::address(&matrix[0][0]); }
-export int64 heapAddress() { return (int64)std::lang::address(&heapValues[0]); }
+export int64 matrixAddress() { return (int64)std::core::address(&matrix[0][0]); }
+export int64 heapAddress() { return (int64)std::core::address(&heapValues[0]); }
 
 void main() {
     setup();

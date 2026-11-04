@@ -338,11 +338,11 @@ $end_macro
 
 宏定义登记在**定义它的模块**里，调用按模块可见性解析：
 
-- 未限定写法（`$assert(...)`）：先查调用所在模块，再查 `import` 进来的模块；`std::lang`
+- 未限定写法（`$assert(...)`）：先查调用所在模块，再查 `import` 进来的模块；`std::core`
   始终可见，所以标准库提供的宏不用 import。可见范围内出现多个同名定义时报错。
-- 限定写法（`$std::lang::assert(...)`）：直接点名「模块 + 宏名」，模块路径从最长前缀往下试。
+- 限定写法（`$std::core::assert(...)`）：直接点名「模块 + 宏名」，模块路径从最长前缀往下试。
   名字被同名的函数 / 变量挡住，或者想明确指定用哪个模块的宏时用这种写法。限定调用同样
-  受可见性约束：`std::lang` 始终可见，其余模块必须先 `import`。
+  受可见性约束：`std::core` 始终可见，其余模块必须先 `import`。
 - 两种方式展开出的 AST 完全一致，`$line` / `$file` / `$module` 取的都是调用点。
 
 ```chali
@@ -350,8 +350,8 @@ module qualified;
 
 void main() {
     int64 n = 3;
-    $std::lang::assert(n > 0);              /* 限定名：直接点 std::lang 的宏 */
-    $std::lang::assert(n < 10, "n 得是个位数");
+    $std::core::assert(n > 0);              /* 限定名：直接点 std::core 的宏 */
+    $std::core::assert(n < 10, "n 得是个位数");
 }
 ```
 
@@ -383,7 +383,7 @@ void main(){Record record;record.value=answer();assert(record.value==42);}
 
 ## 编译期枚举、方法与接口元数据
 
-`$variants<T>()`、`$methods<T>()`、`$interfaces<T>()` 分别查询具体枚举的变体、类型的方法和直接／间接基接口。也可使用 `std::lang` 限定名。每次查询需要一个显式类型实参，不接收值实参；泛型须先实例化。结果是编译期只读描述符，不能存入运行期变量、按运行期下标读取或当作机器地址调用。
+`$variants<T>()`、`$methods<T>()`、`$interfaces<T>()` 分别查询具体枚举的变体、类型的方法和直接／间接基接口。也可使用 `std::core` 限定名。每次查询需要一个显式类型实参，不接收值实参；泛型须先实例化。结果是编译期只读描述符，不能存入运行期变量、按运行期下标读取或当作机器地址调用。
 
 | 查询／描述符 | 可读属性 |
 | --- | --- |
@@ -408,7 +408,7 @@ void main(){Record record;record.value=answer();assert(record.value==42);}
 
 宏预览显示结果类别、引入的模板绑定、只读／可写参数借用和控制出口。全部展开按语义检查后的实际目标区分调用方出口与展开内出口；一层预览把尚未确定的出口列为待解析。创建局部函数或闭包时，不将其函数体的退出和借用算作宏本次执行的直接效果。汇总有独立规模上限，截断时会标注；它不证明调用链纯度，也不改变既有 stmt／expr／旧式控制流规则。
 
-接口按源码基接口顺序深度优先读取，首次出现时确定顺序，菱形继承去重；显式列出的基接口具有 `isDirect == true`。查询接口本身时，集合包含它的基接口，不包含自身。具体泛型实参保留在类型描述符中。类型描述符可继续读取 `fields`、`variants`、`methods`、`interfaces`，但查询对象仍须符合相应种类。
+接口按源码基接口顺序深度优先读取，首次出现时确定顺序，菱形继承去重；显式列出的基接口具有 `isDirect == true`。查询接口本身时，集合包含它的基接口，不包含自身。具体泛型实参保留在类型描述符中。`type.qualifiedName` 返回名义类型的完整模块名和具体泛型实参，适合用于区分同名类型；`type.name` 仍采用原有显示名称。类型描述符可继续读取 `fields`、`variants`、`methods`、`interfaces`，但查询对象仍须符合相应种类。
 
 ```chali
 enum Message { Quit, Text(String text), Move(int64 x, int64 y) };
@@ -424,7 +424,7 @@ $end_macro
 void main()
 {
     assert($PAYLOAD_COUNT<Message>() == 3);
-    assert(($variants<Message>())[1].payloads[0].type.name == "std::lang::String");
+    assert(($variants<Message>())[1].payloads[0].type.name == "std::core::String");
 }
 ```
 
@@ -441,7 +441,7 @@ struct Item{int64 code;String name;}
 void main(){
     assert($fields<Item>().count==2);
     assert(($fields<Item>())[0].name=="code");
-    assert(($fields<Item>())[1].type.name=="std::lang::String");
+    assert(($fields<Item>())[1].type.name=="std::core::String");
 }
 ```
 
@@ -515,9 +515,9 @@ $end_macro
 
 `$if condition` 后可以连续写 `$elif condition` 或等价的 `$else_if condition`，最后可接一个 `$else`，整条链只使用一个 `$end_if`。按顺序选择首个成立分支；未选分支的条件和正文不求值、不进行普通语义检查。表达式／语句／声明和成员宏中的条件均适用，嵌套链各自配对。`$else` 后不能再有条件分支；孤立分支、缺少条件或结束命令明确报错。条件只接受编译期 bool 常量。可使用字段属性、变参数量和常量实参；字符串属性支持 `==` 与 `!=`，按语言转义规则解码后比较。未选分支不参与普通名称、类型和借用检查，实际生成的分支照常检查。这里不会执行任意用户函数或宿主副作用。每轮字段局部声明具有独立身份；字段集合为空时不生成循环正文。描述符仍不能逃逸为运行期值。
 
-字段类型条件支持直接写 `field.type == String` 或 `field.type == std::lang::String`。短名遵循宏定义位置的类型作用域。具体实参参与精确比较，`field.type != Map<String, int64>` 可区分不同实例。使用 `Map<?, ?>`、`Set<?>` 或 `Map<String, Set<?>>` 时，每个 `?` 匹配一个类型实参。宏条件里的 `Map` 与 `Map<?, ?>` 等效，`std::lang::Map` 也可用于同一匹配。
+字段类型条件支持直接写 `field.type == String` 或 `field.type == std::core::String`。短名遵循宏定义位置的类型作用域。具体实参参与精确比较，`field.type != Map<String, int64>` 可区分不同实例。使用 `Map<?, ?>`、`Set<?>` 或 `Map<String, Set<?>>` 时，每个 `?` 匹配一个类型实参。宏条件里的 `Map` 与 `Map<?, ?>` 等效，`std::core::Map` 也可用于同一匹配。
 
-`field.genericName` 返回限定泛型族名，例如 `std::lang::Map`，非泛型类型返回空字符串。`field.typeArguments` 是按声明顺序排列的具体类型描述符集合，可查 `.count`、用常量下标读取，或写 `$for arg in field.typeArguments` 遍历。匹配 `Map<String, ?>` 后，可把 `field.typeArguments[1]` 传给宏的 `type` 形参。描述符还可继续查询自己的 `.typeArguments`；编译期整数形参不进入这个类型集合。
+`field.genericName` 返回限定泛型族名，例如 `std::core::Map`，非泛型类型返回空字符串。`field.typeArguments` 是按声明顺序排列的具体类型描述符集合，可查 `.count`、用常量下标读取，或写 `$for arg in field.typeArguments` 遍历。匹配 `Map<String, ?>` 后，可把 `field.typeArguments[1]` 传给宏的 `type` 形参。描述符还可继续查询自己的 `.typeArguments`；编译期整数形参不进入这个类型集合。
 
 对于具体记录字段，`field.chlids` 与 `field.type.fields` 都返回该记录按声明顺序排列的实例字段。用 `$member($member(value, field), child)` 生成普通子字段访问。空记录返回空集合，标量等不支持的字段类型会得到编译期诊断。
 
@@ -574,7 +574,7 @@ struct Cell {
 | `-> expr` 模板 | 本模板的局部循环／值出口；模板不能自行提前返回调用方、向调用方传播错误或逃出表达式 |
 | 未标注结果类别的旧模板 | 保留原有语句式穿透用法；调用方片段仍保留来源 |
 
-因此，在宏生成的 `while` 中放入调用方 `{ break; }`，仍退出调用方的循环。`continue`、带值退出和指定层数退出使用相同来源规则。模板自己的 `break level N` 会先计入自身源码循环，再将剩余层数交给调用方；调用方指定层数时不计宏额外生成的循环。`break all` 沿允许穿透的调用来源选择当前函数最外层的循环，保留旧式宏用法；显式 `expr` 模板以自己的最外层循环为界。
+在宏生成的 `while` 中放入调用方的 `{ break; }`，仍退出调用方的循环。`continue` 和带值退出沿用相同规则。具名退出只查找同一语法来源的标签，模板使用模板自身的标签，调用方传入的片段使用调用方的标签。
 
 模板内声明的函数可以使用自己的 `return` 与 `?`。调用方片段不能跨入一个新生成函数后再返回原函数。显式表达式模板若要让调用方决定是否传播，可接收调用方明确写出的表达式，例如恒等表达式宏的实参 `leaf()?`；模板直接添加 `?` 并提前返回调用方则被拒绝。
 
@@ -596,12 +596,11 @@ VSCode 的“预览宏展开”显示当前文件的调用；“当前宏展开�
 
 命令行使用 `--macro-backtrace short` 仅显示最近一层展开帧，保留实际错误、字段与实参位置；`--macro-backtrace full` 显示完整调用—定义链，缺省 full 保持兼容。专项见 [生产预览与诊断验证](../tests/chali_macro_preview.py)。
 
-内建 #derive 的预览读取已注入的真实方法，同时列出实际参与生成的实例字段或枚举变体；静态字段不参与。字段引用使用预览内的简短标识，元数据声明导航回到原字段。泛型实例保留原派生指令的位置与模块身份，每个具体实参分别检查。用户自定义类型不会因为名称相似就获得标准 Option／Result 的行为；用户派生与内建派生也不能覆盖已有成员。
 
 
 ## Debug 调试显示
 
-标准库接口 Debug 声明 String debug()。在结构体或枚举前使用 #derive(Debug)，按实例字段或活动变体载荷的声明顺序生成普通方法；静态字段不参与。嵌套用户值须实现 Debug，支持手写借用实现和接口继承。字符串按 UTF-8 文本段复制，转义引号、反斜线和控制字节；char 使用单引号，bool 显示 true／false。默认 program:: 前缀省略，其他模块和具体泛型身份保留。
+标准库接口 Debug 声明 String debug()。在类型体内调用 `$std::macro::Debug<T>(debug);`，按实例字段或活动变体载荷的声明顺序生成普通方法；静态字段不参与。嵌套用户值须实现 Debug，支持手写借用实现和接口继承。字符串按 UTF-8 文本段复制，转义引号、反斜线和控制字节；char 使用单引号，bool 显示 true／false。默认 program:: 前缀省略，其他模块和具体泛型身份保留。
 
 派生不覆盖已有 debug，数组、引用、函数值和没有 Debug 契约的容器字段在编译时拒绝。显示不赋予资源复制权限，也不将接口内部所有权变为可复制。调试文本没有跨版本稳定格式保证，不替代 JSON 编码或 Error.toString；生成代码接受相同的类型、借用和清理检查。
 
@@ -610,10 +609,43 @@ VSCode 的“预览宏展开”显示当前文件的调用；“当前宏展开�
 
 ## Json 派生的字段协议
 
-导入 std::json 后，`#derive(Json)` 为结构体或枚举实现 `Json.toJson()`，并生成具体类型的静态 `fromJson(String)`。返回值分别为 `Result<String, Error>` 和 `Result<T, Error>`，当前要求启用反射代码生成；这不会自动以 @Reflect 暴露运行期字段。
+导入 std::json 后，`$std::json::Json<T>(toJson, fromJson);` 为结构体或枚举实现 `Json.toJson()`，并生成具体类型的静态 `fromJson(String)`。返回值分别为 `Result<String, Error>` 和 `Result<T, Error>`，当前要求启用反射代码生成；这不会自动以 @Reflect 暴露运行期字段。
 
 结构体实例字段可使用 `@std::json::Field(name:"external_name", skip:false)`。空 name 沿用语言字段名；skip 为 true 时不编码、不恢复该字段，解码保留默认构造值，输入中的已知忽略键被忽略。重复映射名、重复注解、控制字节名称，以及函数／静态字段／未派生类型上的该注解均在编译时拒绝。非忽略字段缺失、未知键、类型或数值范围错误返回 Err。枚举使用仅含 $variant 与 $values 的对象，并校验标签和载荷数量。
 
 支持全部基础数值、bool、char、标准 String、List、Set、String 键 Map 及递归受支持的 Option／Result。char 编码为字节数值，超出有符号范围的 uint64 使用精确十进制字符串；非有限浮点编码和目标浮点越界解码返回错误。嵌套用户类型也须派生 Json；引用、函数、动态接口、数组、不可复制资源及其他类型在编译时拒绝，skip 不改变这些约束。已有 toJson／fromJson 不被覆盖。
 
-没有派生 Json 的已有反射序列化类型保持原来的字段策略。普通 JSON 解析可在 --no-reflection 下使用。完整代码及逐段讲解见[编译器指令教程](book/24-编译器指令.md)，专项见 [JSON 派生验证](../tests/chali_json_derive.py)。
+没有派生 Json 的已有反射序列化类型保持原来的字段策略。普通 JSON 解析可在 --no-reflection 下使用。完整代码及逐段讲解见[宏教程](book/22-预处理与宏.md)，专项见 [JSON 派生验证](../tests/chali_json_derive.py)。
+
+## 成员宏自动实现接口
+
+在 `-> member` 宏的模板中写 `$implement 接口;`，展开时将接口合入宿主结构体或枚举的接口列表。接口可以使用宏的类型实参。重复请求同一接口时按普通接口列表去重。生成的方法仍须满足接口签名和可见性规则。下面通过两个接口调用同一宿主类型生成的方法。
+
+例如，`$implement Count<T>;` 使用宏调用提供的类型，`$implement Count<String>;` 固定使用 String。标准 Equal、Hash、Clone、Debug 和 Json 成员宏自行登记各自接口，宿主只需调用对应宏。
+
+```chali
+interface Read<T> { T read(); }
+interface Named { String label(); }
+$macro AUTO<U>(reader:ident, labeler:ident) -> member
+$implement Read<U>;
+$implement Named;
+$implement Named;
+U reader() { return self.value; }
+String labeler() { return "auto"; }
+$end_macro
+struct Entry {
+    int64 value;
+    $AUTO<int64>(read, label);
+}
+void main() {
+    Entry entry;
+    entry.value = 42;
+    Read<int64> reader = entry;
+    Named named = entry;
+    println("{} {}", reader.read(), named.label());
+}
+```
+
+```text
+42 auto
+```

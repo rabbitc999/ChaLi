@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PROGRAM = re.compile(r'<!-- verify-book(?:-input:\s*("(?:\\.|[^"\\])*"))? -->\s*```chali\n(.*?)```\s*```text\n(.*?)```', re.S)
 PROGRAM_MARKER = re.compile(r'<!-- verify-book(?:-input:[^\n]*)? -->')
 ERROR_MARKER = re.compile(r'<!-- verify-book-error:[^\n]+ -->')
-ERROR = re.compile(r'<!-- verify-book-error:[^\n]+ -->\s*```chali\n.*?```\s*```text\n.+?```', re.S)
+ERROR = re.compile(r'<!-- verify-book-error:([^\n]+) -->\s*```chali\n(.*?)```\s*```text\n(.+?)```', re.S)
 
 
 def main():
@@ -40,9 +40,11 @@ def main():
         text=(ROOT/'doc/book'/chapter['zh']).read_text(encoding='utf-8')
         translated=(ROOT/'doc/book/en'/chapter['en']).read_text(encoding='utf-8')
         for name, content in ((chapter['zh'], text), (chapter['en'], translated)):
+            assert not re.search(r'^#{2,4} .*?(?:习题|参考解答|Exercises|Answers and checks)\s*$', content, re.M), name
             assert len(PROGRAM_MARKER.findall(content)) == len(PROGRAM.findall(content)), ('样例缺少输出块', name)
             assert len(ERROR_MARKER.findall(content)) == len(ERROR.findall(content)), ('负例缺少诊断块', name)
         assert PROGRAM.findall(text)==PROGRAM.findall(translated), ('双语例程不同', chapter['zh'])
+        assert ERROR.findall(text)==ERROR.findall(translated), ('双语反例不同', chapter['zh'])
     print(f'番外原文 {len(fixture["sha256"])} 章一致；重写教程 {len(selected)} 章双语例程与表述检查通过')
 
 

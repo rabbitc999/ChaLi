@@ -265,15 +265,15 @@ bool astPrimitiveWrapper(const Text &rawLabel)
         if (separator != Text::npos) label = label.substr(separator + 1u);
     }
     static const char *const prefixes[] = {
-        "std::lang::dereference__", "std::lang::barePointer__", "std::lang::pointerFromAddress__",
-        "std::lang::__pointerCast__", "std::lang::readAt__", "std::lang::borrowAt__",
-        "std::lang::initAt__", "std::lang::takeAt__", "std::lang::memcpy__", "std::lang::memset__",
-        "BarePtr__", "std::lang::BarePtr__", "std::lang::__bootList", "std::lang::__bootMap",
-        "std::lang::__bootSet", "std::lang::__bootString", "std::lang::__bootAlgorithm"
+        "std::core::dereference__", "std::core::barePointer__", "std::core::pointerFromAddress__",
+        "std::core::__pointerCast__", "std::core::readAt__", "std::core::borrowAt__",
+        "std::core::initAt__", "std::core::takeAt__", "std::core::memcpy__", "std::core::memset__",
+        "BarePtr__", "std::core::BarePtr__", "std::core::__bootList", "std::core::__bootMap",
+        "std::core::__bootSet", "std::core::__bootString", "std::core::__bootAlgorithm"
     };
     for (const auto *prefix : prefixes)
         if (label.rfind(prefix, 0u) == 0u) return true;
-    return (label.rfind("RawStorage__", 0u) == 0u || label.rfind("std::lang::RawStorage__", 0u) == 0u)
+    return (label.rfind("RawStorage__", 0u) == 0u || label.rfind("std::core::RawStorage__", 0u) == 0u)
            && (label.find(".pointer") != Text::npos || label.find(".capacity") != Text::npos
                || label.find(".isInitialized") != Text::npos);
 }

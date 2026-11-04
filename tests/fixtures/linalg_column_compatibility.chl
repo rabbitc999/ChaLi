@@ -1,7 +1,7 @@
-import std::linalg;
+import std::linear_algebra;
 import std::parse;
 void checkColumn<T>() {
-    let matrix = std::linalg::Matrix<T>::zeros(3,4);
+    let matrix = std::linear_algebra::Matrix<T>::zeros(3,4);
     int64 row = 0;
     while (row < 3) {
         int64 column = 0;
@@ -20,7 +20,7 @@ void checkColumn<T>() {
     int64 count = 0;
     for (column in matrix) { assert(column.len() == 3); count = count + 1; }
     assert(count == 4);
-    let empty = std::linalg::Matrix<T>::zeros(0,2);
+    let empty = std::linear_algebra::Matrix<T>::zeros(0,2);
     assert(empty.column(1).len() == 0);
 }
 void main() {
@@ -28,7 +28,7 @@ void main() {
     checkColumn<int8>(); checkColumn<int16>(); checkColumn<int32>(); checkColumn<int64>();
     checkColumn<uint8>(); checkColumn<uint16>(); checkColumn<uint32>(); checkColumn<uint64>();
     uint64 maximum = std::parse::Parse::parseUInt64("18446744073709551615").unwrap();
-    let matrix = std::linalg::Matrix<uint64>::zeros(1,2);
+    let matrix = std::linear_algebra::Matrix<uint64>::zeros(1,2);
     matrix.set(0,1,maximum);
     assert(matrix.column(1)[0] == maximum);
     println("ten scalar columns, iteration and independent storage OK");

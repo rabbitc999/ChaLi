@@ -161,7 +161,7 @@ The while condition is false immediately, so its body never supplies its string.
 
 ## 5.5 Exit levels and cleanup
 
-Continue advances an iteration and break exits a loop. Nested loops support break level N and break all; a value exit needs a receiver. Leaving scopes triggers cleanup, covered in Chapter 8.
+Continue advances an iteration and break exits a loop. Label a loop and use `break label;` to exit it; a value exit needs a receiver. Leaving scopes triggers cleanup, covered in Chapter 8.
 
 Increment and compound assignment mutate their target. Split dependent reads and writes into ordered statements.
 
@@ -170,15 +170,15 @@ Increment and compound assignment mutate their target. Split dependent reads and
 void main()
 {
     int64 visited = 0;
-    loop
+    outer: loop
     {
         loop
         {
             visited++;
-            break level 2;
+            break outer;
         };
         visited += 100;
-    };
+    }
 
     int64 total = 0;
     List<int64> values;
@@ -197,29 +197,37 @@ void main()
 1 12
 ```
 
-Visited begins at zero. The inner loop increments it to one and `break level 2` exits both enclosing loops. Consequently the outer body's addition of 100 is skipped. Two denotes loop nesting depth, not two separate break operations or two function returns.
+Visited begins at zero. The inner loop increments it to one. The statement `break outer;` exits the labeled outer loop, skipping its addition of 100.
 
 The second part builds a list containing two, four and six, then adds each item to total to obtain twelve. The output combines independent results: exit scope explains visited equal to one, and container iteration explains total equal to twelve. Trace both state updates and the nesting boundaries crossed by exits.
 
+
+### Skip one iteration
+
+After skipping a negative value, the loop still processes later elements.
+
+<!-- verify-book -->
+```chali
+void main() {
+    int64 total = 0;
+    for (value in range(-1, 3)) {
+        if (value < 0) {
+            continue;
+        }
+        total += value;
+    }
+    println("{}", total);
+}
+```
+
+```text
+3
+```
 
 ### Summary
 
 Ask when the condition is tested, where state changes and where each exit leads. For value-producing structures also ask whether every reachable path supplies a compatible result. This separates missing updates, endpoint mistakes and missing-result paths.
 
 Exits also leave scopes. Chapter 8 adds cleanup actions to these same paths once their control flow is clear.
-
-## 5.6 Exercises
-
-1. Count range(0,5) iterations.
-2. Change it to rangeEq.
-3. Provide a no-match search result.
-4. Compare break level 2 and return.
-
-### Answers and checks
-
-1. Five iterations, with values 0 through 4.
-2. It includes 5, giving six iterations.
-3. Use a compatible result in else.
-4. The first exits two loops; the second exits the function.
 
 Next: [Chapter 7](07-value-semantics.md).

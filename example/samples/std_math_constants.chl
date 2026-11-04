@@ -1,0 +1,6 @@
+import std::math;
+void main() {
+    assert(std::math::PI > 3.14 && std::math::PI < 3.15);
+    assert(std::math::E > 2.71 && std::math::E < 2.72);
+    println("math constants OK");
+}

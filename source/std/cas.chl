@@ -1,4 +1,6 @@
 module std::cas;
+import std::big_number;
+import std::macro;
 
 /** 不可变表达式的宿主记录；复制保留独立引用，变换产生新 AST。 */
 opcode __CasValue {
@@ -23,7 +25,6 @@ __CasValue __std_cas_math(__CasValue value, String name, __CasValue other);
 String __std_cas_decimal(__CasValue value, int64 digits);
 
 /** 规范化 AST 的节点种类；减法和除法规范化为加法、乘法与幂。 */
-#derive(Equal, Hash, Clone)
 enum NodeKind {
     Integer,
     Rational,
@@ -32,7 +33,10 @@ enum NodeKind {
     Multiply,
     Power,
     Function,
-    Constant
+    Constant;
+    $std::macro::Equal<NodeKind>(leftEqual);
+    $std::macro::Hash<NodeKind>(hash);
+    $std::macro::Clone<NodeKind>(clone);
 };
 
 /** 精确符号表达式，同时也是可遍历的 AST 根节点。 */

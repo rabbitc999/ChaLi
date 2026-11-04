@@ -299,7 +299,7 @@ struct MPropagationInfo
 bool StandardGeneric(const Memory::String &name, const Memory::String &generic)
 {
     const auto made = chali_generic::session.made.find(name);
-    return made != chali_generic::session.made.end() && made->second.generic->module == "std::lang" && made->second.generic->name == generic;
+    return made != chali_generic::session.made.end() && made->second.generic->module == "std::core" && made->second.generic->name == generic;
 }
 /**
  * @brief 展示传播类型的源码名称，避免诊断泄露实例化符号。
@@ -608,7 +608,7 @@ std::shared_ptr<MType> InferCollectionLiteral(int id, const std::shared_ptr<MTyp
     if (node.type >= 0) return T(node.type);
     if (node.kids.empty())
     {
-        Fail(node.s == "vec" ? "空列表字面量 `[]` 需要 std::lang::List<T> 上下文" : "空集合字面量 `{}` 需要 std::lang::Set<T> 或 std::lang::Map<K,V> 上下文");
+        Fail(node.s == "vec" ? "空列表字面量 `[]` 需要 std::core::List<T> 上下文" : "空集合字面量 `{}` 需要 std::core::Set<T> 或 std::core::Map<K,V> 上下文");
         return T(M_TypeInt());
     }
     auto type = Memory::makeShared<MType>();
@@ -776,7 +776,7 @@ void ResolveBufferIndexShadowing(int id)
 {
     if (id < 0 || N(id).kind != MNode::Index || N(id).s2 != "__chali_bare_index") return;
     const MNode node = N(id);
-    if (CanUseImplicitLang(node.module, "index")) return;
+    if (CanUseImplicitCore(node.module, "index")) return;
     const int arguments = M_List();
     g_nodes[static_cast<std::size_t>(arguments)].kids = node.kids;
     g_nodes[static_cast<std::size_t>(id)].kind = MNode::Call;
@@ -831,7 +831,7 @@ std::shared_ptr<MType> RawExprType(int id)
             Fail("内建区间的元素必须是整数或 char");
             return T(M_TypeVoid());
         }
-        return NamedType("std::lang::__Interval_" + Describe(element));
+        return NamedType("std::core::__Interval_" + Describe(element));
     }
     case MNode::CollectionLiteral: return node.type >= 0 ? T(node.type) : InferCollectionLiteral(id, nullptr);
     case MNode::MacroMetadata:
@@ -873,7 +873,7 @@ std::shared_ptr<MType> RawExprType(int id)
     case MNode::EnumCtor:
     {
         /* `模块::全局变量`：限定写法先认模块全局，再走 static 字段 / 枚举构造。 */
-        if (const MVar *global = FindQualifiedGlobal(node.s, node.s2); global != nullptr)
+        if (const MVar *global = FindQualifiedGlobal(node.s, node.s2, node.module); global != nullptr)
             return global->type;
         if (IsQualifiedFunctionValue(node))
         {
@@ -956,7 +956,7 @@ std::shared_ptr<MType> RawExprType(int id)
         if (IsStandardOpcode(base, "String")) return T(M_TypeChar());
         if (IsContainer(base))
         {
-            /* `v[i]` 是元素；`m[k]` 是值（`std::lang::Map<K,V>` 的 V）。`set` 没有下标。 */
+            /* `v[i]` 是元素；`m[k]` 是值（`std::core::Map<K,V>` 的 V）。`set` 没有下标。 */
             if (base->name == "map") return base->elem2 ? base->elem2 : base->elem;
             return base->elem;
         }
@@ -1042,7 +1042,7 @@ std::shared_ptr<MType> RawExprType(int id)
                     pointer->readOnly = true;
                 if (baseNode.kind == MNode::EnumCtor)
                 {
-                    const MVar *global = FindQualifiedGlobal(baseNode.s, baseNode.s2);
+                    const MVar *global = FindQualifiedGlobal(baseNode.s, baseNode.s2, baseNode.module);
                     if (global && global->isConst) pointer->readOnly = true;
                 }
                 if (baseNode.kind != MNode::Member && baseNode.kind != MNode::Arrow && baseNode.kind != MNode::Index) break;
@@ -1202,7 +1202,7 @@ std::shared_ptr<MType> RawExprType(int id)
             }
             if (algorithm == "mapValue")
             {
-                /* 结果表是 `std::lang::List<R>`，R 从回调的返回类型来。 */
+                /* 结果表是 `std::core::List<R>`，R 从回调的返回类型来。 */
                 if (args.size() < 2u) return T(M_TypeInt());
                 const std::shared_ptr<MType> callback = ExprType(args[1]);
                 return callback && callback->kind == MType::Func && callback->elem ? MakeListType(callback->elem) : T(M_TypeInt());
@@ -1252,7 +1252,7 @@ std::shared_ptr<MType> RawExprType(int id)
             if (name == "str") return T(M_TypeString());
             if (name == "address") return T(M_TypeIntBits(64, 1));
             /* `bint(x)`：构造大整数（整数 / 浮点 / 十进制文本）；
-             * `std::lang::BigInteger(x)` / `std::lang::BigDecimal(x)` 是同一个东西的限定名写法。 */
+             * `std::big_number::BigInteger(x)` / `std::big_number::BigDecimal(x)` 是同一个东西的限定名写法。 */
             if (name == "bint" || name == "BigInteger") return T(M_TypeBigInt());
             if (name == "bfloat" || name == "BigDecimal") return T(M_TypeBigFloat());
             /* 内存内建：memcpy / memset 是过程（`new` / `drop` 是关键字，不走这里） */
@@ -1261,9 +1261,9 @@ std::shared_ptr<MType> RawExprType(int id)
                 return T(M_TypeInt());
             if (name == "print" || name == "println" || name == "putChar")
                 return T(M_TypeInt());
-            /* `std::lang::pause()`：调试暂停，降成 VM 内建 `__std_pause`，返回 0。 */
+            /* `std::core::pause()`：调试暂停，降成 VM 内建 `__std_pause`，返回 0。 */
             if (name == "pause") return T(M_TypeInt());
-            /* `std::lang::format("…", …)`：按 `{}` 占位符拼出的**新串**（和 `std::lang::print` 同规则）。 */
+            /* `std::core::format("…", …)`：按 `{}` 占位符拼出的**新串**（和 `std::core::print` 同规则）。 */
             if (name == "format") return T(M_TypeString());
             if (name == "inputLine") return T(M_TypeString());
             if (name == "inputInt") return T(M_TypeInt());

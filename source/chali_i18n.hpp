@@ -124,7 +124,7 @@ inline constexpr Message messages[] = {
     {"  new DIR [name NAME]  新建 ChaLi 应用工程（目标目录必须不存在）\n", "  new DIR [name NAME]  Create a ChaLi project (destination must not exist)\n"},
     {"  test|fmt|lsp|deps      测试、格式化、语言服务与依赖锁定（原生内建）\n", "  test|fmt|lsp|deps      Tests, formatting, language service, dependency locks (native)\n"},
     {" 与目标函数类型不匹配", " does not match the target function type"},
-    {" 个文件，lang.chl 来自引用模板）\n", " files; lang.chl generated from the template)\n"},
+    {" 个文件，core.chl 来自引用模板）\n", " files; core.chl generated from the template)\n"},
     {" 个编译器文件\n", " compiler files\n"},
     {" 有多个匹配重载；请先赋给带签名的函数变量或显式指定类型实参", " has multiple matching overloads; use a function variable with an explicit signature or specify generic arguments"},
     {" 缺少取值", " requires a value"},

@@ -3,11 +3,11 @@ module std::compress;
 /* 文本压缩与解压：要 `import std::compress;` 才可见。
  * lztext 内核通过 C 帧及公开的字符串／字节列表服务接入。
  *
- * 压缩结果是**二进制**（含 NUL 字节），所以类型是 std::lang::List<uint8>，
- * 不要当字符串打印或拼接。解压出来的才是 std::lang::String。
+ * 压缩结果是**二进制**（含 NUL 字节），所以类型是 std::core::List<uint8>，
+ * 不要当字符串打印或拼接。解压出来的才是 std::core::String。
  *
  * 注意：不保证一定比原文短——随机数据、极短文本这类压不出收益时，
  * 底层会自动按原样存储，体积不变但解压照常正确。 */
 
-std::lang::List<uint8> compress(std::lang::String text);
-std::lang::String decompress(std::lang::List<uint8> bytes);
+std::core::List<uint8> compress(std::core::String text);
+std::core::String decompress(std::core::List<uint8> bytes);

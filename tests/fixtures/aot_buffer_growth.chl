@@ -5,37 +5,37 @@ struct BufferEqualKey: Equal<bool,BufferEqualKey> {
 };
 
 int64 referenceAddress(int64 mut& value) {
-    return (int64)std::lang::address(value);
+    return (int64)std::core::address(value);
 }
 
 void main() {
     int64 local=17;
-    assert(referenceAddress(&local)==(int64)std::lang::address(&local));
-    assert(std::lang::__bootBufferCapacity(0,0,0,8,100)==0);
-    assert(std::lang::__bootBufferCapacity(0,1,0,8,100)==8);
-    assert(std::lang::__bootBufferCapacity(3,5,8,8,100)==8);
-    assert(std::lang::__bootBufferCapacity(8,1,8,8,100)==16);
-    assert(std::lang::__bootBufferCapacity(8,40,8,8,100)==48);
-    assert(std::lang::__bootBufferCapacity(60,1,60,8,100)==100);
-    assert(std::lang::__bootBufferCapacity(0,1,0,3,3)==3);
-    assert(std::lang::__bootBufferCapacity(9223372036854775806,1,9223372036854775806,0,9223372036854775807)==9223372036854775807);
+    assert(referenceAddress(&local)==(int64)std::core::address(&local));
+    assert(std::core::__bootBufferCapacity(0,0,0,8,100)==0);
+    assert(std::core::__bootBufferCapacity(0,1,0,8,100)==8);
+    assert(std::core::__bootBufferCapacity(3,5,8,8,100)==8);
+    assert(std::core::__bootBufferCapacity(8,1,8,8,100)==16);
+    assert(std::core::__bootBufferCapacity(8,40,8,8,100)==48);
+    assert(std::core::__bootBufferCapacity(60,1,60,8,100)==100);
+    assert(std::core::__bootBufferCapacity(0,1,0,3,3)==3);
+    assert(std::core::__bootBufferCapacity(9223372036854775806,1,9223372036854775806,0,9223372036854775807)==9223372036854775807);
     List<int64> values;
     int64 handle=0;
     unsafe {
-        int64 mut& raw=(int64 mut&)(int64)std::lang::address(&values);handle=*raw;
-        int64 maximum=std::lang::__listStorageMaxCapacity(handle);
+        int64 mut& raw=(int64 mut&)(int64)std::core::address(&values);handle=*raw;
+        int64 maximum=std::core::__listStorageMaxCapacity(handle);
         assert(maximum>8 && maximum<9223372036854775807);
-        std::lang::__bootListReserve(handle,33);
-        assert(std::lang::__listStorageCapacity(handle)==33);
+        std::core::__bootListReserve(handle,33);
+        assert(std::core::__listStorageCapacity(handle)==33);
     }
     int64 i=0;
     while(i<33){values.push(i);i=i+1;}
     List<int64> copy=values;
     values.remove(0);values.pop();values.clear();
-    unsafe {assert(std::lang::__listStorageCapacity(handle)==33);}
+    unsafe {assert(std::core::__listStorageCapacity(handle)==33);}
     values.push(99);
     assert(values[0]==99 && copy.len()==33 && copy[0]==0 && copy[32]==32);
-    unsafe {assert(std::lang::__listStorageCapacity(handle)==33);}
+    unsafe {assert(std::core::__listStorageCapacity(handle)==33);}
     List<String> words;words.push("first");words.push("second");
     List<String> saved=words;words.clear();words.push("third");
     assert(saved[0]=="first" && saved[1]=="second" && words[0]=="third");
@@ -43,14 +43,14 @@ void main() {
     i=0;while(i<65){mapping[i]="owned";keys.add(i);i=i+1;}
     int64 mapHandle=0;int64 setHandle=0;
     unsafe {
-        int64 mut& mapSlot=(int64 mut&)(int64)std::lang::address(&mapping);mapHandle=*mapSlot;
-        int64 mut& setSlot=(int64 mut&)(int64)std::lang::address(&keys);setHandle=*setSlot;
-        assert(std::lang::__mapStorageState(mapHandle,10,0,0)==128);
-        assert(std::lang::__mapStorageState(setHandle,10,0,0)==128);
-        assert(std::lang::__mapStorageState(mapHandle,13,0,0)==256);
-        assert(std::lang::__mapStorageState(setHandle,13,0,0)==256);
-        assert(std::lang::__mapStorageState(mapHandle,9,0,0)>256);
-        assert(std::lang::__mapStorageState(mapHandle,11,0,0)>128);
+        int64 mut& mapSlot=(int64 mut&)(int64)std::core::address(&mapping);mapHandle=*mapSlot;
+        int64 mut& setSlot=(int64 mut&)(int64)std::core::address(&keys);setHandle=*setSlot;
+        assert(std::core::__mapStorageState(mapHandle,10,0,0)==128);
+        assert(std::core::__mapStorageState(setHandle,10,0,0)==128);
+        assert(std::core::__mapStorageState(mapHandle,13,0,0)==256);
+        assert(std::core::__mapStorageState(setHandle,13,0,0)==256);
+        assert(std::core::__mapStorageState(mapHandle,9,0,0)>256);
+        assert(std::core::__mapStorageState(mapHandle,11,0,0)>128);
     }
     Map<int64,String> mapCopy=mapping;Set<int64> setCopy=keys;
     mapping.remove(0);keys.remove(0);mapping.clear();keys.clear();
@@ -59,19 +59,19 @@ void main() {
     assert(setCopy.len()==65 && setCopy.has(0)!=0 && setCopy.has(64)!=0);
     assert(mapping.len()==1 && mapping[100]=="new" && keys.len()==1 && keys.has(100)!=0);
     unsafe {
-        assert(std::lang::__mapStorageState(mapHandle,10,0,0)==128);
-        assert(std::lang::__mapStorageState(setHandle,10,0,0)==128);
-        assert(std::lang::__mapStorageState(mapHandle,13,0,0)==256);
-        assert(std::lang::__mapStorageState(setHandle,13,0,0)==256);
+        assert(std::core::__mapStorageState(mapHandle,10,0,0)==128);
+        assert(std::core::__mapStorageState(setHandle,10,0,0)==128);
+        assert(std::core::__mapStorageState(mapHandle,13,0,0)==256);
+        assert(std::core::__mapStorageState(setHandle,13,0,0)==256);
     }
     Map<BufferEqualKey,int64> linear;Set<BufferEqualKey> linearSet;
     i=0;while(i<17){BufferEqualKey key;key.id=i;linear[key]=i;linearSet.add(key);i=i+1;}
     BufferEqualKey first;first.id=0;
     assert(linear[first]==0 && linearSet.has(first)!=0);
     unsafe {
-        int64 mut& slot=(int64 mut&)(int64)std::lang::address(&linear);
-        assert(std::lang::__mapStorageState(*slot,1,0,0)==0);
-        assert(std::lang::__mapStorageState(*slot,10,0,0)==32);
+        int64 mut& slot=(int64 mut&)(int64)std::core::address(&linear);
+        assert(std::core::__mapStorageState(*slot,1,0,0)==0);
+        assert(std::core::__mapStorageState(*slot,10,0,0)==32);
     }
     linear.clear();linearSet.clear();linear[first]=9;linearSet.add(first);
     assert(linear.len()==1 && linear[first]==9 && linearSet.len()==1);

@@ -35,7 +35,7 @@ void main() {
     *lastByte = 7;
     bytes[1, 2, 3]++;
     assert(bytes[1, 2, 3] == 8);
-    assert(std::lang::address(&bytes[1, 0, 0]) - std::lang::address(&bytes[0, 0, 0]) == 12);
+    assert(std::core::address(&bytes[1, 0, 0]) - std::core::address(&bytes[0, 0, 0]) == 12);
     Entry entries[2, 2, 2];
     entries[1, 0, 1].text = "entry";
     entries[1, 0, 1].items.push(7);

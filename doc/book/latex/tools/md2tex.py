@@ -202,6 +202,16 @@ class Converter:
             raise ValueError('Markdown 表格缺少合法的表头分隔行：' + rows_raw[0])
         header, sep, body = rows[0], rows[1], rows[2:]
         ncol = len(header)
+        if self.mode == 'preface' and header == ['章', '主题', '这一章要解决的问题']:
+            # 章号链接按可见内容排版，主题留固定宽度，说明占用剩余版心。
+            out = [r'\par\noindent{\small\hypersetup{linkcolor=blue!60!black}%',
+                   r'\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}p{.25\linewidth}>{\raggedright\arraybackslash}X@{}}',
+                   r'\toprule',
+                   ' & '.join(self.inline(cell) for cell in header) + r' \\',
+                   r'\midrule']
+            out.extend(' & '.join(self.inline(cell) for cell in row) + r' \\' for row in body)
+            out.extend([r'\bottomrule', r'\end{tabularx}\par}'])
+            return '\n'.join(out)
         aligns = []
         for j in range(ncol):
             cell = sep[j] if j < len(sep) else '---'
@@ -357,6 +367,8 @@ class Converter:
         else:
             star = ''
         if level == 2:
+            if self.mode == 'preface' and text == '目录':
+                return r'\clearpage\section*{目录}'
             if not re.match(r'^(\d+\.\d+|[AB]\.\d+)\s+', text):
                 star = '*'
             text = re.sub(r'^(\d+\.\d+|[AB]\.\d+)\s+', '', text)

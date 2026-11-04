@@ -7,10 +7,10 @@
  */
 int64 classify(int64 x) {
     match (x) {
-        std::lang::range(0, 10) => { return 1; }
-        std::lang::range(10, 20) => { return 2; }
-        std::lang::range(20, 30) => { return 3; }
-        std::lang::rangeEq(30, 40) => { return 4; }
+        std::core::range(0, 10) => { return 1; }
+        std::core::range(10, 20) => { return 2; }
+        std::core::range(20, 30) => { return 3; }
+        std::core::rangeEq(30, 40) => { return 4; }
         _ => { return 0; }
     }
 }

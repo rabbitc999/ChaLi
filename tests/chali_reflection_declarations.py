@@ -71,13 +71,13 @@ def main():
         names = identities(work / 'names')
         assert names['one::Same'] != names['two::Same']
         snapshots = []
-        for index, alias in enumerate(('String', 'std::lang::String')):
+        for index, alias in enumerate(('String', 'std::core::String')):
             extra = 'struct Unrelated{int32 x;};\n' if index else ''
             source.write_text('import std::reflect;\n' + extra + 'struct Box<T>{T value;};\n@Reflect String read(Box<' + alias +
                               '> value){return value.value;}\nvoid main(){\n'
                               'let info=std::reflect::getFuncInfo("program::read").unwrap();\n'
                               'assert(info.params[0].typeId==std::reflect::getTypeId<Box<' + alias + '>>());\n'
-                              'assert(info.returnTypeId==std::reflect::getTypeId<std::lang::String>());\n'
+                              'assert(info.returnTypeId==std::reflect::getTypeId<std::core::String>());\n'
                               'println("function|{}",info.typeId);println("box|{}",info.params[0].typeId);\n'
                               'println("string|{}",info.returnTypeId);}', encoding='utf-8')
             prefix = work / ('identity' + str(index))

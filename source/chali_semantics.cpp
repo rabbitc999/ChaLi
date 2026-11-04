@@ -254,22 +254,22 @@ int M_TypeDouble() { return M_TypeFloatBits(64); }
  * @brief 构造并登记字符串类型。
  * @retval 类型池中对应类型的编号。
  */
-int M_TypeString() { return M_TypeKind(MType::Opcode, "std::lang::String"); }
+int M_TypeString() { return M_TypeKind(MType::Opcode, "std::core::String"); }
 /**
  * @brief 构造并登记无返回值类型。
  * @retval 类型池中对应类型的编号。
  */
 int M_TypeVoid() { return M_TypeKind(MType::Void); }
 /**
- * @brief 引用 lang 包声明的 BigInteger opcode 类型。
+ * @brief 引用 bignumber 包声明的 BigInteger opcode 类型。
  * @retval 类型池中对应类型的编号。
  */
-int M_TypeBigInt() { return M_TypeKind(MType::Opcode, "std::lang::BigInteger"); }
+int M_TypeBigInt() { return M_TypeKind(MType::Opcode, "std::big_number::BigInteger"); }
 /**
- * @brief 引用 lang 包声明的 BigDecimal opcode 类型。
+ * @brief 引用 bignumber 包声明的 BigDecimal opcode 类型。
  * @retval 类型池中对应类型的编号。
  */
-int M_TypeBigFloat() { return M_TypeKind(MType::Opcode, "std::lang::BigDecimal"); }
+int M_TypeBigFloat() { return M_TypeKind(MType::Opcode, "std::big_number::BigDecimal"); }
 /**
  * @brief `obj`：**装箱格子**（值 = 运行期对象句柄：一个值 + 它的类型号）。
  *
@@ -279,15 +279,15 @@ int M_TypeBigFloat() { return M_TypeKind(MType::Opcode, "std::lang::BigDecimal")
  */
 int M_TypeObj() { return M_TypeKind(MType::Obj); }
 /**
- * @brief 引用 lang 包声明的 File opcode 类型。
+ * @brief 引用 std::core 声明的 File opcode 类型。
  * @retval 类型池中对应类型的编号。
  */
-int M_TypeFile() { return M_TypeKind(MType::Opcode, "std::lang::File"); }
+int M_TypeFile() { return M_TypeKind(MType::Opcode, "std::core::File"); }
 /**
- * @brief 引用 lang 包声明的 Process opcode 类型。
+ * @brief 引用 std::core 声明的 Process opcode 类型。
  * @retval 类型池中对应类型的编号。
  */
-int M_TypeProc() { return M_TypeKind(MType::Opcode, "std::lang::Process"); }
+int M_TypeProc() { return M_TypeKind(MType::Opcode, "std::core::Process"); }
 
 /**
  * @brief 造一个容器类型：`name` 是 "vec" / "set" / "map"。
@@ -306,9 +306,9 @@ int M_ContainerType(const char *name, int firstId, int secondId)
     return M_AddType(type);
 }
 /**
- * @brief 标准类型名 → 类型节点（`String` / `BigInteger` / `BigDecimal` / `File` / `Process` / `Any`）。
+ * @brief 标准类型名 → 类型节点（`String` / `File` / `Process` / `Any`）。
  *
- * `std::lang::X` 只走一条路：通用限定名 `VARIABLE SCOPE VARIABLE` → 这里按名字落回真实类型。
+ * `std::core::X` 只走一条路：通用限定名 `VARIABLE SCOPE VARIABLE` → 这里按名字落回真实类型。
  * 拼写 token（`STD_*`）已删除，所以这是**唯一**入口，不存在两种写法给出不同结果的问题。
  *
  * @param name 类型名（不含 `std::`）。
@@ -317,8 +317,6 @@ int M_ContainerType(const char *name, int firstId, int secondId)
 int StandardTypeByName(const Memory::String &name)
 {
     if (name == "String") return M_TypeString();
-    if (name == "BigInteger") return M_TypeBigInt();
-    if (name == "BigDecimal") return M_TypeBigFloat();
     if (name == "File") return M_TypeFile();
     if (name == "Process") return M_TypeProc();
     if (name == "Any") return M_TypeObj();
@@ -352,7 +350,7 @@ int M_TypeMap(int keyId, int valueId) { return M_ContainerType("map", keyId, val
  * **泛型实例化产出的源码里仍然是这些内部拼写**（`Result<File, string>` 实例化出来的结构体
  * 成员就写成 `file`），所以"按名字写出类型"这条路必须照样认它们，否则一用泛型就炸。
  * `String` / `File` / `Process` / `BigInteger` / `BigDecimal` / `Any` 的裸名形式也一并认，
- * 方便 `std::lang::X` 与裸名两种写法过渡（`std::lang::X` 那条路由 `StandardTypeByName` 认）。
+ * 方便 `std::core::X` 与裸名两种写法过渡（`std::core::X` 那条路由 `StandardTypeByName` 认）。
  *
  * @param name 类型名（不含 `std::`）。
  * @return 类型节点 id；不是内建名返回 -1（调用方按普通结构体处理）。
@@ -777,7 +775,7 @@ int M_BinOp(int kind, int left, int right)
 /**
  * @brief 构造 `move 表达式` 节点。
  *
- * 移动是运算符而不是函数：这里把它包成内部调用 `std::lang::__move(x)`，借用流、生命周期与
+ * 移动是运算符而不是函数：这里把它包成内部调用 `std::core::__move(x)`，借用流、生命周期与
  * 降级只认这一种形状。`__move` 是编译器内部拼写，和 `__fileTryOpen` 那批内建一样不在文档里公开。
  * @param operand 被移动的位置表达式。
  * @retval 内部移动调用节点的编号。
@@ -786,7 +784,7 @@ int M_Move(int operand)
 {
     if (operand >= 0 && g_nodes[static_cast<std::size_t>(operand)].kind == MNode::Un && g_nodes[static_cast<std::size_t>(operand)].s == "&")
         PushParseDiagnostic("move 不接受取地址表达式；请直接移动变量或引用");
-    const int callee = M_New(MNode::EnumCtor, "std::lang");
+    const int callee = M_New(MNode::EnumCtor, "std::core");
     g_nodes[static_cast<std::size_t>(callee)].s2 = "__move";
     return M_CallOn(callee, M_List1(operand));
 }
@@ -1132,7 +1130,7 @@ int M_CallOn(int callee, int args)
         target.kids = g_nodes[args].kids;
         return callee;
     }
-    const bool bufferIndex = (target.kind == MNode::Var && target.s == "index") || (target.kind == MNode::EnumCtor && target.s == "std::lang" && target.s2 == "index");
+    const bool bufferIndex = (target.kind == MNode::Var && target.s == "index") || (target.kind == MNode::EnumCtor && target.s == "std::core" && target.s2 == "index");
     if (bufferIndex && g_nodes[static_cast<std::size_t>(args)].kids.size() == 2u)
     {
         // 显式缓冲区元素访问直接构造成左值，复用索引的读写与取引用流程。
@@ -1153,7 +1151,7 @@ int M_CallOn(int callee, int args)
     const std::size_t typeStart = qualifier == Memory::String::npos ? 0u : qualifier + 2u;
     std::size_t typeLetter = typeStart;
     while (typeLetter < target.s.size() && target.s[typeLetter] == '_') ++typeLetter;
-    const bool standardModule = target.s.compare(0u, 11u, "std::lang::") == 0 && IsStandardModule(target.s.substr(11u));
+    const bool standardModule = target.s.compare(0u, 11u, "std::core::") == 0 && IsStandardModule(target.s.substr(11u));
     const bool moduleQualifier = standardModule || target.s == "program";
     const auto instance = chali_generic::session.made.find(target.s.substr(typeStart));
     const bool instantiatedType = instance != chali_generic::session.made.end() && instance->second.generic
@@ -1165,7 +1163,7 @@ int M_CallOn(int callee, int args)
     if (target.kind == MNode::EnumCtor && !moduleQualifier
         && (instantiatedType || (typeLetter < target.s.size() && std::isupper(static_cast<unsigned char>(target.s[typeLetter])))))
     {
-        if (target.s.compare(0u, 11u, "std::lang::") == 0) target.s.erase(0u, 11u);
+        if (target.s.compare(0u, 11u, "std::core::") == 0) target.s.erase(0u, 11u);
         target.kids = g_nodes[static_cast<std::size_t>(args)].kids;
         target.type2 = 1; /* `Type::name(...)`，与无括号的 static 字段访问区分。 */
         return callee;
@@ -1211,7 +1209,7 @@ int M_QualifiedName(int leftNameId, int rightNameId)
 }
 
 /**
- * @brief `std::lang::X` 里的 X 是不是标准库**模块**（表在 `chali.gram` 的 `%code` 里）。
+ * @brief `std::core::X` 里的 X 是不是标准库**模块**（表在 `chali.gram` 的 `%code` 里）。
  *
  * 判定办法是查文法声明的那张表，而不是在编译器里写死 —— 新加标准模块只要改文法。
  * @param name `std::` 后面的那一段（如 `Math` / `Clock`）。
@@ -1225,7 +1223,7 @@ bool IsStandardModule(const Memory::String &name)
             if (item) result.insert(item);
         return result;
     }();
-    return modules.count("std::lang::" + name) != 0u;
+    return modules.count("std::core::" + name) != 0u;
 }
 
 /**
@@ -1243,11 +1241,11 @@ int M_QualifiedRef(int leftRefId, int rightNameId)
         g_nodes[id].s2 = left.s2 + "::" + g_names[rightNameId];
         return id;
     }
-    const bool standardType = left.s == "std::lang" && !left.s2.empty() && std::isupper(static_cast<unsigned char>(left.s2[0]));
-    /* `std::lang::X::y` 里的 X 是不是**模块**，看 chali.gram 的 `%code` 里那张
+    const bool standardType = left.s == "std::core" && !left.s2.empty() && std::isupper(static_cast<unsigned char>(left.s2[0]));
+    /* `std::core::X::y` 里的 X 是不是**模块**，看 chali.gram 的 `%code` 里那张
      * kChaLiStdModules 表（新加标准模块时改文法，别在编译器里硬编码）。
-     * 表外的按标准**类型**处理（`std::lang::List::of` 只留 `List::of`）。 */
-    const Memory::String qualified = standardType ? (IsStandardModule(left.s2) ? "std::lang::" + left.s2 : left.s2) : left.s + "::" + left.s2;
+     * 表外的按标准**类型**处理（`std::core::List::of` 只留 `List::of`）。 */
+    const Memory::String qualified = standardType ? (IsStandardModule(left.s2) ? "std::core::" + left.s2 : left.s2) : left.s + "::" + left.s2;
     const int nameId = M_Name(qualified.c_str());
     const int emptyArgs = M_List();
     return M_EnumCtor(nameId, rightNameId, emptyArgs);
@@ -1295,8 +1293,8 @@ int M_QualifiedContainer(int refId, int first, int second)
  */
 int M_StdType(int moduleNameId, int kind)
 {
-    if (g_names[static_cast<std::size_t>(moduleNameId)] != "std::lang")
-        PushParseDiagnostic("标准类型必须使用 std::lang:: 前缀");
+    if (g_names[static_cast<std::size_t>(moduleNameId)] != "std::core")
+        PushParseDiagnostic("标准类型必须使用 std::core:: 前缀");
     switch (kind)
     {
     case 0: return M_TypeString();
@@ -1319,8 +1317,12 @@ int M_StdNamedType(int moduleNameId, int typeNameId)
 {
     const Memory::String &module = g_names[static_cast<std::size_t>(moduleNameId)];
     const Memory::String &name = g_names[static_cast<std::size_t>(typeNameId)];
-    /* `std::lang::String` / `std::lang::BigInteger` / `std::lang::File` … 落回真实类型。 */
-    if (module == "std::lang")
+    if (module == "std::big_number")
+    {
+        if (name == "BigInteger") return M_TypeBigInt();
+        if (name == "BigDecimal") return M_TypeBigFloat();
+    }
+    if (module == "std::core")
     {
         const int standard = StandardTypeByName(name);
         if (standard >= 0) return standard;
@@ -1336,10 +1338,10 @@ int M_StdNamedType(int moduleNameId, int typeNameId)
 }
 
 /**
- * @brief `std::lang::List<T>` / `std::lang::Set<T>` / `std::lang::Map<K,V>`：**按名字**认容器。
+ * @brief `std::core::List<T>` / `std::core::Set<T>` / `std::core::Map<K,V>`：**按名字**认容器。
  *
  * 容器的裸写法和限定写法统一走这条语义路径。
- * @param moduleNameId 模块名（必须是 `lang`）。
+ * @param moduleNameId 模块名（必须是 `std::core`）。
  * @param typeNameId 容器名（`List` / `Set` / `Map`）。
  * @param firstType 元素 / 键类型。
  * @param secondType `Map` 的值类型；其它容器传 -1。
@@ -1347,13 +1349,13 @@ int M_StdNamedType(int moduleNameId, int typeNameId)
  */
 int M_StdContainerNamed(int moduleNameId, int typeNameId, int firstType, int secondType)
 {
-    if (g_names[static_cast<std::size_t>(moduleNameId)] != "std::lang")
-        PushParseDiagnostic("标准容器必须使用 std::lang:: 前缀");
+    if (g_names[static_cast<std::size_t>(moduleNameId)] != "std::core")
+        PushParseDiagnostic("标准容器必须使用 std::core:: 前缀");
     const Memory::String &name = g_names[static_cast<std::size_t>(typeNameId)];
     if (name == "List") return M_TypeVec(firstType);
     if (name == "Set") return M_TypeSet(firstType);
     if (name == "Map") return M_TypeMap(firstType, secondType);
-    PushParseDiagnostic("不是标准容器：" + name + "（只有 std::lang::List / std::lang::Set / std::lang::Map）");
+    PushParseDiagnostic("不是标准容器：" + name + "（只有 std::core::List / std::core::Set / std::core::Map）");
     return M_TypeVoid();
 }
 
@@ -1366,7 +1368,7 @@ int M_StdContainerNamed(int moduleNameId, int typeNameId, int firstType, int sec
  */
 int M_ImplicitContainer(int name, int first, int second)
 {
-    return M_StdContainerNamed(M_Name("std::lang"), name, first, second);
+    return M_StdContainerNamed(M_Name("std::core"), name, first, second);
 }
 
 /**
@@ -1379,8 +1381,8 @@ int M_ImplicitContainer(int name, int first, int second)
  */
 int M_StdContainer(int moduleNameId, int kind, int firstType, int secondType)
 {
-    if (g_names[static_cast<std::size_t>(moduleNameId)] != "std::lang")
-        PushParseDiagnostic("标准容器必须使用 std::lang:: 前缀");
+    if (g_names[static_cast<std::size_t>(moduleNameId)] != "std::core")
+        PushParseDiagnostic("标准容器必须使用 std::core:: 前缀");
     if (kind == 0) return M_TypeVec(firstType);
     if (kind == 1) return M_TypeSet(firstType);
     return M_TypeMap(firstType, secondType);
@@ -1395,8 +1397,8 @@ int M_StdContainer(int moduleNameId, int kind, int firstType, int secondType)
  */
 int M_StdNumberCtor(int moduleNameId, int kind, int value)
 {
-    if (g_names[static_cast<std::size_t>(moduleNameId)] != "std::lang")
-        PushParseDiagnostic("标准数值构造器必须使用 std::lang:: 前缀");
+    if (g_names[static_cast<std::size_t>(moduleNameId)] != "std::big_number")
+        PushParseDiagnostic("标准大数字构造器必须使用 std::big_number:: 前缀");
     return kind == 0 ? M_BigIntCtor(value) : M_BigFloatCtor(value);
 }
 /**
@@ -1538,7 +1540,7 @@ int M_CaseBlock(int patterns, int guard, int block)
  */
 int M_FString(int args)
 {
-    return M_CallOn(M_EnumCtor(M_Name("std::lang"), M_Name("format"), M_List()), args);
+    return M_CallOn(M_EnumCtor(M_Name("std::core"), M_Name("format"), M_List()), args);
 }
 /**
  * @brief 延迟正文提升为借用当前作用域的闭包。
@@ -2014,61 +2016,30 @@ int M_Break(int value)
 int M_Continue() { return M_New(MNode::Continue); }
 
 /**
- * @brief 构造指定循环层数的退出语句并校验正整数层数。
- * @param level 整数字面量节点编号；负一表示退出全部循环。
- * @retval 返回保存层数的退出节点编号；非法层数登记语义错误。
+ * @brief 保存循环标签。
+ * @param label 冒号左侧的标签语法节点。
+ * @param loop 待标记的循环节点。
+ * @return 循环节点编号或错误节点。
  */
-int M_BreakLevel(int level)
+int M_LabeledLoop(int label, int loop)
+{
+    if (g_nodes[label].kind != MNode::Var)
+        return M_ParseBad("循环标签必须是标识符");
+    g_nodes[loop].s2 = g_nodes[label].s;
+    return loop;
+}
+
+/**
+ * @brief 保存待降级时解析的退出标签。
+ * @param nameId 标签名称池编号。
+ * @return 无值退出节点编号。
+ */
+int M_BreakNamed(int nameId)
 {
     const int id = M_Break(-1);
-    if (level < 0)
-        g_nodes[id].i = -1;
-    else
-    {
-        const MNode value = g_nodes[level];
-        if (value.kind != MNode::Int || value.i <= 0 || value.unsignedLiteral)
-            return M_ParseBad("break #level(N) 的 N 必须是正整数字面量");
-        else
-            g_nodes[id].i = value.i;
-    }
+    g_nodes[id].s2 = g_names[nameId];
     return id;
 }
-
-/**
- * @brief 语法糖辅助：大小写无关地判定名称池中的名字是否等于给定文本。
- * @param nameId 名称池编号。
- * @param text 目标文本（ASCII）。
- * @retval 名字与 text 大小写无关相等时返回 true。
- * @note 不引入关键字，保留 level / all 作为普通标识符。
- */
-bool M_NameIs(int nameId, const char *text)
-{
-    if (nameId < 0 || nameId >= static_cast<int>(g_names.size()) || text == nullptr) return false;
-    const std::string &nm = g_names[static_cast<std::size_t>(nameId)];
-    for (size_t i = 0; text[i] != '\0'; ++i)
-    {
-        char a = nm[i], b = text[i];
-        if (a >= 'a' && a <= 'z') a -= static_cast<char>('a' - 'A');
-        if (b >= 'a' && b <= 'z') b -= static_cast<char>('a' - 'A');
-        if (a != b) return false;
-    }
-    return nm.size() == std::strlen(text);
-}
-
-/**
- * @brief `break level N;` / `break level all;` 语法糖的层级名判定辅助（文法动作不支持字符串字面量）。
- * @param nameId 名称池编号。
- * @retval 名字大小写无关等于 level / all 时返回 true。
- */
-bool M_NameIsLevel(int nameId) { return M_NameIs(nameId, "level"); }
-bool M_NameIsAll(int nameId) { return M_NameIs(nameId, "all"); }
-
-/**
- * @brief `break level N;` 语法糖的参数错误节点（文法动作不支持字符串字面量）。
- */
-int M_ParseBadLevelSugar() { return M_ParseBad("break level 后必须跟正整数字面量层数，形如 break level 2;"); }
-int M_ParseBadLevelAllSugar() { return M_ParseBad("break level 后只能跟 all，形如 break level all;"); }
-int M_ParseBadBreakAllSugar() { return M_ParseBad("break 仅支持 break all 退出全部循环，带值退出请写 yield 值"); }
 
 /**
  * @brief 构造并登记实例字段声明。
@@ -2587,7 +2558,7 @@ int M_HostImpl(int ownerTypeId, int interfaceNameId, int functionNameId)
  */
 void NoteReservedCoreType(const Memory::String &name)
 {
-    if (g_parseModule == "std::lang") return;
+    if (g_parseModule == "std::core") return;
     static const Memory::Set<Memory::String> reserved{
         "List", "Set", "Map", "Option", "Result", "Any", "range",
         "Index", "Iterator"
@@ -2661,7 +2632,9 @@ int M_EnumWithMethods(int nameId, int variants, int members, int interfacesId)
     g_nodes[static_cast<std::size_t>(id)].i = interfacesId;
     return id;
 }
-#include "semantics/derive_ast.cpp"
+
+#include "semantics/operator_switch_ast.cpp"
+
 /**
  * @brief 构造并登记枚举变体声明。
  * @param nameId 名称池中的名称编号。
@@ -3015,7 +2988,7 @@ int M_TokenValue(int tokenType, double number, const char *pName, Memory::String
     }
     g_reductionLine = line;
     g_reductionColumn = column;
-    if (tokenType == TOKEN_AT || tokenType == TOKEN_ANNOTATION || tokenType == TOKEN_DERIVE)
+    if (tokenType == TOKEN_AT || tokenType == TOKEN_ANNOTATION)
     {
         const int id = M_New(MNode::AnnotationMarker);
         g_nodes[id].sourceColumn = column;
@@ -3191,7 +3164,6 @@ namespace
 #include "semantics/builtins.cpp"
 #include "semantics/generic_inference.cpp"
 #include "semantics/editor_analysis.cpp"
-#include "semantics/editor_derive_preview.cpp"
 #include "semantics/constants.cpp"
 #include "semantics/lowering.cpp"
 #include "semantics/interface_dispatch.cpp"
@@ -3204,9 +3176,8 @@ namespace
 #include "semantics/reflection_metadata.cpp"
 #include "semantics/reflection_queries.cpp"
 #include "semantics/reflection_calls.cpp"
-#include "semantics/derive_json.cpp"
+#include "semantics/json_model.cpp"
 #include "semantics/reflection_serialization.cpp"
-#include "semantics/derive.cpp"
 #include "semantics/macro_fragments.cpp"
 #include "semantics/ast_generic_closures.cpp"
 bool ExpandAstMacroMembers(int owner);
@@ -3215,7 +3186,6 @@ bool ExpandAstMacroMembers(int owner);
 #include "semantics/macro_controls.cpp"
 #include "semantics/macro_patterns.cpp"
 #include "semantics/macro_expansion.cpp"
-#include "semantics/custom_derive.cpp"
 }  // namespace
 
 /**
@@ -3295,11 +3265,6 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
         return 1;
     }
     if (!LiftReachableAstLambdas()) return 1;
-    if (!ExpandReadyDerivedDeclarations())
-    {
-        RestoreFirstDiagnostic();
-        return 1;
-    }
     if (!PrepareGenericSignatures())
     {
         RestoreFirstDiagnostic();
@@ -3328,7 +3293,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
                 return 1;
             }
             RecordEditorGeneratedDeclarations();
-            if (!ValidateDerivedFields())
+            if (!ValidateJsonModels())
             {
                 RestoreFirstDiagnostic();
                 return 1;
@@ -3456,7 +3421,6 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
             if (!LiftReachableAstLambdas()) return 1;
             parsedTop.insert(parsedTop.end(), g_top.begin(), g_top.end());
             g_top = parsedTop;
-            if (!ExpandReadyDerivedDeclarations()) return 1;
             parsedTop = g_top;
             parsedNodes = g_nodes;
             parsedDirectives = chali_lifetime::g_directiveNodes;
@@ -3595,7 +3559,7 @@ void M_SetProgramArguments(int argc, const char *const *argv)
 namespace
 {
 constexpr std::uint64_t kStandardUnitMagic = 0x4d47535444494e54ull; /* "MGSTDINT" */
-constexpr std::uint64_t kStandardUnitVersion = 8;
+constexpr std::uint64_t kStandardUnitVersion = 9;
 
 /**
  * @brief 一个类型的引用字段在单元里的原始下标。
@@ -3719,12 +3683,8 @@ void WriteUnitNode(std::ostream &out, const MNode &node, const Memory::Vector<st
     chali_incremental::writeString(out, node.expansionModule);
     chali_incremental::writeNumber(out, static_cast<std::uint64_t>(static_cast<std::int64_t>(node.macroExpansion)));
     WriteUnitInts(out, node.annotations);
-    chali_incremental::writeStrings(out, node.derives);
-    chali_incremental::writeNumber(out, node.deriveLine < canonical.size() ? canonical[node.deriveLine] : node.deriveLine);
-    chali_incremental::writeNumber(out, node.deriveColumn);
     chali_incremental::writeStrings(out, node.noReplace);
     chali_incremental::writeStrings(out, node.noRight);
-    chali_incremental::writeNumber(out, node.derivesExpanded ? 1u : 0u);
     chali_incremental::writeNumber(out, node.annotationValues.size());
     for (const auto &value : node.annotationValues)
     {
@@ -3806,14 +3766,8 @@ bool ReadUnitNode(std::istream &in, MNode &node)
     if (!chali_incremental::readNumber(in, frame)) return false;
     node.macroExpansion = static_cast<int>(static_cast<std::int64_t>(frame));
     if (!ReadUnitInts(in, node.annotations)) return false;
-    if (!chali_incremental::readStrings(in, node.derives)) return false;
-    if (!chali_incremental::readNumber(in, node.deriveLine) || !chali_incremental::readNumber(in, node.deriveColumn)) return false;
-    if ((node.deriveLine == 0) != (node.deriveColumn == 0) || node.deriveLine > (1ull << 32) || node.deriveColumn > (1ull << 32)) return false;
     if (!chali_incremental::readStrings(in, node.noReplace)) return false;
     if (!chali_incremental::readStrings(in, node.noRight)) return false;
-    std::uint64_t derived = 0;
-    if (!chali_incremental::readNumber(in, derived)) return false;
-    node.derivesExpanded = derived != 0;
     if (!chali_incremental::readNumber(in, count) || count > (1ull << 20) || !UnitPayloadFits(in, count, 8)) return false;
     node.annotationValues.resize(static_cast<std::size_t>(count));
     for (auto &value : node.annotationValues)
@@ -4212,7 +4166,6 @@ void M_ShiftNodeLines(std::size_t from, std::size_t lines)
         g_nodes[i].sourceLine += lines;
         if (g_nodes[i].metadataLine != 0) g_nodes[i].metadataLine += lines;
         if (g_nodes[i].macroDefinitionLine != 0) g_nodes[i].macroDefinitionLine += lines;
-        if (g_nodes[i].deriveLine != 0) g_nodes[i].deriveLine += lines;
         if (g_nodes[i].expansionLine != 0) g_nodes[i].expansionLine += lines;
     }
 }

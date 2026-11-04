@@ -102,16 +102,25 @@ requestStop is cooperative. A task responds through stopRequested or cancellable
 
 The HTTP server's sockets belong to their creating context and cannot simply be copied through createWith. Chapter 28 interleaves nonblocking connections on one thread. A slow connection does not block other clients, but CPU-heavy work is not thereby parallelized across cores.
 
-## 21.6 Exercises
+### Use a wait to order output
 
-1. Which operation guarantees that done prints last?
-2. Why does changing score not change the task argument?
-3. Can a timed-out handle be abandoned?
-4. Why not copy a socket into createWith?
+The main thread prints the last line after the task ends.
 
-### Answers and checks
+<!-- verify-book -->
+```chali
+import std::thread;
 
-1. wait joins the task before the final output.
-2. Initial data follows cross-thread copying, without sharing the caller's local variable.
-3. No; timeout does not consume it.
-4. A socket is an owned resource, not freely copyable initial data across isolated contexts.
+void task() {
+    println("finished");
+}
+void main() {
+    Thread worker = std::thread::create(task);
+    std::thread::wait(worker);
+    println("joined");
+}
+```
+
+```text
+finished
+joined
+```

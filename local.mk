@@ -8,6 +8,12 @@ CFLAGS += -std=c11
 endif
 CFLAGS += -Isource -O2 -DNDEBUG
 
+# Linux 安装包的宿主对象还会进入 clang 链接的 AOT PIE。
+ifeq ($(CHALI_RELEASE_PIC),1)
+CFLAGS += -fPIC
+override CXXFLAGS += -fPIC
+endif
+
 # local.mk —— 生成工程自己的挂载点（生成的 Makefile 末尾有 `-include local.mk`）。
 #
 # chali 自带 ast / vm / bignum 三份源码副本，只有前处理仍用仓库里的库：

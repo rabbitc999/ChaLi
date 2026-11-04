@@ -59,7 +59,7 @@ T name = value 声明有明确类型的变量，let name = value 推导类型，
 
 ## C.4 循环、匹配与退出
 
-if、elif、else 选择分支，else if 与 elif 等价。while(condition) 在每轮前检查条件；loop 直接开始下一轮，适合没有条件的重复。习题里的无限循环优先写 loop，而不必写 while(true)。
+if、elif、else 选择分支，else if 与 elif 等价。while(condition) 在每轮前检查条件；loop 直接开始下一轮，适合没有条件的重复。无条件重复可以直接写 loop。
 
 for (T value in sequence) 通过迭代协议取值。range 的上界不包含在内，rangeEq 包含。match 按枚举变体、常量、区间、接口具体类型或联合模式选择分支，通配写 _，需要保留值时可绑定变量。
 
@@ -188,7 +188,7 @@ $for、$if、$match、$regex 选择或重复模板；$elif 与 $else_if 是 $if 
 
 %define、%symbol 及 %if、%ifdef、%ifndef、%elif、%else、%endif 在预处理阶段决定保留哪些源码；%undefine、%unsymbol 撤销定义，%warning、%error 给出消息。它们不等于运行期 if，也不等于类型检查后的宏字段选择。
 
-@annotation 声明注解，@Name 标注声明；@Reflect 选择运行期反射信息。#derive、#borrow、#static、#abi、#export、#NonCopyable 等编译器指令各有具体约束，不以 # 前缀自动成为用户宏。
+@annotation 声明注解，@Name 标注声明；@Reflect 选择运行期反射信息。#borrow、#static、#abi、#export、#NonCopyable 等编译器指令各有具体约束，不以 # 前缀自动成为用户宏。
 
 ## C.8 不安全操作与宿主边界
 

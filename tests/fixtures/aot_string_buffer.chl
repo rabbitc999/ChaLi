@@ -2,8 +2,8 @@
 import std::memory;
 struct StringBufferRecord { String text;String items[2]; };
 unsafe int64 stringBufferAddress(String const& value) {
-    int64 mut& slot=(int64 mut&)(int64)std::lang::address(value);
-    return std::lang::__bootStringOwnedData(*slot);
+    int64 mut& slot=(int64 mut&)(int64)std::core::address(value);
+    return std::core::__bootStringOwnedData(*slot);
 }
 
 String appendCopy(String value) { value.append("!");return value; }

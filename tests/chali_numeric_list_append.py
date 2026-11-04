@@ -19,8 +19,8 @@ def fixture():
 int64 numericFill(int64 seed){
     List<int64> values;int64 i=0;
     while(i<257){values.push(seed+i);i=i+1;}
-    unsafe{int64 mut& raw=(int64 mut&)(int64)std::lang::address(&values);
-        assert(std::lang::__listStorageCapacity(*raw)==512);}
+    unsafe{int64 mut& raw=(int64 mut&)(int64)std::core::address(&values);
+        assert(std::core::__listStorageCapacity(*raw)==512);}
     int64 result=0;i=0;while(i<257){result=result+values[i];i=i+1;}return result;
 }
 void main(){assert(numericFill(3)==33667);
@@ -46,10 +46,10 @@ Set<{kind}> keys;keys.add(expected);assert(keys.has(expected)!=0);}}
                             (32, ('0u', '0x80000000u', '0x7fc00042u', '0xffc00043u', '0x7f800000u', '1u'))):
         for pattern in patterns:
             source += f'''{{List<float{width}> values;uint64 bits={pattern};
-values.push(std::lang::__bootFloat{width}FromBits(bits));
-assert(std::lang::__bootFloat{width}Bits(values[0])==bits);
+values.push(std::core::__bootFloat{width}FromBits(bits));
+assert(std::core::__bootFloat{width}Bits(values[0])==bits);
 List<float{width}> copy=values;values.clear();
-assert(std::lang::__bootFloat{width}Bits(copy[0])==bits);}}
+assert(std::core::__bootFloat{width}Bits(copy[0])==bits);}}
 '''
     source += '''List<int64> reused;int64 round=0;
 while(round<5){int64 j=0;while(j<65){reused.push(round*100+j);j=j+1;}
@@ -62,17 +62,17 @@ int64 integerSource=17;
 List<float32> converted32;converted32.push(integerSource);assert(converted32[0]==17.0);
 List<float64> converted64;converted64.push(integerSource);assert(converted64[0]==17.0);
 List<float64> opaqueSource;opaqueSource.push(1.25);List<int64> opaqueDestination;
-unsafe{int64 mut& from=(int64 mut&)(int64)std::lang::address(&opaqueSource);
-int64 mut& to=(int64 mut&)(int64)std::lang::address(&opaqueDestination);
-std::lang::__bootListPushI(*to,std::lang::__listStorageReadI(*from,0,0,0),0,0);
-assert(std::lang::__bootListFindI(*to,(int64)std::lang::__bootFloat64Bits(1.25),0,0)==0);}
+unsafe{int64 mut& from=(int64 mut&)(int64)std::core::address(&opaqueSource);
+int64 mut& to=(int64 mut&)(int64)std::core::address(&opaqueDestination);
+std::core::__bootListPushI(*to,std::core::__listStorageReadI(*from,0,0,0),0,0);
+assert(std::core::__bootListFindI(*to,(int64)std::core::__bootFloat64Bits(1.25),0,0)==0);}
 List<int64> reserved;int64 handle=0;
-unsafe{int64 mut& raw=(int64 mut&)(int64)std::lang::address(&reserved);handle=*raw;
-std::lang::__bootListReserve(handle,33);}
+unsafe{int64 mut& raw=(int64 mut&)(int64)std::core::address(&reserved);handle=*raw;
+std::core::__bootListReserve(handle,33);}
 int64 i=0;while(i<33){reserved.push(i);i=i+1;}
-unsafe{assert(std::lang::__listStorageCapacity(handle)==33);}
-reserved.push(33);unsafe{assert(std::lang::__listStorageCapacity(handle)==66);}
-reserved.clear();reserved.push(7);unsafe{assert(std::lang::__listStorageCapacity(handle)==66);}
+unsafe{assert(std::core::__listStorageCapacity(handle)==33);}
+reserved.push(33);unsafe{assert(std::core::__listStorageCapacity(handle)==66);}
+reserved.clear();reserved.push(7);unsafe{assert(std::core::__listStorageCapacity(handle)==66);}
 List<String> words;words.push("before");List<String> saved=words;
 words.clear();words.push("after");assert(saved[0]=="before" && words[0]=="after");
 println("numeric List append primitives OK");}
@@ -126,12 +126,12 @@ def main():
         assert bool(direct) == expected_direct, (label, bodies[0], work)
         (work / (label + '-fill.ll')).write_text(bodies[0] + '\n', encoding='utf-8')
         errors = {
-            'invalid': ('void main(){unsafe{std::lang::__bootListPushI(0,1,0,0);}}', 'List storage'),
+            'invalid': ('void main(){unsafe{std::core::__bootListPushI(0,1,0,0);}}', 'List storage'),
             'bounds': ('''void main(){List<int64> values;values.push(7);
 assert(values[0]==7);println("{}",values[1]);}''', 'vec 下标越界'),
             'lease': ('''void main(){List<int64> values;values.push(1);int64 handle=0;
-unsafe{int64 mut& raw=(int64 mut&)(int64)std::lang::address(&values);handle=*raw;}
-for(int64 value in values){unsafe{std::lang::__bootListPushI(handle,value,0,0);}}}''',
+unsafe{int64 mut& raw=(int64 mut&)(int64)std::core::address(&values);handle=*raw;}
+for(int64 value in values){unsafe{std::core::__bootListPushI(handle,value,0,0);}}}''',
                       '活跃 for-in 引用期间不能移动或删除列表元素'),
         }
         for name, (content, diagnostic) in errors.items():

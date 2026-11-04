@@ -2,31 +2,31 @@
 struct Payload { String text; int64 serial; };
 
 void main() {
-    std::lang::RawStorage<Payload> slots = std::lang::RawStorage<Payload>::allocate(4);
+    std::core::RawStorage<Payload> slots = std::core::RawStorage<Payload>::allocate(4);
     assert(slots.capacity() == 4 && !slots.isInitialized(0));
     Payload source;
     source.text = "owned";
     source.serial = 42;
-    unsafe { std::lang::initAt<Payload>(slots.pointer(0), move(source)); }
+    unsafe { std::core::initAt<Payload>(slots.pointer(0), move(source)); }
     Payload copied;
-    unsafe { copied = std::lang::readAt<Payload>(slots.pointer(0)); }
+    unsafe { copied = std::core::readAt<Payload>(slots.pointer(0)); }
     copied.text = "copy";
     unsafe {
-        Payload mut& original = std::lang::borrowAt<Payload>(slots.pointer(0));
+        Payload mut& original = std::core::borrowAt<Payload>(slots.pointer(0));
         assert(original.text == "owned" && original.serial == 42);
-        std::lang::relocateNonOverlapping<Payload>(slots.pointer(2), slots.pointer(0), 1);
+        std::core::relocateNonOverlapping<Payload>(slots.pointer(2), slots.pointer(0), 1);
     }
     assert(!slots.isInitialized(0) && slots.isInitialized(2));
     Payload moved;
-    unsafe { moved = std::lang::takeAt<Payload>(slots.pointer(2)); }
+    unsafe { moved = std::core::takeAt<Payload>(slots.pointer(2)); }
     assert(moved.text == "owned" && moved.serial == 42 && !slots.isInitialized(2));
-    unsafe { std::lang::initAt<Payload>(slots.pointer(2), move(moved)); std::lang::dropAt<Payload>(slots.pointer(2)); }
+    unsafe { std::core::initAt<Payload>(slots.pointer(2), move(moved)); std::core::dropAt<Payload>(slots.pointer(2)); }
     assert(!slots.isInitialized(2));
     slots.close();
-    std::lang::RawStorage<uint8> bytes = std::lang::RawStorage<uint8>::allocate(1);
+    std::core::RawStorage<uint8> bytes = std::core::RawStorage<uint8>::allocate(1);
     unsafe {
-        std::lang::initAt<uint8>(bytes.pointer(0), (uint8)255);
-        uint8 value = std::lang::takeAt<uint8>(bytes.pointer(0));
+        std::core::initAt<uint8>(bytes.pointer(0), (uint8)255);
+        uint8 value = std::core::takeAt<uint8>(bytes.pointer(0));
         assert(value == (uint8)255);
     }
     bytes.close();

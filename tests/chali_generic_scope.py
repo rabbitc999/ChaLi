@@ -17,27 +17,27 @@ def main():
     args=parser.parse_args()
     cases=[
         ('empty_shadow','struct String{int64 tag;}void main(){}',None),
-        ('standard_string','struct String{int64 tag;}void main(){std::lang::String text="中文";assert(text==text);}',None),
+        ('standard_string','struct String{int64 tag;}void main(){std::core::String text="中文";assert(text==text);}',None),
         ('user_argument','''struct String{int64 tag;}
 T identity<T>(T value){return value;}
-void main(){String value;value.tag=7;String copy=identity<String>(value);assert(copy.tag==7);std::lang::String text=identity<std::lang::String>("中文");assert(text=="中文");}''',None),
+void main(){String value;value.tag=7;String copy=identity<String>(value);assert(copy.tag==7);std::core::String text=identity<std::core::String>("中文");assert(text=="中文");}''',None),
         ('nested','''struct String{int64 tag;}
 T identity<T>(T value){return value;}
-void main(){List<String> values;String item;item.tag=7;values.push(item);let copied=identity<List<String>>(values);assert(copied[0].tag==7);List<std::lang::String> texts;texts.push("中文");let textCopy=identity<List<std::lang::String>>(texts);assert(textCopy[0]=="中文");}''',None),
+void main(){List<String> values;String item;item.tag=7;values.push(item);let copied=identity<List<String>>(values);assert(copied[0].tag==7);List<std::core::String> texts;texts.push("中文");let textCopy=identity<List<std::core::String>>(texts);assert(textCopy[0]=="中文");}''',None),
         ('tuple','''struct String{int64 tag;}
 T identity<T>(T value){return value;}
-void main(){String value;value.tag=7;let pair=identity<(String,std::lang::String)>((value,"text"));assert(pair.0.tag==7&&pair.1=="text");}''',None),
+void main(){String value;value.tag=7;let pair=identity<(String,std::core::String)>((value,"text"));assert(pair.0.tag==7&&pair.1=="text");}''',None),
         ('reference','''struct String{int64 tag;}
 T identity<T>(T value){return value;}
 void main(){String value;value.tag=7;let borrowed=identity<String const&>(&value);assert(borrowed.tag==7);}''',None),
         ('function_type','''struct String{int64 tag;}
 T identity<T>(T value){return value;}
 String echoUser(String value){return value;}
-std::lang::String echoText(std::lang::String value){return value;}
-void main(){String value;value.tag=7;let user=identity<String fn(String)>(echoUser);let text=identity<std::lang::String fn(std::lang::String)>(echoText);assert(user(value).tag==7&&text("中文")=="中文");}''',None),
-        ('derive','''struct String{int64 tag;}
-#derive(Equal,Hash,Clone)
-struct Label{std::lang::String text;}
+std::core::String echoText(std::core::String value){return value;}
+void main(){String value;value.tag=7;let user=identity<String fn(String)>(echoUser);let text=identity<std::core::String fn(std::core::String)>(echoText);assert(user(value).tag==7&&text("中文")=="中文");}''',None),
+        ('derive','''import std::macro;
+struct String{int64 tag;}
+struct Label : Equal<bool, Label>, Hash<Label>, Clone<Label>{std::core::String text; $std::macro::Equal<Label>(leftEqual); $std::macro::Hash<Label>(hash); $std::macro::Clone<Label>(clone); }
 void main(){Label a;a.text="中文😀";let b=a.clone();assert(a==b&&a.hash(a)==b.hash(b));}''',None),
         ('other_aliases','''struct File{int64 id;}struct Process{int64 id;}struct BigInteger{int64 id;}struct BigDecimal{int64 id;}
 T identity<T>(T value){return value;}
@@ -54,7 +54,7 @@ struct String{int64 caller;}
 void main(){alpha::Box<String> value;value.value.caller=9;assert(value.value.caller==9);}''',None),
         ('standard_module','''import std::json;
 struct String{int64 tag;}
-void main(){std::lang::String text="{\\\"value\\\":7}";let value=std::json::parse(text).unwrap();assert(value.find("value").unwrap().asInt().unwrap()==7);}''',None),
+void main(){std::core::String text="{\\\"value\\\":7}";let value=std::json::parse(text).unwrap();assert(value.find("value").unwrap().asInt().unwrap()==7);}''',None),
         ('reflection_interface','''import std::reflect;
 @Reflect interface View{int64 read(){return 7;}}
 @Reflect struct Record:View{}

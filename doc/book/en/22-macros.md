@@ -316,7 +316,7 @@ void main()
 ```text
 2
 score
-std::lang::String
+std::core::String
 ```
 
 shared is static and is excluded from instance fields. The count is therefore 2, in source order: score, then name. The three output statements use the count, the first name and the second field's canonical type name.
@@ -498,8 +498,8 @@ struct Middle<T> { T inner; }
 struct Root {
     Middle<Leaf> middle;
     List<int64> items;
-    Set<std::lang::String> unique;
-    Map<std::lang::String, List<Leaf>> byName;
+    Set<std::core::String> unique;
+    Map<std::core::String, List<Leaf>> byName;
     List<int64> emptyList;
     Set<int64> emptySet;
     Map<String, bool> emptyMap;
@@ -596,7 +596,7 @@ void main()
 ```text
 Quit: 0
 Text: 1
-  text: std::lang::String
+  text: std::core::String
 Move: 2
   x: int64
   y: int64
@@ -606,7 +606,7 @@ The declaration has three variants. Quit has no payload, Text has one String and
 
 DESCRIBE obtains descriptors with `$variants<T>()`. The outer compile-time loop emits one output statement for each variant. The inner loop visits that variant's payloads and emits their names and types. Quit has an empty payload collection, so it produces no indented lines.
 
-`payload.type.name` is canonical, hence std::lang::String for text. Generic enums substitute concrete arguments before exposing payload types: a T payload in Box<int16> has type int16. Descriptors do not read an enum object; use ordinary match to inspect a Message value.
+`payload.type.name` is canonical, hence std::core::String for text. Generic enums substitute concrete arguments before exposing payload types: a T payload in Box<int16> has type int16. Descriptors do not read an enum object; use ordinary match to inspect a Message value.
 
 main invokes the macro. Iteration happens during compilation; the generated println statements execute at runtime. Variants and payloads expose name, index and id. Variants additionally expose payloads, and payloads expose type. A payload is not a struct field and cannot be passed to `$member`.
 
@@ -750,7 +750,7 @@ main creates the outer loop and increments visited from 0 to 1. The supplied bre
 
 Continue follows the same origin rule. A return or ? in a supplied fragment belongs to the caller's function; yield belongs to the caller's existing value exit. Template caches and value blocks do not intercept them. Loops and functions declared inside the supplied fragment retain their own local boundaries.
 
-A template's ordinary control statements first search its loops or value exits. An explicit `-> stmt` macro may transfer control to the caller when there is no local target. Legacy macros without a result category retain that use. Break all continues through permitted caller origins to the outermost loop. An explicit `-> expr` template stops at its own boundary: it cannot itself return or propagate errors into the caller, nor escape the expression through break or continue. Returns inside functions declared by that template still belong to those functions.
+A template's ordinary control statements first search its loops or value exits. An explicit `-> stmt` macro may transfer control to the caller when there is no local target. Legacy macros without a result category retain that use. Named exits resolve within their own syntax origin. An explicit `-> expr` template stops at its own boundary: it cannot itself return or propagate errors into the caller, nor escape the expression through break or continue. Returns inside functions declared by that template still belong to those functions.
 
 Explicit caller fragments may leave the caller, but cannot cross a newly generated function and then return to the original function. Exited scopes still execute defer actions and owned-value cleanup. Return and propagation values retain ordinary type, borrowing and move checks. Read the statement category, fragment categories and invocation's exit condition together before examining expansion nesting.
 
@@ -758,7 +758,6 @@ Explicit caller fragments may leave the caller, but cannot cross a newly generat
 
 In VS Code, use ChaLi's macro expansion preview to inspect one level or the complete expansion. A one-level preview may retain nested macro calls; the complete preview expands them further. Source mappings identify definitions and invocations. Preview output is not a stable source export format.
 
-Placing the cursor on #derive also previews built-in derivation. Inputs list the instance fields or enum variants actually used, followed by the injected methods; static fields are excluded. A metadata-declaration link returns to the original field, and short reference labels connect repeated accesses. Enum matches, branch patterns and payloads come from the same production syntax tree.
 
 A generic directive may have several concrete instances. Each shows its field types and generated methods while retaining the original directive as its source. One-level and complete views can differ after further name, type and macro resolution. Previewing does not execute user code again.
 The summary lists direct effects: result category, introduced template bindings, shared or mutable parameter borrows, and control exits. Full expansion distinguishes caller control from local control using actual targets; one-step previews list unresolved targets separately. Creating a closure does not execute its body, so that body's return is excluded from the current macro's exits. The summary does not analyze effects along an entire call chain. An empty list still requires ordinary signature, type and borrow checks.
@@ -794,18 +793,32 @@ Broken uses temp without declaring it in the template's scope or receiving its s
 The example therefore fails during compilation and has no normal runtime output. Repair the interface by explicitly supplying the needed object, or declare a genuine local list inside the macro. A hidden caller variable of the same name is not a repair. Value supplies an element, not a list source.
 
 
+### Counterexample: writing the caller’s matching name
+
+The template writes to total directly. The caller’s matching declaration supplies no binding to it. Pass the target explicitly through a mutable reference parameter such as mut &target. The diagnostic excerpt below uses the compiler’s Chinese language setting.
+
+<!-- verify-book-error: check -->
+```chali
+$macro ADD(amount:value) -> stmt
+total = total + amount;
+
+$end_macro
+
+void main() {
+    int64 total = 7;
+    $ADD(2);
+}
+```
+
+```text
+给没声明的变量赋值：total
+```
+
 ### Expansion and execution occur at different stages
 
 Expansion composes program structure during compilation; next in the examples still executes at runtime. Knowing an expression's static type does not execute that expression. T:#res obtains information from an expected type supplied by contexts such as assignment or return; it does not observe a runtime result. Supply explicit types when context is insufficient rather than depending on incidental literal inference.
 
 Expanded code undergoes ordinary semantic checking and then reaches the LLVM native backend. Macros cannot remove cleanup obligations, bypass borrowing or make an invalid expression executable. Performance depends on generated operations and LLVM optimization; fewer template lines do not establish less runtime work. For diagnostics, first express the intended operation as ordinary code, verify types and resource relationships, then inspect whether the macro preserves them.
-
-
-### Summary
-
-Prefer a regular function when it expresses the requirement; choose macros for necessary syntax composition. Identify which arguments become values, which remain fragments, where names originate and how result types are determined.
-
-Expansion does not execute arbitrary user runtime logic or legalize invalid borrowing and resource use. Runtime reflection next addresses metadata-based object access, a different mechanism from compile-time syntax generation.
 
 
 ## 22.17 Single-Line and Parameterless Macros
@@ -919,7 +932,7 @@ $end_macro
 void main()
 {
     println("{}", $FORWARD(2, 3, 4));
-    $std::lang::assert($FORWARD() == 0);
+    $std::core::assert($FORWARD() == 0);
 }
 ```
 
@@ -931,32 +944,111 @@ SUM generates additions over captured arguments. FORWARD places the capture list
 
 Single evaluation for value parameters survives forwarding. Forwarded expr parameters remain syntax and do not automatically become cached values.
 
-$std::lang::assert explicitly qualifies a macro by module. Use visible imported names or qualify them when the source needs to be explicit. Ordinary function calls and macro calls retain their respective call syntax.
+$std::core::assert explicitly qualifies a macro by module. Use visible imported names or qualify them when the source needs to be explicit. Ordinary function calls and macro calls retain their respective call syntax.
 
-### From member macros to interface derivation
+### Interface derivation in a member macro
 
-A same-module, same-name interface/member-macro pair can be selected with `#derive(Interface)`. The directive passes the following type as the macro's type parameter. Signature-matching methods become public; helpers remain hygienic. For example, `interface Count { int64 count(); }` pairs with `$macro Count<T>() -> member`.
-
-Unlike passing a public name explicitly to `$METHOD(read)`, the interface contract determines published names. Derivation cannot add layout fields. Chapter 24 develops the complete field-count example and checks the result through an interface value.
-
-### Inspecting values with Debug
-
-The standard Debug interface declares String debug(). Place #derive(Debug) before a structure or enumeration to generate an ordinary implementation from its instance fields or active variant payloads.
+This member macro generates a method that counts instance fields. The static loop expands at compile time, and the method executes the generated statements.
 
 <!-- verify-book -->
 ```chali
-#derive(Debug)
+interface Count
+{
+    int64 count();
+}
+
+$macro Count<T>(method:ident) -> member
+$implement Count;
+int64 method()
+{
+    int64 result = 0;
+    $for field in $fields<T>()
+    result += 1;
+    $end_for
+    return result;
+}
+$end_macro
+
+struct Record
+{
+    int64 number;
+    String text;
+    $Count<Record>(count);
+}
+
+void main()
+{
+    Record record;
+    Count counted = record;
+    println("fields={}", counted.count());
+}
+```
+
+```text
+fields=2
+```
+
+The `Count` interface requires an instance method returning an integer. The macro’s `$implement Count;` adds that interface to the host type. The call `$Count<Record>(count);` supplies the type `Record` and the method name `count` explicitly. The `method:ident` parameter uses the caller’s name for the generated method, while local variables inside the macro remain hygienic.
+
+The static loop emits an increment for each of the two instance fields. It reads no field values and copies no string. The call through an interface value verifies that the generated method satisfies the interface signature.
+
+
+In a generic member macro, `$implement Count<T>;` uses the macro's type argument, and `$implement Count<String>;` fixes it to String, provided the declared Count interface accepts a type parameter. The host must provide all required methods after expansion.
+
+
+### Adding an interface from a member macro
+
+The macro registers `Read<U>` with the host and generates the required method. At `$AUTO<int64>(read, label)`, the interface becomes `Read<int64>`. Assignments to `Read<int64>` and `Named` exercise ordinary interface dispatch.
+
+<!-- verify-book -->
+```chali
+interface Read<T> { T read(); }
+interface Named { String label(); }
+$macro AUTO<U>(reader:ident, labeler:ident) -> member
+$implement Read<U>;
+$implement Named;
+U reader() { return self.value; }
+String labeler() { return "auto"; }
+$end_macro
+struct Entry {
+    int64 value;
+    $AUTO<int64>(read, label);
+}
+void main() {
+    Entry entry;
+    entry.value = 42;
+    Read<int64> reader = entry;
+    Named named = entry;
+    println("{} {}", reader.read(), named.label());
+}
+```
+
+```text
+42 auto
+```
+
+### Inspecting values with Debug
+
+Debug uses `($type<T>()).qualifiedName` to display the declaring module and concrete generic arguments. It omits the default `program::` prefix.
+
+The standard Debug interface declares String debug(). Call `$std::macro::Debug<T>(debug);` in the body of a structure or enumeration to generate the implementation from its instance fields or active variant payloads.
+
+<!-- verify-book -->
+```chali
+import std::macro;
+
 struct Reading
 {
     String sensor;
     int64 value;
+    $std::macro::Debug<Reading>(debug);
 }
 
-#derive(Debug)
 enum Event
 {
     Idle,
-    Updated(Reading reading, bool saved)
+    Updated(Reading reading, bool saved);
+    $std::macro::Debug<Event>(debug);
 };
 
 void main()
@@ -985,7 +1077,159 @@ Newlines, carriage returns, tabs, quotes and backslashes are escaped. Other ASCI
 
 Nested user types must implement Debug. A handwritten implementation can omit sensitive fields or shorten output. Derivation rejects an existing debug method instead of replacing it. Arrays, references, function values and containers without a Debug contract are rejected at compile time. An owned resource can provide a borrowing Debug method without becoming copyable.
 
-Debug output is for inspection, has no cross-version format guarantee, and is not a JSON or persistence format. User-facing error descriptions still use Error.toString. The builtin form is #derive(Debug); custom derivation continues to pair an interface with a same-name member macro.
+Debug output is for inspection, has no cross-version format guarantee, and is not a JSON or persistence format. User-facing error descriptions still use Error.toString. The generated method follows the ordinary interface, type and borrow checks.
+
+### Generate equality, hashing and cloning with member macros
+
+Equality, cloning and hashing often follow a model’s field structure. Standard member macros generate the methods for those interfaces.
+
+Point declares the three interfaces and calls the corresponding member macros in its type body. The program compares a copy with its source, then changes one field and compares them again.
+
+<!-- verify-book -->
+```chali
+import std::macro;
+
+struct Point
+{
+    int64 x;
+    int64 y;
+    String label;
+    $std::macro::Equal<Point>(leftEqual);
+    $std::macro::Hash<Point>(hash);
+    $std::macro::Clone<Point>(clone);
+};
+
+void main()
+{
+    Point origin;
+    origin.x = 0;
+    origin.y = 0;
+    origin.label = "O";
+
+    Point copy = origin.clone();
+    println("equal={}", origin == copy);
+    println("sameHash={}", origin.hash(origin) == copy.hash(copy));
+
+    copy.label = "O2";
+    println("afterChange={}", origin == copy);
+    println("original={}", origin.label);
+}
+```
+
+```text
+equal=1
+sameHash=1
+afterChange=0
+original=O
+```
+
+The three member macros add the Equal, Hash, and Clone interfaces to Point. All three instance fields participate in the generated methods. Origin starts with coordinates zero, zero and label O. Cloning preserves those contents, making equal and sameHash true. The latter compares hash results rather than checking a fixed numeric hash.
+
+Changing copy.label to O2 changes overall equality even though coordinates still match. AfterChange becomes false while origin.label stays O, demonstrating independent mutation. Equal objects require consistent hashes, but equal hashes alone do not prove equality or provide persistent identity.
+
+Fields here mean instance fields. Static fields belong to shared type state and do not participate in these derives. Chinese and emoji labels are hashed as complete UTF-8 bytes; positive and negative zero also hash consistently for float32/64 fields. Nested types use their own protocols: if handwritten equality compares only id, handwritten hashing needs the same meaning.
+
+
+### Generating comparison and hashing for nested values
+
+<!-- verify-book -->
+```chali
+import std::macro;
+
+struct BookKey
+{
+    String label;
+    int64 id;
+    $std::macro::Equal<BookKey>(leftEqual);
+    $std::macro::Hash<BookKey>(hash);
+    $std::macro::Clone<BookKey>(clone);
+}
+
+struct BookRecord
+{
+    BookKey key;
+    $std::macro::Equal<BookRecord>(leftEqual);
+    $std::macro::Hash<BookRecord>(hash);
+    $std::macro::Clone<BookRecord>(clone);
+}
+
+void main()
+{
+    BookRecord original;
+    original.key.label = "left";
+    original.key.id = 7;
+    BookRecord copied = original.clone();
+    Map<BookKey, int64> cache;
+    cache.put(original.key, 10);
+    println("{} {} {}", original == copied,
+            original.hash(original) == copied.hash(copied),
+            cache.has(original.key) != 0);
+    copied.key.label = "changed";
+    println("{} {}", original.key.label, copied.key.label);
+}
+```
+
+```text
+1 1 1
+left changed
+```
+
+The inner value declares derived capabilities, and the enclosing type composes them from its fields. Equal contents compare equal; using them as Map keys also checks compatible hashing. Derivation uses field behavior, not merely a type name, and missing field capabilities remain compilation errors.
+
+### Generating JSON encoding and decoding rules
+
+Program field names need not match external keys. This example keeps the language member id, publishes student_id, and excludes an internal string.
+
+<!-- verify-book -->
+```chali
+import std::json;
+
+struct Profile
+{
+    @std::json::Field(name:"student_id")
+    int64 id;
+    String name;
+    @std::json::Field(skip:true)
+    String secret;
+    $std::json::Json<Profile>(toJson, fromJson);
+}
+
+void main()
+{
+    Profile profile;
+    profile.id = 7;
+    profile.name = "Ada";
+    profile.secret = "internal";
+    println("{}", profile.toJson().unwrap());
+
+    let decoded = Profile::fromJson("{\"student_id\":7,\"name\":\"Ada\"}");
+    match (decoded)
+    {
+        Ok(value) => { println("{} {}", value.id, value.name); }
+        Err::MessageError(error) => { println("{}", error.toString()); }
+        Err(_) => { println("unavailable"); }
+    }
+}
+```
+
+```text
+{"student_id":7,"name":"Ada"}
+7 Ada
+```
+
+Import std::json first. Json declares toJson; derivation also generates a static fromJson on the concrete type. Both return Result with Error: encoding produces String and decoding produces an independently owned Profile.
+
+The name annotation changes the JSON key, not profile.id. skip excludes secret from encoding and input reconstruction, leaving its default-constructed value after decoding. This annotation is restricted to instance fields of structures that derive Json; functions, static fields and unrelated types reject it.
+
+main constructs the value and prints its encoding in declaration order. The second half decodes external text. Ok receives the owned value, MessageError handles a concrete diagnostic, and Err(_) covers other Error implementations. A real application must still validate the identifier and enforce account permissions.
+
+Missing required fields, unknown keys, wrong types and out-of-range values return Err. A known skipped input key is ignored. Renamed fields use their new key. Duplicate mapped names, repeated field annotations and ASCII controls in key names are compile-time errors. Derived enum tag objects also reject unknown fields.
+
+Supported values include all base numeric types, bool, char, String, List, Set, String-keyed Map and recursively supported Option/Result. char encodes as a byte number. uint64 above the signed 64-bit range encodes as a decimal string to preserve precision. Floats must be finite and decoding checks the destination width. Enums use objects with $variant and $values in payload declaration order.
+
+Nested user types must also derive Json. References, functions, dynamic interfaces, arrays, noncopyable resources and other unsupported types fail at compile time, including skipped fields. Existing toJson/fromJson methods are never replaced. The implementation generates ordinary concrete methods and currently requires reflection code generation; basic JSON parsing remains available without it.
+
+Json derivation does not expose runtime fields through @Reflect. These are separate choices. Existing reflected types without Json derivation retain their previous serialization policy. Debug in Chapter 22 is for inspection, not JSON persistence.
 
 ## 22.21 Choosing a Form
 
@@ -993,18 +1237,10 @@ Start with functions and generics. Choose a macro when repetition concerns synta
 
 Generated code still undergoes name, type, borrow and resource checks. Start with a field-printing macro before adding serialization rules to a project.
 
-## 22.22 Exercises
+### Summary
 
-1. Compare next call counts with value and expr.
-2. Does changing an unannotated parameter change the caller?
-3. Does T:#res come from a runtime return value?
-4. Why cannot a caller read internal temp?
+Prefer a regular function when it expresses the requirement; choose macros for necessary syntax composition. Identify which arguments become values, which remain fragments, where names originate and how result types are determined.
 
-### Answers and checks
-
-1. Value evaluates once per argument; expr follows placements and execution.
-2. No; it changes a copy. Use an explicit mutable reference to change the caller.
-3. No; it comes from the statically expected result type.
-4. Hygiene prevents capture; internal names do not become caller declarations.
+Expansion does not execute arbitrary user runtime logic or legalize invalid borrowing and resource use. Runtime reflection next addresses metadata-based object access, a different mechanism from compile-time syntax generation.
 
 Next: [Chapter 23](23-annotations-reflection.md).

@@ -3,12 +3,11 @@ module std::path;
 /* 纯词法路径处理。原来下沉在宿主 C++（glue/std_path.hpp），现已改由本文件用 ChaLi 表达，
  * 宿主签名 `__pathJoin` / `__pathFileName` / `__pathExtension` / `__pathNormalize` 一并删除。
  *
- * 公开面保持原样：只有 `std::path::PathString::{join, fileName, extension, normalize}`。
  * 语义逐条照搬原实现：反斜杠一律归一成 `/`，`..` 只回退上一段、顶到绝对路径开头就保留，
  * 不访问文件系统。
  *
  * String 下标读取要求位置落在 UTF-8 字符边界；字节切片允许任意端点。
- * 这里先经 std::lang::stringBytes 取得字节表来扫描分隔符，再按已识别的路径段切片，
+ * 这里先经 std::core::stringBytes 取得字节表来扫描分隔符，再按已识别的路径段切片，
  * 保留非 ASCII 路径段的原始字节。 */
 
 /** 该字节是不是路径分隔符（`/` 或 `\`）。 */
@@ -24,12 +23,12 @@ inline bool __pathIsAlpha(uint8 byte)
 }
 
 /** 归一化路径文本：反斜杠转正斜杠、消掉 `.` 与可回退的 `..`；空结果给 `.`。 */
-inline std::lang::String __pathNormalize(std::lang::String path)
+inline std::core::String __pathNormalize(std::core::String path)
 {
-    std::lang::List<uint8> bytes = std::lang::stringBytes(path);
+    std::core::List<uint8> bytes = std::core::stringBytes(path);
     int64 size = bytes.len();
 
-    std::lang::String prefix = "";
+    std::core::String prefix = "";
     int64 begin = 0;
     bool absolute = false;
     if (size >= 2 && __pathIsAlpha(bytes[0]) && bytes[1] == (uint8)58) {
@@ -44,12 +43,12 @@ inline std::lang::String __pathNormalize(std::lang::String path)
         begin = 1;
     }
 
-    std::lang::List<std::lang::String> parts;
+    std::core::List<std::core::String> parts;
     while (begin <= size) {
         int64 end = begin;
         while (end < size && !__pathIsSeparator(bytes[end])) { end = end + 1; }
         if (end > begin) {
-            std::lang::String part = path[begin:end];
+            std::core::String part = path[begin:end];
             if (part != ".") {
                 if (part == ".." && parts.len() > 0 && parts[parts.len() - 1] != "..") {
                     parts.pop();
@@ -63,7 +62,7 @@ inline std::lang::String __pathNormalize(std::lang::String path)
     }
 
     /* 拼接时用状态位代替「看 result 的最后一个字节」——末字节可能落在多字节字符中间。 */
-    std::lang::String result = prefix;
+    std::core::String result = prefix;
     if (absolute) { result = result + "/"; }
     bool needsSlash = len(prefix) > 0 && !absolute;
     {
@@ -82,10 +81,10 @@ inline std::lang::String __pathNormalize(std::lang::String path)
 }
 
 /** 归一化后的最后一段（文件名）；没有分隔符就是整串。 */
-inline std::lang::String __pathFileName(std::lang::String path)
+inline std::core::String __pathFileName(std::core::String path)
 {
-    std::lang::String normalized = __pathNormalize(path);
-    std::lang::List<uint8> bytes = std::lang::stringBytes(normalized);
+    std::core::String normalized = __pathNormalize(path);
+    std::core::List<uint8> bytes = std::core::stringBytes(normalized);
     int64 slash = 0 - 1;
     int64 index = 0;
     while (index < bytes.len()) {
@@ -97,10 +96,10 @@ inline std::lang::String __pathFileName(std::lang::String path)
 }
 
 /** 扩展名（含点）；没有点或点在开头给空串。 */
-inline std::lang::String __pathExtension(std::lang::String path)
+inline std::core::String __pathExtension(std::core::String path)
 {
-    std::lang::String name = __pathFileName(path);
-    std::lang::List<uint8> bytes = std::lang::stringBytes(name);
+    std::core::String name = __pathFileName(path);
+    std::core::List<uint8> bytes = std::core::stringBytes(name);
     int64 dot = 0 - 1;
     int64 index = 0;
     while (index < bytes.len()) {
@@ -112,15 +111,15 @@ inline std::lang::String __pathExtension(std::lang::String path)
 }
 
 /** 拼两段路径；`right` 是绝对路径时直接取代 `left`，结果一律归一化。 */
-inline std::lang::String __pathJoin(std::lang::String left, std::lang::String right)
+inline std::core::String __pathJoin(std::core::String left, std::core::String right)
 {
-    std::lang::List<uint8> bytes = std::lang::stringBytes(right);
+    std::core::List<uint8> bytes = std::core::stringBytes(right);
     bool rightAbsolute = false;
     if (bytes.len() > 0) {
         if (__pathIsSeparator(bytes[0])) { rightAbsolute = true; }
         elif (bytes.len() >= 2 && __pathIsAlpha(bytes[0]) && bytes[1] == (uint8)58) { rightAbsolute = true; }
     }
-    std::lang::String joined;
+    std::core::String joined;
     if (rightAbsolute) {
         joined = right;
     } else {
@@ -132,8 +131,31 @@ inline std::lang::String __pathJoin(std::lang::String left, std::lang::String ri
 }
 
 struct PathString {
-    static std::lang::String join(std::lang::String left, std::lang::String right) { return __pathJoin(left, right); }
-    static std::lang::String fileName(std::lang::String path) { return __pathFileName(path); }
-    static std::lang::String extension(std::lang::String path) { return __pathExtension(path); }
-    static std::lang::String normalize(std::lang::String path) { return __pathNormalize(path); }
+    static std::core::String join(std::core::String left, std::core::String right) { return __pathJoin(left, right); }
+    static std::core::String fileName(std::core::String path) { return __pathFileName(path); }
+    static std::core::String extension(std::core::String path) { return __pathExtension(path); }
+    static std::core::String normalize(std::core::String path) { return __pathNormalize(path); }
+
+    /** 返回归一化后的父路径；单段相对路径的父路径为点。 */
+    static String parent(String path) {
+        String normalized = __pathNormalize(path);
+        List<uint8> bytes = stringBytes(normalized);
+        int64 slash = bytes.len() - 1;
+        while (slash >= 0 && bytes[slash] != (uint8)47) { slash = slash - 1; }
+        bool drive = bytes.len() >= 2 && __pathIsAlpha(bytes[0]) && bytes[1] == (uint8)58;
+        if (slash < 0) {
+            if (drive) { return normalized[0:2]; }
+            return ".";
+        }
+        if (slash == 0) { return "/"; }
+        if (drive && slash == 2) { return normalized[0:3]; }
+        return normalized[0:slash];
+    }
+
+    /** 返回末段名称去掉最后一个扩展名后的文本。 */
+    static String stem(String path) {
+        String name = __pathFileName(path);
+        String suffix = __pathExtension(path);
+        return name[0:len(name)-len(suffix)];
+    }
 };

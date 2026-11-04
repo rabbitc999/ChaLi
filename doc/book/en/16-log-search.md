@@ -157,16 +157,20 @@ The first call delegates the work. The failure branch reports an unsuccessful in
 
 Project checks cover spaces in paths, CRLF, empty files, a final line without newline, Unicode, zero bytes, and oversized input. A display limit can be added as configuration and applied at output. After learning iterators, revisit the intermediate lists.
 
-## 16.8 Exercises
+### Test the log filter independently
 
-1. Compare case modes while preserving output text.
-2. Add a --limit option.
-3. Distinguish missing arguments from a missing file, preserving path context.
-4. Why can block-based input not simply search each block independently?
+Verify the filter on two fixed log lines before reading a file.
 
-### Answers and checks
+<!-- verify-book -->
+```chali
+bool wanted(String line) {
+    return line.contains("ERROR");
+}
+void main() {
+    println("{} {}", wanted("INFO ready"), wanted("ERROR timeout"));
+}
+```
 
-1. Fold comparison copies, not Hit.text.
-2. Validate a nonnegative limit and apply it while displaying original line numbers.
-3. Argument errors precede file access; read errors include the actual path.
-4. Lines and queries can cross block boundaries, requiring retained partial input and accumulated positions.
+```text
+0 1
+```

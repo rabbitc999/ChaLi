@@ -124,7 +124,7 @@ void main() {
 
 For example, replace `Pair<int64>` with `Pair<int64, String>`, or explicitly choose `Pair<int64, Any>` when type erasure is required.
 
-Type arguments resolve in the caller's module; defaults and constraints resolve at the template definition. References, tuples, function types and nested containers preserve their component types' sources. When an allowed user name shadows a core type, standard-library templates retain their standard types: `Box<String>` can select a user type, while `Box<std::lang::String>` selects the standard string. Qualify ambiguous imports. Any remains reserved. See the [generic tutorial](../book/en/18-generics.md) for a complete example.
+Type arguments resolve in the caller's module; defaults and constraints resolve at the template definition. References, tuples, function types and nested containers preserve their component types' sources. When an allowed user name shadows a core type, standard-library templates retain their standard types: `Box<String>` can select a user type, while `Box<std::core::String>` selects the standard string. Qualify ambiguous imports. Any remains reserved. See the [generic tutorial](../book/en/18-generics.md) for a complete example.
 
 ## New modules
 
@@ -132,7 +132,7 @@ Type arguments resolve in the caller's module; defaults and constraints resolve 
 | --- | --- | --- |
 | [`std::encoding`](../library/std-encoding.md) | Base64, Base64URL, hexadecimal | Strict `Result` decoding; implemented in ChaLi |
 | [`std::csv`](../library/std-csv.md) | Reading, writing, quoting, delimiters, error positions | Multiline quoted fields; one-based lines and byte columns; implemented in ChaLi |
-| [`std::datetime`](../library/std-datetime.md) | Unix seconds, UTC dates, formatting and arithmetic | Gregorian years 1..9999; UTC ISO text at second precision; current time needs a host clock |
+| [`std::date_time`](../library/std-date_time.md) | Unix seconds, UTC dates, formatting and arithmetic | Gregorian years 1..9999; UTC ISO text at second precision; current time needs a host clock |
 | [`std::io`](../library/std-io.md) | Byte streams, whole files, directory listing, metadata, creation and renaming | File operations use C frames; path operations use the host filesystem |
 | [`std::cli`](../library/std-cli.md) | Long/short options, positional values, defaults, help and validation | Returns results without printing or exiting; implemented in ChaLi |
 | [`std::utf8`](../library/std-utf8.md) | Validation, code points, counts and slicing | Strict UTF-8; code points are not grapheme clusters; byte APIs support U+0000 |
@@ -141,13 +141,13 @@ Use short names when unambiguous. Module reference pages link to complete execut
 
 ```chali
 import std::encoding;
-import std::datetime;
+import std::date_time;
 import std::utf8;
 void main() {
     List<uint8> bytes = decodeHex("666f6f").unwrap();
     println("{}", encodeBase64(bytes));
-    DateTime utc = parseUtc("2024-02-29T12:34:56Z").unwrap();
-    println("{}", formatUtc(addDays(utc, 1).unwrap()).unwrap());
+    DateTime utc = parse_utc("2024-02-29T12:34:56Z").unwrap();
+    println("{}", format_utc(add_days(utc, 1).unwrap()).unwrap());
     println("{}", sliceCodePoints("A中文😀", 1, 2).unwrap());
 }
 ```
@@ -158,7 +158,7 @@ void main() {
 
 `readAllBytes` defaults to a 16 MiB limit that callers can change. `readAllText` reads the entire content but rejects embedded zero bytes; use byte APIs for binary files. Directory listing is one level deep and sorted. File metadata follows symbolic links. Rename replacement rules depend on the platform; these operations do not promise transactional or atomic writes.
 
-Custom hosts register file services through the C function table, using public C record, buffer, and error protocols. Desktop directory operations are not automatically available on a board. Date conversion does not depend on the operating system's timezone; `nowUtc` requires an actual UTC clock from the host.
+Custom hosts register file services through the C function table, using public C record, buffer, and error protocols. Desktop directory operations are not automatically available on a board. Date conversion does not depend on the operating system's timezone; `now_utc` requires an actual UTC clock from the host.
 
 ## Compatible quadruple formats and historical measurements
 

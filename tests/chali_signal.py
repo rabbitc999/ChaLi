@@ -22,7 +22,7 @@ def program():
             parts += [f'input.push(std::complex::Complex<float64>::of({((i*7)%13-6)/8:.8f},{((i*11)%17-8)/4:.8f}));']
         methods=['dft','idft']+(['fft','ifft'] if n>0 and n&(n-1)==0 else [])
         for method in methods:
-            parts += ['{', f'List<std::complex::Complex<float64>> output=std::signal::{method}(input);', f'assert(output.len()=={n});', 'int64 i=0; while(i<output.len()){std::complex::Complex<float64> v=output[i];', 'List<uint8> a=std::lang::float64ToBytes(v.re,false);List<uint8> b=std::lang::float64ToBytes(v.im,false);', 'int64 j=0;while(j<8){print("{} ",(int64)a[j]);j++;}j=0;while(j<8){print("{} ",(int64)b[j]);j++;}println("");i++;}', 'output.clear();',f'assert(input.len()=={n});','}']
+            parts += ['{', f'List<std::complex::Complex<float64>> output=std::signal::{method}(input);', f'assert(output.len()=={n});', 'int64 i=0; while(i<output.len()){std::complex::Complex<float64> v=output[i];', 'List<uint8> a=std::core::float64ToBytes(v.re,false);List<uint8> b=std::core::float64ToBytes(v.im,false);', 'int64 j=0;while(j<8){print("{} ",(int64)a[j]);j++;}j=0;while(j<8){print("{} ",(int64)b[j]);j++;}println("");i++;}', 'output.clear();',f'assert(input.len()=={n});','}']
         if n and n&(n-1)==0:
             parts+=['{List<std::complex::Complex<float64>> restored=std::signal::ifft(std::signal::fft(input));int64 i=0;while(i<input.len()){std::complex::Complex<float64> a=input[i];std::complex::Complex<float64> b=restored[i];assert(std::math::abs(a.re-b.re)<0.00000001);assert(std::math::abs(a.im-b.im)<0.00000001);i++;}}']
         parts+=['}']
@@ -30,7 +30,7 @@ def program():
         bits={'infinity':[0,0,0,0,0,0,240,127],'negative-infinity':[0,0,0,0,0,0,240,255],'nan':[1,0,0,0,0,0,248,127],'negative-zero':[0,0,0,0,0,0,0,128],'max-finite':[255,255,255,255,255,255,239,127],'subnormal':[1,0,0,0,0,0,0,0]}[pattern]
         for method in ('dft','idft','fft','ifft'):
             parts+=['{uint8 raw[8];']+[f'raw[{i}]=(uint8){value};' for i,value in enumerate(bits)]
-            parts+=['float64 special=std::lang::bytesToFloat64(raw,8,false).unwrap();List<std::complex::Complex<float64>> input;', 'input.push(std::complex::Complex<float64>::of(special,special));input.push(std::complex::Complex<float64>::of(1.0,0.0));',f'List<std::complex::Complex<float64>> output=std::signal::{method}(input);', 'int64 i=0;while(i<output.len()){std::complex::Complex<float64> v=output[i];List<uint8> a=std::lang::float64ToBytes(v.re,false);List<uint8> b=std::lang::float64ToBytes(v.im,false);int64 j=0;while(j<8){print("{} ",(int64)a[j]);j++;}j=0;while(j<8){print("{} ",(int64)b[j]);j++;}println("");i++;}}']
+            parts+=['float64 special=std::core::bytesToFloat64(raw,8,false).unwrap();List<std::complex::Complex<float64>> input;', 'input.push(std::complex::Complex<float64>::of(special,special));input.push(std::complex::Complex<float64>::of(1.0,0.0));',f'List<std::complex::Complex<float64>> output=std::signal::{method}(input);', 'int64 i=0;while(i<output.len()){std::complex::Complex<float64> v=output[i];List<uint8> a=std::core::float64ToBytes(v.re,false);List<uint8> b=std::core::float64ToBytes(v.im,false);int64 j=0;while(j<8){print("{} ",(int64)a[j]);j++;}j=0;while(j<8){print("{} ",(int64)b[j]);j++;}println("");i++;}}']
     return '\n'.join(parts+['}'])
 
 

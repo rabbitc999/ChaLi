@@ -53,7 +53,7 @@ def main():
                     print(f'{allocator}/{checks}: ten scalar columns, uint64 maximum, iteration and independent copies passed', flush=True)
         for index, (setup, diagnostic) in enumerate(BAD):
             path = work / f'bad-{index}.chl'
-            path.write_text('import std::linalg;\nvoid main(){let a=std::linalg::Matrix<float64>::identity(1);' + setup + '}', encoding='utf-8')
+            path.write_text('import std::linear_algebra;\nvoid main(){let a=std::linear_algebra::Matrix<float64>::identity(1);' + setup + '}', encoding='utf-8')
             result = run([compiler, 'run', path, '--out', work / f'bad-{index}'], False)
             first = result.stderr.splitlines()[0]
             assert diagnostic in first, result

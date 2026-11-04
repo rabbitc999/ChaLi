@@ -12,7 +12,7 @@ Follow unsafe call contexts, RawStorage slot states, BarePtr arithmetic and byte
 
 An address can be represented numerically, but a number alone does not prove a readable object exists there. Correct arithmetic still leaves allocation, range, layout and alignment obligations.
 
-Begin with an unsafe function that only adds integers to demonstrate call context. Address queries such as std::lang::address must also be read through their contracts. Nothing here dereferences the result; later examples introduce allocation-backed storage and pointers gradually.
+Begin with an unsafe function that only adds integers to demonstrate call context. Address queries such as std::core::address must also be read through their contracts. Nothing here dereferences the result; later examples introduce allocation-backed storage and pointers gradually.
 
 <!-- verify-book -->
 ```chali
@@ -130,7 +130,7 @@ Validate counts and bounds at the safe entry, maintain initialized regions inter
 
 ### 25.4.1 Language addresses and C host handles
 
-`std::lang::address`, `BarePtr` and raw-storage operations follow the language runtime's address conventions. A logical address supplied to C still needs its runtime context. Widening its integer representation does not make it a directly dereferenceable C pointer.
+`std::core::address`, `BarePtr` and raw-storage operations follow the language runtime's address conventions. A logical address supplied to C still needs its runtime context. Widening its integer representation does not make it a directly dereferenceable C pointer.
 
 The public C API uses opaque handles for registries, strings and host records. Pair `chali_abi_registry_create` with `chali_abi_registry_destroy`, and `chali_abi_string` with `chali_abi_string_release`. A borrowed byte view is read using its returned length without acquiring ownership. The next chapter applies these rules in an actual C host program.
 
@@ -140,24 +140,28 @@ Operations with fixed semantics, such as address calculations, scalar reads, byt
 
 Choose whether an operation handles bytes or constructs, copies, moves or destroys a value before selecting its interface. Owned values retain their language semantics, and C buffers follow their library's release contract. These responsibilities remain when optimization changes the call sequence.
 
+### Counterexample: an unsafe call from safe code
+
+The function only adds integers, and its calling permission is still checked. The diagnostic excerpt below uses the compiler’s Chinese language setting.
+
+<!-- verify-book-error: check -->
+```chali
+unsafe int64 offset(int64 base, int64 bytes) {
+    return base+bytes;
+}
+void main() {
+    println("{}", offset(100, 8));
+}
+```
+
+```text
+调用 unsafe 函数需要显式 unsafe 上下文：program::offset
+```
+
 ### Summary
 
 Track allocation range, element layout, slot state and borrows. InitAt constructs, takeAt extracts, dropAt destroys an element and close releases storage. Raw byte operations do not automatically maintain those typed states.
 
 An address alone does not prove valid typed access. Safe entry points should check what they can, internal code must preserve remaining invariants and verification should cover failure and exit paths. The next chapter applies these resource and lifetime rules to C interoperation.
-
-## 25.5 Exercises
-
-1. Can readAt directly follow takeAt on the same slot?
-2. Does dropAt free the entire buffer?
-3. Why cannot memcpy replace every copy?
-4. Which state should a raw-storage wrapper track?
-
-### Answers and checks
-
-1. No; initialize the slot again first.
-2. No; it cleans the element and retains capacity.
-3. Owned values carry ownership and cleanup semantics.
-4. Capacity, initialized regions, live elements and borrow lifetimes.
 
 Next: [Chapter 26](26-c-interop.md).

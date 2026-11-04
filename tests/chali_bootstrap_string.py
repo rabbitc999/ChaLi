@@ -55,7 +55,7 @@ def main():
             assert (native.returncode, native.stdout, native.stderr) == (0, virtual.stdout, ''), (native, work)
             llvm = prefix.with_suffix('.ll').read_text(encoding='utf-8')
             for obsolete in ['__std_str_lit', '__std_str_join', '__std_str_sub', '__std_str_cmp', '__std_str_pos',
-                             'std::lang::__stringNew', 'std::lang::__stringCopy', 'std::lang::__stringDrop']:
+                             'std::core::__stringNew', 'std::core::__stringCopy', 'std::core::__stringDrop']:
                 assert obsolete not in llvm, (obsolete, work)
             assert 'llvm.memcpy' in llvm, work
         results.append(dict(case=name, vm='passed', aot='passed'))

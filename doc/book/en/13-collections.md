@@ -140,6 +140,23 @@ Element size, metadata, indexes, alignment and allocator limits also bound capac
 
 Avoid structural changes that may move a buffer while element references are live. Copying obtains a value, moving transfers ownership, and iteration obtains successive elements through its protocol. Chapter 17 demonstrates iterator consumption and transformations.
 
+### Check whether a key exists
+
+Check present and missing keys before deciding whether to unwrap.
+
+<!-- verify-book -->
+```chali
+void main() {
+    Map<String, int64> scores;
+    scores.put("Ada", 42);
+    println("{} {}", scores.getOption("Ada").isValue(), scores.getOption("Lin").isNone());
+}
+```
+
+```text
+1 1
+```
+
 ### Summary
 
 Length counts valid elements, capacity describes available storage and an index identifies an access position. Maps and sets additionally depend on equality and hashing, while Any requires confirmation during extraction.
@@ -170,19 +187,5 @@ void main()
 ```
 
 The example creates a Bag, fills its list and copies the aggregate. Updating the copied list preserves the original owned contents. Compare the simple Student from Chapter 7: adding an owned collection requires value semantics throughout the fields, not a shared writable list address.
-
-## 13.7 Exercises
-
-1. Choose collections for scores, student-ID lookup and unique subjects.
-2. What happens to capacity and resources after clear?
-3. Why must key hashing agree with equality?
-4. List checks before growing a collection.
-
-### Answers and checks
-
-1. Usually List, Map and Set, subject to actual access patterns.
-2. Retain capacity and clean removed owned elements.
-3. Equal keys must follow consistent indexing rules.
-4. Check addition and growth overflow, limits and allocation failure.
 
 Next: [Chapter 12](12-strings-text.md).

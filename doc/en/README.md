@@ -103,7 +103,7 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 - [Standard library ownership and string methods](32-opcode-values-strings.md)
 - [Reflection serialization and dynamic SQL](33-reflection-serialization-sql.md)
 
-The [29-chapter English book](../book/en/README.md) contains technical chapters, exercises and appendices. The Chinese edition also includes literary extras and a PDF. Chapter 29 follows the actual school application with architecture and browser screenshots.
+The [30-chapter English book](../book/en/README.md) contains technical chapters and appendices. The Chinese edition also includes literary extras and a PDF. Chapter 29 follows the actual school application with architecture and browser screenshots.
 
 - [Compiler safety boundaries and focused regression tests](34-compiler-safety.md)
 
@@ -120,3 +120,5 @@ The [29-chapter English book](../book/en/README.md) contains technical chapters,
 - [Native AOT debugging](43-native-debugging.md): GDB breakpoints, stepping and variables.
 
 - [Library containers and asset inspection](44-library-packages.md): canonical manifests, independent ABIs, target assets, digests and budgets.
+
+- [Optional host libraries](45-optional-libraries.md): windows, audio, XML, cryptography and streaming HTTP.

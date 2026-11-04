@@ -26,7 +26,7 @@ def main():
             (folder / "settings.chl").write_text(f'module settings;\nint64 value() {{ return {value}; }}\n', encoding="utf-8")
         (first / "extra.chl").write_text('module extra;\nint64 value() { return 2; }\n', encoding="utf-8")
         source = project / "src/main.chl"
-        source.write_text('module app;\nvoid main() { std::lang::println("{} {}", settings::value(), extra::value()); return; }\n', encoding="utf-8")
+        source.write_text('module app;\nvoid main() { std::core::println("{} {}", settings::value(), extra::value()); return; }\n', encoding="utf-8")
         manifest = project / "chali.toml"
         config = '''[package]
 name = "paths-demo"
@@ -61,7 +61,7 @@ commands = ['import extra;']
         plain = work / "plain"
         plain.mkdir()
         main = plain / "main.chl"
-        main.write_text('import settings;\nvoid main() { std::lang::println("{}", settings::value()); return; }\n', encoding="utf-8")
+        main.write_text('import settings;\nvoid main() { std::core::println("{}", settings::value()); return; }\n', encoding="utf-8")
         cli = [COMPILER, 'run', main, "--out", work / "cli"]
         assert run([*cli, "--import-dir", first]).stdout == "20\n"
         assert run([*cli, "-I", first]).stdout == "20\n"

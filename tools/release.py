@@ -15,7 +15,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SAMPLES = ('return_expression', 'named_function', 'derive', 'macro_groups',
-           'break_level', 'macro_gensym', 'foreach_interval', 'any_generics', 'value_text')
+           'break_labels', 'macro_gensym', 'foreach_interval', 'any_generics', 'value_text')
 CHECKS = ('tests/chali_release.py', 'tools/changelog.py --check', 'tools/check_doc_links.py',
           'tools/export_chali_ebnf.py --check', 'tools/library_reference.py --check',
           'tools/embed_manual.py --check', 'tests/chali_book_updates.py',

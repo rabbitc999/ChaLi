@@ -27,7 +27,7 @@
 
 关键字和标点按附录逐个登记，采取生成词法器的匹配规则；字符串、浮点、十六进制、二进制与字符字面量使用明确正则。标识符、十进制数字、空白以及行注释和块注释还使用生成词法器的默认处理。注释及字符串内的文字不会作为关键字解析。字符字面量的字节长度、数值范围与进制合法性仍须经过语义检查；正则识别成功不等于常量有效。
 
-`std::lang::String` 是内建字符串类型，核心限定可省略为 `String`。它通过名称解析取得身份，不是独立的字符串类型关键字。`List` / `Set` / `Map` 有专用 Token；`Option` / `Result` 是标准库泛型枚举。预处理器的 `%INCLUDE` / `%IMPORT` / 条件与宏展开在语言解析前执行，不属于下面 `program` 的产生式。
+`std::core::String` 是内建字符串类型，核心限定可省略为 `String`。它通过名称解析取得身份，不是独立的字符串类型关键字。`List` / `Set` / `Map` 有专用 Token；`Option` / `Result` 是标准库泛型枚举。预处理器的 `%INCLUDE` / `%IMPORT` / 条件与宏展开在语言解析前执行，不属于下面 `program` 的产生式。
 
 源码首先经过预处理、模块装载和泛型模板收集与具体实例展开，再由生成解析器处理。泛型名称扫描与实例化不构成运行时类型声明。
 
@@ -109,7 +109,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 171 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 169 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -127,6 +127,7 @@ Box<int64 fn(int64)> box;
 | `MACRO_ELSE` | `$else` |
 | `MACRO_ELIF` | `$elif` |
 | `MACRO_ELSE_IF` | `$else_if` |
+| `MACRO_IMPLEMENT` | `$implement` |
 | `MACRO_END_MATCH` | `$end_match` |
 | `MACRO_REGEX` | `$regex` |
 | `MACRO_END_REGEX` | `$end_regex` |
@@ -195,7 +196,6 @@ Box<int64 fn(int64)> box;
 | `RETURN` | `return` |
 | `MATCH` | `match` |
 | `BREAK` | `break` |
-| `DERIVE` | `#derive` |
 | `BORROW_KW` | `#borrow` |
 | `LIFETIME_STATIC` | `#static` |
 | `BORROW_RET` | `#ret` |
@@ -305,9 +305,6 @@ top_decl = struct_decl, type_decl_end
     | opcode_decl, type_decl_end
     | "#NonCopyable", opcode_decl, type_decl_end
     | switch_directives, struct_decl, type_decl_end
-    | derive_directive, struct_decl, type_decl_end
-    | switch_directives, derive_directive, struct_decl, type_decl_end
-    | derive_directive, enum_decl, type_decl_end
     | "module", module_name, ";"
     | "import", module_name, ";"
     | enum_decl, type_decl_end
@@ -334,11 +331,6 @@ top_decl = struct_decl, type_decl_end
 
 type_decl_end = ""
     | ";" ;
-
-derive_directive = "#derive", "(", derive_names, ")" ;
-
-derive_names = module_name
-    | derive_names, ",", module_name ;
 
 lifetime_directives = lifetime_directive
     | lifetime_directives, lifetime_directive ;
@@ -649,6 +641,9 @@ stmt = block
     | while_stmt
     | loop_stmt
     | for_in_stmt
+    | expr, ":", while_stmt
+    | expr, ":", loop_stmt
+    | expr, ":", for_in_stmt
     | match_stmt
     | match_stmt, ";"
     | "return", expr, ";"
@@ -657,8 +652,6 @@ stmt = block
     | "break", ";"
     | "yield", expr, ";"
     | "break", name_token, ";"
-    | "break", name_token, NUMBER, ";"
-    | "break", name_token, name_token, ";"
     | "continue", ";"
     | expression_items, ";" ;
 
@@ -986,6 +979,7 @@ macro_definition = "$macro", name_token, macro_generics, macro_parameters, "@!ma
 
 macro_member_list = ""
     | macro_member_list, member
+    | macro_member_list, "$implement", type, ";"
     | macro_member_list, "type", name_token, ";"
     | macro_member_list, type, name_token, "(", param_list, ")", ";"
     | macro_member_list, "static", type, name_token, "(", param_list, ")", ";"

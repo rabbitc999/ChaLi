@@ -33,19 +33,27 @@ struct Box<T> {
     static Box<T> create(T value) { Box<T> box; return box; }
     (int64, Option<T>) next(T fn(T) mapper) { return 1,Option<T>::None; }
 };
-Result<std::lang::List<T>, Error> convert<T>(
-    std::lang::List<T> values, String url="http://localhost/");
+Result<std::core::List<T>, Error> convert<T>(
+    std::core::List<T> values, String url="http://localhost/");
 int64 __hidden();
 '''
-    entries=reference.declarations(ROOT/'source/std/lang.chl',fixture)
+    entries=reference.declarations(ROOT/'source/std/core.chl',fixture)
     functions=[r for r in entries if r['kind']=='function']
     assert [(r['owner'],r['name']) for r in functions]==[('Value','unwrapOr'),('Box','create'),('Box','next'),('','convert')]
-    extra=reference.declarations(ROOT/'source/std/lang.chl','module fixture; int64 fn(int64) make(String s="a,  b"); int64 constant=other();')
+    extra=reference.declarations(ROOT/'source/std/core.chl','module fixture; int64 fn(int64) make(String s="a,  b"); int64 constant=other();')
     assert [r['name'] for r in extra if r['kind']=='function']==['make']
     assert reference.parameters(extra[0]['signature'])==[('s','String s','"a,  b"')]
-    derived=reference.declarations(ROOT/'source/std/lang.chl','module fixture;\n#derive(Equal, Hash, Clone)\nenum Kind { Integer, Symbol };')
-    assert any(r['kind']=='enum' and r['name']=='Kind' for r in derived)
-    assert not any(r['kind']=='function' and r['name']=='derive' for r in derived)
+    macro_fixture='''module fixture;
+/// 生成带指定名称的方法。
+$macro GET<T>(name:ident) -> member
+T name() { return self.value; }
+$end_macro
+enum Kind { Integer, Symbol };
+'''
+    macro_entries=reference.declarations(ROOT/'source/std/core.chl',macro_fixture)
+    assert [(r['kind'],r['name']) for r in macro_entries if not r['owner']]==[('macro','GET'),('enum','Kind')]
+    assert macro_entries[0]['signature']=='$macro GET<T>(name:ident) -> member'
+    assert reference.comment_text(macro_entries[0]['comment'])=='生成带指定名称的方法。'
     assert functions[2]['result']=='(int64, Option<T>)'
     assert reference.parameters(functions[3]['signature'])[-1]==('url','String url','"http://localhost/"')
     assert any(r['signature']=='Bad, Empty' for r in entries)
@@ -54,8 +62,12 @@ int64 __hidden();
     assert len({(r['module'],r['name'],r['signature']) for r in index})==len(index)
     symbols=json.loads((ROOT/'doc/library/symbol-index.json').read_text(encoding='utf-8'))
     assert symbols and all(r['documentation'] for r in symbols)
+    macros=[r for r in symbols if r['kind']=='macro' and r['module']=='std::macro']
+    assert {r['name'] for r in macros}>={'MIN','MAX','CLAMP','Equal','Hash','Clone'}
+    assert all(r['comment'] and r['signature'].startswith('$macro ') for r in macros)
     assert any(r['name']=='DateTime::year' and '公历年份' in r['documentation'] for r in symbols)
     assert any(r['name']=='LuFactorization' and r['kind']=='struct' for r in symbols)
+    assert any(r['module']=='std::big_number' and r['name']=='BigInteger::pow' for r in index)
     assert not any(r['module']=='std' and r['name']=='pause' for r in index)
     for critical in ('mysql','maria','bytesToFloat32','parseInt64','getStructInfo','zipValue','tryFold'):
         assert any(r['name'].split('::')[-1]==critical for r in index),critical

@@ -4,5 +4,5 @@ void main() {
     int64 a[] = new[N];
     a[0] = 1;
     a[N] = 9;               /* N == 3 已经越界（合法下标 0..2） */
-    std::lang::println("{}", a[0]);
+    std::core::println("{}", a[0]);
 }

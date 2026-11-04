@@ -31,7 +31,7 @@ async function main() {
   const app = path.join(directory, 'my project'); fs.mkdirSync(app);
   const src = path.join(app, 'src'); fs.mkdirSync(src);
   const mainFile = path.join(src, 'main.chl');
-  fs.writeFileSync(mainFile, 'import values;\nvoid main(){std::lang::println("{}",values::answer());}\n');
+  fs.writeFileSync(mainFile, 'import values;\nvoid main(){std::core::println("{}",values::answer());}\n');
   const archive = zipPackage(); let downloads = 0;
   const server = http.createServer((request, response) => {
     downloads += 1; response.writeHead(200, { 'Content-Length': archive.length }); response.end(archive);

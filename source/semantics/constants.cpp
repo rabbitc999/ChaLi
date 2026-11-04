@@ -55,7 +55,7 @@ MVar *FindConstantGlobal(const Memory::String &module, const Memory::String &nam
         auto it = g_scope.front().find(key);
         if (it != g_scope.front().end()) return &it->second;
     }
-    Memory::Set<Memory::String> owners{ "std::lang" };
+    Memory::Set<Memory::String> owners{ "std::core" };
     auto imports = g_moduleImports.find(module);
     if (imports != g_moduleImports.end()) owners.insert(imports->second.begin(), imports->second.end());
     MVar *result = nullptr;
@@ -125,7 +125,7 @@ bool ValidateConstantTree(int id, MConstantContext &context, MType::Kind *result
     {
         auto bound = g_constantBindings.find(id);
         auto *variable = bound != g_constantBindings.end() ? &bound->second : node.kind == MNode::Var ? (context.globalOnly ? FindConstantGlobal(node.module, node.s) : FindNodeVar(node)) :
-                                                                                                        FindQualifiedGlobal(node.s, node.s2);
+                                                                                                        FindQualifiedGlobal(node.s, node.s2, node.module);
         if (!variable || !variable->isConst || variable->constantExpression < 0) return Fail("[CHL1300] 常量表达式不能引用运行时变量：" + node.s);
         if (!variable->type || (variable->type->kind != MType::Int && variable->type->kind != MType::Double && variable->type->kind != MType::Bool)) return Fail("[CHL1300] 常量表达式仅支持整数、浮点和 bool");
         if (result) *result = variable->type->kind;
@@ -227,7 +227,7 @@ bool EvaluateConstantImpl(int id, MConstant *out, MConstantContext &context)
     {
         auto bound = g_constantBindings.find(id);
         auto *variable = bound != g_constantBindings.end() ? &bound->second : node.kind == MNode::Var ? (context.globalOnly ? FindConstantGlobal(node.module, node.s) : FindNodeVar(node)) :
-                                                                                                        FindQualifiedGlobal(node.s, node.s2);
+                                                                                                        FindQualifiedGlobal(node.s, node.s2, node.module);
         if (!variable || !variable->isConst || variable->constantExpression < 0)
             return Fail("[CHL1300] 常量表达式不能引用运行时变量：" + node.s);
         const int initializer = variable->constantExpression;

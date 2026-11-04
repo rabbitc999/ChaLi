@@ -56,7 +56,7 @@ def main():
     assert 'CHALI_ABI_CXX' in failed.stderr, failed.stderr
     assert set(temp_root.glob('chali-abi-*')) == before, 'failed bridge temporary directory leaked'
     scalar = WORK / 'scalar.chl'
-    scalar.write_text('#abi("C", ' + json.dumps(library.as_posix()) + ', "identity") int32 identity(int32 value);\nvoid main() { std::lang::println("{}", identity((int32)7)); return; }\n', encoding='utf-8')
+    scalar.write_text('#abi("C", ' + json.dumps(library.as_posix()) + ', "identity") int32 identity(int32 value);\nvoid main() { std::core::println("{}", identity((int32)7)); return; }\n', encoding='utf-8')
     small = execute(compiler, scalar, WORK / 'scalar', env=missing_compiler, aot=options.aot)
     assert small.stdout == '7\n' and small.stderr == '', small.stdout + small.stderr
     for length, message in ((3, 'returned null'), (-1, 'buffer length'), (100000000, 'buffer length')):

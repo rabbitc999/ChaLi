@@ -1,4 +1,4 @@
-import std::linkedlist;
+import std::linked_list;
 void main(){
     LinkedList list=LinkedList::create();
     assert(list.isEmpty() && list.len()==0);

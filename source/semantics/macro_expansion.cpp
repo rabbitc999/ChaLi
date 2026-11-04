@@ -101,7 +101,7 @@ bool ReportAstMacroFailure(int call, const Memory::String &message)
     {
         const auto &candidate = g_nodes[index];
         if (candidate.kind != MNode::MacroDefinition || candidate.s != node.s) continue;
-        int score = candidate.module == node.module ? 3 : candidate.module == "std::lang" ? 1 :
+        int score = candidate.module == node.module ? 3 : candidate.module == "std::core" ? 1 :
                                                                                             0;
         if (!score)
             for (const int root : g_top)

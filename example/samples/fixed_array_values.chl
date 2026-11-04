@@ -54,7 +54,7 @@ void main() {
     uint8 bytes[9];
     bytes[0] = 255;
     bytes[8] = 128;
-    assert(std::lang::address(&bytes[1]) - std::lang::address(&bytes[0]) == 1);
+    assert(std::core::address(&bytes[1]) - std::core::address(&bytes[0]) == 1);
     uint8 copiedBytes[9] = bytes;
     copiedBytes[8] = 7;
     assert(bytes[8] == 128 && copiedBytes[8] == 7);
@@ -63,7 +63,7 @@ void main() {
     char letters[2];
     letters[0] = (char)255;
     letters[1] = (char)128;
-    assert(std::lang::address(&letters[1]) - std::lang::address(&letters[0]) == 1);
+    assert(std::core::address(&letters[1]) - std::core::address(&letters[0]) == 1);
     char copiedLetters[2] = letters;
     copiedLetters[0] = 'a';
     assert((uint8)letters[0] == 255 && (uint8)letters[1] == 128);

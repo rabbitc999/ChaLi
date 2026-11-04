@@ -60,10 +60,10 @@ process=0 probe=42
 
 | 名称 | 声明 |
 | --- | --- |
-| [processRun](#api-0) | `Process processRun(std::lang::String command)` |
-| [processRead](#api-1) | `std::lang::String processRead(Process const& process)` |
+| [processRun](#api-0) | `Process processRun(std::core::String command)` |
+| [processRead](#api-1) | `std::core::String processRead(Process const& process)` |
 | [processClose](#api-2) | `int64 processClose(Process const& process)` |
-| [system](#api-3) | `int64 system(std::lang::String command)` |
+| [system](#api-3) | `int64 system(std::core::String command)` |
 
 <a id="api-0"></a>
 
@@ -72,7 +72,7 @@ process=0 probe=42
 **声明**
 
 ```chali
-Process processRun(std::lang::String command);
+Process processRun(std::core::String command);
 ```
 
 **行为**
@@ -85,7 +85,7 @@ Process processRun(std::lang::String command);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `command` | `std::lang::String command` | 交给宿主 shell 的命令文本 | 无 |
+| `command` | `std::core::String command` | 交给宿主 shell 的命令文本 | 无 |
 
 **返回值**
 
@@ -112,7 +112,7 @@ std::process::processRun(command);
 **声明**
 
 ```chali
-std::lang::String processRead(Process const& process);
+std::core::String processRead(Process const& process);
 ```
 
 **行为**
@@ -127,7 +127,7 @@ std::lang::String processRead(Process const& process);
 
 **返回值**
 
-`std::lang::String`。读取进程管道的输出文本。
+`std::core::String`。读取进程管道的输出文本。
 
 **错误与边界**
 
@@ -188,7 +188,7 @@ std::process::processClose(process);
 **声明**
 
 ```chali
-int64 system(std::lang::String command);
+int64 system(std::core::String command);
 ```
 
 **行为**
@@ -199,7 +199,7 @@ int64 system(std::lang::String command);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `command` | `std::lang::String command` | 交给宿主 shell 的命令文本 | 无 |
+| `command` | `std::core::String command` | 交给宿主 shell 的命令文本 | 无 |
 
 **返回值**
 

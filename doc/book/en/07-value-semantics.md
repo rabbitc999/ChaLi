@@ -79,16 +79,20 @@ In main, follow the chain from left to right: one, then three, then six. The out
 
 Some types cannot be copied at all. Chapter 9 develops resource ownership; the next chapter introduces references, which use an object without copying it or taking ownership.
 
-## 7.4 Exercises
+### Observe the source after copying
 
-1. Does changing only copy.score change the first output line?
-2. Change the copied name and print original.name again.
-3. Why do equal contents not prove shared mutable identity?
-4. Compare later use after copying and after moving.
+Modify the copy and print both values to observe value semantics.
 
-### Answers and checks
+<!-- verify-book -->
+```chali
+void main() {
+    String original = "tea";
+    String copied = original;
+    copied.append("!");
+    println("{} {}", original, copied);
+}
+```
 
-1. No; the first line reads the original record.
-2. The original remains Ada.
-3. Contents describe a current observation, not the ownership or reference relationship.
-4. Copying preserves the source; moving relinquishes its ownership and restricts later use.
+```text
+tea tea!
+```

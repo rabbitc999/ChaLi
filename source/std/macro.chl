@@ -1,0 +1,275 @@
+module std::macro;
+
+/** 返回两个可比较值中较小的值。每个实参求值一次，相等时返回左值。 */
+$macro MIN(left:value, right:value) -> expr
+if (right < left) { yield right; }
+else { yield left; }
+$end_macro
+
+/** 返回两个可比较值中较大的值。每个实参求值一次，相等时返回左值。 */
+$macro MAX(left:value, right:value) -> expr
+if (left < right) { yield right; }
+else { yield left; }
+$end_macro
+
+/** 将值限制在闭区间内。每个实参求值一次，上界小于下界时触发断言。 */
+$macro CLAMP(value:value, low:value, high:value) -> expr
+{
+    assert(!(high < low));
+    if (value < low) { yield low; }
+    if (high < value) { yield high; }
+    yield value;
+}
+$end_macro
+
+/** 以 FNV-1a 顺序混合字符串的 UTF-8 字节。 */
+$macro __hash_text(value:value) -> expr
+{
+    uint64 hash = 14695981039346656037u;
+    for (index in range(0, len(value))) {
+        hash = (hash ^ cast<uint64>(value.byteAt(index).unwrap())) * 1099511628211u;
+    }
+    yield hash;
+}
+$end_macro
+
+/** 将相等的浮点值映射为相同哈希，包括正负零。 */
+$macro __hash_float(value:value) -> expr
+{
+    if (value != value || value == 0.0) { yield 0u; }
+    if (value - value != 0.0) {
+        if (value > 0.0) { yield 9218868437227405312u; }
+        yield 18442240474082181120u;
+    }
+    float64 magnitude = value;
+    uint64 sign = 0u;
+    if (magnitude < 0.0) {
+        magnitude = -magnitude;
+        sign = 9223372036854775808u;
+    }
+    yield cast<uint64>(magnitude % 18446744073709551616.0) ^ sign;
+}
+$end_macro
+
+/** 为类型 T 生成调用方命名的相等方法，按声明顺序比较实例字段或匹配枚举载荷。 */
+$macro Equal<T>(method:ident) -> member
+$implement Equal;
+bool method(T other) {
+    $if ($type<T>()).isEnum
+    $for variant in $variants<T>()
+    match (self) {
+        $variant_pattern(variant, left) => {
+            match (other) {
+                $variant_pattern(variant, right) => {
+                    $for payload in variant.payloads
+                    if (!($variant_payload(payload, left) == $variant_payload(payload, right))) { return false; }
+                    $end_for
+                    return true;
+                }
+                _ => { return false; }
+            }
+        }
+        _ => {}
+    }
+    $end_for
+    return false;
+    $else
+    $for field in $fields<T>()
+    if (!($member(self, field) == $member(other, field))) { return false; }
+    $end_for
+    return true;
+    $end_if
+}
+$end_macro
+
+/** 为类型 T 生成调用方命名的哈希方法，按声明顺序混合字段或枚举载荷。 */
+$macro Hash<T>(method:ident) -> member
+$implement std::core::Hash<T>;
+uint64 method(T value) {
+    $if ($type<T>()).isEnum
+    $for variant in $variants<T>()
+    match (value) {
+        $variant_pattern(variant, source) => {
+            uint64 result = cast<uint64>(variant.index + 1);
+            $for payload in variant.payloads
+            $if payload.type == std::core::String
+            result = (result ^ $__hash_text($variant_payload(payload, source))) * 1099511628211u;
+            $else_if payload.type == float32
+            result = (result ^ $__hash_float(cast<float64>($variant_payload(payload, source)))) * 1099511628211u;
+            $else_if payload.type == float64
+            result = (result ^ $__hash_float($variant_payload(payload, source))) * 1099511628211u;
+            $else_if payload.type.isScalar
+            result = (result ^ cast<uint64>($variant_payload(payload, source))) * 1099511628211u;
+            $else
+            result = (result ^ $variant_payload(payload, source).hash($variant_payload(payload, source))) * 1099511628211u;
+            $end_if
+            $end_for
+            return result;
+        }
+        _ => {}
+    }
+    $end_for
+    panic("invalid enum tag");
+    $else
+    uint64 result = 14695981039346656037u;
+    $for field in $fields<T>()
+    $if field.type == std::core::String
+    result = (result ^ $__hash_text($member(value, field))) * 1099511628211u;
+    $else_if field.type == float32
+    result = (result ^ $__hash_float(cast<float64>($member(value, field)))) * 1099511628211u;
+    $else_if field.type == float64
+    result = (result ^ $__hash_float($member(value, field))) * 1099511628211u;
+    $else_if field.type.isScalar
+    result = (result ^ cast<uint64>($member(value, field))) * 1099511628211u;
+    $else
+    result = (result ^ $member(value, field).hash($member(value, field))) * 1099511628211u;
+    $end_if
+    $end_for
+    return result;
+    $end_if
+}
+$end_macro
+
+/** 为类型 T 生成调用方命名的克隆方法。嵌套拥有值沿用其克隆协议。 */
+$macro Clone<T>(method:ident) -> member
+$implement std::core::Clone<T>;
+T method() {
+    $if ($type<T>()).isEnum
+    $for variant in $variants<T>()
+    match (self) {
+        $variant_pattern(variant, source) => {
+            return $variant_clone(variant, source);
+        }
+        _ => {}
+    }
+    $end_for
+    panic("invalid enum tag");
+    $else
+    T result;
+    $for field in $fields<T>()
+    $if field.type.isScalar
+    $member(result, field) = $member(self, field);
+    $else_if field.type == std::core::String
+    $member(result, field) = $member(self, field);
+    $else
+    $member(result, field) = $member(self, field).clone();
+    $end_if
+    $end_for
+    return result;
+    $end_if
+}
+$end_macro
+
+$macro __debug_bool(value:value) -> expr
+{
+    if(value){yield "true";}
+    yield "false";
+}
+$end_macro
+$macro __debug_quote(value:value, character:value) -> expr
+{
+    std::core::String quote="\"";
+    if(character){quote="'";}
+    std::core::String result=quote;
+    std::core::String hex="0123456789abcdef";
+    int64 begin=0;
+    int64 index=0;
+    while(index<value.length()){
+        uint8 byte=value.byteAt(index).unwrap();
+        if(byte<32||byte==127||byte==92||(!character&&byte==34)||(character&&byte==39)){
+            result.append(value.substring(begin,index-begin));
+            if(byte==10){result.append("\\n");}
+            elif(byte==13){result.append("\\r");}
+            elif(byte==9){result.append("\\t");}
+            elif(byte==92){result.append("\\\\");}
+            elif(byte==34){result.append("\\\"");}
+            elif(byte==39){result.append("\\'");}
+            else{
+                result.append("\\x");
+                result.append(hex.substring(cast<int64>(byte)/16,1));
+                result.append(hex.substring(cast<int64>(byte)%16,1));
+            }
+            begin=index+1;
+        }
+        index=index+1;
+    }
+    result.append(value.substring(begin,value.length()-begin));
+    result.append(quote);
+    yield result;
+}
+$end_macro
+
+$macro __debug_value(value:expr) -> expr
+{
+    std::core::Debug const& nested = value;
+    yield nested.debug();
+}
+$end_macro
+
+/** 为类型 T 生成调用方命名的调试显示方法，保留字段和枚举载荷的声明顺序与文本转义。 */
+$macro Debug<T>(method:ident) -> member
+$implement std::core::Debug;
+std::core::String method() {
+    std::core::String type_name = ($type<T>()).qualifiedName;
+    if (type_name.startsWith("program::")) { type_name = type_name.substring(9, type_name.length() - 9); }
+    $if ($type<T>()).isEnum
+    $for variant in $variants<T>()
+    match (self) {
+        $variant_pattern(variant, source) => {
+            std::core::String result = type_name + "::" + variant.name;
+            $if variant.payloads.count > 0
+            result.append("(");
+            $for payload in variant.payloads
+            $if payload.index > 0
+            result.append(", ");
+            $end_if
+            result.append(payload.name + ": ");
+            $if payload.type == std::core::String
+            result.append($__debug_quote($variant_payload(payload, source), false));
+            $else_if payload.type == char
+            result.append($__debug_quote(std::core::format("{}", $variant_payload(payload, source)), true));
+            $else_if payload.type == bool
+            result.append($__debug_bool($variant_payload(payload, source)));
+            $else_if payload.type.isScalar
+            result.append(std::core::format("{}", $variant_payload(payload, source)));
+            $else
+            result.append($__debug_value(&$variant_payload(payload, source)));
+            $end_if
+            $end_for
+            result.append(")");
+            $end_if
+            return result;
+        }
+        _ => {}
+    }
+    $end_for
+    panic("invalid enum tag");
+    $else
+    std::core::String result = type_name + " {";
+    $for field in $fields<T>()
+    $if field.index > 0
+    result.append(", ");
+    $else
+    result.append(" ");
+    $end_if
+    result.append(field.name + ": ");
+    $if field.type == std::core::String
+    result.append($__debug_quote($member(self, field), false));
+    $else_if field.type == char
+    result.append($__debug_quote(std::core::format("{}", $member(self, field)), true));
+    $else_if field.type == bool
+    result.append($__debug_bool($member(self, field)));
+    $else_if field.type.isScalar
+    result.append(std::core::format("{}", $member(self, field)));
+    $else
+    result.append($__debug_value(&$member(self, field)));
+    $end_if
+    $end_for
+    $if ($fields<T>()).count > 0
+    result.append(" ");
+    $end_if
+    result.append("}");
+    return result;
+    $end_if
+}
+$end_macro

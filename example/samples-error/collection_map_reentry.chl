@@ -3,7 +3,7 @@ struct Key : Equal<bool, Key> {
     int64 id;
     bool leftEqual(Key other) { return touches() == 1 && self.id == other.id; }
 };
-std::lang::Map<Key, int64> values;
+std::core::Map<Key, int64> values;
 int64 touches() { return values.len(); }
 void main() {
     Key key; key.id = 1;

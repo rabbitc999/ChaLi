@@ -78,7 +78,7 @@ def main():
     for qualified in [True, False]:
         for explicit in [True, False]:
             name = ('qualified' if qualified else 'implicit-namespace') + ('-explicit-types' if explicit else '-inferred-types')
-            text = SOURCE.replace('@P@', 'std::lang::' if qualified else '')
+            text = SOURCE.replace('@P@', 'std::core::' if qualified else '')
             text = text.replace('@S64@', '<int64>' if explicit else '').replace('@S8@', '<uint8>' if explicit else '').replace('@C@', '<int64,uint8>' if explicit else '')
             source = work / (name + '.chl')
             source.write_text(text, encoding='utf-8')
@@ -93,7 +93,7 @@ def main():
             assert '@llvm.memcpy.p0.p0.i64' in main_body and '@llvm.memset.p0.i64' in main_body
             assert '@chali_host_memory_prepare' in main_body
             assert not re.search(r'\bcall[^\n]*@f_[^\s(]*(?:memcpy__|memset__|dereference__)', llvm), name
-            assert not re.search(r'@native_name[^\n]*std::lang::__rawStorage', llvm), name
+            assert not re.search(r'@native_name[^\n]*std::core::__rawStorage', llvm), name
             optimized = work / (name + '-optimized.ll')
             invoke([clang, '-O3', '-S', '-emit-llvm', target.with_suffix('.ll'), '-o', optimized, '-Wno-override-module'], name + '-optimize')
             optimized_text = optimized.read_text(encoding='utf-8')

@@ -1,6 +1,6 @@
-import std::linalg;
+import std::linear_algebra;
 import std::numerics;
-import std::numtheory;
+import std::number_theory;
 
 import std::math;
 
@@ -9,20 +9,20 @@ float64 rootFunction(float64 x) { return x*x-2.0; }
 float64 exponentialRate(float64 time, float64 value) { return value; }
 
 void main() {
-    std::linalg::Vector<float32> left=std::linalg::Vector<float32>::zeros(2);
+    std::linear_algebra::Vector<float32> left=std::linear_algebra::Vector<float32>::zeros(2);
     left.set(0,(float32)3.0); left.set(1,(float32)4.0);
-    std::linalg::Vector<float32> right=left+left;
-    std::linalg::Vector<float32> difference=right-left;
-    std::linalg::Vector<float32> scaled=left*(float32)2.0;
+    std::linear_algebra::Vector<float32> right=left+left;
+    std::linear_algebra::Vector<float32> difference=right-left;
+    std::linear_algebra::Vector<float32> scaled=left*(float32)2.0;
     assert(difference.at(0)==(float32)3.0 && scaled.at(1)==(float32)8.0);
-    std::linalg::Matrix<float32> matrix=std::linalg::Matrix<float32>::identity(2);
-    std::linalg::Matrix<float32> doubled=matrix+matrix;
-    std::linalg::Matrix<float32> recovered=doubled-matrix;
-    std::linalg::Matrix<float32> scaledMatrix=matrix*(float32)3.0;
-    std::linalg::Vector<float32> mapped=doubled*left;
+    std::linear_algebra::Matrix<float32> matrix=std::linear_algebra::Matrix<float32>::identity(2);
+    std::linear_algebra::Matrix<float32> doubled=matrix+matrix;
+    std::linear_algebra::Matrix<float32> recovered=doubled-matrix;
+    std::linear_algebra::Matrix<float32> scaledMatrix=matrix*(float32)3.0;
+    std::linear_algebra::Vector<float32> mapped=doubled*left;
     assert(mapped.at(0)==(float32)6.0 && mapped.at(1)==(float32)8.0);
     assert(recovered.at(1,1)==(float32)1.0 && scaledMatrix.at(0,0)==(float32)3.0);
-    std::linalg::Matrix<float32> product=matrix*matrix;
+    std::linear_algebra::Matrix<float32> product=matrix*matrix;
     assert(product.at(0,0)==(float32)1.0);
 
     float64 integral=std::numerics::Numerics::integrateSimpson(square,0.0,1.0,20);
@@ -39,16 +39,16 @@ void main() {
     assert(rk4.at(10)>euler.at(10) &&
     std::math::abs(rk4.at(10)-std::math::E)<0.00001);
 
-    assert(std::numtheory::gcd((uint64)54,(uint64)24)==6);
-    assert(std::numtheory::lcm((uint64)6,(uint64)8)==24);
-    assert(std::numtheory::modInverse((int64)3,(int64)11)==4);
-    assert(std::numtheory::modInverse((int64)-3,(int64)11)==7);
-    assert(std::numtheory::powMod((uint64)7,(uint64)128,(uint64)97)==35);
-    assert(std::numtheory::isPrime((uint64)97));
-    assert(!std::numtheory::isPrime((uint64)561));
+    assert(std::number_theory::gcd((uint64)54,(uint64)24)==6);
+    assert(std::number_theory::lcm((uint64)6,(uint64)8)==24);
+    assert(std::number_theory::mod_inverse((int64)3,(int64)11)==4);
+    assert(std::number_theory::mod_inverse((int64)-3,(int64)11)==7);
+    assert(std::number_theory::pow_mod((uint64)7,(uint64)128,(uint64)97)==35);
+    assert(std::number_theory::is_prime((uint64)97));
+    assert(!std::number_theory::is_prime((uint64)561));
     uint64 largePrime=(uint64)2305843009213693951;
     assert(largePrime==(((uint64)1<<61)-1));
-    assert(std::numtheory::mulMod(largePrime-1,largePrime-1,largePrime)==1);
-    assert(std::numtheory::isPrime((uint64)65537));
+    assert(std::number_theory::mul_mod(largePrime-1,largePrime-1,largePrime)==1);
+    assert(std::number_theory::is_prime((uint64)65537));
     println("generic matrix numerics number theory OK");
 }

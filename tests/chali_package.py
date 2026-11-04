@@ -41,7 +41,7 @@ def main():
             env = dict(os.environ, CHALI_LANG='zh',
                        PATH=str(project / 'include') + os.pathsep + os.environ.get('PATH', ''))
             return run([*args, *extra], success=success, cwd=project, env=env)
-        source.write_text('/*\nmodule hidden;\nimport absent;\n*/\n' + source.read_text(encoding='utf-8').replace('    std::lang::println("chali-ok");', '    std::lang::assert(nativeapi::nativeIdentity((int32)7) == 7);\n    std::lang::println("chali-ok");'), encoding='utf-8')
+        source.write_text('/*\nmodule hidden;\nimport absent;\n*/\n' + source.read_text(encoding='utf-8').replace('    std::core::println("chali-ok");', '    std::core::assert(nativeapi::nativeIdentity((int32)7) == 7);\n    std::core::println("chali-ok");'), encoding='utf-8')
         assert execute().stdout == 'chali-ok\n'
         emitted = [args[0], 'aot', *args[2:], '--emit-llvm', '--incremental']
         first = run(emitted)

@@ -17,7 +17,7 @@ const lines = [
   '}',
   'void main() {',
   '    int64 total = 0;',
-  '    for (int64 i in std::lang::range(0, 4)) {',
+  '    for (int64 i in std::core::range(0, 4)) {',
   '        total = add(total, i);',
   '    }',
   '    println("TOTAL {}", total);',

@@ -1,0 +1,22 @@
+module desktop_gui;
+
+#abi("C", "./@LIBRARY@", "chali_gui_open")
+bool open(int32 width, int32 height, String title);
+
+#abi("C", "./@LIBRARY@", "chali_gui_should_close")
+bool should_close();
+
+#abi("C", "./@LIBRARY@", "chali_gui_begin_frame")
+bool begin_frame();
+
+#abi("C", "./@LIBRARY@", "chali_gui_end_frame")
+void end_frame();
+
+#abi("C", "./@LIBRARY@", "chali_gui_close")
+void close();
+
+#abi("C", "./@LIBRARY@", "chali_gui_label")
+void label(int32 x, int32 y, int32 width, int32 height, String text);
+
+#abi("C", "./@LIBRARY@", "chali_gui_button")
+bool button(int32 x, int32 y, int32 width, int32 height, String text);

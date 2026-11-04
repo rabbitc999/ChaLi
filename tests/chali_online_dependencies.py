@@ -82,7 +82,7 @@ def main():
             top = publish('top.zip', {'chali.toml': config('top', 'middle=' + json.dumps(middle) + '\nleaf=' + json.dumps(leaf) + '\n'), 'modules/lib/top.chl': 'module lib::top;\nimport lib::middle;\nimport lib::leaf;\nint64 value(){return lib::middle::value()+lib::leaf::value();}\n'}, prefix='top-0.1.0/')
             (app / 'chali.toml').write_text(config('app', 'top=' + json.dumps(top) + '\n'), encoding='utf-8')
             source = app / 'main.chl'
-            source.write_text('import lib::top;\nvoid main(){std::lang::println("{}",lib::top::value());return;}\n', encoding='utf-8')
+            source.write_text('import lib::top;\nvoid main(){std::core::println("{}",lib::top::value());return;}\n', encoding='utf-8')
             env = dict(os.environ, CHALI_LANG='zh')
 
             def run(*command, success=True):

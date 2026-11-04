@@ -5,7 +5,7 @@
 <!-- END LANGUAGE NAVIGATION -->
 
 ChaLi's built-in modules, grouped by capability. Everything needs an `import` except the core module
-`std::lang`.
+`std::core`.
 
 Standard-library failures use `Result<T, Error>` with an owned interface payload that retains the concrete error. IoError, ParseError, CsvError and other structured errors keep their variants, positions and messages. Text errors use MessageError::from(text) before boxing as Error. Shared handlers accept an Error value, Error const& or an E: Error generic constraint. Custom Result<T, E> values may retain a concrete E; when E implements Error, ? can propagate into a function returning Result<U, Error>.
 
@@ -30,7 +30,9 @@ isObject=1 len=1
 
 ---
 
-## 1. Core module `std::lang` (auto-loaded)
+## 1. Core module `std::core` (auto-loaded)
+
+Use `String` and `List<T>` directly, or spell them `std::core::String` and `std::core::List<T>`. An explicit `import std::core;` is also valid.
 
 No `import` needed.
 
@@ -39,11 +41,12 @@ No `import` needed.
 | Output and formatting | `println(fmt, …)`, `format(fmt, …)` |
 | Assertions | `assert(cond)` |
 | Length | `len(x)` (strings / containers) |
-| Strings | `std::lang::String`; index to read a character |
+| Strings | `std::core::String`; index to read a character |
 | Containers | `List<T>`, `Map<K,V>`, `Set<T>` |
-| Type-erased box | `std::lang::Any` (for runtime polymorphism) |
-| Math constants | `std::lang::Math::PI`, `std::lang::Math::E` |
+| Type-erased box | `std::core::Any` (for runtime polymorphism) |
 | Big numbers | `BigInteger`, `BigDecimal` |
+
+The public opcode types are `std::big_number::BigInteger` and `std::big_number::BigDecimal`. Use `import std::big_number;` to state the dependency explicitly. The language prelude also makes their short names and literals available.
 
 ---
 
@@ -53,13 +56,42 @@ No `import` needed.
 
 | Module | Contents |
 | --- | --- |
-| `std::math` | `sin` `cos` `sqrt` and friends; `abs` `min` `max` are generic entry points (`min`/`max` take any number of arguments) while `clamp` keeps `int64`/`float64` overloads; constants live in `std::lang::Math` |
+| `std::math` | `sin` `cos` `sqrt` and friends; `abs` `min` `max` are generic entry points (`min`/`max` take any number of arguments) while `clamp` keeps `int64`/`float64` overloads; constants `std::math::PI` and `std::math::E` |
 | `std::numerics` | scalar numerical methods: derivative, Simpson integration, bisection, RK4, Newton |
-| `std::numtheory` | integer number theory: module-level generic `gcd` `lcm` (any number of arguments), `addMod` `mulMod` `powMod` `modInverse`, deterministic Miller-Rabin `isPrime` |
+| `std::number_theory` | integer number theory: module-level generic `gcd` `lcm` (any number of arguments), `add_mod` `mul_mod` `pow_mod` `mod_inverse`, deterministic Miller-Rabin `is_prime` |
 | `std::complex` | complex numbers `Complex<T>` with arithmetic traits |
-| `std::linalg` | dense vectors and matrices, `luDecompose` `symmetricEigen` `svd` `jordan2` `diagonalize2` |
+| `std::linear_algebra` | dense vectors and matrices, `lu_decompose` `symmetric_eigen` `svd` `jordan2` `diagonalize2` |
 | `std::random` | deterministic LCG and entropy seeding; handle-based state, implements `Drop` |
 | `std::signal` | DFT / FFT / inverse; radix-2 FFT requires a power-of-two length |
+
+### Standard macros
+
+Import `std::macro` to use these expression macros. Each argument is evaluated once, including arguments that do not become the result.
+
+| Macro | Behavior |
+| --- | --- |
+| `$MIN(left, right)` | Selects the smaller value. |
+| `$MAX(left, right)` | Selects the larger value. |
+| `$CLAMP(value, low, high)` | Limits a value to the inclusive interval. Reversed bounds trigger an assertion. |
+
+```chali
+import std::macro;
+
+int64 calls = 0;
+int64 next(int64 value) {
+    calls++;
+    return value;
+}
+void main() {
+    println("{} {} {}", $std::macro::MIN(next(7), next(3)), $MAX(7, 3), $CLAMP(9, 0, 6));
+    println("{}", calls);
+}
+```
+
+```text
+3 7 6
+2
+```
 
 ### Text and data formats
 
@@ -117,11 +149,11 @@ No `import` needed.
 **Follow each resource type's lifetime protocol.** Files, sockets and database connections support their documented explicit close or scope cleanup. JSON/TOML values own independent data; do not treat every value as a raw handle needing manual closure, or assume identical repeated-close results across types.
 
 **Compressed output is binary.** `std::compress` output contains NUL bytes and has type
-`std::lang::List<uint8>`; only the decompressed result is a `std::lang::String`.
+`std::core::List<uint8>`; only the decompressed result is a `std::core::String`.
 
 Module availability follows the target host bindings, system libraries and build configuration. Embedded Linux uses ordinary Linux hosts without a separate module-blocking deployment mode. See [deployment](06-deployment.md).
 
-**Modules other than core `std::lang` require an explicit `import`.**
+**Modules other than core `std::core` require an explicit `import`.**
 
 ---
 
@@ -135,7 +167,7 @@ capabilities:
   bindings
 - [`example/samples/`](../../example/samples/) — runnable samples organised by feature
 - Per-domain API reference: [`doc/library/`](../library/README.md) has one page per module
-  (`std-json.md`, `std-toml.md`, `std-regex.md`, `std-linalg.md`, `std-complex.md`, `std-net.md`,
+  (`std-json.md`, `std-toml.md`, `std-regex.md`, `std-linear_algebra.md`, `std-complex.md`, `std-net.md`,
   `std-sql.md`, …)
 
 ---
@@ -148,4 +180,4 @@ capabilities:
 | Capabilities beyond the standard library | [Language reference](04-language-reference.md) |
 | Runnable samples for a feature | [`example/samples/`](../../example/samples/) |
 
-0.14.0 adds `std::encoding`, `std::csv`, `std::datetime`, `std::cli`, `std::utf8` and extended file operations. See the [Any, explicit generics and data utilities](23-any-generics-data.md).
+0.14.0 adds `std::encoding`, `std::csv`, `std::date_time`, `std::cli`, `std::utf8` and extended file operations. See the [Any, explicit generics and data utilities](23-any-generics-data.md).

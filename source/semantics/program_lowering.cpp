@@ -441,7 +441,7 @@ void AppendInterfaceDispatchers(ast::Program &program)
  * @brief 把"一个值"按叶子类型存进聚合槽：字符串 / 对象复制一份，标量原样写。
  *
  * 字符串 / 对象的空值（0）原样写 0：空值没有资源可复制，也不能让
- * `__std_object_copy(0)` / `std::lang::__bootStringSlice(0, …)` 报错或白分配。
+ * `__std_object_copy(0)` / `std::core::__bootStringSlice(0, …)` 报错或白分配。
  */
 void AppendLeafStore(Memory::Vector<ast::NodePtr> *body,
                      const ast::NodePtr &dst, const ast::NodePtr &value,
@@ -1462,7 +1462,7 @@ bool FinalizeBootstrapCalls(ast::Program &program)
                 if (found == stringJoinLabels.end())
                 {
                     ast::Function function;
-                    function.name = "std::lang::__bootStringJoin" + Memory::toString(count);
+                    function.name = "std::core::__bootStringJoin" + Memory::toString(count);
                     function.result = ast::Type::i64();
                     Memory::Vector<ast::NodePtr> body;
                     const auto total = function.name + "_total";
@@ -1476,19 +1476,19 @@ bool FinalizeBootstrapCalls(ast::Program &program)
                         const auto length = function.name + "_length" + Memory::toString(index);
                         function.parameters.push_back({ argument, ast::Type::i64() });
                         body.push_back(ast::Node::declare(length, ast::Type::i64()));
-                        body.push_back(ast::Node::assign(length, ast::Node::call("std::lang::__bootStringLength", { "address" }, { ast::Node::var(argument) })));
-                        body.push_back(ast::Node::assign(total, ast::Node::call("std::lang::__bootStringAddLength", { "left", "right" }, { ast::Node::var(total), ast::Node::var(length) })));
+                        body.push_back(ast::Node::assign(length, ast::Node::call("std::core::__bootStringLength", { "address" }, { ast::Node::var(argument) })));
+                        body.push_back(ast::Node::assign(total, ast::Node::call("std::core::__bootStringAddLength", { "left", "right" }, { ast::Node::var(total), ast::Node::var(length) })));
                     }
                     body.push_back(ast::Node::declare(result, ast::Type::i64()));
-                    body.push_back(ast::Node::assign(result, ast::Node::call("std::lang::__bootStringBuffer", { "length" }, { ast::Node::var(total) })));
+                    body.push_back(ast::Node::assign(result, ast::Node::call("std::core::__bootStringBuffer", { "length" }, { ast::Node::var(total) })));
                     body.push_back(ast::Node::declare(offset, ast::Type::i64()));
                     body.push_back(ast::Node::assign(offset, ast::Node::i(0)));
                     for (std::size_t index = 0; index < count; ++index)
                     {
                         const auto argument = function.name + "_arg" + Memory::toString(index);
                         const auto length = function.name + "_length" + Memory::toString(index);
-                        body.push_back(ast::Node::exprStmt(ast::Node::call("std::lang::__bootStringCopyBytes", { "destination", "source", "length" },
-                            { ast::Node::binary("+", ast::Node::call("std::lang::__bootStringOwnedData", { "address" }, { ast::Node::var(result) }), ast::Node::var(offset)), ast::Node::call("std::lang::__stringStorageData", { "address" }, { ast::Node::var(argument) }), ast::Node::var(length) })));
+                        body.push_back(ast::Node::exprStmt(ast::Node::call("std::core::__bootStringCopyBytes", { "destination", "source", "length" },
+                            { ast::Node::binary("+", ast::Node::call("std::core::__bootStringOwnedData", { "address" }, { ast::Node::var(result) }), ast::Node::var(offset)), ast::Node::call("std::core::__stringStorageData", { "address" }, { ast::Node::var(argument) }), ast::Node::var(length) })));
                         body.push_back(ast::Node::assign(offset, ast::Node::binary("+", ast::Node::var(offset), ast::Node::var(length))));
                     }
                     body.push_back(ast::Node::ret(ast::Node::var(result)));
@@ -1506,7 +1506,7 @@ bool FinalizeBootstrapCalls(ast::Program &program)
     // 原生集合调用原先不依赖参数名字；改接语言自举函数后必须绑定实际帧形参。
     Memory::Map<Memory::String, Memory::Vector<Memory::String>> bootstrapParameters;
     for (const auto &function : program.functions)
-        if (function.name.rfind("std::lang::__boot", 0u) == 0u)
+        if (function.name.rfind("std::core::__boot", 0u) == 0u)
         {
             auto &parameters = bootstrapParameters[function.name];
             for (const auto &parameter : function.parameters) parameters.push_back(parameter.first);
@@ -1514,7 +1514,7 @@ bool FinalizeBootstrapCalls(ast::Program &program)
     Memory::Set<const ast::Node *> visitedBootstrapCalls;
     std::function<void(const ast::NodePtr &)> bindBootstrap = [&](const ast::NodePtr &node) {
         if (!node || !visitedBootstrapCalls.insert(node.get()).second) return;
-        if (node->kind == ast::Node::Kind::Call && node->text.rfind("std::lang::__boot", 0u) == 0u)
+        if (node->kind == ast::Node::Kind::Call && node->text.rfind("std::core::__boot", 0u) == 0u)
         {
             const auto found = bootstrapParameters.find(node->text);
             if (found == bootstrapParameters.end() || found->second.size() != node->kids.size())

@@ -102,11 +102,15 @@ Payloads retain their own value, borrow and resource rules. Copying a String-bea
 
 <!-- verify-book -->
 ```chali
-#derive(Equal, Hash, Clone)
+import std::macro;
+
 enum BookPacket
 {
     Empty,
-    Text(String text)
+    Text(String text);
+    $std::macro::Equal<BookPacket>(leftEqual);
+    $std::macro::Hash<BookPacket>(hash);
+    $std::macro::Clone<BookPacket>(clone);
 }
 
 void main()
@@ -131,24 +135,37 @@ Println then verifies equality between first and second and consistent hashes, g
 
 Match can produce a value when its branches satisfy a common result type. Keep payload-dependent work in its matching branch instead of asserting a guessed variant later. Option and Result apply this structure to absence and failure.
 
+### Extract an enum payload
+
+A matching payload variant binds its data inside the branch.
+
+<!-- verify-book -->
+```chali
+enum Signal {
+    Idle, Data(int64 value)
+};
+
+void main() {
+    Signal item = Signal::Data(42);
+    match (item) {
+        Signal::Data(value) => {
+            println("{}", value);
+        }
+        _ => {
+            println("idle");
+        }
+    }
+}
+```
+
+```text
+42
+```
+
 ### Summary
 
 Enums define possible states, match maps states to paths and payload bindings expose typed data within the corresponding arm. For result-producing matches, check coverage and result compatibility instead of guessing states afterward.
 
 Option and Result apply this structure to absence and failure in Chapter 16. First, Chapter 11 organizes typed values in containers.
-
-## 10.5 Exercises
-
-1. Add a disconnected state to Event.
-2. Print only Message text.
-3. When is a wildcard necessary?
-4. Is a reference payload an independent copy?
-
-### Answers and checks
-
-1. Update every exhaustive match.
-2. Use Message(_, text).
-3. Keep a fallback for remaining alternatives or interface implementations.
-4. No; lifetime and access restrictions remain.
 
 Next: [Chapter 13](13-collections.md).

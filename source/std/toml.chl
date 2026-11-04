@@ -3,23 +3,23 @@ module std::toml;
 import std::serialization;
 
 /** 将反射模型编码为 TOML 文档；根值必须是对象。 */
-Result<String,std::lang::Error> serialize<T>(T const& value) {
+Result<String,std::core::Error> serialize<T>(T const& value) {
     let encoded = std::json::serialize<T>(value);
-    if (encoded.isErr()) { return Result<String,std::lang::Error>::Err(MessageError::from(encoded.error())); }
+    if (encoded.isErr()) { return Result<String,std::core::Error>::Err(MessageError::from(encoded.error())); }
     String converted = std::serialization::__transcode(encoded.unwrap(), true);
-    if (!converted.startsWith("1")) { return Result<String,std::lang::Error>::Err(MessageError::from(converted.removePrefix("0"))); }
-    return Result<String,std::lang::Error>::Ok(converted.removePrefix("1"));
+    if (!converted.startsWith("1")) { return Result<String,std::core::Error>::Err(MessageError::from(converted.removePrefix("0"))); }
+    return Result<String,std::core::Error>::Ok(converted.removePrefix("1"));
 }
 /** 按具体反射类型解码 TOML，不接受静默数值窄化。 */
-Result<T,std::lang::Error> deserialize<T>(String text) {
+Result<T,std::core::Error> deserialize<T>(String text) {
     String converted = std::serialization::__transcode(text, false);
-    if (!converted.startsWith("1")) { return Result<T,std::lang::Error>::Err(MessageError::from(converted.removePrefix("0"))); }
+    if (!converted.startsWith("1")) { return Result<T,std::core::Error>::Err(MessageError::from(converted.removePrefix("0"))); }
     return std::json::deserialize<T>(converted.removePrefix("1"));
 }
 
-__TomlValueStorage __parse(std::lang::String text);
+__TomlValueStorage __parse(std::core::String text);
 bool __valid(int64 document);
-std::lang::String __takeError(int64 document);
+std::core::String __takeError(int64 document);
 bool __close(int64 document);
 int64 __kind(int64 document, int64 node);
 int64 __size(int64 document, int64 node);
@@ -27,16 +27,16 @@ int64 __int(int64 document, int64 node);
 float64 __float(int64 document, int64 node);
 bool __bool(int64 document, int64 node);
 bool __textAvailable(int64 document, int64 node);
-std::lang::String __string(int64 document, int64 node);
-std::lang::List<uint8> __bytes(int64 document, int64 node);
-std::lang::String __dateTime(int64 document, int64 node);
-std::lang::String __dump(int64 document, int64 node);
-__TomlValueStorage __find(int64 document, int64 node, std::lang::String key);
-__TomlValueStorage __findBytes(int64 document, int64 node, std::lang::List<uint8> key);
+std::core::String __string(int64 document, int64 node);
+std::core::List<uint8> __bytes(int64 document, int64 node);
+std::core::String __dateTime(int64 document, int64 node);
+std::core::String __dump(int64 document, int64 node);
+__TomlValueStorage __find(int64 document, int64 node, std::core::String key);
+__TomlValueStorage __findBytes(int64 document, int64 node, std::core::List<uint8> key);
 __TomlValueStorage __at(int64 document, int64 node, int64 index);
 bool __keyAvailable(int64 document, int64 node, int64 index);
-std::lang::String __key(int64 document, int64 node, int64 index);
-std::lang::List<uint8> __keyBytes(int64 document, int64 node, int64 index);
+std::core::String __key(int64 document, int64 node, int64 index);
+std::core::List<uint8> __keyBytes(int64 document, int64 node, int64 index);
 
 int64 __valueNew();
 int64 __valueCopy(int64 handle);
@@ -79,29 +79,29 @@ struct TomlValue : Iterator<TomlValue> {
         return Option<bool>::Value(__bool(self.__storage.opcode, 0));
     }
     /** 非字符串或含零字节时返回 None；含零字节的文本使用 asBytes。 */
-    Option<std::lang::String> asString() {
-        if (!__textAvailable(self.__storage.opcode, 0)) { return Option<std::lang::String>::None; }
-        std::lang::String result = __string(self.__storage.opcode, 0);
-        return Option<std::lang::String>::Value(result);
+    Option<std::core::String> asString() {
+        if (!__textAvailable(self.__storage.opcode, 0)) { return Option<std::core::String>::None; }
+        std::core::String result = __string(self.__storage.opcode, 0);
+        return Option<std::core::String>::Value(result);
     }
-    Option<std::lang::List<uint8>> asBytes() {
-        if (!self.isString()) { return Option<std::lang::List<uint8>>::None; }
-        std::lang::List<uint8> result = __bytes(self.__storage.opcode, 0);
-        return Option<std::lang::List<uint8>>::Value(result);
+    Option<std::core::List<uint8>> asBytes() {
+        if (!self.isString()) { return Option<std::core::List<uint8>>::None; }
+        std::core::List<uint8> result = __bytes(self.__storage.opcode, 0);
+        return Option<std::core::List<uint8>>::Value(result);
     }
-    Option<std::lang::String> asDateTime() {
-        if (!self.isDateTime()) { return Option<std::lang::String>::None; }
-        std::lang::String result = __dateTime(self.__storage.opcode, 0);
-        return Option<std::lang::String>::Value(result);
+    Option<std::core::String> asDateTime() {
+        if (!self.isDateTime()) { return Option<std::core::String>::None; }
+        std::core::String result = __dateTime(self.__storage.opcode, 0);
+        return Option<std::core::String>::Value(result);
     }
-    Option<TomlValue> find(std::lang::String key) {
+    Option<TomlValue> find(std::core::String key) {
         __TomlValueStorage child = __find(self.__storage.opcode, 0, key);
         if (!__valid(child.opcode)) { return Option<TomlValue>::None; }
         TomlValue value; value.__storage = move child;
         return Option<TomlValue>::Value(move value);
     }
     /** 允许包含零字节的 UTF-8 键名。 */
-    Option<TomlValue> findBytes(std::lang::List<uint8> key) {
+    Option<TomlValue> findBytes(std::core::List<uint8> key) {
         __TomlValueStorage child = __findBytes(self.__storage.opcode, 0, key);
         if (!__valid(child.opcode)) { return Option<TomlValue>::None; }
         TomlValue value; value.__storage = move child;
@@ -116,23 +116,23 @@ struct TomlValue : Iterator<TomlValue> {
     }
     Option<TomlValue> iterator(int64 index) { return self.at(index); }
     /** 对象成员的键名；越界或键中含零字节时返回 None。 */
-    Option<std::lang::String> keyAt(int64 index) {
-        if (!__keyAvailable(self.__storage.opcode, 0, index)) { return Option<std::lang::String>::None; }
-        std::lang::String result = __key(self.__storage.opcode, 0, index);
-        return Option<std::lang::String>::Value(result);
+    Option<std::core::String> keyAt(int64 index) {
+        if (!__keyAvailable(self.__storage.opcode, 0, index)) { return Option<std::core::String>::None; }
+        std::core::String result = __key(self.__storage.opcode, 0, index);
+        return Option<std::core::String>::Value(result);
     }
-    Option<std::lang::List<uint8>> keyBytesAt(int64 index) {
-        if (!self.isObject() || index < 0 || index >= self.len()) { return Option<std::lang::List<uint8>>::None; }
-        std::lang::List<uint8> result = __keyBytes(self.__storage.opcode, 0, index);
-        return Option<std::lang::List<uint8>>::Value(result);
+    Option<std::core::List<uint8>> keyBytesAt(int64 index) {
+        if (!self.isObject() || index < 0 || index >= self.len()) { return Option<std::core::List<uint8>>::None; }
+        std::core::List<uint8> result = __keyBytes(self.__storage.opcode, 0, index);
+        return Option<std::core::List<uint8>>::Value(result);
     }
-    std::lang::String dump() { return __dump(self.__storage.opcode, 0); }
+    std::core::String dump() { return __dump(self.__storage.opcode, 0); }
 };
 
 /** 解析文本；失败返回包含行列信息的诊断。 */
-Result<TomlValue, std::lang::Error> parse(std::lang::String text) {
+Result<TomlValue, std::core::Error> parse(std::core::String text) {
     __TomlValueStorage handle = __parse(text);
-    if (!__valid(handle.opcode)) { std::lang::String message = __takeError(handle.opcode); return Result<TomlValue, std::lang::Error>::Err(MessageError::from(message)); }
+    if (!__valid(handle.opcode)) { std::core::String message = __takeError(handle.opcode); return Result<TomlValue, std::core::Error>::Err(MessageError::from(message)); }
     TomlValue value; value.__storage = move handle;
-    return Result<TomlValue, std::lang::Error>::Ok(move value);
+    return Result<TomlValue, std::core::Error>::Ok(move value);
 }

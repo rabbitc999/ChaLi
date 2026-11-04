@@ -30,7 +30,7 @@ void main() {
     let first=shared.get();assert(first.text=="payload" && first.values.len()==1);
     first.text="changed";first.values.push(9);assert(shared.get().values.len()==1);
     shared.set(first);let second=shared.get();assert(second.text=="changed" && second.values.len()==2);
-    assert(std::lang::rawSize<std::concurrency::Shared<Payload>>()==8);println("shared owned payload snapshots OK");
+    assert(std::core::rawSize<std::concurrency::Shared<Payload>>()==8);println("shared owned payload snapshots OK");
     let atomic=std::concurrency::AtomicInt64::create(5);
     Thread left=std::thread::createWith<std::concurrency::AtomicInt64>(atomicWorker,atomic);
     Thread right=std::thread::createWith<std::concurrency::AtomicInt64>(atomicWorker,atomic);

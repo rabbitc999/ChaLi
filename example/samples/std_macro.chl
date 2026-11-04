@@ -1,0 +1,11 @@
+import std::macro;
+
+int64 calls = 0;
+int64 next(int64 value) {
+    calls++;
+    return value;
+}
+void main() {
+    println("{} {} {}", $std::macro::MIN(next(7), next(3)), $MAX(7, 3), $CLAMP(9, 0, 6));
+    println("{}", calls);
+}

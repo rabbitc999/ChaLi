@@ -8,7 +8,7 @@ from project_temp import tempfile
 
 SOURCE = """List<int64> transform(List<int64> values, int64 fn(int64) mapper)
 {
-    for (int64 index in std::lang::range(0, values.len())) { values[index] = mapper(values[index]); }
+    for (int64 index in std::core::range(0, values.len())) { values[index] = mapper(values[index]); }
     return values;
 }
 Map<int64, int64> copyMap(Map<int64, int64> values) { return values; }

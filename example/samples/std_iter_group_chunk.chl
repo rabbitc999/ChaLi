@@ -1,0 +1,14 @@
+import std::iter;
+int64 parity(int64 value) { return value % 2; }
+void main() {
+    let groups = std::iter::group_by(std::iter::range(0,5),parity);
+    assert(groups[0][0] == 0 && groups[0][2] == 4 && groups[1].len() == 2);
+    let blocks = std::iter::chunk(std::iter::range(0,5),2);
+    let first = blocks.next().unwrap();
+    let second = blocks.next().unwrap();
+    let last = blocks.next().unwrap();
+    assert(first[1] == 1 && second[0] == 2 && last.len() == 1 && last[0] == 4 && blocks.next().isNone());
+    let paired = std::iter::zip(std::iter::range(0,2),std::iter::range(3,4));
+    assert(!paired.next().isNone() && paired.next().isNone());
+    println("iterator groups, chunks and zip OK");
+}

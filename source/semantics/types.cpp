@@ -716,7 +716,7 @@ Memory::String TypeKey(const std::shared_ptr<MType> &type)
 
     case MType::Host: return type->name;
     case MType::Opcode: return type->name;
-    case MType::Obj: return type->name.empty() ? Memory::String("std::lang::Any") : "interface " + type->name;
+    case MType::Obj: return type->name.empty() ? Memory::String("std::core::Any") : "interface " + type->name;
     case MType::Struct: return "struct " + type->name;
     case MType::Ptr:
         return (type->readOnly ? "const& " : "mut& ") + TypeKey(type->elem);

@@ -16,7 +16,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='chali-panic-') as folder:
         directory = Path(folder)
         source = directory / 'nested.chl'
-        source.write_text('int64 inner() { std::lang::panic("nested failure"); return 0; }\n'
+        source.write_text('int64 inner() { std::core::panic("nested failure"); return 0; }\n'
                           'int64 outer() { return inner(); }\nvoid main() { let __boom = outer(); }\n',
                           encoding='utf-8')
 
@@ -34,8 +34,8 @@ def main():
 
         threaded = directory / 'threaded.chl'
         threaded.write_text('import std::thread;\nvoid spin() { while (true) {} }\n'
-                            'void blocked() { std::lang::String x = std::thread::receive(); }\n'
-                            'void leaf() { std::lang::panic("worker failure"); }\n'
+                            'void blocked() { std::core::String x = std::thread::receive(); }\n'
+                            'void leaf() { std::core::panic("worker failure"); }\n'
                             'void crash() { leaf(); }\n'
                             'void main() { Thread a = std::thread::create(spin); Thread b = std::thread::create(blocked);'
                             ' Thread c = std::thread::create(crash); while (true) {} return; }\n', encoding='utf-8')
@@ -43,12 +43,12 @@ def main():
         assert result.returncode != 0 and 'worker failure' in stderr, stderr
         assert '调用栈' in stderr and 'leaf' in stderr, stderr
 
-        for mode, body in (('mainpanic', 'Thread a = std::thread::create(spin); std::lang::panic("main failure"); return;'),
+        for mode, body in (('mainpanic', 'Thread a = std::thread::create(spin); std::core::panic("main failure"); return;'),
                            ('autojoin', 'Thread a = std::thread::create(spin); Thread c = std::thread::create(crash); while (std::thread::state(c) == std::thread::RUNNING) { std::thread::sleepFor(1); } return;'),
                            ('wait', 'Thread a = std::thread::create(spin); Thread c = std::thread::create(crash); std::thread::wait(c); return;'),
-                           ('receive', 'Thread a = std::thread::create(spin); Thread c = std::thread::create(crash); std::lang::String x = std::thread::receive(); return;')):
+                           ('receive', 'Thread a = std::thread::create(spin); Thread c = std::thread::create(crash); std::core::String x = std::thread::receive(); return;')):
             threaded.write_text('import std::thread;\nvoid spin() { while (true) {} }\n'
-                                'void leaf() { std::lang::panic("worker failure"); }\nvoid crash() { leaf(); }\n'
+                                'void leaf() { std::core::panic("worker failure"); }\nvoid crash() { leaf(); }\n'
                                 'void main() { ' + body + ' }\n', encoding='utf-8')
             result, stderr = command([compiler, 'run', threaded])
             assert result.returncode != 0 and ('main failure' if mode == 'mainpanic' else 'worker failure') in stderr, stderr

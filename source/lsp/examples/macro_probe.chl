@@ -6,7 +6,7 @@ $end_macro
 
 $macro DESCRIBE(...items)
 $for item in items
-std::lang::println("{}", item);
+std::core::println("{}", item);
 $end_for
 $end_macro
 

@@ -3,5 +3,5 @@
 void main() {
     int64 m[2][3];
     int64 x = m[1];
-    std::lang::println("{}", x);
+    std::core::println("{}", x);
 }

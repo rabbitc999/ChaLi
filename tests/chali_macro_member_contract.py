@@ -75,7 +75,7 @@ Result<int64,Error> nested(){let f=fn(Result<int64,Error> r){let v=r?;return Res
 void main(){assert(($methods<Ops>())[0].hasPropagation);assert(!($methods<Ops>())[1].hasPropagation);}''',None),
         ('generic_binding', '''interface Read{type Item;Item get();}
 struct Holder<T>:Read{type Item=T;T value;T get(){return self.value;}}
-void main(){assert(($interfaces<Holder<int16>>())[0].associatedTypes[0].type.name=="int16");assert(($interfaces<Holder<String>>())[0].associatedTypes[0].type.name=="std::lang::String");}''',None),
+void main(){assert(($interfaces<Holder<int16>>())[0].associatedTypes[0].type.name=="int16");assert(($interfaces<Holder<String>>())[0].associatedTypes[0].type.name=="std::core::String");}''',None),
         ('early_identity', '''interface Source{type Item;Item get();}
 $macro SNAP<T>(name:ident) -> member
 $compile_assert(($interfaces<T>())[0].associatedTypes[0].type.name=="int64");

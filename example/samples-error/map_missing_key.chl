@@ -5,6 +5,6 @@
 void main() {
     Map<String, int64> ages;
     ages.put("amy", 11);
-    std::lang::println("{}", ages["amy"]);
-    std::lang::println("{}", ages["zoe"]);   /* 没有这个键 → 运行期错误 */
+    std::core::println("{}", ages["amy"]);
+    std::core::println("{}", ages["zoe"]);   /* 没有这个键 → 运行期错误 */
 }

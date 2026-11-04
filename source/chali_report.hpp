@@ -7,7 +7,7 @@
  *      （`分号(;)` / `semicolon(;)` / `セミコロン(;)`），打印前换掉。
  *      表与 `chali_token.gram` 一一对应；文法加了终结符要同步改这里。
  *      替换按**整词**做：只认全大写的标识符片段，且必须整段命中表，
- *      所以源码路径、类型名（`std::lang::List`）里的大小写都不会被误伤。
+ *      所以源码路径、类型名（`std::core::List`）里的大小写都不会被误伤。
  *      这份是**名字表**不是**消息表**，所以就地双语、不进 `i18n/messages.tsv`
  *      （那边按整条中文消息做键，装不了逐词替换）。
  *   ② **语法错误骨架的双语重建**：`chali_parser.cpp` 是生成文件，文案写死中文，
@@ -155,7 +155,7 @@ std::size_t wordExtentAt(const std::string &raw, std::size_t start);
 const std::vector<std::string> &cachedFileLines(const Memory::String &file);
 /**
  * @brief 这一行能不能从磁盘上读回来 —— 决定**要不要补"第 N 行"**。
- * 合成文件（`<内建 lang>` 之类）与前处理行映射失效时读不到，这时给行号等于指着空气。
+ * 合成文件（`<内建 std::core>` 之类）与前处理行映射失效时读不到，这时给行号等于指着空气。
  * @param file 源文件路径。
  * @param line 行号（1 基）。
  * @return 读得到返回 true。

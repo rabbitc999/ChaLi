@@ -62,7 +62,7 @@ Memory::Vector<Scalar> readValues(ChaliAbiFrame *frame, int64_t handle)
 {
     Memory::Vector<Scalar> result;
     if (!handle) return result;
-    auto *storage = static_cast<scalar_buffer::Storage *>(chali_abi_record_probe(frame, handle, "std::linalg::ScalarStorage"));
+    auto *storage = static_cast<scalar_buffer::Storage *>(chali_abi_record_probe(frame, handle, "std::linear_algebra::ScalarStorage"));
     if (!storage) fail(frame, "线性代数存储 opcode 已释放或类型不匹配");
     result.reserve(storage->values.size());
     for (const auto &slot : storage->values) result.push_back(scalar_buffer::decode<Scalar>(slot));
@@ -79,7 +79,7 @@ template <class Values>
 void writeOwnedValues(ChaliAbiFrame *frame, int64_t output, size_t slot, const Values &values)
 {
     const auto previous = readSlot(frame, output, slot);
-    if (previous && !chali_abi_record_probe(frame, previous, "std::linalg::ScalarStorage")) fail(frame, "矩阵输出存储类型不匹配");
+    if (previous && !chali_abi_record_probe(frame, previous, "std::linear_algebra::ScalarStorage")) fail(frame, "矩阵输出存储类型不匹配");
     auto storage = std::make_unique<scalar_buffer::Storage>();
     storage->values.reserve(values.size());
     for (auto value : values) storage->values.push_back(scalar_buffer::encode(value));
@@ -723,22 +723,22 @@ try
 extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_linalg_records(size_t *count)
 {
     static const ChaliAbiRecord records[] = {
-        { "std::linalg::__diagonalize2Into", decompose<Decomposition::Diagonal>, 2 },
-        { "std::linalg::__jordan2Into", decompose<Decomposition::Jordan>, 2 },
-        { "std::linalg::__luDecomposeInto", decompose<Decomposition::LU>, 2 },
-        { "std::linalg::__lurDecomposeInto", decompose<Decomposition::LUR>, 2 },
-        { "std::linalg::__matrixSolveInto__float32", solve<float>, 3 },
-        { "std::linalg::__matrixSolveInto__float64", solve<double>, 3 },
-        { "std::linalg::__matrixSolveInto__int16", solve<int16_t>, 3 },
-        { "std::linalg::__matrixSolveInto__int32", solve<int32_t>, 3 },
-        { "std::linalg::__matrixSolveInto__int64", solve<int64_t>, 3 },
-        { "std::linalg::__matrixSolveInto__int8", solve<int8_t>, 3 },
-        { "std::linalg::__matrixSolveInto__uint16", solve<uint16_t>, 3 },
-        { "std::linalg::__matrixSolveInto__uint32", solve<uint32_t>, 3 },
-        { "std::linalg::__matrixSolveInto__uint64", solve<uint64_t>, 3 },
-        { "std::linalg::__matrixSolveInto__uint8", solve<uint8_t>, 3 },
-        { "std::linalg::__svdInto", decompose<Decomposition::SVD>, 2 },
-        { "std::linalg::__symmetricEigenInto", decompose<Decomposition::Eigen>, 2 },
+        { "std::linear_algebra::__diagonalize2Into", decompose<Decomposition::Diagonal>, 2 },
+        { "std::linear_algebra::__jordan2Into", decompose<Decomposition::Jordan>, 2 },
+        { "std::linear_algebra::__luDecomposeInto", decompose<Decomposition::LU>, 2 },
+        { "std::linear_algebra::__lurDecomposeInto", decompose<Decomposition::LUR>, 2 },
+        { "std::linear_algebra::__matrixSolveInto__float32", solve<float>, 3 },
+        { "std::linear_algebra::__matrixSolveInto__float64", solve<double>, 3 },
+        { "std::linear_algebra::__matrixSolveInto__int16", solve<int16_t>, 3 },
+        { "std::linear_algebra::__matrixSolveInto__int32", solve<int32_t>, 3 },
+        { "std::linear_algebra::__matrixSolveInto__int64", solve<int64_t>, 3 },
+        { "std::linear_algebra::__matrixSolveInto__int8", solve<int8_t>, 3 },
+        { "std::linear_algebra::__matrixSolveInto__uint16", solve<uint16_t>, 3 },
+        { "std::linear_algebra::__matrixSolveInto__uint32", solve<uint32_t>, 3 },
+        { "std::linear_algebra::__matrixSolveInto__uint64", solve<uint64_t>, 3 },
+        { "std::linear_algebra::__matrixSolveInto__uint8", solve<uint8_t>, 3 },
+        { "std::linear_algebra::__svdInto", decompose<Decomposition::SVD>, 2 },
+        { "std::linear_algebra::__symmetricEigenInto", decompose<Decomposition::Eigen>, 2 },
     };
     if (count) *count = sizeof(records) / sizeof(records[0]);
     return records;

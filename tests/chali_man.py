@@ -63,14 +63,14 @@ def main():
         assert query('book','29')['chapter']['id']=='29'
         assert query('book','不存在',code=1)['diagnostics'][0]['code']=='CHL1701'
         keyword=query('keyword','break')['keyword']
-        assert 'break level' in keyword['documentation'] and 'yield 值;' in keyword['documentation'] and 'BREAK' in keyword['syntax'],keyword
+        assert '按标签退出循环' in keyword['documentation'] and 'yield 值;' in keyword['documentation'] and 'BREAK' in keyword['syntax'],keyword
         macro = json.loads(run('macro', '--json').stdout)['keyword']
         assert macro['name'] == 'macro' and '<T:arg>' in macro['syntax']
         assert all(text in macro['documentation'] for text in ('卫生', 'AST', '$end_macro', 'ECMAScript', '$variants', '$methods', '$interfaces', '控制流'))
         assert '卫生' in run('macro').stdout
         assert 'struct' in query('keyword')['keywords']
         assert '__typeTag' not in query('keyword')['keywords']
-        assert 'break level' in query('keyword','BREAK')['keyword']['documentation']
+        assert '按标签退出循环' in query('keyword','BREAK')['keyword']['documentation']
         assert 'match' in query('keyword','_')['keyword']['documentation']
         assert 'demo_counter_from_uint' in query('keyword','impl')['keyword']['documentation']
         assert '1.0f' in query('keyword','float32')['keyword']['documentation']
@@ -127,7 +127,7 @@ def main():
         executed=query('std::text::Text::split','--run')
         assert executed['execution']['exitCode']==0 and not executed['execution']['stderr'],executed
         assert executed['execution']['stdout'].replace('\r\n','\n')==entry['examples'][0]['expected'],executed
-        for target in ('std::lang::readLines','std::io::FileStream::readAllString'):
+        for target in ('std::core::readLines','std::io::FileStream::readAllString'):
             example=query(target,'--run')
             assert example['execution']['exitCode']==0,example
             expected=example['symbols'][0]['examples'][0]['expected']

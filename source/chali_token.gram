@@ -20,6 +20,7 @@
 %token MACRO_ELSE "$else"
 %token MACRO_ELIF "$elif"
 %token MACRO_ELSE_IF "$else_if"
+%token MACRO_IMPLEMENT "$implement"
 %token MACRO_END_MATCH "$end_match"
 %token MACRO_REGEX "$regex"
 %token MACRO_END_REGEX "$end_regex"
@@ -40,7 +41,7 @@
 %token MACRO_PARSE_BLOCK "@!macroparse_block"
 %token MACRO_PARSE_STMT "@!macroparse_stmt"
 %token MACRO_PARSE_PATTERN "@!macroparse_pattern"
-/* 宏调用名：支持限定名（`$std::lang::assert`）—— 名字被同名的函数 / 变量挡住，或者想
+/* 宏调用名：支持限定名（`$std::core::assert`）—— 名字被同名的函数 / 变量挡住，或者想
  * 明确点名某个模块时用。模块路径怎么切由语义层决定（从最长的模块前缀往下试）。 */
 %token regex MACRO_NAME "\\$[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*(@![0-9]+)?"
 %token regex MACRO_FRAGMENT "@!macrofragment[0-9]+_[0-9]+"
@@ -99,8 +100,7 @@
 %token RETURN "return"
 %token MATCH "match"
 %token BREAK "break"
-%token DERIVE "#derive"
-/* 生命周期契约指令；`#` 一并进记号，与 `#derive` 同形。 */
+/* 生命周期契约指令；`#` 一并进记号。 */
 %token BORROW_KW "#borrow"
 %token LIFETIME_STATIC "#static"
 %token BORROW_RET "#ret"

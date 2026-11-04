@@ -50,7 +50,7 @@ def main():
         ('bad-minimum', '0,1,0,11,10', '缓冲区容量参数无效'),
     ):
         source = work / (name + '.chl')
-        source.write_text('void main(){std::lang::__bootBufferCapacity(' + arguments + ');}\n', encoding='utf-8')
+        source.write_text('void main(){std::core::__bootBufferCapacity(' + arguments + ');}\n', encoding='utf-8')
         prefix = work / name
         built = execute([compiler, 'aot', source, '--out', prefix], name + '-build', environment)
         assert built.returncode == 0, (name, built.stdout, built.stderr, work)
@@ -59,9 +59,9 @@ def main():
     for name, query, operation in (('map-index-max', 9, 5), ('map-entry-max', 11, 12)):
         source = work / (name + '.chl')
         source.write_text('void main(){Map<int64,int64> value;unsafe{'
-                          'int64 mut& slot=(int64 mut&)(int64)std::lang::address(&value);'
-                          'int64 handle=*slot;int64 maximum=std::lang::__mapStorageState(handle,'
-                          + str(query) + ',0,0);std::lang::__mapStorageState(handle,'
+                          'int64 mut& slot=(int64 mut&)(int64)std::core::address(&value);'
+                          'int64 handle=*slot;int64 maximum=std::core::__mapStorageState(handle,'
+                          + str(query) + ',0,0);std::core::__mapStorageState(handle,'
                           + str(operation) + ',0,maximum+1);}}\n', encoding='utf-8')
         prefix = work / name
         built = execute([compiler, 'aot', source, '--out', prefix], name + '-build', environment)

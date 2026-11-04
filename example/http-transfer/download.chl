@@ -1,0 +1,21 @@
+import std::net::http;
+
+void main(List<String> args) {
+    if (args.len() != 2) {
+        println("usage: download URL new-file");
+        return;
+    }
+    let opened = std::net::http::HttpClient::open();
+    if (opened.isErr()) {
+        println("{}", opened.error().toString());
+        return;
+    }
+    let client = opened.take();
+    let result = client.download_to(args[0], args[1], 5000, std::net::http::keep_going);
+    client.close();
+    if (result.isErr()) {
+        println("{}", result.error().toString());
+        return;
+    }
+    println("HTTP {}", result.unwrap());
+}

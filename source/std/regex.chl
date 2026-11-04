@@ -1,6 +1,6 @@
 module std::regex;
 
-/* 从 lang.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::regex;` 才能用）。 */
+/* 从 core.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::regex;` 才能用）。 */
 /* 复制共享不可变编译模式；匹配状态属于每次调用，最后一个值释放时回收模式。 */
 enum RegexError : Error {
     Invalid;
@@ -13,13 +13,13 @@ enum RegexError : Error {
     }
 };
 
-Regex __regexCompileHandle(std::lang::String pattern);
-bool __regexFullMatch(int64 handle, std::lang::String text);
-bool __regexContains(int64 handle, std::lang::String text);
-int64 __regexFindByteIndex(int64 handle, std::lang::String text);
-std::lang::String __regexCapture(int64 handle, std::lang::String text, int64 group);
-std::lang::String __regexReplaceFirst(int64 handle, std::lang::String text, std::lang::String replacement);
-std::lang::String __regexReplaceAll(int64 handle, std::lang::String text, std::lang::String replacement);
+Regex __regexCompileHandle(std::core::String pattern);
+bool __regexFullMatch(int64 handle, std::core::String text);
+bool __regexContains(int64 handle, std::core::String text);
+int64 __regexFindByteIndex(int64 handle, std::core::String text);
+std::core::String __regexCapture(int64 handle, std::core::String text, int64 group);
+std::core::String __regexReplaceFirst(int64 handle, std::core::String text, std::core::String replacement);
+std::core::String __regexReplaceAll(int64 handle, std::core::String text, std::core::String replacement);
 
 int64 __regexNew();
 int64 __regexCopy(int64 handle);
@@ -31,26 +31,26 @@ opcode Regex {
     copy = std::regex::__regexCopy;
     drop = std::regex::__regexDrop;
 
-    static Result<Regex, std::lang::Error> compile(std::lang::String pattern) {
+    static Result<Regex, std::core::Error> compile(std::core::String pattern) {
         Regex value = __regexCompileHandle(pattern);
-        if (!__regexValid(value.opcode)) { return Result<Regex, std::lang::Error>::Err(RegexError::Invalid); }
-        return Result<Regex, std::lang::Error>::Ok(move value);
+        if (!__regexValid(value.opcode)) { return Result<Regex, std::core::Error>::Err(RegexError::Invalid); }
+        return Result<Regex, std::core::Error>::Ok(move value);
     }
 
-    bool fullMatch(std::lang::String text) { return __regexFullMatch(self.opcode, text); }
-    bool contains(std::lang::String text) { return __regexContains(self.opcode, text); }
-    Option<int64> find(std::lang::String text) {
+    bool fullMatch(std::core::String text) { return __regexFullMatch(self.opcode, text); }
+    bool contains(std::core::String text) { return __regexContains(self.opcode, text); }
+    Option<int64> find(std::core::String text) {
         int64 index = __regexFindByteIndex(self.opcode, text);
         if (index < 0) { return Option<int64>::None; }
         return Option<int64>::Value(index);
     }
-    std::lang::String capture(std::lang::String text, int64 group) {
+    std::core::String capture(std::core::String text, int64 group) {
         return __regexCapture(self.opcode, text, group);
     }
-    std::lang::String replaceFirst(std::lang::String text, std::lang::String replacement) {
+    std::core::String replaceFirst(std::core::String text, std::core::String replacement) {
         return __regexReplaceFirst(self.opcode, text, replacement);
     }
-    std::lang::String replaceAll(std::lang::String text, std::lang::String replacement) {
+    std::core::String replaceAll(std::core::String text, std::core::String replacement) {
         return __regexReplaceAll(self.opcode, text, replacement);
     }
 };

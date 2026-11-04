@@ -30,7 +30,7 @@ validate checks ordering, parent links, a black root, black children of red node
 
 ## String methods
 
-String is automatically available from std::lang. Transformations return independent values. Embedded zero bytes require List<uint8>. Ordinary lengths, searches and slices use UTF-8 **bytes**. Explicit Unicode operations use **code points**, not grapheme clusters, and perform no Unicode normalization.
+String is automatically available from std::core. Transformations return independent values. Embedded zero bytes require List<uint8>. Ordinary lengths, searches and slices use UTF-8 **bytes**. Explicit Unicode operations use **code points**, not grapheme clusters, and perform no Unicode normalization.
 
 | Category | Methods |
 | --- | --- |

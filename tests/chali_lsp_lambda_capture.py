@@ -14,7 +14,7 @@ def main():
         root=Path(directory);uri=(root/'main.chl').as_uri()
         text='''void main() {
     String a = "1";
-    int64 len = std::lang::len(a);
+    int64 len = std::core::len(a);
     String fn() b = fn move() { a };
     println("{} {}", a, len);
 

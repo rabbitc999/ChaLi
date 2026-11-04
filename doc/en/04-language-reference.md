@@ -25,7 +25,7 @@ about how to use it.
 | Integer literal | `42`, `0xFF`, `b1010`, `1u`, `0xffu`, `b_101u` | Lowercase `u`: unsigned, defaults to `uint64`; `-1u` is rejected |
 | Float literal | `3.14`, `1e9`, `1.5f`, `1f` | Unsuffixed: `float64`; lowercase `f`: `float32` |
 | Character literal | `'M'`, `'\n'` | type `char` |
-| String literal | `"hello"` | type `std::lang::String` |
+| String literal | `"hello"` | type `std::core::String` |
 | Boolean | `true` / `false` | |
 
 Statements end with `;`, blocks use `{ }`. Preprocessor directives start with `%` and macros with `$`;
@@ -62,7 +62,7 @@ assert(buffer.isEmpty() && buffer.capacity() == capacity);
 | Unsigned integers | `uint8` `uint16` `uint32` `uint64` |
 | Floating point | `float32` `float64` |
 | Other scalars | `bool` `char` |
-| String | `String` (i.e. `std::lang::String`) |
+| String | `String` (i.e. `std::core::String`) |
 | Big numbers / high precision | `BigInteger` `BigDecimal` |
 
 `char` holds one UTF-8 byte in the range 0–255 and shares u8 arithmetic and one-byte memory access with `uint8`.
@@ -105,7 +105,7 @@ Runnable check: [`literal_context_type.chl`](../../example/samples/literal_conte
 | `Option<T>` | maybe a value: `Value(v)` / `None` |
 | `Result<T, E>` | maybe a failure: `Ok(v)` / `Err(e)` |
 | `List<T>` `Map<K,V>` `Set<T>` | built-in containers |
-| `std::lang::Any` | type-erased box, used for runtime polymorphism |
+| `std::core::Any` | type-erased box, used for runtime polymorphism |
 
 ---
 
@@ -161,7 +161,7 @@ void log(String message) { println("{}", message); }
 - Overloading is supported: selection is by argument types.
 - Variadic trailing parameters are written `T... items`, used with `for-in` or `std::iter`.
 - `static` methods belong to the type and are called `Type::method()`.
-- The entry point is named `main`, returns `void`, and takes no parameters or `std::lang::List<std::lang::String> arguments`. Normal completion or `return;` from `void main` produces process exit code 0; panic still fails.
+- The entry point is named `main`, returns `void`, and takes no parameters or `std::core::List<std::core::String> arguments`. Normal completion or `return;` from `void main` produces process exit code 0; panic still fails.
 
 ### Multiple return values and generic tuples
 
@@ -453,8 +453,8 @@ void show(Message message) {
 int64 grade(int64 score) {
     match (score) {
         100 => { return 3; }
-        std::lang::rangeEq(90, 99) => { return 2; }
-        std::lang::rangeEq(60, 89) => { return 1; }
+        std::core::rangeEq(90, 99) => { return 2; }
+        std::core::rangeEq(60, 89) => { return 1; }
         _ => { return 0; }
     }
     return 0;
@@ -465,8 +465,8 @@ Integer and `char` range patterns use standard calls:
 
 | Spelling | Meaning |
 | --- | --- |
-| `std::lang::range<T>(a, b)` | `a <= x < b` |
-| `std::lang::rangeEq<T>(a, b)` | `a <= x <= b` |
+| `std::core::range<T>(a, b)` | `a <= x < b` |
+| `std::core::rangeEq<T>(a, b)` | `a <= x <= b` |
 
 `<T>` may be omitted when the endpoint types can be inferred. Range patterns support integers and `char`; ordered conditions on floats and String use guards. Custom values implementing `Equal<T>` can be match subjects, with branch values compared through that protocol. The subject is evaluated once and branches are tested in source order.
 
@@ -575,7 +575,7 @@ void main() {
 
 The field of `TypeB<String>` becomes `TypeA<String, TypeC>`. `TypeB<int64>` has its own layout,
 methods and static fields. A template with identical canonical arguments reuses its instance;
-`String` and `std::lang::String`, for example, do not produce duplicates. Unique imported type names and their module-qualified spellings also share an instance.
+`String` and `std::core::String`, for example, do not produce duplicates. Unique imported type names and their module-qualified spellings also share an instance.
 Further nesting and reordered parameters work with generic functions, interface constraints,
 enum payloads, containers, tuples, function values and references.
 Inside methods, `item.first`, `item = value` and `&item` follow the same layout and ownership rules as `self.item`.
@@ -703,7 +703,7 @@ void main() {
 
 `Copy<T>` declares `T copy();`, returning an independent value. For example: `struct Packet: Copy<Packet> { String text; Packet copy() { return self; } };`. Returning `self` follows existing value semantics: strings, owning fields and arrays are copied independently; reference fields remain borrowed and retain their lifetime limits. `DynamicArray<T>` implements `Copy<DynamicArray<T>>` and preserves length and capacity in the copy.
 
-Generic code may use `T duplicate<T: Copy<T>>(T const& value) { return value.copy(); }`; interface references can dispatch `copy()` too. An explicit interface declaration is required; a same-named method alone does not satisfy the constraint. This interface does not change assignment or value parameters, is not an implicit-copy eligibility marker, and does not override `#NonCopyable` or `Closeable` restrictions. `Copy<T>` and `#NonCopyable` are mutually exclusive, including inherited interfaces and host `impl` declarations. `Closeable` types receive the noncopyable flag automatically and cannot implement `Copy<T>`, even if the method would return a fresh object. Existing `Clone<T>::clone()` behavior and the supported `#derive` traits remain unchanged.
+Generic code may use `T duplicate<T: Copy<T>>(T const& value) { return value.copy(); }`; interface references can dispatch `copy()` too. An explicit interface declaration is required; a same-named method alone does not satisfy the constraint. This interface does not change assignment or value parameters, is not an implicit-copy eligibility marker, and does not override `#NonCopyable` or `Closeable` restrictions. `Copy<T>` and `#NonCopyable` are mutually exclusive, including inherited interfaces and host `impl` declarations. `Closeable` types receive the noncopyable flag automatically and cannot implement `Copy<T>`, even if the method would return a fresh object. Existing `Clone<T>::clone()` behavior remains available.
 
 ## 12. Modules and imports
 
@@ -715,7 +715,7 @@ import std::text;
 
 - A module is declared with `module name::subname;`, usually on the first line. A user file without this declaration belongs to `program`; its declarations can be referenced as `program::name`.
 - After `import`, use fully qualified names or uniquely visible short names; qualify a name explicitly when imports conflict.
-- The core module `std::lang` (`println` / `format` / `assert` / `len` / `Any` …) is loaded
+- The core module `std::core` (`println` / `format` / `assert` / `len` / `Any` …) is loaded
   automatically and needs no `import`.
 - Visibility, exports and cross-module generics: see
   [`example/samples/import_names.chl`](../../example/samples/import_names.chl).
@@ -838,9 +838,9 @@ mutable references are forbidden. Reflection follows the existing `@Reflect`
 rules and can read the object and its public fields, while excluding the internal
 `opcode` handle. Language-service suggestions exclude that internal handle.
 Strings and arrays retain their value semantics.
-`String`, `BigInteger`, `BigDecimal`, `File` and `Process` are defined by `opcode`
-declarations in `std::lang`; the frontend has no separate `Kind` enumerators for
-them. Lowercase `string` is not a type alias for `String`.
+`String`, `File` and `Process` use `opcode` declarations in `std::core`. `BigInteger` and
+`BigDecimal` use `opcode` declarations in `std::big_number`. The frontend represents
+all five with the same `Kind` enumerator. Lowercase `string` is not a type alias for `String`.
 
 ```chali
 #abi("C", "./native.dll", "c_function")
@@ -855,9 +855,9 @@ Type mapping, nullable references and glue bindings: see
 
 `unsafe { ... }` grants raw-operation permission to the current block. An `unsafe T f(...)` declaration requires an unsafe caller and cannot become a safe function value. Closure bodies do not inherit permission from their creation site. Ordinary array, reference and arithmetic checks remain active.
 
-`std::lang::RawStorage<T>` owns capacity without constructing spare elements. `RawPtr<T>` carries a typed allocation identity and index without extending lifetime. `initAt`, `takeAt`, `dropAt`, `readAt`, `borrowAt` and `relocateNonOverlapping` require unsafe permission. The public `std::lang::rawSize<T>()` needs no unsafe scope and returns the byte size of the current ChaLi value layout: `rawSize<uint8>()` is 1 and `rawSize<int64>()` is 8; aggregates use the language layout. It does not report a dynamic object's allocation size or the host C ABI `sizeof`. Direct arrays, host aliases and void are unsupported; wrap arrays in a named struct. Internal `__rawSize(T)` and `__rawAlign(T)` remain restricted to unsafe kernels. Borrowed references must not outlive their allocation or initialized element.
+`std::core::RawStorage<T>` owns capacity without constructing spare elements. `RawPtr<T>` carries a typed allocation identity and index without extending lifetime. `initAt`, `takeAt`, `dropAt`, `readAt`, `borrowAt` and `relocateNonOverlapping` require unsafe permission. The public `std::core::rawSize<T>()` needs no unsafe scope and returns the byte size of the current ChaLi value layout: `rawSize<uint8>()` is 1 and `rawSize<int64>()` is 8; aggregates use the language layout. It does not report a dynamic object's allocation size or the host C ABI `sizeof`. Direct arrays, host aliases and void are unsupported; wrap arrays in a named struct. Internal `__rawSize(T)` and `__rawAlign(T)` remain restricted to unsafe kernels. Borrowed references must not outlive their allocation or initialized element.
 
-`BarePtr<T>` stores only a logical byte address, without runtime element-type or initialization checks. `p + n`, `n + p` and `p - n` use the static element stride; `p - q` returns an integral element distance. `barePointer`, `pointerFromAddress`, `dereference`, `memcpy` and `memset` require unsafe scope. Byte copy/fill lengths count bytes; complete-range and allocation-lifetime checks remain, with no initialization-bit changes or resource hooks. Nonempty copies must not overlap. These names belong to the implicit `std::lang` core and may be used without qualification. See [Raw storage and C ABI directives](41-unsafe-abi.md) and [book chapter 25](../book/en/25-unsafe.md).
+`BarePtr<T>` stores only a logical byte address, without runtime element-type or initialization checks. `p + n`, `n + p` and `p - n` use the static element stride; `p - q` returns an integral element distance. `barePointer`, `pointerFromAddress`, `dereference`, `memcpy` and `memset` require unsafe scope. Byte copy/fill lengths count bytes; complete-range and allocation-lifetime checks remain, with no initialization-bit changes or resource hooks. Nonempty copies must not overlap. These names belong to the implicit `std::core` core and may be used without qualification. See [Raw storage and C ABI directives](41-unsafe-abi.md) and [book chapter 25](../book/en/25-unsafe.md).
 
 ---
 
@@ -968,9 +968,9 @@ support fields with concrete function signatures. Generic declarations such as `
 
 ## Ranges and the advancement protocol
 
-`for (let item in source)`, `for (item in source)` and explicitly typed bindings share the iteration protocol. `std::lang::range(a, b)` excludes the upper endpoint; `std::lang::rangeEq(a, b)` includes both endpoints. Either call accepts an explicit `<T>`.
+`for (let item in source)`, `for (item in source)` and explicitly typed bindings share the iteration protocol. `std::core::range(a, b)` excludes the upper endpoint; `std::core::rangeEq(a, b)` includes both endpoints. Either call accepts an explicit `<T>`.
 
-The eight fixed-width integer types and `char` support direct range calculations. `for (uint8 x in std::lang::rangeEq<uint8>(0, 255)) { ... }` yields 256 items; `range<uint8>` yields 255. Bounds are evaluated once each, from left to right, and both must fit T, including an exclusive upper endpoint. Foldable integer violations are rejected at compile time; dynamic endpoints are checked before iteration. Reversed ranges are errors. `range(a, a)` is empty; `rangeEq(a, a)` yields one item. A closed maximum endpoint terminates without calculating maximum plus one.
+The eight fixed-width integer types and `char` support direct range calculations. `for (uint8 x in std::core::rangeEq<uint8>(0, 255)) { ... }` yields 256 items; `range<uint8>` yields 255. Bounds are evaluated once each, from left to right, and both must fit T, including an exclusive upper endpoint. Foldable integer violations are rejected at compile time; dynamic endpoints are checked before iteration. Reversed ranges are errors. `range(a, a)` is empty; `rangeEq(a, a)` yields one item. A closed maximum endpoint terminates without calculating maximum plus one.
 
 Other value types implement `NextValue<T>`, whose method is `Option<T> nextValue(T end, bool inclusive)`. A range independently owns its starting cursor and endpoint. Each step calls the method on the cursor; the implementation yields the next item, advances its receiver state and detects termination by returning None. Custom advancement supports iteration; match range patterns remain restricted to integers and char.
 
@@ -981,7 +981,7 @@ For-in and while can produce values in initializers, assignments, arguments and 
 ```chali
 void main()
 {
-    int64 first = for (let value in std::lang::range(1, 8))
+    int64 first = for (let value in std::core::range(1, 8))
     {
         if (value % 2 == 0)
         {
@@ -996,31 +996,26 @@ void main()
 
 All reachable results are checked against the receiving type. String, arrays and copyable aggregates keep value semantics. Noncopyable opcode results transfer ownership through newly created values or explicit move. The result is saved before loop-local resources are destroyed.
 
-## Breaking out of nested loops
+## Disabling naming checks in a source file
 
-`break level N;` counts from the current loop and exits the Nth enclosing loop, resuming after that loop. `break level 1;` is equivalent to `break;`. `break all;` exits every enclosing loop in the current function and resumes after the outermost loop; `break level all;` is equivalent. `level` and `all` are recognized only in this position, so `all` remains available as an ordinary variable name.
+Write `#NoNamingCheck` on its own line. A trailing line comment is allowed. This disables naming warnings for types, functions, methods and modules in that file. Imported files and other warning rules are handled separately.
 
-Only `loop`, `while` and `for-in` count. Ordinary blocks, value blocks, `if` and `match` do not count. N must be a positive decimal integer literal, not a variable or expression. Zero, negative numbers, excessive depths and use outside a loop are rejected. Exits cannot cross function or `fn` boundaries. These forms carry no result; targeting a loop expression that requires a value is rejected. Use `yield value;` to supply a result.
+## Named loop exits
+
+Use `break;` to exit the nearest loop. Prefix a `while`, `for-in`, or statement `loop` with a label, then use `break label;` to exit it. A label is visible inside its loop body and cannot cross a function boundary. Unknown labels and duplicate active labels are errors. When leaving scopes, deferred actions and resource cleanup run from inner to outer. Use `yield value;` when an expression needs a result.
 
 ```chali
-loop {
-    while (true) {
-        {
-            int64 i = 0;
-            while (i < 10) {
-
-            if (i == 3) { break level 2; }
-
-                i++;
-            }
-        }
+void main() {
+    outer: while (true) {
+        loop { break outer; };
     }
-    // The for and while loops have ended; execution is still inside loop.
-    break all;
-};
+    println("done");
+}
 ```
 
-Scope cleanup runs from inner to outer scopes, including `defer`, `scope(exit)` and resource cleanup. Statements and update expressions bypassed by the exit do not run. See the [nested-loop exit example](../../example/samples/break_level.chl).
+```text
+done
+```
 
 ## Block expressions and interpolated output
 
@@ -1128,15 +1123,15 @@ Struct `{}` formatting reuses the no-argument method; styled overloads retain th
 
 ## Returning control expressions
 
-`return { ... yield value; };`, `return if ...;`, `return match ...;` and `return loop ...;` receive the value in a hidden slot before cleanup and return. All result branches require identical types. Direct owned locals, including const bindings, move on yield; outer variables copy. Nested return, break level / break all, escaping local references and deferred cleanup that still borrows the moved source are rejected. These special return rules extend ordinary value exits. See [declarations and return expressions](29-declaration-sugars.md).
+`return { ... yield value; };`, `return if ...;`, `return match ...;` and `return loop ...;` receive the value in a hidden slot before cleanup and return. All result branches require identical types. Direct owned locals, including const bindings, move on yield; outer variables copy. Nested return, named loop exits, escaping local references and deferred cleanup that still borrows the moved source are rejected. These special return rules extend ordinary value exits. See [declarations and return expressions](29-declaration-sugars.md).
 
 ## Named function declarations
 
 Statements accept `int64 add(int64 x) { return x + 1; }` and a local function binding prototype `int64 callback(int64 x);`. The declared result anchors checking. Captures default to const&, with explicit mut, copy or move before the body. Capture state moves into the binding; borrowed captures cannot outlive their sources. This syntax is absent from expression productions. See [named function rules](29-declaration-sugars.md).
 
-## Field derivation
+## Interfaces generated by member macros
 
-`#derive(Equal, Hash, Clone)` before a struct or enum generates restricted field/payload methods. `#derive(Trait)` can select a same-module interface and `$macro Trait<T>() -> member` pair; qualified names select imported definitions. Matching methods become public, helpers remain hygienic, layout fields cannot be generated, and existing same-signature methods are not overwritten. Nested fields must satisfy the requested protocols. Drop and Closeable derivation is forbidden. Generic owners expand per concrete instance, retaining normal type, borrow and resource checks. See [derivation rules](29-declaration-sugars.md).
+A `-> member` macro can add an interface to its host struct or enum with `$implement Interface;`. The interface can use the macro’s concrete type arguments, and the ordinary interface checker validates the generated methods. See [declaration macros](29-declaration-sugars.md).
 
 ## Lifetime contracts `#borrow` / `#static`
 

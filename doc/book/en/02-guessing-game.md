@@ -82,16 +82,21 @@ A counter must remember previous rounds, so declare it outside the loop, increme
 
 This first version assumes valid integer input. Chapter 14 handles invalid input and end-of-input as errors rather than incorrect guesses. For now, test all three normal paths.
 
-## 2.5 Exercises
+### Isolate the hint branch
 
-1. What happens if the first input is 42?
-2. Add and print a guess counter.
-3. Replace elif with else if and repeat the inputs.
-4. Why does removing break prevent termination after a correct guess?
+Fix the target and guess to check the comparison.
 
-### Answers and checks
+<!-- verify-book -->
+```chali
+void main() {
+    int64 target = 7;
+    int64 guess = 5;
+    if (guess < target) {
+        println("too low");
+    }
+}
+```
 
-1. It prints found and exits the loop.
-2. Initialize to zero outside the loop and increment after each read; the sample needs three guesses.
-3. The output remains small, large, found.
-4. The loop condition remains true and its explicit exit has been removed.
+```text
+too low
+```

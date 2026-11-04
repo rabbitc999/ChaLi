@@ -346,7 +346,7 @@ private:
         std::ifstream in(path, std::ios::binary);
         std::uint64_t magic = 0, signature = 0, count = 0;
         Memory::String storedSource;
-        if (!readNumber(in, magic) || magic != 0x4d43554e49543031ull || !readNumber(in, signature) || signature != signature_ || !readString(in, storedSource) || storedSource != source || !readStrings(in, result.dependencies)) return false;
+        if (!readNumber(in, magic) || magic != 0x4d43554e49543032ull || !readNumber(in, signature) || signature != signature_ || !readString(in, storedSource) || storedSource != source || !readStrings(in, result.dependencies)) return false;
         bool sourceListed = false;
         for (const auto &dependency : result.dependencies)
             if (canonical(dependency) == source) sourceListed = true;
@@ -372,7 +372,8 @@ private:
             origin.line = static_cast<std::size_t>(line);
         }
         std::uint64_t checksum = 0;
-        return readNumber(in, checksum) && checksum == inputHash(result, signature_);
+        return readStrings(in, result.namingSuppressedFiles) && readNumber(in, checksum)
+            && checksum == inputHash(result, signature_);
     }
 
     void writeUnit(const fs::path &path, const Memory::String &source,
@@ -387,7 +388,7 @@ private:
             hashes.push_back(hash);
         }
         replaceCacheFile(path, [&](std::ostream &out) {
-            writeNumber(out, 0x4d43554e49543031ull);
+            writeNumber(out, 0x4d43554e49543032ull);
             writeNumber(out, signature_);
             writeString(out, source);
             writeStrings(out, result.dependencies);
@@ -401,6 +402,7 @@ private:
                 writeString(out, origin.file);
                 writeNumber(out, origin.line);
             }
+            writeStrings(out, result.namingSuppressedFiles);
             writeNumber(out, inputHash(result, signature_));
         });
     }
@@ -434,6 +436,7 @@ inline std::uint64_t inputHash(const preprocess::Result &result, std::uint64_t s
         hash = hashBytes(Memory::toString(origin.line), hash);
     }
     for (const auto &dependency : result.dependencies) hash = hashBytes(dependency, hash);
+    for (const auto &file : result.namingSuppressedFiles) hash = hashBytes(file, hash);
     return hash;
 }
 

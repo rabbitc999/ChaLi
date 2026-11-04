@@ -203,7 +203,7 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
                     return true;
                 }
                 auto packet = Memory::makeShared<TransferPacket>();
-                packet->type = "std::lang::String";
+                packet->type = "std::core::String";
                 packet->value.isText = true;
                 packet->value.text = std::move(message);
                 const auto receiver = found->second;
@@ -261,7 +261,7 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
                     fail("线程接收消息形成死锁");
                     return true;
                 }
-                if (self->inbox.front()->type != "std::lang::String")
+                if (self->inbox.front()->type != "std::core::String")
                 {
                     fail("线程消息类型不匹配：期望 string，收到 " + self->inbox.front()->type);
                     return true;

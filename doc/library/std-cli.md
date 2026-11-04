@@ -69,24 +69,24 @@ CLI options, defaults and validation OK
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-7"></a>`struct CliError : Error` | 参数错误保留原始参数及可供用户阅读的原因。 |
-| CliError | <a id="symbol-8"></a>`String argument` | 导致错误的命令行实参。 |
-| CliError | <a id="symbol-9"></a>`String message` | 供用户阅读的错误原因。 |
-| 模块 | <a id="symbol-10"></a>`struct CliOption` | 一个选项；shortName 为零时没有短名称，takesValue=false 表示布尔开关。 |
-| CliOption | <a id="symbol-11"></a>`String name` | 声明或选项的名称。 |
-| CliOption | <a id="symbol-12"></a>`char shortName` | 单字符短选项名称。 |
-| CliOption | <a id="symbol-13"></a>`bool takesValue` | 选项是否需要附加值。 |
-| CliOption | <a id="symbol-14"></a>`bool required` | 是否要求调用方显式提供该选项。 |
-| CliOption | <a id="symbol-15"></a>`String defaultValue` | 没有显式提供值时使用的默认值。 |
-| CliOption | <a id="symbol-16"></a>`String description` | 用于帮助或展示的说明文本。 |
-| 模块 | <a id="symbol-17"></a>`struct CliArguments` | 解析结果；选项使用长名称作为键，位置参数保持输入顺序。 |
-| CliArguments | <a id="symbol-18"></a>`Map<String,String> options` | 已解析的选项名称与值。 |
-| CliArguments | <a id="symbol-19"></a>`List<String> positional` | 按输入顺序保存的位置实参。 |
-| CliArguments | <a id="symbol-20"></a>`bool helpRequested` | 输入是否请求显示帮助。 |
-| 模块 | <a id="symbol-21"></a>`struct CliParser` | 命令行选项定义与解析器；不调用 exit、不打印帮助，由应用决定交互行为。 |
-| CliParser | <a id="symbol-22"></a>`String program` | 帮助文本中显示的程序名称。 |
-| CliParser | <a id="symbol-23"></a>`String description` | 用于帮助或展示的说明文本。 |
-| CliParser | <a id="symbol-24"></a>`List<CliOption> definitions` | 解析器登记的选项定义。 |
+| 模块 | <a id="symbol-9"></a>`struct CliError : Error` | 参数错误保留原始参数及可供用户阅读的原因。 |
+| CliError | <a id="symbol-10"></a>`String argument` | 导致错误的命令行实参。 |
+| CliError | <a id="symbol-11"></a>`String message` | 供用户阅读的错误原因。 |
+| 模块 | <a id="symbol-12"></a>`struct CliOption` | 一个选项；shortName 为零时没有短名称，takesValue=false 表示布尔开关。 |
+| CliOption | <a id="symbol-13"></a>`String name` | 声明或选项的名称。 |
+| CliOption | <a id="symbol-14"></a>`char shortName` | 单字符短选项名称。 |
+| CliOption | <a id="symbol-15"></a>`bool takesValue` | 选项是否需要附加值。 |
+| CliOption | <a id="symbol-16"></a>`bool required` | 是否要求调用方显式提供该选项。 |
+| CliOption | <a id="symbol-17"></a>`String defaultValue` | 没有显式提供值时使用的默认值。 |
+| CliOption | <a id="symbol-18"></a>`String description` | 用于帮助或展示的说明文本。 |
+| 模块 | <a id="symbol-19"></a>`struct CliArguments` | 解析结果；选项使用长名称作为键，位置参数保持输入顺序。 |
+| CliArguments | <a id="symbol-20"></a>`Map<String,String> options` | 已解析的选项名称与值。 |
+| CliArguments | <a id="symbol-21"></a>`List<String> positional` | 按输入顺序保存的位置实参。 |
+| CliArguments | <a id="symbol-22"></a>`bool helpRequested` | 输入是否请求显示帮助。 |
+| 模块 | <a id="symbol-23"></a>`struct CliParser` | 命令行选项定义与解析器；不调用 exit、不打印帮助，由应用决定交互行为。 |
+| CliParser | <a id="symbol-24"></a>`String program` | 帮助文本中显示的程序名称。 |
+| CliParser | <a id="symbol-25"></a>`String description` | 用于帮助或展示的说明文本。 |
+| CliParser | <a id="symbol-26"></a>`List<CliOption> definitions` | 解析器登记的选项定义。 |
 
 ## 函数索引
 
@@ -94,12 +94,12 @@ CLI options, defaults and validation OK
 | --- | --- |
 | [CliError::toString](#api-0) | `String toString()` |
 | [CliArguments::get](#api-1) | `Option<String> get(String name)` |
-| [CliArguments::getInt](#api-2) | `Result<int64,std::lang::Error> getInt(String name)` |
+| [CliArguments::getInt](#api-2) | `Result<int64,std::core::Error> getInt(String name)` |
 | [cliError](#api-3) | `CliError cliError(String argument, String message)` |
 | [cliTail](#api-4) | `String cliTail(String text,int64 start)` |
 | [CliParser::add](#api-5) | `bool add(CliOption option)` |
 | [CliParser::help](#api-6) | `String help()` |
-| [CliParser::parse](#api-7) | `Result<CliArguments,std::lang::Error> parse(List<String> arguments)` |
+| [CliParser::parse](#api-7) | `Result<CliArguments,std::core::Error> parse(List<String> arguments)` |
 
 <a id="api-0"></a>
 
@@ -186,7 +186,7 @@ obj.get(name);
 **声明**
 
 ```chali
-Result<int64,std::lang::Error> getInt(String name);
+Result<int64,std::core::Error> getInt(String name);
 ```
 
 **行为**
@@ -201,7 +201,7 @@ Result<int64,std::lang::Error> getInt(String name);
 
 **返回值**
 
-`Result<int64,std::lang::Error>`。严格转换整数参数，失败返回带参数名的错误。
+`Result<int64,std::core::Error>`。严格转换整数参数，失败返回带参数名的错误。
 
 **错误与边界**
 
@@ -378,7 +378,7 @@ obj.help();
 **声明**
 
 ```chali
-Result<CliArguments,std::lang::Error> parse(List<String> arguments);
+Result<CliArguments,std::core::Error> parse(List<String> arguments);
 ```
 
 **行为**
@@ -393,7 +393,7 @@ Result<CliArguments,std::lang::Error> parse(List<String> arguments);
 
 **返回值**
 
-`Result<CliArguments,std::lang::Error>`。解析长选项、短选项组合、附着值与 --；重复选项采用最后一次的值。
+`Result<CliArguments,std::core::Error>`。解析长选项、短选项组合、附着值与 --；重复选项采用最后一次的值。
 
 **错误与边界**
 

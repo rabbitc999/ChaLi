@@ -834,13 +834,13 @@ int main(int argc, char **argv)
                 function(&invocation);
                 return invocation.result;
             };
-            const auto original = call("std::linalg::__std_scalarNew", {});
+            const auto original = call("std::linear_algebra::__std_scalarNew", {});
             assert(original && !runtime.status);
             auto *storage = static_cast<scalar_buffer::Storage *>(
-                chali_abi_record_probe(&frame, original, "std::linalg::ScalarStorage"));
+                chali_abi_record_probe(&frame, original, "std::linear_algebra::ScalarStorage"));
             assert(storage && sizeof(scalar_buffer::Slot) < sizeof(NativeValue));
-            call("std::linalg::__std_scalarPush__int64", { original, INT64_MIN });
-            assert(!runtime.status && call("std::linalg::__std_scalarAt__int64", { original, 0 }) == INT64_MIN);
+            call("std::linear_algebra::__std_scalarPush__int64", { original, INT64_MIN });
+            assert(!runtime.status && call("std::linear_algebra::__std_scalarAt__int64", { original, 0 }) == INT64_MIN);
             NativeCallContextImpl host(context, &invoker);
             const auto copy = host.cloneNativeRecord(original);
             assert(copy && !runtime.status);
@@ -849,27 +849,27 @@ int main(int argc, char **argv)
             assert(captureTransferObject(context, original, packet, active));
             const auto capacity = storage->values.capacity();
             const auto data = storage->values.data();
-            call("std::linalg::__std_scalarClear", { original });
+            call("std::linear_algebra::__std_scalarClear", { original });
             assert(!runtime.status && storage->values.empty() && storage->values.capacity() == capacity && storage->values.data() == data);
-            assert(call("std::linalg::__std_scalarAt__int64", { copy, 0 }) == INT64_MIN);
+            assert(call("std::linear_algebra::__std_scalarAt__int64", { copy, 0 }) == INT64_MIN);
             assert(chali_abi_record_release(&frame, original));
             Memory::Vector<std::int64_t> created;
             int64_t restored = 0;
             assert(restoreTransferObject(context, packet, original, active, created, &restored));
-            assert(call("std::linalg::__std_scalarAt__int64", { restored, 0 }) == INT64_MIN);
-            call("std::linalg::__std_scalarSet__int64", { copy, -1, 4 });
+            assert(call("std::linear_algebra::__std_scalarAt__int64", { restored, 0 }) == INT64_MIN);
+            call("std::linear_algebra::__std_scalarSet__int64", { copy, -1, 4 });
             assert(runtime.status);
             reset();
-            assert(call("std::linalg::__std_scalarAt__int64", { copy, 0 }) == INT64_MIN);
+            assert(call("std::linear_algebra::__std_scalarAt__int64", { copy, 0 }) == INT64_MIN);
             assert(chali_abi_record_release(&frame, copy) && chali_abi_record_release(&frame, restored));
-            call("std::linalg::__std_scalarDrop", { original });
-            call("std::linalg::__std_scalarDrop", { 0 });
+            call("std::linear_algebra::__std_scalarDrop", { original });
+            call("std::linear_algebra::__std_scalarDrop", { 0 });
             assert(!runtime.status);
             int failures = 0;
             for (int point = 0; point < 32; ++point)
             {
                 arena.remaining = point;
-                const auto attempted = call("std::linalg::__std_scalarCopy", { 0 });
+                const auto attempted = call("std::linear_algebra::__std_scalarCopy", { 0 });
                 arena.remaining = -1;
                 if (attempted)
                 {
@@ -881,12 +881,12 @@ int main(int argc, char **argv)
                 reset();
             }
             assert(failures >= 2);
-            const auto empty = call("std::linalg::__std_scalarNew", {});
+            const auto empty = call("std::linear_algebra::__std_scalarNew", {});
             auto *emptyStorage = static_cast<scalar_buffer::Storage *>(
-                chali_abi_record_probe(&frame, empty, "std::linalg::ScalarStorage"));
+                chali_abi_record_probe(&frame, empty, "std::linear_algebra::ScalarStorage"));
             assert(emptyStorage && emptyStorage->values.capacity() == 0);
             arena.remaining = 0;
-            call("std::linalg::__std_scalarPush__int64", { empty, 42 });
+            call("std::linear_algebra::__std_scalarPush__int64", { empty, 42 });
             arena.remaining = -1;
             assert(runtime.status && emptyStorage->values.empty() && emptyStorage->values.capacity() == 0);
             reset();
@@ -918,9 +918,9 @@ int main(int argc, char **argv)
             };
             const auto input = chali_abi_temporary(&frame, 24);
             const auto output = chali_abi_temporary(&frame, 72);
-            const auto values = call("std::linalg::__std_scalarNew", {});
+            const auto values = call("std::linear_algebra::__std_scalarNew", {});
             assert(input && output && values);
-            for (auto value : {1, 0, 0, 1}) call("std::linalg::__std_scalarPush__int64", {values, value});
+            for (auto value : {1, 0, 0, 1}) call("std::linear_algebra::__std_scalarPush__int64", {values, value});
             put(input, 2); put(input + 8, 2); put(input + 16, values);
             int failures = 0;
             bool partialResult = false;
@@ -928,7 +928,7 @@ int main(int argc, char **argv)
             {
                 for (int slot = 0; slot < 9; ++slot) put(output + slot * 8, 0);
                 arena.remaining = point;
-                call("std::linalg::__luDecomposeInto", {input, output});
+                call("std::linear_algebra::__luDecomposeInto", {input, output});
                 arena.remaining = -1;
                 const bool failed = runtime.status != 0;
                 int owned = 0;
@@ -945,7 +945,7 @@ int main(int argc, char **argv)
             }
             assert(failures >= 3 && partialResult);
             put(input, 3);
-            call("std::linalg::__svdInto", {input, output});
+            call("std::linear_algebra::__svdInto", {input, output});
             assert(runtime.status && context.error.find("矩阵存储长度与维度不匹配") != Memory::String::npos);
             reset();
             assert(chali_abi_record_release(&frame, values));

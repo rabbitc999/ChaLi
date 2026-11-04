@@ -115,7 +115,6 @@ struct MBorrowFlowBuilder
     const MBorrowFlowCapture &capture;
     chali_borrow_checker::FlowGraph graph;
     mutable Memory::Map<Memory::String, MBorrowOrigins> summaries;
-    Memory::Vector<std::size_t> loopStops;                       ///< 按词法嵌套登记循环出口，供层级退出选择。
     Memory::Vector<std::size_t> valueStops;                      ///< 值表达式出口独立于普通循环出口，带值退出可穿透循环。
     Memory::Vector<std::pair<int, std::size_t>> controlStops;    ///< 解析后出口身份与当前图中的后继。
     Memory::Vector<std::pair<int, std::size_t>> controlRepeats;  ///< 解析后循环身份与当前图中的下一轮入口。
@@ -497,13 +496,25 @@ struct MBorrowFlowBuilder
                     next = branch;
                 }
             }
-            // 普通函数的引用返回值保守关联到所有引用实参，不猜测不透明方法的内部字段。
+            // 普通函数默认关联所有引用实参，显式契约限定来源集合。
             if (reference(id) && callee.kind != MNode::Member && callee.kind != MNode::Arrow && methodOrigins(id).empty())
             {
                 Memory::Vector<std::size_t> choices;
-                for (const int argument : arguments)
+                const Memory::Vector<int> *sources = nullptr;
+                if (const auto call = capture.calls.find(id); call != capture.calls.end())
+                    if (const auto signature = g_funcs.find(call->second); signature != g_funcs.end())
+                    {
+                        const auto &params = signature->second.params;
+                        const auto count = !params.empty() && params.back().variadic ? arguments.size() : params.size();
+                        sources = LifetimeRetParams(call->second, count);
+                    }
+                for (std::size_t index = 0; index < arguments.size(); ++index)
+                {
+                    if (sources && std::find(sources->begin(), sources->end(), static_cast<int>(index)) == sources->end()) continue;
+                    const int argument = arguments[index];
                     if (reference(argument) && !place(argument).root.empty())
                         choices.push_back(add(MBorrowFlowNode::Bind, place(id, true), place(argument), next, id));
+                }
                 if (!choices.empty())
                 {
                     const auto branch = add(MBorrowFlowNode::Nop, {}, {}, static_cast<std::size_t>(-1), id);
@@ -667,13 +678,11 @@ struct MBorrowFlowBuilder
                                                                                                  node.kids[1];
             const bool ownValue = capture.valueLoops.count(id) != 0u;
             if (ownValue) valueStops.push_back(next);
-            loopStops.push_back(next);
             controlStops.push_back({ id, next });
             controlRepeats.push_back({ id, update });
             auto bodyEntry = statement(body, update, next, update);
             controlRepeats.pop_back();
             controlStops.pop_back();
-            loopStops.pop_back();
             if (ownValue) valueStops.pop_back();
             const auto iteration = capture.foreachBindings.find(id);
             if (iteration != capture.foreachBindings.end())
@@ -712,8 +721,6 @@ struct MBorrowFlowBuilder
                         return node.kids.empty() ? target->second : expression(node.kids[0], target->second);
                 return Fail("借用控制流缺少已解析的退出目标"), next;
             }
-            if (node.i < 0 && !loopStops.empty()) return loopStops.front();
-            if (node.i > 0 && static_cast<unsigned long long>(node.i) <= loopStops.size()) return loopStops[loopStops.size() - node.i];
             return node.kids.empty() ? stop : expression(node.kids[0], valueStops.empty() ? stop : valueStops.back());
         }
         if (node.kind == MNode::Continue)

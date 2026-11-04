@@ -1,1 +1,1 @@
-void main() { std::lang::List<int64> value; std::lang::List<int64> const& ref = &value; ref.pop(); }
+void main() { std::core::List<int64> value; std::core::List<int64> const& ref = &value; ref.pop(); }

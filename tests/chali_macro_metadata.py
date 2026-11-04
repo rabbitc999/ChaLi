@@ -45,7 +45,7 @@ struct Basics{int8 a;uint8 b;int16 c;uint16 d;int32 e;uint32 f;int64 g;uint64 h;
 struct Other{List<int32> n;Map<String,int16> o;Set<uint64> p;}
 void main(){
 assert($fields<Basics>().count==16);
-""" + ''.join(f'assert(($fields<Basics>())[{index}].type.name=="{name}");\n' for index,name in enumerate(['int8','uint8','int16','uint16','int32','uint32','int64','uint64','float32','float64','bool','char','std::lang::String'])) + """
+""" + ''.join(f'assert(($fields<Basics>())[{index}].type.name=="{name}");\n' for index,name in enumerate(['int8','uint8','int16','uint16','int32','uint32','int64','uint64','float32','float64','bool','char','std::core::String'])) + """
 assert(($fields<Basics>())[13].type.id!=($fields<Other>())[0].type.id);
 assert(($fields<Basics>())[14].type.id!=($fields<Other>())[1].type.id);
 assert(($fields<Basics>())[15].type.id!=($fields<Other>())[2].type.id);
@@ -55,7 +55,7 @@ assert(($fields<Basics>())[15].type.id!=($fields<Other>())[2].type.id);
 void main(){
 assert($fields<Holder<int16>>().count==2);
 assert(($fields<Holder<int16>>())[0].type.name=="int16");
-assert(($fields<Holder<String>>())[0].type.name=="std::lang::String");
+assert(($fields<Holder<String>>())[0].type.name=="std::core::String");
 assert(($fields<Holder<Inner>>())[0].type.fields[0].name=="code");
 assert($fields<Holder<int16>>().id!=$fields<Holder<int32>>().id);
 }

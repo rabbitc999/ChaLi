@@ -1,0 +1,13 @@
+import std::log;
+import std::json;
+void main() {
+    Map<String,String> fields;
+    fields.put("component","解析");
+    String message = "path \\ \"quoted\"\n";
+    let line = std::log::format_record(std::log::LogLevel::Info,message,fields);
+    let record = std::json::parse(line).unwrap();
+    assert(record.find("level").unwrap().asString().unwrap() == "info");
+    assert(record.find("message").unwrap().asString().unwrap() == message);
+    assert(record.find("fields").unwrap().find("component").unwrap().asString().unwrap() == "解析");
+    println("structured log OK");
+}

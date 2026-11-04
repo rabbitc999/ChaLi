@@ -76,6 +76,24 @@ A returned reference needs a source that survives the call. Local references can
 
 CHL1204 reports source and use paths. Typical fixes return an owning value, use caller-owned storage or shorten a borrow. Raw address casts do not repair lifetime errors.
 
+### Counterexample: returning a local borrow
+
+The local storage ends when the function returns, leaving the reference without its source. The diagnostic excerpt below uses the compiler’s Chinese language setting.
+
+<!-- verify-book-error: check -->
+```chali
+int64 const& bad() {
+    int64 local = 7;
+    return &local;
+}
+void main() {
+}
+```
+
+```text
+[CHL1204] 返回值中的引用不能超过局部来源的生命周期
+```
+
 ## 8.5 Choose a parameter form
 
 Small copyable values can be passed by value. Use a reference when accessing an existing object and make mutation explicit. An owning return transfers a value to the caller; a reference return continues borrowing a source. Chapter 8 connects this distinction with cleanup.
@@ -85,19 +103,5 @@ Small copyable values can be passed by value. Use a reference when accessing an 
 Trace each reference from use back to its source, checking writability, lifetime and any move or release. Ordinary references need sources; Option expresses absence instead of an uninitialized reference.
 
 The language permits alias relationships without permitting every overlapping access. Interpret diagnostics through the actual access and source path rather than importing another language's global exclusivity model. Next, connect these sources to cleanup on exit.
-
-## 8.6 Exercises
-
-1. Change increment to a value parameter.
-2. Can const storage be passed as mut&?
-3. How is an optional reference represented?
-4. Why cannot a local reference escape?
-
-### Answers and checks
-
-1. Score is not changed by mutation of the copy.
-2. No; change the interface or provide writable storage.
-3. Use an Option reference type and handle None.
-4. The local source ends when the function returns.
 
 Next: [Chapter 9](09-resources-scopes.md).

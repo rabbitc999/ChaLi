@@ -415,6 +415,7 @@ std::vector<CompletionItem> McDocument::completion(Position) const
         { "$elif", "keyword", "依次选择尚未匹配的编译期条件分支", "$elif condition" },
         { "$else_if", "keyword", "$elif 的等价写法", "$else_if condition" },
         { "$end_if", "keyword", "结束编译期条件", "$end_if" },
+        { "$implement", "keyword", "成员宏为宿主自动登记接口", "$implement Interface;" },
         { "$fields", "function", "具体结构体的编译期字段集合", "$fields<T>()" },
         { "$variants", "function", "具体枚举的编译期变体与载荷集合", "$variants<T>()" },
         { "$methods", "function", "具体类型的编译期方法签名集合", "$methods<T>()" },

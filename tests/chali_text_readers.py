@@ -39,7 +39,7 @@ def main():
         code = 'import std::io;\nvoid main(){\n FileStream exact=FileStream::open("exact.txt","rb").take();\n assert(exact.readAllString(4).unwrap()=="abcd");exact.close();\n FileStream short=FileStream::open("exact.txt","rb").take();assert(short.readAllString(3).isErr());short.close();\n FileStream zero=FileStream::open("raw.bin","rb").take();assert(zero.readString(5).isErr());zero.close();\n FileStream zeroLine=FileStream::open("raw.bin","rb").take();assert(zeroLine.readLine().isErr());zeroLine.close();\n FileStream bad=FileStream::open("exact.txt","rb").take();assert(bad.readString(-1).isErr());bad.close();assert(bad.readLine().isErr());\n return;\n}'
         result = run(code)
         assert result.returncode == 0, result.stderr
-        result = subprocess.run([str(COMPILER), 'man', 'api', '--json', 'std::lang::readLines'], capture_output=True, encoding='utf-8')
+        result = subprocess.run([str(COMPILER), 'man', 'api', '--json', 'std::core::readLines'], capture_output=True, encoding='utf-8')
         item = json.loads(result.stdout)['symbols'][0]
         assert item['parameters'][0]['name'] == 'N' and '非负' in item['parameters'][0]['documentation'], item
 if __name__ == '__main__':

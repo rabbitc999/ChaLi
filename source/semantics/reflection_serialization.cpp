@@ -45,7 +45,7 @@ struct MReflectionSerialization
      */
     bool exposed(const std::shared_ptr<MType> &type)
     {
-        if (HasJsonDerivation(type->name)) return true;
+        if (ImplementsJsonModel(type->name)) return true;
         const auto separator = type->name.rfind("::");
         const auto name = separator == Memory::String::npos ? type->name : type->name.substr(separator + 2);
         if (name.rfind("Option__", 0) == 0 || name.rfind("Result__", 0) == 0 || IsTupleType(type)) return true;
@@ -143,7 +143,7 @@ struct MReflectionSerialization
             {
                 encode = "match(value){";
                 decode = "if(!node.isObject() || node.find(\"$variant\").isNone() || node.find(\"$values\").isNone()){" + decodeError("需要枚举变体对象") + "}let variantNode=node.find(\"$variant\").unwrap();let parts=node.find(\"$values\").unwrap();if(!variantNode.isString() || !parts.isArray()){" + decodeError("无效枚举变体") + "}String variant=variantNode.asString().unwrap();";
-                if (HasJsonDerivation(type->name))
+                if (ImplementsJsonModel(type->name))
                     decode += "if(node.len()!=2){" + decodeError("枚举对象仅允许 $variant 与 $values") + "}";
                 for (const auto &variant : enumeration->second.variants)
                 {
@@ -186,17 +186,17 @@ struct MReflectionSerialization
                 decode = "if(!node.isObject()){" + decodeError("需要结构体对象") + "}";
                 bool first = true;
                 const auto *definition = FindStruct(type->name);
-                if (definition && HasJsonDerivation(type->name))
+                if (definition && ImplementsJsonModel(type->name))
                 {
                     Memory::String known = "false";
                     for (const auto &field : definition->fields)
-                        known += " || jsonKey==" + queries.quote(DerivedJsonFieldFor(metadata, type->name, field.name).name);
+                        known += " || jsonKey==" + queries.quote(JsonFieldFor(metadata, type->name, field.name).name);
                     decode += "int64 jsonIndex=0;while(jsonIndex<node.len()){if(node.keyAt(jsonIndex).isNone()){" + decodeError("对象键无法表示为 String") + "}String jsonKey=node.keyAt(jsonIndex).unwrap();if(!(" + known + ")){error=\"未知字段：\"+jsonKey;return false;}jsonIndex=jsonIndex+1;}";
                 }
                 if (definition)
                     for (const auto &field : definition->fields)
                     {
-                        const auto rule = DerivedJsonFieldFor(metadata, type->name, field.name);
+                        const auto rule = JsonFieldFor(metadata, type->name, field.name);
                         if (rule.skip) continue;
                         const auto child = ensure(field.type), fieldName = queries.quote(rule.name);
                         if (!first) encode += "output=output+\",\";";
@@ -244,11 +244,11 @@ struct MReflectionSerialization
                 const auto helper = g_reflectionEnabled ? ensure(type) : Memory::String{}, result = InferenceTypeText(decl.signature.result);
                 entries += result + " " + decl.source + "(" + InferenceTypeText(decl.signature.params.front().type) + " " + decl.signature.params.front().source + "){String error;";
                 if (!g_reflectionEnabled)
-                    entries += "std::lang::panic(\"编译器未启用反射支持\");return " + result + "::Err(std::lang::MessageError::from(\"编译器未启用反射支持\"));}\n";
+                    entries += "std::core::panic(\"编译器未启用反射支持\");return " + result + "::Err(std::core::MessageError::from(\"编译器未启用反射支持\"));}\n";
                 else if (encoding)
-                    entries += "String text=" + helper + "Encode(&value,&error,0);if(error!=\"\"){return " + result + "::Err(std::lang::MessageError::from(error));}return " + result + "::Ok(text);}\n";
+                    entries += "String text=" + helper + "Encode(&value,&error,0);if(error!=\"\"){return " + result + "::Err(std::core::MessageError::from(error));}return " + result + "::Ok(text);}\n";
                 else
-                    entries += "let parsed=std::json::parse(text);if(parsed.isErr()){return " + result + "::Err(parsed.error());}let node=parsed.unwrap();" + InferenceTypeText(type) + " value;if(!" + helper + "Decode(&node,&value,&error,0)){return " + result + "::Err(std::lang::MessageError::from(error));}return " + result + "::Ok(move value);}\n";
+                    entries += "let parsed=std::json::parse(text);if(parsed.isErr()){return " + result + "::Err(parsed.error());}let node=parsed.unwrap();" + InferenceTypeText(type) + " value;if(!" + helper + "Decode(&node,&value,&error,0)){return " + result + "::Err(std::core::MessageError::from(error));}return " + result + "::Ok(move value);}\n";
                 queries.replaced.insert(decl.source);
                 break;
             }

@@ -123,6 +123,13 @@ int M_MacroCall(int name, int arguments);
  * @return 泛型参数节点。
  */
 int M_MacroGeneric(int name, int source);
+
+/**
+ * @brief 构造成员宏的接口集成请求。
+ * @param type 接口类型编号，可以包含宏类型参数。
+ * @return 保留到宿主接口登记阶段的请求节点。
+ */
+int M_MacroImplement(int type);
 /**
  * @brief 保存显式泛型调用，不在解析期选择具体类型。
  * @param name 带美元前缀的宏名。

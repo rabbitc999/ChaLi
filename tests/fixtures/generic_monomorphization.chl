@@ -33,7 +33,7 @@ struct AuditTracked<T> : Drop {
     T value;
     void drop(){AuditTracked<T>::drops=AuditTracked<T>::drops+1;}
 };
-struct _int64_lang__String_ { int64 marker; };
+struct _int64_core__String_ { int64 marker; };
 struct AuditCallback<T> { T fn(T) operation; };
 enum AuditChoice<T> { Empty, Value(AuditOuter<T> value); };
 AuditOuter<T> auditWrap<T>(T value) { AuditOuter<T> result;result.item.first=value;return result; }
@@ -93,7 +93,7 @@ void main(){
     AuditBorrow<int64 mut&> borrow;int64 local=21;borrow.value=&local;*borrow.value=22;assert(local==22);
     AuditPair<int64,String> tupleCollision;
     AuditBorrow<(int64,String)> tuple;tuple.value=((int64)23,"tuple");
-    AuditBorrow<_int64_lang__String_> nominal;nominal.value.marker=29;
+    AuditBorrow<_int64_core__String_> nominal;nominal.value.marker=29;
     assert(tuple.value.0==23 && tuple.value.1=="tuple" && nominal.value.marker==29);
     AuditCallback<int64> callback;callback.operation=auditIncrement;assert(callback.operation(30)==31);
     int64 fn(int64) specialized=auditIdentity<int64>;assert(specialized(32)==32);

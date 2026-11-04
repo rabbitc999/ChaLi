@@ -30,12 +30,12 @@ def main():
             result = run([args.chali, '--diagnostics=json', source], False)
             report = json.loads(result.stdout)
             assert report['diagnostics'], report
-        for expression in ('(int64,2)', '(std::lang::String,2)', '(1,2,3]'):
+        for expression in ('(int64,2)', '(std::core::String,2)', '(1,2,3]'):
             source.write_text('void main(){let invalid=' + expression + ';}\n', encoding='utf-8')
             run([args.chali, '--check', source], False)
         source.write_text('struct string{int64 value;}; void main(){string x;x.value=4;assert(x.value==4);}\n', encoding='utf-8')
         run([args.chali, 'run', source, '--out', work / 'ordinary'])
-        source.write_text('struct String{int64 value;int64 extra;}; struct Box<T>{T value;};\nvoid main(){String local;local.value=7;std::lang::String core="text";Box<String> first;first.value=local;Box<std::lang::String> second;second.value=core;assert(first.value.value==7 && second.value=="text");return;}\n', encoding='utf-8')
+        source.write_text('struct String{int64 value;int64 extra;}; struct Box<T>{T value;};\nvoid main(){String local;local.value=7;std::core::String core="text";Box<String> first;first.value=local;Box<std::core::String> second;second.value=core;assert(first.value.value==7 && second.value=="text");return;}\n', encoding='utf-8')
         run([args.chali, 'run', source, '--out', work / 'shadow'])
         source.write_text('struct Box<T>{T value;}; int64 identity(int64 value){return value;} void main(){Box<int64 fn(int64)> box;box.value=identity;assert(box.value(7)==7);}\n', encoding='utf-8')
         run([args.chali, 'run', source, '--out', work / 'function-type'])

@@ -47,6 +47,13 @@ bool ExpandAstMacroMembers(int owner)
         if (depth >= 256 || !budget--) return ReportAstMacroFailure(id, "成员宏展开超过深度或规模预算");
         const auto node = N(id);
         if (node.kind == MNode::ParseBad) return ReportAstMacroFailure(id, node.s);
+        if (node.kind == MNode::MacroImplement)
+        {
+            if (declaration.kind == MNode::InterfaceDecl)
+                return ReportAstMacroFailure(id, "$implement 需要结构体或枚举宿主");
+            members.push_back(id);
+            return true;
+        }
         if (node.kind != MNode::MacroCall)
         {
             if (node.kind != MNode::Field && node.kind != MNode::MethodDef && node.kind != MNode::AssociatedDef && node.kind != MNode::AssociatedDecl)

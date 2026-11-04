@@ -4,7 +4,7 @@
   <text x="40" y="88" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="15" fill="#4a5b73">从 .chl 源码到已检查 AST、LLVM 与原生产物 · 语言 / 编译器 / 运行时 / 导出四层</text>
   <rect x="40" y="118" width="360" height="700" rx="14" fill="#ffffff" stroke="#d8e1ee" stroke-width="1.5"/>
   <text x="58" y="148" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="17" font-weight="700" fill="#14507e">① CHALI 语言</text>
-  <text x="58" y="170" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="11" fill="#55677f">source/std/lang.chl · example/samples/</text>
+  <text x="58" y="170" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="11" fill="#55677f">source/std/core.chl · example/samples/</text>
   <text x="58" y="202" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="13" font-weight="700" fill="#10233f">类型与数据</text>
   <rect x="58" y="216" width="324" height="52" rx="8" fill="#f7f9fc" stroke="#e2e9f3" stroke-width="1"/>
   <text x="69" y="237" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="12" font-weight="700" fill="#14507e">静态类型与值语义</text>
@@ -31,7 +31,7 @@
   <text x="69" y="685" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="11" fill="#55677f">$macro · name&lt;T&gt; · 类型实参推导</text>
   <rect x="58" y="706" width="324" height="52" rx="8" fill="#f7f9fc" stroke="#e2e9f3" stroke-width="1"/>
   <text x="69" y="727" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="12" font-weight="700" fill="#14507e">接口协议</text>
-  <text x="69" y="747" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="11" fill="#55677f">运算、索引、迭代与 std::lang::Drop</text>
+  <text x="69" y="747" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="11" fill="#55677f">运算、索引、迭代与 std::core::Drop</text>
   <rect x="410" y="118" width="360" height="700" rx="14" fill="#ffffff" stroke="#d8e1ee" stroke-width="1.5"/>
   <text x="428" y="148" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="17" font-weight="700" fill="#14507e">② CHALI 编译器</text>
   <text x="428" y="170" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="11" fill="#55677f">source/chali.gram · chali</text>

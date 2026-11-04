@@ -1,1 +1,1 @@
-void main(){for(int8 x in std::lang::rangeEq<int8>(0,255)){}}
+void main(){for(int8 x in std::core::rangeEq<int8>(0,255)){}}

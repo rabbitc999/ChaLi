@@ -60,18 +60,19 @@ A successful check does not print the greeting: it checks the program without ex
 
 For now, know that run compiles a native program and executes it. Chapter 27 explains export and compilation tools; you do not need LLVM knowledge to continue.
 
-## 1.5 Exercises
+### Observe output order
 
-1. Print your name and one learning goal on separate lines.
-2. Put a semicolon inside the quoted text and compare its role with the final semicolon.
-3. Record the output of check and run.
-4. Misspell main, read the diagnostic, and fix it.
+The calls write two lines in order.
 
-### Answers and checks
+<!-- verify-book -->
+```chali
+void main() {
+    println("start");
+    println("ready");
+}
+```
 
-1. Use two println statements in the same function body.
-2. The quoted semicolon is data; the unquoted one ends a statement.
-3. A successful check prints no greeting; run executes the calls.
-4. A valid entry is required. Check again before comparing runtime output.
-
-The next chapter responds to input. Keep this small file as a way to check your tools when a larger program fails.
+```text
+start
+ready
+```

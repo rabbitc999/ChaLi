@@ -1,6 +1,6 @@
 module std::memory;
 
-/* 从 lang.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::memory;` 才能用）。 */
+/* 从 core.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::memory;` 才能用）。 */
 /* `Span<T>` 是"指针 + 长度"的视图，所以它的迭代器**返回元素指针**：
  * `for (T mut& p in span) { *p = …; }` 拿到的是可写元素地址，不复制元素；
  * 只要值就读 `span[i]` 或先 `T v = *p;`。*/
@@ -9,7 +9,7 @@ struct Span<T>: Iterator<T mut&>, Index<T, int64> {
     int64 length;
 
     static Span<T> from(T mut& data, int64 length) {
-        std::lang::assert(length >= 0);
+        std::core::assert(length >= 0);
         Span<T> result;
         result.data = &data;
         result.length = length;
@@ -17,11 +17,11 @@ struct Span<T>: Iterator<T mut&>, Index<T, int64> {
     }
 
     T index(int64 key) {
-        std::lang::assert(key >= 0 && key < self.length);
-        return std::lang::index(self.data, key);
+        std::core::assert(key >= 0 && key < self.length);
+        return std::core::index(self.data, key);
     }
     Option<T mut&> iterator(int64 index) {
-        if (index >= 0 && index < self.length) { return Option<T mut&>::Value(&std::lang::index(self.data, index)); }
+        if (index >= 0 && index < self.length) { return Option<T mut&>::Value(&std::core::index(self.data, index)); }
         return Option<T mut&>::None;
     }
     int64 len() { return self.length; }

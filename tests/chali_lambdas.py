@@ -56,7 +56,7 @@ def main():
         assert '没释放' not in result.stdout, result
     (WORK / 'callbacks_module.chl').write_text('module callbacks_module;\nimport std::iter;\nint64 offset=5; int64 adjust(int64 value){return value+offset;}\nint64 compute(){return std::iter::range(1,4).map(fn(value){adjust(value)}).fold(0,fn(acc,value){acc+value});}\n', encoding='utf-8')
     source = WORK / 'module_main.chl'
-    source.write_text('import callbacks_module;\nvoid main(){std::lang::println("{}",callbacks_module::compute());return;}\n', encoding='utf-8')
+    source.write_text('import callbacks_module;\nvoid main(){std::core::println("{}",callbacks_module::compute());return;}\n', encoding='utf-8')
     result = execute(compiler, 'run', source, '--out', WORK / 'module-interpret')
     assert result.returncode == 0 and result.stdout == '21\n' and (not result.stderr), result
     successes = {'const_capture_read': 'const int64 n=1;let f=int64 fn(){n};let __boom = f();', 'readonly_capture_read': 'int64 n=1;int64 const& r=&n;let f=int64 fn(){r};let __boom = f();', 'readonly_match_read': 'match(Option<int64>::Value(10)){Option<int64>::Value(n)=>{let f=int64 fn(){n};let __boom = f();} Option<int64>::None=>{}}', 'local_capture': 'int64 bias=10; let f=fn(int64 x){x+bias}; let __boom = f(1);', 'inferred_capture': 'int64 bias=10; let __boom = apply(fn(x){x+bias},1);', 'global_shadow': 'int64 x=10; let __boom = apply(fn(value){value+x},1);', 'destructure_shadow': 'let (x,y)=(10,20); let f=fn(){x}; let __boom = f();', 'destructure_callback': 'let (x,y)=(10,20); let __boom = apply(fn(value){value+x},1);'}
@@ -86,7 +86,7 @@ def main():
         source.write_text(text, encoding='utf-8')
         result = execute(compiler, '--check', source)
         assert result.returncode != 0 and any((word in result.stderr for word in ('捕获', '只读', 'const', '生命周期', '局部'))), (name, result)
-    readonly.write_text('import std::iter;\nvoid main(){std::lang::List<int64> values;values.push(1);values.iter().forEach(void fn(int64 const& value){value=2;});return;}\n', encoding='utf-8')
+    readonly.write_text('import std::iter;\nvoid main(){std::core::List<int64> values;values.push(1);values.iter().forEach(void fn(int64 const& value){value=2;});return;}\n', encoding='utf-8')
     result = execute(compiler, '--check', readonly)
     assert result.returncode != 0 and '只读' in result.stderr, result
 if __name__ == '__main__':

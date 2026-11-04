@@ -1,0 +1,15 @@
+import desktop_gui;
+
+void main() {
+    assert(desktop_gui::open((int32)400, (int32)220, "ChaLi desktop"));
+    int64 clicks = 0;
+    while (!desktop_gui::should_close()) {
+        assert(desktop_gui::begin_frame());
+        desktop_gui::label((int32)24, (int32)24, (int32)352, (int32)32, "Clicks: " + clicks.toString());
+        if (desktop_gui::button((int32)24, (int32)80, (int32)152, (int32)40, "Count")) { clicks = clicks + 1; }
+        if (desktop_gui::button((int32)200, (int32)80, (int32)152, (int32)40, "Close")) { break; }
+        desktop_gui::end_frame();
+    }
+    desktop_gui::close();
+    println("clicks={}", clicks);
+}

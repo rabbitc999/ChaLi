@@ -137,24 +137,26 @@ Named defines toString to join a fixed prefix with self.name. Setting name to Ch
 
 Repeated appends depend on copies, temporaries and capacity growth. String can reuse allocated buffers; shortening does not imply freeing capacity. Optimizations must preserve observable copy and borrow behavior. Chapter 24 distinguishes compiler settings, and Chapter 25 uses textContent to display user data without interpreting names as HTML.
 
+### Construct formatted text first
+
+Store formatted text before passing it to the output function.
+
+<!-- verify-book -->
+```chali
+void main() {
+    String line = format("{} = {}","score", 42);
+    println("{}", line);
+}
+```
+
+```text
+score = 42
+```
+
 ### Summary
 
 Decide whether text is for display or exchange before choosing interpolation, toString or serialization. Interpolation evaluates expressions, display conversion explains a human view and protocol encoding defines how another endpoint parses data.
 
 External text may still be malformed or violate business rules. Error handling and the final project place parsing, field validation, SQL quoting and page display at their respective boundaries.
-
-## 12.6 Exercises
-
-1. Print an error containing non-ASCII text.
-2. Does formatting safely construct SQL?
-3. When should toString be used?
-4. Must shortening immediately free the buffer?
-
-### Answers and checks
-
-1. Inspect encoding and output instead of treating bytes as characters.
-2. No; use database quoting or parameter binding.
-3. For display; use explicit formats for stable storage.
-4. No; retained capacity supports later growth and drop releases the final buffer.
 
 Next: [Chapter 17](17-interfaces.md).

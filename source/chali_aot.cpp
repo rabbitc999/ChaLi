@@ -678,7 +678,7 @@ void analyze(Translator &state)
             state.markKind(quad.arg(2), Kind::Int);
     }
     /* 4.5 字符串来源：只认**确实返回字符串**的那几个内建。
-     * 不能按名字里含 `String` 来猜——`std::lang::String.length` 返回的是整数，
+     * 不能按名字里含 `String` 来猜——`std::core::String.length` 返回的是整数，
      * `__std_str_len` 也是，猜错就会把长度当字符串打印。 */
     for (std::size_t at = 0; at < quads.size(); ++at)
     {
@@ -690,7 +690,7 @@ void analyze(Translator &state)
         const auto external = state.externsByLabel.find(std::string(callee.c_str()));
         if (callee == "__std_read_float" || callee == "__std_input_float" || (external != state.externsByLabel.end() && (external->second->resultType == "double" || external->second->resultType == "float")))
             state.markKind(target, Kind::Float);
-        if (callee == "std::lang::__std_str_of_flt" || callee == "std::lang::__bootStringCopy" || callee == "std::lang::__bootStringNew" || callee == "std::lang::__bootStringSlice" || callee == "std::lang::__bootStringFromInt" || callee.rfind("std::lang::__bootStringJoin", 0u) == 0u || callee == "__std_read_line" || callee == "__std_input_line" || callee == "std::lang::__readLine" || callee == "__readLine")
+        if (callee == "std::core::__std_str_of_flt" || callee == "std::core::__bootStringCopy" || callee == "std::core::__bootStringNew" || callee == "std::core::__bootStringSlice" || callee == "std::core::__bootStringFromInt" || callee.rfind("std::core::__bootStringJoin", 0u) == 0u || callee == "__std_read_line" || callee == "__std_input_line" || callee == "std::core::__readLine" || callee == "__readLine")
             state.markString(target);
     }
     // 原生服务和函数值返回原始位模式，由显式浮点消费者反推结果形态。
@@ -1401,18 +1401,18 @@ struct Builder
                 return true;
             }
         }
-        if (state.rawIntrinsics && !state.stepChecks && callee == "std::lang::__bufferMaxBytes" && arguments.empty())
+        if (state.rawIntrinsics && !state.stepChecks && callee == "std::core::__bufferMaxBytes" && arguments.empty())
         {
             write(destination, instruction("i64", "load i64, ptr @chali_heap_size"));
             return true;
         }
         if (state.rawIntrinsics && !state.stepChecks && arguments.size() == 1u
-            && (callee == "std::lang::__stringStorageLength" || callee == "std::lang::__stringStorageData"
-                || callee == "std::lang::__stringStorageCapacity" || callee == "std::lang::__stringStorageKind"))
+            && (callee == "std::core::__stringStorageLength" || callee == "std::core::__stringStorageData"
+                || callee == "std::core::__stringStorageCapacity" || callee == "std::core::__stringStorageKind"))
         {
-            const auto operation = callee == "std::lang::__stringStorageLength" ? "0" :
-                                   callee == "std::lang::__stringStorageData" ? "1" :
-                                   callee == "std::lang::__stringStorageCapacity" ? "2" : "3";
+            const auto operation = callee == "std::core::__stringStorageLength" ? "0" :
+                                   callee == "std::core::__stringStorageData" ? "1" :
+                                   callee == "std::core::__stringStorageCapacity" ? "2" : "3";
             const auto *primitive = state.stringStorageViews && state.cacheAddresses
                                         ? "chali_primitive_string_storage" : "chali_host_string_storage";
             write(destination, call(primitive, "i64",
@@ -1420,10 +1420,10 @@ struct Builder
             return true;
         }
         // 核心 IEEE 编解码的局部重解释无需真正建立引用存储；其存活及范围静态可证。
-        const bool float64Bits = callee == "std::lang::__bootFloat64Bits";
-        const bool float32Bits = callee == "std::lang::__bootFloat32Bits";
-        const bool float64Value = callee == "std::lang::__bootFloat64FromBits";
-        const bool float32Value = callee == "std::lang::__bootFloat32FromBits";
+        const bool float64Bits = callee == "std::core::__bootFloat64Bits";
+        const bool float32Bits = callee == "std::core::__bootFloat32Bits";
+        const bool float64Value = callee == "std::core::__bootFloat64FromBits";
+        const bool float32Value = callee == "std::core::__bootFloat32FromBits";
         if (state.rawIntrinsics && !state.stepChecks && arguments.size() == 1u
             && (float64Bits || float32Bits || float64Value || float32Value))
         {
@@ -1446,58 +1446,58 @@ struct Builder
             return true;
         }
         static const std::map<Text, std::pair<int, std::size_t>> listStorageCalls = {
-            { "std::lang::__bootListPushI", { 18, 4 } },
-            { "std::lang::__bootListPushF", { 18, 4 } },
-            { "std::lang::__listStorageGuard", { 0, 3 } },
-            { "std::lang::__listStorageCapacity", { 1, 1 } },
-            { "std::lang::__listStorageMaxCapacity", { 17, 1 } },
-            { "std::lang::__listStorageReserve", { 2, 2 } },
-            { "std::lang::__listStorageSwap", { 3, 3 } },
-            { "std::lang::__listStorageDiscard", { 4, 1 } },
-            { "std::lang::__listStorageEqualI", { 5, 5 } },
-            { "std::lang::__listStorageEqualF", { 5, 5 } },
-            { "std::lang::__listStorageCloneAppend", { 6, 3 } },
-            { "std::lang::__listStorageAppendI", { 7, 4 } },
-            { "std::lang::__listStorageAppendF", { 7, 4 } },
-            { "std::lang::__listStorageTakeI", { 8, 3 } },
-            { "std::lang::__listStorageTakeF", { 8, 3 } },
-            { "std::lang::__listStorageNew", { 9, 0 } },
-            { "std::lang::__listStorageLength", { 10, 1 } },
+            { "std::core::__bootListPushI", { 18, 4 } },
+            { "std::core::__bootListPushF", { 18, 4 } },
+            { "std::core::__listStorageGuard", { 0, 3 } },
+            { "std::core::__listStorageCapacity", { 1, 1 } },
+            { "std::core::__listStorageMaxCapacity", { 17, 1 } },
+            { "std::core::__listStorageReserve", { 2, 2 } },
+            { "std::core::__listStorageSwap", { 3, 3 } },
+            { "std::core::__listStorageDiscard", { 4, 1 } },
+            { "std::core::__listStorageEqualI", { 5, 5 } },
+            { "std::core::__listStorageEqualF", { 5, 5 } },
+            { "std::core::__listStorageCloneAppend", { 6, 3 } },
+            { "std::core::__listStorageAppendI", { 7, 4 } },
+            { "std::core::__listStorageAppendF", { 7, 4 } },
+            { "std::core::__listStorageTakeI", { 8, 3 } },
+            { "std::core::__listStorageTakeF", { 8, 3 } },
+            { "std::core::__listStorageNew", { 9, 0 } },
+            { "std::core::__listStorageLength", { 10, 1 } },
             { "__std_vec_new", { 9, 0 } },
             { "__std_vec_len", { 10, 1 } },
             { "__std_vec_at", { 11, 4 } },
             { "__std_vec_set", { 12, 5 } },
             { "__std_iter_lease", { 13, 1 } },
-            { "std::lang::__listStorageCompareI", { 14, 5 } },
-            { "std::lang::__listStorageCompareF", { 14, 5 } },
-            { "std::lang::__listStorageCompareIndex", { 15, 3 } },
-            { "std::lang::__listStorageReadI", { 11, 4 } },
-            { "std::lang::__listStorageReadF", { 11, 4 } },
-            { "std::lang::__listStorageCloneI", { 16, 3 } },
-            { "std::lang::__listStorageCloneF", { 16, 3 } }
+            { "std::core::__listStorageCompareI", { 14, 5 } },
+            { "std::core::__listStorageCompareF", { 14, 5 } },
+            { "std::core::__listStorageCompareIndex", { 15, 3 } },
+            { "std::core::__listStorageReadI", { 11, 4 } },
+            { "std::core::__listStorageReadF", { 11, 4 } },
+            { "std::core::__listStorageCloneI", { 16, 3 } },
+            { "std::core::__listStorageCloneF", { 16, 3 } }
         };
         const auto listStorage = listStorageCalls.find(textOf(callee));
         static const std::map<Text, std::pair<int, std::size_t>> mapStorageCalls = {
-            { "std::lang::__mapStorageState", { 0, 4 } },
-            { "std::lang::__mapStorageHashI", { 1, 4 } },
-            { "std::lang::__mapStorageHashF", { 1, 4 } },
-            { "std::lang::__mapStorageMatchI", { 2, 5 } },
-            { "std::lang::__mapStorageMatchF", { 2, 5 } },
-            { "std::lang::__mapStoragePrepareII", { 3, 7 } },
-            { "std::lang::__mapStoragePrepareIF", { 3, 7 } },
-            { "std::lang::__mapStoragePrepareFI", { 3, 7 } },
-            { "std::lang::__mapStoragePrepareFF", { 3, 7 } },
-            { "std::lang::__mapStorageCommit", { 4, 3 } },
-            { "std::lang::__setStorageAppendI", { 5, 5 } },
-            { "std::lang::__setStorageAppendF", { 5, 5 } },
-            { "std::lang::__mapStorageErase", { 6, 2 } },
-            { "std::lang::__mapStorageReadI", { 7, 4 } },
-            { "std::lang::__mapStorageReadF", { 7, 4 } },
-            { "std::lang::__mapStorageEmptyLike", { 8, 1 } },
-            { "std::lang::__mapStorageCloneAppend", { 9, 3 } },
-            { "std::lang::__setStoragePrepareI", { 10, 4 } },
-            { "std::lang::__setStoragePrepareF", { 10, 4 } },
-            { "std::lang::__setStorageCancel", { 11, 1 } },
+            { "std::core::__mapStorageState", { 0, 4 } },
+            { "std::core::__mapStorageHashI", { 1, 4 } },
+            { "std::core::__mapStorageHashF", { 1, 4 } },
+            { "std::core::__mapStorageMatchI", { 2, 5 } },
+            { "std::core::__mapStorageMatchF", { 2, 5 } },
+            { "std::core::__mapStoragePrepareII", { 3, 7 } },
+            { "std::core::__mapStoragePrepareIF", { 3, 7 } },
+            { "std::core::__mapStoragePrepareFI", { 3, 7 } },
+            { "std::core::__mapStoragePrepareFF", { 3, 7 } },
+            { "std::core::__mapStorageCommit", { 4, 3 } },
+            { "std::core::__setStorageAppendI", { 5, 5 } },
+            { "std::core::__setStorageAppendF", { 5, 5 } },
+            { "std::core::__mapStorageErase", { 6, 2 } },
+            { "std::core::__mapStorageReadI", { 7, 4 } },
+            { "std::core::__mapStorageReadF", { 7, 4 } },
+            { "std::core::__mapStorageEmptyLike", { 8, 1 } },
+            { "std::core::__mapStorageCloneAppend", { 9, 3 } },
+            { "std::core::__setStoragePrepareI", { 10, 4 } },
+            { "std::core::__setStoragePrepareF", { 10, 4 } },
+            { "std::core::__setStorageCancel", { 11, 1 } },
             { "__std_map_new", { 12, 0 } },
             { "__std_set_new", { 13, 0 } },
             { "__std_map_new_policy", { 14, 2 } },
@@ -1536,7 +1536,7 @@ struct Builder
                 if (numericAppend)
                 {
                     // 替代语言函数时仍执行其形参转换，整数形参不继承不透明槽的浮点标记。
-                    value = convert(value, i == 1u && callee == "std::lang::__bootListPushF" ? "double" : "i64");
+                    value = convert(value, i == 1u && callee == "std::core::__bootListPushF" ? "double" : "i64");
                     value.floating.clear();
                 }
                 if (value.type == "double")
@@ -1567,7 +1567,7 @@ struct Builder
             write(destination, result);
             return true;
         }
-        if (state.rawIntrinsics && !state.stepChecks && callee == "std::lang::__rawStorage" && arguments.size() == 6u)
+        if (state.rawIntrinsics && !state.stepChecks && callee == "std::core::__rawStorage" && arguments.size() == 6u)
         {
             std::vector<Value> values;
             for (const auto &item : arguments) values.push_back(convert(item.second, "i64"));
@@ -1575,7 +1575,7 @@ struct Builder
             return true;
         }
         /* 标准错误流直连：字符串 data/len 取自运行时，再直接 fwrite 到 stderr，不经宿主胶水。 */
-        if (state.rawIntrinsics && !state.stepChecks && callee == "std::lang::__std_stderr_write" && arguments.size() == 1u)
+        if (state.rawIntrinsics && !state.stepChecks && callee == "std::core::__std_stderr_write" && arguments.size() == 1u)
         {
             const Value handle = convert(argument(0), "i64");
             const auto length = call("chali_host_string_storage", "i64", { { "i64", "0" }, handle });
@@ -1604,7 +1604,7 @@ struct Builder
             return true;
         }
         /* 标准库错误直接调用 C 运行时；兼容旧宿主错误，不添加公开 panic 的前缀。 */
-        if (callee == "std::lang::__runtimeFail" && arguments.size() == 1u)
+        if (callee == "std::core::__runtimeFail" && arguments.size() == 1u)
         {
             const auto handle = convert(argument(0), "i64");
             const auto length = call("chali_host_string_storage", "i64", { { "i64", "0" }, handle });
@@ -1615,18 +1615,18 @@ struct Builder
             return true;
         }
         /* 浮点定长格式化直连：调用模块级辅助函数完成 snprintf 与新字符串分配。 */
-        if (state.rawIntrinsics && !state.stepChecks && callee == "std::lang::__std_str_fixed" && arguments.size() == 2u)
+        if (state.rawIntrinsics && !state.stepChecks && callee == "std::core::__std_str_fixed" && arguments.size() == 2u)
         {
             write(destination, call("chali_string_fixed", "i64", { convert(argument(0), "double"), convert(argument(1), "i64") }));
             return true;
         }
         /* 标准输入直连：读取一行直接调用运行时 IR 里的 chali_read_line（fgets + 去 LF/CRLF，EOF 返回空串）。 */
-        if (state.rawIntrinsics && !state.stepChecks && (callee == "std::lang::__readLine" || callee == "__readLine" || callee == "__std_input_line") && arguments.empty())
+        if (state.rawIntrinsics && !state.stepChecks && (callee == "std::core::__readLine" || callee == "__readLine" || callee == "__std_input_line") && arguments.empty())
         {
             write(destination, call("chali_read_line", "i64", {}));
             return true;
         }
-        if (state.rawIntrinsics && !state.stepChecks && callee == "std::lang::__stdinEof" && arguments.empty())
+        if (state.rawIntrinsics && !state.stepChecks && callee == "std::core::__stdinEof" && arguments.empty())
         {
             write(destination, call("chali_stdin_eof", "i64", {}));
             return true;
@@ -1937,22 +1937,22 @@ struct Builder
             const auto separator = pointerLabel.find('$', destinationPrefix.size());
             if (separator != Text::npos) pointerLabel = pointerLabel.substr(separator + 1u);
         }
-        const bool rawPointerWrapper = pointerLabel.rfind("std::lang::dereference__", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::barePointer__", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::pointerFromAddress__", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::__pointerCast__", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::readAt__", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::borrowAt__", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::initAt__", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::takeAt__", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::memcpy__", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::memset__", 0u) == 0u
+        const bool rawPointerWrapper = pointerLabel.rfind("std::core::dereference__", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::barePointer__", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::pointerFromAddress__", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::__pointerCast__", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::readAt__", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::borrowAt__", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::initAt__", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::takeAt__", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::memcpy__", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::memset__", 0u) == 0u
                                        || pointerLabel.rfind("BarePtr__", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::__bootList", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::__bootMap", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::__bootSet", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::__bootString", 0u) == 0u
-                                       || pointerLabel.rfind("std::lang::__bootAlgorithm", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::__bootList", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::__bootMap", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::__bootSet", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::__bootString", 0u) == 0u
+                                       || pointerLabel.rfind("std::core::__bootAlgorithm", 0u) == 0u
                                        || (pointerLabel.rfind("RawStorage__", 0u) == 0u
                                            && (pointerLabel.find(".pointer") != Text::npos || pointerLabel.find(".capacity") != Text::npos
                                                || pointerLabel.find(".isInitialized") != Text::npos));

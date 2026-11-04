@@ -16,18 +16,18 @@ struct Owned: Closeable {
     void close() { closed = closed + 1; self.id = 0; }
 };
 void main() {
-    std::lang::RawStorage<Owned> slots = std::lang::RawStorage<Owned>::allocate(20);
+    std::core::RawStorage<Owned> slots = std::core::RawStorage<Owned>::allocate(20);
     assert(closed == 0);
     Owned value;
     value.id = 7; value.text = "resource";
     unsafe {
-        std::lang::initAt<Owned>(slots.pointer(0), move(value));
+        std::core::initAt<Owned>(slots.pointer(0), move(value));
         assert(closed == 0);
-        std::lang::relocateNonOverlapping<Owned>(slots.pointer(10), slots.pointer(0), 1);
+        std::core::relocateNonOverlapping<Owned>(slots.pointer(10), slots.pointer(0), 1);
         assert(closed == 0);
-        Owned moved = std::lang::takeAt<Owned>(slots.pointer(10));
+        Owned moved = std::core::takeAt<Owned>(slots.pointer(10));
         assert(moved.text == "resource" && moved.id == 7 && closed == 0);
-        std::lang::initAt<Owned>(slots.pointer(3), move(moved));
+        std::core::initAt<Owned>(slots.pointer(3), move(moved));
         assert(closed == 0);
     }
     slots.close();
@@ -60,12 +60,12 @@ def main():
         'closure': 'unsafe int64 raw(){return 7;}void main(){unsafe{let f=int64 fn(){return raw();};}}',
         'layout': 'void main(){println("{}",__rawSize(int64));}',
         'integer_pointer': 'void main(){int64 mut& p=(int64 mut&)16;}',
-        'native_call': 'import std::memory;\nvoid main(){std::lang::__rawStorage(4,0u,0,0,0,1);}',
-        'bare_dereference': 'import std::memory;\nvoid main(){std::lang::BarePtr<int64> p;std::lang::dereference<int64>(p);}',
+        'native_call': 'import std::memory;\nvoid main(){std::core::__rawStorage(4,0u,0,0,0,1);}',
+        'bare_dereference': 'import std::memory;\nvoid main(){std::core::BarePtr<int64> p;std::core::dereference<int64>(p);}',
         'bare_cast': 'void main(){BarePtr<int64> p;BarePtr<uint8> q=p.castTo<uint8>();}',
-        'bare_copy': 'import std::memory;\nvoid main(){std::lang::BarePtr<uint8> p;std::lang::memcpy<uint8,uint8>(p,p,0);}',
-        'bare_set': 'import std::memory;\nvoid main(){std::lang::BarePtr<uint8> p;std::lang::memset<uint8>(p,(uint8)0,0);}',
-        'reference_copy': 'void main(){int64 x=0;int64 y=1;std::lang::memcpy(&x,&y,8);}',
+        'bare_copy': 'import std::memory;\nvoid main(){std::core::BarePtr<uint8> p;std::core::memcpy<uint8,uint8>(p,p,0);}',
+        'bare_set': 'import std::memory;\nvoid main(){std::core::BarePtr<uint8> p;std::core::memset<uint8>(p,(uint8)0,0);}',
+        'reference_copy': 'void main(){int64 x=0;int64 y=1;std::core::memcpy(&x,&y,8);}',
         'legacy_abi': 'abi "none.dll" {int32 f(int32 x);}void main(){}',
         'abi_mode': '#abi("invalid","none.dll","f")int32 f(int32 x);void main(){}',
         'empty_export': '#export("")int32 f(int32 x){return x;}void main(){}',
@@ -85,18 +85,18 @@ def main():
                 ('string', (ROOT / 'benchmarks/perf/bootstrap_string.chl').read_text(encoding='utf-8') + '\n' + (ROOT / 'benchmarks/perf/bootstrap_string_check.chl').read_text(encoding='utf-8'), 'bootstrap String OK\n'),
                 ('string_assignment_regression', 'void main(){String text="aaa";String needle="b";int64 sum=0;int64 i=0;while(i<32){sum=sum+text.indexOf(needle);i=i+1;}assert(sum==0-32);println("String assignment OK");}', 'String assignment OK\n')]
     failures = {
-        'uninitialized': 'std::lang::readAt<int64>(slots.pointer(0));',
-        'double_init': 'std::lang::initAt<int64>(slots.pointer(0),1);std::lang::initAt<int64>(slots.pointer(0),2);',
-        'double_take': 'std::lang::initAt<int64>(slots.pointer(0),1);std::lang::takeAt<int64>(slots.pointer(0));std::lang::takeAt<int64>(slots.pointer(0));',
-        'bounds': 'std::lang::readAt<int64>(slots.pointer(2));',
-        'overlap': 'std::lang::initAt<int64>(slots.pointer(0),1);std::lang::relocateNonOverlapping<int64>(slots.pointer(0),slots.pointer(0),1);',
-        'stale': 'std::lang::RawPtr<int64> p=slots.pointer(0);slots.close();std::lang::readAt<int64>(p);',
-        'byte_overlap': 'std::lang::BarePtr<int64> p=std::lang::barePointer<int64>(slots.pointer(0));std::lang::memcpy<int64,int64>(p,p,1);',
-        'byte_partial_overlap': 'std::lang::BarePtr<int64> p=std::lang::barePointer<int64>(slots.pointer(0));std::lang::memcpy<int64,int64>(p+1,p,9);',
-        'byte_bounds': 'std::lang::BarePtr<int64> p=std::lang::barePointer<int64>(slots.pointer(0));std::lang::memset<int64>(p,(uint8)0,17);',
-        'byte_negative': 'std::lang::BarePtr<int64> p;std::lang::memset<int64>(p,(uint8)0,0-1);',
-        'byte_source_bounds': 'std::lang::BarePtr<int64> p=std::lang::barePointer<int64>(slots.pointer(0));std::lang::RawStorage<int64> fresh=std::lang::RawStorage<int64>::allocate(4);std::lang::memcpy<int64,int64>(std::lang::barePointer<int64>(fresh.pointer(0)),p,17);',
-        'byte_stale': 'std::lang::BarePtr<int64> p=std::lang::barePointer<int64>(slots.pointer(0));slots.close();std::lang::memset<int64>(p,(uint8)0,1);',
+        'uninitialized': 'std::core::readAt<int64>(slots.pointer(0));',
+        'double_init': 'std::core::initAt<int64>(slots.pointer(0),1);std::core::initAt<int64>(slots.pointer(0),2);',
+        'double_take': 'std::core::initAt<int64>(slots.pointer(0),1);std::core::takeAt<int64>(slots.pointer(0));std::core::takeAt<int64>(slots.pointer(0));',
+        'bounds': 'std::core::readAt<int64>(slots.pointer(2));',
+        'overlap': 'std::core::initAt<int64>(slots.pointer(0),1);std::core::relocateNonOverlapping<int64>(slots.pointer(0),slots.pointer(0),1);',
+        'stale': 'std::core::RawPtr<int64> p=slots.pointer(0);slots.close();std::core::readAt<int64>(p);',
+        'byte_overlap': 'std::core::BarePtr<int64> p=std::core::barePointer<int64>(slots.pointer(0));std::core::memcpy<int64,int64>(p,p,1);',
+        'byte_partial_overlap': 'std::core::BarePtr<int64> p=std::core::barePointer<int64>(slots.pointer(0));std::core::memcpy<int64,int64>(p+1,p,9);',
+        'byte_bounds': 'std::core::BarePtr<int64> p=std::core::barePointer<int64>(slots.pointer(0));std::core::memset<int64>(p,(uint8)0,17);',
+        'byte_negative': 'std::core::BarePtr<int64> p;std::core::memset<int64>(p,(uint8)0,0-1);',
+        'byte_source_bounds': 'std::core::BarePtr<int64> p=std::core::barePointer<int64>(slots.pointer(0));std::core::RawStorage<int64> fresh=std::core::RawStorage<int64>::allocate(4);std::core::memcpy<int64,int64>(std::core::barePointer<int64>(fresh.pointer(0)),p,17);',
+        'byte_stale': 'std::core::BarePtr<int64> p=std::core::barePointer<int64>(slots.pointer(0));slots.close();std::core::memset<int64>(p,(uint8)0,1);',
     }
     for backend in (['run', 'aot'] if args.aot else ['run']):
         for name, source, expected in positive:
@@ -110,7 +110,7 @@ def main():
             assert result.returncode == 0 and result.stdout == expected and not result.stderr, (name, backend, result)
         for name, operation in failures.items():
             path = work / ('failure-' + name + '.chl')
-            path.write_text('import std::memory;\nvoid main(){std::lang::RawStorage<int64> slots=std::lang::RawStorage<int64>::allocate(2);unsafe{' + operation + '}}', encoding='utf-8')
+            path.write_text('import std::memory;\nvoid main(){std::core::RawStorage<int64> slots=std::core::RawStorage<int64>::allocate(2);unsafe{' + operation + '}}', encoding='utf-8')
             target = work / ('failure-' + name + '-' + backend)
             result = invoke([compiler, backend, path, '--out', target], 'failure-' + name + '-' + backend + '-build')
             if backend == 'aot':

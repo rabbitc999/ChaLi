@@ -48,7 +48,7 @@ void main() {
 
 `println` 的 `{}` 是位置占位符，不是 `printf` 的 `%d`——类型由实参推导，写错了编译期就报。
 
-`String` 是 `std::lang::String` 的简写，来自自动加载的核心模块 `lang`。没有命名冲突时前缀可省。
+`String` 是 `std::core::String` 的简写，来自自动加载的核心模块 `lang`。没有命名冲突时前缀可省。
 
 ---
 
@@ -222,7 +222,7 @@ void main() {
 
 `T: Shape` 是接口约束。泛型在编译期单态化，调用点静态确定，没有虚表开销。
 
-需要**运行期**多态时，把对象装进 `std::lang::Any` 再按接口取出引用（`Shape mut& view = boxed.getReference();`），具体类型在运行时决定。完整例子见 [`example/samples/interface.chl`](../example/samples/interface.chl)。
+需要**运行期**多态时，把对象装进 `std::core::Any` 再按接口取出引用（`Shape mut& view = boxed.getReference();`），具体类型在运行时决定。完整例子见 [`example/samples/interface.chl`](../example/samples/interface.chl)。
 
 结构体还能写构造器（`T v = new T(...)` 调用）、`Drop` 析构逻辑、运算符重载——见[语言参考](04-language-reference.md)。
 

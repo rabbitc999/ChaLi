@@ -5,5 +5,5 @@ void main() {
     int64 mut& p = &a[0];
     p[0] = 1;
     p[4] = 9;               /* 这块只有 4 个元素 */
-    std::lang::println("{}", p[0]);
+    std::core::println("{}", p[0]);
 }

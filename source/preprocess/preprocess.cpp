@@ -838,6 +838,15 @@ private:
             const std::size_t lineNumber = index + 1u;
             const ScanInfo info = scanLine(line, state);
 
+            if (options_.allowNamingDirective && info.hasContent && !info.opaqueStart
+                && line.compare(info.contentIndex, 14u, "#NoNamingCheck") == 0
+                && trim(stripTrailingComment(line.substr(info.contentIndex))) == "#NoNamingCheck")
+            {
+                if (active(frames)) out_.namingSuppressedFiles.push_back(file);
+                emitDropped(file, lineNumber);
+                continue;
+            }
+
             // 1. 空行、纯注释行、不透明区域内部：按内容行处理。
             const bool isDirective =
                 info.hasContent && !info.opaqueStart && (options_.prefixes().find(line[info.contentIndex]) != Memory::String::npos) && (info.contentIndex + 1u < line.size()) && isNameStart(line[info.contentIndex + 1u]);

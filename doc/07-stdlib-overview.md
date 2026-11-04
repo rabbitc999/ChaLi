@@ -6,7 +6,7 @@
 
 逐项查询函数的声明、参数、默认值、返回值、错误边界和完整程序，见 [库函数 API 参考](library/README.md) 与 [全部函数索引](library/symbols.md)。
 
-按能力域列出 ChaLi 自带的模块。除核心模块 `std::lang` 自动加载外，其余都要 `import`。
+按能力域列出 ChaLi 自带的模块。除核心模块 `std::core` 自动加载外，其余都要 `import`。
 
 标准库失败返回统一使用 `Result<T, Error>`，拥有接口载荷中仍保存具体错误。`IoError`、`ParseError`、`CsvError` 等保留枚举分支、位置和原始消息；文本错误以 `MessageError::from(text)` 构造后装入 Error。通用函数可接收 Error 值、`Error const&` 或使用 `<E: Error>` 约束。自定义 `Result<T, E>` 仍可保留具体 E；当 E 实现 Error 时，`?` 支持向返回 `Result<U, Error>` 的函数传播。
 
@@ -31,7 +31,9 @@ isObject=1 len=1
 
 ---
 
-## 1. 核心模块 `std::lang`（自动加载）
+## 1. 核心模块 `std::core`（自动加载）
+
+可以直接写 `String`、`List<T>`，也可以写 `std::core::String`、`std::core::List<T>`。显式写 `import std::core;` 也是有效的。
 
 无需 `import`，直接可用。
 
@@ -40,11 +42,12 @@ isObject=1 len=1
 | 输出与格式化 | `println(fmt, …)`、`format(fmt, …)` |
 | 断言 | `assert(cond)` |
 | 长度 | `len(x)`（字符串 / 容器） |
-| 字符串 | `std::lang::String`，下标与切片按 UTF-8 字节 |
+| 字符串 | `std::core::String`，下标与切片按 UTF-8 字节 |
 | 容器 | `List<T>`、`Map<K,V>`、`Set<T>` |
-| 类型擦除盒子 | `std::lang::Any`（运行期多态用） |
-| 数学常数 | `std::lang::Math::PI`、`std::lang::Math::E` |
+| 类型擦除盒子 | `std::core::Any`（运行期多态用） |
 | 大数 | `BigInteger`、`BigDecimal` |
+
+公开 opcode 类型为 `std::big_number::BigInteger` 和 `std::big_number::BigDecimal`。可用 `import std::big_number;` 显式声明依赖，语言前置环境也提供两种类型的短名和字面量。
 
 ---
 
@@ -54,13 +57,42 @@ isObject=1 len=1
 
 | 模块 | 内容 |
 | --- | --- |
-| `std::math` | `sin` `cos` `sqrt` 等常用函数；`abs` `min` `max` 是泛型入口（`min`/`max` 任意数量实参），`clamp` 分 `int64`/`float64` 两份；常数见 `std::lang::Math` |
+| `std::math` | `sin` `cos` `sqrt` 等常用函数；`abs` `min` `max` 是泛型入口（`min`/`max` 任意数量实参），`clamp` 分 `int64`/`float64` 两份；常数 `std::math::PI`、`std::math::E` |
 | `std::numerics` | 标量数值方法：导数、辛普森积分、二分、RK4、牛顿 |
-| `std::numtheory` | 整数数论：模块级泛型 `gcd` `lcm`（任意数量实参）、`addMod` `mulMod` `powMod` `modInverse`、确定性 Miller-Rabin `isPrime` |
+| `std::number_theory` | 整数数论：模块级泛型 `gcd` `lcm`（任意数量实参）、`add_mod` `mul_mod` `pow_mod` `mod_inverse`、确定性 Miller-Rabin `is_prime` |
 | `std::complex` | 复数 `Complex<T>`，支持加减乘除 trait |
-| `std::linalg` | 稠密向量与矩阵、`luDecompose` `symmetricEigen` `svd` `jordan2` `diagonalize2` |
+| `std::linear_algebra` | 稠密向量与矩阵、`lu_decompose` `symmetric_eigen` `svd` `jordan2` `diagonalize2` |
 | `std::random` | 确定性 LCG 与熵播种；句柄型状态，实现 `Drop` |
 | `std::signal` | DFT / FFT / 逆变换；基 2 FFT 只接受 2 的幂 |
+
+### 标准宏
+
+导入 `std::macro` 即可使用这些表达式宏。每个实参求值一次，包括最终没有成为结果的实参。
+
+| 宏 | 行为 |
+| --- | --- |
+| `$MIN(left, right)` | 选择较小的值。 |
+| `$MAX(left, right)` | 选择较大的值。 |
+| `$CLAMP(value, low, high)` | 将值限制在闭区间内。上下界颠倒时触发断言。 |
+
+```chali
+import std::macro;
+
+int64 calls = 0;
+int64 next(int64 value) {
+    calls++;
+    return value;
+}
+void main() {
+    println("{} {} {}", $std::macro::MIN(next(7), next(3)), $MAX(7, 3), $CLAMP(9, 0, 6));
+    println("{}", calls);
+}
+```
+
+```text
+3 7 6
+2
+```
 
 ### 文本与数据格式
 
@@ -83,7 +115,7 @@ isObject=1 len=1
 | `std::array` | ChaLi 实现的 `DynamicArray<T>`：连续存储、自动扩容、`reserve`、`resize`、`capacity`、安全读取与 `set` |
 | `std::tree` | `BinarySearchTree`（增删查、三种遍历、min/max/height）、`RedBlackTree`（插入 + 双红修复）、`MinHeap`（可当优先队列）、`GeneralTree`（首个孩子 / 下一兄弟，可与二叉表示互转） |
 | `std::graph` | `Graph` 链式前向星：`bfs` `dfs` `connectedComponents` `topologicalSort` `dijkstra` `hasCycle` `minimumSpanningTreeWeight`；`UnionFind` 路径压缩 + 按大小合并 |
-| `std::linkedlist` | `LinkedList` 双向链表：首尾与游标处 O(1) 插删、`reverse` `toArray` `fromArray` `find`，实现 `Iterator<int64>` 与 `Drop` |
+| `std::linked_list` | `LinkedList` 双向链表：首尾与游标处 O(1) 插删、`reverse` `toArray` `fromArray` `find`，实现 `Iterator<int64>` 与 `Drop` |
 
 这三个模块的全部算法都在宿主胶水（`glue/std_tree.hpp`、`glue/std_graph.hpp`、`glue/std_linkedlist.hpp`）里，`.chl` 只做公开 API 壳；`std::text` 的 KMP 同理（`glue/std_kmp.hpp`）。裁剪宏分别是 `NO_CHALI_STD_TREE` / `NO_CHALI_STD_GRAPH` / `NO_CHALI_STD_LINKEDLIST` / `NO_CHALI_STD_KMP`。
 
@@ -123,11 +155,11 @@ isObject=1 len=1
 
 **按资源类型管理生命周期。** 文件、套接字和数据库连接遵守各自关闭协议，可显式关闭或由类型的作用域清理处理。JSON/TOML 值拥有独立数据，不把所有值都当作需要手动关闭的裸句柄；也不统一假定所有类型的重复关闭返回值相同。
 
-**压缩结果是二进制。** `std::compress` 的输出含 NUL 字节，类型是 `std::lang::List<uint8>`；解压出来的才是 `std::lang::String`。
+**压缩结果是二进制。** `std::compress` 的输出含 NUL 字节，类型是 `std::core::List<uint8>`；解压出来的才是 `std::core::String`。
 
 模块能力由目标宿主提供的胶水、系统库及实际构建配置决定。嵌入式 Linux 使用普通 Linux 宿主，不额外设置模块禁用模式。详见[部署说明](06-deployment.md)。
 
-**除核心 `std::lang` 外，模块都要显式 `import`。**
+**除核心 `std::core` 外，模块都要显式 `import`。**
 
 ---
 
@@ -138,7 +170,7 @@ isObject=1 len=1
 - [`source/std/`](../source/std) —— 全部模块源码，`source/std/<名字>.chl`
 - [`source/glue/`](../source/glue) —— 宿主侧 C++ 胶水，`source/glue/std_*.hpp` 是各模块绑定的权威定义
 - [`example/samples/`](../example/samples/) —— 按特性组织的可运行样例
-- 各能力域的 API 参考：[`doc/library/`](library/README.md) 按模块分页（`std-json.md`、`std-toml.md`、`std-regex.md`、`std-linalg.md`、`std-complex.md`、`std-net.md`、`std-sql.md` …）
+- 各能力域的 API 参考：[`doc/library/`](library/README.md) 按模块分页（`std-json.md`、`std-toml.md`、`std-regex.md`、`std-linear_algebra.md`、`std-complex.md`、`std-net.md`、`std-sql.md` …）
 
 ---
 
@@ -150,4 +182,4 @@ isObject=1 len=1
 | 查标准库之外的能力边界 | [语言参考](04-language-reference.md) |
 | 看某个特性的可运行样例 | [`example/samples/`](../example/samples/) |
 
-`std::encoding`、`std::csv`、`std::datetime`、`std::cli`、`std::utf8` 与文件系统扩展，见 [Any、显式泛型与通用数据工具](23-any-generics-data.md)。
+`std::encoding`、`std::csv`、`std::date_time`、`std::cli`、`std::utf8` 与文件系统扩展，见 [Any、显式泛型与通用数据工具](23-any-generics-data.md)。

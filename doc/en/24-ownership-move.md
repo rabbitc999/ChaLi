@@ -52,7 +52,7 @@ Duplicate names, unknown variables, parameter conflicts, and mut/move captures o
 
 ## Match range patterns
 
-Match interval patterns use `std::lang::range<T>(a,b)` (half open) and `std::lang::rangeEq<T>(a,b)` (inclusive), and accept only integers and char. Custom types implementing `Equal<T>` can use ordinary value patterns. Use guards or if/elif for floating-point and String bounds. Ordinary tuple expressions retain value semantics.
+Match interval patterns use `std::core::range<T>(a,b)` (half open) and `std::core::rangeEq<T>(a,b)` (inclusive), and accept only integers and char. Custom types implementing `Equal<T>` can use ordinary value patterns. Use guards or if/elif for floating-point and String bounds. Ordinary tuple expressions retain value semantics.
 
 ## Integer intervals in for-in
 

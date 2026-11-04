@@ -172,6 +172,7 @@ class LspClient extends EventEmitter {
           synchronization: { didSave: true, dynamicRegistration: false },
           publishDiagnostics: { relatedInformation: true },
           hover: { contentFormat: ['markdown', 'plaintext'] },
+          definition: { linkSupport: true },
           references: { dynamicRegistration: false },
           rename: { prepareSupport: true },
           inlayHint: { dynamicRegistration: false },

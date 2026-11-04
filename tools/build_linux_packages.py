@@ -85,9 +85,23 @@ def main():
             raise ValueError('目标工具链无法完成编译和链接：' + result.stderr.decode(errors='replace'))
         from package_installers import validate
         validate(temporary / 'architecture_probe', 'linux', arch)
+        runner = []
+        if native != arch:
+            emulator = shutil.which('qemu-aarch64' if arch == 'arm64' else 'qemu-x86_64')
+            if emulator is None:
+                message = '缺少执行交叉编译阶段编译器的 QEMU：' + arch
+                if args.available:
+                    print('跳过 ' + arch + '，' + message, flush=True)
+                    continue
+                parser.error(message)
+            libc = Path(subprocess.check_output([cc, '-print-file-name=libc.so.6'], text=True).strip()).resolve()
+            env['QEMU_LD_PREFIX'] = str(libc.parent.parent)
+            run([emulator, probe.with_name('architecture_probe')], work, env)
+            runner.append('CHALI_STDLIB_RUNNER=' + emulator)
         binary = work / ('chali-' + version + '-llvm-external-' + distribution + '-' + ('x64' if arch == 'amd64' else arch))
         run(['make', '-j' + str(args.jobs), 'PYTHON=' + sys.executable, 'CC=' + cc, 'CXX=' + cxx, 'AR=' + ar,
-             'CHALI_STATIC_LLVM=0', 'LDFLAGS=-Wl,--gc-sections -s -static-libgcc -static-libstdc++', 'TARGET=' + binary.name], work, env)
+             'CHALI_STATIC_LLVM=0', 'CHALI_RELEASE_PIC=1', 'CHALI_BUILD_ROOT=build/release-pic',
+             'LDFLAGS=-Wl,--gc-sections -s -static-libgcc -static-libstdc++', 'TARGET=' + binary.name, *runner], work, env)
         output = ROOT / 'dist/installers' / (distribution + '-' + arch)
         output.mkdir(parents=True, exist_ok=True)
         shutil.copy2(binary, output / binary.name)

@@ -181,7 +181,7 @@ bool StructNeedsCleanup(const Memory::String &structName)
  * 可写引用（`T mut&`）**不算** —— 它归程序自己 `drop`（见 README 的三档所有权）。
  */
 /**
- * 类型的人类可读写法（`int64` / `std::lang::List<string>` / …）；实现在下面。
+ * 类型的人类可读写法（`int64` / `std::core::List<string>` / …）；实现在下面。
  */
 Memory::String Describe(const std::shared_ptr<MType> &type);
 /**
@@ -251,7 +251,7 @@ struct MContainerMethod
 };
 
 /**
- * `std::lang::List<T>` 的方法。
+ * `std::core::List<T>` 的方法。
  */
 const MContainerMethod kVecMethods[] = {
     { "copy", "__std_object_copy", 0, "h", MContainerResult::Self, false },
@@ -268,7 +268,7 @@ const MContainerMethod kVecMethods[] = {
 };
 
 /**
- * `std::lang::Set<T>` 的方法。
+ * `std::core::Set<T>` 的方法。
  */
 const MContainerMethod kSetMethods[] = {
     { "copy", "__std_object_copy", 0, "h", MContainerResult::Self, false },
@@ -282,7 +282,7 @@ const MContainerMethod kSetMethods[] = {
 };
 
 /**
- * `std::lang::Map<K,V>` 的方法。
+ * `std::core::Map<K,V>` 的方法。
  */
 const MContainerMethod kMapMethods[] = {
     { "copy", "__std_object_copy", 0, "h", MContainerResult::Self, false },
@@ -307,21 +307,21 @@ Memory::String BootstrapCollectionLabel(const Memory::String &native, const std:
     if (!IsContainer(container)) return native;
     if (container->name == "map" || container->name == "set")
     {
-        if (native == "__std_object_copy") return "std::lang::__bootMapCopy";
-        if (native == "__std_map_clear" || native == "__std_set_clear") return "std::lang::__bootMapClear";
+        if (native == "__std_object_copy") return "std::core::__bootMapCopy";
+        if (native == "__std_map_clear" || native == "__std_set_clear") return "std::core::__bootMapClear";
         const Memory::String key = container->elem->kind == MType::Double ? "F" : "I";
-        if (native == "__std_map_has" || native == "__std_set_has") return "std::lang::__bootMapHas" + key;
-        if (native == "__std_map_remove" || native == "__std_set_remove") return "std::lang::__bootMapRemove" + key;
-        if (native == "__std_set_add") return "std::lang::__bootSetAdd" + key;
+        if (native == "__std_map_has" || native == "__std_set_has") return "std::core::__bootMapHas" + key;
+        if (native == "__std_map_remove" || native == "__std_set_remove") return "std::core::__bootMapRemove" + key;
+        if (native == "__std_set_add") return "std::core::__bootSetAdd" + key;
         if (native == "__std_map_put" || native == "__std_map_get")
-            return Memory::String(native == "__std_map_put" ? "std::lang::__bootMapPut" : "std::lang::__bootMapGet")
+            return Memory::String(native == "__std_map_put" ? "std::core::__bootMapPut" : "std::core::__bootMapGet")
                    + key + (container->elem2->kind == MType::Double ? "F" : "I");
         return native;
     }
     if (container->name != "vec") return native;
-    if (native == "__std_object_copy") return "std::lang::__bootListCopy";
-    if (native == "__std_vec_remove") return "std::lang::__bootListRemove";
-    if (native == "__std_vec_clear") return "std::lang::__bootListClear";
+    if (native == "__std_object_copy") return "std::core::__bootListCopy";
+    if (native == "__std_vec_remove") return "std::core::__bootListRemove";
+    if (native == "__std_vec_clear") return "std::core::__bootListClear";
     const char *operation = native == "__std_vec_push" ? "Push" : native == "__std_vec_insert"    ? "Insert" :
                                                               native == "__std_vec_pop"           ? "Pop" :
                                                               native == "__std_vec_find"          ? "Find" :
@@ -333,7 +333,7 @@ Memory::String BootstrapCollectionLabel(const Memory::String &native, const std:
                                                               native == "__std_vec_clamp"         ? "Clamp" :
                                                                                                     nullptr;
     if (!operation) return native;
-    return Memory::String("std::lang::__bootList") + operation + (container->elem->kind == MType::Double ? "F" : "I");
+    return Memory::String("std::core::__bootList") + operation + (container->elem->kind == MType::Double ? "F" : "I");
 }
 
 /**
@@ -777,12 +777,12 @@ bool SameStruct(const std::shared_ptr<MType> &left, const std::shared_ptr<MType>
  * @brief 字符串字面量当"**变量的值**"时，先复制成一份堆串。
  *
  * 字符串的值一律是**堆地址**（8 字节长度 + UTF-8 字节数据，由虚拟机运行时管理）：
- * 数据区里只留只读的字面量字节当复制源（`std::lang::__bootStringCopy` 把它们拷到堆上）。于是：
+ * 数据区里只留只读的字面量字节当复制源（`std::core::__bootStringCopy` 把它们拷到堆上）。于是：
  *
  * - 变量手里那块是**自己能写**的（`s[i] = 'x'` 不会改到别人共享的字面量）；
  * - 所有权也统一了：**变量 = 那块堆串的主人**，离开语句块时自动释放（见 MarkOwned）。
  *
- * 只读用法**不复制**（比较、拼接的操作数、`std::lang::print("{}", "abc")` 这种实参）：那些地方
+ * 只读用法**不复制**（比较、拼接的操作数、`std::core::print("{}", "abc")` 这种实参）：那些地方
  * 不写这块内存，也没人该为它负责 —— 复制了反倒没人释放。
  *
  * @param valueId 右边的表达式。
@@ -840,7 +840,7 @@ ast::NodePtr MaterializeStringValue(int valueId, const std::shared_ptr<MType> &t
     if (!target || !IsStandardOpcode(target, "String")) return value;
     if (valueId < 0) return value;
     if (N(valueId).kind == MNode::Str)
-        return ast::Node::call("std::lang::__bootStringCopy", { "__chali_addr" }, { value });
+        return ast::Node::call("std::core::__bootStringCopy", { "__chali_addr" }, { value });
     if (IsFreshValue(valueId) || IsImplicitConversionValue(valueId, target)) return TakeExpressionTempValue(value, target);
     /*
      * 借来的值（变量 / 别名 / 字段 / 下标 / 解引用）**复制成自己的堆串**：
@@ -899,7 +899,7 @@ ast::NodePtr MaterializeReturnStringValue(int valueId, const std::shared_ptr<MTy
     while (N(sourceId).kind == MNode::Cast) sourceId = N(sourceId).kids[0];
     const MNode &expr = N(sourceId);
     if (expr.kind == MNode::Str)
-        return ast::Node::call("std::lang::__bootStringCopy", { "__chali_addr" }, { value });
+        return ast::Node::call("std::core::__bootStringCopy", { "__chali_addr" }, { value });
     if (expr.kind == MNode::Var)
     {
         const MVar *found = FindNodeVar(expr);
@@ -1003,7 +1003,7 @@ ast::NodePtr CopyRuntimeArrayValue(const ast::NodePtr &source, const std::shared
     {
         auto value = Node::loadFrom(from, LowerType(element, input));
         if (IsStandardOpcode(element, "String"))
-            value = Node::call("std::lang::__bootStringSlice", { "source", "start", "end" }, { value, Node::i(0), Node::i(-1) });
+            value = Node::call("std::core::__bootStringSlice", { "source", "start", "end" }, { value, Node::i(0), Node::i(-1) });
         else if (IsObjectLike(element))
             value = Node::call(ObjectCopyFunction(element), { "value" }, { value });
         out.push_back(Node::storeAt(into, value, LowerType(element, result)));
@@ -1189,22 +1189,22 @@ bool IsFreshValue(int exprId)
     case MNode::Call:              /* 函数返回：所有权归调用方 */
     {
         /*
-         * `std::lang::BigInteger(x)` / `std::lang::BigDecimal(x)`（限定名写法）虽然 AST 上是"调用"，语义却与
+         * `std::big_number::BigInteger(x)` / `std::big_number::BigDecimal(x)`（限定名写法）虽然 AST 上是"调用"，语义却与
          * `bint(x)` 一致：**从已有大数转发时不复制**。不特判的话会按"调用一律是当场造出来的
          * 新对象"处理，变量之间共享句柄，一旦其中一个被重新赋值就把旧句柄还了，另一个悬空
          * （`example/samples/object_copy.chl` 踩过：打印时说"大整数已经释放过了"）。
          */
         if (expr.kids.size() < 2u) return true; /* 有的调用节点只带被调者，别越界 */
         const MNode &calleeNode = N(expr.kids[0]);
-        if (calleeNode.kind == MNode::EnumCtor && calleeNode.s == "std::lang" && (calleeNode.s2 == "BigInteger" || calleeNode.s2 == "BigDecimal"))
+        if (calleeNode.kind == MNode::EnumCtor && calleeNode.s == "std::big_number" && (calleeNode.s2 == "BigInteger" || calleeNode.s2 == "BigDecimal"))
         {
             const Memory::Vector<int> &callArgs = N(expr.kids[1]).kids;
             if (callArgs.size() == 1u)
             {
                 /*
                  * 实参是"已有值"（变量 / 字段 / 下标）且**类型相同**才判为**转发旧句柄**：
-                 * `std::lang::BigInteger(other)`（other 已经是 BigInteger）不复制；而
-                 * `std::lang::BigInteger(k)`（k 是 int64）是**新建**，必须按新对象处理，
+                 * `std::big_number::BigInteger(other)`（other 已经是 BigInteger）不复制；而
+                 * `std::big_number::BigInteger(k)`（k 是 int64）是**新建**，必须按新对象处理，
                  * 否则那个新对象没有所有者，循环里每次都漏一个。
                  *
                  * 变量走 `Find` 查**声明类型**，不碰 `ExprType` —— 类型推导会反过来问

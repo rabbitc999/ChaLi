@@ -48,7 +48,7 @@ def check_contract():
 SCENARIOS = {
     "cli": 'let error = std::cli::cliError("--count", "参数缺失"); assert(error.toString().contains("--count"));',
     "csv": 'let error = std::csv::csvError(3, 7, "字段错误"); assert(error.line == 3 && error.column == 7); assert(error.toString().contains("字段错误"));',
-    "datetime": 'assert((std::datetime::DateTimeError::InvalidDate).toString() != "");',
+    "date_time": 'assert((std::date_time::DateTimeError::InvalidDate).toString() != "");',
     "encoding": 'assert((std::encoding::EncodingError::InvalidCharacter(9)).toString().contains("9"));',
     "utf8": 'assert((std::utf8::Utf8Error::InvalidSequence(12)).toString().contains("12"));',
     "regex": 'assert((std::regex::RegexError::Invalid).toString() != "");',
@@ -60,7 +60,7 @@ SCENARIOS = {
 }
 ERROR_VALUES = {
     'cli': 'error', 'csv': 'error',
-    'datetime': 'std::datetime::DateTimeError::InvalidDate',
+    'date_time': 'std::date_time::DateTimeError::InvalidDate',
     'encoding': 'std::encoding::EncodingError::InvalidCharacter(9)',
     'utf8': 'std::utf8::Utf8Error::InvalidSequence(12)',
     'regex': 'std::regex::RegexError::Invalid',

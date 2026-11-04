@@ -14,7 +14,7 @@ import std::numerics;
 
 ## 公共约定与错误边界
 
-回调应满足算法的连续性/可微性条件。实现由 std::numerics 模块用 ChaLi 表达，前置条件（导数步长、辛普森区间数、二分区间与容限、最大迭代次数、ODE 步数）在模块内校验并以 std::lang::panic 停机。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。迭代次数按 int64 计数。数值结果是近似值，不保证任意模型收敛。 二分要求 left<right、tolerance>0、maxIterations>0；导数与 rk4Step 要求 step>0；Simpson 要求 intervals 为正偶数；ODE 要求 steps>=0。
+回调应满足算法的连续性/可微性条件。实现由 std::numerics 模块用 ChaLi 表达，前置条件（导数步长、辛普森区间数、二分区间与容限、最大迭代次数、ODE 步数）在模块内校验并以 std::core::panic 停机。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。迭代次数按 int64 计数。数值结果是近似值，不保证任意模型收敛。 二分要求 left<right、tolerance>0、maxIterations>0；导数与 rk4Step 要求 step>0；Simpson 要求 intervals 为正偶数；ODE 要求 steps>=0。
 
 ## 参考代码
 
@@ -28,9 +28,9 @@ chali run example/samples/std_numerics_number_theory.chl
 <summary>展开完整参考代码</summary>
 
 ```chali
-import std::linalg;
+import std::linear_algebra;
 import std::numerics;
-import std::numtheory;
+import std::number_theory;
 
 import std::math;
 
@@ -39,20 +39,20 @@ float64 rootFunction(float64 x) { return x*x-2.0; }
 float64 exponentialRate(float64 time, float64 value) { return value; }
 
 void main() {
-    std::linalg::Vector<float32> left=std::linalg::Vector<float32>::zeros(2);
+    std::linear_algebra::Vector<float32> left=std::linear_algebra::Vector<float32>::zeros(2);
     left.set(0,(float32)3.0); left.set(1,(float32)4.0);
-    std::linalg::Vector<float32> right=left+left;
-    std::linalg::Vector<float32> difference=right-left;
-    std::linalg::Vector<float32> scaled=left*(float32)2.0;
+    std::linear_algebra::Vector<float32> right=left+left;
+    std::linear_algebra::Vector<float32> difference=right-left;
+    std::linear_algebra::Vector<float32> scaled=left*(float32)2.0;
     assert(difference.at(0)==(float32)3.0 && scaled.at(1)==(float32)8.0);
-    std::linalg::Matrix<float32> matrix=std::linalg::Matrix<float32>::identity(2);
-    std::linalg::Matrix<float32> doubled=matrix+matrix;
-    std::linalg::Matrix<float32> recovered=doubled-matrix;
-    std::linalg::Matrix<float32> scaledMatrix=matrix*(float32)3.0;
-    std::linalg::Vector<float32> mapped=doubled*left;
+    std::linear_algebra::Matrix<float32> matrix=std::linear_algebra::Matrix<float32>::identity(2);
+    std::linear_algebra::Matrix<float32> doubled=matrix+matrix;
+    std::linear_algebra::Matrix<float32> recovered=doubled-matrix;
+    std::linear_algebra::Matrix<float32> scaledMatrix=matrix*(float32)3.0;
+    std::linear_algebra::Vector<float32> mapped=doubled*left;
     assert(mapped.at(0)==(float32)6.0 && mapped.at(1)==(float32)8.0);
     assert(recovered.at(1,1)==(float32)1.0 && scaledMatrix.at(0,0)==(float32)3.0);
-    std::linalg::Matrix<float32> product=matrix*matrix;
+    std::linear_algebra::Matrix<float32> product=matrix*matrix;
     assert(product.at(0,0)==(float32)1.0);
 
     float64 integral=std::numerics::Numerics::integrateSimpson(square,0.0,1.0,20);
@@ -69,17 +69,17 @@ void main() {
     assert(rk4.at(10)>euler.at(10) &&
     std::math::abs(rk4.at(10)-std::math::E)<0.00001);
 
-    assert(std::numtheory::gcd((uint64)54,(uint64)24)==6);
-    assert(std::numtheory::lcm((uint64)6,(uint64)8)==24);
-    assert(std::numtheory::modInverse((int64)3,(int64)11)==4);
-    assert(std::numtheory::modInverse((int64)-3,(int64)11)==7);
-    assert(std::numtheory::powMod((uint64)7,(uint64)128,(uint64)97)==35);
-    assert(std::numtheory::isPrime((uint64)97));
-    assert(!std::numtheory::isPrime((uint64)561));
+    assert(std::number_theory::gcd((uint64)54,(uint64)24)==6);
+    assert(std::number_theory::lcm((uint64)6,(uint64)8)==24);
+    assert(std::number_theory::mod_inverse((int64)3,(int64)11)==4);
+    assert(std::number_theory::mod_inverse((int64)-3,(int64)11)==7);
+    assert(std::number_theory::pow_mod((uint64)7,(uint64)128,(uint64)97)==35);
+    assert(std::number_theory::is_prime((uint64)97));
+    assert(!std::number_theory::is_prime((uint64)561));
     uint64 largePrime=(uint64)2305843009213693951;
     assert(largePrime==(((uint64)1<<61)-1));
-    assert(std::numtheory::mulMod(largePrime-1,largePrime-1,largePrime)==1);
-    assert(std::numtheory::isPrime((uint64)65537));
+    assert(std::number_theory::mul_mod(largePrime-1,largePrime-1,largePrime)==1);
+    assert(std::number_theory::is_prime((uint64)65537));
     println("generic matrix numerics number theory OK");
 }
 ```
@@ -103,7 +103,7 @@ generic matrix numerics number theory OK
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-349"></a>`struct Numerics` | 数值计算算法的静态入口。 |
+| 模块 | <a id="symbol-374"></a>`struct Numerics` | 数值计算算法的静态入口。 |
 
 ## 函数索引
 
@@ -114,8 +114,8 @@ generic matrix numerics number theory OK
 | [Numerics::bisect](#api-2) | `static float64 bisect(float64 fn(float64) function, float64 left, float64 right, float64 tolerance, int64 maxIterations)` |
 | [Numerics::rk4Step](#api-3) | `static float64 rk4Step(float64 fn(float64, float64) derivative, float64 time, float64 value, float64 step)` |
 | [Numerics::newton](#api-4) | `static float64 newton(float64 fn(float64) function, float64 initial, float64 tolerance, int64 maxIterations)` |
-| [Numerics::solveOdeEuler](#api-5) | `static std::lang::List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
-| [Numerics::solveOdeRK4](#api-6) | `static std::lang::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
+| [Numerics::solveOdeEuler](#api-5) | `static std::core::List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
+| [Numerics::solveOdeRK4](#api-6) | `static std::core::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
 
 <a id="api-0"></a>
 
@@ -344,7 +344,7 @@ std::numerics::Numerics::newton(function, initial, tolerance, maxIterations);
 **声明**
 
 ```chali
-static std::lang::List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps);
+static std::core::List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps);
 ```
 
 **行为**
@@ -365,7 +365,7 @@ static std::lang::List<float64> solveOdeEuler( float64 fn(float64, float64) rate
 
 **返回值**
 
-`std::lang::List<float64>`。用 Euler 法求解标量初值问题并返回采样列表。
+`std::core::List<float64>`。用 Euler 法求解标量初值问题并返回采样列表。
 
 **错误与边界**
 
@@ -389,7 +389,7 @@ std::numerics::Numerics::solveOdeEuler(rate, initialTime, initialValue, step, st
 **声明**
 
 ```chali
-static std::lang::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps);
+static std::core::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps);
 ```
 
 **行为**
@@ -410,7 +410,7 @@ static std::lang::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, 
 
 **返回值**
 
-`std::lang::List<float64>`。用四阶 RK 法求解标量初值问题并返回采样列表。
+`std::core::List<float64>`。用四阶 RK 法求解标量初值问题并返回采样列表。
 
 **错误与边界**
 

@@ -9,12 +9,12 @@ from compiler_path import compiler_path
 from project_temp import tempfile
 ROOT=Path(__file__).resolve().parents[1]
 BAD=(
- ('let a=std::linalg::Matrix<float64>::zeros(1,2);let result=std::linalg::luDecompose(a);','LU 分解要求方阵'),
- ('let a=std::linalg::Matrix<float64>::identity(2);a.set(0,1,2.0);let result=std::linalg::symmetricEigen(a);','symmetricEigen 要求对称矩阵'),
- ('let a=std::linalg::Matrix<float64>::zeros(0,0);let result=std::linalg::svd(a);','SVD 要求非空矩阵'),
- ('let a=std::linalg::Matrix<float64>::identity(1);let result=std::linalg::jordan2(a);','jordan2 只支持 2x2 矩阵'),
- ('let a=std::linalg::Matrix<float64>::zeros(2,2);a.set(0,1,-1.0);a.set(1,0,1.0);let result=std::linalg::jordan2(a);','jordan2 不支持复特征值'),
- ('let a=std::linalg::Matrix<float64>::identity(2);a.set(0,1,1.0);let result=std::linalg::diagonalize2(a);','矩阵不可对角化'),
+ ('let a=std::linear_algebra::Matrix<float64>::zeros(1,2);let result=std::linear_algebra::lu_decompose(a);','LU 分解要求方阵'),
+ ('let a=std::linear_algebra::Matrix<float64>::identity(2);a.set(0,1,2.0);let result=std::linear_algebra::symmetric_eigen(a);','symmetricEigen 要求对称矩阵'),
+ ('let a=std::linear_algebra::Matrix<float64>::zeros(0,0);let result=std::linear_algebra::svd(a);','SVD 要求非空矩阵'),
+ ('let a=std::linear_algebra::Matrix<float64>::identity(1);let result=std::linear_algebra::jordan2(a);','jordan2 只支持 2x2 矩阵'),
+ ('let a=std::linear_algebra::Matrix<float64>::zeros(2,2);a.set(0,1,-1.0);a.set(1,0,1.0);let result=std::linear_algebra::jordan2(a);','jordan2 不支持复特征值'),
+ ('let a=std::linear_algebra::Matrix<float64>::identity(2);a.set(0,1,1.0);let result=std::linear_algebra::diagonalize2(a);','矩阵不可对角化'),
 )
 def main():
     """冻结功能输出及诊断，不生成性能测量数据。"""
@@ -37,7 +37,7 @@ def main():
             print(f'{allocator}/{checks}: LU, LUR, eigen, SVD, Jordan, diagonalization, solve and independent copies passed',flush=True)
         expected=[] if args.record_baseline else json.loads(baseline.read_text(encoding='utf-8'))['diagnostics']
         for index,(setup,diagnostic) in enumerate(BAD):
-            path=work/f'bad-{index}.chl';path.write_text('import std::linalg;\nvoid main(){'+setup+'}',encoding='utf-8')
+            path=work/f'bad-{index}.chl';path.write_text('import std::linear_algebra;\nvoid main(){'+setup+'}',encoding='utf-8')
             result=run([compiler,'run',path,'--out',work/f'bad-{index}'],False)
             first=result.stderr.splitlines()[0];assert diagnostic in first,result
             if args.record_baseline:expected.append(first)

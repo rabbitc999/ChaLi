@@ -14,7 +14,7 @@ import std::text;
 
 ## 公共约定与错误边界
 
-长度、位置和填充宽度按 UTF-8 字节，不按字符数或显示宽度。大小写转换仅 ASCII。除 charAt 返回字节外，变换返回新字符串。字符串下标要求 UTF-8 字符边界；切片允许任意字节端点，处理中文码点时使用显式 UTF-8 方法。kmpFind/kmpFindAll/kmpFailureTable 是字节级 KMP：kmpFind 返回首个匹配的字节下标，找不到为 -1，空针返回 0（与 find 口径一致）；kmpFindAll 返回升序命中下标、允许重叠匹配，空针给空列表；kmpFailureTable 返回长度等于针长的失配表。KMP 失配表、首次及重叠匹配均由 ChaLi 实现，不依赖宿主 KMP 胶水。
+长度、位置和填充宽度按 UTF-8 字节，不按字符数或显示宽度。大小写转换仅 ASCII。除 charAt 返回字节外，变换返回新字符串。字符串下标要求 UTF-8 字符边界；切片允许任意字节端点，处理中文码点时使用显式 UTF-8 方法。kmpFind/kmpFindAll/kmpFailureTable 是字节级 KMP：kmpFind 返回首个匹配的字节下标，找不到为 -1，空针返回 0（与 find 口径一致）；kmpFindAll 返回升序命中下标、允许重叠匹配，空针给空列表；kmpFailureTable 返回长度等于针长的失配表。KMP 失配表、首次及重叠匹配均由 ChaLi 实现，不依赖宿主 KMP 胶水。strip_prefix 与 strip_suffix 各移除一次匹配，is_blank 只识别 ASCII 空白，count_matches 统计互不重叠的匹配且空子串计零。
 
 ## 参考代码
 
@@ -69,56 +69,60 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-448"></a>`struct KmpReply` | KMP 操作回执，所有字段由语言实现直接更新。 |
-| KmpReply | <a id="symbol-449"></a>`String error` | 本次胶水调用的错误说明；成功时为空串。 |
-| KmpReply | <a id="symbol-450"></a>`int64 value` | 首个匹配的字节下标；找不到为 -1。 |
-| KmpReply | <a id="symbol-451"></a>`int64 flag` | 布尔结果：1 = 命中。 |
-| KmpReply | <a id="symbol-452"></a>`List<int64> table` | 长度为针长的 KMP 失配表。 |
-| KmpReply | <a id="symbol-453"></a>`List<int64> positions` | 全部命中下标，升序且允许重叠。 |
-| 模块 | <a id="symbol-454"></a>`struct Text` | 字符串查找、比较、裁剪和替换的静态入口。 |
-| 模块 | <a id="symbol-455"></a>`struct StringBuilder : Drop` | 字符串构建器：把片段收进列表，最后一次分配写入结果区（与 `Text::join` 同口径）。
+| 模块 | <a id="symbol-477"></a>`struct KmpReply` | KMP 操作回执，所有字段由语言实现直接更新。 |
+| KmpReply | <a id="symbol-478"></a>`String error` | 本次胶水调用的错误说明；成功时为空串。 |
+| KmpReply | <a id="symbol-479"></a>`int64 value` | 首个匹配的字节下标；找不到为 -1。 |
+| KmpReply | <a id="symbol-480"></a>`int64 flag` | 布尔结果：1 = 命中。 |
+| KmpReply | <a id="symbol-481"></a>`List<int64> table` | 长度为针长的 KMP 失配表。 |
+| KmpReply | <a id="symbol-482"></a>`List<int64> positions` | 全部命中下标，升序且允许重叠。 |
+| 模块 | <a id="symbol-483"></a>`struct Text` | 字符串查找、比较、裁剪和替换的静态入口。 |
+| 模块 | <a id="symbol-484"></a>`struct StringBuilder : Drop` | 字符串构建器：把片段收进列表，最后一次分配写入结果区（与 `Text::join` 同口径）。
 `s = s + t` 每次复制整串，逐块累加是 O(n²)；构建器把每段代价压到拷贝一次片段，
 `toString` 再用 O(n log k) 的合并收尾。循环拼字符串一律走这里。 |
-| StringBuilder | <a id="symbol-456"></a>`std::lang::List<std::lang::String> chunks` | 已累计的字符串片段。 |
-| StringBuilder | <a id="symbol-457"></a>`int64 length` | 已累计的总字节数。 |
+| StringBuilder | <a id="symbol-485"></a>`std::core::List<std::core::String> chunks` | 已累计的字符串片段。 |
+| StringBuilder | <a id="symbol-486"></a>`int64 length` | 已累计的总字节数。 |
 
 ## 函数索引
 
 | 名称 | 声明 |
 | --- | --- |
-| [Text::find](#api-0) | `static int64 find(std::lang::String text, std::lang::String needle)` |
-| [Text::rfind](#api-1) | `static int64 rfind(std::lang::String text, std::lang::String needle)` |
-| [Text::contains](#api-2) | `static bool contains(std::lang::String text, std::lang::String needle)` |
-| [Text::startsWith](#api-3) | `static bool startsWith(std::lang::String text, std::lang::String prefix)` |
-| [Text::endsWith](#api-4) | `static bool endsWith(std::lang::String text, std::lang::String suffix)` |
-| [Text::compare](#api-5) | `static int64 compare(std::lang::String left, std::lang::String right)` |
-| [Text::toUpper](#api-6) | `static std::lang::String toUpper(std::lang::String text)` |
-| [Text::toLower](#api-7) | `static std::lang::String toLower(std::lang::String text)` |
-| [Text::trim](#api-8) | `static std::lang::String trim(std::lang::String text)` |
-| [Text::ltrim](#api-9) | `static std::lang::String ltrim(std::lang::String text)` |
-| [Text::rtrim](#api-10) | `static std::lang::String rtrim(std::lang::String text)` |
-| [Text::replace](#api-11) | `static std::lang::String replace(std::lang::String text, std::lang::String from, std::lang::String to)` |
-| [Text::repeat](#api-12) | `static std::lang::String repeat(std::lang::String text, int64 count)` |
-| [Text::padStart](#api-13) | `static std::lang::String padStart(std::lang::String text, int64 width, char fill)` |
-| [Text::padEnd](#api-14) | `static std::lang::String padEnd(std::lang::String text, int64 width, char fill)` |
-| [Text::charAt](#api-15) | `static char charAt(std::lang::String text, int64 index)` |
-| [Text::split](#api-16) | `static std::lang::List<std::lang::String> split(std::lang::String text, std::lang::String separator)` |
-| [Text::join](#api-17) | `static std::lang::String join(std::lang::List<std::lang::String> parts, std::lang::String separator)` |
-| [Text::kmpFind](#api-18) | `static int64 kmpFind(std::lang::String text, std::lang::String needle)` |
-| [Text::kmpFindAll](#api-19) | `static std::lang::List<int64> kmpFindAll(std::lang::String text, std::lang::String needle)` |
-| [Text::kmpFailureTable](#api-20) | `static std::lang::List<int64> kmpFailureTable(std::lang::String needle)` |
-| [StringBuilder::drop](#api-21) | `void drop()` |
-| [StringBuilder::create](#api-22) | `static StringBuilder create()` |
-| [StringBuilder::len](#api-23) | `int64 len()` |
-| [StringBuilder::isEmpty](#api-24) | `bool isEmpty()` |
-| [StringBuilder::append](#api-25) | `void append(std::lang::String text)` |
-| [StringBuilder::appendLine](#api-26) | `void appendLine(std::lang::String text)` |
-| [StringBuilder::appendChar](#api-27) | `void appendChar(char value)` |
-| [StringBuilder::appendInt](#api-28) | `void appendInt(int64 value)` |
-| [StringBuilder::appendFloat](#api-29) | `void appendFloat(float64 value)` |
-| [StringBuilder::appendBool](#api-30) | `void appendBool(bool value)` |
-| [StringBuilder::clear](#api-31) | `void clear()` |
-| [StringBuilder::toString](#api-32) | `std::lang::String toString()` |
+| [Text::find](#api-0) | `static int64 find(std::core::String text, std::core::String needle)` |
+| [Text::rfind](#api-1) | `static int64 rfind(std::core::String text, std::core::String needle)` |
+| [Text::contains](#api-2) | `static bool contains(std::core::String text, std::core::String needle)` |
+| [Text::startsWith](#api-3) | `static bool startsWith(std::core::String text, std::core::String prefix)` |
+| [Text::endsWith](#api-4) | `static bool endsWith(std::core::String text, std::core::String suffix)` |
+| [Text::strip_prefix](#api-5) | `static std::core::String strip_prefix(std::core::String text, std::core::String prefix)` |
+| [Text::strip_suffix](#api-6) | `static std::core::String strip_suffix(std::core::String text, std::core::String suffix)` |
+| [Text::is_blank](#api-7) | `static bool is_blank(std::core::String text)` |
+| [Text::count_matches](#api-8) | `static int64 count_matches(std::core::String text, std::core::String needle)` |
+| [Text::compare](#api-9) | `static int64 compare(std::core::String left, std::core::String right)` |
+| [Text::toUpper](#api-10) | `static std::core::String toUpper(std::core::String text)` |
+| [Text::toLower](#api-11) | `static std::core::String toLower(std::core::String text)` |
+| [Text::trim](#api-12) | `static std::core::String trim(std::core::String text)` |
+| [Text::ltrim](#api-13) | `static std::core::String ltrim(std::core::String text)` |
+| [Text::rtrim](#api-14) | `static std::core::String rtrim(std::core::String text)` |
+| [Text::replace](#api-15) | `static std::core::String replace(std::core::String text, std::core::String from, std::core::String to)` |
+| [Text::repeat](#api-16) | `static std::core::String repeat(std::core::String text, int64 count)` |
+| [Text::padStart](#api-17) | `static std::core::String padStart(std::core::String text, int64 width, char fill)` |
+| [Text::padEnd](#api-18) | `static std::core::String padEnd(std::core::String text, int64 width, char fill)` |
+| [Text::charAt](#api-19) | `static char charAt(std::core::String text, int64 index)` |
+| [Text::split](#api-20) | `static std::core::List<std::core::String> split(std::core::String text, std::core::String separator)` |
+| [Text::join](#api-21) | `static std::core::String join(std::core::List<std::core::String> parts, std::core::String separator)` |
+| [Text::kmpFind](#api-22) | `static int64 kmpFind(std::core::String text, std::core::String needle)` |
+| [Text::kmpFindAll](#api-23) | `static std::core::List<int64> kmpFindAll(std::core::String text, std::core::String needle)` |
+| [Text::kmpFailureTable](#api-24) | `static std::core::List<int64> kmpFailureTable(std::core::String needle)` |
+| [StringBuilder::drop](#api-25) | `void drop()` |
+| [StringBuilder::create](#api-26) | `static StringBuilder create()` |
+| [StringBuilder::len](#api-27) | `int64 len()` |
+| [StringBuilder::isEmpty](#api-28) | `bool isEmpty()` |
+| [StringBuilder::append](#api-29) | `void append(std::core::String text)` |
+| [StringBuilder::appendLine](#api-30) | `void appendLine(std::core::String text)` |
+| [StringBuilder::appendChar](#api-31) | `void appendChar(char value)` |
+| [StringBuilder::appendInt](#api-32) | `void appendInt(int64 value)` |
+| [StringBuilder::appendFloat](#api-33) | `void appendFloat(float64 value)` |
+| [StringBuilder::appendBool](#api-34) | `void appendBool(bool value)` |
+| [StringBuilder::clear](#api-35) | `void clear()` |
+| [StringBuilder::toString](#api-36) | `std::core::String toString()` |
 
 <a id="api-0"></a>
 
@@ -127,7 +131,7 @@ void main() {
 **声明**
 
 ```chali
-static int64 find(std::lang::String text, std::lang::String needle);
+static int64 find(std::core::String text, std::core::String needle);
 ```
 
 **行为**
@@ -140,8 +144,8 @@ static int64 find(std::lang::String text, std::lang::String needle);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `needle` | `std::lang::String needle` | 待查找子串 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `needle` | `std::core::String needle` | 待查找子串 | 无 |
 
 **返回值**
 
@@ -168,7 +172,7 @@ std::text::Text::find(text, needle);
 **声明**
 
 ```chali
-static int64 rfind(std::lang::String text, std::lang::String needle);
+static int64 rfind(std::core::String text, std::core::String needle);
 ```
 
 **行为**
@@ -181,8 +185,8 @@ static int64 rfind(std::lang::String text, std::lang::String needle);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `needle` | `std::lang::String needle` | 待查找子串 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `needle` | `std::core::String needle` | 待查找子串 | 无 |
 
 **返回值**
 
@@ -209,7 +213,7 @@ std::text::Text::rfind(text, needle);
 **声明**
 
 ```chali
-static bool contains(std::lang::String text, std::lang::String needle);
+static bool contains(std::core::String text, std::core::String needle);
 ```
 
 **行为**
@@ -222,8 +226,8 @@ static bool contains(std::lang::String text, std::lang::String needle);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `needle` | `std::lang::String needle` | 待查找子串 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `needle` | `std::core::String needle` | 待查找子串 | 无 |
 
 **返回值**
 
@@ -250,7 +254,7 @@ std::text::Text::contains(text, needle);
 **声明**
 
 ```chali
-static bool startsWith(std::lang::String text, std::lang::String prefix);
+static bool startsWith(std::core::String text, std::core::String prefix);
 ```
 
 **行为**
@@ -261,8 +265,8 @@ static bool startsWith(std::lang::String text, std::lang::String prefix);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `prefix` | `std::lang::String prefix` | 前缀 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `prefix` | `std::core::String prefix` | 前缀 | 无 |
 
 **返回值**
 
@@ -289,7 +293,7 @@ std::text::Text::startsWith(text, prefix);
 **声明**
 
 ```chali
-static bool endsWith(std::lang::String text, std::lang::String suffix);
+static bool endsWith(std::core::String text, std::core::String suffix);
 ```
 
 **行为**
@@ -300,8 +304,8 @@ static bool endsWith(std::lang::String text, std::lang::String suffix);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `suffix` | `std::lang::String suffix` | 后缀 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `suffix` | `std::core::String suffix` | 后缀 | 无 |
 
 **返回值**
 
@@ -323,12 +327,167 @@ std::text::Text::endsWith(text, suffix);
 
 <a id="api-5"></a>
 
-### Text::compare（6）
+### Text::strip_prefix（6）
 
 **声明**
 
 ```chali
-static int64 compare(std::lang::String left, std::lang::String right);
+static std::core::String strip_prefix(std::core::String text, std::core::String prefix);
+```
+
+**行为**
+
+去掉一次匹配的前缀，未匹配时返回原值副本。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `prefix` | `std::core::String prefix` | 前缀 | 无 |
+
+**返回值**
+
+`std::core::String`。去掉一次匹配的前缀，未匹配时返回原值副本。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::text::Text::strip_prefix(text, prefix);
+```
+
+**源码**：[source/std/text.chl:304](../../source/std/text.chl#L304)。
+
+**完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
+
+<a id="api-6"></a>
+
+### Text::strip_suffix（7）
+
+**声明**
+
+```chali
+static std::core::String strip_suffix(std::core::String text, std::core::String suffix);
+```
+
+**行为**
+
+去掉一次匹配的后缀，未匹配时返回原值副本。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `suffix` | `std::core::String suffix` | 后缀 | 无 |
+
+**返回值**
+
+`std::core::String`。去掉一次匹配的后缀，未匹配时返回原值副本。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::text::Text::strip_suffix(text, suffix);
+```
+
+**源码**：[source/std/text.chl:309](../../source/std/text.chl#L309)。
+
+**完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
+
+<a id="api-7"></a>
+
+### Text::is_blank（8）
+
+**声明**
+
+```chali
+static bool is_blank(std::core::String text);
+```
+
+**行为**
+
+判断文本是否为空或仅由 ASCII 空白组成。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+
+**返回值**
+
+`bool`。判断文本是否为空或仅由 ASCII 空白组成。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::text::Text::is_blank(text);
+```
+
+**源码**：[source/std/text.chl:314](../../source/std/text.chl#L314)。
+
+**完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
+
+<a id="api-8"></a>
+
+### Text::count_matches（9）
+
+**声明**
+
+```chali
+static int64 count_matches(std::core::String text, std::core::String needle);
+```
+
+**行为**
+
+统计从左到右互不重叠的匹配，空子串返回零。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `needle` | `std::core::String needle` | 待查找子串 | 无 |
+
+**返回值**
+
+`int64`。统计从左到右互不重叠的匹配，空子串返回零。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::text::Text::count_matches(text, needle);
+```
+
+**源码**：[source/std/text.chl:322](../../source/std/text.chl#L322)。
+
+**完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
+
+<a id="api-9"></a>
+
+### Text::compare（10）
+
+**声明**
+
+```chali
+static int64 compare(std::core::String left, std::core::String right);
 ```
 
 **行为**
@@ -341,8 +500,8 @@ static int64 compare(std::lang::String left, std::lang::String right);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `left` | `std::lang::String left` | 左操作数或区间左端 | 无 |
-| `right` | `std::lang::String right` | 右操作数或区间右端 | 无 |
+| `left` | `std::core::String left` | 左操作数或区间左端 | 无 |
+| `right` | `std::core::String right` | 右操作数或区间右端 | 无 |
 
 **返回值**
 
@@ -358,18 +517,18 @@ static int64 compare(std::lang::String left, std::lang::String right);
 std::text::Text::compare(left, right);
 ```
 
-**源码**：[source/std/text.chl:304](../../source/std/text.chl#L304)。
+**源码**：[source/std/text.chl:335](../../source/std/text.chl#L335)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-6"></a>
+<a id="api-10"></a>
 
-### Text::toUpper（7）
+### Text::toUpper（11）
 
 **声明**
 
 ```chali
-static std::lang::String toUpper(std::lang::String text);
+static std::core::String toUpper(std::core::String text);
 ```
 
 **行为**
@@ -382,11 +541,11 @@ ASCII 大小写（VM 里不认区域设置，结果可复现）。
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::lang::String`。将 ASCII 小写字母转换成大写。
+`std::core::String`。将 ASCII 小写字母转换成大写。
 
 **错误与边界**
 
@@ -398,18 +557,18 @@ ASCII 大小写（VM 里不认区域设置，结果可复现）。
 std::text::Text::toUpper(text);
 ```
 
-**源码**：[source/std/text.chl:310](../../source/std/text.chl#L310)。
+**源码**：[source/std/text.chl:341](../../source/std/text.chl#L341)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-7"></a>
+<a id="api-11"></a>
 
-### Text::toLower（8）
+### Text::toLower（12）
 
 **声明**
 
 ```chali
-static std::lang::String toLower(std::lang::String text);
+static std::core::String toLower(std::core::String text);
 ```
 
 **行为**
@@ -420,11 +579,11 @@ static std::lang::String toLower(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::lang::String`。将 ASCII 大写字母转换成小写。
+`std::core::String`。将 ASCII 大写字母转换成小写。
 
 **错误与边界**
 
@@ -436,18 +595,18 @@ static std::lang::String toLower(std::lang::String text);
 std::text::Text::toLower(text);
 ```
 
-**源码**：[source/std/text.chl:311](../../source/std/text.chl#L311)。
+**源码**：[source/std/text.chl:342](../../source/std/text.chl#L342)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-8"></a>
+<a id="api-12"></a>
 
-### Text::trim（9）
+### Text::trim（13）
 
 **声明**
 
 ```chali
-static std::lang::String trim(std::lang::String text);
+static std::core::String trim(std::core::String text);
 ```
 
 **行为**
@@ -460,11 +619,11 @@ static std::lang::String trim(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::lang::String`。去掉两端 ASCII 空白。
+`std::core::String`。去掉两端 ASCII 空白。
 
 **错误与边界**
 
@@ -476,18 +635,18 @@ static std::lang::String trim(std::lang::String text);
 std::text::Text::trim(text);
 ```
 
-**源码**：[source/std/text.chl:313](../../source/std/text.chl#L313)。
+**源码**：[source/std/text.chl:344](../../source/std/text.chl#L344)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-9"></a>
+<a id="api-13"></a>
 
-### Text::ltrim（10）
+### Text::ltrim（14）
 
 **声明**
 
 ```chali
-static std::lang::String ltrim(std::lang::String text);
+static std::core::String ltrim(std::core::String text);
 ```
 
 **行为**
@@ -498,11 +657,11 @@ static std::lang::String ltrim(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::lang::String`。去掉左端 ASCII 空白。
+`std::core::String`。去掉左端 ASCII 空白。
 
 **错误与边界**
 
@@ -514,18 +673,18 @@ static std::lang::String ltrim(std::lang::String text);
 std::text::Text::ltrim(text);
 ```
 
-**源码**：[source/std/text.chl:314](../../source/std/text.chl#L314)。
+**源码**：[source/std/text.chl:345](../../source/std/text.chl#L345)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-10"></a>
+<a id="api-14"></a>
 
-### Text::rtrim（11）
+### Text::rtrim（15）
 
 **声明**
 
 ```chali
-static std::lang::String rtrim(std::lang::String text);
+static std::core::String rtrim(std::core::String text);
 ```
 
 **行为**
@@ -536,11 +695,11 @@ static std::lang::String rtrim(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::lang::String`。去掉右端 ASCII 空白。
+`std::core::String`。去掉右端 ASCII 空白。
 
 **错误与边界**
 
@@ -552,18 +711,18 @@ static std::lang::String rtrim(std::lang::String text);
 std::text::Text::rtrim(text);
 ```
 
-**源码**：[source/std/text.chl:315](../../source/std/text.chl#L315)。
+**源码**：[source/std/text.chl:346](../../source/std/text.chl#L346)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-11"></a>
+<a id="api-15"></a>
 
-### Text::replace（12）
+### Text::replace（16）
 
 **声明**
 
 ```chali
-static std::lang::String replace(std::lang::String text, std::lang::String from, std::lang::String to);
+static std::core::String replace(std::core::String text, std::core::String from, std::core::String to);
 ```
 
 **行为**
@@ -576,13 +735,13 @@ static std::lang::String replace(std::lang::String text, std::lang::String from,
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `from` | `std::lang::String from` | 被替换的子串 | 无 |
-| `to` | `std::lang::String to` | 替换文本 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `from` | `std::core::String from` | 被替换的子串 | 无 |
+| `to` | `std::core::String to` | 替换文本 | 无 |
 
 **返回值**
 
-`std::lang::String`。将所有 from 子串替换为 to；空 from 保留副本。
+`std::core::String`。将所有 from 子串替换为 to；空 from 保留副本。
 
 **错误与边界**
 
@@ -594,18 +753,18 @@ static std::lang::String replace(std::lang::String text, std::lang::String from,
 std::text::Text::replace(text, from, to);
 ```
 
-**源码**：[source/std/text.chl:317](../../source/std/text.chl#L317)。
+**源码**：[source/std/text.chl:348](../../source/std/text.chl#L348)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-12"></a>
+<a id="api-16"></a>
 
-### Text::repeat（13）
+### Text::repeat（17）
 
 **声明**
 
 ```chali
-static std::lang::String repeat(std::lang::String text, int64 count);
+static std::core::String repeat(std::core::String text, int64 count);
 ```
 
 **行为**
@@ -618,12 +777,12 @@ static std::lang::String repeat(std::lang::String text, int64 count);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 | `count` | `int64 count` | 元素或字节数量，具体单位见行为说明 | 无 |
 
 **返回值**
 
-`std::lang::String`。重复给定值或文本；文本次数非正时为空串，迭代器版本为无限源。
+`std::core::String`。重复给定值或文本；文本次数非正时为空串，迭代器版本为无限源。
 
 **错误与边界**
 
@@ -635,18 +794,18 @@ static std::lang::String repeat(std::lang::String text, int64 count);
 std::text::Text::repeat(text, count);
 ```
 
-**源码**：[source/std/text.chl:321](../../source/std/text.chl#L321)。
+**源码**：[source/std/text.chl:352](../../source/std/text.chl#L352)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-13"></a>
+<a id="api-17"></a>
 
-### Text::padStart（14）
+### Text::padStart（18）
 
 **声明**
 
 ```chali
-static std::lang::String padStart(std::lang::String text, int64 width, char fill);
+static std::core::String padStart(std::core::String text, int64 width, char fill);
 ```
 
 **行为**
@@ -659,13 +818,13 @@ static std::lang::String padStart(std::lang::String text, int64 width, char fill
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 | `width` | `int64 width` | 目标字节宽度或定宽字段大小 | 无 |
 | `fill` | `char fill` | 填充字节 | 无 |
 
 **返回值**
 
-`std::lang::String`。在左侧以 fill 补到 width 字节。
+`std::core::String`。在左侧以 fill 补到 width 字节。
 
 **错误与边界**
 
@@ -677,18 +836,18 @@ static std::lang::String padStart(std::lang::String text, int64 width, char fill
 std::text::Text::padStart(text, width, fill);
 ```
 
-**源码**：[source/std/text.chl:325](../../source/std/text.chl#L325)。
+**源码**：[source/std/text.chl:356](../../source/std/text.chl#L356)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-14"></a>
+<a id="api-18"></a>
 
-### Text::padEnd（15）
+### Text::padEnd（19）
 
 **声明**
 
 ```chali
-static std::lang::String padEnd(std::lang::String text, int64 width, char fill);
+static std::core::String padEnd(std::core::String text, int64 width, char fill);
 ```
 
 **行为**
@@ -699,13 +858,13 @@ static std::lang::String padEnd(std::lang::String text, int64 width, char fill);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 | `width` | `int64 width` | 目标字节宽度或定宽字段大小 | 无 |
 | `fill` | `char fill` | 填充字节 | 无 |
 
 **返回值**
 
-`std::lang::String`。在右侧以 fill 补到 width 字节。
+`std::core::String`。在右侧以 fill 补到 width 字节。
 
 **错误与边界**
 
@@ -717,18 +876,18 @@ static std::lang::String padEnd(std::lang::String text, int64 width, char fill);
 std::text::Text::padEnd(text, width, fill);
 ```
 
-**源码**：[source/std/text.chl:328](../../source/std/text.chl#L328)。
+**源码**：[source/std/text.chl:359](../../source/std/text.chl#L359)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-15"></a>
+<a id="api-19"></a>
 
-### Text::charAt（16）
+### Text::charAt（20）
 
 **声明**
 
 ```chali
-static char charAt(std::lang::String text, int64 index);
+static char charAt(std::core::String text, int64 index);
 ```
 
 **行为**
@@ -741,7 +900,7 @@ static char charAt(std::lang::String text, int64 index);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 | `index` | `int64 index` | 从 0 开始的位置 | 无 |
 
 **返回值**
@@ -758,18 +917,18 @@ static char charAt(std::lang::String text, int64 index);
 std::text::Text::charAt(text, index);
 ```
 
-**源码**：[source/std/text.chl:332](../../source/std/text.chl#L332)。
+**源码**：[source/std/text.chl:363](../../source/std/text.chl#L363)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-16"></a>
+<a id="api-20"></a>
 
-### Text::split（17）
+### Text::split（21）
 
 **声明**
 
 ```chali
-static std::lang::List<std::lang::String> split(std::lang::String text, std::lang::String separator);
+static std::core::List<std::core::String> split(std::core::String text, std::core::String separator);
 ```
 
 **行为**
@@ -782,12 +941,12 @@ static std::lang::List<std::lang::String> split(std::lang::String text, std::lan
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `separator` | `std::lang::String separator` | 分隔文本 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `separator` | `std::core::String separator` | 分隔文本 | 无 |
 
 **返回值**
 
-`std::lang::List<std::lang::String>`。按 separator 分割，空分隔符把整串作为一项。
+`std::core::List<std::core::String>`。按 separator 分割，空分隔符把整串作为一项。
 
 **错误与边界**
 
@@ -799,18 +958,18 @@ static std::lang::List<std::lang::String> split(std::lang::String text, std::lan
 std::text::Text::split(text, separator);
 ```
 
-**源码**：[source/std/text.chl:335](../../source/std/text.chl#L335)。
+**源码**：[source/std/text.chl:366](../../source/std/text.chl#L366)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-17"></a>
+<a id="api-21"></a>
 
-### Text::join（18）
+### Text::join（22）
 
 **声明**
 
 ```chali
-static std::lang::String join(std::lang::List<std::lang::String> parts, std::lang::String separator);
+static std::core::String join(std::core::List<std::core::String> parts, std::core::String separator);
 ```
 
 **行为**
@@ -823,12 +982,12 @@ static std::lang::String join(std::lang::List<std::lang::String> parts, std::lan
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `parts` | `std::lang::List<std::lang::String> parts` | 待拼接文本列表 | 无 |
-| `separator` | `std::lang::String separator` | 分隔文本 | 无 |
+| `parts` | `std::core::List<std::core::String> parts` | 待拼接文本列表 | 无 |
+| `separator` | `std::core::String separator` | 分隔文本 | 无 |
 
 **返回值**
 
-`std::lang::String`。用 separator 连接 parts。
+`std::core::String`。用 separator 连接 parts。
 
 **错误与边界**
 
@@ -840,18 +999,18 @@ static std::lang::String join(std::lang::List<std::lang::String> parts, std::lan
 std::text::Text::join(parts, separator);
 ```
 
-**源码**：[source/std/text.chl:340](../../source/std/text.chl#L340)。
+**源码**：[source/std/text.chl:371](../../source/std/text.chl#L371)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-18"></a>
+<a id="api-22"></a>
 
-### Text::kmpFind（19）
+### Text::kmpFind（23）
 
 **声明**
 
 ```chali
-static int64 kmpFind(std::lang::String text, std::lang::String needle);
+static int64 kmpFind(std::core::String text, std::core::String needle);
 ```
 
 **行为**
@@ -862,8 +1021,8 @@ KMP 查找：针在串中首次出现的字节下标，O(n + m)。
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 干草堆。 | 无 |
-| `needle` | `std::lang::String needle` | 针。 | 无 |
+| `text` | `std::core::String text` | 干草堆。 | 无 |
+| `needle` | `std::core::String needle` | 针。 | 无 |
 
 **返回值**
 
@@ -879,18 +1038,18 @@ KMP 查找：针在串中首次出现的字节下标，O(n + m)。
 std::text::Text::kmpFind(text, needle);
 ```
 
-**源码**：[source/std/text.chl:351](../../source/std/text.chl#L351)。
+**源码**：[source/std/text.chl:382](../../source/std/text.chl#L382)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-19"></a>
+<a id="api-23"></a>
 
-### Text::kmpFindAll（20）
+### Text::kmpFindAll（24）
 
 **声明**
 
 ```chali
-static std::lang::List<int64> kmpFindAll(std::lang::String text, std::lang::String needle);
+static std::core::List<int64> kmpFindAll(std::core::String text, std::core::String needle);
 ```
 
 **行为**
@@ -901,12 +1060,12 @@ KMP 查找全部（可重叠）匹配位置。
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 干草堆。 | 无 |
-| `needle` | `std::lang::String needle` | 针。 | 无 |
+| `text` | `std::core::String text` | 干草堆。 | 无 |
+| `needle` | `std::core::String needle` | 针。 | 无 |
 
 **返回值**
 
-`std::lang::List<int64>`。KMP 查找全部（可重叠）匹配位置。
+`std::core::List<int64>`。KMP 查找全部（可重叠）匹配位置。
 
 **错误与边界**
 
@@ -918,18 +1077,18 @@ KMP 查找全部（可重叠）匹配位置。
 std::text::Text::kmpFindAll(text, needle);
 ```
 
-**源码**：[source/std/text.chl:363](../../source/std/text.chl#L363)。
+**源码**：[source/std/text.chl:394](../../source/std/text.chl#L394)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-20"></a>
+<a id="api-24"></a>
 
-### Text::kmpFailureTable（21）
+### Text::kmpFailureTable（25）
 
 **声明**
 
 ```chali
-static std::lang::List<int64> kmpFailureTable(std::lang::String needle);
+static std::core::List<int64> kmpFailureTable(std::core::String needle);
 ```
 
 **行为**
@@ -940,11 +1099,11 @@ static std::lang::List<int64> kmpFailureTable(std::lang::String needle);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `needle` | `std::lang::String needle` | 针。 | 无 |
+| `needle` | `std::core::String needle` | 针。 | 无 |
 
 **返回值**
 
-`std::lang::List<int64>`。计算 KMP 失配表：table[i] 是 needle[0..i] 的最长相等真前后缀长度。
+`std::core::List<int64>`。计算 KMP 失配表：table[i] 是 needle[0..i] 的最长相等真前后缀长度。
 
 **错误与边界**
 
@@ -956,13 +1115,13 @@ static std::lang::List<int64> kmpFailureTable(std::lang::String needle);
 std::text::Text::kmpFailureTable(needle);
 ```
 
-**源码**：[source/std/text.chl:374](../../source/std/text.chl#L374)。
+**源码**：[source/std/text.chl:405](../../source/std/text.chl#L405)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-21"></a>
+<a id="api-25"></a>
 
-### StringBuilder::drop（22）
+### StringBuilder::drop（26）
 
 **声明**
 
@@ -974,7 +1133,7 @@ void drop();
 
 释放对象拥有的资源，调用后遵守本模块失效规则。
 
-///< 已累计的总字节数。
+< 已累计的总字节数。
 
 **参数**
 
@@ -994,13 +1153,13 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/std/text.chl:391](../../source/std/text.chl#L391)。
+**源码**：[source/std/text.chl:422](../../source/std/text.chl#L422)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-22"></a>
+<a id="api-26"></a>
 
-### StringBuilder::create（23）
+### StringBuilder::create（27）
 
 **声明**
 
@@ -1032,13 +1191,13 @@ static StringBuilder create();
 std::text::StringBuilder::create();
 ```
 
-**源码**：[source/std/text.chl:394](../../source/std/text.chl#L394)。
+**源码**：[source/std/text.chl:425](../../source/std/text.chl#L425)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-23"></a>
+<a id="api-27"></a>
 
-### StringBuilder::len（24）
+### StringBuilder::len（28）
 
 **声明**
 
@@ -1070,13 +1229,13 @@ int64 len();
 obj.len();
 ```
 
-**源码**：[source/std/text.chl:399](../../source/std/text.chl#L399)。
+**源码**：[source/std/text.chl:430](../../source/std/text.chl#L430)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-24"></a>
+<a id="api-28"></a>
 
-### StringBuilder::isEmpty（25）
+### StringBuilder::isEmpty（29）
 
 **声明**
 
@@ -1108,18 +1267,18 @@ bool isEmpty();
 obj.isEmpty();
 ```
 
-**源码**：[source/std/text.chl:401](../../source/std/text.chl#L401)。
+**源码**：[source/std/text.chl:432](../../source/std/text.chl#L432)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-25"></a>
+<a id="api-29"></a>
 
-### StringBuilder::append（26）
+### StringBuilder::append（30）
 
 **声明**
 
 ```chali
-void append(std::lang::String text);
+void append(std::core::String text);
 ```
 
 **行为**
@@ -1130,7 +1289,7 @@ void append(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
@@ -1146,18 +1305,18 @@ void append(std::lang::String text);
 obj.append(text);
 ```
 
-**源码**：[source/std/text.chl:406](../../source/std/text.chl#L406)。
+**源码**：[source/std/text.chl:437](../../source/std/text.chl#L437)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-26"></a>
+<a id="api-30"></a>
 
-### StringBuilder::appendLine（27）
+### StringBuilder::appendLine（31）
 
 **声明**
 
 ```chali
-void appendLine(std::lang::String text);
+void appendLine(std::core::String text);
 ```
 
 **行为**
@@ -1168,7 +1327,7 @@ void appendLine(std::lang::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
@@ -1184,13 +1343,13 @@ void appendLine(std::lang::String text);
 obj.appendLine(text);
 ```
 
-**源码**：[source/std/text.chl:411](../../source/std/text.chl#L411)。
+**源码**：[source/std/text.chl:442](../../source/std/text.chl#L442)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-27"></a>
+<a id="api-31"></a>
 
-### StringBuilder::appendChar（28）
+### StringBuilder::appendChar（32）
 
 **声明**
 
@@ -1222,13 +1381,13 @@ void appendChar(char value);
 obj.appendChar(value);
 ```
 
-**源码**：[source/std/text.chl:413](../../source/std/text.chl#L413)。
+**源码**：[source/std/text.chl:444](../../source/std/text.chl#L444)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-28"></a>
+<a id="api-32"></a>
 
-### StringBuilder::appendInt（29）
+### StringBuilder::appendInt（33）
 
 **声明**
 
@@ -1260,13 +1419,13 @@ void appendInt(int64 value);
 obj.appendInt(value);
 ```
 
-**源码**：[source/std/text.chl:415](../../source/std/text.chl#L415)。
+**源码**：[source/std/text.chl:446](../../source/std/text.chl#L446)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-29"></a>
+<a id="api-33"></a>
 
-### StringBuilder::appendFloat（30）
+### StringBuilder::appendFloat（34）
 
 **声明**
 
@@ -1298,13 +1457,13 @@ void appendFloat(float64 value);
 obj.appendFloat(value);
 ```
 
-**源码**：[source/std/text.chl:417](../../source/std/text.chl#L417)。
+**源码**：[source/std/text.chl:448](../../source/std/text.chl#L448)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-30"></a>
+<a id="api-34"></a>
 
-### StringBuilder::appendBool（31）
+### StringBuilder::appendBool（35）
 
 **声明**
 
@@ -1336,13 +1495,13 @@ void appendBool(bool value);
 obj.appendBool(value);
 ```
 
-**源码**：[source/std/text.chl:419](../../source/std/text.chl#L419)。
+**源码**：[source/std/text.chl:450](../../source/std/text.chl#L450)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-31"></a>
+<a id="api-35"></a>
 
-### StringBuilder::clear（32）
+### StringBuilder::clear（36）
 
 **声明**
 
@@ -1374,18 +1533,18 @@ void clear();
 obj.clear();
 ```
 
-**源码**：[source/std/text.chl:425](../../source/std/text.chl#L425)。
+**源码**：[source/std/text.chl:456](../../source/std/text.chl#L456)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。
 
-<a id="api-32"></a>
+<a id="api-36"></a>
 
-### StringBuilder::toString（33）
+### StringBuilder::toString（37）
 
 **声明**
 
 ```chali
-std::lang::String toString();
+std::core::String toString();
 ```
 
 **行为**
@@ -1400,7 +1559,7 @@ std::lang::String toString();
 
 **返回值**
 
-`std::lang::String`。由实现者将当前值转换为文本，Formattable 重载接收 style。
+`std::core::String`。由实现者将当前值转换为文本，Formattable 重载接收 style。
 
 **错误与边界**
 
@@ -1412,6 +1571,6 @@ std::lang::String toString();
 obj.toString();
 ```
 
-**源码**：[source/std/text.chl:432](../../source/std/text.chl#L432)。
+**源码**：[source/std/text.chl:463](../../source/std/text.chl#L463)。
 
 **完整示例**：[example/samples/std_glue_edges.chl](../../example/samples/std_glue_edges.chl)。

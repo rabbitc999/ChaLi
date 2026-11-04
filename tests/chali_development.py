@@ -48,29 +48,29 @@ def main():
                 assert result.stderr.count('[CHL1601]') == 1, result.stderr
             else:
                 assert not result.stderr, result.stderr
-        source.write_text('void main(){std::lang::println("{} {}",1);}', encoding='utf-8')
+        source.write_text('void main(){std::core::println("{} {}",1);}', encoding='utf-8')
         formatting_error = json.loads(run('--diagnostics=json', source, expected=1).stdout)['diagnostics'][0]
         assert formatting_error['code'] == 'CHL1400', formatting_error
         cli_project = directory / 'cli-project'
         cli_project.mkdir()
         (cli_project / 'chali.toml').write_text('[chali]\nrun="run"\n', encoding='utf-8')
         cli_source = cli_project / 'main.chl'
-        cli_source.write_text('void main(){std::lang::println("executed");}', encoding='utf-8')
+        cli_source.write_text('void main(){std::core::println("executed");}', encoding='utf-8')
         cli_prefix = directory / 'cli-arguments'
         result = run('--out', cli_prefix, cli_source, '--', '--check')
         assert result.stdout == 'executed\n' and cli_prefix.with_suffix('.ll').exists(), result
         print('[通过] 检查模式、JSON 诊断、格式检查、程序参数边界与三个功能样例', flush=True)
-        source.write_text('void main() {\nstd::lang::println("{}", "{ literal }"); // } comment\nif (true) {\nreturn;\n}\nreturn;\n}\n', encoding='utf-8')
+        source.write_text('void main() {\nstd::core::println("{}", "{ literal }"); // } comment\nif (true) {\nreturn;\n}\nreturn;\n}\n', encoding='utf-8')
         run('fmt', source, '--check', expected=1)
         run('fmt', source, '--write')
         run('fmt', source, '--check')
         formatted = source.read_text(encoding='utf-8')
-        assert '    std::lang::println("{}", "{ literal }"); // } comment' in formatted
+        assert '    std::core::println("{}", "{ literal }"); // } comment' in formatted
         assert '        return;' in formatted
         run('run', source, '--out', directory / 'formatted')
         tests = directory / 'tests'
         tests.mkdir()
-        (tests / 'test_pass.chl').write_text('void main(){ std::lang::println("ok"); }', encoding='utf-8')
+        (tests / 'test_pass.chl').write_text('void main(){ std::core::println("ok"); }', encoding='utf-8')
         (tests / 'test_pass.expected').write_text('ok\n', encoding='utf-8')
         (tests / 'skip_test.chl').write_text('invalid code', encoding='utf-8')
         (tests / 'skip_test.test.toml').write_text('skip = "fixture"\n', encoding='utf-8')
@@ -78,7 +78,7 @@ def main():
         assert summary == {'passed': 1, 'failed': 0, 'skipped': 1}, summary
         summary = json.loads(run('test', tests, '--json', '--filter', 'test_pass').stdout)['summary']
         assert summary == {'passed': 1, 'failed': 0, 'skipped': 0}
-        (tests / 'test_fail.chl').write_text('void main(){ std::lang::assert(false); }', encoding='utf-8')
+        (tests / 'test_fail.chl').write_text('void main(){ std::core::assert(false); }', encoding='utf-8')
         summary = json.loads(run('test', tests, '--json', expected=1).stdout)['summary']
         assert summary['failed'] == 1
         (tests / 'timeout_test.chl').write_text('void main(){while(true){}}', encoding='utf-8')
@@ -93,7 +93,7 @@ def main():
         (library / 'values.chl').write_text('module values;\nint64 answer() { return 42; }\n', encoding='utf-8')
         (app / 'chali.toml').write_text('[package]\nname="app"\nversion="0.1.0"\ncompiler=">=0.7.0"\n[dependencies]\nvalues="path:../lib"\n', encoding='utf-8')
         app_source = app / 'main.chl'
-        app_source.write_text('import values;\nvoid main(){std::lang::assert(values::answer()==42);return;}\n', encoding='utf-8')
+        app_source.write_text('import values;\nvoid main(){std::core::assert(values::answer()==42);return;}\n', encoding='utf-8')
         run('--check', app_source, expected=1)
         run('deps', 'lock', '--offline', '--project', app)
         lock = (app / 'chali.lock').read_bytes()
@@ -140,7 +140,7 @@ def main():
         print('[通过] 固定 Git 提交、本地下载及离线缓存', flush=True)
         source.write_text('void main(){ }\n', encoding='utf-8')
         uri = source.as_uri()
-        messages = [{'id': 1, 'method': 'initialize', 'params': {}}, {'method': 'textDocument/didOpen', 'params': {'textDocument': {'uri': uri, 'version': 1, 'languageId': 'chali', 'text': 'void main() {\n int64 value=3;\n std::lang::println("{}", value);\n}\n'}}}, {'id': 2, 'method': 'textDocument/completion', 'params': {'textDocument': {'uri': uri}, 'position': {'line': 2, 'character': 26}}}, {'id': 3, 'method': 'textDocument/definition', 'params': {'textDocument': {'uri': uri}, 'position': {'line': 2, 'character': 27}}}, {'id': 5, 'method': 'textDocument/hover', 'params': {'textDocument': {'uri': uri}, 'position': {'line': 2, 'character': 27}}}, {'id': 6, 'method': 'textDocument/formatting', 'params': {'textDocument': {'uri': uri}, 'options': {'tabSize': 4, 'insertSpaces': True}}}, {'id': 7, 'method': 'textDocument/documentSymbol', 'params': {'textDocument': {'uri': uri}}}, {'method': 'textDocument/didChange', 'params': {'textDocument': {'uri': uri, 'version': 2}, 'contentChanges': [{'text': 'void main(){ int64 value = ; }'}]}}, {'id': 4, 'method': 'shutdown', 'params': {}}, {'method': 'exit', 'params': {}}]
+        messages = [{'id': 1, 'method': 'initialize', 'params': {}}, {'method': 'textDocument/didOpen', 'params': {'textDocument': {'uri': uri, 'version': 1, 'languageId': 'chali', 'text': 'void main() {\n int64 value=3;\n std::core::println("{}", value);\n}\n'}}}, {'id': 2, 'method': 'textDocument/completion', 'params': {'textDocument': {'uri': uri}, 'position': {'line': 2, 'character': 26}}}, {'id': 3, 'method': 'textDocument/definition', 'params': {'textDocument': {'uri': uri}, 'position': {'line': 2, 'character': 27}}}, {'id': 5, 'method': 'textDocument/hover', 'params': {'textDocument': {'uri': uri}, 'position': {'line': 2, 'character': 27}}}, {'id': 6, 'method': 'textDocument/formatting', 'params': {'textDocument': {'uri': uri}, 'options': {'tabSize': 4, 'insertSpaces': True}}}, {'id': 7, 'method': 'textDocument/documentSymbol', 'params': {'textDocument': {'uri': uri}}}, {'method': 'textDocument/didChange', 'params': {'textDocument': {'uri': uri, 'version': 2}, 'contentChanges': [{'text': 'void main(){ int64 value = ; }'}]}}, {'id': 4, 'method': 'shutdown', 'params': {}}, {'method': 'exit', 'params': {}}]
         from native_lsp_transport import Transport
         transport = Transport(compiler, cwd=directory)
         responses = []

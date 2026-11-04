@@ -135,15 +135,15 @@ struct Dynamic : Fallible {
 };
 Receiver dynamicOuter(Fallible input) { let value=input?; Receiver result;result.value=value;return result; }
 void main() {
-    std::lang::assert(outer(false).unwrap()==10,"result success",1);
+    std::core::assert(outer(false).unwrap()==10,"result success",1);
     let failure=outer(true);
-    match(failure) { Ok(_)=>{std::lang::assert(false,"result must fail",1);} Err(IoError error)=>{std::lang::assert(error.message=="io","result error text",1);} Err(_)=>{std::lang::assert(false,"dynamic error type",1);} }
-    std::lang::assert(optionOuter(true).isNone(),"option none",1);
-    std::lang::assert(optionOuter(false).unwrap().toString()=="option","option value",1);
-    std::lang::assert(customOuter(Custom::Good).value==12,"custom success",1);
-    std::lang::assert(customOuter(Custom::Bad).error.toString()=="custom","custom error",1);
-    Dynamic dynamic;std::lang::assert(dynamicOuter(dynamic).value==19,"interface propagation success",1);
-    dynamic.fail=true;std::lang::assert(dynamicOuter(dynamic).error.toString()=="dynamic","interface propagation error",1);
+    match(failure) { Ok(_)=>{std::core::assert(false,"result must fail",1);} Err(IoError error)=>{std::core::assert(error.message=="io","result error text",1);} Err(_)=>{std::core::assert(false,"dynamic error type",1);} }
+    std::core::assert(optionOuter(true).isNone(),"option none",1);
+    std::core::assert(optionOuter(false).unwrap().toString()=="option","option value",1);
+    std::core::assert(customOuter(Custom::Good).value==12,"custom success",1);
+    std::core::assert(customOuter(Custom::Bad).error.toString()=="custom","custom error",1);
+    Dynamic dynamic;std::core::assert(dynamicOuter(dynamic).value==19,"interface propagation success",1);
+    dynamic.fail=true;std::core::assert(dynamicOuter(dynamic).error.toString()=="dynamic","interface propagation error",1);
 }
 ''')
 

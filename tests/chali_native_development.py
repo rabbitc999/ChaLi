@@ -37,7 +37,7 @@ def main():
         run('fmt', source, '--write')
         run('fmt', source, '--check')
         test = root / 'test_pass.chl'
-        test.write_text('void main(){std::lang::println("通过");}', encoding='utf-8')
+        test.write_text('void main(){std::core::println("通过");}', encoding='utf-8')
         test.with_suffix('.expected').write_text('通过\n', encoding='utf-8')
         skipped = root / 'test_skip.chl'
         skipped.write_text('invalid', encoding='utf-8')

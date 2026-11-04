@@ -119,7 +119,7 @@ gdb build/app-debug.exe
 
 Linux 使用无 `.exe` 后缀的产物。可以设置 `break app.chl:行号`、`run`、`next`、`step`、`finish`、`backtrace`、`info locals` 和 `print 表达式`。`--debug` 保留调试信息，`--checked` 控制数组及指针检查，两者独立。
 
-DWARF 按实际表示区分 int8—int64、uint8—uint64、bool、char、float32 和 float64，并保留声明行、源码列及用户词法块。内层同名变量只在其有效区间遮蔽外层变量，循环变量离开循环后不可见；编译器生成的清理块不额外创建用户名字作用域。当前数值帧将 float32 的已舍入值存为 double，调试描述按实际 64 位槽读取，类型名仍为 float32；调试器的原生 sizeof 因而不能替代语言的 std::lang::rawSize。
+DWARF 按实际表示区分 int8—int64、uint8—uint64、bool、char、float32 和 float64，并保留声明行、源码列及用户词法块。内层同名变量只在其有效区间遮蔽外层变量，循环变量离开循环后不可见；编译器生成的清理块不额外创建用户名字作用域。当前数值帧将 float32 的已舍入值存为 double，调试描述按实际 64 位槽读取，类型名仍为 float32；调试器的原生 sizeof 因而不能替代语言的 std::core::rawSize。
 
 match 的模式绑定保留声明位置、类型和分支范围；分支退出后，模式变量不再出现在局部变量列表。调试产物同时记录宏的定义、调用和嵌套展开来源。VSCode 在当前宏展开中提供独立的 `$宏名` 变量作用域，内部副本不冒充调用方同名变量，展开结束后隐藏这些内部绑定；普通名称参数生成的调用方声明仍沿用调用方作用域。
 

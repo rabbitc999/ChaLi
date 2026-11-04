@@ -63,7 +63,7 @@ void preprocess(WeightedTree mut& tree){
             cursor++;
         }
     }
-    std::lang::assert(tree.orderCount==tree.n);
+    std::core::assert(tree.orderCount==tree.n);
 }
 int64 lca(WeightedTree const& tree,int64 a,int64 b){
     if(tree.depth[a]<tree.depth[b]){int64 temporary=a;a=b;b=temporary;}
@@ -130,7 +130,7 @@ int64 solve(WeightedTree const& tree,Plan const& plans,int64 planCount,int64 max
     return low;
 }
 void main(){
-    int64 n=std::lang::inputInt(),m=std::lang::inputInt();
+    int64 n=std::core::inputInt(),m=std::core::inputInt();
     int64 levels=1;while((1<<levels)<=n){levels+=1;}
     int64 storage[]=new[(n+1)*(12+levels)];
     WeightedTree tree;initialize(&tree,n,storage);
@@ -138,7 +138,7 @@ void main(){
         int64 i=1;
         while (i<n) {
 
-        int64 from=std::lang::inputInt(),to=std::lang::inputInt(),weight=std::lang::inputInt();
+        int64 from=std::core::inputInt(),to=std::core::inputInt(),weight=std::core::inputInt();
         addEdge(&tree,from,to,weight);addEdge(&tree,to,from,weight);
     
             i++;
@@ -150,15 +150,15 @@ void main(){
         int64 i=0;
         while (i<m) {
 
-        Plan plan;plan.from=std::lang::inputInt();plan.to=std::lang::inputInt();
+        Plan plan;plan.from=std::core::inputInt();plan.to=std::core::inputInt();
         plan.ancestor=lca(&tree,plan.from,plan.to);
         plan.length=tree.distance[plan.from]+tree.distance[plan.to]-2*tree.distance[plan.ancestor];
         if(plan.length>maximum){maximum=plan.length;}
         plans[i]=plan;
-        if(i<16){genericProbe.push(plan);std::lang::assert(genericProbe[i].length==plans[i].length);}
+        if(i<16){genericProbe.push(plan);std::core::assert(genericProbe[i].length==plans[i].length);}
     
             i++;
         }
     }
-    std::lang::println("{}",solve(&tree,plans,m,maximum));plans.drop();storage.drop();
+    std::core::println("{}",solve(&tree,plans,m,maximum));plans.drop();storage.drop();
 }

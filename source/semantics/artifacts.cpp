@@ -482,7 +482,7 @@ void ResetState()
     {
         if (node.kind != MNode::Call || node.kids.empty()) continue;
         const auto &callee = N(node.kids[0]);
-        if ((callee.kind == MNode::EnumCtor && callee.s == "std::lang" && callee.s2 == "__move") || (callee.kind == MNode::Var && callee.s == "__move")) g_usesLanguageMove = true;
+        if ((callee.kind == MNode::EnumCtor && callee.s == "std::core" && callee.s2 == "__move") || (callee.kind == MNode::Var && callee.s == "__move")) g_usesLanguageMove = true;
     }
     g_needsAggregateRelease.clear();
     g_needsCaptureDestructor.clear();

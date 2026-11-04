@@ -65,7 +65,7 @@ static void parseFloatValue(ChaliAbiFrame *frame)
 {
     double value = 0.0;
     if (parseFloat(frame, &value) != 0)
-        chali_abi_fail(frame, "std::lang::Parse.parseFloat64 输入无效");
+        chali_abi_fail(frame, "std::core::Parse.parseFloat64 输入无效");
     chali_abi_return_real(frame, value);
 }
 

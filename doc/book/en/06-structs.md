@@ -82,18 +82,26 @@ main calls `Student::create` through the type, without an existing student. In c
 
 ## 6.4 Design one step at a time
 
-Choose the fields, then the operations that need them. Chapter 7 examines copying this model; Chapter 18 varies field types through generics; Chapter 24 introduces method derivation. The first model does not need all three at once.
+Choose the fields, then the operations that need them. Chapter 7 examines copying this model; Chapter 18 varies field types through generics; Chapter 22 introduces method derivation through member macros. The first model does not need all three at once.
 
-## 6.5 Exercises
+### Combine instance fields
 
-1. Add and print a className field.
-2. Create two students and change only one score.
-3. Make addBonus return the updated int64 score.
-4. Compare the data available to create and to addBonus.
+Store width and height on the same object and use them to compute area.
 
-### Answers and checks
+<!-- verify-book -->
+```chali
+struct Size {
+    int64 width;
+    int64 height;
+}
+void main() {
+    Size box;
+    box.width = 3;
+    box.height = 4;
+    println("{}", box.width * box.height);
+}
+```
 
-1. Declare a String field, assign it, and add an output argument.
-2. Ordinary owning values keep independent fields.
-3. Return self.score after updating it.
-4. create initializes a new result from parameters; addBonus already has a receiver.
+```text
+12
+```

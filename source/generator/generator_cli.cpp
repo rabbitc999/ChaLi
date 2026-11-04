@@ -672,7 +672,7 @@ int runCli(int argc, char **argv)
      * 拼回；生成工程必须把分片一起带过去（编译 `chali_parser.cpp` 时按相对路径找到）。 */
     for (const char *name : {"standard_module_units.cpp", "symbol_table.cpp", "type_ids.cpp", "type_ids_shared.cpp",
                              "lifetime.cpp", "aggregate_ownership.cpp", "resource_lifetime.cpp", "scope.cpp",
-                             "return_expression_ast.cpp", "named_function_ast.cpp", "derive_ast.cpp", "derive.cpp",
+                             "return_expression_ast.cpp", "named_function_ast.cpp", "operator_switch_ast.cpp", "json_model.cpp",
                              "types.cpp", "interfaces.cpp", "formatted_output.cpp", "builtins.cpp", "generic_inference.cpp", "constants.cpp", "annotation_ast.cpp", "annotations.cpp", "reflection_metadata.cpp", "reflection_queries.cpp", "reflection_calls.cpp", "reflection_serialization.cpp",
                              "lowering.cpp", "borrow_facts.cpp", "borrow_flow.cpp", "borrow_return_sources.cpp", "expression_effects.cpp", "interface_dispatch.cpp", "boxing.cpp",
                              "symbol_registration.cpp", "program_lowering.cpp", "artifacts.cpp"})
@@ -767,21 +767,21 @@ int runCli(int argc, char **argv)
         ok = copy(mc / "tools" / name, Memory::String("tools/") + name) && ok;
     for (const char *name : {"LICENSE", "NOTICE", "licenses/miniz/LICENSE", "licenses/llvm/LICENSE.TXT"})
         ok = copy(mc / name, name) && ok;
-    Memory::String langSource;
-    Memory::String langTemplate;
+    Memory::String coreSource;
+    Memory::String coreTemplate;
     Memory::String cmakeTemplate;
     Memory::String readmeTemplate;
-    if (!readFile(mc / "source/std/lang.chl", &langSource) ||
-        !readFile(templateDir / "compiler_lang.chl.tmpl", &langTemplate) ||
+    if (!readFile(mc / "source/std/core.chl", &coreSource) ||
+        !readFile(templateDir / "compiler_core.chl.tmpl", &coreTemplate) ||
         !readFile(templateDir / "compiler_cmake_lists.txt.tmpl", &cmakeTemplate) ||
         !readFile(templateDir / "compiler_readme.md.tmpl", &readmeTemplate))
         ok = false;
     try
     {
         tmpl::SnippetTable snippets;
-        snippets.emplace("chali_lang", langSource);
-        project["std/lang.chl"] = tmpl::renderValues(
-            langTemplate, {}, snippets);
+        snippets.emplace("chali_core", coreSource);
+        project["std/core.chl"] = tmpl::renderValues(
+            coreTemplate, {}, snippets);
         project["CMakeLists.txt"] = tmpl::renderValues(
             cmakeTemplate);
         project["README.md"] = tmpl::renderValues(
@@ -805,7 +805,7 @@ int runCli(int argc, char **argv)
         return 1;
     }
     std::cout << CHALI_TEXT("已生成 ChaLi 编译器工程：") << output.string() << "（"
-              << project.size() << CHALI_TEXT(" 个文件，lang.chl 来自引用模板）\n");
+              << project.size() << CHALI_TEXT(" 个文件，core.chl 来自引用模板）\n");
     return 0;
 }
 

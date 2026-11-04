@@ -6,7 +6,7 @@ const MAX_BYTES = 4096;
 /** 核对明确的局部拥有关系并解析 JSON 字符串，不接受表达式或隐式转换。 */
 function encodeStringAssignment(binding, layout, text) {
   if (binding.readOnly) throw new Error('不能修改不可变绑定');
-  if (binding.stringOwner !== true || !['String','std::lang::String'].includes(binding.type) || !binding.address
+  if (binding.stringOwner !== true || !['String','std::core::String'].includes(binding.type) || !binding.address
     || binding.nativeStorage !== 'i64' || layout?.kind !== 's' || layout.width !== 8)
     throw new Error('缺少可核对的局部 String 拥有关系；引用、参数、模式绑定和旧构件不能直接修改');
   if (typeof text !== 'string' || text.length > 32768) throw new Error('拥有 String 修改超过输入预算');

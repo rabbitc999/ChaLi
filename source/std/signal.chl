@@ -8,9 +8,9 @@ import std::math;
  * https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/builtins/muldc3.c
  * 本文件将该规则实现为 ChaLi；许可证见 licenses/llvm/LICENSE.TXT。 */
 inline float64 __signedUnit(float64 original, bool unit) {
-    uint64 bits=(std::lang::__bootFloat64Bits(original) >> 63) << 63;
+    uint64 bits=(std::core::__bootFloat64Bits(original) >> 63) << 63;
     if(unit) { bits=bits | ((uint64)1023 << 52); }
-    return std::lang::__bootFloat64FromBits(bits);
+    return std::core::__bootFloat64FromBits(bits);
 }
 inline Complex<float64> __multiply(Complex<float64> left, Complex<float64> right) {
     float64 a=left.re; float64 b=left.im; float64 c=right.re; float64 d=right.im;
@@ -38,7 +38,7 @@ inline Complex<float64> __multiply(Complex<float64> left, Complex<float64> right
             recover=true;
         }
         if(recover) {
-            float64 infinity=std::lang::__bootFloat64FromBits((uint64)2047 << 52);
+            float64 infinity=std::core::__bootFloat64FromBits((uint64)2047 << 52);
             real=infinity*(a*c-b*d); imaginary=infinity*(a*d+b*c);
         }
     }
@@ -72,8 +72,8 @@ inline List<Complex<float64>> __transform(List<Complex<float64>> const& input, b
 inline List<Complex<float64>> __fast(List<Complex<float64>> input, bool inverse) {
     int64 n=input.len();
     if(n<=0 || (n & (n-1))!=0) {
-        if(inverse) { std::lang::__runtimeFail("ifft 长度必须是正的 2 的幂"); }
-        else { std::lang::__runtimeFail("fft 长度必须是正的 2 的幂"); }
+        if(inverse) { std::core::__runtimeFail("ifft 长度必须是正的 2 的幂"); }
+        else { std::core::__runtimeFail("fft 长度必须是正的 2 的幂"); }
     }
     if(inverse) {
         int64 index=0;

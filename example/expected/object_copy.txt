@@ -1,4 +1,4 @@
-std::lang::BigInteger=12/13
+std::big_number::BigInteger=12/13
 BigInteger_ctor=12/13
 vec=1/2
 set=1/2

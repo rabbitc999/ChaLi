@@ -15,7 +15,7 @@ $end_macro
 $macro CLASSIFY<T, Expected>() -> expr
 int64 result = 0;
 $for field in $fields<T>()
-$if field.type == String && field.type == std::lang::String
+$if field.type == String && field.type == std::core::String
 $compile_assert(field.genericName == "" && field.typeArguments.count == 0);
 result += 1;
 $else_if field.type == int64
@@ -24,8 +24,8 @@ $elif field.type == Expected && field.type == Box<?>
 $compile_assert(field.typeArguments[0].name == "bool");
 result += 4;
 $elif field.type == Map<String, Set<int64>> && field.type == Map<String, Set<?>> && field.type == Map<String, ?>
-$compile_assert(field.genericName == "std::lang::Map");
-$compile_assert(field.typeArguments[0].name == "std::lang::String");
+$compile_assert(field.genericName == "std::core::Map");
+$compile_assert(field.typeArguments[0].name == "std::core::String");
 $compile_assert(field.typeArguments[1].typeArguments[0].name == "int64");
 $for arg in field.typeArguments[1].typeArguments
 result += $ONE(arg);
@@ -38,7 +38,7 @@ String value = $EMPTY(field.typeArguments[0]);
 $compile_assert(field.typeArguments.count == 1);
 result += 16;
 $elif field.type == List<?>
-$compile_assert(field.genericName == "std::lang::List");
+$compile_assert(field.genericName == "std::core::List");
 $compile_assert(field.typeArguments[0].name == "uint8");
 result += 32;
 $else
@@ -56,7 +56,7 @@ $end_macro
 $macro VISIT_ARGUMENTS<T>() -> expr
 String order = "";
 $for field in $fields<T>()
-$if field.type == Map && field.type == std::lang::Map && field.type == Map<?, ?>
+$if field.type == Map && field.type == std::core::Map && field.type == Map<?, ?>
 $for arg in field.typeArguments
 order = order + arg.genericName + "/" + arg.name + ";";
 $end_for
@@ -68,6 +68,6 @@ $end_macro
 void main() {
     assert($CLASSIFY<Data, Box<bool>>() == 63);
     String order = $VISIT_ARGUMENTS<Data>();
-    assert(order.startsWith("/std::lang::String;std::lang::Set/"));
+    assert(order.startsWith("/std::core::String;std::core::Set/"));
     assert(4 == 4);
 }

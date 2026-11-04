@@ -1,5 +1,5 @@
 import std::collections;
-import std::linkedlist;
+import std::linked_list;
 
 void main() {
     std::collections::Deque<int64> values;
@@ -55,7 +55,7 @@ void main() {
         while (i<9) { assert(ring.pop().unwrap()==step*9+i); i=i+1; }
         assert(ring.available()==9 && ring.pop().isNone()); step=step+1;
     }
-    std::linkedlist::LinkedList list;
+    std::linked_list::LinkedList list;
     int64 old=list.pushBack(1); assert(list.removeAt(old).unwrap()==1);
     int64 reused=list.pushBack(2); assert(reused!=old && list.removeAt(old).isNone());
     list.clear(); int64 newer=list.pushBack(3);

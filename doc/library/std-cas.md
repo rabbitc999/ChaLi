@@ -89,9 +89,9 @@ ast = sin(x)
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-5"></a>`#derive(Equal, Hash, Clone) enum NodeKind` | 规范化 AST 的节点种类；减法和除法规范化为加法、乘法与幂。 |
+| 模块 | <a id="symbol-7"></a>`enum NodeKind` | 规范化 AST 的节点种类；减法和除法规范化为加法、乘法与幂。 |
 | NodeKind | `Integer, Rational, Symbol, Add, Multiply, Power, Function, Constant` | 规范化 AST 的节点种类；减法和除法规范化为加法、乘法与幂。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-6"></a>`struct Expr : Add<Expr, Expr>, Subtract<Expr, Expr>, Multiply<Expr, Expr>, Divide<Expr, Expr>, Negate<Expr, Expr>, Equal<bool, Expr>` | 精确符号表达式，同时也是可遍历的 AST 根节点。 |
+| 模块 | <a id="symbol-8"></a>`struct Expr : Add<Expr, Expr>, Subtract<Expr, Expr>, Multiply<Expr, Expr>, Divide<Expr, Expr>, Negate<Expr, Expr>, Equal<bool, Expr>` | 精确符号表达式，同时也是可遍历的 AST 根节点。 |
 
 ## 函数索引
 
@@ -182,7 +182,7 @@ static Expr parse(String text);
 std::cas::Expr::parse(text);
 ```
 
-**源码**：[source/std/cas.chl:43](../../source/std/cas.chl#L43)。
+**源码**：[source/std/cas.chl:47](../../source/std/cas.chl#L47)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -220,7 +220,7 @@ static Expr fromInteger(BigInteger number);
 std::cas::Expr::fromInteger(number);
 ```
 
-**源码**：[source/std/cas.chl:49](../../source/std/cas.chl#L49)。
+**源码**：[source/std/cas.chl:53](../../source/std/cas.chl#L53)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -258,7 +258,7 @@ static Expr fromDecimal(BigDecimal number);
 std::cas::Expr::fromDecimal(number);
 ```
 
-**源码**：[source/std/cas.chl:51](../../source/std/cas.chl#L51)。
+**源码**：[source/std/cas.chl:55](../../source/std/cas.chl#L55)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -296,7 +296,7 @@ static Expr symbol(String name);
 std::cas::Expr::symbol(name);
 ```
 
-**源码**：[source/std/cas.chl:53](../../source/std/cas.chl#L53)。
+**源码**：[source/std/cas.chl:57](../../source/std/cas.chl#L57)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -332,7 +332,7 @@ Expr ast();
 obj.ast();
 ```
 
-**源码**：[source/std/cas.chl:59](../../source/std/cas.chl#L59)。
+**源码**：[source/std/cas.chl:63](../../source/std/cas.chl#L63)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -368,7 +368,7 @@ String str();
 obj.str();
 ```
 
-**源码**：[source/std/cas.chl:61](../../source/std/cas.chl#L61)。
+**源码**：[source/std/cas.chl:65](../../source/std/cas.chl#L65)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -404,7 +404,7 @@ String toString();
 obj.toString();
 ```
 
-**源码**：[source/std/cas.chl:63](../../source/std/cas.chl#L63)。
+**源码**：[source/std/cas.chl:67](../../source/std/cas.chl#L67)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -440,7 +440,7 @@ LaTeX 数学文本。
 obj.latex();
 ```
 
-**源码**：[source/std/cas.chl:65](../../source/std/cas.chl#L65)。
+**源码**：[source/std/cas.chl:69](../../source/std/cas.chl#L69)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -476,7 +476,7 @@ NodeKind kind();
 obj.kind();
 ```
 
-**源码**：[source/std/cas.chl:67](../../source/std/cas.chl#L67)。
+**源码**：[source/std/cas.chl:71](../../source/std/cas.chl#L71)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -512,7 +512,7 @@ String name();
 obj.name();
 ```
 
-**源码**：[source/std/cas.chl:79](../../source/std/cas.chl#L79)。
+**源码**：[source/std/cas.chl:83](../../source/std/cas.chl#L83)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -548,7 +548,7 @@ int64 childCount();
 obj.childCount();
 ```
 
-**源码**：[source/std/cas.chl:81](../../source/std/cas.chl#L81)。
+**源码**：[source/std/cas.chl:85](../../source/std/cas.chl#L85)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -586,7 +586,7 @@ Expr child(int64 index);
 obj.child(index);
 ```
 
-**源码**：[source/std/cas.chl:83](../../source/std/cas.chl#L83)。
+**源码**：[source/std/cas.chl:87](../../source/std/cas.chl#L87)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -622,7 +622,7 @@ List<Expr> children();
 obj.children();
 ```
 
-**源码**：[source/std/cas.chl:89](../../source/std/cas.chl#L89)。
+**源码**：[source/std/cas.chl:93](../../source/std/cas.chl#L93)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -658,7 +658,7 @@ BigInteger numerator();
 obj.numerator();
 ```
 
-**源码**：[source/std/cas.chl:100](../../source/std/cas.chl#L100)。
+**源码**：[source/std/cas.chl:104](../../source/std/cas.chl#L104)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -694,7 +694,7 @@ BigInteger denominator();
 obj.denominator();
 ```
 
-**源码**：[source/std/cas.chl:102](../../source/std/cas.chl#L102)。
+**源码**：[source/std/cas.chl:106](../../source/std/cas.chl#L106)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -732,7 +732,7 @@ BigDecimal decimal(int64 digits = 50);
 obj.decimal(digits);
 ```
 
-**源码**：[source/std/cas.chl:104](../../source/std/cas.chl#L104)。
+**源码**：[source/std/cas.chl:108](../../source/std/cas.chl#L108)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -770,7 +770,7 @@ Expr leftAdd(Expr other);
 obj.leftAdd(other);
 ```
 
-**源码**：[source/std/cas.chl:106](../../source/std/cas.chl#L106)。
+**源码**：[source/std/cas.chl:110](../../source/std/cas.chl#L110)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -808,7 +808,7 @@ Expr leftSub(Expr other);
 obj.leftSub(other);
 ```
 
-**源码**：[source/std/cas.chl:107](../../source/std/cas.chl#L107)。
+**源码**：[source/std/cas.chl:111](../../source/std/cas.chl#L111)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -846,7 +846,7 @@ Expr leftMul(Expr other);
 obj.leftMul(other);
 ```
 
-**源码**：[source/std/cas.chl:108](../../source/std/cas.chl#L108)。
+**源码**：[source/std/cas.chl:112](../../source/std/cas.chl#L112)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -884,7 +884,7 @@ Expr leftDiv(Expr other);
 obj.leftDiv(other);
 ```
 
-**源码**：[source/std/cas.chl:109](../../source/std/cas.chl#L109)。
+**源码**：[source/std/cas.chl:113](../../source/std/cas.chl#L113)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -922,7 +922,7 @@ bool leftEqual(Expr other);
 obj.leftEqual(other);
 ```
 
-**源码**：[source/std/cas.chl:111](../../source/std/cas.chl#L111)。
+**源码**：[source/std/cas.chl:115](../../source/std/cas.chl#L115)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -960,7 +960,7 @@ Expr negate(Expr operand);
 obj.negate(operand);
 ```
 
-**源码**：[source/std/cas.chl:113](../../source/std/cas.chl#L113)。
+**源码**：[source/std/cas.chl:117](../../source/std/cas.chl#L117)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -998,7 +998,7 @@ Expr pow(Expr exponent);
 obj.pow(exponent);
 ```
 
-**源码**：[source/std/cas.chl:115](../../source/std/cas.chl#L115)。
+**源码**：[source/std/cas.chl:119](../../source/std/cas.chl#L119)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1036,7 +1036,7 @@ Expr pow(int64 exponent);
 obj.pow(exponent);
 ```
 
-**源码**：[source/std/cas.chl:117](../../source/std/cas.chl#L117)。
+**源码**：[source/std/cas.chl:121](../../source/std/cas.chl#L121)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1072,7 +1072,7 @@ Expr simplify();
 obj.simplify();
 ```
 
-**源码**：[source/std/cas.chl:119](../../source/std/cas.chl#L119)。
+**源码**：[source/std/cas.chl:123](../../source/std/cas.chl#L123)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1108,7 +1108,7 @@ Expr expand();
 obj.expand();
 ```
 
-**源码**：[source/std/cas.chl:121](../../source/std/cas.chl#L121)。
+**源码**：[source/std/cas.chl:125](../../source/std/cas.chl#L125)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1144,7 +1144,7 @@ Expr factor();
 obj.factor();
 ```
 
-**源码**：[source/std/cas.chl:123](../../source/std/cas.chl#L123)。
+**源码**：[source/std/cas.chl:127](../../source/std/cas.chl#L127)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1180,7 +1180,7 @@ Expr together();
 obj.together();
 ```
 
-**源码**：[source/std/cas.chl:125](../../source/std/cas.chl#L125)。
+**源码**：[source/std/cas.chl:129](../../source/std/cas.chl#L129)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1219,7 +1219,7 @@ Expr differentiate(String variable = "x", int64 order = 1);
 obj.differentiate(variable, order);
 ```
 
-**源码**：[source/std/cas.chl:127](../../source/std/cas.chl#L127)。
+**源码**：[source/std/cas.chl:131](../../source/std/cas.chl#L131)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1257,7 +1257,7 @@ Expr integrate(String variable = "x");
 obj.integrate(variable);
 ```
 
-**源码**：[source/std/cas.chl:129](../../source/std/cas.chl#L129)。
+**源码**：[source/std/cas.chl:133](../../source/std/cas.chl#L133)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1296,7 +1296,7 @@ Expr substitute(String variable, Expr replacement);
 obj.substitute(variable, replacement);
 ```
 
-**源码**：[source/std/cas.chl:131](../../source/std/cas.chl#L131)。
+**源码**：[source/std/cas.chl:135](../../source/std/cas.chl#L135)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1335,7 +1335,7 @@ Expr limit(String variable, Expr point);
 obj.limit(variable, point);
 ```
 
-**源码**：[source/std/cas.chl:133](../../source/std/cas.chl#L133)。
+**源码**：[source/std/cas.chl:137](../../source/std/cas.chl#L137)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1375,7 +1375,7 @@ Expr taylor(String variable, Expr point, int64 order);
 obj.taylor(variable, point, order);
 ```
 
-**源码**：[source/std/cas.chl:135](../../source/std/cas.chl#L135)。
+**源码**：[source/std/cas.chl:139](../../source/std/cas.chl#L139)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1415,7 +1415,7 @@ Expr integrateDefinite(String variable, Expr lower, Expr upper);
 obj.integrateDefinite(variable, lower, upper);
 ```
 
-**源码**：[source/std/cas.chl:137](../../source/std/cas.chl#L137)。
+**源码**：[source/std/cas.chl:141](../../source/std/cas.chl#L141)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1451,7 +1451,7 @@ Expr sin();
 obj.sin();
 ```
 
-**源码**：[source/std/cas.chl:139](../../source/std/cas.chl#L139)。
+**源码**：[source/std/cas.chl:143](../../source/std/cas.chl#L143)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1487,7 +1487,7 @@ Expr cos();
 obj.cos();
 ```
 
-**源码**：[source/std/cas.chl:141](../../source/std/cas.chl#L141)。
+**源码**：[source/std/cas.chl:145](../../source/std/cas.chl#L145)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1523,7 +1523,7 @@ Expr tan();
 obj.tan();
 ```
 
-**源码**：[source/std/cas.chl:143](../../source/std/cas.chl#L143)。
+**源码**：[source/std/cas.chl:147](../../source/std/cas.chl#L147)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1559,7 +1559,7 @@ Expr asin();
 obj.asin();
 ```
 
-**源码**：[source/std/cas.chl:145](../../source/std/cas.chl#L145)。
+**源码**：[source/std/cas.chl:149](../../source/std/cas.chl#L149)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1595,7 +1595,7 @@ Expr acos();
 obj.acos();
 ```
 
-**源码**：[source/std/cas.chl:147](../../source/std/cas.chl#L147)。
+**源码**：[source/std/cas.chl:151](../../source/std/cas.chl#L151)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1631,7 +1631,7 @@ Expr atan();
 obj.atan();
 ```
 
-**源码**：[source/std/cas.chl:149](../../source/std/cas.chl#L149)。
+**源码**：[source/std/cas.chl:153](../../source/std/cas.chl#L153)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1667,7 +1667,7 @@ Expr exp();
 obj.exp();
 ```
 
-**源码**：[source/std/cas.chl:151](../../source/std/cas.chl#L151)。
+**源码**：[source/std/cas.chl:155](../../source/std/cas.chl#L155)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1703,7 +1703,7 @@ Expr ln();
 obj.ln();
 ```
 
-**源码**：[source/std/cas.chl:153](../../source/std/cas.chl#L153)。
+**源码**：[source/std/cas.chl:157](../../source/std/cas.chl#L157)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1739,7 +1739,7 @@ Expr log10();
 obj.log10();
 ```
 
-**源码**：[source/std/cas.chl:155](../../source/std/cas.chl#L155)。
+**源码**：[source/std/cas.chl:159](../../source/std/cas.chl#L159)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1775,7 +1775,7 @@ Expr sqrt();
 obj.sqrt();
 ```
 
-**源码**：[source/std/cas.chl:157](../../source/std/cas.chl#L157)。
+**源码**：[source/std/cas.chl:161](../../source/std/cas.chl#L161)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1811,7 +1811,7 @@ Expr floor();
 obj.floor();
 ```
 
-**源码**：[source/std/cas.chl:159](../../source/std/cas.chl#L159)。
+**源码**：[source/std/cas.chl:163](../../source/std/cas.chl#L163)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1847,7 +1847,7 @@ Expr ceil();
 obj.ceil();
 ```
 
-**源码**：[source/std/cas.chl:161](../../source/std/cas.chl#L161)。
+**源码**：[source/std/cas.chl:165](../../source/std/cas.chl#L165)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1883,7 +1883,7 @@ Expr round();
 obj.round();
 ```
 
-**源码**：[source/std/cas.chl:163](../../source/std/cas.chl#L163)。
+**源码**：[source/std/cas.chl:167](../../source/std/cas.chl#L167)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1919,7 +1919,7 @@ Expr trunc();
 obj.trunc();
 ```
 
-**源码**：[source/std/cas.chl:165](../../source/std/cas.chl#L165)。
+**源码**：[source/std/cas.chl:169](../../source/std/cas.chl#L169)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1957,7 +1957,7 @@ Expr fmod(Expr other);
 obj.fmod(other);
 ```
 
-**源码**：[source/std/cas.chl:167](../../source/std/cas.chl#L167)。
+**源码**：[source/std/cas.chl:171](../../source/std/cas.chl#L171)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。
 
@@ -1995,6 +1995,6 @@ Expr parse(String text);
 std::cas::parse(text);
 ```
 
-**源码**：[source/std/cas.chl:171](../../source/std/cas.chl#L171)。
+**源码**：[source/std/cas.chl:175](../../source/std/cas.chl#L175)。
 
 **完整示例**：[example/samples/cas.chl](../../example/samples/cas.chl)。

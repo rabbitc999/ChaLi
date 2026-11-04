@@ -599,7 +599,7 @@ inline Slot vecNew(State &ctx, const Arguments &args)
 }
 
 /**
- * @brief 把宿主入口参数复制成 `std::lang::List<std::lang::String>`。
+ * @brief 把宿主入口参数复制成 `std::core::List<std::core::String>`。
  * @param ctx 原生调用上下文，提供内存访问与错误报告。
  * @retval 封装为原生值的运行时结果。
  * @param args 按此原生操作的绑定约定排列的实参槽；无参操作为空。

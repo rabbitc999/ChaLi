@@ -6,5 +6,5 @@ void main() {
         m[i] = i;
         i = i + 1;
     }
-    std::lang::println("{}", m[0]);
+    std::core::println("{}", m[0]);
 }

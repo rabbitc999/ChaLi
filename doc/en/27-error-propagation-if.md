@@ -26,7 +26,7 @@ Expected types flow from the surrounding initialization, assignment, parameter o
 
 ## Custom propagation
 
-The automatically imported std::lang module defines TryBranch<T,R>, Try<T,R>, TryMove<T,R> and FromResidual<F,R>. The source declares its unique output T and residual R. The enclosing return type F must provide a suitable static fromResidual method. An exact residual match takes priority; a concrete implementation may also convert to an interface. Equally applicable conversion receivers are ambiguous, and arbitrary conversion chains are not searched. Static receivers are checked at compile time. A source interface value or reference can dynamically dispatch its splitting method.
+The automatically imported std::core module defines TryBranch<T,R>, Try<T,R>, TryMove<T,R> and FromResidual<F,R>. The source declares its unique output T and residual R. The enclosing return type F must provide a suitable static fromResidual method. An exact residual match takes priority; a concrete implementation may also convert to an interface. Equally applicable conversion receivers are ambiguous, and arbitrary conversion chains are not searched. Static receivers are checked at compile time. A source interface value or reference can dynamically dispatch its splitting method.
 
 Standard-library failures return `Result<T, Error>` while retaining the concrete error inside the owned interface value. If IoError implements Error, `?` can propagate a custom `Result<T, IoError>` into `Result<U, Error>`, including conversion of the standard error residual wrapper. An Option source still yields its concrete success value, which can be placed into `Option<Interface>`; None propagates as the destination Option's None. Custom Try, TryMove and FromResidual protocols also accept legal concrete-to-interface residual conversions.
 
@@ -53,6 +53,6 @@ Take a conditional value with `if (condition) { a } else { b }`; it evaluates on
 
 The LSP infers conditional and propagation results for let hover and member completion. Hover over ? to inspect source, output, residual and the enclosing return type.
 
-Interactive terminal output is streamed before the pause prompt. std::lang::pause flushes stdout and stderr before waiting; non-interactive input never waits for Enter. Pipeline output retains the host's buffered collection behavior.
+Interactive terminal output is streamed before the pause prompt. std::core::pause flushes stdout and stderr before waiting; non-interactive input never waits for Enter. Pipeline output retains the host's buffered collection behavior.
 
 `unwrap()` and `expect()` copy their success payload. Calls are rejected at compile time when that payload contains a `#NonCopyable opcode`. `Option<T>.take()` and `Result<T,E>.take()` consume the receiver and move its success payload; `Result<T,E>.takeError()` consumes the receiver and moves its error payload. A mismatched variant panics. Use `take()` to transfer FileStream or File ownership. String and array values retain independent value semantics.

@@ -63,6 +63,16 @@ async function main() {
   for (const line of [1, 3, 5, 7, 9]) {
     assert(branchTokens[line][0].scopes.includes('keyword.control.macro.chali'), branches[line]);
   }
+  const interfaces = tokenize([
+    '$macro implementCount<T>() -> member',
+    '$implement Count<T>;',
+    '$implement Count<String>;',
+    '// $implement Count;',
+    '$end_macro',
+  ]);
+  assert(interfaces[1][0].scopes.includes('keyword.control.macro.chali'));
+  assert(interfaces[2][0].scopes.includes('keyword.control.macro.chali'));
+  assert(interfaces[3][0].scopes.includes('comment.line.double-slash.chali'));
   registry.dispose();
   console.log('真实 TextMate 宏头、独立宏体、两组循环、卫生局部变量、字符串/注释保护与结束恢复高亮通过。');
 }

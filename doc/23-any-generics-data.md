@@ -119,7 +119,7 @@ void main() {
 
 例如 `Pair<int64>` 不能再省略第二个类型参数，应写成 `Pair<int64, String>` 或确实需要类型擦除时写成 `Pair<int64, Any>`。
 
-类型实参按调用位置的模块查找，默认类型与约束按模板定义位置查找；引用、元组、函数及嵌套容器保留组成类型的来源。可重定义名称与核心类型同名时，标准库自己的实参仍绑定标准类型，例如用户声明 String 后，`Box<String>` 使用用户类型，`Box<std::lang::String>` 使用标准字符串。导入产生歧义时使用限定名，Any 仍是保留名。完整例子见[泛型教程](book/18-泛型.md)。
+类型实参按调用位置的模块查找，默认类型与约束按模板定义位置查找；引用、元组、函数及嵌套容器保留组成类型的来源。可重定义名称与核心类型同名时，标准库自己的实参仍绑定标准类型，例如用户声明 String 后，`Box<String>` 使用用户类型，`Box<std::core::String>` 使用标准字符串。导入产生歧义时使用限定名，Any 仍是保留名。完整例子见[泛型教程](book/18-泛型.md)。
 
 ## 新模块
 
@@ -127,7 +127,7 @@ void main() {
 | --- | --- | --- |
 | [`std::encoding`](library/std-encoding.md) | Base64、Base64URL、十六进制 | 严格解码返回 `Result`，拒绝非法填充与非零尾部位；纯 ChaLi |
 | [`std::csv`](library/std-csv.md) | 文本读写、转义、分隔符、位置诊断 | 引号字段可含换行；位置为一基行号和字节列；纯 ChaLi |
-| [`std::datetime`](library/std-datetime.md) | Unix 秒、UTC 日期、解析格式化、日期运算 | 公历年份 1..9999，ISO 秒精度 UTC；换算为纯 ChaLi，当前时间需要宿主时钟 |
+| [`std::date_time`](library/std-date_time.md) | Unix 秒、UTC 日期、解析格式化、日期运算 | 公历年份 1..9999，ISO 秒精度 UTC；换算为纯 ChaLi，当前时间需要宿主时钟 |
 | [`std::io`](library/std-io.md) | 字节流、整文件、目录、文件信息、创建与重命名 | 文件入口走 C 帧；路径操作使用宿主文件系统 |
 | [`std::cli`](library/std-cli.md) | 长短选项、位置参数、默认值、帮助、校验 | 不自动打印或退出，应用读取解析结果；纯 ChaLi |
 | [`std::utf8`](library/std-utf8.md) | 校验、码点编解码、数量、截取 | 严格 UTF-8；码点不是字素簇；字节接口完整支持 U+0000 |
@@ -136,13 +136,13 @@ void main() {
 
 ```chali
 import std::encoding;
-import std::datetime;
+import std::date_time;
 import std::utf8;
 void main() {
     List<uint8> bytes = decodeHex("666f6f").unwrap();
     println("{}", encodeBase64(bytes));
-    DateTime utc = parseUtc("2024-02-29T12:34:56Z").unwrap();
-    println("{}", formatUtc(addDays(utc, 1).unwrap()).unwrap());
+    DateTime utc = parse_utc("2024-02-29T12:34:56Z").unwrap();
+    println("{}", format_utc(add_days(utc, 1).unwrap()).unwrap());
     println("{}", sliceCodePoints("A中文😀", 1, 2).unwrap());
 }
 ```
@@ -153,7 +153,7 @@ void main() {
 
 `readAllBytes` 默认预算为 16 MiB，可显式传入上限。`readAllText` 读取完整内容而非一行，拒绝内嵌零字节；二进制文件必须使用字节接口。`listDirectory` 只枚举一层并排序；`fileInfo` 跟随符号链接；`renamePath` 的目标覆盖规则遵从平台。文件操作不承诺事务或原子写入。
 
-自定义宿主通过 C 函数表登记文件服务，使用公开 C 记录、缓冲与错误协议；目录操作需相应系统服务。日期换算不依赖操作系统时区，`nowUtc` 的宿主必须提供真实 UTC 时钟。
+自定义宿主通过 C 函数表登记文件服务，使用公开 C 记录、缓冲与错误协议；目录操作需相应系统服务。日期换算不依赖操作系统时区，`now_utc` 的宿主必须提供真实 UTC 时钟。
 
 ## 四元式兼容格式与历史体积实测
 

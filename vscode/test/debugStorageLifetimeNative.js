@@ -33,7 +33,7 @@ const lines = [
   '  println("SHADOW");',
   ' }',
   ' println("MOVED");',
-  ' for(int64 i in std::lang::range(0,2)){',
+  ' for(int64 i in std::core::range(0,2)){',
   '  int64 roundValue=i+29;int64 mut& roundRef=&roundValue;',
   '  println("LOOPREADY");',
   '  let roundClosure=int64 fn move[roundRef](){roundRef};',

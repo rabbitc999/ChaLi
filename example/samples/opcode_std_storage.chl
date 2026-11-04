@@ -1,5 +1,5 @@
 import std::image;
-import std::linalg;
+import std::linear_algebra;
 import std::net;
 
 void main() {

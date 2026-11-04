@@ -56,7 +56,7 @@ unsigned binary arithmetic still wraps, so `0u - 1u` yields the maximum `uint64`
 `{}` in `println` is a positional placeholder, not `printf`'s `%d` — the type is inferred from the
 argument, and a mistake is a compile-time error.
 
-`String` is shorthand for `std::lang::String`, from the automatically loaded core module `lang`. Drop the
+`String` is shorthand for `std::core::String`, from the automatically loaded core module `lang`. Drop the
 prefix when there is no name clash.
 
 ---
@@ -238,7 +238,7 @@ void main() {
 `T: Shape` is an interface constraint. Generics are monomorphised at compile time; the call site is
 resolved statically, with no vtable overhead.
 
-For **runtime** polymorphism, box the object into `std::lang::Any` and take an interface reference out
+For **runtime** polymorphism, box the object into `std::core::Any` and take an interface reference out
 (`Shape mut& view = boxed.getReference();`); the concrete type is decided at run time. See
 [`example/samples/interface.chl`](../../example/samples/interface.chl).
 

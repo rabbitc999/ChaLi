@@ -16,7 +16,7 @@ interface IterNext<T> {
 
 /** @brief 持有惰性游标状态，按 ChaLi 值语义复制时获得独立游标。 */
 struct Iter<T> : Iterator<T> {
-    std::lang::Any state;
+    std::core::Any state;
     bool buffered;
     Option<T> pending;
     /**
@@ -91,7 +91,7 @@ struct Iter<T> : Iterator<T> {
             }
             result = result + 1;
         }
-        std::lang::panic("迭代器消费循环意外结束");
+        std::core::panic("迭代器消费循环意外结束");
     }
     /**
      * @brief nth 迭代操作。
@@ -99,7 +99,7 @@ struct Iter<T> : Iterator<T> {
      * @return 操作结果。
      */
     Option<T> nth(int64 index) {
-        std::lang::assert(index >= 0, "nth 下标不能为负数");
+        std::core::assert(index >= 0, "nth 下标不能为负数");
         {
             int64 i = 0;
             while (i < index) {
@@ -127,7 +127,7 @@ struct Iter<T> : Iterator<T> {
             }
             result = item;
         }
-        std::lang::panic("迭代器消费循环意外结束");
+        std::core::panic("迭代器消费循环意外结束");
     }
     /**
      * @brief all 迭代操作。
@@ -144,7 +144,7 @@ struct Iter<T> : Iterator<T> {
                 return false;
             }
         }
-        std::lang::panic("迭代器消费循环意外结束");
+        std::core::panic("迭代器消费循环意外结束");
     }
     /**
      * @brief any 迭代操作。
@@ -161,7 +161,7 @@ struct Iter<T> : Iterator<T> {
                 return true;
             }
         }
-        std::lang::panic("迭代器消费循环意外结束");
+        std::core::panic("迭代器消费循环意外结束");
     }
     /**
      * @brief find 迭代操作。
@@ -178,7 +178,7 @@ struct Iter<T> : Iterator<T> {
                 return item;
             }
         }
-        std::lang::panic("迭代器消费循环意外结束");
+        std::core::panic("迭代器消费循环意外结束");
     }
     /**
      * @brief forEach 迭代操作。
@@ -197,7 +197,7 @@ struct Iter<T> : Iterator<T> {
            */
             action(item.unwrap());
         }
-        std::lang::panic("迭代器消费循环意外结束");
+        std::core::panic("迭代器消费循环意外结束");
     }
 };
 
@@ -251,7 +251,7 @@ Iter<T> fromIterator<T,S : Iterator<T>>(S source) {
 
 /** @brief 列表值迭代状态，保留未消费的元素。 */
 struct IterListState<T> : IterNext<T> {
-    std::lang::List<T> values;
+    std::core::List<T> values;
     int64 position;
     /**
      * @brief next 迭代操作。
@@ -281,7 +281,7 @@ struct IterListState<T> : IterNext<T> {
  * @param values 操作参数。
  * @return 操作结果。
  */
-Iter<T> fromList<T>(std::lang::List<T> values) {
+Iter<T> fromList<T>(std::core::List<T> values) {
     IterListState<T> state;
     state.values = values;
     return fromState<T,IterListState<T> >(state);
@@ -349,7 +349,7 @@ struct IterRangeState : IterNext<int64> {
  * @return 操作结果。
  */
 Iter<int64> range(int64 start, int64 stop, int64 step) {
-    std::lang::assert(step != 0, "迭代器区间步长不能为零");
+    std::core::assert(step != 0, "迭代器区间步长不能为零");
     IterRangeState state;
     state.current = start;
     state.stop = stop;
@@ -423,7 +423,7 @@ struct IterFilterState<T> : IterNext<T> {
                 return item;
             }
         }
-        std::lang::panic("迭代器消费循环意外结束");
+        std::core::panic("迭代器消费循环意外结束");
     }
     /**
      * @brief sizeHint 迭代操作。
@@ -468,7 +468,7 @@ struct IterFilterMapState<T,U> : IterNext<U> {
                 return result;
             }
         }
-        std::lang::panic("迭代器消费循环意外结束");
+        std::core::panic("迭代器消费循环意外结束");
     }
     /**
      * @brief sizeHint 迭代操作。
@@ -610,7 +610,7 @@ struct IterSkipWhileState<T> : IterNext<T> {
                 return item;
             }
         }
-        std::lang::panic("迭代器消费循环意外结束");
+        std::core::panic("迭代器消费循环意外结束");
     }
     /**
      * @brief sizeHint 迭代操作。
@@ -679,7 +679,7 @@ struct IterTakeState<T> : IterNext<T> {
  */
 Iter<T> take<T>(Iter<T> source, int64 amount) {
     IterTakeState<T> stage;
-    std::lang::assert(amount >= 0, "take 数量不能为负数");
+    std::core::assert(amount >= 0, "take 数量不能为负数");
     stage.source = source;
     stage.remaining = amount;
     return fromState<T,IterTakeState<T> >(stage);
@@ -735,7 +735,7 @@ struct IterSkipState<T> : IterNext<T> {
  */
 Iter<T> skip<T>(Iter<T> source, int64 amount) {
     IterSkipState<T> stage;
-    std::lang::assert(amount >= 0, "skip 数量不能为负数");
+    std::core::assert(amount >= 0, "skip 数量不能为负数");
     stage.source = source;
     stage.remaining = amount;
     return fromState<T,IterSkipState<T> >(stage);
@@ -897,7 +897,7 @@ struct IterStepState<T> : IterNext<T> {
  */
 Iter<T> stepBy<T>(Iter<T> source, int64 step) {
     IterStepState<T> stage;
-    std::lang::assert(step > 0, "stepBy 步长必须大于零");
+    std::core::assert(step > 0, "stepBy 步长必须大于零");
     stage.source = source;
     stage.step = step;
     return fromState<T,IterStepState<T> >(stage);
@@ -1077,8 +1077,8 @@ Iter<U> scan<T,A,U>(Iter<T> source, A initial, Option<U> fn(A mut&, T) callback)
  * @param source 来源游标、容器或连续存储。
  * @return 操作结果。
  */
-std::lang::List<T> collect<T>(Iter<T> source) {
-    std::lang::List<T> result;
+std::core::List<T> collect<T>(Iter<T> source) {
+    std::core::List<T> result;
     while (true) {
         Option<T> item = source.next();
         if (item.isNone()) {
@@ -1086,7 +1086,7 @@ std::lang::List<T> collect<T>(Iter<T> source) {
         }
         result.push(item.unwrap());
     }
-    std::lang::panic("迭代器消费循环意外结束");
+    std::core::panic("迭代器消费循环意外结束");
 }
 
 
@@ -1106,7 +1106,7 @@ A fold<T,A>(Iter<T> source, A initial, A fn(A, T) callback) {
         }
         result = callback(result, item.unwrap());
     }
-    std::lang::panic("迭代器消费循环意外结束");
+    std::core::panic("迭代器消费循环意外结束");
 }
 
 
@@ -1130,7 +1130,7 @@ Result<A,E> tryFold<T,A,E>(Iter<T> source, A initial, Result<A,E> fn(A, T) callb
         }
         result = next.unwrap();
     }
-    std::lang::panic("迭代器消费循环意外结束");
+    std::core::panic("迭代器消费循环意外结束");
 }
 
 
@@ -1151,7 +1151,7 @@ Option<U> findMap<T,U>(Iter<T> source, Option<U> fn(T) callback) {
             return result;
         }
     }
-    std::lang::panic("迭代器消费循环意外结束");
+    std::core::panic("迭代器消费循环意外结束");
 }
 
 
@@ -1172,14 +1172,14 @@ bool sameItems<T>(Iter<T> left, Iter<T> right) {
             return false;
         }
     }
-    std::lang::panic("迭代器消费循环意外结束");
+    std::core::panic("迭代器消费循环意外结束");
 }
 
 
 /** @brief 缓存有限来源，保留来源状态以延长元素引用的有效期。 */
 struct IterBufferState<T> : IterNext<T> {
-    std::lang::List<T> values;
-    std::lang::Any anchor;
+    std::core::List<T> values;
+    std::core::Any anchor;
     int64 position;
     /** @brief 读取下一项。 @return 下一项，耗尽返回 None。 */
     Option<T> next() {
@@ -1200,7 +1200,7 @@ struct IterBufferState<T> : IterNext<T> {
  * @return 操作结果。
  */
 Iter<T> rev<T>(Iter<T> source) {
-    std::lang::List<T> values = collect<T>(source);
+    std::core::List<T> values = collect<T>(source);
     IterBufferState<T> state;
     state.anchor = source.state;
     {
@@ -1223,7 +1223,7 @@ Iter<T> rev<T>(Iter<T> source) {
  * @return 操作结果。
  */
 (Iter<T>,Iter<T>) peekingTakeWhile<T>(Iter<T> source, bool fn(T) predicate) {
-    std::lang::List<T> first;
+    std::core::List<T> first;
     while (true) {
         Option<T> item = source.peek();
         if (item.isNone() || !predicate(item.unwrap())) {
@@ -1316,7 +1316,7 @@ void forEach<T>(Iter<T> mut& source, void fn(T) action) {
  * @param source 来源游标、容器或连续存储。
  * @return 操作结果。
  */
-Iter<T> listIntoIter<T>(std::lang::List<T> mut& source) {
+Iter<T> listIntoIter<T>(std::core::List<T> mut& source) {
     IterListState<T> state;
     state.values = __iterTakeList<T>(source);
     return fromState<T,IterListState<T> >(state);
@@ -1324,11 +1324,11 @@ Iter<T> listIntoIter<T>(std::lang::List<T> mut& source) {
 
 
 /**
- * @brief 将 std::lang::range 转为独立有状态游标。
+ * @brief 将 std::core::range 转为独立有状态游标。
  * @param source 来源游标、容器或连续存储。
  * @return 操作结果。
  */
-Iter<int64> fromRange(std::lang::__Range source) {
+Iter<int64> fromRange(std::core::__Range source) {
     return range(source.start, source.stop, source.step);
 }
 
@@ -1338,14 +1338,14 @@ Iter<int64> fromRange(std::lang::__Range source) {
  * @param source 来源游标、容器或连续存储。
  * @return 操作结果。
  */
-std::lang::Any __iterLease<T>(std::lang::List<T> const& source);
+std::core::Any __iterLease<T>(std::core::List<T> const& source);
 
 /**
  * @brief __iterLeaseLen 迭代操作。
  * @param lease 拥有源存储的租约。
  * @return 操作结果。
  */
-int64 __iterLeaseLen(std::lang::Any lease);
+int64 __iterLeaseLen(std::core::Any lease);
 
 /**
  * @brief __iterConstRef 迭代操作。
@@ -1353,7 +1353,7 @@ int64 __iterLeaseLen(std::lang::Any lease);
  * @param position 当前元素下标。
  * @return 操作结果。
  */
-T const& __iterConstRef<T>(std::lang::Any lease, int64 position);
+T const& __iterConstRef<T>(std::core::Any lease, int64 position);
 
 /**
  * @brief __iterMutRef 迭代操作。
@@ -1361,9 +1361,9 @@ T const& __iterConstRef<T>(std::lang::Any lease, int64 position);
  * @param position 当前元素下标。
  * @return 操作结果。
  */
-T mut& __iterMutRef<T>(std::lang::Any lease, int64 position);
+T mut& __iterMutRef<T>(std::core::Any lease, int64 position);
 struct IterConstListState<T> : IterNext<T const&> {
-    std::lang::Any lease;
+    std::core::Any lease;
     int64 position;
     /**
      * @brief next 迭代操作。
@@ -1387,7 +1387,7 @@ struct IterConstListState<T> : IterNext<T const&> {
     }
 };
 struct IterMutListState<T> : IterNext<T mut&> {
-    std::lang::Any lease;
+    std::core::Any lease;
     int64 position;
     /**
      * @brief next 迭代操作。
@@ -1417,7 +1417,7 @@ struct IterMutListState<T> : IterNext<T mut&> {
  * @param source 来源游标、容器或连续存储。
  * @return 操作结果。
  */
-Iter<T const&> listIter<T>(std::lang::List<T> const& source) {
+Iter<T const&> listIter<T>(std::core::List<T> const& source) {
     IterConstListState<T> state;
     state.lease = __iterLease<T>(source);
     return fromState<T const&,IterConstListState<T> >(state);
@@ -1429,7 +1429,7 @@ Iter<T const&> listIter<T>(std::lang::List<T> const& source) {
  * @param source 来源游标、容器或连续存储。
  * @return 操作结果。
  */
-Iter<T mut&> listIterMut<T>(std::lang::List<T> mut& source) {
+Iter<T mut&> listIterMut<T>(std::core::List<T> mut& source) {
     IterMutListState<T> state;
     state.lease = __iterLease<T>(source);
     return fromState<T mut&,IterMutListState<T> >(state);
@@ -1441,29 +1441,29 @@ Iter<T mut&> listIterMut<T>(std::lang::List<T> mut& source) {
  * @param source 来源游标、容器或连续存储。
  * @return 操作结果。
  */
-std::lang::List<T> __iterTakeList<T>(std::lang::List<T> mut& source);
+std::core::List<T> __iterTakeList<T>(std::core::List<T> mut& source);
 
 /**
  * @brief __iterTakeSet 迭代操作。
  * @param source 来源游标、容器或连续存储。
  * @return 操作结果。
  */
-std::lang::Set<T> __iterTakeSet<T>(std::lang::Set<T> mut& source);
+std::core::Set<T> __iterTakeSet<T>(std::core::Set<T> mut& source);
 
 /**
  * @brief __iterTakeMap 迭代操作。
  * @param source 来源游标、容器或连续存储。
  * @return 操作结果。
  */
-std::lang::Map<K,V> __iterTakeMap<K,V>(std::lang::Map<K,V> mut& source);
+std::core::Map<K,V> __iterTakeMap<K,V>(std::core::Map<K,V> mut& source);
 
 /**
  * @brief setIntoIter 迭代操作。
  * @param source 来源游标、容器或连续存储。
  * @return 操作结果。
  */
-Iter<T> setIntoIter<T>(std::lang::Set<T> mut& source) {
-    std::lang::Set<T> owned = __iterTakeSet<T>(source);
+Iter<T> setIntoIter<T>(std::core::Set<T> mut& source) {
+    std::core::Set<T> owned = __iterTakeSet<T>(source);
     IterListState<T> state;
     {
         int64 i = 0;
@@ -1482,7 +1482,7 @@ Iter<T> setIntoIter<T>(std::lang::Set<T> mut& source) {
  * @param source 来源集合，只读借用。
  * @return 独立有状态的元素迭代器；迭代器本身仍是一次性消费。
  */
-Iter<T> setIter<T>(std::lang::Set<T> const& source) {
+Iter<T> setIter<T>(std::core::Set<T> const& source) {
     IterListState<T> state;
     {
         int64 i = 0;
@@ -1501,8 +1501,8 @@ Iter<T> setIter<T>(std::lang::Set<T> const& source) {
  * @param source 来源游标、容器或连续存储。
  * @return 操作结果。
  */
-Iter<Pair<K,V>> mapIntoIter<K,V>(std::lang::Map<K,V> mut& source) {
-    std::lang::Map<K,V> owned = __iterTakeMap<K,V>(source);
+Iter<Pair<K,V>> mapIntoIter<K,V>(std::core::Map<K,V> mut& source) {
+    std::core::Map<K,V> owned = __iterTakeMap<K,V>(source);
     IterListState<Pair<K,V>> state;
     {
         int64 i = 0;
@@ -1521,7 +1521,7 @@ Iter<Pair<K,V>> mapIntoIter<K,V>(std::lang::Map<K,V> mut& source) {
  * @param source 来源映射，只读借用。
  * @return 独立有状态的 Pair<K,V> 迭代器；迭代器本身仍是一次性消费。
  */
-Iter<Pair<K,V>> mapIter<K,V>(std::lang::Map<K,V> const& source) {
+Iter<Pair<K,V>> mapIter<K,V>(std::core::Map<K,V> const& source) {
     IterListState<Pair<K,V>> state;
     {
         int64 i = 0;
@@ -1548,7 +1548,7 @@ struct IterSpanState<T> : IterNext<T const&> {
         if (self.position >= self.length) {
             return Option<T const&>::None;
         }
-        T const& value = &std::lang::index(self.source, self.position);
+        T const& value = &std::core::index(self.source, self.position);
         self.position = self.position + 1;
         return Option<T const&>::Value(&value);
     }
@@ -1569,7 +1569,7 @@ struct IterSpanState<T> : IterNext<T const&> {
  * @return 操作结果。
  */
 Iter<T const&> fromSpan<T>(T const& source, int64 length) {
-    std::lang::assert(length >= 0, "迭代器长度不能为负数");
+    std::core::assert(length >= 0, "迭代器长度不能为负数");
     IterSpanState<T> state;
     state.source = &source;
     state.length = length;
@@ -1578,14 +1578,14 @@ Iter<T const&> fromSpan<T>(T const& source, int64 length) {
 
 /** @brief 按 ChaLi 字符模型遍历字符串字节，持有独立字符串副本。 */
 struct IterCharsState : IterNext<char> {
-    std::lang::String source;
+    std::core::String source;
     int64 position;
     /**
      * @brief next 迭代操作。
      * @return 下一项；耗尽时返回 None。
      */
     Option<char> next() {
-        if (self.position >= std::lang::len(self.source)) {
+        if (self.position >= std::core::len(self.source)) {
             return Option<char>::None;
         }
         char value = self.source[self.position];
@@ -1597,7 +1597,7 @@ struct IterCharsState : IterNext<char> {
      * @return 操作结果。
      */
     (int64, Option<int64>) sizeHint() {
-        int64 left = std::lang::len(self.source) - self.position;
+        int64 left = std::core::len(self.source) - self.position;
         return (left, Option<int64>::Value(left));
     }
 };
@@ -1607,7 +1607,7 @@ struct IterCharsState : IterNext<char> {
  * @param source 来源游标、容器或连续存储。
  * @return 操作结果。
  */
-Iter<char> chars(std::lang::String source) {
+Iter<char> chars(std::core::String source) {
     IterCharsState state;
     state.source = source;
     return fromState<char,IterCharsState>(state);
@@ -1649,4 +1649,83 @@ Iter<T> repeat<T>(T value) {
  * @param state 初始状态值。
  * @return 操作结果。
  */
-std::lang::Any __iterBox<S>(S state);
+std::core::Any __iterBox<S>(S state);
+
+
+/** 按键分组，保留每组中元素的来源顺序。消费有限游标。 */
+Map<K,List<T>> group_by<T,K>(Iter<T> source, K fn(T) key_of) {
+    Map<K,int64> positions;
+    List<K> keys;
+    List<int64> heads;
+    List<int64> tails;
+    List<int64> links;
+    List<T> values;
+    while (true) {
+        Option<T> next = source.next();
+        if (next.isNone()) { break; }
+        T item = next.take();
+        K key = key_of(item);
+        int64 index = values.len();
+        if (positions.contains(key) == 0) {
+            positions.put(key,keys.len());
+            keys.push(key);
+            heads.push(index);
+            tails.push(index);
+        } else {
+            int64 group = positions[key];
+            links[tails[group]] = index;
+            tails[group] = index;
+        }
+        links.push(-1);
+        values.push(move item);
+    }
+
+    Map<K,List<T>> groups;
+    int64 group = 0;
+    while (group < keys.len()) {
+        List<T> items;
+        int64 index = heads[group];
+        while (index >= 0) {
+            items.push(values[index]);
+            index = links[index];
+        }
+        groups.put(keys[group],move items);
+        group = group + 1;
+    }
+    return groups;
+}
+
+/** 惰性分块状态，最后一块可以短于指定长度。 */
+struct __IterChunkState<T> : IterNext<List<T>> {
+    Iter<T> source;
+    int64 length;
+    bool finished;
+
+    /** 读取下一块，耗尽时返回 None。 */
+    Option<List<T>> next() {
+        if (self.finished) { return Option<List<T>>::None; }
+        List<T> block;
+        while (block.len() < self.length) {
+            Option<T> item = self.source.next();
+            if (item.isNone()) { self.finished = true; break; }
+            block.push(item.take());
+        }
+        if (block.len() == 0) { return Option<List<T>>::None; }
+        return Option<List<T>>::Value(move block);
+    }
+
+    /** 返回剩余分块数的保守区间。 */
+    (int64,Option<int64>) sizeHint() {
+        if (self.finished) { return (0,Option<int64>::Value(0)); }
+        return (0,Option<int64>::None);
+    }
+};
+
+/** 按正长度惰性分块，保留最后的非空短块。长度小于一时触发断言。 */
+Iter<List<T>> chunk<T>(Iter<T> source, int64 length) {
+    assert(length > 0, "chunk length must be positive");
+    __IterChunkState<T> state;
+    state.source = move source;
+    state.length = length;
+    return fromState<List<T>,__IterChunkState<T>>(state);
+}

@@ -80,8 +80,8 @@ def main():
             path=ROOT/'doc/book'/source
             text=path.read_text(encoding='utf-8')
             if re.match(r'^\d\d-', source):
-                assert '参考解答与验收要点' in text, source
-                assert len(re.findall(r'^\d+\. ', text[text.index('参考解答与验收要点'):], re.M)) >= 4, source
+                assert not re.search(r'^#{2,4} .*?(?:习题|参考解答)\s*$', text, re.M), source
+                assert '<!-- verify-book' in text, ('章节缺少可核对的代码示例', source)
                 if source in EXTRAS:
                     assert '番外：' in re.findall(r'^## (.+)$', text, re.M)[-1], source
             mode='preface' if source=='README.md' else 'appendix' if source.startswith(('A-','B-','C-')) else 'chapter'
@@ -113,12 +113,29 @@ def main():
             assert result.returncode==0 and result.stdout.replace('\r\n','\n')==output,(source,result.stdout,result.stderr,output)
         with ThreadPoolExecutor(max_workers=4) as pool:
             list(pool.map(execute, programs))
-        chapter=(ROOT/'doc/book/22-预处理与宏.md').read_text(encoding='utf-8')
-        invalid, diagnostic = re.search(
-            r'<!-- verify-book-error: temp -->\s*```chali\n(.*?)```\s*```text\n(.*?)```', chapter, re.S).groups()
-        bad=work/'invalid_macro.chl';bad.write_text(invalid,encoding='utf-8')
-        result=subprocess.run([str(COMPILER),'check',str(bad)],cwd=work,capture_output=True,encoding='utf-8',timeout=60)
-        assert result.returncode!=0 and diagnostic.strip() in result.stderr and '分支结果类型必须一致' not in result.stderr,result
+        negative_count = 0
+        negative_block = re.compile(
+            r'<!-- verify-book-error:\s*([^\n]+?)\s*-->\s*```chali\n(.*?)```\s*```text\n(.*?)```', re.S)
+        for entry in CHAPTERS:
+            chapter = (ROOT/'doc/book'/entry['zh']).read_text(encoding='utf-8')
+            cases = negative_block.findall(chapter)
+            assert len(cases) == chapter.count('<!-- verify-book-error:'), entry['zh']
+            for mode, invalid, diagnostic in cases:
+                diagnostic_code = re.fullmatch(r'CHL\d{4}', mode)
+                assert mode in ('check', 'run', 'temp') or diagnostic_code, (entry['zh'], mode)
+                negative_count += 1
+                bad = work/f'chapter-failure-{negative_count}.chl'
+                bad.write_text(invalid, encoding='utf-8')
+                arguments = ['run', str(bad), '--out', str(bad.with_suffix(''))] if mode == 'run' else ['check', str(bad)]
+                result = subprocess.run([str(COMPILER), *arguments], cwd=work,
+                    env=dict(os.environ, CHALI_LANG='zh', CHALI_NO_STDIN_INPUT='1'),
+                    capture_output=True, encoding='utf-8', timeout=120)
+                assert result.returncode != 0 and diagnostic.strip() in result.stderr, (entry['zh'], result)
+                if diagnostic_code:
+                    assert re.search(rf'\b{mode}\b', result.stderr), (entry['zh'], mode, result.stderr)
+                if mode == 'temp':
+                    assert '分支结果类型必须一致' not in result.stderr, result
+        assert negative_count > 0
         kong=(ROOT/'doc/book/19-函数值与闭包.md').read_text(encoding='utf-8')
         assert '鲁镇的码栈' in kong and '违约金零头' in kong and not re.search(r'^\[\d+\]',kong,re.M)
     # 附录 A 的 <!-- fail --> 示例逐个重跑：必须失败，且文档记载的首条消息真实出现。
@@ -140,7 +157,7 @@ def main():
             assert result.returncode!=0,(index,actual)
             assert lines and (position.sub('',lines[0]).strip()==documented or documented in actual),(index,first,lines[0] if lines else '')
     assert count>=22,count
-    print(f'新增 {count} 个书本完整程序输出、{len(fails)} 个附录失败示例与全部 LaTeX 生成章节一致。')
+    print(f'{count} 个书本程序、{negative_count} 个章节反例、{len(fails)} 个附录反例和全部 LaTeX 生成章节通过。')
 
 
 if __name__=='__main__':main()

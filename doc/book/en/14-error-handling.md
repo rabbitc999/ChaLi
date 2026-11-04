@@ -98,16 +98,19 @@ The enclosing return type must support the protocol. A void main cannot arbitrar
 
 Libraries return Result so callers can retry, prompt or stop. Converting every file error into empty text would erase the difference between an empty file and a failed read. The log project attaches the path and lets its entry report failure. Concrete interface payloads and custom Try move to Chapters 17 and 18.
 
-## 14.5 Exercises
+### Keep the parse failure branch
 
-1. What represents an unsuccessful search?
-2. Does unwrapOr(-1) store -1 into the Option?
-3. Does addBonus(-1) add five?
-4. Why preserve file errors?
+Valid and invalid inputs yield success and failure, respectively.
 
-### Answers and checks
+<!-- verify-book -->
+```chali
+import std::json;
 
-1. None, distinct from legitimate integer values.
-2. No; it supplies a fallback for that read.
-3. No; propagation returns Err first.
-4. Callers need the distinction to choose recovery.
+void main() {
+    println("{} {}", std::json::parse("42").isOk(), std::json::parse("{").isErr());
+}
+```
+
+```text
+1 1
+```

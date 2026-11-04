@@ -34,26 +34,26 @@ inline String __unpack(List<uint8> bytes, uint64 typeId) {
         index++;
     }
     unsafe {
-        int64 buffer=std::lang::__bootStringBuffer(bytes.len()-19);
-        BarePtr<uint8> output=pointerFromAddress<uint8>(std::lang::__bootStringOwnedData(buffer));
+        int64 buffer=std::core::__bootStringBuffer(bytes.len()-19);
+        BarePtr<uint8> output=pointerFromAddress<uint8>(std::core::__bootStringOwnedData(buffer));
         uint8 mut& first=dereference<uint8>(output); *first=(uint8)49;
         index=20;
         while(index<bytes.len()) {
             uint8 mut& slot=dereference<uint8>(output+index-19); *slot=bytes[index]; index++;
         }
-        return std::lang::__stringAdopt(buffer);
+        return std::core::__stringAdopt(buffer);
     }
 }
 
 /** 将反射值编码为带稳定类型标识和版本的独立字节流。 */
-Result<List<uint8>,std::lang::Error> serialize<T>(T const& value) {
+Result<List<uint8>,std::core::Error> serialize<T>(T const& value) {
     let encoded = std::json::serialize<T>(value);
-    if (encoded.isErr()) { return Result<List<uint8>,std::lang::Error>::Err(MessageError::from(encoded.error())); }
-    return Result<List<uint8>,std::lang::Error>::Ok(__pack(encoded.unwrap(), std::reflect::getTypeId<T>()));
+    if (encoded.isErr()) { return Result<List<uint8>,std::core::Error>::Err(MessageError::from(encoded.error())); }
+    return Result<List<uint8>,std::core::Error>::Ok(__pack(encoded.unwrap(), std::reflect::getTypeId<T>()));
 }
 /** 严格验证类型、版本和长度后恢复独立拥有的值。 */
-Result<T,std::lang::Error> deserialize<T>(List<uint8> bytes) {
+Result<T,std::core::Error> deserialize<T>(List<uint8> bytes) {
     String unpacked = __unpack(bytes, std::reflect::getTypeId<T>());
-    if (!unpacked.startsWith("1")) { return Result<T,std::lang::Error>::Err(MessageError::from(unpacked.removePrefix("0"))); }
+    if (!unpacked.startsWith("1")) { return Result<T,std::core::Error>::Err(MessageError::from(unpacked.removePrefix("0"))); }
     return std::json::deserialize<T>(unpacked.removePrefix("1"));
 }

@@ -106,7 +106,7 @@ distance.push(-1);
     return distance;
 }
 void main(){
-    int64 n=std::lang::inputInt(),seed=std::lang::inputInt();
+    int64 n=std::core::inputInt(),seed=std::core::inputInt();
     List<int64> values;Option<Link mut&> head=Option<Link mut&>::None;Option<Tree mut&> tree=Option<Tree mut&>::None;
     {
         int64 i=0;
@@ -126,32 +126,32 @@ void main(){
         int64 i=0;
         while (i<n) {
 
-        std::lang::assert(cursor.isValue());Link mut& node=cursor.unwrap();
-        std::lang::assert(node.value==values[i]);cursor=node.next;
+        std::core::assert(cursor.isValue());Link mut& node=cursor.unwrap();
+        std::core::assert(node.value==values[i]);cursor=node.next;
     
             i++;
         }
     }
-    std::lang::assert(cursor.isNone());
+    std::core::assert(cursor.isNone());
     cursor=head;
     while(cursor.isValue()){
         Link mut& node=cursor.unwrap();Option<Link mut&> rest=node.next;node.drop();cursor=rest;
     }
     List<int64> sorted;inorder(tree,&sorted);
-    std::lang::assert(sorted.len()==n);
+    std::core::assert(sorted.len()==n);
     int64 sum=0;
     {
         int64 i=0;
         while (i<n) {
 
-        if(i>0){std::lang::assert(sorted[i-1]<=sorted[i]);}
+        if(i>0){std::core::assert(sorted[i-1]<=sorted[i]);}
         sum+=sorted[i];
     
             i++;
         }
     }
     destroyTree(tree);
-    std::lang::assert(listDrops==n && treeDrops==treeAllocations);
+    std::core::assert(listDrops==n && treeDrops==treeAllocations);
     Graph graph;
     {
         int64 i=0;
@@ -187,7 +187,7 @@ reached.push(0);
             int64 i=0;
             while (i<n) {
 
-            std::lang::assert((reached[i]!=0)==(distances[i]>=0));
+            std::core::assert((reached[i]!=0)==(distances[i]>=0));
             checksum+=(distances[i]+1)*(start+1)*(i+1);
         
                 i++;
@@ -197,5 +197,5 @@ reached.push(0);
             start++;
         }
     }
-    std::lang::println("{} {} {} {}",sum,checksum,listDrops,treeDrops);
+    std::core::println("{} {} {} {}",sum,checksum,listDrops,treeDrops);
 }

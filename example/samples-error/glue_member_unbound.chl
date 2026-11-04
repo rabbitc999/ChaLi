@@ -4,5 +4,5 @@ void main()
     GlueDemoRect rect;
     rect.width = 1;
     rect.height = 2;
-    std::lang::println("{}", rect.missing());
+    std::core::println("{}", rect.missing());
 }

@@ -84,7 +84,7 @@ void main() {
             i = i + 1;
         }
     }
-    println("std::lang::List<string> 遍历：{}（len={}，contains(bob)={}）",
+    println("std::core::List<string> 遍历：{}（len={}，contains(bob)={}）",
     joined, len(names), names.contains("bob"));
 
     String keys = "";
@@ -109,25 +109,25 @@ void main() {
     List<Pair> pairs;
     pairs.push(p);
     Pair back = pairs[0];
-    println("std::lang::List<Pair>：{},{} contains={}", back.x, back.y, pairs.contains(p));
+    println("std::core::List<Pair>：{},{} contains={}", back.x, back.y, pairs.contains(p));
 
     Map<Pair, int64> weights;
     weights.put(p, 13);
-    println("std::lang::Map<Pair,int64>：has={} value={}", weights.has(p), weights[p]);
+    println("std::core::Map<Pair,int64>：has={} value={}", weights.has(p), weights[p]);
 
     Any box;
     box.set(77);
     List<Any> boxes;
     boxes.push(box);
     Any box_back = boxes[0];
-    println("std::lang::List<std::lang::Any>：{} contains={}", (int64)box_back.getValue(), boxes.contains(box));
+    println("std::core::List<std::core::Any>：{} contains={}", (int64)box_back.getValue(), boxes.contains(box));
 
     Set<Any> object_set;
     object_set.add(box);
     Any set_key = object_set.at(0);
     int64 set_has = object_set.has(set_key);
     int64 set_removed = object_set.remove(set_key);
-    println("std::lang::Set<std::lang::Any> 取出再查：has={} remove={}",
+    println("std::core::Set<std::core::Any> 取出再查：has={} remove={}",
     set_has, set_removed);
 
     Map<Any, int64> object_map;
@@ -135,12 +135,12 @@ void main() {
     Any map_key = object_map.keyAt(0);
     Map<Any, int64> object_map_copy = object_map;
     box.drop();                                  /* 键身份不依赖原变量继续存活 */
-    println("std::lang::Map<std::lang::Any,int64> 取出再查：has={} 值={} 副本={}",
+    println("std::core::Map<std::core::Any,int64> 取出再查：has={} 值={} 副本={}",
     object_map.has(map_key), object_map[map_key], object_map_copy[map_key]);
     Any unrelated;
     unrelated.set(77);
-    println("std::lang::Map<std::lang::Any,int64> 同内容新对象：has={}", object_map.has(unrelated));
-    println("std::lang::Map<std::lang::Any,int64> remove={}", object_map.remove(map_key));
+    println("std::core::Map<std::core::Any,int64> 同内容新对象：has={}", object_map.has(unrelated));
+    println("std::core::Map<std::core::Any,int64> remove={}", object_map.remove(map_key));
 
     /* ---------- 生命周期：容器归这一层块，出块自动还 ---------- */
     {

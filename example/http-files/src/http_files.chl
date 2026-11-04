@@ -5,6 +5,7 @@ import std::net;
 import std::text;
 import std::clock;
 import std::thread;
+import std::macro;
 
 struct Asset
 {
@@ -20,11 +21,11 @@ struct Request
     String route;
 }
 
-#derive(Equal)
 enum Phase
 {
     Reading,
-    Writing
+    Writing;
+    $std::macro::Equal<Phase>(leftEqual);
 }
 
 struct Connection

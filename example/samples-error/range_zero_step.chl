@@ -1,4 +1,4 @@
 void main()
 {
-    for (value in std::lang::range(0, 10, 0)) { std::lang::print("{}", value); }
+    for (value in std::core::range(0, 10, 0)) { std::core::print("{}", value); }
 }

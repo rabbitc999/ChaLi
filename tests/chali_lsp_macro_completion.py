@@ -34,6 +34,13 @@ def main():
                 if suffix == "$":
                     for builtin in ["$variants", "$methods", "$interfaces"]:
                         assert any(item["label"].startswith(builtin) for item in items), (builtin, items)
+            text = "import std::macro;\nvoid main(){ $std::macro::"
+            uri = (folder / 'standard-macro-qualified.chl').as_uri()
+            server.send({"method": "textDocument/didOpen", "params": {"textDocument": {"uri": uri, "text": text, "version": 1}}})
+            response = server.query("textDocument/completion", {"textDocument": {"uri": uri}, "position": position(text, len(text))})
+            items = response.get("items", []) if isinstance(response, dict) else response
+            for name in ('MIN', 'MAX', 'CLAMP'):
+                assert any(item['label'] == '$' + name for item in items), (name, items)
             text = '$macro Update(mut &target, &source)\ntarget=source;\n$end_macro\nvoid main(){ $'
             uri = (folder / 'reference-parameters.chl').as_uri()
             server.send({"method": "textDocument/didOpen", "params": {"textDocument": {"uri": uri, "text": text, "version": 1}}})

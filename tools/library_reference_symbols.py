@@ -249,6 +249,8 @@ def symbol_description(row):
         if row['comment']:
             return documentation(row['comment'])
         raise ValueError('缺少类型说明：' + name)
+    if kind == 'constant':
+        return documentation(row['comment']) if row['comment'] else FIELDS.get(name, '模块公开的只读常量。')
     if (owner, name) in OVERRIDES:
         return OVERRIDES[owner, name]
     if name in FIELDS:

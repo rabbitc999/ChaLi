@@ -294,7 +294,7 @@ Memory::Vector<ModuleSlice> moduleSlices(const Memory::String &text, const Memor
         if (at < limit && file.compare(0, prefix.size(), prefix) == 0 && file.size() > prefix.size() && file.back() == '>')
         {
             const auto name = file.substr(prefix.size(), file.size() - prefix.size() - 1);
-            if (name.compare(0, 5, "std::") == 0 && name != "std::lang")
+            if (name.compare(0, 5, "std::") == 0 && name != "std::core")
             {
                 if (!result.empty() && result.back().name == name && result.back().end == at) result.back().end = end;
                 else result.push_back({ name, at, end });

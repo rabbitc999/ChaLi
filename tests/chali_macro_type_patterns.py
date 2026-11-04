@@ -67,13 +67,13 @@ void main() { Root value; value.leaf.first = 2; value.leaf.second = 7; assert($R
         invoke('children', children)
         invoke('type_fields', children.replace('field.chlids', 'field.type.fields'))
         invoke('shadowed_string', '''struct String { int64 number; }
-struct Root { String custom; std::lang::String standard; }
+struct Root { String custom; std::core::String standard; }
 $macro CHECK<T>() -> expr
 int64 result = 0;
 $for field in $fields<T>()
 $if field.type == String
 result += 1;
-$elif field.type == std::lang::String
+$elif field.type == std::core::String
 result += 2;
 $else
 $compile_error("unrecognized string type");

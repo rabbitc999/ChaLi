@@ -234,6 +234,151 @@ struct RedBlackTree: Copy<RedBlackTree> {
     }
 };
 
+/** 唯一 int64 键的 AVL 树，插入与删除后维护各节点的子树高度。 */
+struct AvlTree: Copy<AvlTree> {
+    __BinaryNodes __nodes;
+    List<int64> __heights;
+
+    /** 创建空树。 */
+    static AvlTree create() { }
+    /** 取得独立副本。 */
+    AvlTree copy() { return self; }
+    /** 返回键数量。 */
+    int64 len() { return self.__nodes.count; }
+    /** 判断树是否为空。 */
+    bool is_empty() { return self.len() == 0; }
+    /** 判断键是否存在。 */
+    bool contains(int64 key) { return self.__nodes.find(key) != 0; }
+    /** 清空节点与缓存高度。 */
+    void clear() {
+        self.__nodes.clear();
+        self.__heights.clear();
+    }
+    /** 返回树高，空树为零。 */
+    int64 height() { return self.__height(self.__nodes.root); }
+    /** 返回独立的升序键列表。 */
+    List<int64> inorder() { return self.__nodes.walk(0); }
+    /** 返回独立节点快照。 */
+    TreeSnapshot snapshot() { return self.__nodes.snapshot(); }
+    /** 返回最小键，空树返回 None。 */
+    Option<int64> min() { return self.__key(self.__nodes.minimum(self.__nodes.root)); }
+    /** 返回最大键，空树返回 None。 */
+    Option<int64> max() { return self.__key(self.__nodes.maximum(self.__nodes.root)); }
+    /** 返回大于等于给定值的最小键，无匹配时返回 None。 */
+    Option<int64> lower_bound(int64 key) { return self.__key(self.__bound(key, false)); }
+    /** 返回严格大于给定值的最小键，无匹配时返回 None。 */
+    Option<int64> upper_bound(int64 key) { return self.__key(self.__bound(key, true)); }
+    /** 删除并返回最小键，空树返回 None。 */
+    Option<int64> pop_min() { return self.__pop(self.__nodes.minimum(self.__nodes.root)); }
+    /** 删除并返回最大键，空树返回 None。 */
+    Option<int64> pop_max() { return self.__pop(self.__nodes.maximum(self.__nodes.root)); }
+
+    /** 插入唯一键，重复时返回 false。 */
+    bool insert(int64 key) {
+        int64 parent = 0;
+        int64 node = self.__nodes.root;
+        while (node != 0) {
+            parent = node;
+            int64 current = self.__nodes.keys[node - 1];
+            if (key == current) { return false; }
+            if (key < current) { node = self.__nodes.left[node - 1]; }
+            else { node = self.__nodes.right[node - 1]; }
+        }
+        node = self.__nodes.allocate(key);
+        if (node > self.__heights.len()) { self.__heights.push(1); }
+        else { self.__heights[node - 1] = 1; }
+        self.__nodes.parent[node - 1] = parent;
+        if (parent == 0) { self.__nodes.root = node; }
+        elif (key < self.__nodes.keys[parent - 1]) { self.__nodes.left[parent - 1] = node; }
+        else { self.__nodes.right[parent - 1] = node; }
+        self.__rebalance(parent);
+        return true;
+    }
+
+    /** 删除指定键，缺失时返回 false。 */
+    bool remove(int64 key) {
+        int64 node = self.__nodes.find(key);
+        if (node == 0) { return false; }
+        if (self.__nodes.left[node - 1] != 0 && self.__nodes.right[node - 1] != 0) {
+            int64 next = self.__nodes.minimum(self.__nodes.right[node - 1]);
+            self.__nodes.keys[node - 1] = self.__nodes.keys[next - 1];
+            node = next;
+        }
+        int64 child = self.__nodes.left[node - 1];
+        if (child == 0) { child = self.__nodes.right[node - 1]; }
+        int64 parent = self.__nodes.parent[node - 1];
+        self.__nodes.transplant(node, child);
+        self.__nodes.release(node);
+        self.__rebalance(parent);
+        return true;
+    }
+
+    int64 __height(int64 node) {
+        if (node == 0) { return 0; }
+        return self.__heights[node - 1];
+    }
+    int64 __balance(int64 node) {
+        return self.__height(self.__nodes.left[node - 1]) - self.__height(self.__nodes.right[node - 1]);
+    }
+    void __refresh(int64 node) {
+        int64 left_height = self.__height(self.__nodes.left[node - 1]);
+        int64 right_height = self.__height(self.__nodes.right[node - 1]);
+        int64 height = left_height;
+        if (right_height > height) { height = right_height; }
+        self.__heights[node - 1] = height + 1;
+    }
+    void __rotate_left(int64 node) {
+        self.__nodes.rotateLeft(node);
+        self.__refresh(node);
+        self.__refresh(self.__nodes.parent[node - 1]);
+    }
+    void __rotate_right(int64 node) {
+        self.__nodes.rotateRight(node);
+        self.__refresh(node);
+        self.__refresh(self.__nodes.parent[node - 1]);
+    }
+    void __rebalance(int64 node) {
+        while (node != 0) {
+            int64 parent = self.__nodes.parent[node - 1];
+            self.__refresh(node);
+            int64 balance = self.__balance(node);
+            if (balance > 1) {
+                int64 left = self.__nodes.left[node - 1];
+                if (self.__balance(left) < 0) { self.__rotate_left(left); }
+                self.__rotate_right(node);
+            }
+            elif (balance < -1) {
+                int64 right = self.__nodes.right[node - 1];
+                if (self.__balance(right) > 0) { self.__rotate_right(right); }
+                self.__rotate_left(node);
+            }
+            node = parent;
+        }
+    }
+    int64 __bound(int64 key, bool strict) {
+        int64 candidate = 0;
+        int64 node = self.__nodes.root;
+        while (node != 0) {
+            int64 current = self.__nodes.keys[node - 1];
+            if (current > key || (!strict && current == key)) {
+                candidate = node;
+                node = self.__nodes.left[node - 1];
+            }
+            else { node = self.__nodes.right[node - 1]; }
+        }
+        return candidate;
+    }
+    Option<int64> __key(int64 node) {
+        if (node == 0) { return Option<int64>::None; }
+        return Option<int64>::Value(self.__nodes.keys[node - 1]);
+    }
+    Option<int64> __pop(int64 node) {
+        Option<int64> key = self.__key(node);
+        if (!key.isNone()) { self.remove(key.unwrap()); }
+        return key;
+    }
+};
+
 /** ChaLi 最小二叉堆，插入与弹出沿单条路径调整。 */
 struct MinHeap: Copy<MinHeap> {
     List<int64> __values;

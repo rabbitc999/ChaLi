@@ -4,5 +4,5 @@ $define TWICE(value)
 $end_define
 
 void main() {
-    std::lang::println("{}", TWICE(21));
+    std::core::println("{}", TWICE(21));
 }

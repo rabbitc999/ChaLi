@@ -16,7 +16,7 @@ BAD = (
     ('let col=a[-1];', '列索引越界'),
     ('let col=a[1];', '列索引越界'),
     ('float64 value=rhs[1];', '越界'),
-    ('float64 raw[2];let bad=std::linalg::Matrix<float64>::fromArray(raw,2,2,2);', '维度不匹配'),
+    ('float64 raw[2];let bad=std::linear_algebra::Matrix<float64>::fromArray(raw,2,2,2);', '维度不匹配'),
 )
 
 
@@ -45,9 +45,9 @@ def main():
                 print(f'{allocator}/{checks}: all ten scalar types, arrays, columns and ownership passed', flush=True)
         for index, (setup, diagnostic) in enumerate(BAD):
             path = work / f'bad-{index}.chl'
-            path.write_text('import std::linalg;\nvoid main(){'
-                            'let a=std::linalg::Matrix<float64>::identity(1);'
-                            'let rhs=std::linalg::Vector<float64>::zeros(1);' + setup +
+            path.write_text('import std::linear_algebra;\nvoid main(){'
+                            'let a=std::linear_algebra::Matrix<float64>::identity(1);'
+                            'let rhs=std::linear_algebra::Vector<float64>::zeros(1);' + setup +
                             'let result=a.solve(rhs);}', encoding='utf-8')
             result = run([compiler, 'run', path, '--out', work / f'bad-{index}'], False)
             assert diagnostic in result.stdout + result.stderr, result

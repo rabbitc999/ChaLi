@@ -16,7 +16,7 @@ def main():
     work = ROOT / "build" / "entry-signature"
     work.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ, CHALI_LANG="zh")
-    for params in ("", "std::lang::List<std::lang::String> args"):
+    for params in ("", "std::core::List<std::core::String> args"):
         for result_type, body in (("int64", "return 0;"), ("int32", "return 0;"),
                                   ("uint64", "return 0;"), ("void", "return;"),
                                   ("float64", "return 0.0;"), ("bool", "return false;")):

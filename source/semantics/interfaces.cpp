@@ -295,9 +295,9 @@ Memory::String Describe(const std::shared_ptr<MType> &type)
     {
         if (type->name == "map")
         {
-            return "std::lang::Map<" + Describe(type->elem) + ", " + Describe(type->elem2) + ">";
+            return "std::core::Map<" + Describe(type->elem) + ", " + Describe(type->elem2) + ">";
         }
-        return Memory::String(type->name == "vec" ? "std::lang::List<" : "std::lang::Set<") + Describe(type->elem) + ">";
+        return Memory::String(type->name == "vec" ? "std::core::List<" : "std::core::Set<") + Describe(type->elem) + ">";
     }
     switch (type->kind)
     {
@@ -326,7 +326,7 @@ Memory::String Describe(const std::shared_ptr<MType> &type)
         return text + ")";
     }
     // 名称解析可先于接口方法表登记；已有名字的 Obj 必须保留其接口身份。
-    case MType::Obj: return type->name.empty() ? Memory::String("std::lang::Any") : type->name;
+    case MType::Obj: return type->name.empty() ? Memory::String("std::core::Any") : type->name;
     case MType::Ptr:
     {
         const Memory::String star = type->readOnly ? " const&" : " mut&";
@@ -599,7 +599,7 @@ bool StableBoxAddress(int valueId)
         return global != g_scope.front().end() && found->emitted == global->second.emitted;
     }
     /* `模块::全局变量` 也是"数据区里稳定的一块"，可以直接取地址装箱。 */
-    if (node.kind == MNode::EnumCtor && FindQualifiedGlobal(node.s, node.s2) != nullptr) return true;
+    if (node.kind == MNode::EnumCtor && FindQualifiedGlobal(node.s, node.s2, node.module) != nullptr) return true;
     if ((node.kind == MNode::Member || node.kind == MNode::Index) && !node.kids.empty())
     {
         const std::shared_ptr<MType> base = ExprType(node.kids[0]);

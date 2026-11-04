@@ -238,9 +238,17 @@ struct Temporary
      */
     Temporary()
     {
-        for (int i = 0; i < 100; ++i)
+#ifdef _WIN32
+        const auto process = GetCurrentProcessId();
+#else
+        const auto process = getpid();
+#endif
+        static std::atomic<std::uint64_t> next{0};
+        const auto prefix = "chali-native-" + std::to_string(process) + "-"
+            + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "-";
+        for (int attempt = 0; attempt < 100; ++attempt)
         {
-            path = chali_temp::root() / ("chali-native-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "-" + std::to_string(i));
+            path = chali_temp::root() / (prefix + std::to_string(next.fetch_add(1, std::memory_order_relaxed)));
             if (fs::create_directory(path))
                 return;
         }
@@ -1061,7 +1069,7 @@ std::vector<Record> scan(const std::string &source, const std::string &s)
                         r.qualified = qualified(r);
                         records.push_back(r);
                     }
-                    else if (!owner.empty())
+                    else if (!owner.empty() || t[start].word == "const")
                     {
                         size_t stop = start;
                         while (stop < i && t[stop].word != "=")
@@ -1072,7 +1080,7 @@ std::vector<Record> scan(const std::string &source, const std::string &s)
                             --n;
                             if (identifier(t[n].word))
                             {
-                                r.kind = "member";
+                                r.kind = owner.empty() ? "constant" : "member";
                                 r.name = t[n].word;
                                 r.offset = t[n].a;
                                 r.type =
@@ -1166,7 +1174,7 @@ std::vector<Binding> scanBindings(const std::string &s,
             ++j;
         while (j + 1 < t.size() && t[j].word == "fn" && t[j + 1].word == "(")
             j = groupEnd(t, j + 1, "(", ")");
-        if (j >= t.size() || !identifier(t[j].word) || keywords.count(t[j].word))
+        if (j >= t.size() || !identifier(t[j].word) || (t[j].word != "copy" && keywords.count(t[j].word)))
             continue;
         size_t next = j + 1;
         if (next < t.size() && t[next].word == "<")
@@ -1223,7 +1231,7 @@ std::vector<Binding> scanBindings(const std::string &s,
                     continue;
                 }
                 if (t[j].word != "," && j + 1 != end) continue;
-                if (j == begin + 1 && identifier(t[begin].word) && !keywords.count(t[begin].word))
+                if (j == begin + 1 && identifier(t[begin].word) && (t[begin].word == "copy" || !keywords.count(t[begin].word)))
                 {
                     Binding b{ t[begin].word, "let", "parameter", t[begin].a, t[begin].b, scopes[end] };
                     b.context = t[i].a;
@@ -1794,7 +1802,7 @@ public:
             std::string plain;
             for (const auto &token : tokens)
                 if (token.word != "const" && token.word != "mut" && token.word != "&") plain += token.word;
-            if (plain == "String") plain = "std::lang::String";
+            if (plain == "String") plain = "std::core::String";
             return plain;
         };
         for (const auto &record : entries)
@@ -1911,7 +1919,7 @@ public:
         if (depth > 24) return "";
         value = trim(value);
         const auto originalValue = value;
-        if (starts(value, "f\"")) return qualify("std::lang::String");
+        if (starts(value, "f\"")) return qualify("std::core::String");
         auto t = valueTokens(value);
         if (t.empty()) return "";
         auto shape = lspFunctionShape(value);
@@ -2034,7 +2042,7 @@ public:
             auto right = infer(rightText, cursor, depth + 1);
             if (left.empty() || right.empty()) return "";
             if (lspBinaryPriority(word) <= 4) return "bool";
-            if (word == "+" && (tail(left) == "String" || tail(right) == "String")) return "std::lang::String";
+            if (word == "+" && (tail(left) == "String" || tail(right) == "String")) return "std::core::String";
             const bool leftLiteral = lspFitsIntegerLiteral(leftText, "uint64");
             const bool rightLiteral = lspFitsIntegerLiteral(rightText, "uint64");
             if (leftLiteral && !rightLiteral && lspFitsIntegerLiteral(leftText, right)) left = right;
@@ -2084,7 +2092,7 @@ public:
         {
             auto receiver = infer(value.substr(0, dot), cursor, depth + 1);
             auto memberName = trim(value.substr(dot + 1));
-            if (call && memberName == "toString" && arguments.empty() && !receiver.empty()) return "std::lang::String";
+            if (call && memberName == "toString" && arguments.empty() && !receiver.empty()) return "std::core::String";
             auto entries = members(receiver, base(memberName));
             if (call) entries = selectedCalls(entries, arguments, cursor, depth + 1);
             std::set<std::string> results;
@@ -2127,7 +2135,7 @@ public:
         {
             auto owner = value.substr(0, variantAt), variant = value.substr(variantAt + 2);
             auto ownerName = base(qualify(owner));
-            if ((ownerName == "std::lang::Result" && (variant == "Ok" || variant == "Err")) || (ownerName == "std::lang::Option" && (variant == "Value" || variant == "None"))) return qualify(owner);
+            if ((ownerName == "std::core::Result" && (variant == "Ok" || variant == "Err")) || (ownerName == "std::core::Option" && (variant == "Value" || variant == "None"))) return qualify(owner);
         }
         if (!call)
         {
@@ -2148,7 +2156,7 @@ public:
             }
             if (words.size() == 1)
             {
-                if (words[0].kind == 9) return words[0].word[0] == '"' ? "std::lang::String" : "char";
+                if (words[0].kind == 9) return words[0].word[0] == '"' ? "std::core::String" : "char";
                 if (value == "true" || value == "false") return "bool";
                 const bool binaryUnsigned = value.size() > 2 && (value[0] == 'b' || value[0] == 'B') && value.back() == 'u' && std::all_of(value.begin() + 1, value.end() - 1, [](char ch) { return ch == '0' || ch == '1' || ch == '_'; });
                 if (words[0].kind == 10 || binaryUnsigned)
@@ -2163,7 +2171,7 @@ public:
         }
         auto name = base(value);
         /* `copy(x)` 还是调用形式，运算符 `move x` 不需要在这里特判：它不改变操作数的类型。 */
-        if ((name == "copy" || name == "std::lang::copy") && t.back().word == ")")
+        if ((name == "copy" || name == "std::core::copy") && t.back().word == ")")
         {
             size_t open = 0;
             while (open < t.size() && t[open].word != "(") ++open;
@@ -2210,7 +2218,7 @@ public:
     {
         auto head = base(qualify(type));
         std::string signature = type;
-        if (head == "std::lang::Result" || head == "std::lang::Option")
+        if (head == "std::core::Result" || head == "std::core::Option")
         {
             auto open = signature.find('<');
             if (open == signature.npos) return {};
@@ -2297,7 +2305,7 @@ public:
             method.owner = owner;
             method.qualified = owner + "::toString";
             method.signature = "String toString()";
-            method.type = "std::lang::String";
+            method.type = "std::core::String";
             method.documentation = "返回拥有型字符串。默认结构体使用 {值, ...}，List 使用 [...]，Set/Map 使用 {...}，元组使用 (...)；嵌套字符串加引号。自定义无参 toString 或 ImplicitConvert<String> 优先。";
             method.source = "source/semantics/value_text.cpp";
             out.push_back(std::move(method));
@@ -2333,10 +2341,10 @@ std::vector<Record> matching(const std::vector<Record> &records,
         if (name.find("::") != name.npos ? (r.qualified == name || ends(r.qualified, "::" + name)) : (r.name == name && r.owner.empty()))
             out.push_back(r);
     if (name.find("::") == name.npos && std::any_of(out.begin(), out.end(), [](const Record &entry) {
-            return entry.module != "std::lang" && entry.kind == "function";
+            return entry.module != "std::core" && entry.kind == "function";
         }))
         out.erase(std::remove_if(out.begin(), out.end(), [](const Record &entry) {
-                      return entry.module == "std::lang" && entry.kind == "function";
+                      return entry.module == "std::core" && entry.kind == "function";
                   }),
                   out.end());
     return out;
@@ -3279,6 +3287,7 @@ class Server
     std::map<std::string, std::string> sourceSnapshot;
     std::string analysisGraph;
     std::set<std::string> usedDocuments;
+    bool definitionLinks = false;
     bool shutdown = false;
     std::shared_ptr<std::atomic<bool>> requestCancelled;
     /**
@@ -3290,7 +3299,7 @@ class Server
      */
     Server(const Server &parent, Documents snapshot, std::vector<fs::path> folders, uint64_t version) : compiler(parent.compiler), documents(std::move(snapshot)), roots(std::move(folders)),
                                                                                                         library(parent.library), standard(library->standard), standardImports(library->imports),
-                                                                                                        baseTypes(library->types), types(baseTypes), cache(parent.cache), analysisBudget(parent.analysisBudget), outputMutex(parent.outputMutex), revision(parent.revision), snapshotRevision(version) {}
+                                                                                                        baseTypes(library->types), types(baseTypes), cache(parent.cache), analysisBudget(parent.analysisBudget), outputMutex(parent.outputMutex), revision(parent.revision), snapshotRevision(version), definitionLinks(parent.definitionLinks) {}
     /**
      * @brief 取得指定 URI 对应的当前源码内容。
      * @param u 待处理文档的 URI。
@@ -3374,7 +3383,7 @@ class Server
     {
         types = baseTypes;
         auto search = projectPaths(pathOf(u));
-        std::set<std::string> visited, modules{ "std::lang", "std" };
+        std::set<std::string> visited, modules{ "std::core", "std" };
         std::vector<Record> out;
         std::string graph;
         std::function<void(const std::string &, const std::string &)> visit =
@@ -3518,6 +3527,8 @@ class Server
             return 11;
         if (r.kind == "member")
             return 8;
+        if (r.kind == "constant")
+            return 14;
         return r.owner.empty() ? 12 : 6;
     }
     /**
@@ -3535,6 +3546,8 @@ class Server
             return 8;
         if (r.kind == "member")
             return 5;
+        if (r.kind == "constant")
+            return 21;
         return 3;
     }
     /**
@@ -3897,10 +3910,9 @@ class Server
     /**
      * @brief 为文档生成语义着色词法项。
      * @param s 待处理的文本或节点文本值。
-     * @param records 当前文件的符号记录集合。
-     * @retval 保存为文档生成语义着色词法项结果的对象。
+     * @return 以相对 UTF-16 位置编码的语义标记。
      */
-    J semantic(const std::string &s, const std::vector<Record> &records)
+    J semantic(const std::string &s)
     {
         const auto unit = activeUnit ? std::shared_ptr<const LspUnit>() : cache->unit("semantic", s);
         const auto &raw = activeUnit ? activeUnit->raw : unit->raw;
@@ -3948,10 +3960,6 @@ class Server
             classes[b.offset] = { b.kind == "function" ? 6 : b.kind == "parameter" ? 3 :
                                                                                      4,
                                   1 };
-        std::set<std::string> functions;
-        for (auto &r : records)
-            if (r.kind == "function" || r.kind == "macro")
-                functions.insert(r.name);
         A data;
         int lastLine = 0, lastCol = 0;
         // 原始 token 按字节位置递增；一次推进 UTF-16 游标，避免长行反复扫描行首。
@@ -4004,7 +4012,8 @@ class Server
             }
             else if (primitives.count(word))
                 kind = 1;
-            else if (keywords.count(word))
+            else if (keywords.count(word) && (word != "copy" || prev == "fn" ||
+                     (prev == "]" && (next == "[" || next == "(")) || (prev == ")" && next == "{")))
                 kind = 7;
             else if (identifier(word))
             {
@@ -4018,7 +4027,7 @@ class Server
                 }
                 if (prev == ".")
                     kind = next == "(" ? 6 : 5;
-                else if (best)
+                else if (best && prev != "::")
                     kind = best->kind == "function" ? 6 : best->kind == "parameter" ? 3 :
                                                                                       4;
                 else if (generic.count(word))
@@ -4027,7 +4036,7 @@ class Server
                     kind = 1;
                 else if (next == "::" || prev == "module" || prev == "import")
                     kind = 0;
-                else if (next == "(" || functions.count(word))
+                else if (next == "(")
                     kind = 6;
                 else
                     kind = 4;
@@ -4143,6 +4152,8 @@ class Server
     {
         if (method == "initialize")
         {
+            definitionLinks = get(get(get(get(params, "capabilities"), "textDocument"), "definition"),
+                                  "linkSupport").asBool().value_or(false);
             roots.clear();
             for (auto &folder : array(get(params, "workspaceFolders")))
                 roots.push_back(pathOf(str(folder, "uri")));
@@ -4231,7 +4242,7 @@ class Server
             }
         }
         if (method == "textDocument/semanticTokens/full")
-            return semantic(s, records);
+            return semantic(s);
         auto vars = bindings(s, types);
         CompilerTypeScope compilerTypes;
         if (s.find('$') != s.npos && (method == "textDocument/hover" || method == "textDocument/completion" || method == "textDocument/signatureHelp"))
@@ -4434,7 +4445,7 @@ class Server
             A out;
             auto addImport = [&](J &item, const std::string &module) {
                 auto imported = directives(s, "import");
-                if (module.empty() || module == "std::lang" || module == "std" || std::find(imported.begin(), imported.end(), module) != imported.end())
+                if (module.empty() || module == "std::core" || module == "std" || std::find(imported.begin(), imported.end(), module) != imported.end())
                     return;
                 auto t = lex(s);
                 size_t insertion = 0;
@@ -4477,7 +4488,7 @@ class Server
                     completionNames[record.name].insert(record.qualified);
             auto shortCompletion = [&](const Record &record) {
                 auto owners = completionNames[record.name];
-                if (record.module != "std::lang") owners.erase("std::lang::" + record.name);
+                if (record.module != "std::core") owners.erase("std::core::" + record.name);
                 if (owners.size() != 1)
                     return false;
                 for (const auto &binding : vars)
@@ -4486,7 +4497,7 @@ class Server
                 return true;
             };
             std::set<std::string> ownerTypes;
-            if (macroCompletion && !member && (!qualifiedName || receiver == "std::lang"))
+            if (macroCompletion && !member && (!qualifiedName || receiver == "std::core"))
             {
                 for (const auto *builtin : { "fields", "variants", "methods", "interfaces" })
                 {
@@ -4498,9 +4509,12 @@ class Server
                                            { "documentation", markup("具体类型的编译期只读元数据；仅接受一个显式类型实参") } }));
                 }
             }
+            std::set<std::pair<std::string, std::string>> standardMacros;
             for (auto &r : records)
             {
                 if (macroCompletion && r.kind != "macro") continue;
+                const bool standardMacro = r.kind == "macro" && starts(r.module, "std::");
+                if (standardMacro && starts(r.name, "__")) continue;
                 if (!member && qualifiedName)
                 {
                     auto prefix =
@@ -4510,6 +4524,8 @@ class Server
                 }
                 else if (!member && !r.owner.empty())
                     continue;
+                // 同一标准宏可能同时来自公开索引与已载入的模块。
+                if (standardMacro && !standardMacros.emplace(r.qualified, r.signature).second) continue;
                 // 宏在源码里写成 `$名字`：跨模块同名时和普通标识符一样用限定名，
                 // 唯一时用短名；`%define` 那类是文本替换，只能按短名插入。
                 const bool dollarMacro = r.kind == "macro" && (starts(r.signature, "$macro") || starts(r.signature, "$replace"));
@@ -4572,7 +4588,7 @@ class Server
                             base.size(), m.find("::", base.size()) == m.npos ? m.size() - base.size() : m.find("::", base.size()) - base.size()));
                 for (auto &choice : choices)
                 {
-                    if (importContext && base == "std::" && choice == "lang") continue;
+                    if (importContext && base == "std::" && choice == "core") continue;
                     out.push_back(object({ { "label", choice },
                                            { "insertText", choice },
                                            { "kind", 9 },
@@ -4609,7 +4625,7 @@ class Server
                     const Binding *function = nullptr;
                     for (auto &b : vars)
                         if (b.kind == "function" && b.offset < cursor && (!function || b.offset > function->offset)) function = &b;
-                    bool hasMove = sourceType.find("std::lang::Result<") == 0 || sourceType.find("std::lang::Option<") == 0;
+                    bool hasMove = sourceType.find("std::core::Result<") == 0 || sourceType.find("std::core::Option<") == 0;
                     for (auto &r : records)
                         if (r.qualified == sourceType.substr(0, sourceType.find('<')) && r.signature.find("TryMove") != std::string::npos) hasMove = true;
                     bool moving = hasMove && !value.empty() && value.back() == ')';
@@ -4705,12 +4721,20 @@ class Server
         if (method == "textDocument/definition")
         {
             auto locationsFound = locations(entries);
-            if (!array(locationsFound).empty())
-                return locationsFound;
-            if (binding)
-                return object(
-                    { { "uri", u }, { "range", range(s, binding->offset, binding->end) } });
-            return J();
+            if (array(locationsFound).empty() && binding)
+            {
+                auto location = object({ { "uri", u }, { "range", range(s, binding->offset, binding->end) } });
+                if (!definitionLinks) return location;
+                locationsFound = A{location};
+            }
+            if (array(locationsFound).empty()) return J();
+            if (!definitionLinks) return locationsFound;
+            A links;
+            for (const auto &location : array(locationsFound))
+                links.emplace_back(object({ { "originSelectionRange", range(s, token->a, token->b) },
+                    { "targetUri", str(location, "uri") }, { "targetRange", get(location, "range") },
+                    { "targetSelectionRange", get(location, "range") } }));
+            return links;
         }
         if (method == "textDocument/hover")
         {
@@ -4983,6 +5007,18 @@ public:
                 for (auto &v : array(m.value))
                     out.push_back(str(v));
             }
+        Memory::String macroSource;
+        if (chali_module::embedded::find("std::macro", &macroSource))
+        {
+            library->imports.try_emplace("std::macro");
+            const std::string body(macroSource.data(), macroSource.size());
+            for (auto &entry : scan(standardUri("std::macro"), body))
+            {
+                if (entry.kind != "macro") continue;
+                entry.offset = static_cast<std::size_t>(std::count(body.begin(), body.begin() + entry.offset, '\n')) + 1;
+                library->standard.push_back(std::move(entry));
+            }
+        }
         types = baseTypes;
     }
     /**

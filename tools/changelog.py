@@ -47,7 +47,7 @@ INTRO = (
     "版本使用三段编号，不兼容变更升主版本，兼容功能新增升次版本，"
     "修复升补丁版本；所有变更均须记入本文件（改 [`tools/changelog_data.json`](tools/changelog_data.json) "
     "后跑 `--build`），并同步更新 [`doc/21-semantics-frozen.md`](doc/21-semantics-frozen.md) 与 "
-    "`AGENTS.md`。VS Code 扩展包独立编号；历史版本统一采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，"
+    "`AGENTS.md`。发行 VS Code 扩展包与编译器使用相同版本；历史开发基线采用三段 0.x.x 编号。较长的开发记录可拆为补丁版本分段，"
     "这些分段不重新标记历史二进制、测量结果或既有 tag；其余历史版本保留简要摘要。")
 
 TAG = re.compile(r"^v(\d+(?:\.\d+)*)$")
@@ -75,6 +75,8 @@ def render(data):
     lines = ["# ChaLi 变更记录", "", INTRO, ""]
     for ver in data["versions"]:
         lines += ["", f"## {ver['version']} — {ver['title']}", ""]
+        if origin := ver.get("origin"):
+            lines += [f"开发基线源自提交 `{origin['commit']}`，当时的构件版本为 `{origin['version']}`。", ""]
         for entry in ver.get("entries", []):
             if isinstance(entry, str):
                 lines.append(f"- {entry}")
@@ -130,7 +132,11 @@ def check():
         if "dates" in ver or "date" in ver:
             problems.append(f"{ver['version']} 仅按版本维护条目，不填写日期或日期组")
 
-    known = seen
+    historical = data.get("historicalTags", {})
+    baseline_origins = {row["origin"]["version"]: row["version"] for row in data["versions"] if "origin" in row}
+    if historical != baseline_origins:
+        problems.append("历史标签映射必须与开发基线的原版本一致")
+    known = seen | set(historical)
     editor_version = json.loads((ROOT / "vscode/package.json").read_text(encoding="utf-8"))["version"]
     for tag_version in tags():
         if tag_version == editor_version and tag_version != version:

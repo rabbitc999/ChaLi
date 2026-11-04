@@ -126,7 +126,7 @@ void MarkMacroFieldTypeOperands(int id, std::size_t depth = 0)
         {
             int type = -1;
             if ((right.kind == MNode::Var && right.s == "Map")
-                || (right.kind == MNode::EnumCtor && right.kids.empty() && right.s == "std::lang" && right.s2 == "Map"))
+                || (right.kind == MNode::EnumCtor && right.kids.empty() && right.s == "std::core" && right.s2 == "Map"))
             {
                 const int argument = M_TypeKind(MType::Struct, "?");
                 type = M_TypeMap(argument, argument);
@@ -183,7 +183,7 @@ int M_AstGenericType(int name, int arguments)
     type->genericBase = type->name;
     type->lookupModule = g_parseModule;
     for (const int argument : g_nodes[arguments].kids) type->genericArguments.push_back(M_TypeAt(g_nodes[argument].type));
-    const auto bare = type->name.rfind("std::lang::", 0) == 0 ? type->name.substr(11) : type->name;
+    const auto bare = type->name.rfind("std::core::", 0) == 0 ? type->name.substr(11) : type->name;
     if ((bare == "List" || bare == "Set" || bare == "Map") && type->genericArguments.size() == (bare == "Map" ? 2u : 1u))
     {
         const int first = g_nodes[g_nodes[arguments].kids[0]].type;
@@ -283,6 +283,19 @@ int M_MacroGeneric(int name, int source)
     const int id = M_New(MNode::MacroGeneric, g_names[name]);
     if (source >= 0) g_nodes[id].s2 = g_names[source];
     else if (source == -2) g_nodes[id].s2 = "#res";
+    return id;
+}
+
+/**
+ * @brief 构造成员宏的接口集成请求。
+ * @param type 接口类型编号，可以包含宏类型参数。
+ * @return 保留到宿主接口登记阶段的请求节点。
+ */
+int M_MacroImplement(int type)
+{
+    const int id = M_New(MNode::MacroImplement);
+    g_nodes[id].type = type;
+    g_nodes[id].s = g_types[static_cast<std::size_t>(type)]->name;
     return id;
 }
 

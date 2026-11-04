@@ -501,18 +501,18 @@ private:
                       Memory::String &error)
     {
         Memory::String embeddedText;
-        if (embedded::find("std::lang", &embeddedText))
-            return load(embeddedUnit("std::lang", embeddedText), base, "std::lang",
+        if (embedded::find("std::core", &embeddedText))
+            return load(embeddedUnit("std::core", embeddedText), base, "std::core",
                         false, output, error);
         Memory::String path;
-        if (!findModule("std::lang", base, includeDirs_, path))
+        if (!findModule("std::core", base, includeDirs_, path))
         {
-            error = "找不到 ChaLi 标准库 std/lang.chl（可用 -I 指定其所在目录）";
+            error = "找不到 ChaLi 标准库 std/core.chl（可用 -I 指定其所在目录）";
             return false;
         }
         preprocess::Result unit;
         if (!preprocessFile(path, unit)) return diagnostics(unit, error);
-        if (!load(unit, std::filesystem::path(path).parent_path().string(), "std::lang",
+        if (!load(unit, std::filesystem::path(path).parent_path().string(), "std::core",
                   false, output, error)) return false;
         output.dependencies.push_back(path);
         return true;
@@ -546,6 +546,8 @@ private:
         output.lineMap.insert(output.lineMap.end(), input.lineMap.begin(), input.lineMap.end());
         output.dependencies.insert(output.dependencies.end(), input.dependencies.begin(),
                                    input.dependencies.end());
+        output.namingSuppressedFiles.insert(output.namingSuppressedFiles.end(), input.namingSuppressedFiles.begin(),
+                                            input.namingSuppressedFiles.end());
     }
 
     /**
@@ -593,11 +595,11 @@ private:
             info.hasModule = true;
             info.name = "program";
         }
-        /* 模块根保留：`lang` 与 `std` 归标准库。导入方（root=false）本来就按 expected
+        /* 模块根保留：`std::core` 与 `std` 归标准库。导入方（root=false）本来就按 expected
          * 核对模块名，这里挡的是**入口文件**自称标准库模块。 */
-        if (root && (info.name == "std::lang" || info.name == "std" || info.name.compare(0u, 5u, "std::") == 0u))
+        if (root && (info.name == "std::core" || info.name == "std" || info.name.compare(0u, 5u, "std::") == 0u))
         {
-            error = "模块名 " + info.name + " 保留给标准库（核心 prelude 是 std::lang，按需模块是 std::xxx）："
+            error = "模块名 " + info.name + " 保留给标准库（核心 prelude 是 std::core，按需模块是 std::xxx）："
                                             "用户文件不能用这个名字";
             return false;
         }
@@ -624,7 +626,7 @@ private:
             if (!origin.file.empty()) moduleByFile_[origin.file] = key;
         for (const Memory::String &imported : info.imports)
         {
-            if (imported == "std::lang") continue;
+            if (imported == "std::core") continue;
             /* `std::algorithms` 没有 CHALI 文件，但仍在合并源码里保留模块边界。限定调用由
              * 编译器直接降级到 StackVM 胶水，不在这里注入函数体。 */
             if (imported == "std::algorithms")

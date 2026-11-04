@@ -155,7 +155,7 @@ void main() {
     int64 total = 0;
     for (int64 item in std::iter::range(1,4).map(squared)) { total = total + item; }
     assert((total) == (14));
-    assert((std::lang::range(1,5).intoIter().fold(0,sum)) == (10));
+    assert((std::core::range(1,5).intoIter().fold(0,sum)) == (10));
     assert((std::iter::range(5,1,-1).fold(0,sum)) == (14));
     assert((madeList().intoIter().fold(0,sum)) == (5));
     assert((madeList().iter().map(read).fold(0,sum)) == (5));

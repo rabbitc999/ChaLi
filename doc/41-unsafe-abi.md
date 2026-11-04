@@ -14,10 +14,10 @@
 import std::memory;
 
 void main() {
-    std::lang::RawStorage<String> slots = std::lang::RawStorage<String>::allocate(8);
+    std::core::RawStorage<String> slots = std::core::RawStorage<String>::allocate(8);
     unsafe {
-        std::lang::initAt<String>(slots.pointer(0), "hello");
-        String value = std::lang::takeAt<String>(slots.pointer(0));
+        std::core::initAt<String>(slots.pointer(0), "hello");
+        String value = std::core::takeAt<String>(slots.pointer(0));
         assert(value == "hello");
     }
     slots.close();
@@ -26,7 +26,7 @@ void main() {
 
 `RawStorage<T>` 独占原始容量，实现 `Closeable`，备用槽位不构造元素。`RawPtr<T>` 保存分配身份和元素下标；它不是宿主机器指针。不要改写内部句柄。`pointer(capacity)` 可以形成尾后位置，不能解引用。`__rawSize(T)`、`__rawAlign(T)` 仅在不安全作用域中查询语言存储布局。直接数组和宿主别名不能作为原始元素类型；需要数组时放进具名结构体。
 
-公开的 `std::lang::rawSize<T>()` 可以在安全代码中查询同一值布局。例如 `rawSize<uint8>() == 1`、`rawSize<int64>() == 8`。聚合大小包含语言布局规定的槽位；String 等拥有值返回值槽大小，字符串内容和容量另占的内存不包含在内。这项查询不访问对象，也不等于宿主 C ABI 的 `sizeof`；void、直接数组和宿主别名不支持查询。
+公开的 `std::core::rawSize<T>()` 可以在安全代码中查询同一值布局。例如 `rawSize<uint8>() == 1`、`rawSize<int64>() == 8`。聚合大小包含语言布局规定的槽位；String 等拥有值返回值槽大小，字符串内容和容量另占的内存不包含在内。这项查询不访问对象，也不等于宿主 C ABI 的 `sizeof`；void、直接数组和宿主别名不支持查询。
 
 | 操作 | 行为 |
 | --- | --- |
@@ -46,11 +46,11 @@ void main() {
 
 ```chali
 unsafe {
-    std::lang::BarePtr<int64> p = std::lang::barePointer<int64>(slots.pointer(0));
-    std::lang::BarePtr<int64> q = p + 1;
+    std::core::BarePtr<int64> p = std::core::barePointer<int64>(slots.pointer(0));
+    std::core::BarePtr<int64> q = p + 1;
     assert(q - p == 1);
-    std::lang::memset<int64>(p, (uint8)0, 8);
-    int64 mut& value = std::lang::dereference<int64>(p);
+    std::core::memset<int64>(p, (uint8)0, 8);
+    int64 mut& value = std::core::dereference<int64>(p);
     *value = 42;
 }
 ```
@@ -59,7 +59,7 @@ unsafe {
 
 `memcpy<T,U>(destination, source, bytes)` 与 `memset<T>(destination, uint8 value, bytes)` 的长度都按字节计算。底层不检测元素类型，不读写原始存储的初始化位图，也不调用复制、移动或清理钩子。非零范围须落在有效分配内；复制的完整源与目标范围均检查成功后才写入，重叠被拒绝。零长度允许空指针。裸指针不携带分配代次，地址被释放并重用后的身份区分需要调用者管理。
 
-这些类型与操作位于 `std::lang`，可以省略命名空间。`memcpy`／`memset` 从已检查 AST 直接生成 LLVM 内存原语；不经过语言包装函数或通用内建分派。受检原始存储的必要动态检查通过标量内核执行，小型指针包装优先内联；裸指针解引用直接提取地址。
+这些类型与操作位于 `std::core`，可以省略命名空间。`memcpy`／`memset` 从已检查 AST 直接生成 LLVM 内存原语；不经过语言包装函数或通用内建分派。受检原始存储的必要动态检查通过标量内核执行，小型指针包装优先内联；裸指针解引用直接提取地址。
 
 ### 当前原语降低范围
 
@@ -86,7 +86,7 @@ IEEE754 编解码使用这个方法重解释存储并解引用，不通过整数
 
 ## 默认标准库的自举实现
 
-默认 List、Map、Set 的增长、查找、插删、复制及清空算法位于 `source/std/lang.chl`。List 删除和清空保留容量；Map 使用密集键值项、有效槽位编码和缓存 HashKey，Set 维护独立槽位。键的 `Equal`／`Hash` 契约保持原样。公开容器仍采用既有不透明存储表示，以便宿主返回的容器与语言容器直接互操作。
+默认 List、Map、Set 的增长、查找、插删、复制及清空算法位于 `source/std/core.chl`。List 删除和清空保留容量；Map 使用密集键值项、有效槽位编码和缓存 HashKey，Set 维护独立槽位。键的 `Equal`／`Hash` 契约保持原样。公开容器仍采用既有不透明存储表示，以便宿主返回的容器与语言容器直接互操作。
 
 链表、栈、队列、双端队列、环形缓冲、二叉搜索树、红黑树、通用树、最小堆、图及并查集由对应的 ChaLi 标准库模块实现。标准列表算法的遍历、函数值回调、归约、二分、极值和稳定索引归并排序也在语言中实现；算法租约在回调期间保持来源存活并阻止结构性移动。String 的拥有值复制与清理、查找、比较、分类、UTF-8 解码、切片、变换、分割、连接和字节转换，以及 IEEE754 编解码和 KMP 均已迁入语言。
 

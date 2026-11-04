@@ -185,7 +185,7 @@ void main() {
     int64 total = 0;
     for (int64 item in std::iter::range(1,4).map(squared)) { total = total + item; }
     assert((total) == (14));
-    assert((std::lang::range(1,5).intoIter().fold(0,sum)) == (10));
+    assert((std::core::range(1,5).intoIter().fold(0,sum)) == (10));
     assert((std::iter::range(5,1,-1).fold(0,sum)) == (14));
     assert((madeList().intoIter().fold(0,sum)) == (5));
     assert((madeList().iter().map(read).fold(0,sum)) == (5));
@@ -259,96 +259,96 @@ iterator pipelines OK
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-128"></a>`interface IterNext<T>` | 有状态迭代器接口；每次 next 消费一个元素。 |
-| 模块 | <a id="symbol-129"></a>`struct Iter<T> : Iterator<T>` | 持有惰性游标状态，按 ChaLi 值语义复制时获得独立游标。 |
-| Iter | <a id="symbol-130"></a>`std::lang::Any state` | 以 Any 持有的具体迭代游标状态。 |
-| Iter | <a id="symbol-131"></a>`bool buffered` | 是否已缓存 peek 取得的下一项。 |
-| Iter | <a id="symbol-132"></a>`Option<T> pending` | 等待消费的元素或队列。 |
-| 模块 | <a id="symbol-133"></a>`struct IteratorValueState<T,S : Iterator<T>> : IterNext<T>` | 将语言 Iterator 值保存为独立的惰性游标。 |
-| IteratorValueState | <a id="symbol-134"></a>`S source` | 被适配的源游标或连续存储。 |
-| IteratorValueState | <a id="symbol-135"></a>`int64 position` | 下一项在源存储中的位置。 |
-| 模块 | <a id="symbol-136"></a>`struct IterListState<T> : IterNext<T>` | 列表值迭代状态，保留未消费的元素。 |
-| IterListState | <a id="symbol-137"></a>`std::lang::List<T> values` | 按声明顺序保存的元素存储。 |
-| IterListState | <a id="symbol-138"></a>`int64 position` | 下一项在源存储中的位置。 |
-| 模块 | <a id="symbol-139"></a>`struct IterRangeState : IterNext<int64>` | 创建半开整数区间的惰性迭代器。 |
-| IterRangeState | <a id="symbol-140"></a>`int64 current` | 当前迭代位置或正在消费的游标。 |
-| IterRangeState | <a id="symbol-141"></a>`int64 stop` | 区间结束边界。 |
-| IterRangeState | <a id="symbol-142"></a>`int64 step` | 每次推进的步长。 |
-| IterRangeState | <a id="symbol-143"></a>`bool done` | 游标是否已经结束。 |
-| 模块 | <a id="symbol-144"></a>`struct IterMapState<T,U> : IterNext<U>` | IterMapState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterMapState | <a id="symbol-145"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterMapState | <a id="symbol-146"></a>`U fn(T) callback` | 宿主事件发生时执行的回调。 |
-| 模块 | <a id="symbol-147"></a>`struct IterFilterState<T> : IterNext<T>` | IterFilterState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterFilterState | <a id="symbol-148"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterFilterState | <a id="symbol-149"></a>`bool fn(T) predicate` | 用于筛选或判断停止条件的回调。 |
-| 模块 | <a id="symbol-150"></a>`struct IterFilterMapState<T,U> : IterNext<U>` | IterFilterMapState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterFilterMapState | <a id="symbol-151"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterFilterMapState | <a id="symbol-152"></a>`Option<U> fn(T) callback` | 宿主事件发生时执行的回调。 |
-| 模块 | <a id="symbol-153"></a>`struct IterMapWhileState<T,U> : IterNext<U>` | IterMapWhileState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterMapWhileState | <a id="symbol-154"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterMapWhileState | <a id="symbol-155"></a>`bool done` | 游标是否已经结束。 |
-| IterMapWhileState | <a id="symbol-156"></a>`Option<U> fn(T) callback` | 宿主事件发生时执行的回调。 |
-| 模块 | <a id="symbol-157"></a>`struct IterTakeWhileState<T> : IterNext<T>` | IterTakeWhileState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterTakeWhileState | <a id="symbol-158"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterTakeWhileState | <a id="symbol-159"></a>`bool done` | 游标是否已经结束。 |
-| IterTakeWhileState | <a id="symbol-160"></a>`bool fn(T) predicate` | 用于筛选或判断停止条件的回调。 |
-| 模块 | <a id="symbol-161"></a>`struct IterSkipWhileState<T> : IterNext<T>` | IterSkipWhileState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterSkipWhileState | <a id="symbol-162"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterSkipWhileState | <a id="symbol-163"></a>`bool skipping` | 是否仍处于跳过前缀的阶段。 |
-| IterSkipWhileState | <a id="symbol-164"></a>`bool fn(T) predicate` | 用于筛选或判断停止条件的回调。 |
-| 模块 | <a id="symbol-165"></a>`struct IterTakeState<T> : IterNext<T>` | IterTakeState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterTakeState | <a id="symbol-166"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterTakeState | <a id="symbol-167"></a>`int64 remaining` | 尚需跳过或允许消费的元素数量。 |
-| 模块 | <a id="symbol-168"></a>`struct IterSkipState<T> : IterNext<T>` | IterSkipState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterSkipState | <a id="symbol-169"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterSkipState | <a id="symbol-170"></a>`int64 remaining` | 尚需跳过或允许消费的元素数量。 |
-| 模块 | <a id="symbol-171"></a>`struct IterChainState<T> : IterNext<T>` | IterChainState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterChainState | <a id="symbol-172"></a>`Iter<T> left` | 第一个输入游标。 |
-| IterChainState | <a id="symbol-173"></a>`Iter<T> right` | 第二个输入游标。 |
-| IterChainState | <a id="symbol-174"></a>`bool switched` | 是否已切换到第二个输入游标。 |
-| 模块 | <a id="symbol-175"></a>`struct IterZipState<T,U> : IterNext<(T,U)>` | IterZipState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterZipState | <a id="symbol-176"></a>`Iter<T> left` | 第一个输入游标。 |
-| IterZipState | <a id="symbol-177"></a>`Iter<U> right` | 第二个输入游标。 |
-| 模块 | <a id="symbol-178"></a>`struct IterEnumerateState<T> : IterNext<(int64,T)>` | IterEnumerateState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterEnumerateState | <a id="symbol-179"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterEnumerateState | <a id="symbol-180"></a>`int64 index` | 当前元素序号，从 0 开始。 |
-| 模块 | <a id="symbol-181"></a>`struct IterStepState<T> : IterNext<T>` | IterStepState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterStepState | <a id="symbol-182"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterStepState | <a id="symbol-183"></a>`int64 step` | 每次推进的步长。 |
-| IterStepState | <a id="symbol-184"></a>`bool started` | 是否已消费首个元素。 |
-| 模块 | <a id="symbol-185"></a>`struct IterFuseState<T> : IterNext<T>` | IterFuseState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterFuseState | <a id="symbol-186"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterFuseState | <a id="symbol-187"></a>`bool done` | 游标是否已经结束。 |
-| 模块 | <a id="symbol-188"></a>`struct IterInspectState<T> : IterNext<T>` | IterInspectState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterInspectState | <a id="symbol-189"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterInspectState | <a id="symbol-190"></a>`void fn(T) action` | 逐项执行的观察或处理回调。 |
-| 模块 | <a id="symbol-191"></a>`struct IterCycleState<T> : IterNext<T>` | IterCycleState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterCycleState | <a id="symbol-192"></a>`Iter<T> initial` | 用于重新开始遍历的初始游标。 |
-| IterCycleState | <a id="symbol-193"></a>`Iter<T> current` | 当前迭代位置或正在消费的游标。 |
-| IterCycleState | <a id="symbol-194"></a>`bool empty` | 输入是否已确认没有元素。 |
-| 模块 | <a id="symbol-195"></a>`struct IterScanState<T,A,U> : IterNext<U>` | IterScanState 的惰性状态，仅在 next 时执行回调或消费来源。 |
-| IterScanState | <a id="symbol-196"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
-| IterScanState | <a id="symbol-197"></a>`A accumulator` | 扫描过程中保存的累积状态。 |
-| IterScanState | <a id="symbol-198"></a>`Option<U> fn(A mut&, T) callback` | 宿主事件发生时执行的回调。 |
-| 模块 | <a id="symbol-199"></a>`struct IterBufferState<T> : IterNext<T>` | 缓存有限来源，保留来源状态以延长元素引用的有效期。 |
-| IterBufferState | <a id="symbol-200"></a>`std::lang::List<T> values` | 按声明顺序保存的元素存储。 |
-| IterBufferState | <a id="symbol-201"></a>`std::lang::Any anchor` | 用于维持缓冲元素借用有效性的源状态。 |
-| IterBufferState | <a id="symbol-202"></a>`int64 position` | 下一项在源存储中的位置。 |
-| 模块 | <a id="symbol-203"></a>`struct IterConstListState<T> : IterNext<T const&>` | 持有列表只读租约的迭代状态，逐项返回 const&。 |
-| IterConstListState | <a id="symbol-204"></a>`std::lang::Any lease` | 保持源列表存储有效的迭代租约。 |
-| IterConstListState | <a id="symbol-205"></a>`int64 position` | 下一项在源存储中的位置。 |
-| 模块 | <a id="symbol-206"></a>`struct IterMutListState<T> : IterNext<T mut&>` | 持有列表可写租约的迭代状态，逐项返回 mut&。 |
-| IterMutListState | <a id="symbol-207"></a>`std::lang::Any lease` | 保持源列表存储有效的迭代租约。 |
-| IterMutListState | <a id="symbol-208"></a>`int64 position` | 下一项在源存储中的位置。 |
-| 模块 | <a id="symbol-209"></a>`struct IterSpanState<T> : IterNext<T const&>` | 读取数组或 Span 的只读引用，来源必须覆盖游标生命周期。 |
-| IterSpanState | <a id="symbol-210"></a>`T const& source` | 被适配的源游标或连续存储。 |
-| IterSpanState | <a id="symbol-211"></a>`int64 length` | 连续存储中可访问的元素数量。 |
-| IterSpanState | <a id="symbol-212"></a>`int64 position` | 下一项在源存储中的位置。 |
-| 模块 | <a id="symbol-213"></a>`struct IterCharsState : IterNext<char>` | 按 ChaLi 字符模型遍历字符串字节，持有独立字符串副本。 |
-| IterCharsState | <a id="symbol-214"></a>`std::lang::String source` | 被适配的源游标或连续存储。 |
-| IterCharsState | <a id="symbol-215"></a>`int64 position` | 下一项在源存储中的位置。 |
-| 模块 | <a id="symbol-216"></a>`struct IterRepeatState<T> : IterNext<T>` | 惰性无限重复一个值，可配合 take 创建有限输出。 |
-| IterRepeatState | <a id="symbol-217"></a>`T value` | 保存的单个值。 |
+| 模块 | <a id="symbol-216"></a>`interface IterNext<T>` | 有状态迭代器接口；每次 next 消费一个元素。 |
+| 模块 | <a id="symbol-217"></a>`struct Iter<T> : Iterator<T>` | 持有惰性游标状态，按 ChaLi 值语义复制时获得独立游标。 |
+| Iter | <a id="symbol-218"></a>`std::core::Any state` | 以 Any 持有的具体迭代游标状态。 |
+| Iter | <a id="symbol-219"></a>`bool buffered` | 是否已缓存 peek 取得的下一项。 |
+| Iter | <a id="symbol-220"></a>`Option<T> pending` | 等待消费的元素或队列。 |
+| 模块 | <a id="symbol-221"></a>`struct IteratorValueState<T,S : Iterator<T>> : IterNext<T>` | 将语言 Iterator 值保存为独立的惰性游标。 |
+| IteratorValueState | <a id="symbol-222"></a>`S source` | 被适配的源游标或连续存储。 |
+| IteratorValueState | <a id="symbol-223"></a>`int64 position` | 下一项在源存储中的位置。 |
+| 模块 | <a id="symbol-224"></a>`struct IterListState<T> : IterNext<T>` | 列表值迭代状态，保留未消费的元素。 |
+| IterListState | <a id="symbol-225"></a>`std::core::List<T> values` | 按声明顺序保存的元素存储。 |
+| IterListState | <a id="symbol-226"></a>`int64 position` | 下一项在源存储中的位置。 |
+| 模块 | <a id="symbol-227"></a>`struct IterRangeState : IterNext<int64>` | 创建半开整数区间的惰性迭代器。 |
+| IterRangeState | <a id="symbol-228"></a>`int64 current` | 当前迭代位置或正在消费的游标。 |
+| IterRangeState | <a id="symbol-229"></a>`int64 stop` | 区间结束边界。 |
+| IterRangeState | <a id="symbol-230"></a>`int64 step` | 每次推进的步长。 |
+| IterRangeState | <a id="symbol-231"></a>`bool done` | 游标是否已经结束。 |
+| 模块 | <a id="symbol-232"></a>`struct IterMapState<T,U> : IterNext<U>` | IterMapState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterMapState | <a id="symbol-233"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterMapState | <a id="symbol-234"></a>`U fn(T) callback` | 宿主事件发生时执行的回调。 |
+| 模块 | <a id="symbol-235"></a>`struct IterFilterState<T> : IterNext<T>` | IterFilterState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterFilterState | <a id="symbol-236"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterFilterState | <a id="symbol-237"></a>`bool fn(T) predicate` | 用于筛选或判断停止条件的回调。 |
+| 模块 | <a id="symbol-238"></a>`struct IterFilterMapState<T,U> : IterNext<U>` | IterFilterMapState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterFilterMapState | <a id="symbol-239"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterFilterMapState | <a id="symbol-240"></a>`Option<U> fn(T) callback` | 宿主事件发生时执行的回调。 |
+| 模块 | <a id="symbol-241"></a>`struct IterMapWhileState<T,U> : IterNext<U>` | IterMapWhileState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterMapWhileState | <a id="symbol-242"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterMapWhileState | <a id="symbol-243"></a>`bool done` | 游标是否已经结束。 |
+| IterMapWhileState | <a id="symbol-244"></a>`Option<U> fn(T) callback` | 宿主事件发生时执行的回调。 |
+| 模块 | <a id="symbol-245"></a>`struct IterTakeWhileState<T> : IterNext<T>` | IterTakeWhileState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterTakeWhileState | <a id="symbol-246"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterTakeWhileState | <a id="symbol-247"></a>`bool done` | 游标是否已经结束。 |
+| IterTakeWhileState | <a id="symbol-248"></a>`bool fn(T) predicate` | 用于筛选或判断停止条件的回调。 |
+| 模块 | <a id="symbol-249"></a>`struct IterSkipWhileState<T> : IterNext<T>` | IterSkipWhileState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterSkipWhileState | <a id="symbol-250"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterSkipWhileState | <a id="symbol-251"></a>`bool skipping` | 是否仍处于跳过前缀的阶段。 |
+| IterSkipWhileState | <a id="symbol-252"></a>`bool fn(T) predicate` | 用于筛选或判断停止条件的回调。 |
+| 模块 | <a id="symbol-253"></a>`struct IterTakeState<T> : IterNext<T>` | IterTakeState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterTakeState | <a id="symbol-254"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterTakeState | <a id="symbol-255"></a>`int64 remaining` | 尚需跳过或允许消费的元素数量。 |
+| 模块 | <a id="symbol-256"></a>`struct IterSkipState<T> : IterNext<T>` | IterSkipState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterSkipState | <a id="symbol-257"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterSkipState | <a id="symbol-258"></a>`int64 remaining` | 尚需跳过或允许消费的元素数量。 |
+| 模块 | <a id="symbol-259"></a>`struct IterChainState<T> : IterNext<T>` | IterChainState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterChainState | <a id="symbol-260"></a>`Iter<T> left` | 第一个输入游标。 |
+| IterChainState | <a id="symbol-261"></a>`Iter<T> right` | 第二个输入游标。 |
+| IterChainState | <a id="symbol-262"></a>`bool switched` | 是否已切换到第二个输入游标。 |
+| 模块 | <a id="symbol-263"></a>`struct IterZipState<T,U> : IterNext<(T,U)>` | IterZipState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterZipState | <a id="symbol-264"></a>`Iter<T> left` | 第一个输入游标。 |
+| IterZipState | <a id="symbol-265"></a>`Iter<U> right` | 第二个输入游标。 |
+| 模块 | <a id="symbol-266"></a>`struct IterEnumerateState<T> : IterNext<(int64,T)>` | IterEnumerateState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterEnumerateState | <a id="symbol-267"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterEnumerateState | <a id="symbol-268"></a>`int64 index` | 当前元素序号，从 0 开始。 |
+| 模块 | <a id="symbol-269"></a>`struct IterStepState<T> : IterNext<T>` | IterStepState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterStepState | <a id="symbol-270"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterStepState | <a id="symbol-271"></a>`int64 step` | 每次推进的步长。 |
+| IterStepState | <a id="symbol-272"></a>`bool started` | 是否已消费首个元素。 |
+| 模块 | <a id="symbol-273"></a>`struct IterFuseState<T> : IterNext<T>` | IterFuseState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterFuseState | <a id="symbol-274"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterFuseState | <a id="symbol-275"></a>`bool done` | 游标是否已经结束。 |
+| 模块 | <a id="symbol-276"></a>`struct IterInspectState<T> : IterNext<T>` | IterInspectState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterInspectState | <a id="symbol-277"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterInspectState | <a id="symbol-278"></a>`void fn(T) action` | 逐项执行的观察或处理回调。 |
+| 模块 | <a id="symbol-279"></a>`struct IterCycleState<T> : IterNext<T>` | IterCycleState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterCycleState | <a id="symbol-280"></a>`Iter<T> initial` | 用于重新开始遍历的初始游标。 |
+| IterCycleState | <a id="symbol-281"></a>`Iter<T> current` | 当前迭代位置或正在消费的游标。 |
+| IterCycleState | <a id="symbol-282"></a>`bool empty` | 输入是否已确认没有元素。 |
+| 模块 | <a id="symbol-283"></a>`struct IterScanState<T,A,U> : IterNext<U>` | IterScanState 的惰性状态，仅在 next 时执行回调或消费来源。 |
+| IterScanState | <a id="symbol-284"></a>`Iter<T> source` | 被适配的源游标或连续存储。 |
+| IterScanState | <a id="symbol-285"></a>`A accumulator` | 扫描过程中保存的累积状态。 |
+| IterScanState | <a id="symbol-286"></a>`Option<U> fn(A mut&, T) callback` | 宿主事件发生时执行的回调。 |
+| 模块 | <a id="symbol-287"></a>`struct IterBufferState<T> : IterNext<T>` | 缓存有限来源，保留来源状态以延长元素引用的有效期。 |
+| IterBufferState | <a id="symbol-288"></a>`std::core::List<T> values` | 按声明顺序保存的元素存储。 |
+| IterBufferState | <a id="symbol-289"></a>`std::core::Any anchor` | 用于维持缓冲元素借用有效性的源状态。 |
+| IterBufferState | <a id="symbol-290"></a>`int64 position` | 下一项在源存储中的位置。 |
+| 模块 | <a id="symbol-291"></a>`struct IterConstListState<T> : IterNext<T const&>` | 持有列表只读租约的迭代状态，逐项返回 const&。 |
+| IterConstListState | <a id="symbol-292"></a>`std::core::Any lease` | 保持源列表存储有效的迭代租约。 |
+| IterConstListState | <a id="symbol-293"></a>`int64 position` | 下一项在源存储中的位置。 |
+| 模块 | <a id="symbol-294"></a>`struct IterMutListState<T> : IterNext<T mut&>` | 持有列表可写租约的迭代状态，逐项返回 mut&。 |
+| IterMutListState | <a id="symbol-295"></a>`std::core::Any lease` | 保持源列表存储有效的迭代租约。 |
+| IterMutListState | <a id="symbol-296"></a>`int64 position` | 下一项在源存储中的位置。 |
+| 模块 | <a id="symbol-297"></a>`struct IterSpanState<T> : IterNext<T const&>` | 读取数组或 Span 的只读引用，来源必须覆盖游标生命周期。 |
+| IterSpanState | <a id="symbol-298"></a>`T const& source` | 被适配的源游标或连续存储。 |
+| IterSpanState | <a id="symbol-299"></a>`int64 length` | 连续存储中可访问的元素数量。 |
+| IterSpanState | <a id="symbol-300"></a>`int64 position` | 下一项在源存储中的位置。 |
+| 模块 | <a id="symbol-301"></a>`struct IterCharsState : IterNext<char>` | 按 ChaLi 字符模型遍历字符串字节，持有独立字符串副本。 |
+| IterCharsState | <a id="symbol-302"></a>`std::core::String source` | 被适配的源游标或连续存储。 |
+| IterCharsState | <a id="symbol-303"></a>`int64 position` | 下一项在源存储中的位置。 |
+| 模块 | <a id="symbol-304"></a>`struct IterRepeatState<T> : IterNext<T>` | 惰性无限重复一个值，可配合 take 创建有限输出。 |
+| IterRepeatState | <a id="symbol-305"></a>`T value` | 保存的单个值。 |
 
 ## 函数索引
 
@@ -373,7 +373,7 @@ iterator pipelines OK
 | [fromIterator](#api-16) | `Iter<T> fromIterator<T,S : Iterator<T>>(S source)` |
 | [IterListState::next](#api-17) | `Option<T> next()` |
 | [IterListState::sizeHint](#api-18) | `(int64, Option<int64>) sizeHint()` |
-| [fromList](#api-19) | `Iter<T> fromList<T>(std::lang::List<T> values)` |
+| [fromList](#api-19) | `Iter<T> fromList<T>(std::core::List<T> values)` |
 | [IterRangeState::next](#api-20) | `Option<int64> next()` |
 | [IterRangeState::sizeHint](#api-21) | `(int64, Option<int64>) sizeHint()` |
 | [range](#api-22) | `Iter<int64> range(int64 start, int64 stop, int64 step)` |
@@ -426,7 +426,7 @@ iterator pipelines OK
 | [IterScanState::next](#api-69) | `Option<U> next()` |
 | [IterScanState::sizeHint](#api-70) | `(int64, Option<int64>) sizeHint()` |
 | [scan](#api-71) | `Iter<U> scan<T,A,U>(Iter<T> source, A initial, Option<U> fn(A mut&, T) callback)` |
-| [collect](#api-72) | `std::lang::List<T> collect<T>(Iter<T> source)` |
+| [collect](#api-72) | `std::core::List<T> collect<T>(Iter<T> source)` |
 | [fold](#api-73) | `A fold<T,A>(Iter<T> source, A initial, A fn(A, T) callback)` |
 | [tryFold](#api-74) | `Result<A,E> tryFold<T,A,E>(Iter<T> source, A initial, Result<A,E> fn(A, T) callback)` |
 | [findMap](#api-75) | `Option<U> findMap<T,U>(Iter<T> source, Option<U> fn(T) callback)` |
@@ -442,27 +442,29 @@ iterator pipelines OK
 | [any](#api-85) | `bool any<T>(Iter<T> mut& source, bool fn(T) predicate)` |
 | [find](#api-86) | `Option<T> find<T>(Iter<T> mut& source, bool fn(T) predicate)` |
 | [forEach](#api-87) | `void forEach<T>(Iter<T> mut& source, void fn(T) action)` |
-| [listIntoIter](#api-88) | `Iter<T> listIntoIter<T>(std::lang::List<T> mut& source)` |
-| [fromRange](#api-89) | `Iter<int64> fromRange(std::lang::__Range source)` |
+| [listIntoIter](#api-88) | `Iter<T> listIntoIter<T>(std::core::List<T> mut& source)` |
+| [fromRange](#api-89) | `Iter<int64> fromRange(std::core::__Range source)` |
 | [IterConstListState::next](#api-90) | `Option<T const&> next()` |
 | [IterConstListState::sizeHint](#api-91) | `(int64, Option<int64>) sizeHint()` |
 | [IterMutListState::next](#api-92) | `Option<T mut&> next()` |
 | [IterMutListState::sizeHint](#api-93) | `(int64, Option<int64>) sizeHint()` |
-| [listIter](#api-94) | `Iter<T const&> listIter<T>(std::lang::List<T> const& source)` |
-| [listIterMut](#api-95) | `Iter<T mut&> listIterMut<T>(std::lang::List<T> mut& source)` |
-| [setIntoIter](#api-96) | `Iter<T> setIntoIter<T>(std::lang::Set<T> mut& source)` |
-| [setIter](#api-97) | `Iter<T> setIter<T>(std::lang::Set<T> const& source)` |
-| [mapIntoIter](#api-98) | `Iter<Pair<K,V>> mapIntoIter<K,V>(std::lang::Map<K,V> mut& source)` |
-| [mapIter](#api-99) | `Iter<Pair<K,V>> mapIter<K,V>(std::lang::Map<K,V> const& source)` |
+| [listIter](#api-94) | `Iter<T const&> listIter<T>(std::core::List<T> const& source)` |
+| [listIterMut](#api-95) | `Iter<T mut&> listIterMut<T>(std::core::List<T> mut& source)` |
+| [setIntoIter](#api-96) | `Iter<T> setIntoIter<T>(std::core::Set<T> mut& source)` |
+| [setIter](#api-97) | `Iter<T> setIter<T>(std::core::Set<T> const& source)` |
+| [mapIntoIter](#api-98) | `Iter<Pair<K,V>> mapIntoIter<K,V>(std::core::Map<K,V> mut& source)` |
+| [mapIter](#api-99) | `Iter<Pair<K,V>> mapIter<K,V>(std::core::Map<K,V> const& source)` |
 | [IterSpanState::next](#api-100) | `Option<T const&> next()` |
 | [IterSpanState::sizeHint](#api-101) | `(int64, Option<int64>) sizeHint()` |
 | [fromSpan](#api-102) | `Iter<T const&> fromSpan<T>(T const& source, int64 length)` |
 | [IterCharsState::next](#api-103) | `Option<char> next()` |
 | [IterCharsState::sizeHint](#api-104) | `(int64, Option<int64>) sizeHint()` |
-| [chars](#api-105) | `Iter<char> chars(std::lang::String source)` |
+| [chars](#api-105) | `Iter<char> chars(std::core::String source)` |
 | [IterRepeatState::next](#api-106) | `Option<T> next()` |
 | [IterRepeatState::sizeHint](#api-107) | `(int64, Option<int64>) sizeHint()` |
 | [repeat](#api-108) | `Iter<T> repeat<T>(T value)` |
+| [group_by](#api-109) | `Map<K,List<T>> group_by<T,K>(Iter<T> source, K fn(T) key_of)` |
+| [chunk](#api-110) | `Iter<List<T>> chunk<T>(Iter<T> source, int64 length)` |
 
 <a id="api-0"></a>
 
@@ -1186,7 +1188,7 @@ obj.sizeHint();
 **声明**
 
 ```chali
-Iter<T> fromList<T>(std::lang::List<T> values);
+Iter<T> fromList<T>(std::core::List<T> values);
 ```
 
 **行为**
@@ -1199,7 +1201,7 @@ Iter<T> fromList<T>(std::lang::List<T> values);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `values` | `std::lang::List<T> values` | 操作参数。 | 无 |
+| `values` | `std::core::List<T> values` | 操作参数。 | 无 |
 
 **返回值**
 
@@ -3158,7 +3160,7 @@ std::iter::scan<T,A,U>(source, initial, callback);
 **声明**
 
 ```chali
-std::lang::List<T> collect<T>(Iter<T> source);
+std::core::List<T> collect<T>(Iter<T> source);
 ```
 
 **行为**
@@ -3173,7 +3175,7 @@ std::lang::List<T> collect<T>(Iter<T> source);
 
 **返回值**
 
-`std::lang::List<T>`。消费迭代器，收集到独立 List。
+`std::core::List<T>`。消费迭代器，收集到独立 List。
 
 **错误与边界**
 
@@ -3783,7 +3785,7 @@ std::iter::forEach<T>(source, action);
 **声明**
 
 ```chali
-Iter<T> listIntoIter<T>(std::lang::List<T> mut& source);
+Iter<T> listIntoIter<T>(std::core::List<T> mut& source);
 ```
 
 **行为**
@@ -3794,7 +3796,7 @@ Iter<T> listIntoIter<T>(std::lang::List<T> mut& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::lang::List<T> mut& source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `std::core::List<T> mut& source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -3821,20 +3823,20 @@ std::iter::listIntoIter<T>(source);
 **声明**
 
 ```chali
-Iter<int64> fromRange(std::lang::__Range source);
+Iter<int64> fromRange(std::core::__Range source);
 ```
 
 **行为**
 
 将核心整数 range 转为通用 Iter。
 
-将 std::lang::range 转为独立有状态游标。
+将 std::core::range 转为独立有状态游标。
 
 **参数**
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::lang::__Range source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `std::core::__Range source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -4005,7 +4007,7 @@ obj.sizeHint();
 **声明**
 
 ```chali
-Iter<T const&> listIter<T>(std::lang::List<T> const& source);
+Iter<T const&> listIter<T>(std::core::List<T> const& source);
 ```
 
 **行为**
@@ -4018,7 +4020,7 @@ Iter<T const&> listIter<T>(std::lang::List<T> const& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::lang::List<T> const& source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `std::core::List<T> const& source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -4045,7 +4047,7 @@ std::iter::listIter<T>(source);
 **声明**
 
 ```chali
-Iter<T mut&> listIterMut<T>(std::lang::List<T> mut& source);
+Iter<T mut&> listIterMut<T>(std::core::List<T> mut& source);
 ```
 
 **行为**
@@ -4058,7 +4060,7 @@ Iter<T mut&> listIterMut<T>(std::lang::List<T> mut& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::lang::List<T> mut& source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `std::core::List<T> mut& source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -4085,7 +4087,7 @@ std::iter::listIterMut<T>(source);
 **声明**
 
 ```chali
-Iter<T> setIntoIter<T>(std::lang::Set<T> mut& source);
+Iter<T> setIntoIter<T>(std::core::Set<T> mut& source);
 ```
 
 **行为**
@@ -4096,7 +4098,7 @@ Iter<T> setIntoIter<T>(std::lang::Set<T> mut& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::lang::Set<T> mut& source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `std::core::Set<T> mut& source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -4123,7 +4125,7 @@ std::iter::setIntoIter<T>(source);
 **声明**
 
 ```chali
-Iter<T> setIter<T>(std::lang::Set<T> const& source);
+Iter<T> setIter<T>(std::core::Set<T> const& source);
 ```
 
 **行为**
@@ -4136,7 +4138,7 @@ Iter<T> setIter<T>(std::lang::Set<T> const& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::lang::Set<T> const& source` | 来源集合，只读借用。 | 无 |
+| `source` | `std::core::Set<T> const& source` | 来源集合，只读借用。 | 无 |
 
 **返回值**
 
@@ -4163,7 +4165,7 @@ std::iter::setIter<T>(source);
 **声明**
 
 ```chali
-Iter<Pair<K,V>> mapIntoIter<K,V>(std::lang::Map<K,V> mut& source);
+Iter<Pair<K,V>> mapIntoIter<K,V>(std::core::Map<K,V> mut& source);
 ```
 
 **行为**
@@ -4174,7 +4176,7 @@ Iter<Pair<K,V>> mapIntoIter<K,V>(std::lang::Map<K,V> mut& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::lang::Map<K,V> mut& source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `std::core::Map<K,V> mut& source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -4201,7 +4203,7 @@ std::iter::mapIntoIter<K,V>(source);
 **声明**
 
 ```chali
-Iter<Pair<K,V>> mapIter<K,V>(std::lang::Map<K,V> const& source);
+Iter<Pair<K,V>> mapIter<K,V>(std::core::Map<K,V> const& source);
 ```
 
 **行为**
@@ -4214,7 +4216,7 @@ Iter<Pair<K,V>> mapIter<K,V>(std::lang::Map<K,V> const& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::lang::Map<K,V> const& source` | 来源映射，只读借用。 | 无 |
+| `source` | `std::core::Map<K,V> const& source` | 来源映射，只读借用。 | 无 |
 
 **返回值**
 
@@ -4425,7 +4427,7 @@ obj.sizeHint();
 **声明**
 
 ```chali
-Iter<char> chars(std::lang::String source);
+Iter<char> chars(std::core::String source);
 ```
 
 **行为**
@@ -4436,7 +4438,7 @@ Iter<char> chars(std::lang::String source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::lang::String source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `std::core::String source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -4563,5 +4565,83 @@ std::iter::repeat<T>(value);
 ```
 
 **源码**：[source/std/iter.chl:1640](../../source/std/iter.chl#L1640)。
+
+**完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
+
+<a id="api-109"></a>
+
+### group_by（110）
+
+**声明**
+
+```chali
+Map<K,List<T>> group_by<T,K>(Iter<T> source, K fn(T) key_of);
+```
+
+**行为**
+
+按键分组，保留每组中元素的来源顺序。消费有限游标。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `source` | `Iter<T> source` | 输入游标、存储或事件来源值 | 无 |
+| `key_of` | `K fn(T) key_of` | 从元素提取分组键的回调 | 无 |
+
+**返回值**
+
+`Map<K,List<T>>`。按键分组，保留每组中元素的来源顺序。消费有限游标。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::iter::group_by<T,K>(source, key_of);
+```
+
+**源码**：[source/std/iter.chl:1656](../../source/std/iter.chl#L1656)。
+
+**完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
+
+<a id="api-110"></a>
+
+### chunk（111）
+
+**声明**
+
+```chali
+Iter<List<T>> chunk<T>(Iter<T> source, int64 length);
+```
+
+**行为**
+
+按正长度惰性分块，保留最后的非空短块。长度小于一时触发断言。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `source` | `Iter<T> source` | 输入游标、存储或事件来源值 | 无 |
+| `length` | `int64 length` | 目标有效元素数，必须非负。 | 无 |
+
+**返回值**
+
+`Iter<List<T>>`。按正长度惰性分块，保留最后的非空短块。长度小于一时触发断言。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+std::iter::chunk<T>(source, length);
+```
+
+**源码**：[source/std/iter.chl:1725](../../source/std/iter.chl#L1725)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。

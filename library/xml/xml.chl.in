@@ -1,0 +1,65 @@
+module xml;
+import std::json;
+
+#abi("C", "./@LIBRARY@", "chali_xml_parse")
+String __parse_xml(String text, int64 length) ["chali_xml_free"];
+
+/** An XML element with ordered mixed content. */
+struct XmlNode {
+    std::json::JsonValue __value;
+
+    /** Read the element's qualified source name. */
+    String name() { return self.__value.find("name").unwrap().asString().unwrap(); }
+
+    /** Read an attribute by its exact source name. */
+    Option<String> attribute(String name) {
+        let attrs = self.__value.find("attributes").unwrap();
+        let found = attrs.find(name);
+        if (found.isNone()) { return Option<String>::None; }
+        return found.unwrap().asString();
+    }
+
+    /** Return the number of element and text fragments in source order. */
+    int64 child_count() { return self.__value.find("children").unwrap().len(); }
+
+    /** Return an element child at a mixed-content index. */
+    Option<XmlNode> child(int64 index) {
+        let value = self.__value.find("children").unwrap().at(index);
+        if (value.isNone() || !value.unwrap().isObject()) { return Option<XmlNode>::None; }
+        XmlNode result;
+        result.__value = value.take();
+        return Option<XmlNode>::Value(move result);
+    }
+
+    /** Return a text fragment at a mixed-content index. */
+    Option<String> text(int64 index) {
+        let value = self.__value.find("children").unwrap().at(index);
+        if (value.isNone()) { return Option<String>::None; }
+        return value.unwrap().asString();
+    }
+};
+
+/** Parse one UTF-8 document. Error messages include one-based line and column. */
+Result<XmlNode,Error> parse(String text) {
+    let value = std::json::parse(__parse_xml(text, len(text)))?;
+    let error = value.find("error");
+    if (!error.isNone()) {
+        let line = value.find("line").unwrap().asInt().unwrap();
+        let column = value.find("column").unwrap().asInt().unwrap();
+        return Result<XmlNode,Error>::Err(MessageError::from(format("{}:{}: {}", line, column, error.unwrap().asString().unwrap())));
+    }
+    XmlNode root;
+    root.__value = move value;
+    return Result<XmlNode,Error>::Ok(move root);
+}
+
+/** Escape text content for an XML element. */
+String escape_text(String value) {
+    return value.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;");
+}
+
+/** Escape a value for a quoted XML attribute. */
+String escape_attribute(String value) {
+    return escape_text(value).replace("\"","&quot;").replace("'","&apos;")
+        .replace("\r","&#13;").replace("\n","&#10;").replace("\t","&#9;");
+}

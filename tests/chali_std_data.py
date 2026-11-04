@@ -20,7 +20,7 @@ def main():
     compiler = parser.parse_args().chali.resolve()
     rng = random.Random(220)
     quote = lambda s: json.dumps(s, ensure_ascii=False)
-    blocks = ['import std::encoding;', 'import std::datetime;', 'import std::csv;', 'import std::utf8;', 'void main(){']
+    blocks = ['import std::encoding;', 'import std::date_time;', 'import std::csv;', 'import std::utf8;', 'void main(){']
     checks = 0
     for size in (0, 1, 2, 3, 4, 5, 7, 16, 31, 32, 63, 64, 127):
         data = rng.randbytes(size)
@@ -35,8 +35,8 @@ def main():
     for seconds in [-62135596800, -2208988800, -1, 0, 2147483648, 253402300799] + [rng.randrange(-62135596800,253402300800) for _ in range(40)]:
         value = epoch + dt.timedelta(seconds=seconds)
         formatted = f'{value.year:04}-{value.month:02}-{value.day:02}T{value.hour:02}:{value.minute:02}:{value.second:02}Z'
-        blocks.append(f'assert(formatUtc(fromUnixSeconds({seconds}).unwrap()).unwrap()=={quote(formatted)});')
-        blocks.append(f'assert(toUnixSeconds(parseUtc({quote(formatted)}).unwrap()).unwrap()=={seconds});')
+        blocks.append(f'assert(format_utc(from_unix_seconds({seconds}).unwrap()).unwrap()=={quote(formatted)});')
+        blocks.append(f'assert(to_unix_seconds(parse_utc({quote(formatted)}).unwrap()).unwrap()=={seconds});')
         checks += 2
     for delimiter in (',', ';', '\t'):
         rows = [[rng.choice(['', 'plain', '中文😀', 'a,b;c', 'quote"text', 'line\nnext', 'x\r\ny']) for _ in range(rng.randrange(1,5))] for _ in range(12)]

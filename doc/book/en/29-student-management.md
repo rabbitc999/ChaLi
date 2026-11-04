@@ -133,6 +133,29 @@ Acceptance uses an isolated temporary database for valid CRUD, duplicate and for
 
 Screenshots come from the real Windows x64 service, an isolated MySQL database and Edge. Names, classes and scores are acceptance data, and the shown roles and counts reflect actual access results.
 
+### Check record updates independently
+
+Check a fixed student record before connecting storage.
+
+<!-- verify-book -->
+```chali
+struct Student {
+    String name;
+    int64 score;
+}
+void main() {
+    Student student;
+    student.name = "Ada";
+    student.score = 40;
+    student.score += 2;
+    println("{} {}", student.name, student.score);
+}
+```
+
+```text
+Ada 42
+```
+
 ### Summary
 
 Follow a teacher's grade correction end to end: the browser submits a token and data, the server validates session/account state, checks fields and teaching scope, writes the database and returns an outcome for the page. Testing only buttons or only writes does not cover that chain.
@@ -402,7 +425,6 @@ Grade writes have fixed fields. This standalone example uses school_grades field
 ```chali
 import std::json;
 
-#derive(Json)
 struct GradeInput
 {
     @std::json::Field("student_id") int64 student;
@@ -410,6 +432,7 @@ struct GradeInput
     @std::json::Field("teacher_id") int64 teacher;
     String term;
     float64 score;
+    $std::json::Json<GradeInput>(toJson, fromJson);
 }
 
 Result<GradeInput, Error> parseGrade(String text)
@@ -447,16 +470,3 @@ The ? operator propagates decoding failures before a GradeInput is available. Th
 main decodes valid input and prints the student identifier and score. It then changes the score to 101, encodes it and sends it through the same entry, verifying rejection. This exercises decoding, validation and encoding together.
 
 Successful decoding still requires the role and record-scope checks in write, the teaching-association checks in relations and SQL literal conversion. An acceptable GradeInput does not authorize the current account to grade that student.
-## 29.16 Exercises
-
-1. Create a teacher, class and subject and assign teaching scope.
-2. Try changing another class’s grade using a teacher token.
-3. Reuse a student token after disabling the account.
-4. Explain browser-memory loss, service restart and database backup.
-
-### Answers and checks
-
-1. Create records in dependency order and inspect the teacher’s visible scope.
-2. The backend rejects it and preserves the target; hidden buttons alone are insufficient.
-3. The old token is rejected because account status and version are rechecked.
-4. Refresh loses the token, restart loses sessions, and database backups retain accounts and business records.

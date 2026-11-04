@@ -69,16 +69,20 @@ The name addBonus and its parameters explain a calculation. Hidden file access o
 
 return accepts a computed expression. After Chapter 5 introduces control flow, Appendix C shows compact combinations with returning control expressions.
 
-## 4.5 Exercises
+### Combine two returned values
 
-1. What is main's score after addBonus(70, 5)?
-2. Rename the parameter score to original. Which references must change?
-3. Compare an omitted bonus with an explicit bonus of ten.
-4. How does returning 75 differ from printing 75?
+Call the same function with different arguments and combine the results.
 
-### Answers and checks
+<!-- verify-book -->
+```chali
+int64 twice(int64 n) {
+    return n * 2;
+}
+void main() {
+    println("{}", twice(3)+twice(4));
+}
+```
 
-1. It remains 70; result receives 75.
-2. Change the header and references in that function body, not main's variable.
-3. The default produces 75 and the explicit ten produces 80.
-4. A returned value can be saved and calculated with; printed output does not substitute for it.
+```text
+14
+```

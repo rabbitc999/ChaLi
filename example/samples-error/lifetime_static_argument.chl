@@ -3,5 +3,5 @@
 int64 mut& install(int64 mut& slot) { return slot; }
 void main() {
     int64 x = 1;
-    std::lang::println("{}", install(&x));
+    std::core::println("{}", install(&x));
 }

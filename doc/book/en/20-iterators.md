@@ -159,24 +159,27 @@ Map next returns a pair, with the key in first and value in second. The actual f
 
 Growth, deletion or reordering can invalidate traversal state and element borrows. Use supported mutation operations. For batch changes, collect stable identifiers and update in a second phase. Early loop exit still cleans iterator state and owned temporaries.
 
+### Finish iteration with a consumer
+
+Counting consumes the elements produced by the range.
+
+<!-- verify-book -->
+```chali
+import std::iter;
+
+void main() {
+    println("{}", std::iter::range(1, 4).count());
+}
+```
+
+```text
+3
+```
+
 ### Summary
 
 Traversal obtains a source, advances, handles items and ends. All, any and fold consume current state; next expresses availability through Option. A new container iterator starts a fresh traversal.
 
 Check each interface for source mutation, value versus borrowed elements and invalidating modifications. An order-independent sum does not establish stable ordering. Chapter 18 extends the discussion from individual algorithms to modules and project dependencies.
-
-## 20.6 Exercises
-
-1. Does a second any always restart?
-2. When does a pipeline actually execute?
-3. Is Map iteration an ordering operation?
-4. How can matching elements be removed in a batch?
-
-### Answers and checks
-
-1. Do not assume so; inspect consumption or create a fresh iterator.
-2. Consumption or terminal operations advance it under its protocol.
-3. No; sort explicitly when needed.
-4. Use supported APIs or collect identifiers before mutation without retaining invalid references.
 
 Next: [Chapter 11](11-modules-projects.md).

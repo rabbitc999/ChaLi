@@ -83,11 +83,11 @@ Slot inputAtEnd(NativeContext &ctx, const Memory::Vector<Slot> &args);
 bool standardInputIsInteractive();
 
 /**
- * @brief `__std_pause() -> 0`：调试用"临时停一下"，等到一行输入再继续（`std::lang::pause()` 降到它）。
+ * @brief `__std_pause() -> 0`：调试用"临时停一下"，等到一行输入再继续（`std::core::pause()` 降到它）。
  *
  * **只在交互式终端里真的停**：标准输入不是终端（重定向、管道、CI、嵌入式宿主）时立刻返回，
  * 所以回归样例和自动化跑批不会被它挂住。停下时提示走 stderr，不污染程序的 stdout；
- * 读到的内容直接丢弃（它是"按回车继续"，不是数据输入——要数据请用 `std::lang::inputLine`）。
+ * 读到的内容直接丢弃（它是"按回车继续"，不是数据输入——要数据请用 `std::core::inputLine`）。
  * @retval 封装为原生值的运行时结果。
  */
 Slot pauseForDebug(NativeContext &, const Memory::Vector<Slot> &);

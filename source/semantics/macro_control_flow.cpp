@@ -14,7 +14,7 @@ std::uint32_t MacroControlContext(const MNode &node)
 
 /**
  * @brief 宏展开后的退出仍受显式 return 控制表达式的原有约束。
- * @param node 返回、传播或层级退出节点。
+ * @param node 返回、传播或具名退出节点。
  * @return 未越过受保护的返回控制表达式时返回真。
  */
 bool CheckMacroReturnExpressionControl(const MNode &node)
@@ -24,7 +24,7 @@ bool CheckMacroReturnExpressionControl(const MNode &node)
     if (!protectedReturn) return true;
     if (node.kind == MNode::Return) return Fail("return 表达式内部禁止嵌套 return；请使用 yield 值;");
     if (node.kind == MNode::Try) return Fail("return 表达式内部禁止使用会提前返回的 ?；请显式匹配并使用 yield 值;");
-    if (node.kind == MNode::Break && node.i != 0) return Fail("return 表达式内部禁止 break #level 跳转");
+    if (node.kind == MNode::Break && !node.s2.empty()) return Fail("return 表达式内部禁止按循环标签退出");
     return true;
 }
 
@@ -32,12 +32,10 @@ bool CheckMacroReturnExpressionControl(const MNode &node)
  * @brief 将模板上下文沿所属展开帧退回调用方，只允许语句或旧式宏的模板穿透。
  * @param node 出口语法节点。
  * @param context 当前卫生上下文，成功时改为调用方上下文。
- * @param expressionBoundary 可选输出；遇到表达式边界时置真，不立即报告错误。
  * @return 存在允许穿透的所属展开时返回真。
  */
-bool MacroControlCaller(const MNode &node, std::uint32_t &context, bool *expressionBoundary = nullptr)
+bool MacroControlCaller(const MNode &node, std::uint32_t &context)
 {
-    if (expressionBoundary) *expressionBoundary = false;
     int frameId = node.macroExpansion;
     for (unsigned depth = 0; frameId >= 0 && depth < 256; ++depth)
     {
@@ -49,11 +47,6 @@ bool MacroControlCaller(const MNode &node, std::uint32_t &context, bool *express
         {
             if (frame.i >= 0 && N(static_cast<int>(frame.i)).s2 == "expr")
             {
-                if (expressionBoundary)
-                {
-                    *expressionBoundary = true;
-                    return false;
-                }
                 return Fail("expr 宏模板不能把控制流转移到调用方；请使用 stmt 宏，或由调用方显式传入控制片段");
             }
             context = MacroControlContext(frame);
@@ -62,6 +55,23 @@ bool MacroControlCaller(const MNode &node, std::uint32_t &context, bool *express
         frameId = frame.kids.empty() ? -1 : frame.kids[0];
     }
     return false;
+}
+
+/**
+ * @brief 在同一控制来源中查找活动的具名循环。
+ * @param node 带标签的循环或退出语句。
+ * @return 同来源同名的活动循环，未找到时为空。
+ */
+MBlockContext *FindNamedLoopContext(const MNode &node)
+{
+    const auto context = MacroControlContext(node);
+    for (auto current = g_blockStack.rbegin(); current != g_blockStack.rend(); ++current)
+    {
+        if (current->continueLabel.empty() || current->sourceNode < 0) continue;
+        const auto &loop = N(current->sourceNode);
+        if (loop.s2 == node.s2 && MacroControlContext(loop) == context) return &*current;
+    }
+    return nullptr;
 }
 
 /**
@@ -74,13 +84,11 @@ MBlockContext *FindMacroControlTarget(int id, bool continuation)
 {
     const auto node = N(id);
     if (!CheckMacroReturnExpressionControl(node)) return nullptr;
+    if (!continuation && !node.s2.empty()) return FindNamedLoopContext(node);
     auto context = MacroControlContext(node);
     const bool value = !continuation && !node.kids.empty();
-    long long level = continuation ? 0 : node.i;
-    MBlockContext *allTarget = nullptr;
     for (unsigned depth = 0; depth < 256; ++depth)
     {
-        MBlockContext *outermost = nullptr;
         for (auto current = g_blockStack.rbegin(); current != g_blockStack.rend(); ++current)
         {
             if (node.macroExpansion >= 0 && (current->sourceNode < 0 || MacroControlContext(N(current->sourceNode)) != context)) continue;
@@ -88,24 +96,8 @@ MBlockContext *FindMacroControlTarget(int id, bool continuation)
             {
                 if (!current->continueLabel.empty()) return &*current;
             }
-            else if (level != 0)
-            {
-                if (current->continueLabel.empty()) continue;
-                outermost = &*current;
-                if (level > 0 && --level == 0) return outermost;
-            }
             else if (value ? !current->breakValue.empty() : !current->valueOnly)
                 return &*current;
-        }
-        if (level < 0)
-        {
-            if (outermost) allTarget = outermost;
-            bool expressionBoundary = false;
-            if (MacroControlCaller(node, context, &expressionBoundary)) continue;
-            if (!g_error.empty()) return nullptr;
-            if (expressionBoundary && !allTarget)
-                return Fail("expr 宏模板不能把控制流转移到调用方；请使用 stmt 宏，或由调用方显式传入控制片段"), nullptr;
-            return allTarget;
         }
         if (!MacroControlCaller(node, context)) return nullptr;
     }

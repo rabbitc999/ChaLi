@@ -53,7 +53,7 @@ bool captureTransferObject(NativeContext &ctx, std::int64_t handle, TransferPack
     }
     if (source->kind == ObjectKind::Obj || (source->kind == ObjectKind::NativeRecord && (!source->nativeType || (!source->nativeType->clone && !source->nativeType->cloneC))))
     {
-        ctx.error = Memory::String("消息不能复制运行期资源或 std::lang::Any：") + objectKindName(source->kind);
+        ctx.error = Memory::String("消息不能复制运行期资源或 std::core::Any：") + objectKindName(source->kind);
         return false;
     }
     active.insert(handle);

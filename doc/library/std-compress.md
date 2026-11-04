@@ -78,8 +78,8 @@ void main() {
 
 | 名称 | 声明 |
 | --- | --- |
-| [compress](#api-0) | `std::lang::List<uint8> compress(std::lang::String text)` |
-| [decompress](#api-1) | `std::lang::String decompress(std::lang::List<uint8> bytes)` |
+| [compress](#api-0) | `std::core::List<uint8> compress(std::core::String text)` |
+| [decompress](#api-1) | `std::core::String decompress(std::core::List<uint8> bytes)` |
 
 <a id="api-0"></a>
 
@@ -88,22 +88,22 @@ void main() {
 **声明**
 
 ```chali
-std::lang::List<uint8> compress(std::lang::String text);
+std::core::List<uint8> compress(std::core::String text);
 ```
 
 **行为**
 
-文本压缩与解压：要 `import std::compress;` 才可见。 lztext 内核通过 C 帧及公开的字符串／字节列表服务接入。 压缩结果是**二进制**（含 NUL 字节），所以类型是 std::lang::List<uint8>， 不要当字符串打印或拼接。解压出来的才是 std::lang::String。 注意：不保证一定比原文短——随机数据、极短文本这类压不出收益时， 底层会自动按原样存储，体积不变但解压照常正确。
+文本压缩与解压：要 `import std::compress;` 才可见。 lztext 内核通过 C 帧及公开的字符串／字节列表服务接入。 压缩结果是**二进制**（含 NUL 字节），所以类型是 std::core::List<uint8>， 不要当字符串打印或拼接。解压出来的才是 std::core::String。 注意：不保证一定比原文短——随机数据、极短文本这类压不出收益时， 底层会自动按原样存储，体积不变但解压照常正确。
 
 **参数**
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::lang::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::lang::List<uint8>`。文本压缩与解压：要 `import std::compress;` 才可见。 lztext 内核通过 C 帧及公开的字符串／字节列表服务接入。 压缩结果是**二进制**（含 NUL 字节），所以类型是 std::lang::List<uint8>， 不要当字符串打印或拼接。解压出来的才是 std::lang::String。 注意：不保证一定比原文短——随机数据、极短文本这类压不出收益时， 底层会自动按原样存储，体积不变但解压照常正确。
+`std::core::List<uint8>`。文本压缩与解压：要 `import std::compress;` 才可见。 lztext 内核通过 C 帧及公开的字符串／字节列表服务接入。 压缩结果是**二进制**（含 NUL 字节），所以类型是 std::core::List<uint8>， 不要当字符串打印或拼接。解压出来的才是 std::core::String。 注意：不保证一定比原文短——随机数据、极短文本这类压不出收益时， 底层会自动按原样存储，体积不变但解压照常正确。
 
 **错误与边界**
 
@@ -126,7 +126,7 @@ std::compress::compress(text);
 **声明**
 
 ```chali
-std::lang::String decompress(std::lang::List<uint8> bytes);
+std::core::String decompress(std::core::List<uint8> bytes);
 ```
 
 **行为**
@@ -137,11 +137,11 @@ std::lang::String decompress(std::lang::List<uint8> bytes);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `bytes` | `std::lang::List<uint8> bytes` | 输入或输出字节存储 | 无 |
+| `bytes` | `std::core::List<uint8> bytes` | 输入或输出字节存储 | 无 |
 
 **返回值**
 
-`std::lang::String`。将有效 lztext 二进制数据还原为文本；损坏时报运行错误。
+`std::core::String`。将有效 lztext 二进制数据还原为文本；损坏时报运行错误。
 
 **错误与边界**
 
