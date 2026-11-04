@@ -72,7 +72,7 @@ Output:
 Hello, ChaLi!
 ```
 
-Handing a source file straight to `chali` also interprets it, and everything after it is passed to
+Handing a source file straight to `chali` also compiles it with checked AOT and runs it, and everything after it is passed to
 `main` as program arguments:
 
 ```sh
@@ -91,14 +91,14 @@ void main(List<String> arguments) {
 
 ## 4. What happened
 
-`chali run` does four things, all **inside one process**:
+`chali run` performs these four steps and launches the generated native program after successful compilation:
 
 1. **Preprocess** — handles `%define`, `%if` and friends;
 2. **Parse and type-check** — syntax, types and reference lifetimes are checked here; nothing runs if
    this fails;
-3. **Lower to quadruples** — the front end turns the program into ChaLi's intermediate
-   representation;
-4. **Compile and run** — LLVM AOTs the quadruples into native code and executes it in the same process.
+3. **Generate LLVM IR** — the normal execution path lowers the checked AST directly to LLVM IR;
+   ChaLi quadruples use a separate export path;
+4. **Compile and run** — LLVM produces a native program with runtime checks, publishes it beside the source, reports compilation completion and launches the program.
 
 To stop after the first two steps (no execution, no output files):
 

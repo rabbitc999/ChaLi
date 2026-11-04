@@ -272,11 +272,6 @@ struct Program
 bool validateProgramMetadata(const Program &program, Memory::Vector<Memory::String> *diagnostics = nullptr);
 
 /**
- * @brief stackvm 二进制程序文件的推荐后缀。
- */
-inline constexpr std::string_view kProgramBinaryExtension = ".svmb";
-
-/**
  * @brief 把四元式组装成栈指令。
  * @param file 四元式文件。
  * @param out 组装结果。

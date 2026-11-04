@@ -11,7 +11,6 @@ I -- Interface（接口 / 运行期多态）：定义一组共同的“契约”
 用法：chali 文件.chl [程序参数...]\n|Usage: chali FILE.chl [program arguments...]\n
       chali 场景 [文件.chl] [配置词...] [-- 程序参数...]\n|       chali COMMAND [FILE.chl] [settings...] [-- program arguments...]\n
 场景指令（运行方式也可用 --mode 指定）：\n|Commands (execution mode can also be selected with --mode):\n
-  run\pinterpret  内部解释运行（缺省）；直接传入文件时，其后全为程序参数\n|  run\pinterpret  Interpret (default); arguments after a direct file go to the program\n
   check FILE [json]    仅检查，可输出 JSON 诊断\n|  check FILE [json]    Check only; optionally emit JSON diagnostics\n
   help                 显示帮助\n|  help                 Show help\n
   emit           只出 .quad / .data / .layout\n|  emit           Export .quad / .data / .layout only\n
@@ -258,3 +257,4 @@ chali: 无法生成标准库二进制预编译资产\n|chali: cannot generate th
   --quiet                不输出编译完成提示（不隐藏错误或程序输出）\n|  --quiet                Suppress compilation completion notices; keep errors and program output\n
   --out 前缀             生成产物的文件名前缀（缺省与源码同级）\n|  --out PREFIX           Output file prefix (default: beside the source)\n
   --keep-artifacts       保留源码旁隐藏 .chali 下的中间产物（缺省自动清理）\n|  --keep-artifacts       Retain intermediates in the source-adjacent hidden .chali workspace\n
+多线程已关闭；run／aot 构建时去掉 --no-threads|Multithreading is disabled; remove --no-threads when building with run/aot

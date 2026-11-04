@@ -3,6 +3,7 @@
  * @brief 原生源码行、参数和局部槽的 DWARF 生成。
  */
 #include "chali_aot_debug.hpp"
+#include <set>
 #include <algorithm>
 #include <cstdio>
 #include <filesystem>
@@ -205,9 +206,10 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
                      + ", producer: \"ChaLi\", isOptimized: " + (optimized_ ? "true" : "false") + ", runtimeVersion: 0, emissionKind: FullDebug)");
     }
     const auto type = node("!DISubroutineType(types: !" + std::to_string(empty_) + ")");
+    // 声明保留真实源行，序言使用零行，避免单行函数在参数保存前命中源码断点。
     const auto scope = node("distinct !DISubprogram(name: " + metadataString(name) + ", linkageName: " + metadataString(linkage)
                             + ", scope: !" + std::to_string(source) + ", file: !" + std::to_string(source) + ", line: " + std::to_string(std::max<std::size_t>(1, origin.line))
-                            + ", type: !" + std::to_string(type) + ", scopeLine: " + std::to_string(std::max<std::size_t>(1, origin.line))
+                            + ", type: !" + std::to_string(type) + ", scopeLine: 0"
                             + ", spFlags: DISPFlagDefinition" + (optimized_ ? " | DISPFlagOptimized" : "") + ", unit: !" + std::to_string(unit_) + ", retainedNodes: !" + std::to_string(empty_) + ")");
     std::map<std::size_t, std::size_t> lexicalScopes{ { 0, scope } };
     std::function<std::size_t(std::size_t)> lexicalScope = [&](std::size_t id) {
@@ -270,9 +272,15 @@ std::string NativeDebugInfo::annotate(const std::string &definition, const std::
     std::string line, output;
     // 入口清零与参数保存属于原生序言，不应作为首条源码语句停下。
     auto currentLocation = node("!DILocation(line: 0, column: 0, scope: !" + std::to_string(scope) + ")");
-    // 内存目录发布不属于源码语句：用 0 行位置，避免单步把它当成新的源码停点。
+    // 目录发布不属于源码语句，使用零行。
     const auto publishLocation = currentLocation;
-    const auto captureLocation = location({ "<native-debug-context>", 1, 0, 0 });
+    // 捕获位置保留非零序言结束标记，合成行号不能压制真实语句的 is_stmt 标记。
+    std::set<std::size_t> sourceLines{ std::max<std::size_t>(1, origin.line) };
+    for (const auto &entry : lines)
+        if (entry.second.line) sourceLines.insert(entry.second.line);
+    std::size_t captureLine = 1;
+    while (sourceLines.count(captureLine)) ++captureLine;
+    const auto captureLocation = location({ "<native-debug-context>", captureLine, 0, 0 });
     bool inserted = false;
     while (std::getline(input, line))
     {

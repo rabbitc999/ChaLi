@@ -37,13 +37,31 @@ async function stepping() {
     await value.request({ seq: index + 1, command, arguments: { threadId: 2 } });
     assert.equal(messages.find(message => message.request_seq === index + 1).success, true);
   }
-  assert.deepEqual(commands, ['-exec-next --thread 2', '-exec-step --thread 2', '-exec-finish --thread 2']);
+  assert.deepEqual(commands, ['-exec-next --thread 2', '-stack-info-frame --thread 2 --frame 0', '-exec-step --thread 2', '-exec-finish --thread 2']);
   value.state = 'stopped'; value.threads.exit(2);
   for (const [index, args] of [{ threadId: 2 }, { threadId: '1\n-exec-run' }, { threadId: 1, singleThread: true }].entries()) {
     await value.request({ seq: index + 4, command: 'next', arguments: args });
     assert.equal(messages.find(message => message.request_seq === index + 4).success, false);
   }
-  assert.equal(commands.length, 3);
+  assert.equal(commands.length, 4);
+}
+
+/** 查询单步起点期间退出的线程不能继续执行，也不能换成另一个线程。 */
+async function originExit() {
+  const { value, messages } = adapter(), commands = [];
+  let release;
+  value.gdb = { command: async command => {
+    commands.push(command);
+    return new Promise(resolve => { release = resolve; });
+  } };
+  const entering = value.request({ seq: 1, command: 'stepIn', arguments: { threadId: 2 } });
+  await new Promise(resolve => setImmediate(resolve));
+  assert(release, '应先查询所选线程的实际帧');
+  value.threads.exit(2);
+  release({ frame: { func: 'f_worker', line: '2', fullname: 'worker.chl', addr: '0x1000' } });
+  await entering;
+  assert.equal(messages.find(message => message.request_seq === 1).success, false);
+  assert.deepEqual(commands, ['-stack-info-frame --thread 2 --frame 0']);
 }
 
 async function boundlessNative() {
@@ -94,7 +112,7 @@ async function interruptIdentity() {
 }
 
 async function main() {
-  directory(); await stepping(); await boundlessNative(); await exits(); await exceptions(); await interruptIdentity();
+  directory(); await stepping(); await originExit(); await boundlessNative(); await exits(); await exceptions(); await interruptIdentity();
   console.log('全停线程：事件去重、退出墓碑、迟到列表/读取、所选线程单步、退出后异常停点恢复通过');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

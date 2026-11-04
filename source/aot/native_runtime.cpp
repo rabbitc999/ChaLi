@@ -12,6 +12,7 @@
 #include "glue/std_collection.hpp"
 #include "console/utf8.hpp"
 #include <memory>
+#include <cstddef>
 #include <cstring>
 #include <cstdlib>
 #include <filesystem>
@@ -50,7 +51,7 @@ extern "C" {
 /** @brief 只读调试目录的稳定根，具体区间在调试源码停点前发布。 */
 ChaliDebugMemoryIndex chali_debug_memory{ 5, 8, 0 };
 /**
- * @brief 启用调试参数传输并连接会话专属终端，不参与 GDB 控制流。
+ * @brief 启用调试参数传输并连接会话专属终端，Linux 的 @ 前缀表示抽象套接字。
  * @return 无返回值；未设置终端时保持宿主标准流，连接失败则报告并退出。
  */
 void chali_debug_console()
@@ -70,9 +71,12 @@ void chali_debug_console()
         sockaddr_un address{};
         address.sun_family = AF_UNIX;
         if (name.size() >= sizeof(address.sun_path)) return -1;
-        std::strcpy(address.sun_path, name.c_str());
+        const bool abstract = name.front() == '@';
+        if (abstract) std::memcpy(address.sun_path + 1, name.data() + 1, name.size() - 1);
+        else std::strcpy(address.sun_path, name.c_str());
+        const auto addressSize = abstract ? offsetof(sockaddr_un, sun_path) + name.size() : sizeof(address);
         const int descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
-        if (descriptor >= 0 && connect(descriptor, reinterpret_cast<sockaddr *>(&address), sizeof(address)) == 0) return descriptor;
+        if (descriptor >= 0 && connect(descriptor, reinterpret_cast<sockaddr *>(&address), static_cast<socklen_t>(addressSize)) == 0) return descriptor;
         if (descriptor >= 0) close(descriptor);
         return -1;
 #else

@@ -7,7 +7,10 @@ const crypto = require('node:crypto');
 
 class DebugTerminal {
   constructor(directory, output) {
-    this.endpoint = process.platform === 'win32' ? '\\\\.\\pipe\\chali-debug-' + crypto.randomBytes(16).toString('hex') : path.join(directory, 'console.sock');
+    const [major, minor] = process.versions.node.split('.').map(Number);
+    const abstract = process.platform === 'linux' && (major > 20 || (major === 20 && minor >= 8));
+    const name = 'chali-debug-' + crypto.randomBytes(16).toString('hex');
+    this.endpoint = process.platform === 'win32' ? '\\\\.\\pipe\\' + name : abstract ? '@' + name : path.join(directory, 'console.sock');
     this.output = output;
     this.servers = ['stdin', 'stdout'].map(direction => {
       let connected = false;
@@ -28,7 +31,8 @@ class DebugTerminal {
     try {
       await Promise.all(this.servers.map((server, index) => new Promise((resolve, reject) => {
         server.once('error', reject);
-        server.listen(this.endpoint + (index ? '-stdout' : '-stdin'), () => { server.removeListener('error', reject); resolve(); });
+        const endpoint = this.endpoint + (index ? '-stdout' : '-stdin');
+        server.listen(endpoint.startsWith('@') ? '\0' + endpoint.slice(1) : endpoint, () => { server.removeListener('error', reject); resolve(); });
       })));
     } catch (error) { this.close(); throw error; }
     for (const server of this.servers) server.on('error', error => this.output('\r\n终端监听错误：' + error.message + '\r\n'));

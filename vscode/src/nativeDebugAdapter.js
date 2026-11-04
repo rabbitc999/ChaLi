@@ -177,6 +177,8 @@ class Adapter {
     this.breakpoints = new Map();
     this.functionBreakpoints = [];
     this.stepCommand = null;      ///< 最近一次单步命令，用于跳过内部代码。
+    this.stepOrigin = null;       ///< 进入单步时的真实源码帧，内部返回同一位置后继续原单步。
+    this.finishingInternalStep = false; ///< 是否正在跳出没有用户源码的内部调用。
     this.stepThread = null;
     this.stopSerial = 0;
     this.pauseRequested = false;
@@ -258,7 +260,7 @@ class Adapter {
     this.threads = new DebugThreads((reason, threadId) => {
       if (reason === 'exited') {
         this.invalidate();
-        if (this.stepThread === threadId) { this.stepThread = null; this.stepCommand = null; this.suppressContinued = false; }
+        if (this.stepThread === threadId) { this.stepThread = null; this.stepCommand = null; this.stepOrigin = null; this.finishingInternalStep = false; this.suppressContinued = false; }
         if (this.invalidatedEvents && this.state === 'stopped') this.event('invalidated', { areas: ['stacks', 'variables'] });
       }
       this.event('thread', { reason, threadId });
@@ -627,23 +629,34 @@ class Adapter {
         const frame = data.frame || {};
         const file = String(frame.fullname || frame.file || '');
         const internal = internalSource(file);
-        const mapped = this.metadata?.frame?.(frame);
-        const observation = path.posix.basename(file.replace(/\\/g, '/')) === '<native-debug-context>';
+        const original = frame.fullname ? { ...frame, fullname: this.sourceMap.toTarget(frame.fullname) } : frame;
+        const mapped = this.metadata?.frame?.(original);
+        const observation = !mapped?.position && path.posix.basename(file.replace(/\\/g, '/')) === '<native-debug-context>';
         const entry = mapped && /^0x[0-9a-f]+$/i.test(frame.addr || '')
           ? mapped.function?.positions?.find(position => position.address > BigInt(frame.addr)) : null;
+        const frameLine = Number(frame.line);
+        // 已核对函数的零行序言先推进到源码位置，避免把初始化当作无源码函数跳出。
         const prologue = mapped && !mapped.optimized && mapped.function?.context && !mapped.position
-          && (Number(frame.line) === mapped.function.line || observation) && entry;
-        if (internal || prologue || observation) {
+          && (!Number.isFinite(frameLine) || frameLine <= 0 || frameLine === mapped.function.line || observation) && entry;
+        const origin = this.stepOrigin;
+        const resumedOrigin = this.finishingInternalStep && this.stepCommand === '-exec-step' && origin
+          && !internal && !prologue && !observation && frame.func === origin.func && Number(frame.line) === Number(origin.line)
+          && file.replace(/\\/g, '/') === String(origin.fullname || origin.file || '').replace(/\\/g, '/')
+          && (!origin.position || !mapped?.position || (origin.position.column === mapped.position.column
+            && origin.position.scope === mapped.position.scope && origin.position.macro === mapped.position.macro));
+        if (internal || prologue || observation || resumedOrigin) {
           if (this.stepAttempts >= 64) {
             this.event('output', { category: 'console', output: '内部代码步进超过限制，停在当前内部位置\n' });
           } else {
             this.stepAttempts++;
             this.suppressContinued = true;
-            const command = prologue ? '-exec-until --thread ' + thread + ' *0x' + entry.address.toString(16)
+            const command = resumedOrigin ? this.stepCommand + ' --thread ' + thread
+              : prologue ? '-exec-until --thread ' + thread + ' *0x' + entry.address.toString(16)
               : (observation ? '-exec-next --thread ' : '-exec-finish --thread ') + thread;
+            this.finishingInternalStep = !resumedOrigin && !prologue && !observation;
             void gdb.command(command).catch((error) => {
               if (this.gdb !== gdb || this.terminated || serial !== this.stopSerial) return;
-              this.stepCommand = null; this.stepThread = null; this.suppressContinued = false;
+              this.stepCommand = null; this.stepThread = null; this.stepOrigin = null; this.finishingInternalStep = false; this.suppressContinued = false;
               this.event('output', { category: 'stderr', output: error.message + '\n' });
               void this.recoverThreadStop(gdb, data);
             });
@@ -652,6 +665,8 @@ class Adapter {
         }
       }
       this.stepCommand = null;
+      this.stepOrigin = null;
+      this.finishingInternalStep = false;
       this.stepThread = null;
       this.stepAttempts = 0;
       this.suppressContinued = false;
@@ -689,6 +704,8 @@ class Adapter {
     await command('-gdb-set confirm off');
     await command('-gdb-set mi-async on');
     await command('-gdb-set non-stop off');
+    // 进入零行原生入口后，由已验证的源码目录越过初始化，内部函数仍沿现有规则过滤。
+    await command('-gdb-set step-mode on');
     await command('-gdb-set charset UTF-8');
     await command('-file-exec-and-symbols ' + JSON.stringify(executable));
     for (const rule of this.sourceMap.forward)
@@ -1081,7 +1098,7 @@ class Adapter {
             const sourceOrigin = library ? `预编译库 ${library.module}@${library.version} · ${library.implementation} · SHA-256 ${implementationHash}`
               + (localFile && !fs.existsSync(localFile) ? ' · 源码不可用；仍可查看符号、位置、变量及反汇编' : '') : undefined;
             this.frames.set(id, { thread, level: Number(frame.level), native: frame, metadata: sourceInfo });
-            return { id, name: sourceInfo?.name || frame.func || '<native>', line: (observation ? sourceInfo.function.line : Number(frame.line)) || 1, column: sourceInfo?.column || Number(frame.col) || 1,
+            return { id, name: sourceInfo?.name || frame.func || '<native>', line: (observation ? sourceInfo.position?.line || sourceInfo.function.line : Number(frame.line)) || 1, column: sourceInfo?.column || Number(frame.col) || 1,
               source: localFile ? { path: localFile, name: path.basename(localFile), ...(sourceOrigin ? { origin: sourceOrigin } : {}) } : undefined,
               instructionPointerReference: frame.addr };
           });
@@ -1378,11 +1395,20 @@ class Adapter {
           if (args.singleThread === true) throw new Error('当前仅支持全停调试模式');
           const thread = this.threads.resolve(args.threadId);
           this.threads.selected = thread;
+          let origin = null;
+          if (request.command === 'stepIn') {
+            await this.metadata?.load(signal);
+            const current = await this.gdb.command('-stack-info-frame --thread ' + thread + ' --frame 0', { signal });
+            this.stopped(epoch); this.threads.resolve(thread);
+            if (current.frame) origin = { ...current.frame, position: this.metadata?.frame(current.frame)?.position };
+          }
           ++this.stopSerial;
           this.pauseRequested = false;
           this.state = 'running'; this.invalidate();
           const commands = { continue: '-exec-continue', next: '-exec-next', stepIn: '-exec-step', stepOut: '-exec-finish' };
           this.stepCommand = request.command === 'continue' ? null : commands[request.command];
+          this.stepOrigin = origin;
+          this.finishingInternalStep = false;
           this.stepThread = request.command === 'continue' ? null : thread;
           this.stepAttempts = 0;
           this.suppressContinued = false;
@@ -1402,7 +1428,7 @@ class Adapter {
             }
           }
           catch (error) {
-            this.stepCommand = null; this.stepThread = null;
+            this.stepCommand = null; this.stepThread = null; this.stepOrigin = null; this.finishingInternalStep = false;
             if (error.gdbError && this.state === 'running') this.state = 'stopped';
             else if (!this.restartPending) this.end();
             throw error;
@@ -1413,7 +1439,7 @@ class Adapter {
         case 'pause': {
           if (this.state !== 'running') throw new Error('程序当前没有运行');
           this.pauseThread = this.threads.resolve(args.threadId);
-          this.pauseRequested = true; this.stepCommand = null; this.stepThread = null; this.suppressContinued = false;
+          this.pauseRequested = true; this.stepCommand = null; this.stepThread = null; this.stepOrigin = null; this.finishingInternalStep = false; this.suppressContinued = false;
           try {
             await this.interruptTarget(signal);
           } catch (error) { this.pauseRequested = false; this.pauseThread = null; throw error; }

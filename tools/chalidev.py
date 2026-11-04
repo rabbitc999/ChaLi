@@ -79,9 +79,6 @@ _MESSAGES = {
   "场景指令（运行方式也可用 --mode 指定）：\n": [
     "Commands (execution mode can also be selected with --mode):\n"
   ],
-  "  run|interpret  内部解释运行（缺省）；直接传入文件时，其后全为程序参数\n": [
-    "  run|interpret  Interpret (default); arguments after a direct file go to the program\n"
-  ],
   "  check FILE [json]    仅检查，可输出 JSON 诊断\n": [
     "  check FILE [json]    Check only; optionally emit JSON diagnostics\n"
   ],
@@ -807,6 +804,9 @@ _MESSAGES = {
   ],
   "  --keep-artifacts       保留源码旁隐藏 .chali 下的中间产物（缺省自动清理）\n": [
     "  --keep-artifacts       Retain intermediates in the source-adjacent hidden .chali workspace\n"
+  ],
+  "多线程已关闭；run／aot 构建时去掉 --no-threads": [
+    "Multithreading is disabled; remove --no-threads when building with run/aot"
   ]
 }
 # CHALI_CATALOG_END

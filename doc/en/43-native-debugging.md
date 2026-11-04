@@ -12,6 +12,8 @@ ChaLi 1.0.8 executes `run` through checked AOT compilation, while `aot` defaults
 
 Install the ChaLi extension and a GDB matching the target platform. Open a `.chl` file and press F5. The extension builds a checked native debug program, then uses GDB/MI for source breakpoints, continue, step in/over/out, stack frames, parameter/local-variable inspection and expression evaluation.
 
+On Linux editor hosts using Node.js 20.8 or later, session-specific abstract sockets avoid requiring socket files on the project mount. Older hosts retain filesystem endpoints, so the temporary directory filesystem must support Unix domain sockets. Windows retains separate named pipes. Both standard-stream channels listen before launch; restart and shutdown retire the previous session connections.
+
 ```json
 {
   "type": "chali",

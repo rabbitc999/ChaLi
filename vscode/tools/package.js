@@ -147,6 +147,7 @@ function main() {
         run(process.execPath, [path.join('test', 'debugFailure.js')]);
         run(process.execPath, [path.join('test', 'debugBreakpoints.js')]);
         run(process.execPath, [path.join('test', 'debugProtocol.js')]);
+        run(process.execPath, [path.join('test', 'debugTerminal.js')]);
         run(process.execPath, [path.join('test', 'smoke.js')]);
         run(process.execPath, [path.join('test', 'dependencies.js')]);
         run(process.execPath, [path.join('test', 'macros.js')]);

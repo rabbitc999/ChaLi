@@ -252,7 +252,7 @@ class DebugMetadata {
     for (const fn of catalog.functions) fn.positions.sort((a, b) => a.address < b.address ? -1 : a.address > b.address ? 1 : a.ordinal - b.ordinal);
     return { byLinkage, catalog, macros, dynamicTypes, closures };
   }
-  /** 用当前机器 PC 选择同函数、同文件和同源码行的位置，不猜测源文件缩进。 */
+  /** 用当前机器 PC 选择同函数、同文件和同源码行的位置；内部上下文仅接受精确地址，不猜测作用域。 */
   frame(frame) {
     let fn = this.cache?.byLinkage.get(frame.func);
     if (!fn && this.cache) {
@@ -269,7 +269,8 @@ class DebugMetadata {
     while (low < high) { const middle = (low + high) >>> 1; if (fn.positions[middle].address <= pc) low = middle + 1; else high = middle; }
     for (let at = low - 1; at >= 0; --at) {
       const position = fn.positions[at];
-      if (position.line === Number(frame.line) && sourcePath(position.file) === file) {
+      const observation = path.basename(file) === '<native-debug-context>' && position.address === pc;
+      if (observation || (position.line === Number(frame.line) && sourcePath(position.file) === file)) {
         result.column = position.column || result.column; result.position = position;
         result.macros = [];
         let macro = this.cache.macros.get(position.macro);

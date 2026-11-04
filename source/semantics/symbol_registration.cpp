@@ -352,7 +352,7 @@ bool LibraryScalarReference(const std::shared_ptr<MType> &type)
 /**
  * @brief 判断逻辑地址传递的基础标量、受支持记录、枚举或标准 String 槽位借用。
  * @param type 已解析语言类型。
- * @return 引用目标可按普通记录布局访问时为真。
+ * @return 目标是受支持基础标量、记录、枚举或 String 槽位时为真。
  */
 bool LibraryBorrowParameter(const std::shared_ptr<MType> &type)
 {

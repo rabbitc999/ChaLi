@@ -316,7 +316,7 @@ using NativeCallback =
     Memory::Function<NativeValue(NativeCallContext &, const Memory::Vector<NativeValue> &)>;
 
 /**
- * @brief 宿主原生函数表；可同时挂到源码即时执行和加载后的 `.svmb` 程序。
+ * @brief 宿主原生函数表；供 LLVM AOT 的共享原生运行时调用。
  */
 class NativeRegistry
 {

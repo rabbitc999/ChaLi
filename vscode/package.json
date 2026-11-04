@@ -24,15 +24,14 @@
   "keywords": [
     "chali",
     "chl",
-    "parseengine",
-    "stackvm"
+    "parseengine"
   ],
   "main": "./extension.js",
   "scripts": {
     "test:extension": "node tools/test-extension-host.js",
     "embed": "node tools/embed-compiler.js",
     "check": "node tools/check-manifest.js",
-    "test": "node test/smoke.js && node test/dependencies.js && node test/macros.js && node test/lspCancellation.js && node test/semanticProviders.js && node test/editorIntegration.js && node test/macroHighlighting.js && node test/llvmConfiguration.js && node test/build.js",
+    "test": "node test/debugTerminal.js && node test/smoke.js && node test/dependencies.js && node test/macros.js && node test/lspCancellation.js && node test/semanticProviders.js && node test/editorIntegration.js && node test/macroHighlighting.js && node test/llvmConfiguration.js && node test/build.js",
     "vscode:prepublish": "node tools/embed-compiler.js",
     "package": "node tools/package.js"
   },
@@ -65,16 +64,6 @@
           ".chl"
         ],
         "configuration": "./chali-language-configuration.json"
-      },
-      {
-        "id": "chali-svmb",
-        "aliases": [
-          "ChaLi 字节码",
-          "ChaLi Bytecode"
-        ],
-        "extensions": [
-          ".svmb"
-        ]
       }
     ],
     "grammars": [

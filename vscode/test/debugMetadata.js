@@ -46,6 +46,9 @@ async function main() {
   assert.equal(visibleBindings({...frame,position:undefined}).size,0);
   frame = healthy.reader.frame({ func: 'f_identity_i64', fullname: source, line: '3', addr: '0x' + (start + 10n).toString(16) });
   assert.equal(frame.column, 1, '不能把其他源码行的列号冒充当前列');
+  const observation = healthy.reader.frame({ func: 'f_identity_i64', fullname: '<native-debug-context>', line: '1', addr: '0x' + (start + 8n).toString(16) });
+  assert.equal(observation.position.column, 13, '内部行表位置用精确指令地址恢复词法作用域');
+  assert.equal(healthy.reader.frame({ func: 'f_identity_i64', fullname: '<native-debug-context>', line: '1', addr: '0x' + (start + 7n).toString(16) }).position, undefined, '不能用邻近地址猜测内部位置');
   const expanded = target(value => {
     const location = { file: source, line: 1, column: 2 };
     value.macros = [ { id: 8, parent: -1, name: 'Outer', call: location, invocation: location, definition: location },

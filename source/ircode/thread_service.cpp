@@ -3,6 +3,7 @@
  * @brief 隔离线程的创建、取消、等待与完成结果。
  */
 #include "concurrent_call_state.hpp"
+#include "../chali_i18n.hpp"
 
 namespace stackvm
 {
@@ -52,7 +53,7 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
             return false;
         if (!threadsEnabled_ || threadRuntime_ == nullptr)
         {
-            fail("多线程已关闭；解释运行或 C++ 导出时去掉 --no-threads");
+            fail(CHALI_TEXT("多线程已关闭；run／aot 构建时去掉 --no-threads"));
             pending.clear();
             return true;
         }

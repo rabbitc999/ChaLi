@@ -1,9 +1,9 @@
-"""验证 AOT 后端：四元式 → LLVM 中间表示 → 原生产物，输出与解释执行逐行一致。
+"""验证 AOT 后端：语义树 → LLVM IR → 原生产物，输出与 checked AOT 的 run 路径逐行一致。
 
 覆盖五件事：
 
 1. `chali aot` 编出的 exe 与 `chali run` 的 stdout 一致；
-2. 默认保留越界及指针检查；仅显式 `--unchecked` 用于性能对照；
+2. 显式 `--checked` 保留越界及指针检查，并核对 unchecked 导出路径；
 3. `--emit-llvm` 只出 LLVM 模块，不调编译器；
 4. **AOT 调外部 C**：`abi` 块声明的函数在产物里变成 extern 调用并链接动态库；
 5. **外部 C 调 AOT**：`--shared --export` 出动态库与头文件，C 驱动能调进去。
@@ -100,12 +100,12 @@ def main():
             return subprocess.run(list(map(str, command)), cwd=cwd or ROOT, env=env, capture_output=True,
                                   text=True, encoding='utf-8', errors='replace', timeout=300, **kwargs)
 
-        # 1) 产物与解释执行一致
+        # 1) 导出产物与 checked AOT 的 run 路径一致。
         expected = (ROOT / 'example/expected/aot_basic.txt').read_text(encoding='utf-8')
         sample = ROOT / 'example/samples/aot_basic.chl'
         result = invoke([compiler, 'run', sample])
         assert (result.returncode, result.stdout, result.stderr) == (0, expected, ''), result
-        print('[通过] aot_basic 解释执行', flush=True)
+        print('[通过] aot_basic checked AOT 运行', flush=True)
         if cc is None:
             print('[跳过] 没有 C 编译器，AOT 产物相关检查不跑', flush=True)
             return
@@ -116,15 +116,15 @@ def main():
         assert product.exists(), 'AOT 没产出可执行文件'
         result = invoke([product])
         assert (result.returncode, result.stdout) == (0, expected), result
-        print('[通过] aot_basic AOT 产物与解释执行逐行一致', flush=True)
+        print('[通过] aot_basic AOT 产物与 run 输出逐行一致', flush=True)
 
-        # 2) 默认检查与 VM 一致；无检查只作为显式对照配置。
+        # 2) aot 默认 unchecked，显式 checked 路径保留运行时检查。
         opened = (exe.with_suffix('.ll')).read_text(encoding='utf-8')
         assert re.search(r'define internal i64 @f_(?:v)?\d+_program__fib\(', opened)
         assert all(not exe.with_suffix(suffix).exists() for suffix in ['.quad', '.data.bin', '.layout'])
         assert not exe.with_suffix('.c').exists() and not exe.with_suffix('.cpp').exists()
         assert not re.search(r'%s_.*__temp_.*= alloca', opened), '计算临时量不能占声明局部的帧槽'
-        # 同一四元式定义配合 Linux 运行时必须能生成真正的 ELF 目标文件。
+        # 同一语义树生成的 LLVM IR 配合 Linux 运行时必须能生成真正的 ELF 目标文件。
         module_data = re.search(r'^declare i64 @chali_host_call\(', opened, re.M)
         assert module_data, 'LLVM 模块缺少初始化数据定义'
         linux_module = work / 'linux.ll'

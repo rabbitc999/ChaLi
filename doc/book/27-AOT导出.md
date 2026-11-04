@@ -16,6 +16,8 @@ unchecked 的相关默认开关主要影响运行期数组与指针检查，静�
 
 命令选项以 chali help 和 [LLVM AOT 文档](../38-aot.md) 为准。不要再使用已删除的 emit 或 .svmb 路径。
 
+默认 run／aot 将最终产物发布到源码同级，中间文件放在源码旁的 `.chali`；Windows 将该目录设为隐藏。成功或失败后清理本次独占工作区，保留既有用户文件。编译成功并发布后在标准错误提示“编译完成”，run 随后启动原生程序；`--quiet` 或 `CHALI_QUIET=1` 只关闭完成提示。显式输出、保留和增量配置按[产物参考](../15-artifacts.md)使用。
+
 ![AOT 导出与工具链边界](images/chali-aot.png)
 
 ### 从源码走到原生执行
@@ -61,6 +63,62 @@ void main() {
 内置 LLVM 变体携带编译所需组件，外置变体使用已安装工具链。两者生成的应用按实际链接结果交付；编译器使用 LLVM 不等于应用必须携带 LLVM 动态库。
 
 应用主动调用的 C ABI 动态库、数据库客户端和运行期资源仍按各自约定准备。对最终文件检查真实依赖，不从编译器变体名推断。
+
+### 交付一个原生语言库
+
+语言库把公开接口与目标实现保存在 `.chlib` 中，消费者不需要普通函数的实现源码。先把以下代码保存为 `counter.chl`：
+
+```chali
+module example::counter;
+struct Counter {
+    int64 value;
+    static Counter create(int64 initial) {
+        self.value = initial;
+        return self;
+    }
+    void add(int64 step) { self.value += step; }
+    int64 read() { return self.value; }
+}
+void write(int64 mut& target, int64 value) { *target = value; }
+```
+
+记录的方法保留接收者读写约束；`write` 的 `mut&` 访问调用方的逻辑槽位，不把它转换成宿主 C 指针。先创建 `modules/example` 和 `build` 目录，再生成带检查的原生对象与可选 bitcode：
+
+```sh
+chali lib build counter.chl --module example::counter --package-version 1.0.0 --checked --with-bitcode --out modules/example/counter.chlib
+chali lib inspect modules/example/counter.chlib
+```
+
+把 `counter.chl` 移到消费者目录之外，保留库包。将调用方保存为 `main.chl`：
+
+```chali
+import example::counter;
+void main() {
+    let counter = example::counter::Counter::create(40);
+    counter.add(2);
+    int64 result = 0;
+    example::counter::write(&result, counter.read());
+    println("{}", result);
+}
+```
+
+完整模块名对应 `modules/example/counter.chlib`。检查消费者声明、运行原生实现，然后显式选择 bitcode 与 ThinLTO 导出：
+
+```sh
+chali check main.chl
+chali run main.chl --library-implementation native
+chali aot main.chl --library-implementation bitcode --lto-mode thin --checked --out build/counter
+```
+
+run 与导出的程序都输出：
+
+```text
+42
+```
+
+运行导出产物时，Windows 使用 `build/counter.exe`，Linux 使用 `build/counter`。库与应用共用最终程序的运行时、分配器和类型身份；包不附带另一套对象管理器。普通函数预生成，泛型定义和必要语义元数据由消费者实例化，两类正文的交付方式不同。
+
+缺省选择原生实现；选择 bitcode 时核对目标、数据布局和兼容 LLVM 版本，选择 LTO 也不表示每种负载都会更快。更换参数类型、公开布局或借用来源后，旧消费者对象可能需要重编译，不能只替换文件名。标准 String、受支持记录／枚举、具体泛型记录、基础引用及用户方法各有明确能力边界，不能据此推断集合、完整接口、闭包和库全局初始化已经全部开放。依赖身份、源码映射和当前限制见[库包参考](../44-library-packages.md)。
 
 ## 27.3 交叉编译需要哪些信息
 

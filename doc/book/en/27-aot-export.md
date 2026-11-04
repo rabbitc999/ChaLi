@@ -16,6 +16,8 @@ The relevant unchecked defaults mainly affect runtime array and pointer checking
 
 Use chali help and the [LLVM AOT reference](../../en/38-aot.md) for exact options. The emit and .svmb paths have been removed.
 
+Default run/aot publishes final artifacts beside the source and uses the adjacent `.chali` directory for intermediates; Windows marks it hidden. Success or failure cleans the session workspace while preserving existing user files. Successful compilation and publication reports completion on standard error, then run launches the native program. `--quiet` or `CHALI_QUIET=1` suppresses only that notice. Explicit output, retention and incremental settings follow the [artifact reference](../../en/15-artifacts.md).
+
 ![AOT export and toolchain boundaries](../images/chali-aot-en.png)
 
 ### From source to native execution
@@ -61,6 +63,62 @@ Files, networking and databases still require actual host services. LLVM optimiz
 The embedded LLVM variant carries compilation components; the external variant uses an installed toolchain. Deliver applications according to their actual linkage. Compiler use of LLVM does not itself require an LLVM DLL beside the application.
 
 C ABI libraries, database clients and runtime assets used by the application remain separate dependencies. Inspect the final artifact rather than inferring dependencies from the compiler variant.
+
+### Deliver a native language library
+
+A `.chlib` contains the public interface and target implementation. Consumers do not need ordinary function implementation source. Save this provider as `counter.chl`:
+
+```chali
+module example::counter;
+struct Counter {
+    int64 value;
+    static Counter create(int64 initial) {
+        self.value = initial;
+        return self;
+    }
+    void add(int64 step) { self.value += step; }
+    int64 read() { return self.value; }
+}
+void write(int64 mut& target, int64 value) { *target = value; }
+```
+
+Methods retain receiver mutability. The `mut&` parameter in `write` accesses the caller's logical slot without converting it to a host C pointer. Create the `modules/example` and `build` directories, then produce a checked native object with optional bitcode:
+
+```sh
+chali lib build counter.chl --module example::counter --package-version 1.0.0 --checked --with-bitcode --out modules/example/counter.chlib
+chali lib inspect modules/example/counter.chlib
+```
+
+Move `counter.chl` outside the consumer directory, keeping the package. Save the consumer as `main.chl`:
+
+```chali
+import example::counter;
+void main() {
+    let counter = example::counter::Counter::create(40);
+    counter.add(2);
+    int64 result = 0;
+    example::counter::write(&result, counter.read());
+    println("{}", result);
+}
+```
+
+The full module name maps to `modules/example/counter.chlib`. Check the consumer, run the native implementation and explicitly select bitcode with ThinLTO for export:
+
+```sh
+chali check main.chl
+chali run main.chl --library-implementation native
+chali aot main.chl --library-implementation bitcode --lto-mode thin --checked --out build/counter
+```
+
+Both run and the exported program print:
+
+```text
+42
+```
+
+Run `build/counter.exe` on Windows or `build/counter` on Linux. Library and application share the final program's runtime, allocator and type identities; the package does not supply a second object manager. Ordinary functions are precompiled, while consumers instantiate generic definitions with their required semantic metadata.
+
+Native implementation selection is the default. Bitcode selection verifies the target, data layout and compatible LLVM version. LTO does not guarantee a speedup for every workload. Changes to parameter types, public layouts or borrow origins can require rebuilding old consumer objects; replacing a filename is insufficient. Standard String, supported records/enums, concrete generic records, scalar references and user methods have explicit capability boundaries. These do not imply complete support for collections, interfaces, closures or library global initialization. See the [library package reference](../../en/44-library-packages.md) for dependency identities, source mappings and current limits.
 
 ## 27.3 Required cross-compilation information
 

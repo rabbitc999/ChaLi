@@ -40,7 +40,7 @@ MODULES = {
     "signal": ["chali_signal"],
     "process": ["chali_process_c_api"],
     "compress": ["chali_compress_c_api"],
-    "concurrency": ["chali_shared_selfhost", "chali_thread_wait"],
+    "concurrency": ["chali_shared_selfhost", "chali_thread_wait", "chali_thread_diagnostics"],
     "serialization": ["chali_serialization_selfhost", "chali_reflection_serialization", "chali_structured_data", "chali_json_derive"],
     "parse": ["chali_parse_selfhost", "chali_precompiled", "chali_glue_edges"],
     "cas": ["chali_cas_c_api", "chali_cas_math", "chali_big_number_c_api", "chali_thread_wait"],
@@ -100,6 +100,8 @@ def main():
             for script, flags in (("check_doc_links", []), ("export_chali_ebnf", ["--check"]),
                                   ("library_reference", ["--check"])):
                 commands[script] = [sys.executable, str(ROOT / "tools" / (script + ".py")), *flags]
+            commands["chali_book_library"] = [sys.executable, str(ROOT / "tests/chali_book_library.py"),
+                                              "--chali", str(args.chali.resolve())]
         else:
             for script in MODULES[module]:
                 commands[script] = [sys.executable, str(ROOT / "tests" / (script + ".py")),
