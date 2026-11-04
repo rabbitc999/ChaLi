@@ -94,7 +94,7 @@ def chapter_label(target):
     m = re.match(r'^(\d{2})-', target)
     if m:
         return 'ch:' + m.group(1)
-    m = re.match(r'^([AB])-', target)
+    m = re.match(r'^([ABC])-', target)
     if m:
         return 'ch:app' + m.group(1)
     return None
