@@ -1671,6 +1671,26 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
             error = name + " 的类型实参缺少 >";
             return false;
         }
+        // 宏类型模式保留类型应用，不能把通配符作为普通实参单态化。
+        bool wildcard = false;
+        for (auto mark = text.find('?', open + 1); mark < close; mark = text.find('?', mark + 1))
+        {
+            auto before = mark;
+            while (before > open && std::isspace(static_cast<unsigned char>(text[before - 1]))) --before;
+            auto after = mark + 1;
+            skipSpace(text, after);
+            if ((text[before - 1] == '<' || text[before - 1] == ',') && (text[after] == '>' || text[after] == ','))
+            {
+                wildcard = true;
+                break;
+            }
+        }
+        if (wildcard)
+        {
+            output += text.substr(begin, close - begin + 1);
+            at = close + 1;
+            continue;
+        }
         Memory::Vector<Memory::String> args = splitTop(text.substr(open + 1, close - open - 1));
         for (std::size_t index = 0; index < args.size(); ++index)
         {

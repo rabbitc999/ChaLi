@@ -1135,21 +1135,7 @@ void LowerConcreteMethod(ast::Program &program, int topId, const MMethod &signat
     const MNode top = N(topId);
     ReductionSourceScope source(topId);
     /* 方法名（`plus` / `loperator+`，重载时带 `$类型`）就是标签后缀：`结构体名.方法名` */
-    if (signature.nativeBridge && signature.isStatic)
-    {
-        if (signature.isNamedConstructor)
-        {
-            g_namedConstructorBody = true;
-            auto body = LowerFunction(signature.name + "$body", top.s, SimpleType(MType::Void),
-                                      g_funcs.at(top.s + "." + signature.name + "$body").params,
-                                      signature.nativeConstructorBody, signature.module);
-            g_namedConstructorBody = false;
-            program.addMethod(top.s, std::move(body));
-        }
-        program.functions.push_back(LowerFunction(top.s + "." + signature.name, {}, signature.result,
-                                                  signature.params, signature.bodyId, signature.module));
-    }
-    else if (signature.isNamedConstructor)
+    if (signature.isNamedConstructor)
     {
         g_namedConstructorBody = true;
         auto body = LowerFunction(signature.name + "$body", top.s, SimpleType(MType::Void),

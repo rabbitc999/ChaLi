@@ -380,7 +380,7 @@ void prepareAst(Request &request, Translator &state)
         }
         else if (target.exported)
             target.llvmName = "f_" + sanitize(target.label.rfind("program::", 0u) == 0u ? target.label.substr(9u) : target.label);
-        if (!request.options.libraryModule.empty()) target.llvmName = "f_" + state.identifier(target.label, "libfn");
+
         state.astFunctions[textOf(target.label)] = &function;
         state.astTypes[target.label] = function.result;
         state.astTypes[function.name] = function.result;
@@ -411,7 +411,7 @@ void prepareAst(Request &request, Translator &state)
     }
     if (!request.options.shared && !state.functionByLabel.count("main")) state.fail("AOT：找不到入口 main");
     std::vector<std::string> pending;
-    if (request.options.libraryModule.empty()) pending = { "main", "__chali_library_init", "__chali_library_finish" };
+    pending = { "main", "__chali_library_init", "__chali_library_finish" };
     for (const auto &name : request.options.exports) pending.push_back(textOf(name));
     for (const auto &entry : request.abiExports) pending.push_back(textOf(entry.label));
     while (!pending.empty())
@@ -871,7 +871,7 @@ struct AstBuilder : Builder
             }
         const bool inlineBody = !function.exported && !state.addressedFunctions.count(textOf(function.label)) &&
                                 state.astInlineFunctions.count(textOf(function.label));
-        snapshotData = state.request.options.libraryModule.empty() && state.dataSnapshots && state.cacheAddresses && state.rawIntrinsics && state.referencePrimitives && !state.stepChecks && !state.request.options.debug && !inlineBody && loop && memoryAccess && stable;
+        snapshotData = state.dataSnapshots && state.cacheAddresses && state.rawIntrinsics && state.referencePrimitives && !state.stepChecks && !state.request.options.debug && !inlineBody && loop && memoryAccess && stable;
     }
 
     /**
@@ -939,14 +939,9 @@ struct AstBuilder : Builder
                 debugLines[index] = debugLocation(source);
             }
             const auto file = state.sourceFiles.emplace(textOf(source->sourceFile), state.sourceFiles.size()).first;
-            if (!state.request.options.libraryModule.empty())
-                body += "  call void @chali_set_location(ptr @source_file" + std::to_string(file->second) + ", i64 " + std::to_string(source->sourceLine) + ", ptr @" + textOf(function.llvmName) + ")\n";
-            else
-            {
-                body += "  store ptr @" + textOf(function.llvmName) + ", ptr @chali_source_function\n";
-                body += "  store ptr @source_file" + std::to_string(file->second) + ", ptr @chali_source_file\n";
-                body += "  store i64 " + std::to_string(source->sourceLine) + ", ptr @chali_source_line\n";
-            }
+            body += "  store ptr @" + textOf(function.llvmName) + ", ptr @chali_source_function\n";
+            body += "  store ptr @source_file" + std::to_string(file->second) + ", ptr @chali_source_file\n";
+            body += "  store i64 " + std::to_string(source->sourceLine) + ", ptr @chali_source_line\n";
         }
         if (state.stepChecks && (source || controlPoint)) call("chali_host_tick", "void", { { "i64", "1" } });
     }
@@ -975,7 +970,7 @@ struct AstBuilder : Builder
         const bool byte = type && type->kind == ast::Type::Kind::Uint && type->bits == 8;
         const Text storage = real ? "double" : byte ? "i8" :
                                                       "i64";
-        const bool cache = state.request.options.libraryModule.empty() && state.cacheAddresses && !state.stepChecks && !state.request.options.debug;
+        const bool cache = state.cacheAddresses && !state.stepChecks && !state.request.options.debug;
         const auto pointer = snapshotData ? call("chali_data_address", "ptr",
             { convert(address, "i64"), { "i64", byte ? "1" : "8" }, dataBase, dataSize }) :
             call(cache ? "chali_primitive_address" : "chali_host_address", "ptr",
@@ -1043,11 +1038,6 @@ struct AstBuilder : Builder
         case N::ArrayNew:
         case N::StructNew:
         case N::EnumNew:
-            if (!state.unitDataSymbol.empty())
-            {
-                const auto base = instruction("i64", "load i64, ptr @" + textOf(state.unitDataSymbol));
-                return instruction("i64", "add i64 " + base.text + ", " + std::to_string(state.astData.at(node.get())));
-            }
             return { "i64", std::to_string(state.astData.at(node.get())) };
         case N::Sequence:
             for (std::size_t index = 0; index + 1 < node->kids.size(); ++index) statement(node->kids[index]);
@@ -1127,26 +1117,12 @@ struct AstBuilder : Builder
             {
                 const auto address = expression(node->kids[0]);
                 const auto bytes = expression(node->kids[1]);
-                Value typeId;
-                const auto &tag = node->kids[2];
-                const auto symbol = tag->kind == N::IntLit ? state.request.syntax->nativeTypeSymbols.find(tag->intValue) : state.request.syntax->nativeTypeSymbols.end();
-                if (symbol != state.request.syntax->nativeTypeSymbols.end())
-                    typeId = instruction("i64", "load i64, ptr @" + llvmSymbol(symbol->second));
-                else
-                    typeId = expression(tag);
+                const auto typeId = expression(node->kids[2]);
                 location(node);
                 profile("call:" + textOf(node->text), node);
                 const auto operation = node->text == "__std_move_live" ? 0 : node->text == "__std_move_require" ? 1 :
                                                                                                                   2;
                 return call("chali_host_storage_lifetime", "i64", { { "i64", std::to_string(operation) }, convert(address, "i64"), convert(bytes, "i64"), convert(typeId, "i64") });
-            }
-            // 独立语言单元不持有宿主名称表，借用 ABI 始终使用共享运行时的同一非空检查。
-            if (!state.request.options.libraryModule.empty() && node->text == "__std_reference" && node->kids.size() == 1)
-            {
-                const auto value = expression(node->kids.front());
-                location(node);
-                profile("call:" + textOf(node->text), node);
-                return call("chali_require_reference", "i64", { convert(value, "i64") });
             }
             const bool indirect = node->kind == N::CallPointer;
             Value pointer{ "i64", "0" };
@@ -1456,7 +1432,7 @@ struct AstBuilder : Builder
             && state.astInlineFunctions.count(textOf(function.label))) signature += "alwaysinline ";
         signature += "uwtable";
         // 显式节中的局部函数不能由 ThinLTO 提升；独立库尚不提供该调试代码区登记，使用普通代码节。
-        if (state.request.options.libraryModule.empty()) signature += " section \"chali_code\"";
+        signature += " section \"chali_code\"";
         signature += " {\nentry:\n";
         signature += "  %indirect_arguments = alloca [" + std::to_string(argumentCapacity) + " x i64]\n  %native_argument_types = alloca [" + std::to_string(argumentCapacity) + " x i8]\n";
         signature += "  %raw_memory_output = alloca ptr\n  %raw_memory_input = alloca ptr\n  %collection_result_kind = alloca i8\n";

@@ -182,8 +182,7 @@ def main():
             target = WORK / (sample + "-aot")
             arguments = [str(build / EXPORTED_COMPILER), "aot" if native else "run",
                          str(ROOT / "example/samples" / (sample + ".chl"))]
-            if native:
-                arguments += ["--out", str(target)]
+            arguments += ["--out", str(target)]
             environment = dict(os.environ)
             if os.name == "nt":
                 environment.setdefault("CHALI_LLVM_CLANG", str(ROOT / "build/dependencies/llvm/toolchain/bin/clang.exe"))

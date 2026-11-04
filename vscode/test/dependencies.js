@@ -79,7 +79,14 @@ async function main() {
     await commands.get('chali.openLibraries')(); assert.equal(opened[0], path.join(compilerDir, 'libraries'));
     await new Promise((resolve) => server.close(resolve));
     let output = '';
-    await runDependencyProcess(compiler, ['run', mainFile, 'out', path.join(directory, 'output')], app, (chunk) => { output += chunk; });
+    const report = spawnSync(compiler, ['--build-info'], { encoding: 'utf8' });
+    assert.equal(report.status, 0, report.stderr);
+    const args = ['run', mainFile, 'out', path.join(directory, 'output')];
+    if (JSON.parse(report.stdout).llvm === 'external') {
+      const bundled = path.join(root, 'build/dependencies/llvm/toolchain/bin/clang.exe');
+      args.push('--llvm', process.env.CHALI_LLVM_CLANG || (process.platform === 'win32' && fs.existsSync(bundled) ? bundled : 'clang'));
+    }
+    await runDependencyProcess(compiler, args, app, (chunk) => { output += chunk; });
     assert.equal(output.replace(/\r\n/g, '\n'), '7\n');
     // 失败必须显示错误及日志，不能发出成功通知。
     fs.appendFileSync(path.join(compilerDir, 'libraries', `values-${digest}`, 'values.chl'), '\n// changed\n');

@@ -148,9 +148,9 @@ struct MBorrowFlowBuilder
             summary = summaries.emplace(call->second, std::move(origins)).first;
         }
         const auto node = N(id);
-        const auto callee = N(node.kids[0]);
-        if (callee.kind != MNode::Member && callee.kind != MNode::Arrow) return {};
-        const auto arguments = node.kids.size() > 1 ? N(node.kids[1]).kids : Memory::Vector<int>{};
+        const bool directStatic = node.kind == MNode::EnumCtor && node.type2 == 1;
+        const auto callee = directStatic ? MNode{} : N(node.kids[0]);
+        const auto arguments = directStatic ? node.kids : node.kids.size() > 1 ? N(node.kids[1]).kids : Memory::Vector<int>{};
         MBorrowOrigins result;
         for (const auto &origin : summary->second)
         {
@@ -161,7 +161,10 @@ struct MBorrowFlowBuilder
             }
             MBorrowPlace concrete;
             if (origin.root == "$self")
+            {
+                if (directStatic || (callee.kind != MNode::Member && callee.kind != MNode::Arrow) || callee.kids.empty()) continue;
                 concrete = place(callee.kids[0]);
+            }
             else if (origin.root.compare(0, 5, "$arg:") == 0)
             {
                 const auto index = static_cast<std::size_t>(std::strtoull(origin.root.c_str() + 5, nullptr, 10));
@@ -241,6 +244,8 @@ struct MBorrowFlowBuilder
             return place(N(node.kids[1]).kids[0], slot);
         else if (node.kind == MNode::Call && carriesCaptures(id))
             return { "$callvalue:" + Memory::toString(id), {} };
+        else if (node.kind == MNode::EnumCtor && node.type2 == 1 && reference(id) && !methodOrigins(id).empty())
+            result = { "$call:" + Memory::toString(id), {} };
         else if (node.kind == MNode::Call && reference(id) && !node.kids.empty())
         {
             const auto callee = N(node.kids[0]);
@@ -291,7 +296,7 @@ struct MBorrowFlowBuilder
         }
         if ((node.kind == MNode::Member || node.kind == MNode::Arrow || node.kind == MNode::Un || node.kind == MNode::Cast) && !node.kids.empty())
             return address(node.kids[0], next);
-        if (node.kind == MNode::Call) return expression(id, next);
+        if (node.kind == MNode::Call || (node.kind == MNode::EnumCtor && node.type2 == 1 && reference(id))) return expression(id, next);
         return next;
     }
     /**
@@ -449,6 +454,22 @@ struct MBorrowFlowBuilder
             return binding(target, value) ? address(value, entry) : expression(value, entry);
         }
         if (node.kind == MNode::Un && node.s == "&") return address(node.kids[0], next);
+        if (node.kind == MNode::EnumCtor && node.type2 == 1 && reference(id))
+        {
+            const auto origins = methodOrigins(id);
+            if (!origins.empty())
+            {
+                Memory::Vector<std::size_t> choices;
+                for (const auto &origin : origins)
+                    choices.push_back(add(origin.root == "$fresh" ? MBorrowFlowNode::Allocate : MBorrowFlowNode::Bind,
+                                          place(id, true), origin.root == "$fresh" ? MBorrowPlace{ "$returnedAllocation:" + Memory::toString(id), {} } : origin, next, id));
+                const auto branch = add(MBorrowFlowNode::Nop, {}, {}, static_cast<std::size_t>(-1), id);
+                graph.nodes[branch].next = std::move(choices);
+                next = branch;
+                for (auto it = node.kids.rbegin(); it != node.kids.rend(); ++it) next = expression(*it, next);
+                return next;
+            }
+        }
         if (node.kind == MNode::Call && !node.kids.empty())
         {
             const auto callee = N(node.kids[0]);
@@ -477,7 +498,7 @@ struct MBorrowFlowBuilder
                 }
             }
             // 普通函数的引用返回值保守关联到所有引用实参，不猜测不透明方法的内部字段。
-            if (reference(id) && callee.kind != MNode::Member && callee.kind != MNode::Arrow)
+            if (reference(id) && callee.kind != MNode::Member && callee.kind != MNode::Arrow && methodOrigins(id).empty())
             {
                 Memory::Vector<std::size_t> choices;
                 for (const int argument : arguments)

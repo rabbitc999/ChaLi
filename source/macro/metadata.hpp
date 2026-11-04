@@ -111,6 +111,7 @@ struct MetadataType
     Memory::Vector<MetadataVariant> variants;
     Memory::Vector<MetadataMethod> methods;
     Memory::Vector<MetadataInterface> interfaces;
+    Memory::Vector<std::shared_ptr<const MType>> typeArguments;
 };
 /**
  * @brief 仅供宏展开和编译期查询使用的有类型描述符，禁止转换为运行期值。
@@ -141,7 +142,8 @@ struct MetadataValue
         Interfaces,
         Interface,
         AssociatedTypes,
-        AssociatedType
+        AssociatedType,
+        TypeArguments
     } kind = Fields;
     std::shared_ptr<const MetadataType> owner;
     std::shared_ptr<const MType> type;

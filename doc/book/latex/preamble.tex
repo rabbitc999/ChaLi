@@ -3,6 +3,7 @@
 % 由 book.tex 与 tools/check_chapters.py 的试编译壳共同引用。
 
 \usepackage{tabularx}
+\usepackage{fvextra}
 \pdfstringdefDisableCommands{\def\allowbreak{}}
 \setlength{\emergencystretch}{3em}
 \usetikzlibrary{arrows.meta,backgrounds,decorations.pathreplacing,fit,positioning,shapes.geometric}
@@ -40,18 +41,15 @@
   stringstyle=\color[RGB]{128,0,0},
   backgroundcolor=\color{gray!5},
   frame=tb, framerule=1pt,
-  breaklines=true, columns=fullflexible, keepspaces=true,
+  breaklines=true, breakatwhitespace=false, columns=fullflexible, keepspaces=true,
   showstringspaces=false, tabsize=4,
 }
-% 程序输出
-\lstdefinestyle{out}{
-  language=,
-  basicstyle=\ttfamily\small,
-  numbers=none,
-  backgroundcolor=\color{gray!5},
-  frame=tb, framerule=1pt,
-  breaklines=true, columns=fullflexible, keepspaces=true,
-  showstringspaces=false,
+% 程序输出与纯文本配置允许在长 JSON、路径等无空格内容中软换行。
+\DefineVerbatimEnvironment{BookOutput}{Verbatim}{
+  fontsize=\small, frame=lines, framerule=1pt,
+  rulecolor=\color{structurecolor}, fillcolor=\color{gray!5},
+  breaklines=true, breakanywhere=true, breakautoindent=false,
+  breaksymbolleft={}, breakanywheresymbolpre={}
 }
 % 命令行
 \lstdefinestyle{sh}{
@@ -61,17 +59,7 @@
   keywordstyle=\color{red!40!orange},
   backgroundcolor=\color{gray!5},
   frame=tb, framerule=1pt,
-  breaklines=true, columns=fullflexible, keepspaces=true,
-  showstringspaces=false,
-}
-% 配置文件（toml / json）
-\lstdefinestyle{cfg}{
-  language=,
-  basicstyle=\ttfamily\small,
-  numbers=none,
-  backgroundcolor=\color{gray!5},
-  frame=tb, framerule=1pt,
-  breaklines=true, columns=fullflexible, keepspaces=true,
+  breaklines=true, breakatwhitespace=false, columns=fullflexible, keepspaces=true,
   showstringspaces=false,
 }
 

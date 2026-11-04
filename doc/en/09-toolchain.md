@@ -175,7 +175,7 @@ allocator = "malloc"
 
 Build Current File respects executable, `.o`, or `.ll` output. Linux executables have no `.exe` suffix. Build Executable requires `output = "executable"` and does not rewrite the manifest. The status bar shows the target, output kind, and actual compiler LLVM variant. Choices include only registered Windows x64, Linux x64, and Linux ARM64 targets. Object generation does not validate target linking or execution; cross executables still require the corresponding SDK, runtime, and link dependencies.
 
-P7 rename edits include source fingerprints. Before returning edits, the extension checks open versions and the current text of closed dependencies. Standard sources are read-only; ambiguous bindings or macro-template references reject the complete rename.
+Rename edits include source fingerprints. Before returning edits, the extension checks open document versions and the current text of closed dependencies. Standard sources are read-only. Ambiguous bindings or macro-template references cause the entire rename to be rejected.
 
 Code actions can fill directly listed non-generic interface methods and add a fallback to an incomplete match. Generated bodies contain explicit `TODO panic` placeholders that need implementation. Each candidate must pass an isolated compiler check without entering the normal report or preprocessing cache. Other errors, generics, or ambiguous declarations can prevent an action. The macro preview's “Expansion origins and bindings” summary lists compiler-recorded source, definition, metadata and control-target locations with navigation; it does not infer transitive purity.
 
@@ -183,7 +183,7 @@ Code actions can fill directly listed non-generic interface methods and add a fa
 
 Static and external LLVM builds use separate build directories and versioned artifact names. Before packaging, check `--build-info`, extension versions, exact VSIX compiler bytes and the actual variant's build configuration. Do not substitute the other variant's configuration. `tools/release_variants.py --package-only` accepts `--static-build-root` and `--external-build-root` for these directories. Check installer and ZIP executables, versions, LICENSE/NOTICE and dependency licenses separately. Record cross-object generation separately from execution on the target system.
 
-The [final P3-to-P5 LSP comparison](../../benchmarks/results/lsp-1.0.12-final/README.md) is frozen by actual compiler hashes; it does not describe later P6-to-P8 rebuild bytes. Subsequent artifact checks do not relabel or repeat that measurement.
+The LSP performance comparison records the hashes of the compilers that were measured. Later artifact checks preserve those original measurement identifiers. [LSP performance comparison](../../benchmarks/results/lsp-1.0.12-final/README.md)
 
 ## Target machine assembly
 
@@ -207,7 +207,7 @@ The static variant uses LLVM MC in process without clang; explicit `--llvm` sele
 
 AOT accepts repeated `--asm FILE.s` and `--asm-include DIR` options. Every object uses the same target and CPU as the language unit and participates in the final link. Use the established C ABI declaration to reference an assembly symbol; the assembly must follow that target's calling convention. These inputs require executable/shared-library output and cannot be combined with `--emit-asm`, `--emit-obj` or `--emit-llvm`. Assembling a cross-target object does not verify executable deployment on that target.
 
-For a symbol supplied by linked objects, declare `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`. `@link` is a compiler marker, never a filename or dynamic-library lookup. Fixed scalars use direct target C ABI calls. Structures, references, arrays, String, synchronous callbacks and declared release functions use the existing C-frame marshaller with linker-resolved native symbols. Complex signatures still require a target-compatible C++ compiler (`CHALI_ABI_CXX`) for platform layout adaptation; the public boundary uses only C APIs. Ordinary host declarations and existing library paths retain their behavior. Explicit empty library paths are rejected. See [raw storage and C ABI directives](41-unsafe-abi.md) for interoperability and ownership contracts.
+Declare a linked scalar C function as `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`. The object or archive supplied to the linker provides the symbol. Signatures with structures, references, buffers or callbacks use a compatible dynamic library and the [C ABI marshalling rules](41-unsafe-abi.md).
 
 
 ## Standalone linking and static archives

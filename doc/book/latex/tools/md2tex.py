@@ -188,7 +188,10 @@ class Converter:
     def conv_code(self, lang, buf):
         style = CODE_STYLE.get(lang, 'out')
         content = '\n'.join(buf).replace('✗', 'X')
-        listing = '\\begin{lstlisting}[style=%s]\n%s\n\\end{lstlisting}' % (style, content)
+        if style in ('out', 'cfg'):
+            listing = '\\begin{BookOutput}\n%s\n\\end{BookOutput}' % content
+        else:
+            listing = '\\begin{lstlisting}[style=%s]\n%s\n\\end{lstlisting}' % (style, content)
         # 不放进 minipage/samepage；长短示例均允许自然跨页，并保留框线外的段间距。
         return '\\par\n\\medskip\n' + listing + '\n\\par\n\\medskip'
 

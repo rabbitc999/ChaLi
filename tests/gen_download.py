@@ -9,10 +9,9 @@ import urllib.error
 
 ROOT = Path(__file__).resolve().parents[1]
 DOWNLOAD = (ROOT / "gen.sh").read_text(encoding="utf-8").split("python - <<'PY'\n", 1)[1].split("\nPY\n", 1)[0]
-# 固定验证仓库指定的生成器版本，不跟随远端 latest 漂移；GitHub 优先，Gitee 兜底。
+# 固定验证仓库指定的生成器版本，不跟随远端 latest 漂移；GitHub 优先。
 GITHUB = "https://github.com/rabbitc999/ParseEngine/releases/download/v1.3.0/ParseEngine.exe"
-GITEE = "https://gitee.com/rabbitc999/ParseEngine/releases/download/v1.3.0/ParseEngine.exe"
-SOURCES = [GITHUB, GITEE]
+SOURCES = [GITHUB]
 
 
 class DownloadTests(unittest.TestCase):

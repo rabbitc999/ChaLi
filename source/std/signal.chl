@@ -7,12 +7,12 @@ import std::math;
  * Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
  * https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/builtins/muldc3.c
  * 本文件将该规则实现为 ChaLi；许可证见 licenses/llvm/LICENSE.TXT。 */
-float64 __signedUnit(float64 original, bool unit) {
+inline float64 __signedUnit(float64 original, bool unit) {
     uint64 bits=(std::lang::__bootFloat64Bits(original) >> 63) << 63;
     if(unit) { bits=bits | ((uint64)1023 << 52); }
     return std::lang::__bootFloat64FromBits(bits);
 }
-Complex<float64> __multiply(Complex<float64> left, Complex<float64> right) {
+inline Complex<float64> __multiply(Complex<float64> left, Complex<float64> right) {
     float64 a=left.re; float64 b=left.im; float64 c=right.re; float64 d=right.im;
     float64 ac=a*c; float64 bd=b*d; float64 ad=a*d; float64 bc=b*c;
     float64 real=ac-bd; float64 imaginary=ad+bc;
@@ -46,7 +46,7 @@ Complex<float64> __multiply(Complex<float64> left, Complex<float64> right) {
 }
 
 /* 变换使用独立列表；逆变换除以输入长度，DFT 接受空输入。 */
-List<Complex<float64>> __transform(List<Complex<float64>> const& input, bool inverse) {
+inline List<Complex<float64>> __transform(List<Complex<float64>> const& input, bool inverse) {
     List<Complex<float64>> output;
     int64 n=input.len();
     int64 k=0;
@@ -69,7 +69,7 @@ List<Complex<float64>> __transform(List<Complex<float64>> const& input, bool inv
 }
 
 /* 基二变换采用位反转和迭代蝶形；只修改独立的输入副本。 */
-List<Complex<float64>> __fast(List<Complex<float64>> input, bool inverse) {
+inline List<Complex<float64>> __fast(List<Complex<float64>> input, bool inverse) {
     int64 n=input.len();
     if(n<=0 || (n & (n-1))!=0) {
         if(inverse) { std::lang::__runtimeFail("ifft 长度必须是正的 2 的幂"); }

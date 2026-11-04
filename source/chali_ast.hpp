@@ -902,16 +902,6 @@ int M_AbiDeclaration(int convention, int declaration);
  */
 int M_AbiImport(int convention, int library, int symbol, int declaration);
 /**
- * @brief 为无实现体的方法原型保存直接链接入口和接收者契约。
- * @param convention 已有语言 ABI 调用约定。
- * @param library 直接链接标记。
- * @param symbol 原生入口符号。
- * @param receiver const、mut 或 static 接收者种类。
- * @param declaration 方法签名节点。
- * @return 带方法 ABI 信息的声明，非法组合返回诊断节点。
- */
-int M_AbiMethod(int convention, int library, int symbol, int receiver, int declaration);
-/**
  * @brief 配置当前编译是否生成允许无 main 的 AOT 动态库。
  * @param enabled 为 true 时生成独立初始化和清理入口。
  */
@@ -921,12 +911,6 @@ void M_SetSharedLibrary(bool enabled);
  * @return 未被覆盖的导出函数标签列表。
  */
 Memory::Vector<Memory::String> M_AotExports();
-/** @brief 导出首批独立原生库的公开标量接口。
- * @param module 完整模块身份。
- * @param exports 接收稳定原生签名。
- * @return 不含函数实现体的接口源文。 */
-Memory::String M_LibraryInterface(const Memory::String &module, Memory::Vector<chali_aot::ExternFunction> &exports);
-
 /**
  * @brief 建立 lambda 表达式。
  * @param resultType 返回类型。
@@ -1241,55 +1225,6 @@ void M_ShiftParseDiagnostics(std::size_t from, std::size_t lines);
  * 设置下一次 M_Compile 执行时传给 `main(std::lang::List<std::lang::String>)` 的参数。
  */
 void M_SetSourceFiles(const Memory::Vector<Memory::String> &files, const Memory::String &fallback);
-/** @brief 设置仅声明的原生库接口来源。
- * @param files 本次编译的库接口标签；空表清除上次设置。 */
-void M_SetLibrarySources(const Memory::Vector<Memory::String> &files);
-/** @brief 设置允许语言借用调用约定的已验证库接口来源。
- * @param files 当前目标的 chali-borrow-v1 来源；空表清除设置。 */
-void M_SetLibraryBorrowSources(const Memory::Vector<Memory::String> &files);
-/** @brief 设置允许基础标量逻辑引用的已验证库来源。
- * @param files 携带 scalar-reference-v1 的接口标签；空表清除设置。
- * @return 无。 */
-void M_SetLibraryScalarRefSources(const Memory::Vector<Memory::String> &files);
-/**
- * @brief 设置允许独立记录方法声明的已验证库来源。
- * @param files 携带 record-methods-v1 的接口标签。
- * @return 无。
- */
-void M_SetLibraryMethodSources(const Memory::Vector<Memory::String> &files);
-/** @brief 设置已验证模板定义的来源，仅用于依赖类型身份核对。
- * @param files generic-definitions-v1 定义标签；空表清除设置。
- * @return 无。 */
-void M_SetLibraryTemplateSources(const Memory::Vector<Memory::String> &files);
-/**
- * @brief 设置允许标准 String 拥有值 ABI 的已验证库接口来源。
- * @param files 携带 owned-string-value-v1 的稳定来源标签。
- * @return 无。
- */
-void M_SetLibraryOwnedSources(const Memory::Vector<Memory::String> &files);
-/**
- * @brief 设置允许标准 String 拥有字段聚合 ABI 的已验证库来源。
- * @param files 携带 owned-record-value-v1 的稳定来源标签。
- * @return 无。
- */
-void M_SetLibraryOwnedRecordSources(const Memory::Vector<Memory::String> &files);
-/** @brief 设置允许公开生命周期契约的已验证库来源。
- * @param files 携带 lifetime-contract-v1 的接口标签。
- * @return 无。 */
-void M_SetLibraryLifetimeSources(const Memory::Vector<Memory::String> &files);
-/** @brief 设置允许返回调用方借用的已验证库来源。
- * @param files 携带 borrowed-result-v1 的接口标签。
- * @return 无。 */
-void M_SetLibraryBorrowResultSources(const Memory::Vector<Memory::String> &files);
-/** @brief 设置已验证且具备单元数据重定位能力的库来源。
- * @param files 当前目标携带单元映像与布局的来源。
- * @return 无。 */
-void M_SetLibraryDataSources(const Memory::Vector<Memory::String> &files);
-/** @brief 设置要求统一类型编号的已验证原生库来源。
- * @param files 携带 shared-type-id-v1 能力的接口标签。
- * @return 无。 */
-void M_SetLibraryTypeSources(const Memory::Vector<Memory::String> &files);
-
 void M_SetProgramArguments(int argc, const char *const *argv);
 void M_SetThreadsEnabled(int enabled);
 /**

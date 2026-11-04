@@ -50,23 +50,17 @@ Variables reported by GDB as `<optimized out>` are explicitly marked as having n
 
 All O3 debug variables are read-only. `setVariable` reports an explicit error because the original frame slot may have disappeared or been reused. Inspection retains stop-generation and read budgets and calls no user functions. Debug safety points and snapshot publication remain present, so timings from either O0 or O3 debugging are not measurements of a release program without debugging.
 
-O0/O3 execution has been checked on Windows x64 with static LLVM and a matching external LLVM, using malloc and pool. Checks cover actual inline stacks and disassembly, unrecoverable optimized-out values, expressions over live variables and identical program results. Linux O3 execution has not been validated in this stage. Optional precompiled library debug information is described below.
+O0/O3 execution has been checked on Windows x64 with static LLVM and a matching external LLVM, using malloc and pool. Checks cover actual inline stacks and disassembly, unrecoverable optimized-out values, expressions over live variables and identical program results. Linux O3 execution has not been validated in this stage.
 
-When consuming library bitcode, native materialization with LTO disabled and module rewriting for Full/ThinLTO retain the selected O0/O3 debug level. Run `python tools/run_module_gates.py debug_bitcode --chali /path/to/compiler --jobs 1` with a C++17 compiler and a matching real external LLVM. `CHALI_ABI_CXX` and `CHALI_LLVM_CLANG` can select tools. The regression forwards actual clang invocations and checks both arguments and program results, without simulating LLVM output.
+## Linked symbols and source paths
 
-## Precompiled library symbols and source
+Debug information in existing native objects is available through DWARF when it survives the final link. Use a debug build and configure `sourceFileMap` for paths recorded on another machine. With no local source, the debugger can still show available symbols, instruction addresses and disassembly.
 
-`chali lib build ... --debug` or `--debug-optimized` retains DWARF and module-specific catalogs for supported independent language libraries. `--with-bitcode` also includes debug information in bitcode. Build the application with debug enabled as well; release builds continue to strip symbols. ABI conversion entries carry call locations so that DWARF can identify language functions after actual inlining. See [library packages](44-library-packages.md) for the format and compatibility rules.
-
-Merging catalogs, layouts, macros and function identities preserves each unit's optimization state. An O3 application does not mislabel O0 native library variables as optimized, and an O0 application does not permit writes to O3 library variables. To preserve this rule, O3 consumers cannot reoptimize O0 debug library bitcode: select the native implementation or rebuild the library in O3 debug mode.
-
-`sourceFileMap` also maps library source. Some GDB units index substituted local full paths; when the original breakpoint remains unresolved, the adapter tries the validated local mapping and removes redundant pending breakpoints. Missing source does not cause invented text: real functions, DWARF filenames/lines, instruction addresses, readable variables and disassembly remain available. Source metadata identifies the module, version, implementation and SHA-256.
-
-Loading checks the package snapshot's symbol identity against the read-only identity generated at final linking. A stale consumer object relinked with a different implementation reports the digest mismatch and requests recompilation. Typed inspection and modification through the stale catalog are disabled; DWARF and low-level information remain available. All libraries share a 4 MiB catalog/address/identity read budget and a 65536-entry catalog budget. Run `python tools/run_module_gates.py debug_libraries --chali /path/to/compiler --jobs 1` for package identity and consumption checks; the complete `debug` module additionally includes real GDB library checks.
+When an older executable publishes a ChaLi library catalog, the adapter checks that the symbol and implementation identities match before using it for typed inspection. If the identity check fails, DWARF and disassembly remain available.
 
 ## Projects, existing artifacts and input
 
-The project-entry configuration reads `main` from the selected workspace's `chali.toml`, retaining compiler-resolved dependencies, library locks and native link settings. Current-file configurations use `program`. Relative paths belong to the configuration's workspace; the default working directory is the project root or entry directory. Relevant documents are saved before building. Invalid, non-host and non-executable project configurations are rejected before launch.
+The project-entry configuration reads `main` from the selected workspace's `chali.toml`, retaining compiler-resolved dependencies and native link settings. Current-file configurations use `program`. Relative paths belong to the configuration's workspace; the default working directory is the project root or entry directory. Relevant documents are saved before building. Invalid, non-host and non-executable project configurations are rejected before launch.
 
 Set `executable` to an existing symbol-bearing program and omit `program` to skip compilation, including on restart. `args` supplies arguments. `env` overrides environment variables; a `null` value removes an inherited entry. Build diagnostics go directly to Problems without a second compilation.
 

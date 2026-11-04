@@ -64,9 +64,9 @@ void main() {
 
 应用主动调用的 C ABI 动态库、数据库客户端和运行期资源仍按各自约定准备。对最终文件检查真实依赖，不从编译器变体名推断。
 
-### 交付一个原生语言库
+### 从源码模块构建应用
 
-语言库把公开接口与目标实现保存在 `.chlib` 中，消费者不需要普通函数的实现源码。先把以下代码保存为 `counter.chl`：
+把模块保存到 `modules/example/counter.chl`。目录和文件名对应完整模块名。
 
 ```chali
 module example::counter;
@@ -82,14 +82,7 @@ struct Counter {
 void write(int64 mut& target, int64 value) { *target = value; }
 ```
 
-记录的方法保留接收者读写约束；`write` 的 `mut&` 访问调用方的逻辑槽位，不把它转换成宿主 C 指针。先创建 `modules/example` 和 `build` 目录，再生成带检查的原生对象与可选 bitcode：
-
-```sh
-chali lib build counter.chl --module example::counter --package-version 1.0.0 --checked --with-bitcode --out modules/example/counter.chlib
-chali lib inspect modules/example/counter.chlib
-```
-
-把 `counter.chl` 移到消费者目录之外，保留库包。将调用方保存为 `main.chl`：
+把调用方保存为与 `modules` 同级的 `main.chl`。模块的可写引用参数可以修改调用方的值。
 
 ```chali
 import example::counter;
@@ -102,23 +95,19 @@ void main() {
 }
 ```
 
-完整模块名对应 `modules/example/counter.chlib`。检查消费者声明、运行原生实现，然后显式选择 bitcode 与 ThinLTO 导出：
-
 ```sh
-chali check main.chl
-chali run main.chl --library-implementation native
-chali aot main.chl --library-implementation bitcode --lto-mode thin --checked --out build/counter
+mkdir -p build
+chali run main.chl
+chali aot main.chl --lto-mode thin --checked --out build/counter
 ```
 
-run 与导出的程序都输出：
+直接运行源码和启动导出的程序时，标准输出相同。
 
 ```text
 42
 ```
 
-运行导出产物时，Windows 使用 `build/counter.exe`，Linux 使用 `build/counter`。库与应用共用最终程序的运行时、分配器和类型身份；包不附带另一套对象管理器。普通函数预生成，泛型定义和必要语义元数据由消费者实例化，两类正文的交付方式不同。
-
-缺省选择原生实现；选择 bitcode 时核对目标、数据布局和兼容 LLVM 版本，选择 LTO 也不表示每种负载都会更快。更换参数类型、公开布局或借用来源后，旧消费者对象可能需要重编译，不能只替换文件名。标准 String、受支持记录／枚举、具体泛型记录、基础引用及用户方法各有明确能力边界，不能据此推断集合、完整接口、闭包和库全局初始化已经全部开放。依赖身份、源码映射和当前限制见[库包参考](../44-library-packages.md)。
+Windows 的导出产物是 `build/counter.exe`，Linux 上是 `build/counter`。已有原生对象和归档的链接用法见[工具链参考](../09-toolchain.md)。需要封装或检查已有资产时，可使用[库包格式工具](../44-library-packages.md)。
 
 ## 27.3 交叉编译需要哪些信息
 

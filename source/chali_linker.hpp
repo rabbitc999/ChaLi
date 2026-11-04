@@ -13,8 +13,6 @@ struct Request
     Memory::Vector<Memory::String> inputs;              ///< 对象、归档及适用的动态库文件。
     Memory::Vector<Memory::String> libraryDirectories;  ///< 库搜索目录。
     Memory::Vector<Memory::String> libraryNames;        ///< 交给链接器的 -l 名称。
-    Memory::Vector<Memory::String> packages;            ///< 独立链接需要的库包，递归解析其精确依赖。
-    Memory::String libraryLock;                         ///< 可选项目级内容锁。
     Memory::String entry;                               ///< 可选原始入口符号。
     bool noRuntime = false;                             ///< 不添加 CRT 和 ChaLi 运行时的显式独立链接。
 };

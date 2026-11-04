@@ -127,6 +127,50 @@ def main():
     diagnostics = json.loads(result.stdout)["diagnostics"]
     assert result.returncode and len(diagnostics) == 2, (result, diagnostics)
     assert {item["span"]["line"] for item in diagnostics} == {3, 4}, diagnostics
+    for storage, expected in (("local", ["CHL1214"]), ("globalValue", [])):
+        path = WORK / f"static_replay_{storage}.chl"
+        path.write_text(
+            "#static(slot)\nvoid install(int64 const& slot) {}\n"
+            "T identity<T>(T value) { return value; }\n"
+            "int64 globalValue = 1;\n"
+            f"void main() {{ int64 local = 1; install(&{storage}); assert(identity(local) == 1); }}\n",
+            encoding="utf-8",
+        )
+        result = subprocess.run([str(compiler), "--diagnostics=json", str(path)], cwd=ROOT, env=env,
+                                capture_output=True, encoding="utf-8", timeout=120)
+        assert bool(result.returncode) == bool(expected), (storage, result)
+        diagnostics = json.loads(result.stdout)["diagnostics"]
+        assert [item["code"] for item in diagnostics] == expected, result.stdout
+    path = WORK / "static_two_sites.chl"
+    path.write_text(
+        "#static(slot)\nvoid install(int64 const& slot) {}\n"
+        "void main() {\n    int64 local = 1;\n    install(&local);\n    install(&local);\n}\n",
+        encoding="utf-8",
+    )
+    result = subprocess.run([str(compiler), "--diagnostics=json", str(path)], cwd=ROOT, env=env,
+                            capture_output=True, encoding="utf-8", timeout=120)
+    diagnostics = json.loads(result.stdout)["diagnostics"]
+    assert result.returncode and [(item["code"], item["span"]["line"]) for item in diagnostics] == [
+        ("CHL1214", 5), ("CHL1214", 6)
+    ], diagnostics
+    method_prefix = (
+        "struct Payload:Drop { int64 value; void drop(){} } "
+        "struct Selector { static Payload const& first(Payload const& a, Payload const& b) { return a; } }\n"
+    )
+    method_cases = (
+        ("static_local_escape", "Payload const& bad(Payload const& outer){Payload local;return Selector::first(&local,outer);} void main(){}", ["CHL1204"]),
+        ("static_unused_local", "Payload const& good(Payload const& outer){Payload local;return Selector::first(outer,&local);} void main(){}", []),
+        ("static_moved_source", "void main(){Payload x;Payload y;Payload const& ref=Selector::first(&x,&y);Payload moved=move x;assert(ref.value==0);}", ["CHL1205"]),
+        ("static_moved_unused", "void main(){Payload x;Payload y;Payload const& ref=Selector::first(&x,&y);Payload moved=move y;assert(ref.value==0);}", []),
+    )
+    for name, body, expected in method_cases:
+        path = WORK / f"{name}.chl"
+        path.write_text(method_prefix + body + "\n", encoding="utf-8")
+        result = subprocess.run([str(compiler), "--diagnostics=json", str(path)], cwd=ROOT, env=env,
+                                capture_output=True, encoding="utf-8", timeout=120)
+        assert bool(result.returncode) == bool(expected), (name, result)
+        diagnostics = json.loads(result.stdout)["diagnostics"]
+        assert [item["code"] for item in diagnostics] == expected, (name, diagnostics)
     print(f"借用控制流：{len(rejected)} 项拒绝、{len(accepted)} 项允许、多诊断通过")
 
 

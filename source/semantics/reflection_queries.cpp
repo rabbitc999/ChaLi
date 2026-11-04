@@ -250,6 +250,18 @@ struct MReflectionQueries
         functions += "return " + result + "::None;}\n";
     }
     /**
+     * @brief 核对类型池候选及其组成部分均已具体化。
+     * @param type 候选类型或空组成部分。
+     * @return 可登记运行期反射身份时为真。
+     */
+    static bool concrete(const std::shared_ptr<MType> &type)
+    {
+        if (!type) return true;
+        if (type->unresolvedName || !type->genericBase.empty() || !type->genericMember.empty() || type->name == "?") return false;
+        return concrete(type->elem) && concrete(type->elem2)
+            && std::all_of(type->paramTypes.begin(), type->paramTypes.end(), concrete);
+    }
+    /**
      * @brief 生成所有查询函数；仅开启特性且加载 std::reflect 时调用。
      * @return CHALI 源码。
      */
@@ -263,7 +275,7 @@ struct MReflectionQueries
         for (const auto &entry : g_interfaces) types.push_back(NamedType(entry.first));
         for (const auto &type : types)
         {
-            if (type->unresolvedName) continue;
+            if (!concrete(type)) continue;
             auto internal = TypeIdOf(type);
             if (!seen.insert(internal).second) continue;
             functions += "if(id==" + Memory::toString(internal) + "){return " + number(metadata.typeId(type)) + ";}";

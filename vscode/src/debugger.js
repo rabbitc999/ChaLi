@@ -9,6 +9,7 @@ const { promisify } = require('node:util');
 
 const locator = require('./locator');
 const { resolveConfiguration } = require('./debugConfiguration');
+const { llvmOptions } = require('./llvmConfiguration');
 
 /** 调试类型：`launch.json` 里的 `"type": "chali"`。 */
 const DEBUG_TYPE = 'chali';
@@ -50,6 +51,8 @@ function registerDebugger(context, deps) {
       try {
         const config = await resolveConfiguration(vscode, folder, configuration, deps.projectInfo);
         if (!config.debuggerPath) config.debuggerPath = vscode.workspace.getConfiguration('chali', folder?.uri).get('debuggerPath');
+        if (config.request === 'launch' && !config.executable)
+          Object.assign(config, llvmOptions(context.extensionPath, vscode.workspace.getConfiguration('chali', folder?.uri)));
         return config;
       }
       catch (error) { void vscode.window.showErrorMessage('ChaLi：' + error.message); return null; }

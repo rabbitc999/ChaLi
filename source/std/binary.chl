@@ -106,7 +106,7 @@ $__binaryArray<float64>(__readFloat64Array, __readFloat64, 8);
 $__binaryArray<bool>(__readBoolArray, __readBool, 1);
 
 /** 从定宽字段构造独立原始字节串；首个零字节后的内容属于填充。 */
-std::lang::String __readString(std::lang::List<uint8> const& bytes, int64 offset, int64 length) {
+inline std::lang::String __readString(std::lang::List<uint8> const& bytes, int64 offset, int64 length) {
     __checkRange(bytes.len(), offset, length, 1);
     int64 size = 0;
     while (size < length && bytes[offset + size] != 0) { size = size + 1; }
@@ -124,7 +124,7 @@ std::lang::String __readString(std::lang::List<uint8> const& bytes, int64 offset
 }
 
 /** 在创建结果前验证全部定宽字段范围，包含零宽字段。 */
-std::lang::List<std::lang::String> __readStrings(std::lang::List<uint8> const& bytes, int64 offset, int64 count, int64 width) {
+inline std::lang::List<std::lang::String> __readStrings(std::lang::List<uint8> const& bytes, int64 offset, int64 count, int64 width) {
     if (width < 0) { std::lang::__runtimeFail("二进制读取：偏移和长度必须非负"); }
     __checkRange(bytes.len(), offset, count, width);
     std::lang::List<std::lang::String> result;
@@ -137,7 +137,7 @@ std::lang::List<std::lang::String> __readStrings(std::lang::List<uint8> const& b
 }
 
 /** 从调用方的有效数组借用复制字节，结果独立拥有存储。 */
-std::lang::List<uint8> __fromArray(uint8 const& bytes, int64 count) {
+inline std::lang::List<uint8> __fromArray(uint8 const& bytes, int64 count) {
     if (count < 0) { std::lang::__runtimeFail("二进制读取：数组长度或地址无效"); }
     int64 location = (int64)std::lang::address(bytes);
     if (location < 0 || (count > 0 && location == 0) || location > 9223372036854775807 - count) {

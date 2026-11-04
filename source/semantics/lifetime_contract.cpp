@@ -47,8 +47,8 @@ const LifetimeContract *g_lifetimeCurrent = nullptr;
 
 /** @brief 攒下来的契约违规；和借用事实一样，等全部单态化完成后才报。 */
 Memory::Vector<std::pair<Memory::String, std::size_t>> g_lifetimeViolations;
-/** @brief 已报过的正文；登记与降级会跨轮重放，同一条只留一次。 */
-Memory::Set<Memory::String> g_lifetimeReported;
+/** @brief 本轮已记录的位置与正文，避免同一位置重复报告。 */
+Memory::Set<std::pair<std::size_t, Memory::String>> g_lifetimeReported;
 /**
  * @brief 报告一条生命周期诊断并攒下来。
  * @param message 诊断正文。
@@ -58,7 +58,7 @@ Memory::Set<Memory::String> g_lifetimeReported;
 void LifetimeReport(const Memory::String &message, std::size_t line)
 {
     /* 位置由诊断队列统一补上，正文里不再重复写一遍行号。 */
-    if (!g_lifetimeReported.insert(message).second) return;
+    if (!g_lifetimeReported.emplace(line, message).second) return;
     g_lifetimeViolations.push_back({ message, line });
 }
 /**
@@ -252,9 +252,22 @@ void CollectLifetimeOrigins(int id, Memory::Set<Memory::String> &names, int guar
         CollectLifetimeOrigins(node.kids[0], names, guard + 1);
         return;
     }
+    if (node.kind == MNode::EnumCtor && node.type2 == 1)
+    {
+        if (const auto sources = MethodBorrowSourceExpressions(id))
+        {
+            for (const auto &source : *sources) CollectLifetimeOrigins(source.first, names, guard + 1);
+            return;
+        }
+    }
     if (node.kind == MNode::Call && node.kids.size() >= 2u)
     {
         const auto arguments = N(node.kids[1]).kids;
+        if (const auto sources = MethodBorrowSourceExpressions(id))
+        {
+            for (const auto &source : *sources) CollectLifetimeOrigins(source.first, names, guard + 1);
+            return;
+        }
         if (const Memory::Vector<int> *indices = LifetimeCallRetParams(id))
         {
             for (const int index : *indices)

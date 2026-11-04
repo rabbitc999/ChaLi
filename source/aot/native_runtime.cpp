@@ -1696,7 +1696,9 @@ std::int64_t chali_host_map_storage(std::int64_t operation, std::int64_t first, 
                                                       static_cast<std::uint64_t>(floating));
     } catch (const std::exception &error)
     {
-        context.error = Memory::String("Map/Set 存储原语抛出异常：") + error.what();
+        // 同步语言回调已保存原始错误，外层存储入口只补充未报告的宿主异常。
+        if (context.error.empty())
+            context.error = Memory::String("Map/Set 存储原语抛出异常：") + error.what();
     }
     if (!context.memoryFault.empty()) context.error = context.memoryFault;
     if (!context.error.empty()) chali_panic(context.error.c_str());
@@ -1790,7 +1792,9 @@ std::int64_t chali_host_map_storage_scalar(std::int64_t operation, std::int64_t 
                                                       static_cast<std::uint64_t>(floating));
     } catch (const std::exception &error)
     {
-        context.error = Memory::String("Map/Set 存储原语抛出异常：") + error.what();
+        // 同步语言回调已保存原始错误，外层存储入口只补充未报告的宿主异常。
+        if (context.error.empty())
+            context.error = Memory::String("Map/Set 存储原语抛出异常：") + error.what();
     }
     if (!context.memoryFault.empty()) context.error = context.memoryFault;
     if (!context.error.empty()) chali_panic(context.error.c_str());

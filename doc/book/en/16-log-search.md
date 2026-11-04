@@ -145,6 +145,12 @@ void main(List<String> arguments)
 }
 ```
 
+The command in Section 16.1 writes one line to stdout when run in the complete project.
+
+```text
+2:ERROR cannot open report
+```
+
 The first call delegates the work. The failure branch reports an unsuccessful invocation; success ends normally. No matches is a successful empty result, with zero in count mode. This teaching entry does not implement every grep exit-status convention.
 
 ## 16.7 Extend one boundary at a time

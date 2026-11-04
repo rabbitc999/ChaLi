@@ -504,7 +504,7 @@ $end_macro
 $macro SUM_INTEGERS<T>(value: value) -> expr
 int64 total = 0;
 $for field in $fields<T>()
-$if field.type.name == "int64"
+$if field.type == int64
 int64 local = $member(value, field);
 total += local;
 $end_if
@@ -514,6 +514,12 @@ $end_macro
 ```
 
 `$if condition` 后可以连续写 `$elif condition` 或等价的 `$else_if condition`，最后可接一个 `$else`，整条链只使用一个 `$end_if`。按顺序选择首个成立分支；未选分支的条件和正文不求值、不进行普通语义检查。表达式／语句／声明和成员宏中的条件均适用，嵌套链各自配对。`$else` 后不能再有条件分支；孤立分支、缺少条件或结束命令明确报错。条件只接受编译期 bool 常量。可使用字段属性、变参数量和常量实参；字符串属性支持 `==` 与 `!=`，按语言转义规则解码后比较。未选分支不参与普通名称、类型和借用检查，实际生成的分支照常检查。这里不会执行任意用户函数或宿主副作用。每轮字段局部声明具有独立身份；字段集合为空时不生成循环正文。描述符仍不能逃逸为运行期值。
+
+字段类型条件支持直接写 `field.type == String` 或 `field.type == std::lang::String`。短名遵循宏定义位置的类型作用域。具体实参参与精确比较，`field.type != Map<String, int64>` 可区分不同实例。使用 `Map<?, ?>`、`Set<?>` 或 `Map<String, Set<?>>` 时，每个 `?` 匹配一个类型实参。宏条件里的 `Map` 与 `Map<?, ?>` 等效，`std::lang::Map` 也可用于同一匹配。
+
+`field.genericName` 返回限定泛型族名，例如 `std::lang::Map`，非泛型类型返回空字符串。`field.typeArguments` 是按声明顺序排列的具体类型描述符集合，可查 `.count`、用常量下标读取，或写 `$for arg in field.typeArguments` 遍历。匹配 `Map<String, ?>` 后，可把 `field.typeArguments[1]` 传给宏的 `type` 形参。描述符还可继续查询自己的 `.typeArguments`；编译期整数形参不进入这个类型集合。
+
+对于具体记录字段，`field.chlids` 与 `field.type.fields` 都返回该记录按声明顺序排列的实例字段。用 `$member($member(value, field), child)` 生成普通子字段访问。空记录返回空集合，标量等不支持的字段类型会得到编译期诊断。
 
 专项入口为 [类别变参](../tests/chali_macro_variadics.py)、[模式参数](../tests/chali_macro_patterns.py)与[字段和结构化控制](../tests/chali_macro_controls.py)。
 

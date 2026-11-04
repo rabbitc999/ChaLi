@@ -157,8 +157,6 @@ void PrintUsage(std::FILE *out)
              "  --debug                保留原生符号、源码行和变量信息，使用 O0\n",
              "  --debug-optimized      保留调试信息并使用 O3／LTO，变量可能被优化\n",
              "  --deps                 只列出 import 模块与工程依赖文件（构建脚本用）\n",
-             "  --library-lock 文件    按精确版本及摘要检查预编译库\n",
-             "  --library-implementation native|bitcode  显式选择库实现；缺省 native\n",
              "  --lto-mode off|full|thin  最终链接的 LLVM 优化模式；缺省 full\n",
              "  --diagnostics=json     检查并输出稳定 JSON 诊断\n"
              "  --warn=规则 --allow=规则 --deny=规则  配置警告（all／naming／稳定代码）\n"
@@ -345,7 +343,7 @@ try
     Memory::String prefix = ".chali/chali_out";
     bool outGiven = false;      /* 用户是否显式给了 --out。 */
     bool ltoGiven = false;      /* 显式 LTO 开关优先于项目配置。 */
-    bool libraryImplementationGiven = false; /* 显式库实现选择优先于项目配置。 */
+
     bool keepArtifacts = false; /* --keep-artifacts：保留中间产物，不在完成后清理。 */
     const char *quietSetting = std::getenv("CHALI_QUIET");
     bool quiet = quietSetting && std::strcmp(quietSetting, "1") == 0;
@@ -362,7 +360,6 @@ try
 
     bool aot = false;
     chali_aot::Options aotOptions;
-    Memory::String libraryLock, libraryModule, libraryVersion;
     bool raw = false;            /* --raw：不跑前处理 */
     bool depsOnly = false;       /* --deps：只列出依赖文件 */
     bool threadsEnabled = true;  /* --no-threads：关闭隔离的宿主线程 */
@@ -431,61 +428,6 @@ try
         if (argument == "--quiet")
         {
             quiet = true;
-            continue;
-        }
-        if (argument == "--library-license" || argument == "--library-license-asset" || argument == "--library-system-library" || argument == "--library-runtime-library")
-        {
-            if (++index >= argc || !argv[index][0])
-            {
-                std::fputs("chali lib: 库交付元数据选项缺少非空值\n", stderr);
-                return 2;
-            }
-            if (argument == "--library-license") aotOptions.libraryLicense = argv[index];
-            if (argument == "--library-license-asset") aotOptions.libraryLicenseAssets.push_back(argv[index]);
-            if (argument == "--library-system-library") aotOptions.librarySystemLibraries.push_back(argv[index]);
-            if (argument == "--library-runtime-library") aotOptions.libraryRuntimeLibraries.push_back(argv[index]);
-            continue;
-        }
-        if (argument == "--library-module" || argument == "--library-version")
-        {
-            if (++index >= argc)
-            {
-                std::fputs("chali lib: 模块或包版本缺少值\n", stderr);
-                return 2;
-            }
-            if (argument == "--library-module")
-            {
-                libraryModule = argv[index];
-                aotOptions.shared = true;
-            }
-            else
-                libraryVersion = argv[index];
-            continue;
-        }
-        if (argument == "--library-lock")
-        {
-            if (++index >= argc)
-            {
-                std::fputs("chali: --library-lock 缺少路径\n", stderr);
-                return 2;
-            }
-            libraryLock = argv[index];
-            continue;
-        }
-        if (argument == "--library-implementation")
-        {
-            if (++index >= argc || (std::strcmp(argv[index], "native") != 0 && std::strcmp(argv[index], "bitcode") != 0))
-            {
-                std::fputs("chali: --library-implementation 需要 native 或 bitcode\n", stderr);
-                return 2;
-            }
-            aotOptions.libraryImplementation = argv[index];
-            libraryImplementationGiven = true;
-            continue;
-        }
-        if ((aot || run) && argument == "--with-bitcode")
-        {
-            aotOptions.libraryBitcode = true;
             continue;
         }
         if ((aot || run) && (argument == "--lto" || argument == "--no-lto"))
@@ -956,8 +898,7 @@ try
         aotOptions.lto = project.aotLto;
         aotOptions.thinLto = project.aotThinLto;
     }
-    if (!libraryImplementationGiven) aotOptions.libraryImplementation = project.aotLibraryImplementation;
-    if (libraryLock.empty()) libraryLock = project.aotLibraryLock;
+
     includeDirs.insert(includeDirs.end(), project.aotSearchPaths.begin(), project.aotSearchPaths.end());
     importDirs.insert(importDirs.end(), project.aotSearchPaths.begin(), project.aotSearchPaths.end());
     if (aot && !run && !checkOnly && !aotOptions.emitLLVMOnly && !aotOptions.emitObjectOnly && !aotOptions.emitAssemblyOnly)
@@ -1061,42 +1002,6 @@ try
      * `preserveLines` 默认开着 —— 指令行与"条件为假"的行都输出成空行，所以
      * 预处理之后的**行号与源文件一一对应**（通过 lineMap 保留源位置）。
      * 模块通过 import 独立加载，命令行 -I 提供模块搜索目录。 */
-    if (libraryModule.empty() && (!aotOptions.libraryLicense.empty() || !aotOptions.libraryLicenseAssets.empty() || !aotOptions.librarySystemLibraries.empty() || !aotOptions.libraryRuntimeLibraries.empty()))
-    {
-        std::fputs("chali lib: 库交付元数据只适用于 lib build\n", stderr);
-        return 2;
-    }
-    if (!libraryModule.empty() || !libraryVersion.empty())
-    {
-        if (!aot || run || checkOnly || raw || !outGiven || !chali_package::moduleName(libraryModule) || libraryVersion.empty())
-        {
-            std::fputs("chali lib: build 需要模块、精确包版本、--out 路径及实现文件\n", stderr);
-            return 2;
-        }
-        if (path && std::filesystem::weakly_canonical(std::filesystem::u8path(path)) == std::filesystem::weakly_canonical(std::filesystem::u8path(prefix.c_str())))
-        {
-            std::fputs("chali lib: 输出不能覆盖实现源码\n", stderr);
-            return 2;
-        }
-    }
-    chali_report::clearVirtualSources();
-    if (aotOptions.libraryBitcode && libraryModule.empty())
-    {
-        std::fputs("chali: --with-bitcode 只用于 lib build\n", stderr);
-        return 2;
-    }
-    chali_library::ImportSession libraries(aotOptions.target.c_str(), aotOptions.cpu.c_str(), aotOptions.libraryImplementation.c_str(), aotOptions.compiler.c_str());
-    if (!libraryLock.empty())
-    {
-        try
-        {
-            libraries.loadLock(std::filesystem::u8path(libraryLock.c_str()));
-        } catch (const std::exception &failure)
-        {
-            std::fprintf(stderr, "chali: %s\n", failure.what());
-            return 2;
-        }
-    }
     preprocess::Result processed;
     chali_macro::sourceFragments.clear();
     Memory::Vector<preprocess::LineOrigin> originalMacroOrigins;
@@ -1123,15 +1028,9 @@ try
             options.defines.push_back(define);
         }
         Memory::Vector<Memory::String> moduleDirs = importDirs;
-        chali_module::Loader loader(options, moduleDirs, cache.get(), &project, &libraries);
+        chali_module::Loader loader(options, moduleDirs, cache.get(), &project);
         Memory::String moduleError;
         const bool ok = (path != nullptr && !sourceStdin) ? loader.rootFile(path, processed, moduleError) : loader.rootText(text, sourceLabel, path ? Memory::String(std::filesystem::path(path).parent_path().string()) : Memory::String("."), processed, moduleError);
-        if (ok && !libraryModule.empty() && loader.rootModule() != libraryModule)
-        {
-            std::fprintf(stderr, "chali lib: 入口实际模块 %s 与请求模块 %s 不符\n", loader.rootModule().c_str(), libraryModule.c_str());
-            return 1;
-        }
-        if (!libraryLock.empty()) processed.dependencies.push_back(std::filesystem::weakly_canonical(std::filesystem::u8path(libraryLock.c_str())).u8string().c_str());
         auto analysisFiles = processed.dependencies;
         if (path) analysisFiles.push_back(path);
         if (!project.file.empty())
@@ -1252,17 +1151,6 @@ try
             std::fprintf(stderr, CHALI_TEXT("chali: 泛型：%s\n"), macroError.c_str());
             return 1;
         }
-        if (!libraryModule.empty())
-            for (const auto &definition : definitions.records())
-            {
-                const auto marker = processed.text.find(definition.first);
-                if (marker == Memory::String::npos) continue;
-                const auto line = static_cast<std::size_t>(std::count(processed.text.begin(), processed.text.begin() + marker, '\n'));
-                if (line >= processed.lineMap.size()) continue;
-                const auto owner = loader.moduleByFile().find(processed.lineMap[line].file);
-                if (owner != loader.moduleByFile().end() && owner->second == libraryModule)
-                    chali_generic::session.libraryMacros.emplace_back(owner->second, definition.second);
-            }
         chali_lambda::markClosureTypeArguments(processed.text);
         if (!definitions.restore(processed.text, syntaxError))
         {
@@ -1283,38 +1171,6 @@ try
     Memory::Vector<Memory::String> sourceFiles;
     sourceFiles.reserve(processed.lineMap.size());
     for (const auto &origin : processed.lineMap) sourceFiles.push_back(origin.file);
-    Memory::Vector<Memory::String> librarySources;
-    for (const auto &file : libraries.sources()) librarySources.push_back(Memory::String(file.c_str()));
-    M_SetLibrarySources(librarySources);
-    Memory::Vector<Memory::String> borrowSources;
-    for (const auto &file : libraries.borrowSources()) borrowSources.push_back(Memory::String(file.c_str()));
-    M_SetLibraryBorrowSources(borrowSources);
-    Memory::Vector<Memory::String> scalarRefSources;
-    for (const auto &file : libraries.scalarRefSources()) scalarRefSources.push_back(Memory::String(file.c_str()));
-    M_SetLibraryScalarRefSources(scalarRefSources);
-    Memory::Vector<Memory::String> methodSources;
-    for (const auto &file : libraries.methodSources()) methodSources.push_back(Memory::String(file.c_str()));
-    M_SetLibraryMethodSources(methodSources);
-    Memory::Vector<Memory::String> templateSources;
-    for (const auto &file : libraries.templateSources()) templateSources.push_back(Memory::String(file.c_str()));
-    M_SetLibraryTemplateSources(templateSources);
-    Memory::Vector<Memory::String> ownedSources;
-    for (const auto &file : libraries.ownedSources()) ownedSources.push_back(Memory::String(file.c_str()));
-    M_SetLibraryOwnedSources(ownedSources);
-    Memory::Vector<Memory::String> ownedRecordSources;
-    for (const auto &file : libraries.ownedRecordSources()) ownedRecordSources.push_back(Memory::String(file.c_str()));
-    M_SetLibraryOwnedRecordSources(ownedRecordSources);
-    Memory::Vector<Memory::String> lifetimeSources, borrowResultSources;
-    for (const auto &file : libraries.lifetimeSources()) lifetimeSources.push_back(Memory::String(file.c_str()));
-    for (const auto &file : libraries.borrowResultSources()) borrowResultSources.push_back(Memory::String(file.c_str()));
-    M_SetLibraryLifetimeSources(lifetimeSources);
-    M_SetLibraryBorrowResultSources(borrowResultSources);
-    Memory::Vector<Memory::String> dataSources;
-    for (const auto &file : libraries.dataSources()) dataSources.push_back(Memory::String(file.c_str()));
-    M_SetLibraryDataSources(dataSources);
-    Memory::Vector<Memory::String> typeSources;
-    for (const auto &file : libraries.typeSources()) typeSources.push_back(Memory::String(file.c_str()));
-    M_SetLibraryTypeSources(typeSources);
     M_SetSourceFiles(sourceFiles, sourceLabel);
     Memory::Vector<std::size_t> sourceLines;
     for (const auto &origin : processed.lineMap) sourceLines.push_back(origin.line);
@@ -1736,33 +1592,7 @@ try
         for (const auto &external : request.externs)
             if (request.abiGlue.empty() && !external.library.empty() && !chali_aot::isDirectLinkLibrary(external.library) && !chali_aot::usesDynamicAbiLibrary(external) && std::find(aotOptions.linkLibraries.begin(), aotOptions.linkLibraries.end(), external.library) == aotOptions.linkLibraries.end())
                 aotOptions.linkLibraries.push_back(external.library);
-        try
-        {
-            libraries.appendTo(aotOptions);
-        } catch (const std::exception &failure)
-        {
-            std::fprintf(stderr, "chali: %s\n", failure.what());
-            return 1;
-        }
         request.options = aotOptions;
-        if (!libraryModule.empty())
-        {
-            try
-            {
-                const auto output = std::filesystem::weakly_canonical(std::filesystem::u8path(exportPrefix.c_str()));
-                for (const auto &input : libraries.paths())
-                    if (input == output) throw std::runtime_error("库输出不能覆盖导入的库包");
-                if (!libraryLock.empty() && output == std::filesystem::weakly_canonical(std::filesystem::u8path(libraryLock.c_str())))
-                    throw std::runtime_error("库输出不能覆盖内容锁");
-                const auto interface = M_LibraryInterface(libraryModule, request.abiExports);
-                return chali_library::buildNative(request, libraryModule.c_str(), libraryVersion.c_str(),
-                                                  std::string(interface.data(), interface.size()), libraries.records(), output);
-            } catch (const std::exception &failure)
-            {
-                std::fprintf(stderr, "chali lib: %s\n", failure.what());
-                return 1;
-            }
-        }
         const int status = chali_aot::run(request, &diagnostics);
         for (const auto &message : diagnostics) std::fprintf(stderr, "chali: %s\n", message.c_str());
         if (status != 0) return status;

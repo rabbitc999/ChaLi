@@ -17,25 +17,13 @@ namespace chali_aot
 struct ExternFunction
 {
     Memory::String label;                           ///< 四元式里的调用标签。
-    Memory::String nativeAlias;                     ///< 独立语言库保留的显式原生导出名。
+
     Memory::String symbol;                          ///< C 侧真正的符号名（`= "名字"`）。
     Memory::String library;                         ///< 动态库声明路径或静态链接资产路径；空值直接引用链接符号。
     Memory::String resultType = "long long";        ///< C 返回类型名。
     Memory::Vector<Memory::String> parameterTypes;  ///< C 形参类型名，按序。
     Memory::String abiConvention = "C";             ///< 已验证的外部调用约定。
     bool requiresMarshalling = false;               ///< 非标量签名必须通过 C 帧封送，不按槽位冒充原生布局。
-    bool borrowedResult = false;                    ///< 已验证语言入口返回调用方借用的逻辑地址。
-    bool hasLifetimeContract = false;               ///< 公开接口保留显式生命周期契约。
-    bool methodEntry = false;                       ///< 入口来自已验证接收者契约的记录方法。
-    bool genericTypeAnchor = false;                 ///< 私有签名强制恢复原生单元使用的具体泛型类型。
-};
-
-/** @brief 独立原生单元的数据映像、逐符号布局和可重定位基址名称。 */
-struct UnitData
-{
-    Memory::String symbol;  ///< 含模块及数据身份摘要的 LLVM 基址符号。
-    Memory::String bytes;   ///< 原始数据映像，不含宿主指针。
-    Memory::String layout;  ///< 相对于单元基址的逐符号布局。
 };
 
 /**
@@ -61,20 +49,9 @@ struct Options
     bool debugOptimized = false;                      ///< debug 为真时使用 O3／LTO，不承诺变量或步骤完整保留。
     bool threadsEnabled = false;                     ///< 是否启用与 VM 同源的隔离线程服务。
     bool shared = false;                             ///< 产出动态库而不是可执行文件。
-    Memory::String libraryModule;                    ///< 独立原生库单元的完整模块身份；空值沿用完整程序。
-    bool libraryBitcode = false;                     ///< 独立库同时保留与原生对象同源的 bitcode。
-    bool libraryHasTemplates = false;                ///< 生产器已核对模板载荷，允许没有普通函数的原生单元。
-    Memory::String libraryImplementation = "native";  ///< 消费库的明确选择：native 或 bitcode，不作静默回退。
-    Memory::String debugLibraries = "[]";             ///< 已验证库实现的调试目录身份，规范 JSON 数组，不重新读取包。
-    Memory::Vector<UnitData> unitData;               ///< 从已验证库快照恢复的只初始化一次的数据段。
-    Memory::String libraryLicense;                   ///< 生产包声明的许可证名称。
-    Memory::Vector<Memory::String> libraryLicenseAssets;     ///< NAME=FILE 形式的许可证及署名输入。
-    Memory::Vector<Memory::String> librarySystemLibraries;   ///< 最终消费者链接所需的系统库名。
-    Memory::Vector<Memory::String> libraryRuntimeLibraries;  ///< 应用需交付或由目标系统提供的动态库名。
     bool emitLLVMOnly = false;                       ///< `--emit-llvm`：只写 LLVM 模块，不调用目标代码工具。
     bool emitAssemblyOnly = false;                   ///< 只生成目标机器汇编 .s，不生成对象或执行链接。
     bool emitObjectOnly = false;                     ///< 只生成目标机器的对象文件，不执行链接。
-    bool emitBitcodeOnly = false;                    ///< 只生成目标的 LLVM bitcode，不执行链接。
     Memory::String target;                           ///< 目标三元组，空值使用实际宿主。
     Memory::String cpu;                              ///< 目标 CPU，空值使用目标的通用 CPU。
     Memory::String sysroot;                          ///< 完整交叉链接使用的目标 sysroot。
@@ -87,7 +64,6 @@ struct Options
     Memory::Vector<Memory::String> assemblySources;  ///< 显式加入最终链接的 .s 输入。
     Memory::Vector<Memory::String> assemblyIncludes;  ///< 汇编 .include 的搜索目录。
     Memory::Vector<Memory::String> linkObjects;      ///< 用户提供及本次编译生成的目标文件。
-    Memory::Vector<Memory::String> linkBitcode;      ///< 由库快照核对目标、布局及 LLVM 版本后恢复的 bitcode。
     bool lto = true;                                ///< 最终链接保留 LLVM bitcode，默认启用全量 LTO。
     bool thinLto = false;                           ///< 启用 LTO 时改用带模块摘要的 ThinLTO，默认完整 LTO。
     std::size_t memoryBytes = 512u * 1024u * 1024u;  ///< 数据区之外的堆预算。
@@ -177,15 +153,6 @@ void setAbiGlueProvider(Memory::String (*provider)());
  */
 [[nodiscard]] Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::String> *diagnostics,
                                           Memory::String *header = nullptr);
-/** @brief 生成 LLVM 模块并导出独立单元的数据重定位资产。
- * @param request 已检查的输入。
- * @param diagnostics 接收失败诊断。
- * @param header 可选公开 C 头文件输出。
- * @param unit 可选单元数据输出，每次调用首先清空。
- * @return LLVM 模块文本；失败为空。 */
-[[nodiscard]] Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::String> *diagnostics,
-                                          Memory::String *header, UnitData *unit);
-
 /**
  * @brief 生成 LLVM 模块、写盘、并调 LLVM clang 驱动产出可执行文件 / 动态库。
  * @param request 输入。
@@ -193,38 +160,10 @@ void setAbiGlueProvider(Memory::String (*provider)());
  * @return 0 成功，非 0 失败。
  */
 [[nodiscard]] int run(const Request &request, Memory::Vector<Memory::String> *diagnostics);
-/** @brief 编译原生程序并导出独立单元的数据映像。
- * @param request 输入及输出选项。
- * @param diagnostics 接收失败诊断。
- * @param unit 可选独立数据输出。
- * @return 成功为零，失败非零。 */
-[[nodiscard]] int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, UnitData *unit);
 /**
  * @brief 查找实际外置 LLVM 驱动，不启动子进程。
  * @param wanted 显式路径；空值使用环境、发行目录或 PATH。
  * @return 驱动路径或 clang 程序名。
  */
 Memory::String llvmCompilerPath(const Memory::String &wanted);
-/** @brief 核对实际使用的 LLVM 版本，静态后端直接返回编入版本。
- * @param options 静态／显式外置 LLVM 工具选择。
- * @param diagnostics 可选工具失败说明。
- * @return 精确 LLVM 版本；无法核对时为空串。 */
-Memory::String llvmVersion(const Options &options, Memory::Vector<Memory::String> *diagnostics = nullptr);
-/** @brief 将已验证的 bitcode 单独优化为原生对象，用于关闭跨单元 LTO 的路径。
- * @param bytes 已核对目标、布局及版本的 bitcode 字节。
- * @param options 目标、CPU 与 LLVM 工具选项。
- * @param output 私有工作区中的对象路径。
- * @param diagnostics 接收代码生成或工具失败。
- * @return 成功为零，失败非零。 */
-int bitcodeObject(const Memory::String &bytes, const Options &options, const Memory::String &output,
-                  Memory::Vector<Memory::String> *diagnostics);
-/** @brief 按所选完整／ThinLTO 模式重新编码已验证模块，核对后才用于最终链接。
- * @param bytes 已验证目标、布局及版本的原始 bitcode。
- * @param options 目标、优化及 LTO 模式。
- * @param output 私有工作区中的 bitcode 路径。
- * @param diagnostics 接收 LLVM 读取或生成错误。
- * @return 成功零，失败非零。 */
-int bitcodeModule(const Memory::String &bytes, const Options &options, const Memory::String &output,
-                  Memory::Vector<Memory::String> *diagnostics);
-
 }  // namespace chali_aot

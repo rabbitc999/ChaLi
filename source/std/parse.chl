@@ -18,7 +18,7 @@ int64 __parseFloat64Error(std::lang::String text);
 float64 __parseFloat64Value(std::lang::String text);
 
 /** 完整解析十进制幅值；溢出的数字前缀优先报告 Overflow。 */
-Result<uint64, std::lang::Error> __parseMagnitude(std::lang::String text, int64 start, uint64 limit) {
+inline Result<uint64, std::lang::Error> __parseMagnitude(std::lang::String text, int64 start, uint64 limit) {
     int64 length = text.length();
     if (start == length) { return Result<uint64, std::lang::Error>::Err(ParseError::Invalid); }
     uint64 value = 0;

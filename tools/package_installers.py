@@ -63,7 +63,7 @@ def msi(binary, version, arch, variant, output, work):
     namespace = 'http://wixtoolset.org/schemas/v4/wxs'
     ET.register_namespace('', namespace)
     root = ET.Element('Wix', xmlns=namespace)
-    family = str(uuid.uuid5(uuid.NAMESPACE_URL, 'https://gitee.com/rabbitc999/chali/installer/' + arch)).upper()
+    family = str(uuid.uuid5(uuid.NAMESPACE_URL, 'https://github.com/rabbitc999/chali/installer/' + arch)).upper()
     package = ET.SubElement(root, 'Package', Name='ChaLi', Manufacturer='小兔糖糖_OvO', Version=version,
                             UpgradeCode=family, Scope='perMachine', Language='2052', Codepage='936')
     ET.SubElement(package, 'MajorUpgrade', AllowSameVersionUpgrades='yes', DowngradeErrorMessage='A newer ChaLi version is already installed.')

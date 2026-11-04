@@ -223,3 +223,92 @@ struct MBorrowReturnSummary
         return true;
     }
 };
+/**
+ * @brief 将已解析的方法返回来源映射为当前调用中的实际表达式。
+ * @param callId 当前已解析调用节点。
+ * @return 接收者或引用实参及存储借用标记，无法验证时返回空可选值。
+ */
+std::optional<Memory::Vector<std::pair<int, bool>>> MethodBorrowSourceExpressions(int callId)
+{
+    if (!g_borrowFlowCapture || callId < 0 || !NormalizeAstTypeQualifier(callId)) return std::nullopt;
+    const auto node = N(callId);
+    const bool directStatic = node.kind == MNode::EnumCtor && node.type2 == 1;
+    if (!directStatic && (node.kind != MNode::Call || node.kids.size() < 2)) return std::nullopt;
+    static Memory::Set<int> active;
+    if (!active.insert(callId).second) return std::nullopt;
+    struct Guard
+    {
+        Memory::Set<int> &active;
+        int id;
+        /** @brief 退出调用解析的递归保护。
+         * @return 无。 */
+        ~Guard() { active.erase(id); }
+    } guard{ active, callId };
+    const auto arguments = directStatic ? node.kids : N(node.kids[1]).kids;
+    const auto callee = directStatic ? MNode{} : N(node.kids[0]);
+    Memory::String label;
+    if (directStatic)
+    {
+        Memory::String ownerKey;
+        const auto owner = FindStruct(node.s, &ownerKey);
+        if (!owner) return std::nullopt;
+        Memory::Vector<Memory::String> candidates;
+        for (const auto &method : owner->methods)
+            if (!method.superseded && method.isStatic && method.source == node.s2) candidates.push_back(ownerKey + "." + method.name);
+        if (candidates.empty()) return std::nullopt;
+        Memory::Vector<std::shared_ptr<MType>> types;
+        for (const int argument : arguments) types.push_back(RawExprType(argument));
+        Memory::String reason;
+        if (!PickOverload(candidates, types, &label, &reason)) return std::nullopt;
+    }
+    else if (const auto call = g_borrowFlowCapture->calls.find(callId); call != g_borrowFlowCapture->calls.end()) label = call->second;
+    else
+    {
+        if ((callee.kind != MNode::Member && callee.kind != MNode::Arrow) || callee.kids.empty()) return std::nullopt;
+        auto receiver = RawExprType(callee.kids[0]);
+        if (receiver && receiver->kind == MType::Ptr) receiver = receiver->elem;
+        if (!receiver || receiver->kind != MType::Struct) return std::nullopt;
+        const auto owner = g_structs.find(receiver->name);
+        if (owner == g_structs.end()) return std::nullopt;
+        bool candidate = false;
+        for (const auto &method : owner->second.methods)
+            candidate |= !method.superseded && method.source == callee.s && method.result && method.result->kind == MType::Ptr;
+        if (!candidate) return std::nullopt;
+        Memory::Vector<Memory::String> parameters;
+        std::shared_ptr<MType> result;
+        if (!ResolveCall(callId, &label, &parameters, &result)) return std::nullopt;
+    }
+    const auto dot = label.rfind('.');
+    if (dot == Memory::String::npos) return std::nullopt;
+    const auto owner = label.substr(0, dot);
+    const auto definition = g_structs.find(owner);
+    if (definition == g_structs.end()) return std::nullopt;
+    for (const auto &method : definition->second.methods)
+    {
+        if (method.superseded || method.name != label.substr(dot + 1) || !method.result || method.result->kind != MType::Ptr) continue;
+        MBorrowReturnSummary summary(owner, method);
+        summary.statement(method.bodyId);
+        if (summary.returned.empty()) return std::nullopt;
+        Memory::Vector<std::pair<int, bool>> result;
+        for (const auto &origin : summary.returned)
+        {
+            if (origin.root == "$fresh") continue;
+            if (origin.root == "$self")
+            {
+                if (directStatic || (callee.kind != MNode::Member && callee.kind != MNode::Arrow) || callee.kids.empty()) return std::nullopt;
+                // 透过对象保存的引用继续借用指向目标。
+                const bool storedReference = std::find(origin.path.begin(), origin.path.end(), "*") != origin.path.end();
+                result.push_back({ callee.kids[0], !storedReference });
+            }
+            else if (origin.root.compare(0, 5, "$arg:") == 0)
+            {
+                const auto index = static_cast<std::size_t>(std::strtoull(origin.root.c_str() + 5, nullptr, 10));
+                if (index >= arguments.size()) return std::nullopt;
+                result.push_back({ arguments[index], false });
+            }
+            else return std::nullopt;
+        }
+        return result;
+    }
+    return std::nullopt;
+}

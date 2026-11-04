@@ -144,6 +144,74 @@ bool IsMacroMetadataSource(int id)
 #include "macro_type_metadata.cpp"
 
 /**
+ * @brief 返回模板声明的限定源码名称。
+ * @param definition 泛型声明。
+ * @return 泛型族名称。
+ */
+Memory::String MacroGenericFamily(const chali_generic::Generic &definition)
+{
+    const auto name = definition.sourceName.empty() ? BareTypeName(definition.name) : definition.sourceName;
+    return definition.module.empty() ? name : definition.module + "::" + name;
+}
+
+/**
+ * @brief 将内建容器的运行时类型键转换为公开泛型族。
+ * @param type 容器类型。
+ * @return 限定源码名称。
+ */
+Memory::String MacroContainerFamily(const MType &type)
+{
+    if (type.name == "vec") return "std::lang::List";
+    if (type.name == "set") return "std::lang::Set";
+    return "std::lang::Map";
+}
+
+/**
+ * @brief 读取具体类型的泛型族与有序类型实参。
+ * @param type 具体类型。
+ * @param family 接收限定泛型族名，非泛型类型为空。
+ * @param arguments 可选地接收类型实参，编译期整数位置为空。
+ * @return 元数据可读取时为真。
+ */
+bool ReadMacroGenericType(const std::shared_ptr<MType> &type, Memory::String &family,
+                          Memory::Vector<std::shared_ptr<const MType>> *arguments = nullptr)
+{
+    if (IsContainer(type))
+    {
+        family = MacroContainerFamily(*type);
+        if (arguments)
+        {
+            arguments->push_back(type->elem);
+            if (type->elem2) arguments->push_back(type->elem2);
+        }
+        return true;
+    }
+    const auto &instances = chali_generic::session.made;
+    const auto instance = instances.find(BareTypeName(type->name));
+    if (instance == instances.end()) return true;
+    const auto &record = instance->second;
+    const auto &definition = *record.generic;
+    family = MacroGenericFamily(definition);
+    if (!arguments) return true;
+    for (std::size_t index = 0; index < record.args.size(); ++index)
+    {
+        if (definition.params[index].constant)
+        {
+            arguments->push_back(nullptr);
+            continue;
+        }
+        const auto &argument = record.args[index];
+        const chali_macro::SourceFragment text{ std::string(argument.data(), argument.size()), 1, 1 };
+        const int parsed = ParseMacroFragment(text, 2, definition.module);
+        if (parsed < 0) return Fail("不能读取具体泛型类型实参：" + argument);
+        auto concrete = T(N(parsed).type);
+        if (!ResolveImportedTypeNames(false, concrete) || !ResolveAstGenericType(concrete)) return false;
+        arguments->push_back(std::move(concrete));
+    }
+    return true;
+}
+
+/**
  * @brief 读取描述符所代表声明的来源，具体类型优先定位其类型声明。
  * @param value 不可变描述符。
  * @return 字段、载荷、方法、参数或类型的独立声明位置。
@@ -188,7 +256,12 @@ bool MacroMetadataSequence(const chali_macro::MetadataValue &value, std::size_t 
 {
     using Meta = chali_macro::MetadataValue;
     if (!value.owner) return false;
-    if (value.kind == Meta::AssociatedTypes)
+    if (value.kind == Meta::TypeArguments)
+    {
+        count = value.owner->typeArguments.size();
+        element = Meta::Type;
+    }
+    else if (value.kind == Meta::AssociatedTypes)
     {
         count = value.owner->fields.size();
         element = Meta::AssociatedType;
@@ -364,7 +437,13 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
         if (!EvaluateConstant(original.kids[1], &index)) return false;
         if (index.kind != MConstant::Integer || index.integer < 0) return Fail("编译期元数据索引必须为非负整数常量");
         const auto selected = static_cast<std::uint64_t>(index.integer);
-        if (value.kind == Meta::AssociatedTypes)
+        if (value.kind == Meta::TypeArguments)
+        {
+            if (selected >= value.owner->typeArguments.size()) return Fail("编译期类型实参索引越界");
+            value.kind = Meta::Type;
+            value.type = value.owner->typeArguments[selected];
+        }
+        else if (value.kind == Meta::AssociatedTypes)
         {
             if (selected >= fields.size()) return Fail("编译期关联类型索引越界");
             value.kind = Meta::AssociatedType;
@@ -424,6 +503,34 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
         return true;
     }
     const auto &property = original.s;
+    if ((value.kind == Meta::Field || value.kind == Meta::Type) && (property == "genericName" || property == "typeArguments"))
+    {
+        const auto type = Memory::makeShared<MType>(*(value.kind == Meta::Field ? fields[value.field].type : value.type));
+        Memory::String family;
+        if (property == "genericName")
+        {
+            if (!ReadMacroGenericType(type, family)) return false;
+            SetMacroMetadataString(id, family);
+        }
+        else
+        {
+            auto owner = Memory::makeShared<chali_macro::MetadataType>();
+            owner->origin = value.origin;
+            if (!ReadMacroGenericType(type, family, &owner->typeArguments)) return false;
+            auto &arguments = owner->typeArguments;
+            arguments.erase(std::remove(arguments.begin(), arguments.end(), nullptr), arguments.end());
+            value.owner = std::move(owner);
+            value.kind = Meta::TypeArguments;
+            SetMacroMetadata(id, std::move(value));
+        }
+        return true;
+    }
+    if (value.kind == Meta::TypeArguments)
+    {
+        if (property != "count") return Fail("类型实参集合没有此编译期属性：" + property);
+        SetMacroMetadataInteger(id, value.owner->typeArguments.size());
+        return true;
+    }
     if (value.kind == Meta::Variants || value.kind == Meta::Payloads || value.kind == Meta::Methods
         || value.kind == Meta::Parameters || value.kind == Meta::Interfaces || value.kind == Meta::AssociatedTypes)
     {
@@ -642,6 +749,13 @@ bool NormalizeMacroMetadata(int id, std::size_t depth)
         {
             value.kind = Meta::Type;
             value.type = field.type;
+            SetMacroMetadata(id, std::move(value));
+        }
+        else if (property == "chlids")
+        {
+            value.owner = ReadMacroFields(field.type);
+            if (!value.owner) return false;
+            value.kind = Meta::Fields;
             SetMacroMetadata(id, std::move(value));
         }
         else if (property == "attributes")

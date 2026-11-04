@@ -109,7 +109,7 @@ Box<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 170 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 171 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -512,14 +512,7 @@ member_decl = "let", name_token, "=", expr, ";"
     | "static", ptr_type, name_token, "(", param_list, ")", block
     | "static", array_type, name_token, "(", param_list, ")", block
     | name_token, "(", param_list, ")", block
-    | "#abi", "(", STRING, ",", STRING, ",", STRING, ",", STRING, ")", abi_method
     | macro_call, ";" ;
-
-abi_method = type, name_token, "(", param_list, ")", ";"
-    | ptr_type, name_token, "(", param_list, ")", ";"
-    | "static", type, name_token, "(", param_list, ")", ";"
-    | "static", ptr_type, name_token, "(", param_list, ")", ";"
-    | name_token, "(", param_list, ")", ";" ;
 
 OPNAME = "+"
     | "-"
@@ -774,6 +767,10 @@ band_expr = band_expr, "&", eq_expr
 
 eq_expr = eq_expr, "==", rel_expr
     | eq_expr, "!=", rel_expr
+    | eq_expr, "==", builtin_type
+    | eq_expr, "!=", builtin_type
+    | eq_expr, "==", container_type
+    | eq_expr, "!=", container_type
     | rel_expr ;
 
 rel_expr = rel_expr, "<", shift_expr
@@ -817,8 +814,11 @@ cast_expr = "(", builtin_type, ")", unary
     | "cast", "<", type, ">", "(", expr, ")"
     | postfix ;
 
-closure_type_arguments = element_type
-    | closure_type_arguments, ",", element_type ;
+closure_type_arguments = closure_type_argument
+    | closure_type_arguments, ",", closure_type_argument ;
+
+closure_type_argument = element_type
+    | "?" ;
 
 postfix = postfix, "@!<", closure_type_arguments, "@!>"
     | postfix, "++"
@@ -1052,10 +1052,13 @@ macro_control = "$match", name_token, "is", macro_category, "@!macrobody", macro
     | "$if", expr, "@!macrobody", macro_template, macro_if_else, "$end_if" ;
 
 macro_metadata_source = macro_call
-    | name_token, ".", name_token
-    | macro_metadata_source, ".", name_token
+    | name_token, ".", macro_metadata_member
+    | macro_metadata_source, ".", macro_metadata_member
     | macro_metadata_source, "[", expr, "]"
     | "(", macro_metadata_source, ")" ;
+
+macro_metadata_member = name_token
+    | "type" ;
 
 macro_zip_names = name_token
     | macro_zip_names, ",", name_token ;

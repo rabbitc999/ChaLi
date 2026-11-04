@@ -15,7 +15,7 @@ python tests/chali_book_rewrite.py
 python tests/chali_book_updates.py
 ```
 
-然后进入 `doc/book/latex`，使用已安装的 TeX Live 与中文字体先生成封面，再构建正文两次，使目录和页码稳定：
+进入 `doc/book/latex` 后，使用包含 `fvextra` 的 TeX Live 和中文字体生成封面，再构建正文两次，使目录和页码稳定。
 
 ```sh
 mkdir -p ../../../tmp/book-cover ../../../tmp/book-latex
@@ -40,7 +40,7 @@ cp ../../../tmp/book-latex/book.pdf book.pdf
 
 ChaLi 代码使用四空格缩进，赋值及二元运算符两侧、逗号后保留空格；函数体和控制分支展开为多行，避免将声明、赋值与退出语句压在同一行。插值字符串的文字部分及宏的原始文本须保持原意。PDF 代码样式使用 `columns=fullflexible` 和 `keepspaces=true` 保留可见的缩进与词间空格，调整后须检查实际页面，并执行书稿程序回归。
 
-所有 `lstlisting` 允许自动换行和跨页，不用 `minipage`／`samepage` 整块保留短示例。列表项后的代码独立排版，不嵌套在 `enumerate` 或 `itemize` 中；拆开后的有序列表保留原编号。书稿回归同时检查这些结构约束。
+高亮源码和命令使用可换行、可跨页的 `lstlisting`。纯文本输出和配置使用 `BookOutput`，紧凑 JSON 或长路径也可以在版心内软换行。列表项后的代码独立排版，拆开后的有序列表保留原编号。书稿回归同时检查这些结构约束。
 
 标题的井号后需要空格，正文中的 `#borrow` 等指令名不作为标题。图片同时限制宽度与页高并保留比例，图注与图片保持同页；修改后需要实际渲染 PDF 核对，不能只检查 LaTeX 是否返回成功。
 

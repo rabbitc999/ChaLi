@@ -112,18 +112,6 @@ json::Value templateParameter(const chali_generic::Parameter &parameter)
     return json::Value(std::move(object));
 }
 /**
- * @brief 恢复本会话的宏调用实参，以可重新解析的源码保存模板上下文。
- * @param text 尚含稳定宏片段引用的声明。
- * @param label 出错声明的模块内身份。
- * @return 不含会话编号的文本；引用损坏时抛出错误。
- */
-std::string templateRestore(Memory::String text, const Memory::String &label)
-{
-    std::string error;
-    if (!chali_macro::sourceFragments.restore(text, error)) throw std::runtime_error(std::string(label.c_str()) + "：" + error);
-    return std::string(text.data(), text.size());
-}
-/**
  * @brief 校验前缀只能是派生请求或无参数运算符开关，禁止普通代码注入。
  * @param text 前缀文本。
  * @param derive 是否只允许派生请求。
@@ -279,44 +267,4 @@ std::string templateSource(const Manifest &manifest, std::string_view bytes)
     return source;
 }
 
-/**
- * @brief 按原模块名称导出当前语义会话的未实例化泛型定义。
- * @param module 当前生产模块。
- * @return 规范模板载荷；没有模板时为空，不保存原始实现文件路径。
- */
-std::string exportTemplates(const std::string &module)
-{
-    std::vector<const chali_generic::Generic *> records;
-    for (const auto &entry : chali_generic::session.generics)
-        if (entry.second.module == module.c_str() && !entry.second.intrinsic) records.push_back(&entry.second);
-    json::Array macros;
-    for (const auto &entry : chali_generic::session.libraryMacros)
-        if (entry.first == module.c_str()) macros.push_back(templateRestore(entry.second, entry.first + " 宏定义"));
-    if (records.empty() && macros.empty()) return {};
-    std::sort(records.begin(), records.end(), [](const auto *left, const auto *right) { return left->sourceName < right->sourceName; });
-    json::Array definitions;
-    for (const auto *record : records)
-    {
-        json::Object item;
-        item.insert("name", record->sourceName.c_str());
-        json::Array parameters;
-        for (const auto &parameter : record->params) parameters.push_back(templateParameter(parameter));
-        item.insert("parameters", json::Value(std::move(parameters)));
-        item.insert("declaration", templateRestore(record->declaration, record->sourceName));
-        item.insert("derivation", templateRestore(record->derivation, record->sourceName));
-        item.insert("operatorSwitches", templateRestore(record->operatorSwitches, record->sourceName));
-        definitions.push_back(json::Value(std::move(item)));
-    }
-    json::Object root;
-    root.insert("format", 1);
-    root.insert("module", module);
-    json::Array imports;
-    for (const auto &entry : chali_generic::session.libraryImports) imports.push_back(entry.c_str());
-    root.insert("imports", json::Value(std::move(imports)));
-    root.insert("macros", json::Value(std::move(macros)));
-    root.insert("definitions", json::Value(std::move(definitions)));
-    const auto bytes = json::Value(std::move(root)).dump() + "\n";
-    // 依赖清单由发布入口提供；这里仅核对载荷编码，导入身份在发布前统一检查。
-    return bytes;
-}
 }  // namespace chali_library

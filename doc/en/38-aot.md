@@ -118,15 +118,11 @@ chali aot --target linux-x64 --emit-obj --out build/x64/app
 
 ## Target machine assembly
 
-The project `[aot]` table accepts arrays named `assembly_sources`, `assembly_includes`, `objects`, `libraries`, and `search_paths`, plus the `library_lock` string for a precompiled-library lock file. Paths are relative to the directory containing `chali.toml`. Bare library names containing neither a dot nor a path separator are resolved by the linker.
+The project `[aot]` table accepts arrays named `assembly_sources`, `assembly_includes`, `objects`, `libraries`, and `search_paths`. Paths are relative to the directory containing `chali.toml`. Bare library names containing neither a dot nor a path separator are resolved by the linker.
 
-Explicit `--asm`, `--asm-include`, and `--link` options replace their corresponding manifest lists. `--library-lock` replaces the manifest lock file. Manifest search paths follow command-line search paths. Object and assembly inputs participate in final linking.
+Explicit `--asm`, `--asm-include`, and `--link` options replace their corresponding manifest lists. Manifest search paths follow command-line search paths. Object and assembly inputs participate in final linking.
 
 `lto` defaults to `true` (full LTO) and also accepts `false`, `"off"`, `"full"`, and `"thin"`. `--lto-mode off|full|thin` overrides the project setting. `--lto` retains full-LTO behavior and `--no-lto` disables LTO; the last CLI mode flag wins. Disabling it emits a machine object before linking while module optimization retains the selected level. With static and external LLVM, `--debug` uses O0 in the selected LTO mode. `--debug-optimized` explicitly retains DWARF with O3; see [native debugging](43-native-debugging.md).
-
-`library_implementation = "native"` is the default library selection; `"bitcode"` selects LLVM bitcode. `--library-implementation native|bitcode` overrides the manifest for all direct and transitive libraries. Selected bitcode must match the actual target, layout and exact LLVM version. See [library packages](44-library-packages.md#native-and-bitcode-implementation-selection) for mode conversion, missing-implementation errors and limits.
-
-The manifest's `library_lock` also applies to source checking and language-server analysis. The lock and imported `.chlib` files enter the dependency set. The editor watches these files and requests fresh consumer diagnostics when they change. Invalid locks or packages produce errors; restoring valid contents triggers another check.
 
 Standalone `chali link --shared --out FILE` links under the final basename inside a private temporary directory before publishing. Windows DLL export tables and host import tables therefore record the delivered name, allowing C hosts to link and load the actual file. Failures still preserve the previous product.
 
@@ -150,7 +146,7 @@ The static variant uses LLVM MC in process without clang; explicit `--llvm` sele
 
 AOT accepts repeated `--asm FILE.s` and `--asm-include DIR` options. Every object uses the same target and CPU as the language unit and participates in the final link. Use the established C ABI declaration to reference an assembly symbol; the assembly must follow that target's calling convention. These inputs require executable/shared-library output and cannot be combined with `--emit-asm`, `--emit-obj` or `--emit-llvm`. Assembling a cross-target object does not verify executable deployment on that target.
 
-For a symbol supplied by linked objects, declare `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`. `@link` is a compiler marker, never a filename or dynamic-library lookup. Fixed scalars use direct target C ABI calls. Structures, references, arrays, String, synchronous callbacks and declared release functions use the existing C-frame marshaller with linker-resolved native symbols. Complex signatures still require a target-compatible C++ compiler (`CHALI_ABI_CXX`) for platform layout adaptation; the public boundary uses only C APIs. Ordinary host declarations and existing library paths retain their behavior. Explicit empty library paths are rejected. See [raw storage and C ABI directives](41-unsafe-abi.md) for interoperability and ownership contracts.
+Declare a linked scalar C function as `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`. The object or archive supplied to the linker provides the symbol. Signatures with structures, references, buffers or callbacks use a compatible dynamic library and the [C ABI marshalling rules](41-unsafe-abi.md).
 
 
 ## Standalone linking and static archives

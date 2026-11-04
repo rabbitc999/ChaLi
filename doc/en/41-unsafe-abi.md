@@ -150,29 +150,8 @@ Complex layouts, object lookup, resource protocols, callbacks and stale-access d
 
 ## Directly linked C ABI
 
-```chali
-struct Sample { int32 count; float64 value; };
-#abi("C", "@link", "transform")
-Sample transform(Sample input);
-#abi("C", "@link", "update")
-void update(Sample mut& input);
-#abi("C", "@link", "owned_text")
-String ownedText() ["free_owned"];
-```
+Use `@link` for fixed scalar C signatures supplied by a linked object or archive.
 
-Use `chali aot main.chl --link native.o --out build/app`, or export objects and finish with `chali link`. Declarations describe the actual C signature. `@link` changes symbol resolution without treating language addresses as machine pointers. `transform` builds a platform C structure field by field; `update` borrows and writes back language storage for this call. `ownedText` copies the returned content into a language string and then calls `free_owned`. Returns without a release declaration retain the established borrow/copy contract. Arrays require a corresponding integer length parameter; null returns and invalid lengths retain their checks.
+The compiler preserves scalar widths and uses the target C calling convention. Use a compatible dynamic library for structures, references, buffers and synchronous callbacks. The existing marshalling rules above describe those signatures and ownership.
 
-| Boundary | Current handling |
-| --- | --- |
-| Fixed integers, floating point, bool | Direct LLVM calls preserve width and signedness; bool uses i1. Linux x64 narrow integers use C ABI extension attributes; Windows x64 and AArch64 have distinct rules |
-| Nested and packed value structures | Declared fields form the target C layout; a matching C++ compiler handles registers, stack and return buffers |
-| References, optional references, arrays | Checked C-frame marshalling preserves same-call aliasing and mutable writeback; returned values are copied into managed storage |
-| String and owned return buffers | Language content and native pointers remain separate; declared release functions clean native return blocks on success and callback failure |
-| Language function/closure parameters | Synchronous C trampolines return through `chali_abi_invoke`; language function values are not cast to machine function pointers |
-| Resource structures, interfaces, containers exported directly as C values | Unsupported by pure-value `#export`; use checked C frames and handle services |
-
-Direct scalar calls do not need `CHALI_ABI_CXX`. Complex signatures generate a private adapter object. The compiler path is passed as one program/path without a shell; public calls expose no C++ containers or template APIs. `.s`/`.o` output retains a required `.abi.cpp` sidecar. The final linker caller must first compile it with a target-compatible toolchain; the primary object alone is insufficient.
-
-Language slots, C structures and host frames have distinct layouts. `rawSize<T>()` is not C `sizeof(T)`. Logical addresses, type IDs and function IDs in a C frame cannot be reused as native identities across independent runtimes. Public C modules validate platform, layout, version and capabilities through ABI descriptors; these do not serialize complete language type identity. Cross-target scalar declarations/assembly and execution on the target are separate validations. Complex target layouts still require the relevant SDK and C++ toolchain.
-
-Run `python tests/chali_link_abi.py --chali PATH`. The test reuses value/reference and return-ownership examples with C objects replacing dynamic libraries, covering nested/packed layouts, aliases, integer widths, callback reentry and failure cleanup. Target-specific LLVM declarations and call attributes are checked separately for all three targets.
+Run `python tests/chali_link_abi.py --chali PATH` to check scalar calls, target declarations, rejection of complex direct-link signatures and exports to a C host.

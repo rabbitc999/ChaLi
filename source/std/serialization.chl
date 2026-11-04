@@ -4,7 +4,7 @@ import std::reflect;
 
 String __transcode(String input, bool tomlOutput);
 /** 按固定小端编码魔数、版本、类型身份和精确字节长度。 */
-List<uint8> __pack(String text, uint64 typeId) {
+inline List<uint8> __pack(String text, uint64 typeId) {
     List<uint8> bytes;
     bytes.push((uint8)77); bytes.push((uint8)71); bytes.push((uint8)83); bytes.push((uint8)1);
     int64 shift=0;
@@ -16,7 +16,7 @@ List<uint8> __pack(String text, uint64 typeId) {
     return bytes;
 }
 /** 校验顺序保持魔数／版本、类型、长度、零字节，再创建独立文本。 */
-String __unpack(List<uint8> bytes, uint64 typeId) {
+inline String __unpack(List<uint8> bytes, uint64 typeId) {
     if(bytes.len()<20 || bytes[0]!=77 || bytes[1]!=71 || bytes[2]!=83 || bytes[3]!=1) {
         return "0无效序列化魔数或版本";
     }

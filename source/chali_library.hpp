@@ -9,12 +9,6 @@
 #include <vector>
 #include <memory>
 
-namespace chali_aot
-{
-struct Options;
-struct Request;
-}
-
 namespace chali_library
 {
 inline constexpr std::uint32_t packageFormat = 1;                           ///< 容器头和条目编码版本。
@@ -110,12 +104,6 @@ struct Package
     const Entry *find(std::string_view name) const;
 };
 /**
- * @brief 导出当前编译会话中属于指定模块的未实例化泛型定义。
- * @param module 完整模块名。
- * @return 规范 JSON 模板载荷；没有模板时为空。
- */
-std::string exportTemplates(const std::string &module);
-/**
  * @brief 核对泛型元数据并恢复不含普通实现的模板文本。
  * @param manifest 已验证的库清单。
  * @param bytes 带版本、模块及语义形参的规范模板载荷。
@@ -129,113 +117,6 @@ std::string templateSource(const Manifest &manifest, std::string_view bytes);
  * @return 规范调试描述；没有可选符号时为空。
  */
 std::string debugDescriptor(const Package &package, const Target &target);
-/** @brief 单次编译持有的已验证库及原生实现快照，不执行初始化。 */
-class ImportSession
-{
-public:
-    /** @brief 创建目标明确的会话。
-     * @param target 目标别名或三元组。
-     * @param cpu 目标 CPU。
-     * @param implementation 明确的 native 或 bitcode 选择。
-     * @param compiler 可选外置 LLVM 路径；只在选择 bitcode 时查询版本。 */
-    ImportSession(std::string target, std::string cpu, std::string implementation = "native", std::string compiler = {});
-    /** @brief 释放本次会话拥有的原生暂存文件。 */
-    ~ImportSession();
-    /** @brief 禁止复制快照及工作区所有权。 */
-    ImportSession(const ImportSession &) = delete;
-    /** @brief 禁止赋值快照及工作区所有权。 */
-    ImportSession &operator=(const ImportSession &) = delete;
-    /** @brief 加载并锁定模块。
-     * @param path 包文件。
-     * @param module 预期完整模块名；独立链接传空值时采用清单身份。
-     * @param pin 可选精确依赖约束。
-     * @return 已验证且会话内地址稳定的库。 */
-    const Package &open(const std::filesystem::path &path, const std::string &module, const Dependency *pin = nullptr);
-    /** @brief 从同一已验证快照生成链接输入。
-     * @param options 接收原生对象及系统库。 */
-    void appendTo(chali_aot::Options &options);
-    /** @brief 在加载前启用项目级精确锁。
-     * @param path 规范 JSON 锁文件；失败抛出诊断。 */
-    void loadLock(const std::filesystem::path &path);
-    /** @brief 判断模块是否被项目锁指定为库包。
-     * @param module 完整模块名。
-     * @return 锁中存在时为真，禁止源码回退。 */
-    bool requiresPackage(const std::string &module) const;
-
-    /** @brief 为独立链接递归解析包清单依赖。
-     * @param path 根包文件。
-     * @param searchRoots 额外库根。
-     * @return 已验证的根包。 */
-    const Package &openRecursive(const std::filesystem::path &path, const std::vector<std::filesystem::path> &searchRoots = {});
-
-    /** @brief 取得用于诊断及接口封装检查的来源标签。
-     * @return 已装载接口的稳定标签。 */
-    std::vector<std::string> sources() const;
-    /** @brief 取得启用语言借用调用约定的已验证接口标签。
-     * @return 当前目标使用 chali-borrow-v1 的稳定来源。 */
-    std::vector<std::string> borrowSources() const;
-    /** @brief 取得允许基础标量逻辑引用的已验证接口标签。
-     * @return 携带 scalar-reference-v1 的稳定来源。 */
-    std::vector<std::string> scalarRefSources() const;
-    /**
-     * @brief 取得允许独立记录方法声明的已验证接口标签。
-     * @return 携带 record-methods-v1 能力的稳定来源。
-     */
-    std::vector<std::string> methodSources() const;
-    /** @brief 取得已核对泛型定义载荷的虚拟源码标签。
-     * @return generic-definitions-v1 的定义来源，不授予原生 ABI 声明权限。 */
-    std::vector<std::string> templateSources() const;
-    /**
-     * @brief 取得启用 String 拥有值 ABI 的已验证接口标签。
-     * @return 当前目标使用 chali-owned-v1 的来源。
-     */
-    std::vector<std::string> ownedSources() const;
-    /**
-     * @brief 取得启用拥有字段记录或枚举 ABI 的已验证接口标签。
-     * @return 携带 owned-record-value-v1 的当前目标来源。
-     */
-    std::vector<std::string> ownedRecordSources() const;
-    /** @brief 取得允许公开生命周期契约的已验证接口标签。
-     * @return 携带 lifetime-contract-v1 的稳定来源。 */
-    std::vector<std::string> lifetimeSources() const;
-    /** @brief 取得允许借用返回的已验证接口标签。
-     * @return 携带 borrowed-result-v1 的稳定来源。 */
-    std::vector<std::string> borrowResultSources() const;
-    /** @brief 取得当前目标携带已验证数据映像的接口标签。
-     * @return 可声明普通记录返回的库来源。 */
-    std::vector<std::string> dataSources() const;
-    /** @brief 取得要求最终程序统一类型编号的已验证接口标签。
-     * @return 当前会话的共享类型来源。 */
-    std::vector<std::string> typeSources() const;
-    /** @brief 返回快照来源的真实包路径，供发布保护与依赖追踪。
-     * @return 本次成功加载的规范包路径。 */
-    std::vector<std::filesystem::path> paths() const;
-    /** @brief 导出当前快照的精确依赖记录，不重新打开包。
-     * @return 完整模块、版本及内容摘要。 */
-    std::vector<Dependency> records() const;
-
-private:
-    struct State;
-    std::unique_ptr<State> state_;
-};
-/** @brief 从已检查函数生成不含运行时副本的标量原生库。
- * @param request 完整检查结果和公开原生签名。
- * @param module 完整模块身份。
- * @param version 精确包版本。
- * @param interface 不含实现的公开接口。
- * @param dependencies 已验证的实际依赖。
- * @param output 最终包路径。
- * @return 成功为零，失败为一并输出诊断。 */
-int buildNative(const chali_aot::Request &request, const std::string &module, const std::string &version,
-                const std::string &interface, const std::vector<Dependency> &dependencies, const std::filesystem::path &output);
-/** @brief 按模块排序并生成独立库锁，不保存宿主路径。
- * @param modules 精确版本及整个包摘要。
- * @return 格式一的规范 JSON。 */
-std::string lockJson(std::vector<Dependency> modules);
-/** @brief 有界读取精确库锁，拒绝不兼容、重复键和非规范编码。
- * @param path 项目锁文件。
- * @return 按模块排序的精确约束。 */
-std::vector<Dependency> readLock(const std::filesystem::path &path);
 /**
  * @brief 序列化已验证的清单为格式一的规范 JSON。
  * @param manifest 模块与目标契约。

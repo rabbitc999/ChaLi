@@ -92,6 +92,12 @@ bool LifetimeIsStaticName(const Memory::String &name);
 const Memory::Vector<int> *LifetimeRetParams(const Memory::String &symbol, std::size_t argumentCount);
 Memory::String LifetimeCallSymbol(int callId);
 const Memory::Vector<int> *LifetimeCallRetParams(int callId);
+/**
+ * @brief 查询已解析方法返回值实际依赖的接收者或实参表达式。
+ * @param callId 调用节点。
+ * @return 可验证时返回表达式及是否借用存储；未知调用返回空可选值。
+ */
+std::optional<Memory::Vector<std::pair<int, bool>>> MethodBorrowSourceExpressions(int callId);
 void CheckLifetimeStore(int target, int value, std::size_t line);
 void CheckLifetimeReturn(int value, std::size_t line);
 MVar *BorrowAliasOwner(const MVar *variable)
@@ -260,6 +266,12 @@ std::size_t BorrowSourceDepth(int id, bool address)
         }
         /* 带 `#borrow(#ret, [...])` 的函数只按声明的那几个实参传播来源，
          * 不再保守取全部引用实参的最大值（Rust 的 `-> &'a` 同形）。 */
+        if (const auto sources = MethodBorrowSourceExpressions(id))
+        {
+            depth = 0;
+            for (const auto &source : *sources) depth = std::max(depth, BorrowSourceDepth(source.first, source.second));
+            return depth;
+        }
         if (const Memory::Vector<int> *indices = LifetimeCallRetParams(id))
         {
             for (const int index : *indices)
@@ -288,6 +300,12 @@ std::size_t BorrowSourceDepth(int id, bool address)
     }
     if (node.kind == MNode::EnumCtor)
     {
+        if (const auto sources = MethodBorrowSourceExpressions(id))
+        {
+            std::size_t depth = 0;
+            for (const auto &source : *sources) depth = std::max(depth, BorrowSourceDepth(source.first, source.second));
+            return depth;
+        }
         // 静态方法、命名构造入口和枚举变体共用节点；借用其拥有型结果仍借用局部临时槽。
         // 限定全局与静态字段是既有存储，不能当成新构造的临时对象。
         if (const auto global = FindQualifiedGlobal(node.s, node.s2))

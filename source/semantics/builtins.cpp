@@ -42,6 +42,17 @@ ast::NodePtr OwnedObjectTemp(int exprId, const std::shared_ptr<MType> &type);
 /* 解析一次调用（实现在下面）：标签 / 形参名 / 返回类型。 */
 bool ResolveCall(int id, Memory::String *label, Memory::Vector<Memory::String> *params,
                  std::shared_ptr<MType> *result);
+/**
+ * @brief 按普通调用的类型匹配规则选择重载，供静态借用来源查询共用。
+ * @param candidates 已登记的候选标签。
+ * @param args 实际参数类型。
+ * @param label 接收唯一选择的标签。
+ * @param reason 接收无匹配或歧义原因。
+ * @return 唯一匹配时为真。
+ */
+bool PickOverload(const Memory::Vector<Memory::String> &candidates,
+                  const Memory::Vector<std::shared_ptr<MType>> &args, Memory::String *label,
+                  Memory::String *reason);
 
 /* 接口方法查找（实现在下面）：`ExprType` 要按它给接口引用上的调用定结果类型。 */
 bool FindInterfaceMethod(const Memory::String &iface, const Memory::String &methodName,

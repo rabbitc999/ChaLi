@@ -157,6 +157,28 @@ def main():
         obj=work/'main.o';invoke(['gcc','-c',source,'-o',obj],work)
         executable=work/('main.exe' if os.name=='nt' else 'main')
         invoke([compiler,'link',obj,provider,'--out',executable],work);invoke([executable],work)
+        # 归档格式工具和对象链接继续可用，语言包入口已经退役。
+        modules = work / 'modules' / 'example'
+        modules.mkdir(parents=True)
+        placed = modules / 'math.chlib'
+        placed.write_bytes(original)
+        consumer = work / 'consumer.chl'
+        consumer.write_text('import example::math; void main(){assert(example::math::add(20,22)==42);}', encoding='utf-8')
+        missing = invoke([compiler, 'check', consumer], work, False)
+        assert 'example::math' in missing.stderr, missing.stderr
+        retired_output = work / 'retired'
+        for args in (
+            ['lib', 'build', consumer, '--module', 'example::math', '--package-version', '1.2.3', '--out', retired_output],
+            ['lib', 'lock', placed, '--out', retired_output],
+            ['link', obj, '--package', placed, '--out', retired_output],
+            ['aot', consumer, '--library-implementation', 'bitcode', '--out', retired_output],
+            ['check', consumer, '--library-lock', retired_output],
+        ):
+            rejected = invoke([compiler, *args], work, False)
+            assert rejected.returncode == 2 and not list(work.glob('retired*')), rejected
+        assert placed.read_bytes() == original
+        (modules / 'math.chl').write_text('module example::math; int64 add(int64 a,int64 b){return a+b;}', encoding='utf-8')
+        invoke([compiler, 'run', consumer], work)
     print('library container: deterministic wire format, SHA-256, budgets, native targets, optional entries, rejection and transaction checks passed')
 
 

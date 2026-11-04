@@ -3987,6 +3987,7 @@ ast::NodePtr LowerStaticQualified(int id)
     Memory::String reason;
     if (!PickOverload(candidates, argTypes, &chosen, &reason))
         return Fail("调用 static 函数 " + key + " 找不到匹配的重载：" + DescribeTypes(argTypes) + "；" + reason), Bad();
+    if (g_borrowFlowCapture) g_borrowFlowCapture->calls[id] = chosen;
     const MFuncSig &signature = g_funcs[chosen];
     Memory::Vector<Memory::String> names;
     Memory::Vector<ast::NodePtr> values;
@@ -4182,7 +4183,9 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
         {
             const MNode &value = N(statement.kids[0]);
             if (value.kind == MNode::Call && !value.kids.empty() && StandardCallName(N(value.kids[0])) == "panic") return FlowReturn;
-            if (value.kind == MNode::Loop) return ExpressionReturnFlow(statement.kids[0], transparentLoops, exits, depth);
+            // 与语句降级一致，独立花括号块不接管外层值出口。
+            if (value.kind == MNode::Loop && value.s == "block")
+                return StatementReturnFlowImpl(value.kids[0], transparentLoops, exits, depth);
         }
         return statement.kids.empty() ? FlowNext : ExpressionReturnFlow(statement.kids[0], transparentLoops, exits, depth);
     case MNode::Declare:

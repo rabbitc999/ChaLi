@@ -45,6 +45,11 @@ inline const char *code(const Memory::String &message)
     if (message.find("[CHL1205]") != Memory::String::npos) return "CHL1205";
     if (message.find("[CHL1301]") != Memory::String::npos) return "CHL1301";
     if (message.find("[CHL1204]") != Memory::String::npos) return "CHL1204";
+    if (message.find("[CHL1210]") != Memory::String::npos) return "CHL1210";
+    if (message.find("[CHL1211]") != Memory::String::npos) return "CHL1211";
+    if (message.find("[CHL1212]") != Memory::String::npos) return "CHL1212";
+    if (message.find("[CHL1213]") != Memory::String::npos) return "CHL1213";
+    if (message.find("[CHL1214]") != Memory::String::npos) return "CHL1214";
     if (message.find("[CHL") != Memory::String::npos) return "CHL1300";
     if ((message.find("只读") != Memory::String::npos || message.find("read-only") != Memory::String::npos || message.find("読み取り専用") != Memory::String::npos) || message.find("const") != Memory::String::npos) return "CHL1203";
     if (message.find("格式") != Memory::String::npos || message.find("占位符") != Memory::String::npos) return "CHL1400";

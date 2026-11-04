@@ -9,7 +9,6 @@
 #include "chali_aot_llvm.hpp"
 #include "chali_assembler.hpp"
 #include "chali_native_tools.hpp"
-#include "chali_digest.hpp"
 #include <memory>
 #include "chali_aot_runtime_assets.hpp"
 #include "chali_stdlib.hpp"
@@ -318,7 +317,7 @@ struct Translator
     std::set<std::string> astInlineFunctions; ///< 已证明无递归且符合展开预算的 AST 函数。
     std::map<std::string, Memory::Map<Memory::String, Memory::String>> astSymbols; ///< 函数内名字的独立存储身份。
     std::map<const ast::Node *, std::size_t> astData; ///< AST 常量节点的数据地址。
-    Memory::String unitDataSymbol;                    ///< 当前独立单元数据映像的重定位基址。
+
     Memory::Map<Memory::String, ast::TypePtr> astTypes; ///< AST 类型查询环境。
 
     /**
@@ -2262,7 +2261,6 @@ Text profileSiteDeclarations(const Translator &state)
 }
 
 #include "chali_aot_ast.hpp"
-#include "chali_aot_library.hpp"
 
 /**
  * @brief 前端提供的 ABI 声明读取回调。
@@ -2442,19 +2440,6 @@ Text exportDispatcher(Translator &state)
  */
 Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::String> *diagnostics, Memory::String *header)
 {
-    return generateLLVM(inputRequest, diagnostics, header, nullptr);
-}
-/**
- * @brief 生成原生 LLVM 模块并可选导出单元数据，保留原有三参数入口。
- * @param inputRequest 已检查的输入。
- * @param diagnostics 接收诊断。
- * @param header 接收 C 头文件。
- * @param unit 接收独立数据；无数据时清空。
- * @return LLVM 模块；失败为空。
- */
-Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::String> *diagnostics, Memory::String *header, UnitData *unit)
-{
-    if (unit) *unit = {};
     Request request = inputRequest;
     Translator state(request, diagnostics);
     if (state.target.runtime.empty()) return {};
@@ -2465,58 +2450,10 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
         return {};
     }
     for (const auto &external : request.externs)
-        if (external.abiConvention != "C" && external.abiConvention != "ChaLiBorrow" && external.abiConvention != "ChaLiValue" && external.abiConvention != "ChaLiOwned") state.fail("AOT：外部调用约定不受支持");
+        if (external.abiConvention != "C") state.fail("AOT：外部调用约定不受支持");
     if (request.syntax) prepareAst(request, state);
     else { loadLayout(state); analyze(state); }
     if (diagnostics != nullptr && !diagnostics->empty()) return {};
-    if (!request.options.libraryModule.empty())
-    {
-        if (!state.astData.empty())
-        {
-            Memory::String identity = request.options.libraryModule + "\n" + state.target.triple + "\n" + request.dataLayout + "\n" + request.dataBytes;
-            state.unitDataSymbol = Memory::String(("chali_unit_data_" + chali_digest::hex(chali_digest::sha256(std::string_view(identity.data(), identity.size())))).c_str());
-            if (unit) *unit = { state.unitDataSymbol, request.dataBytes, request.dataLayout };
-        }
-        return generateLibraryLLVM(request, state);
-    }
-    Memory::Map<Memory::String, std::size_t> unitBases;
-    Memory::Map<Memory::String, const UnitData *> unitImages;
-    Memory::Vector<stackvm::LayoutRow> unitRows;
-    for (const auto &data : request.options.unitData)
-    {
-        if (data.symbol.size() != 80 || data.symbol.rfind("chali_unit_data_", 0) != 0 || data.symbol.substr(16).find_first_not_of("0123456789abcdef") != Memory::String::npos)
-            return state.fail("预编译单元数据基址符号无效"), Memory::String();
-        const auto previous = unitImages.find(data.symbol);
-        if (previous != unitImages.end())
-        {
-            if (previous->second->bytes != data.bytes || previous->second->layout != data.layout) return state.fail("同一单元数据符号对应不同映像"), Memory::String();
-            continue;
-        }
-        while (request.dataBytes.size() % 16) request.dataBytes.push_back('\0');
-        const auto base = request.dataBytes.size();
-        if (data.bytes.size() > 256ull * 1024 * 1024 || base > 256ull * 1024 * 1024 - data.bytes.size())
-            return state.fail("预编译单元数据总量超过预算"), Memory::String();
-        Memory::Vector<stackvm::LayoutRow> rows;
-        if (!stackvm::decodeDataLayout(data.layout, rows)) return state.fail("预编译单元数据布局无效"), Memory::String();
-        for (auto &row : rows)
-        {
-            if (!row.hasSize || row.offset > data.bytes.size() || row.size > data.bytes.size() - row.offset)
-                return state.fail("预编译单元数据布局越界"), Memory::String();
-            row.name = data.symbol + "_" + row.name;
-            row.offset += base;
-            unitRows.push_back(std::move(row));
-        }
-        request.dataBytes += data.bytes;
-        unitBases.emplace(data.symbol, base);
-        unitImages.emplace(data.symbol, &data);
-    }
-    if (!unitRows.empty())
-    {
-        Memory::Vector<stackvm::LayoutRow> rows;
-        if (!stackvm::decodeDataLayout(request.dataLayout, rows)) return state.fail("主单元数据布局无效"), Memory::String();
-        rows.insert(rows.end(), unitRows.begin(), unitRows.end());
-        request.dataLayout = stackvm::encodeDataLayout(rows);
-    }
     for (const auto &name : request.options.exports)
         if (state.functionByLabel.count(textOf(name)) == 0u) state.fail("AOT：找不到要导出的函数 " + name);
     if (diagnostics != nullptr && !diagnostics->empty()) return {};
@@ -2578,7 +2515,6 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     out += "@chali_return_float = internal thread_local global i8 0\n";
     out += "@chali_source_function = internal thread_local global ptr null\n@chali_source_file = internal thread_local global ptr null\n@chali_source_line = internal thread_local global i64 0\n";
     out += "define void @chali_location(ptr %file, ptr %line, ptr %function) {\nentry:\n  %f = load ptr, ptr @chali_source_file\n  %l = load i64, ptr @chali_source_line\n  %n = load ptr, ptr @chali_source_function\n  store ptr %n, ptr %function\n  store ptr %f, ptr %file\n  store i64 %l, ptr %line\n  ret void\n}\n";
-    out += "define void @chali_set_location(ptr %file, i64 %line, ptr %function) {\nentry:\n  store ptr %file, ptr @chali_source_file\n  store i64 %line, ptr @chali_source_line\n  store ptr %function, ptr @chali_source_function\n  ret void\n}\n";
     out += "define i8 @chali_result_float() {\nentry:\n  %flag = load i8, ptr @chali_return_float\n  ret i8 %flag\n}\n";
     out += "declare void @chali_host_check_pointer(i64, i64, i64)\ndeclare void @chali_host_process_arguments(i32, ptr)\n";
     if (request.options.debug) out += "declare void @chali_debug_console()\ndeclare void @chali_debug_publish_memory()\ndeclare void @chali_debug_capture_context(ptr)\ndeclare void @chali_debug_storage_lifetime(i64, i64, i64, i64)\n";
@@ -2600,9 +2536,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     }
     out += "]\n";
     emitDataImage(state, out);
-    for (const auto &base : unitBases) out += "@" + textOf(base.first) + " = constant i64 " + std::to_string(base.second) + "\n";
-    if (request.syntax)
-        for (const auto &type : request.syntax->nativeTypeSymbols) out += "@" + llvmSymbol(type.second) + " = constant i64 " + std::to_string(type.first) + "\n";
+
     out += "@chali_data_size = constant i64 " + std::to_string(request.dataBytes.size()) + "\n";
     out += "@chali_heap_size = constant i64 " + std::to_string(request.options.memoryBytes) + "\n";
     out += "@chali_allocator_kind = constant i32 " + Text(request.options.allocator == "pool" ? "0" : "1") + "\n";
@@ -2819,7 +2753,7 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
                 state.debugInfo.registerClosure(entry.first, textOf(syntax.debugName.empty() ? syntax.name : syntax.debugName), captures);
             }
         }
-        state.debugInfo.finish(out, "chali_debug", textOf(request.options.debugLibraries));
+        state.debugInfo.finish(out);
     }
     return Memory::String(out.data(), out.size());
 }
@@ -2928,18 +2862,6 @@ Memory::String llvmCompilerPath(const Memory::String &wanted)
  */
 int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
 {
-    return run(request, diagnostics, nullptr);
-}
-/**
- * @brief 编译原生程序并输出独立单元数据，沿用既有两参数入口。
- * @param request 原生编译输入。
- * @param diagnostics 接收生成和工具链错误。
- * @param unit 可选数据输出。
- * @return 成功为零，失败非零。
- */
-int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, UnitData *unit)
-{
-    if (unit) *unit = {};
     TargetInfo target;
     Memory::String targetError;
     if (!describeTarget(request.options.target, target, &targetError))
@@ -2949,11 +2871,10 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
     }
     const bool objectOnly = request.options.emitObjectOnly;
     const bool assemblyOnly = request.options.emitAssemblyOnly;
-    const bool bitcodeOnly = request.options.emitBitcodeOnly;
-    const bool codeOnly = objectOnly || assemblyOnly || bitcodeOnly;
-    if (int(objectOnly) + int(assemblyOnly) + int(bitcodeOnly) + int(request.options.emitLLVMOnly) > 1)
+    const bool codeOnly = objectOnly || assemblyOnly;
+    if (int(objectOnly) + int(assemblyOnly) + int(request.options.emitLLVMOnly) > 1)
     {
-        if (diagnostics) diagnostics->push_back("AOT：LLVM 文本、bitcode、对象文件与机器汇编输出只能选择一种");
+        if (diagnostics) diagnostics->push_back("AOT：LLVM 文本、对象文件与机器汇编输出只能选择一种");
         return 1;
     }
     if (!target.native && !codeOnly && !request.options.emitLLVMOnly && request.options.runtimeDirectory.empty())
@@ -2972,7 +2893,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
         return 1;
     }
     Memory::String header;
-    const Memory::String source = generateLLVM(request, diagnostics, &header, unit);
+    const Memory::String source = generateLLVM(request, diagnostics, &header);
     if (source.empty()) return 1;
     const Text prefix = request.options.outputPrefix.empty() ? "chali_aot" : textOf(request.options.outputPrefix);
     const Text llvmPath = prefix + ".ll";
@@ -3006,7 +2927,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
             linked.options.linkObjects.push_back(Memory::String(object.u8string().c_str()));
         }
     }
-    const Text product = prefix + (bitcodeOnly ? ".bc" : assemblyOnly       ? ".s" :
+    const Text product = prefix + (assemblyOnly              ? ".s" :
                                                      objectOnly             ? ".o" :
                                                      request.options.shared ? target.windows ? ".dll" : ".so" :
                                                      target.windows         ? ".exe" :
@@ -3067,9 +2988,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
     command += (request.options.debug && !request.options.debugOptimized) ? " -O0 " : " -O3 ";
     if (request.options.debug) command += "-g -gdwarf-4 ";
     command += "-Wno-override-module ";
-    if (bitcodeOnly)
-        command += request.options.lto && request.options.thinLto ? "-c -emit-llvm -flto=thin -fno-split-lto-unit " : "-c -emit-llvm -flto=full ";
-    else if (assemblyOnly)
+    if (assemblyOnly)
         command += "-S ";
     else if (objectOnly)
         command += "-c ";
@@ -3096,7 +3015,6 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics, Uni
         if (runtime.empty()) return 1;
         command += " -Wl,--start-group";
         for (const auto &object : linked.options.linkObjects) command += " " + quote(textOf(object));
-        for (const auto &bitcode : linked.options.linkBitcode) command += " " + quote(textOf(bitcode));
         command += " -L" + runtime + " -lchali_aot_host ";
         if (request.options.runtimeDirectory.empty()) command += quote((runtimeDirectory / "libstdc++.a").generic_u8string());
         else command += "-lstdc++";

@@ -182,12 +182,12 @@ LowerProgram()          // ordinary typed methods, normal ownership checks
 
 ### Custom interface derivation
 
-The interface specifies public behavior; its same-name member macro supplies the implementation. The compiler passes the owner as the sole type argument.
+This example calls the member macro inside the type body and passes the owner type and method name explicitly.
 
 ```chali
 interface Count { int64 count(); }
-$macro Count<T>() -> member
-int64 count() {
+$macro Count<T>(method:ident) -> member
+int64 method() {
     int64 result = 0;
     $for field in $fields<T>()
     result += 1;
@@ -195,16 +195,19 @@ int64 count() {
     return result;
 }
 $end_macro
-#derive(Count)
-struct Record { int64 number; String text; }
-void main() { Record value; assert(value.count() == 2); }
+struct Record : Count { int64 number; String text; $Count<Record>(count); }
+void main() { Record value; Count counted = value; println("fields={}", counted.count()); }
 ```
 
-The interface and macro must belong to the same module. The macro has one type parameter, an empty argument group, and the `member` result category. It may generate methods only; layout fields and associated types belong to the owner's declaration. The static field loop expands into ordinary statements.
+```text
+fields=2
+```
+
+The explicit member call supplies the public method name through `method:ident`. For the general `#derive` directive, the paired interface and macro must belong to the same module. The macro has one type parameter, an empty argument group, and the `member` result category. It may generate methods only; layout fields and associated types belong to the owner's declaration. The static field loop expands into ordinary statements.
 
 Methods matching interface signatures become public; helpers retain hygienic names. Matching a method name publishes its generated overload group. Derivation rejects an existing method with the same signature. Default implementations, inherited requirements, type checking, borrows, returns and resource cleanup retain their ordinary rules.
 
-After `import derive_tools;`, write `#derive(derive_tools::Count)` to choose that module explicitly. Unqualified names use normal macro scope/import resolution and ambiguous names require qualification. Generic owners expand per concrete instance. The paired interface may have one implementer parameter, for example `interface Describe<T> { String describe(T value); }` paired with `$macro Describe<T>() -> member`; the directive remains `#derive(Describe)`.
+After `import derive_tools;`, write `#derive(derive_tools::Describe)` to choose that module explicitly. Unqualified names use normal macro scope/import resolution and ambiguous names require qualification. Generic owners expand per concrete instance. The paired interface may have one implementer parameter, for example `interface Describe<T> { String describe(T value); }` paired with `$macro Describe<T>() -> member`; the directive remains `#derive(Describe)`.
 
 Metadata queries that require additional generic instances instantiate them before retrying derivation. Existing expansion budgets reject recursive dependencies. One/all editor previews can select the `#derive` location and retain call, definition and metadata declaration sources without exposing writable hygiene identities.
 

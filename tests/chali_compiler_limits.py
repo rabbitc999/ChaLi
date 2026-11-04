@@ -141,18 +141,22 @@ def main():
                   optimization='LLVM AOT：checked 为 default<O3>+运行期检查，unchecked 为 default<O3>；反射编入', cases=[])
     print('发现报告目录：' + str(root), flush=True)
     with ThreadPoolExecutor(max_workers=options.jobs) as pool:
-        pending = {pool.submit(run_case, case, compiler, root, options.timeout): case for case in cases}
-        for future in as_completed(pending):
-            case = pending[future]
-            try:
-                result = future.result()
-            except Exception as error:
-                result = dict(group=case['group'], name=case['name'], harness_error=repr(error))
-            report['cases'].append(result)
-            report['cases'].sort(key=lambda row: (row['group'], row['name']))
-            (root / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
-            statuses = ', '.join(key + '=' + value['status'] for key, value in result.get('results', {}).items())
-            print(f"{len(report['cases']):02d}/{len(cases)} {case['group']}/{case['name']}: {statuses or result.get('harness_error')}", flush=True)
+        # 迭代器流水线的多个特化集中消耗 CPU，先单独执行，保留原有编译时限。
+        isolated = [case for case in cases if case['name'] == 'iter_pipeline']
+        parallel = [case for case in cases if case['name'] != 'iter_pipeline']
+        for batch in (isolated, parallel):
+            pending = {pool.submit(run_case, case, compiler, root, options.timeout): case for case in batch}
+            for future in as_completed(pending):
+                case = pending[future]
+                try:
+                    result = future.result()
+                except Exception as error:
+                    result = dict(group=case['group'], name=case['name'], harness_error=repr(error))
+                report['cases'].append(result)
+                report['cases'].sort(key=lambda row: (row['group'], row['name']))
+                (root / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+                statuses = ', '.join(key + '=' + value['status'] for key, value in result.get('results', {}).items())
+                print(f"{len(report['cases']):02d}/{len(cases)} {case['group']}/{case['name']}: {statuses or result.get('harness_error')}", flush=True)
     digest = hashlib.sha256((root / 'report.json').read_bytes()).hexdigest()
     (root / 'report.sha256').write_text(digest + '\n', encoding='ascii')
     print('发现报告 SHA256：' + digest, flush=True)

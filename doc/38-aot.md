@@ -125,15 +125,11 @@ chali aot --target linux-x64 --emit-obj --out build/x64/app
 
 ## 目标机器汇编
 
-项目 `[aot]` 支持 `assembly_sources`（汇编源）、`assembly_includes`（汇编包含目录）、`objects`（对象文件）、`libraries`（链接库）、`search_paths`（模块及包含搜索目录）数组，以及 `library_lock`（预编译库锁文件）字符串。路径以 `chali.toml` 所在目录为基准；`libraries` 中不含点或路径分隔符的裸库名交给链接器解析。
+项目 `[aot]` 支持 `assembly_sources`（汇编源）、`assembly_includes`（汇编包含目录）、`objects`（对象文件）、`libraries`（链接库）、`search_paths`（模块及包含搜索目录）数组。路径以 `chali.toml` 所在目录为基准；`libraries` 中不含点或路径分隔符的裸库名交给链接器解析。
 
-显式 `--asm`、`--asm-include`、`--link` 分别覆盖清单中的同类列表，`--library-lock` 覆盖清单锁文件；清单搜索目录追加在命令行搜索目录之后。对象及汇编输入用于最终链接。
+显式 `--asm`、`--asm-include`、`--link` 分别覆盖清单中的同类列表。清单搜索目录追加在命令行搜索目录之后。对象及汇编输入用于最终链接。
 
 `lto` 默认 `true`（完整 LTO），也接受 `false`、`"off"`、`"full"`、`"thin"`。`--lto-mode off|full|thin` 覆盖项目设置；`--lto` 和 `--no-lto` 分别保留完整 LTO 与关闭语义，多个命令行模式开关以最后一个为准。关闭时先生成机器对象再链接，LLVM 的模块内优化仍按原优化级别执行。静态与外置 LLVM 的 `--debug` 开发调试按所选 LTO 模式使用 O0；`--debug-optimized` 明确保留 DWARF 并使用 O3，详见[原生调试](43-native-debugging.md)。
-
-`library_implementation = "native"` 是库实现的默认选择，可设为 `"bitcode"`；`--library-implementation native|bitcode` 优先于清单配置，对直接和传递库同时生效。所选 bitcode 需核对实际目标、布局及精确 LLVM 版本。模式转换、缺失实现拒绝及边界见[库包说明](44-library-packages.md#原生与-bitcode-实现选择)。
-
-清单中的 `library_lock` 同样用于源码检查和语言服务分析。库锁与实际导入的 `.chlib` 都进入依赖集合；编辑器监听这些文件的变化，触发消费者重新诊断。锁或包损坏时报告错误，恢复有效内容后重新检查。
 
 独立 `chali link --shared --out FILE` 在私有临时目录中使用最终文件名完成链接，成功后再发布。因此 Windows DLL 的导出表与宿主导入表记录实际交付名称，C 宿主可直接链接并加载该文件；失败仍保留原产物。
 
@@ -157,7 +153,7 @@ chali aot main.chl --asm native/add.s --asm-include native/include --out build/a
 
 AOT 可重复指定 `--asm FILE.s` 和 `--asm-include DIR`，每个对象使用语言单元相同的目标和 CPU，参与最终链接。通过既有 C ABI 声明引用汇编符号，汇编须遵循目标调用约定。该输入只适用于可执行文件或共享库输出，不能与 `--emit-asm`、`--emit-obj`、`--emit-llvm` 组合。生成交叉对象不等于已经验证目标系统的可执行交付。
 
-引用最终链接提供的符号时，可声明 `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`。`@link` 是编译器标记，不作为文件名或动态库查询。固定标量直接生成平台 C ABI 调用；结构体、引用、数组、String、同步回调及约定释放函数使用现有 C 帧封送，由链接器解析原生符号。复杂签名仍需要与目标兼容的 C++ 编译器（`CHALI_ABI_CXX`）完成平台布局适配，公开边界仅使用 C API。普通宿主声明及既有库路径规则保留，显式空库路径拒绝；完整互调与所有权规则见[原始存储与 C ABI 指令](41-unsafe-abi.md)。
+链接的标量 C 函数可声明为 `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`。符号由交给链接器的对象或归档提供。结构体、引用、缓冲区和回调签名使用兼容的动态库，遵循 [C ABI 封送约定](41-unsafe-abi.md)。
 
 
 ## 独立链接与静态归档

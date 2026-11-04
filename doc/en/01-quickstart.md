@@ -27,7 +27,7 @@ The easiest route is to drop it in the project root as `./ParseEngine` (add `.ex
 alternatively leave it in the neighbouring ParseEngine repository and `gen.sh` will find
 `../ParseEngine/build/bin/` automatically.
 
-On Windows, if no generator is found, `gen.sh` tries the latest release on [Gitee](https://gitee.com/rabbitc999/ParseEngine/releases/download/latest/ParseEngine.exe) and then [GitHub](https://github.com/rabbitc999/ParseEngine/releases/download/latest/ParseEngine.exe), and keeps whichever succeeds first as `ParseEngine.exe` in the project root. Existing generators are reused. Other platforms require a native executable, optionally selected through `ENGINE`.
+On Windows, if no generator is found, `gen.sh` tries the latest release on [GitHub](https://github.com/rabbitc999/ParseEngine/releases/download/latest/ParseEngine.exe), and keeps whichever succeeds first as `ParseEngine.exe` in the project root. Existing generators are reused. Other platforms require a native executable, optionally selected through `ENGINE`.
 
 Verify the install:
 

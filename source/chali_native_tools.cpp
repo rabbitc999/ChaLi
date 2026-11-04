@@ -180,7 +180,7 @@ bool publish(const std::filesystem::path &source, const std::filesystem::path &d
     std::error_code ec;
     for (unsigned attempt = 0; attempt < 100; ++attempt)
     {
-        staged = destination.parent_path() / (destination.filename().u8string() + ".chali-" + suffix() + ".tmp");
+        staged = destination.parent_path() / std::filesystem::u8path(destination.filename().u8string() + ".chali-" + suffix() + ".tmp");
 #ifdef _WIN32
         const HANDLE file = CreateFileW(staged.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (file != INVALID_HANDLE_VALUE)

@@ -97,13 +97,7 @@ def main():
         executable = project / "build" / ("with-object.exe" if os.name == "nt" else "with-object")
         output = subprocess.run([str(executable)], cwd=project, capture_output=True, text=True, encoding="utf-8", timeout=60)
         assert output.returncode == 0 and output.stdout.strip() == "42", (output.returncode, output.stdout, output.stderr)
-        # 锁文件必须读取；命令行选择替代路径应覆盖清单路径。
-        write(project / "chali.toml", config + 'library_lock = "missing-manifest.lock"\n')
-        missing = run("aot", "--out", "build/bad-lock", expected=2)
-        write(project / "invalid-cli.lock", "{}")
-        result = run("aot", "--library-lock", "invalid-cli.lock", "--out", "build/override-lock", expected=2)
-        assert result.stderr != missing.stderr, "命令行锁文件未覆盖清单：仍报告清单文件缺失"
-    print("工程 AOT 配置：汇编、对象、搜索路径、库、库锁、LTO 与命令行覆盖通过")
+    print("工程 AOT 配置：汇编、对象、搜索路径、库、LTO 与命令行覆盖通过")
 
 
 if __name__ == "__main__":

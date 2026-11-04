@@ -184,7 +184,7 @@ Result<A,B> 的两个标签独立匹配。Ok(AType a) 筛选成功载荷的具�
 
 $macro ... $end_macro 与 $replace 定义宏；调用带 $ 前缀。value、expr、ident、type、stmt、block、pattern 约束输入类别，-> expr、-> stmt、-> item、-> member 约束输出位置。<T:#res> 从结果上下文推导，<U:b> 从实参静态类型推导。
 
-$for、$if、$match、$regex 选择或重复模板；$fields 与 $member 静态生成字段操作，$compile_assert 与 $compile_error 报告编译时条件。完整例程及逐段解释见第 22 章。
+$for、$if、$match、$regex 选择或重复模板；$elif 与 $else_if 是 $if 条件链中等价的后续分支命令，一条链由一个 $end_if 收束。$fields 与 $member 静态生成字段操作，$compile_assert 与 $compile_error 报告编译时条件。完整例程及逐段解释见第 22 章。
 
 %define、%symbol 及 %if、%ifdef、%ifndef、%elif、%else、%endif 在预处理阶段决定保留哪些源码；%undefine、%unsymbol 撤销定义，%warning、%error 给出消息。它们不等于运行期 if，也不等于类型检查后的宏字段选择。
 

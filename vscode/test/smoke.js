@@ -75,7 +75,15 @@ async function testChaLiRun(chali) {
   const dir = fs.mkdtempSync(path.join(require('./projectTemp').root, 'chali-run-'));
   const file = path.join(dir, 'demo.chl');
   fs.writeFileSync(file, 'void main() { std::lang::println("run ok"); }\n', 'utf-8');
-  const result = spawnSync(chali, ['run', file], { cwd: dir, encoding: 'utf-8' });
+  const report = spawnSync(chali, ['--build-info'], { encoding: 'utf-8' });
+  check('编译器报告 LLVM 变体', report.status === 0, report.stderr);
+  const args = ['run', file];
+  if (report.status === 0 && JSON.parse(report.stdout).llvm === 'external') {
+    const bundled = path.resolve(__dirname, '../../build/dependencies/llvm/toolchain/bin/clang.exe');
+    const clang = process.env.CHALI_LLVM_CLANG || (process.platform === 'win32' && fs.existsSync(bundled) ? bundled : 'clang');
+    args.push('--llvm', clang);
+  }
+  const result = spawnSync(chali, args, { cwd: dir, encoding: 'utf-8' });
   check('chali run 退出码为 0', result.status === 0, result.stderr);
   check('chali run 输出正确', (result.stdout || '').trim() === 'run ok', result.stdout);
   fs.rmSync(dir, { recursive: true, force: true });
@@ -266,6 +274,7 @@ async function main() {
       process.exit(1);
     }
     await testChaLiLsp(given);
+    await testChaLiRun(given);
   } else {
     const resolved = locator.resolveChaLi(REPO_ROOT, {}, path.join(__dirname, '..'));
     if (!resolved.chali) {

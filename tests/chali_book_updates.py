@@ -50,12 +50,14 @@ def main():
     environments=[]
     for tag, name in re.findall(r'\\(begin|end)\{([^}]+)\}', rendered):
         if tag == 'begin':
-            if name == 'lstlisting':
+            if name in ('lstlisting', 'BookOutput'):
                 assert not any(item in ('enumerate', 'itemize') for item in environments)
             environments.append(name)
         else:
             assert environments.pop() == name
     assert not environments
+    compact = '{"value":"' + 'a' * 160 + '"}'
+    assert '\\begin{BookOutput}\n' + compact + '\n\\end{BookOutput}' in Converter().conv_code('text', [compact])
     try:
         Converter().convert('| chapter | title |\n| 24 | project |\n| 25 | Linux |')
     except ValueError as error:
@@ -89,9 +91,9 @@ def main():
             assert (ROOT/'doc/book/latex/chapters'/target).read_text(encoding='utf-8')==expected,target
             assert 'minipage' not in expected and 'samepage' not in expected, target
             list_depth=0
-            for match in re.finditer(r'\\(begin|end)\{(enumerate|itemize|lstlisting)\}', expected):
+            for match in re.finditer(r'\\(begin|end)\{(enumerate|itemize|lstlisting|BookOutput)\}', expected):
                 direction, environment=match.groups()
-                if environment == 'lstlisting':
+                if environment in ('lstlisting', 'BookOutput'):
                     assert list_depth == 0, (target, match.start())
                 else:
                     list_depth += 1 if direction == 'begin' else -1
@@ -112,10 +114,11 @@ def main():
         with ThreadPoolExecutor(max_workers=4) as pool:
             list(pool.map(execute, programs))
         chapter=(ROOT/'doc/book/22-预处理与宏.md').read_text(encoding='utf-8')
-        invalid=re.search(r'<!-- verify-book-error: temp -->\s*```chali\n(.*?)```',chapter,re.S)[1]
+        invalid, diagnostic = re.search(
+            r'<!-- verify-book-error: temp -->\s*```chali\n(.*?)```\s*```text\n(.*?)```', chapter, re.S).groups()
         bad=work/'invalid_macro.chl';bad.write_text(invalid,encoding='utf-8')
         result=subprocess.run([str(COMPILER),'check',str(bad)],cwd=work,capture_output=True,encoding='utf-8',timeout=60)
-        assert result.returncode!=0 and 'temp' in result.stderr and '分支结果类型必须一致' not in result.stderr,result
+        assert result.returncode!=0 and diagnostic.strip() in result.stderr and '分支结果类型必须一致' not in result.stderr,result
         kong=(ROOT/'doc/book/19-函数值与闭包.md').read_text(encoding='utf-8')
         assert '鲁镇的码栈' in kong and '违约金零头' in kong and not re.search(r'^\[\d+\]',kong,re.M)
     # 附录 A 的 <!-- fail --> 示例逐个重跑：必须失败，且文档记载的首条消息真实出现。
@@ -125,7 +128,7 @@ def main():
         failBlock=re.compile(r'<!-- fail[^>]*-->\s*```chali\n(.*?)```\s*```text\n(.*?)```',re.S)
         position=re.compile(r'\S+ 第 \d+ 行(第 \d+ 列)?：')
         fails=failBlock.findall(appendix)
-        assert fails,'附录 A 缺少 fail 示例'
+        assert fails and len(fails) == len(re.findall(r'<!-- fail[^>]*-->', appendix)), '附录 A 负例缺少诊断块'
         for index,(code,expected) in enumerate(fails):
             file=failWork/f'appendix-fail{index}.chl';file.write_text(code,encoding='utf-8')
             result=subprocess.run([str(COMPILER),'run',str(file),'--out',failWork/f'appendix-fail{index}'],cwd=failWork,

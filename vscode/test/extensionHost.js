@@ -7,46 +7,72 @@ const path = require('node:path');
 const { spawn, spawnSync } = require('node:child_process');
 const { stopProcessTree } = require('../src/debugProtocol');
 
+/** 读取 Windows 进程身份，区分 PID 重用及仍带旧父 PID 的进程。 */
+function windowsProcesses() {
+  const result = spawnSync('powershell.exe', ['-NoProfile', '-Command',
+    'Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,@{Name="Started";Expression={if ($_.CreationDate) { ([DateTimeOffset]$_.CreationDate).ToUnixTimeMilliseconds() }}} | ConvertTo-Json -Compress'],
+  { encoding: 'utf8', windowsHide: true, timeout: 10000 });
+  assert.equal(result.status, 0, result.stderr);
+  return JSON.parse(result.stdout);
+}
+
 /** 只记录当前扩展宿主下的 GDB、被调试程序及适配器，不触碰其他会话。 */
 function debugProcesses(attaching = false) {
   const windows = process.platform === 'win32';
-  const result = spawnSync(windows ? 'powershell.exe' : 'ps', windows ? ['-NoProfile', '-Command',
-    'Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name | ConvertTo-Json -Compress'] : ['-eo', 'pid=,ppid=,comm='],
-  { encoding: 'utf8', windowsHide: true, timeout: 10000 });
-  assert.equal(result.status, 0, result.stderr);
-  const rows = windows ? JSON.parse(result.stdout) : result.stdout.trim().split('\n').map(line => {
-    const match = /^\s*(\d+)\s+(\d+)\s+(.+)$/.exec(line); assert(match, line);
-    return { ProcessId: Number(match[1]), ParentProcessId: Number(match[2]), Name: path.basename(match[3]) };
-  });
+  let rows;
+  if (windows) {
+    rows = windowsProcesses();
+  } else {
+    const result = spawnSync('ps', ['-eo', 'pid=,ppid=,comm='], { encoding: 'utf8', timeout: 10000 });
+    assert.equal(result.status, 0, result.stderr);
+    rows = result.stdout.trim().split('\n').map(line => {
+      const match = /^\s*(\d+)\s+(\d+)\s+(.+)$/.exec(line); assert(match, line);
+      return { ProcessId: Number(match[1]), ParentProcessId: Number(match[2]), Name: path.basename(match[3]) };
+    });
+  }
   const byId = new Map(rows.map(row => [row.ProcessId, row]));
-  const belongs = id => {
+  const parentOf = row => {
+    const parent = byId.get(row.ParentProcessId);
+    if (windows && parent && parent.Started > row.Started) return undefined;
+    return parent;
+  };
+  const belongs = row => {
     const seen = new Set();
-    while (id && !seen.has(id)) {
-      if (id === process.pid) return true;
-      seen.add(id); id = byId.get(id)?.ParentProcessId;
+    while (row && !seen.has(row.ProcessId)) {
+      if (row.ProcessId === process.pid) return true;
+      seen.add(row.ProcessId); row = parentOf(row);
     }
     return false;
   };
-  const debuggerRow = rows.find(row => /^gdb(?:\.exe)?$/i.test(row.Name) && belongs(row.ProcessId));
+  const debuggerRow = rows.find(row => /^gdb(?:\.exe)?$/i.test(row.Name) && belongs(row));
   assert(debuggerRow, '当前扩展宿主下必须存在真实 GDB');
-  const pids = new Set([debuggerRow.ProcessId, debuggerRow.ParentProcessId]);
+  const pids = new Set([debuggerRow.ProcessId, parentOf(debuggerRow).ProcessId]);
   let changed;
   do {
     changed = false;
-    for (const row of rows) if (pids.has(row.ParentProcessId) && !pids.has(row.ProcessId)) { pids.add(row.ProcessId); changed = true; }
+    for (const row of rows) {
+      if (pids.has(parentOf(row)?.ProcessId) && !pids.has(row.ProcessId)) {
+        pids.add(row.ProcessId); changed = true;
+      }
+    }
   } while (changed);
   assert(pids.size >= (attaching ? 2 : 3), '暂停时必须能观察到本会话的完整调试器进程树');
-  return [...pids];
+  return [...pids].map(pid => byId.get(pid));
 }
 
 /** 等待本场景记录的进程自然退出；只查询存活状态，不按旧 PID 强制终止。 */
-async function exited(pids) {
+async function exited(processes) {
+  const pids = processes.map(row => row.ProcessId);
   const alive = pid => { try { process.kill(pid, 0); return true; } catch (error) { if (error.code !== 'ESRCH') throw error; return false; } };
   for (let attempt = 0; attempt < 100; ++attempt) {
     if (!pids.some(alive)) return;
     await new Promise(resolve => setTimeout(resolve, 50));
   }
-  assert.deepEqual(pids.filter(alive), [], '原生调试进程必须全部退出');
+  const remaining = process.platform === 'win32'
+    ? windowsProcesses().filter(current => processes.some(original =>
+      current.ProcessId === original.ProcessId && current.Started === original.Started)).map(row => row.ProcessId)
+    : pids.filter(alive);
+  assert.deepEqual(remaining, [], '原生调试进程必须全部退出');
 }
 
 /** 对协议事件使用有界等待，结束后释放定时器。 */
@@ -127,7 +153,8 @@ exports.run = async function () {
       assert.equal(launched, true);
       const state = scenarios.at(-1); assert(state); active = state.session;
       const stop = await event(state, 'stopped');
-      state.processes = debugProcesses(mode === 'attach');
+      const processes = debugProcesses(mode === 'attach');
+      state.processes = processes.map(row => row.ProcessId);
       if (external) assert(!state.processes.includes(external.child.pid), '外部目标不属于调试器进程树');
       assert.equal(stop.reason, mode === 'exception' ? 'exception' : 'breakpoint');
       const stack = await active.customRequest('stackTrace', { threadId: stop.threadId });
@@ -159,7 +186,7 @@ exports.run = async function () {
       }
       await event(state, 'terminated');
       await bounded(ended, 'VSCode 会话回收');
-      await exited(state.processes);
+      await exited(processes);
       if (external) {
         await new Promise(resolve => setTimeout(resolve, 100));
         assert.equal(external.child.exitCode, null); assert.equal(external.child.signalCode, null);

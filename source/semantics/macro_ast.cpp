@@ -110,6 +110,42 @@ int M_MacroZip(int variables, int sources, int body)
 }
 
 /**
+ * @brief 为字段类型比较保留可按宏泛型替换的右侧类型语法。
+ * @param id 条件表达式节点。
+ * @param depth 当前条件深度。
+ */
+void MarkMacroFieldTypeOperands(int id, std::size_t depth = 0)
+{
+    if (id < 0 || depth >= 256) return;
+    const auto node = g_nodes[id];
+    if (node.kind == MNode::Bin && node.kids.size() == 2 && (node.s == "==" || node.s == "!="))
+    {
+        const auto &left = g_nodes[node.kids[0]];
+        const auto right = g_nodes[node.kids[1]];
+        if (left.kind == MNode::Member && left.s == "type")
+        {
+            int type = -1;
+            if ((right.kind == MNode::Var && right.s == "Map")
+                || (right.kind == MNode::EnumCtor && right.kids.empty() && right.s == "std::lang" && right.s2 == "Map"))
+            {
+                const int argument = M_TypeKind(MType::Struct, "?");
+                type = M_TypeMap(argument, argument);
+            }
+            else if (right.kind == MNode::Var)
+                type = M_TypeStruct(M_Name(right.s.c_str()));
+            else if (right.kind == MNode::EnumCtor && right.kids.empty())
+                type = M_QualifiedType(node.kids[1]);
+            if (type >= 0)
+            {
+                g_nodes[node.kids[1]].kind = MNode::TupleTypeItem;
+                g_nodes[node.kids[1]].type = type;
+            }
+        }
+    }
+    for (const int child : node.kids) MarkMacroFieldTypeOperands(child, depth + 1);
+}
+
+/**
  * @brief 保存未选分支尚未检查的编译期条件。
  * @param condition 常量条件。
  * @param yes 真分支。
@@ -118,9 +154,19 @@ int M_MacroZip(int variables, int sources, int body)
  */
 int M_MacroCompileIf(int condition, int yes, int no)
 {
+    MarkMacroFieldTypeOperands(condition);
     const int id = M_New(MNode::MacroCompileIf);
     g_nodes[id].kids = { condition, yes, no };
     return id;
+}
+
+/**
+ * @brief 保留单个类型实参的通配符，由宏条件解释。
+ * @return 包含通配符类型的语法节点。
+ */
+int M_MacroTypeWildcard()
+{
+    return M_TupleTypeItem(M_TypeKind(MType::Struct, "?"));
 }
 
 /**

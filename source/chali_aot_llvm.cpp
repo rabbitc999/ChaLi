@@ -205,8 +205,7 @@ int link(const chali_linker::Request &request, const Memory::String &product, Me
     for (const auto &path : request.libraryDirectories) storage.push_back("-L" + std::string(path.c_str()));
     storage.push_back("--start-group");
     for (const auto &input : request.inputs) storage.emplace_back(input.c_str());
-    for (const auto &bitcode : request.options.linkBitcode) storage.emplace_back(bitcode.c_str());
-    if (!request.options.linkBitcode.empty()) storage.push_back((request.options.debug && !request.options.debugOptimized) ? "--lto-O0" : "--lto-O3");
+    if (request.options.lto) storage.push_back((request.options.debug && !request.options.debugOptimized) ? "--lto-O0" : "--lto-O3");
     for (const auto &name : request.libraryNames) storage.push_back("-l" + std::string(name.c_str()));
     if (!request.noRuntime)
     {
@@ -344,12 +343,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     // 保留 LLVM bitcode 到链接阶段，由 LLD 根据真实外部引用和导出确定内部化边界。
     if (!failed)
     {
-        if (request.options.emitBitcodeOnly)
-        {
-            failed = !writeBitcode(program, product, request.options.lto && request.options.thinLto, diagnostics);
-            if (failed && diagnostics) diagnostics->push_back("AOT：无法写入 LLVM bitcode");
-        }
-        else if (request.options.emitObjectOnly || request.options.emitAssemblyOnly || !request.options.lto)
+        if (request.options.emitObjectOnly || request.options.emitAssemblyOnly || !request.options.lto)
         {
             std::string file = request.options.emitObjectOnly || request.options.emitAssemblyOnly ? std::string(product.c_str()) : object;
             failed = LLVMTargetMachineEmitToFile(machine, program, file.data(), request.options.emitAssemblyOnly ? LLVMAssemblyFile : LLVMObjectFile, &message) != 0;
@@ -369,7 +363,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     if (program) LLVMDisposeModule(program);
     LLVMContextDispose(context);
     if (failed) return 1;
-    if (request.options.emitObjectOnly || request.options.emitAssemblyOnly || request.options.emitBitcodeOnly) return 0;
+    if (request.options.emitObjectOnly || request.options.emitAssemblyOnly) return 0;
     // 链接资产在打包时内嵌并恢复到专用临时目录，LLVM/LLD 本身均为静态代码。
     LinkerAssets assets;
     if (!assets.restore())
@@ -391,7 +385,6 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     if (request.options.shared) storage.push_back("--shared");
     storage.push_back("--start-group");
     for (const auto &object : request.options.linkObjects) storage.emplace_back(object.c_str());
-    for (const auto &bitcode : request.options.linkBitcode) storage.emplace_back(bitcode.c_str());
     storage.push_back("-L" + runtimeLibrary);
     storage.push_back(runtimeLibrary + "/libstdc++.a");
     for (const char *name : { "chali_aot_host", "gcc_eh", "gcc", "winpthread", "winhttp", "ws2_32", "crypt32", "bcrypt" }) storage.push_back(std::string("-l") + name);

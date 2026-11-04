@@ -366,6 +366,175 @@ $member turns the descriptor into direct field access. This invocation generates
 
 main initializes 3, Ada and 4, then prints 7. Writing fields requires a mutable reference parameter and writable fields. The descriptor must belong to the object's concrete type; identical spelling in another type does not grant access.
 
+### Chaining Conditions with $elif and $else_if
+
+Use $elif or $else_if within one $if to select among several implementations. The two commands are equivalent, and each takes a compile-time condition. This example generates different JSON field text for String, int64 and bool fields.
+
+<!-- verify-book -->
+```chali
+struct Record
+{
+    String name;
+    int64 count;
+    bool active;
+}
+$macro JSON_FIELDS<T>(&value:value) -> expr
+$compile_assert(($fields<T>()).count > 0, "JSON 生成至少需要一个实例字段");
+String result = "{";
+$for field in $fields<T>()
+$if field.index > 0
+result = result + ",";
+$end_if
+$if field.type == String
+result = result + "\"" + field.name + "\": \"" + $member(value, field) + "\"";
+$else_if field.type == int64
+result = result + "\"" + field.name + "\": " + $member(value, field).toString();
+$elif field.type == bool
+result = result + "\"" + field.name + "\": " + $member(value, field).toString();
+$else
+$compile_error("JSON_FIELDS 不支持该字段类型: " + field.type.name);
+$end_if
+$end_for
+result + "}"
+$end_macro
+void main()
+{
+    Record record;
+    record.name = "Ada";
+    record.count = 7;
+    record.active = true;
+    println("{}", $JSON_FIELDS<Record>(record));
+}
+```
+
+```text
+{"name": "Ada","count": 7,"active": true}
+```
+
+The first true branch is selected in source order. Later conditions are not evaluated after selection. Unselected branches are not expanded, so their field operations do not enter runtime type checking. The final $else handles types that matched none of the earlier conditions; adding a float64 field produces a compile-time error naming that type.
+
+The int64 branch uses $else_if and the bool branch uses $elif to demonstrate that both spellings can appear in one chain. Either spelling can replace the other. A single $end_if closes the whole type-selection chain, avoiding three nested $if blocks and separate terminators. At most one $else is allowed, and it must come last. Neither $elif nor $else_if can stand alone or follow $else.
+
+Field iteration, type selection and diagnostics happen during compilation; the generated string concatenations still execute at runtime. The example uses strings that need no escaping. Complete JSON encoding also handles quotes, backslashes and control characters inside strings.
+
+### Child Fields and Recursive JSON Generation
+
+The single field of JsonType<T> exposes type metadata for T. Records recurse through their fields. List and Set produce arrays, while a Map with String keys produces an object. Element and value types come from typeArguments, so collections can contain records or other collections. Empty collections produce [] or {}.
+
+<!-- verify-book -->
+```chali
+import std::json;
+
+String jsonText(String value) {
+    String result = "\"";
+    String digits = "0123456789abcdef";
+    int64 start = 0;
+    int64 i = 0;
+    while (i < value.length()) {
+        int64 byte = (int64)value.byteAt(i).unwrap();
+        if (byte < 32 || byte == 34 || byte == 92) {
+            result += value.slice(start, i);
+            if (byte == 34) { result += "\\\""; }
+            elif (byte == 92) { result += "\\\\"; }
+            else { result += "\\u00" + digits.substring(byte / 16, 1) + digits.substring(byte % 16, 1); }
+            start = i + 1;
+        }
+        i += 1;
+    }
+    return result + value.slice(start, value.length()) + "\"";
+}
+String jsonBool(bool value) { if (value) { return "true"; } return "false"; }
+
+struct JsonType<T> { T item; }
+
+$macro JSON_VALUE(T:type)[value:value] -> expr
+String result = "";
+$for info in $fields<JsonType<T>>()
+$if info.type == String
+result = jsonText(value);
+$elif info.type == int64
+result = value.toString();
+$elif info.type == bool
+result = jsonBool(value);
+$elif info.type == List<?> || info.type == Set<?>
+result = "[";
+int64 i = 0;
+while (i < value.len()) {
+    if (i > 0) { result += ","; }
+    let item = value.at(i);
+    result += $JSON_VALUE(info.typeArguments[0])[item];
+    i += 1;
+}
+result += "]";
+$elif info.type == Map<String, ?>
+result = "{";
+int64 i = 0;
+while (i < value.len()) {
+    if (i > 0) { result += ","; }
+    let item = value.valAt(i);
+    result += jsonText(value.keyAt(i)) + ":" + $JSON_VALUE(info.typeArguments[1])[item];
+    i += 1;
+}
+result += "}";
+$elif info.type == Map
+$compile_error("JSON Map 的键必须是 String: " + info.type.name);
+$else
+result = "{";
+$for field in info.chlids
+$if field.index > 0
+result += ",";
+$end_if
+result += jsonText(field.name) + ":" + $JSON_VALUE(field.type)[$member(value, field)];
+$end_for
+result += "}";
+$end_if
+$end_for
+result
+$end_macro
+
+struct Empty {}
+struct Leaf { int64 count; String text; bool enabled; Empty empty; }
+struct Middle<T> { T inner; }
+struct Root {
+    Middle<Leaf> middle;
+    List<int64> items;
+    Set<std::lang::String> unique;
+    Map<std::lang::String, List<Leaf>> byName;
+    List<int64> emptyList;
+    Set<int64> emptySet;
+    Map<String, bool> emptyMap;
+}
+void main() {
+    Root value;
+    value.middle.inner.count = 42;
+    value.middle.inner.text = "a\"\\\n";
+    value.middle.inner.enabled = true;
+    value.items.push(5);
+    value.items.push(8);
+    value.unique.add("only");
+    value.unique.add("only");
+    List<Leaf> bucket;
+    bucket.push(value.middle.inner);
+    value.byName.put("b\"ox", bucket);
+    String encoded = $JSON_VALUE(Root)[value];
+    let parsed = std::json::parse(encoded).unwrap();
+    let parsedItems = parsed.find("items").unwrap();
+    let parsedBucket = parsed.find("byName").unwrap().find("b\"ox").unwrap();
+    assert(parsedItems.at(1).unwrap().asInt().unwrap() == 8);
+    assert(parsedBucket.at(0).unwrap().find("count").unwrap().asInt().unwrap() == 42);
+    println("{}", encoded);
+    assert(value.items.len() == 2 && value.unique.len() == 1 && value.byName.len() == 1);
+}
+```
+
+```text
+{"middle":{"inner":{"count":42,"text":"a\"\\\u000a","enabled":true,"empty":{}}},"items":[5,8],"unique":["only"],"byName":{"b\"ox":[{"count":42,"text":"a\"\\\u000a","enabled":true,"empty":{}}]},"emptyList":[],"emptySet":[],"emptyMap":{}}
+```
+
+Field names, map keys, and string values share one escaping function for quotes, backslashes, and control bytes. List preserves element order, and Set follows its iteration order. Map keys must be String.
+
+For a single level, write $for child in field.chlids and use $member($member(value, field), child) to access the child. To dispatch on a generic family, match $if field.type == Map<String, ?> and read the value type through field.typeArguments[1], or use $for arg in field.typeArguments to visit the concrete types. Use Map as shorthand for Map<?, ?> when only the family matters.
+
 ## 22.11 Grouped Iteration and Compile-Time Diagnostics
 
 <!-- verify-book -->
@@ -614,6 +783,10 @@ void main()
     List<int64> temp;
     List<int64> values = $broken(1);
 }
+```
+
+```text
+引用了没声明的变量：temp
 ```
 
 Broken uses temp without declaring it in the template's scope or receiving its source as a parameter. Main's equally spelled temp belongs to the caller. Hygienic name resolution does not connect those identities automatically.

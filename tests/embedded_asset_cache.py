@@ -121,11 +121,13 @@ def verify_encoding(folder):
     engine.write_text('#!/bin/sh\nprintf "解析器生成完成\\n"\n', encoding='utf-8', newline='\n')
     engine.chmod(0o755)
     env = dict(os.environ, ENGINE=engine.as_posix(), PYTHONUTF8='0', PYTHONIOENCODING='cp936')
-    result = subprocess.run(['sh', 'gen.sh'], cwd=folder, env=env, capture_output=True, timeout=30)
-    assert result.returncode == 0, result.stderr
-    text = result.stdout.decode('utf-8', errors='strict')
-    assert text.count('内嵌资产生成与校验完成') == 6 and '解析器生成完成' in text, text
-    assert '\ufffd' not in text
+    for deferred, count in [('0', 6), ('1', 5)]:
+        env['CHALI_DEFER_ASSET_EMBED'] = deferred
+        result = subprocess.run(['sh', 'gen.sh'], cwd=folder, env=env, capture_output=True, timeout=30)
+        assert result.returncode == 0, result.stderr
+        text = result.stdout.decode('utf-8', errors='strict')
+        assert text.count('内嵌资产生成与校验完成') == count and '解析器生成完成' in text, text
+        assert ('内嵌资产延后' in text) == (deferred == '1') and '\ufffd' not in text, text
 
 
 def verify_make(folder):

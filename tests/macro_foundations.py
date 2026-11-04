@@ -13,7 +13,7 @@ def execute(command):
     result = subprocess.run(list(map(str, command)), cwd=ROOT, capture_output=True,
                             text=True, encoding="utf-8", errors="replace", timeout=300)
     if result.returncode:
-        raise AssertionError(f"{command}\n{result.stdout}\n{result.stderr}")
+        raise AssertionError(f"{command} exited {result.returncode}\n{result.stdout}\n{result.stderr}")
     if result.stdout:
         print(result.stdout, end="", flush=True)
 
@@ -21,9 +21,12 @@ def execute(command):
 def main():
     """在独立目录编译模块回归，并使用现有解析器库验证真实宏语法节点。"""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--build-root', type=Path, default=ROOT / 'build')
-    parser.add_argument('--cxx', default='g++')
-    parser.add_argument('--sysroot', type=Path)
+    static = os.name == 'nt' and os.environ.get('CHALI_STATIC_LLVM') == '1'
+    sdk = Path(os.environ.get('CHALI_LLVM_SDK', ROOT / 'build/dependencies/llvm/static-sdk')).resolve()
+    build_default = ROOT / ('build/llvm-static-gcc16' if static else 'build')
+    parser.add_argument('--build-root', type=Path, default=Path(os.environ.get('CHALI_BUILD_ROOT', build_default)))
+    parser.add_argument('--cxx', default=str(sdk / 'bin/g++.exe') if static else 'g++')
+    parser.add_argument('--sysroot', type=Path, default=sdk if static else None)
     options = parser.parse_args()
     build = options.build_root.resolve()
     compiler = shutil.which(options.cxx)

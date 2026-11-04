@@ -26,38 +26,6 @@ def main():
             assert (result.returncode == 0) == success, (arguments, result.stdout, result.stderr)
             return result
 
-        def build(source, native, name):
-            """编译并链接一份有目标平台封送的完整语言程序。"""
-            output = work/name
-            invoke([compiler, 'aot', source, '--checked', '--link', native, '--out', output])
-            sidecar = output.with_suffix('.abi.cpp')
-            if sidecar.exists():
-                generated = sidecar.read_text(encoding='utf-8')
-                assert 'chali_linked_' in generated and 'chali_host_abi_lookup("@link"' not in generated
-            return output.with_suffix('.exe') if os.name == 'nt' else output
-
-        for fixture, expected in [('abi_buffers', 'abi-values-ok\n'), ('abi_contracts', 'ABI contracts OK\n')]:
-            origin = ROOT/'doc/examples'/fixture
-            provider = work/(fixture+'.c')
-            provider.write_text((origin/'native.c').read_text(encoding='utf-8').replace('#define API __declspec(dllexport)', '#define API'), encoding='utf-8')
-            native = work/(fixture+'.o')
-            invoke(['gcc', '-O2', '-c', provider, '-o', native])
-            source = work/(fixture+'.chl')
-            source.write_text((origin/'demo.chl').read_text(encoding='utf-8').replace('./native.dll', '@link'), encoding='utf-8')
-            output = build(source, native, fixture)
-            assert invoke([output]).stdout == expected
-            if fixture == 'abi_contracts':
-                for name, body in [('direct', 'panic("linked callback failure");return x;'),
-                                   ('nested', 'return apply(int32 fn(int32 y){panic("linked callback failure");return y;},x);')]:
-                    failure = work/(name+'.chl')
-                    failure.write_text('#abi("C","@link","callback_owned") String owned(int32 fn(int32) cb) ["free_owned"];\n'
-                                       '#abi("C","@link","apply") int32 apply(int32 fn(int32) cb,int32 x);\n'
-                                       'void main(){let cb=int32 fn(int32 x){'+body+'};String text=owned(cb);}', encoding='utf-8')
-                    executable = build(failure, native, name)
-                    marker = work/(name+'.txt')
-                    result = invoke([executable], False, {'CHALI_ABI_FREE_MARKER': str(marker)})
-                    assert 'linked callback failure' in result.stdout+result.stderr
-                    assert marker.read_text().splitlines() == ['free']
         scalars = [('int8','int8_t','-61'), ('uint8','uint8_t','205'), ('int16','int16_t','-30000'),
                    ('uint16','uint16_t','60000'), ('int32','int32_t','-123456'), ('uint32','uint32_t','4000000000'),
                    ('int64','int64_t','-1234567890123'), ('uint64','uint64_t','-1'),
@@ -96,11 +64,15 @@ def main():
         invalid.write_text('#abi("C","", "identity") int32 identity(int32 x);void main(){}', encoding='utf-8')
         result = invoke([compiler,'--check',invalid], False)
         assert 'abi' in result.stdout.lower()+result.stderr.lower()
-        invalid.write_text('struct Packet{int64 value;};'
-                           '#abi("C","@link","same_symbol") Packet first(Packet value);'
-                           '#abi("C","@link","same_symbol") int64 second(int64 value);void main(){}', encoding='utf-8')
-        result = invoke([compiler,'--check',invalid], False)
-        assert 'ABI' in result.stdout+result.stderr and 'same_symbol' in result.stdout+result.stderr
+        for source_text in (
+            'struct Packet{int64 value;};#abi("C","@link","bad") Packet bad(Packet value);',
+            '#abi("C","@link","bad") int64 bad(int64 mut& value);',
+            '#abi("C","@link","bad") String bad() ["free_owned"];',
+            '#abi("C","@link","bad") int64 bad(int64 fn() cb);',
+        ):
+            invalid.write_text(source_text + 'void main(){}', encoding='utf-8')
+            result = invoke([compiler, '--check', invalid], False)
+            assert '@link' in result.stdout + result.stderr, result
         exported = work/'exported.chl'
         exported.write_text('struct Packet{int32 count;float64 value;};\n'
                             '#export("invert") bool invert(bool value){return !value;}\n'
@@ -138,7 +110,7 @@ def main():
             generated = reference_ir.read_text(encoding='utf-8')
             assert '@transform(' in generated and target in generated
             if 'windows' in target: assert 'sret(' in generated
-    print('linked C ABI: all scalar widths, packed/nested aggregates, aliases, owned buffers, callbacks and failure cleanup passed')
+    print('linked C ABI: scalar widths, target extensions, complex direct-link rejection and C exports passed')
 
 
 if __name__ == '__main__':

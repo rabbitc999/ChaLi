@@ -70,6 +70,77 @@ bool SubstituteMacroConstant(int id, int initializer, int declaredType, std::siz
 }
 
 /**
+ * @brief 判断类型模式是否含单个类型实参通配符。
+ * @param type 模式节点。
+ * @return 至少有一个通配符时为真。
+ */
+bool HasMacroTypeWildcard(const std::shared_ptr<MType> &type)
+{
+    return type && (type->name == "?" || HasMacroTypeWildcard(type->elem) || HasMacroTypeWildcard(type->elem2)
+                    || std::any_of(type->genericArguments.begin(), type->genericArguments.end(), HasMacroTypeWildcard));
+}
+
+/**
+ * @brief 比较已解析的具体类型与带可选通配符的模式。
+ * @param actual 具体元数据类型，整数泛型实参为空。
+ * @param pattern 已归一化普通名称的模式。
+ * @param matches 接收比较结果。
+ * @return 模式合法时为真。
+ */
+bool MatchMacroType(const std::shared_ptr<const MType> &actual, const std::shared_ptr<MType> &pattern, bool &matches)
+{
+    if (pattern->name == "?")
+    {
+        matches = static_cast<bool>(actual);
+        return true;
+    }
+    if (!HasMacroTypeWildcard(pattern))
+    {
+        if (!ResolveAstGenericType(pattern)) return false;
+        matches = actual && TypeKey(Memory::makeShared<MType>(*actual)) == TypeKey(pattern);
+        return true;
+    }
+
+    Memory::String family, expected;
+    Memory::Vector<std::shared_ptr<MType>> patterns;
+    if (IsContainer(pattern))
+    {
+        expected = MacroContainerFamily(*pattern);
+        patterns.push_back(pattern->elem);
+        if (pattern->elem2) patterns.push_back(pattern->elem2);
+    }
+    else if (!pattern->genericBase.empty())
+    {
+        const auto *definition = FindAstGenericTypeDefinition(*pattern, true);
+        if (!definition) return false;
+        expected = MacroGenericFamily(*definition);
+        patterns = pattern->genericArguments;
+        if (patterns.size() != definition->params.size()) return Fail("泛型类型模式的实参数量不符：" + expected);
+        for (std::size_t index = 0; index < patterns.size(); ++index)
+            if (definition->params[index].constant) return Fail("泛型类型模式需要类型实参：" + expected);
+    }
+    else
+        return Fail("类型通配符 ? 需要直接用作泛型类型实参");
+
+    Memory::Vector<std::shared_ptr<const MType>> arguments;
+    if (actual)
+    {
+        const auto concrete = Memory::makeShared<MType>(*actual);
+        if (!ReadMacroGenericType(concrete, family)) return false;
+        if (family == expected && !ReadMacroGenericType(concrete, family, &arguments)) return false;
+    }
+    matches = family == expected && arguments.size() == patterns.size();
+    for (std::size_t index = 0; index < patterns.size(); ++index)
+    {
+        bool argumentMatches = false;
+        const auto argument = index < arguments.size() ? arguments[index] : nullptr;
+        if (!MatchMacroType(argument, patterns[index], argumentMatches)) return false;
+        matches = matches && argumentMatches;
+    }
+    return true;
+}
+
+/**
  * @brief 在卫生绑定前处理字段循环、常量分支和编译期诊断，仅构造普通 AST。
  * @param root 已替换泛型类型的独立模板。
  * @param inputs 只读宏实参，条件只允许使用其中的常量表达式。
@@ -181,7 +252,7 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             const auto metadata = N(node.kids[0]).compileMetadata;
             std::size_t count = 0;
             Meta::Kind element;
-            if (!metadata || !MacroMetadataSequence(*metadata, count, element)) return Fail("编译期循环来源必须是字段、变体、载荷、方法、参数、关联类型或接口集合");
+            if (!metadata || !MacroMetadataSequence(*metadata, count, element)) return Fail("编译期循环来源必须是字段、变体、载荷、方法、参数、关联类型、接口或类型实参集合");
             const auto saved = environment;
             const auto savedLocals = localBindings;
             const int list = M_List();
@@ -203,6 +274,8 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
                     field.interfaceIndex = index;
                 else if (element == Meta::AssociatedType)
                     field.field = index;
+                else if (element == Meta::Type)
+                    field.type = metadata->owner->typeArguments[index];
                 environment = saved;
                 localBindings = savedLocals;
                 environment[node.s] = field;
@@ -305,6 +378,23 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             g_nodes[id].kids = std::move(statements);
         }
         if (!NormalizeMacroMetadata(id, 0) || !PrepareMacroMember(id)) return false;
+        if (constant && node.kind == MNode::Bin && (node.s == "==" || node.s == "!=") && node.kids.size() == 2)
+        {
+            const auto left = N(node.kids[0]).compileMetadata;
+            const auto &right = N(node.kids[1]);
+            if (right.kind == MNode::TupleTypeItem)
+            {
+                if (!left || left->kind != Meta::Type || !left->type)
+                    return Fail("类型比较左侧需要编译期类型元数据");
+                const auto type = T(right.type);
+                bool matches = false;
+                if (!ResolveImportedTypeNames(false, type) || !MatchMacroType(left->type, type, matches)) return false;
+                g_nodes[id].kind = MNode::Bool;
+                g_nodes[id].i = matches == (node.s == "==");
+                g_nodes[id].kids.clear();
+                g_nodes[id].s.clear();
+            }
+        }
         if (constant && node.kind == MNode::Bin && node.s == "+" && node.kids.size() == 2 && N(node.kids[0]).kind == MNode::Str && N(node.kids[1]).kind == MNode::Str)
         {
             std::string text;

@@ -18981,7 +18981,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2025,
+    "line": 2045,
     "page": "std-lang.md",
     "anchor": "api-152"
   },
@@ -19027,7 +19027,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2033,
+    "line": 2053,
     "page": "std-lang.md",
     "anchor": "api-153"
   },
@@ -19065,7 +19065,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2048,
+    "line": 2068,
     "page": "std-lang.md",
     "anchor": "api-154"
   },
@@ -19092,7 +19092,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2255,
+    "line": 2275,
     "page": "std-lang.md",
     "anchor": "api-155"
   },
@@ -19117,7 +19117,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2263,
+    "line": 2283,
     "page": "std-lang.md",
     "anchor": "api-156"
   },
@@ -19665,7 +19665,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1962,
+    "line": 1982,
     "page": "std-lang.md",
     "anchor": "api-174"
   },
@@ -19697,7 +19697,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1968,
+    "line": 1988,
     "page": "std-lang.md",
     "anchor": "api-175"
   },
@@ -23249,7 +23249,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1945,
+    "line": 1965,
     "page": "std-lang.md",
     "anchor": "api-288"
   },
@@ -38194,7 +38194,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2076,
+    "line": 2096,
     "page": "std-algorithms.md",
     "anchor": "api-0"
   },
@@ -38232,7 +38232,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2085,
+    "line": 2105,
     "page": "std-algorithms.md",
     "anchor": "api-1"
   },
@@ -38276,7 +38276,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2105,
+    "line": 2125,
     "page": "std-algorithms.md",
     "anchor": "api-2"
   },
@@ -38314,7 +38314,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2119,
+    "line": 2139,
     "page": "std-algorithms.md",
     "anchor": "api-3"
   },
@@ -38352,7 +38352,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2149,
+    "line": 2169,
     "page": "std-algorithms.md",
     "anchor": "api-4"
   },
@@ -38390,7 +38390,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2154,
+    "line": 2174,
     "page": "std-algorithms.md",
     "anchor": "api-5"
   },
@@ -38434,7 +38434,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2167,
+    "line": 2187,
     "page": "std-algorithms.md",
     "anchor": "api-6"
   },
@@ -38478,7 +38478,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2177,
+    "line": 2197,
     "page": "std-algorithms.md",
     "anchor": "api-7"
   },
@@ -38516,7 +38516,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2189,
+    "line": 2209,
     "page": "std-algorithms.md",
     "anchor": "api-8"
   },
@@ -38554,7 +38554,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2201,
+    "line": 2221,
     "page": "std-algorithms.md",
     "anchor": "api-9"
   },
@@ -38598,7 +38598,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2213,
+    "line": 2233,
     "page": "std-algorithms.md",
     "anchor": "api-10"
   },
@@ -38638,7 +38638,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2224,
+    "line": 2244,
     "page": "std-algorithms.md",
     "anchor": "api-11"
   },

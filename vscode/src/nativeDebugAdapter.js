@@ -539,7 +539,9 @@ class Adapter {
     };
     this.event('chali/buildDiagnostics', { diagnostics: [] });
     if (!executable) try { await new Promise((resolve, reject) => {
-      this.compilerProcess = spawn(this.compiler, ['aot', config.program, '--checked', config.debugMode === 'optimized' ? '--debug-optimized' : '--debug', '--out', prefix], { cwd, env, windowsHide: true, detached: process.platform !== 'win32' });
+      const args = ['aot', config.program, '--checked', config.debugMode === 'optimized' ? '--debug-optimized' : '--debug', '--out', prefix];
+      if (config.llvmPath) args.push('--llvm', config.llvmPath);
+      this.compilerProcess = spawn(this.compiler, args, { cwd, env, windowsHide: true, detached: process.platform !== 'win32' });
       this.compilerProcess.stdout.on('data', (chunk) => collect(chunk, 'console'));
       this.compilerProcess.stderr.on('data', (chunk) => collect(chunk, 'stderr'));
       const buildChild = this.compilerProcess;

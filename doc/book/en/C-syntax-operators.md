@@ -180,6 +180,8 @@ Propagation extracts a successful value or returns through the relevant protocol
 
 $macro and $replace define hygienic macros. Parameter categories constrain inputs; result categories constrain output positions. Type inference can use #res or an argument's static type. Compile-time controls and field generation are explained in Chapter 22.
 
+$for, $if, $match and $regex repeat or select templates. $elif and $else_if are equivalent additional branches of one $if chain, closed by a single $end_if. $fields and $member generate static field operations; $compile_assert and $compile_error report compile-time conditions. Chapter 22 includes a complete JSON_FIELDS example using both branch spellings.
+
 Percent-prefixed definitions, symbols and conditional directives select source during preprocessing, distinct from runtime conditions and typed field selection. @annotation declares annotations and @Reflect selects runtime metadata. Hash-prefixed compiler directives such as #derive, #borrow, #abi and #NonCopyable have specific compiler-defined contracts.
 
 ## C.8 Unsafe Operations and Host Boundaries

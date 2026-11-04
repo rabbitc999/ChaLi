@@ -59,6 +59,9 @@ int M_MacroZip(int variables, int sources, int body);
  * @return 新节点编号。
  */
 int M_MacroCompileIf(int condition, int yes, int no);
+
+/** @brief 构造仅在宏类型模式中匹配一个类型实参的通配符。 */
+int M_MacroTypeWildcard();
 /**
  * @brief 保存通用类型应用，保持语法分类独立于模板是否声明。
  * @param name 类型名称池编号。

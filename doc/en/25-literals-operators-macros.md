@@ -455,7 +455,7 @@ Inside a macro, `$for field in $fields<T>()` generates static code for each fiel
 $macro SUM_INTEGERS<T>(value: value) -> expr
 int64 total = 0;
 $for field in $fields<T>()
-$if field.type.name == "int64"
+$if field.type == int64
 int64 local = $member(value, field);
 total += local;
 $end_if
@@ -465,6 +465,12 @@ $end_macro
 ```
 
 `$if condition` can be followed by repeated `$elif condition` or equivalent `$else_if condition` branches and one optional `$else`, closed by a single `$end_if`. The first true branch is selected; later conditions and unselected bodies are not evaluated or semantically checked. This applies to expression, statement, declaration and member macros, including nested chains. A conditional branch after `$else`, an orphan branch, a missing condition or a missing terminator is rejected. Conditions must be compile-time bool values. `$if condition`, optional `$else`, and `$end_if` require a compile-time bool constant. Conditions can use metadata properties, variadic counts, and constant arguments. String properties support `==` and `!=` after ordinary language escape decoding. Unselected branches do not undergo ordinary name, type, or borrowing checks; generated branches do. No arbitrary user function or host side effect is executed. Each field iteration has distinct local declaration identities. Empty field collections generate no body, and descriptors cannot escape as runtime values.
+
+A field type condition can use `field.type == String` or `field.type == std::lang::String`. Short names follow the type scope of the macro definition. Exact comparison includes concrete arguments, so `field.type != Map<String, int64>` can distinguish instances. In `Map<?, ?>`, `Set<?>`, and `Map<String, Set<?>>`, each `?` matches one type argument. In macro conditions, `Map` and `std::lang::Map` both mean `Map<?, ?>`.
+
+`field.genericName` gives the qualified generic family, such as `std::lang::Map`, or an empty string for a non-generic type. `field.typeArguments` contains the concrete type descriptors in declaration order. Use `.count`, a constant index, or `$for arg in field.typeArguments`. After matching `Map<String, ?>`, pass `field.typeArguments[1]` to a macro's `type` parameter. Each descriptor also exposes its own `.typeArguments`. Compile-time integer parameters are omitted from this type collection.
+
+For a concrete record field, `field.chlids` and `field.type.fields` both give its instance fields in declaration order. Use `$member($member(value, field), child)` to generate an ordinary access to a child field. An empty record gives an empty collection. Unsupported field types such as scalars produce a compile-time diagnostic.
 
 Regression entry points: [typed variadics](../../tests/chali_macro_variadics.py), [patterns](../../tests/chali_macro_patterns.py), and [field and structured controls](../../tests/chali_macro_controls.py).
 

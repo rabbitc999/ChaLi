@@ -260,8 +260,8 @@ struct Expansion
  */
 struct Session
 {
-    Memory::Vector<std::pair<Memory::String, Memory::String>> libraryMacros;  ///< 生产模块及其未展开的宏定义。
-    Memory::Vector<Memory::String> libraryImports;  ///< 模板定义模块的显式依赖上下文。
+
+
     Memory::Map<Memory::String, Generic> generics;
     Memory::Map<Memory::String, Memory::Set<Memory::String>> implemented;
     Memory::Map<Memory::String, Expansion> made;

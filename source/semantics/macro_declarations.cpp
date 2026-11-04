@@ -55,14 +55,7 @@ bool ExpandAstMacroMembers(int owner)
                 return ReportAstMacroFailure(id, "接口不能包含生成字段");
             if (declaration.kind != MNode::InterfaceDecl && node.kind == MNode::MethodDef && (node.kids.size() < 2 || node.kids[1] < 0))
             {
-                if (node.abiConvention.empty()) return ReportAstMacroFailure(id, "普通类型的生成方法必须提供方法体");
-                const auto permitted = [&](std::size_t line) {
-                    return line && line <= g_sourceFiles.size() && g_libraryMethodSources.count(g_sourceFiles[line - 1]);
-                };
-                if (!permitted(node.sourceLine) && !permitted(node.expansionLine))
-                    return ReportAstMacroFailure(id, "方法原型缺少已验证的 record-methods-v1 来源");
-                if (node.abiLibrary != "@link" || (node.abiLength != "const" && node.abiLength != "mut" && node.abiLength != "static"))
-                    return ReportAstMacroFailure(id, "原生方法原型缺少直接链接或接收者契约");
+                return ReportAstMacroFailure(id, "普通类型的生成方法必须提供方法体");
             }
             members.push_back(id);
             if (depth || node.macroExpansion >= 0) generated.insert(id);

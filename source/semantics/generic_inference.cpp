@@ -1,6 +1,53 @@
 /* 名称后置泛型：签名仍由生成解析器读取，推导只处理类型树。 */
 
 /**
+ * @brief 查找类型应用所指的模板，沿用模块、标准库和导入查找顺序。
+ * @param type 保留名称与查找模块的类型应用。
+ * @param requireUnique 宏类型模式要求声明从当前作用域唯一可见。
+ * @return 模板定义；未知或歧义时为空并登记诊断。
+ */
+const chali_generic::Generic *FindAstGenericTypeDefinition(const MType &type, bool requireUnique = false)
+{
+    const auto &generics = chali_generic::session.generics;
+    const auto findScoped = [&](const Memory::String &module, const Memory::String &sourceName) {
+        auto direct = generics.find(module.empty() ? sourceName : module + "::" + sourceName);
+        if (direct != generics.end() && direct->second.module == module) return direct;
+        for (auto candidate = generics.begin(); candidate != generics.end(); ++candidate)
+            if (candidate->second.module == module && (candidate->second.sourceName.empty() ? candidate->second.name : candidate->second.sourceName) == sourceName)
+                return candidate;
+        return generics.end();
+    };
+    const auto split = type.genericBase.rfind("::");
+    auto qualifier = split == Memory::String::npos ? type.lookupModule : type.genericBase.substr(0, split);
+    if (requireUnique && qualifier == "__root") qualifier.clear();
+    auto found = findScoped(qualifier, split == Memory::String::npos ? type.genericBase : type.genericBase.substr(split + 2));
+    if (requireUnique)
+    {
+        if (found == generics.end() && split == Memory::String::npos) found = findScoped({}, type.genericBase);
+    }
+    else
+    {
+        if (found == generics.end()) found = generics.find(type.genericBase);
+        if (found == generics.end()) found = findScoped("std::lang", type.genericBase);
+    }
+    if (found == generics.end() && (!requireUnique || split == Memory::String::npos))
+    {
+        const auto imports = g_moduleImports.find(type.lookupModule);
+        if (requireUnique) found = findScoped("std::lang", type.genericBase);
+        if (imports != g_moduleImports.end())
+            for (const auto &module : imports->second)
+            {
+                const auto candidate = findScoped(module, type.genericBase);
+                if (candidate == generics.end()) continue;
+                if (found != generics.end() && found != candidate) return Fail("泛型类型名称有多个可见定义：" + type.genericBase), nullptr;
+                found = candidate;
+            }
+    }
+    if (found == generics.end()) return Fail("没有声明的泛型类型：" + type.genericBase), nullptr;
+    return &found->second;
+}
+
+/**
  * @brief 递归解析结构化类型应用，缺少具体声明时请求普通泛型实例化。
  * @param type 当前类型树。
  * @param depth 当前递归深度。
@@ -10,6 +57,7 @@ bool ResolveAstGenericType(const std::shared_ptr<MType> &type, std::size_t depth
 {
     if (!type) return true;
     if (depth >= 256) return Fail("类型应用超过递归深度预算");
+    if (type->name == "?") return Fail("类型通配符 ? 仅可用于宏类型比较");
     if (!ResolveAstGenericType(type->elem, depth + 1) || !ResolveAstGenericType(type->elem2, depth + 1)) return false;
     for (const auto &parameter : type->paramTypes)
         if (!ResolveAstGenericType(parameter, depth + 1)) return false;
@@ -25,38 +73,13 @@ bool ResolveAstGenericType(const std::shared_ptr<MType> &type, std::size_t depth
         }
         return true;
     }
-    const auto &generics = chali_generic::session.generics;
-    const auto findScoped = [&](const Memory::String &module, const Memory::String &sourceName) {
-        auto direct = generics.find(module.empty() ? sourceName : module + "::" + sourceName);
-        if (direct != generics.end() && direct->second.module == module) return direct;
-        for (auto candidate = generics.begin(); candidate != generics.end(); ++candidate)
-            if (candidate->second.module == module && (candidate->second.sourceName.empty() ? candidate->second.name : candidate->second.sourceName) == sourceName)
-                return candidate;
-        return generics.end();
-    };
-    const auto split = type->genericBase.rfind("::");
-    auto found = split == Memory::String::npos ? findScoped(type->lookupModule, type->genericBase) :
-                                                 findScoped(type->genericBase.substr(0, split), type->genericBase.substr(split + 2));
-    if (found == generics.end()) found = generics.find(type->genericBase);
-    if (found == generics.end()) found = findScoped("std::lang", type->genericBase);
-    if (found == generics.end())
-    {
-        const auto imports = g_moduleImports.find(type->lookupModule);
-        if (imports != g_moduleImports.end())
-            for (const auto &module : imports->second)
-            {
-                const auto candidate = findScoped(module, type->genericBase);
-                if (candidate == generics.end()) continue;
-                if (found != generics.end()) return Fail("泛型类型名称有多个可见定义：" + type->genericBase);
-                found = candidate;
-            }
-    }
-    if (found == generics.end()) return Fail("没有声明的泛型类型：" + type->genericBase);
+    const auto *definition = FindAstGenericTypeDefinition(*type);
+    if (!definition) return false;
     Memory::Vector<Memory::String> arguments;
     for (const auto &argument : type->genericArguments) arguments.push_back(chali_generic::canonicalType(Describe(argument)));
-    const auto name = chali_generic::mangle(found->second.name, arguments);
-    if (!chali_generic::session.made.count(name)) throw MInstantiationRequest{ found->second.name, arguments };
-    type->name = found->second.module.empty() ? name : found->second.module + "::" + name;
+    const auto name = chali_generic::mangle(definition->name, arguments);
+    if (!chali_generic::session.made.count(name)) throw MInstantiationRequest{ definition->name, arguments };
+    type->name = definition->module.empty() ? name : definition->module + "::" + name;
     // 登记阶段按重名情况决定保留模块前缀；宏类型片段复用同一实际声明名称。
     Memory::String declaredName;
     std::size_t matchingDeclarations = 0;
@@ -67,7 +90,7 @@ bool ResolveAstGenericType(const std::shared_ptr<MType> &type, std::size_t depth
         if (node.s == name || node.s == (node.module.empty() ? name : node.module + "::" + name))
         {
             ++matchingDeclarations;
-            if (node.module == found->second.module) declaredName = node.s;
+            if (node.module == definition->module) declaredName = node.s;
         }
     }
     if (!declaredName.empty() && (matchingDeclarations == 1 || declaredName != name)) type->name = declaredName;

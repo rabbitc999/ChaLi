@@ -12,11 +12,6 @@
 #include <fstream>
 #include <stdexcept>
 
-/** @brief 编译器原生驱动入口。
- * @param argc 参数数量。
- * @param argv 完整参数数组。
- * @return 编译状态。 */
-int chali_main_entry(int argc, char **argv);
 namespace chali_library
 {
 namespace
@@ -105,7 +100,7 @@ std::string inspection(const Package &package)
 }
 }  // namespace
 /**
- * @brief 派发受支持的语言库编译或格式工具，不执行初始化。
+ * @brief 派发库包清单、封装和检查工具。
  * @param argc 归一化参数数量。
  * @param argv lib 子命令参数。
  * @return 成功零、输入或工具失败一、用法错误二。
@@ -118,69 +113,7 @@ int runCli(int argc, char **argv)
         const std::string mode = argv[2];
         if (mode == "--help" || mode == "help" || mode == "-h")
         {
-            std::puts("chali lib build FILE.chl --module NAME --package-version VERSION --out FILE.chlib [--target TARGET] [--cpu CPU] [--license SPDX] [--license-asset NAME=FILE] [--system-library NAME] [--runtime-library NAME] [--with-bitcode]\nchali lib template --module NAME --package-version VERSION [--target TARGET] [--cpu CPU] [--license SPDX] [--license-asset NAME] [--dependency MODULE=VERSION#SHA256] [--system-library NAME] [--runtime-library NAME] [--out MANIFEST.json]\nchali lib pack --manifest MANIFEST.json --entry KIND:NAME=FILE ... --out FILE.chlib\nchali lib lock FILE.chlib ... --out chali.libraries.lock\nchali lib inspect FILE.chlib [--module EXPECTED] [--package-version EXPECTED] [--target TARGET] [--cpu CPU]\nKIND: interface, templates, object, archive, bitcode, bytecode, source, license, unit-data\nbuild 编译受支持的语言函数；其余格式工具封装或检查资产。导出与导入不执行库初始化。");
-            return 0;
-        }
-        if (mode == "build")
-        {
-            std::vector<std::string> arguments{ argv[0], "aot" };
-            for (int index = 3; index < argc; ++index)
-            {
-                const std::string option = argv[index];
-                arguments.push_back(option == "--module" ? "--library-module" : option == "--package-version" ? "--library-version" :
-                                                                            option == "--license"             ? "--library-license" :
-                                                                            option == "--license-asset"       ? "--library-license-asset" :
-                                                                            option == "--system-library"      ? "--library-system-library" :
-                                                                            option == "--runtime-library"     ? "--library-runtime-library" :
-                                                                                                                option);
-            }
-            std::vector<char *> values;
-            for (auto &argument : arguments) values.push_back(argument.data());
-            return chali_main_entry(static_cast<int>(values.size()), values.data());
-        }
-        if (mode == "lock")
-        {
-            std::string output;
-            std::vector<std::filesystem::path> inputs;
-            bool literal = false;
-            for (int index = 3; index < argc; ++index)
-            {
-                const std::string argument = argv[index];
-                if (!literal && argument == "--")
-                {
-                    literal = true;
-                    continue;
-                }
-                if (!literal && argument == "--out")
-                {
-                    if (++index >= argc || !output.empty()) throw std::invalid_argument("lock --out 需要唯一路径");
-                    output = argv[index];
-                }
-                else if (!literal && !argument.empty() && argument.front() == '-')
-                    throw std::invalid_argument("未知 lock 选项：" + argument);
-                else
-                    inputs.push_back(std::filesystem::u8path(argument));
-            }
-            if (output.empty() || inputs.empty() || inputs.size() > 128) throw std::invalid_argument("lock 需要一至一百二十八个包及 --out 文件");
-            const auto product = std::filesystem::weakly_canonical(std::filesystem::u8path(output));
-            std::vector<Dependency> records;
-            std::vector<Dependency> required;
-            for (const auto &path : inputs)
-            {
-                if (std::filesystem::weakly_canonical(path) == product) throw std::runtime_error("库锁不能覆盖输入包");
-                Package package;
-                std::string error;
-                if (!read(path, package, error)) throw std::runtime_error(path.u8string() + ": " + error);
-                records.push_back({ package.manifest.module, package.manifest.version, package.contentSha256 });
-                required.insert(required.end(), package.manifest.dependencies.begin(), package.manifest.dependencies.end());
-            }
-            for (const auto &dependency : required)
-            {
-                const auto found = std::find_if(records.begin(), records.end(), [&](const auto &record) { return record.module == dependency.module; });
-                if (found == records.end() || found->version != dependency.version || found->sha256 != dependency.sha256)
-                    throw std::runtime_error("库锁输入未包含匹配的传递依赖：" + dependency.module);
-            }
-            manifestOutput(lockJson(std::move(records)) + "\n", output);
+            std::puts("chali lib template --module NAME --package-version VERSION [--target TARGET] [--cpu CPU] [--license SPDX] [--license-asset NAME] [--dependency MODULE=VERSION#SHA256] [--system-library NAME] [--runtime-library NAME] [--out MANIFEST.json]\nchali lib pack --manifest MANIFEST.json --entry KIND:NAME=FILE ... --out FILE.chlib\nchali lib inspect FILE.chlib [--module EXPECTED] [--package-version EXPECTED] [--target TARGET] [--cpu CPU]\nKIND: interface, templates, object, archive, bitcode, bytecode, source, license, unit-data");
             return 0;
         }
         if (mode != "template" && mode != "pack" && mode != "inspect") throw std::invalid_argument("未知 lib 子命令：" + mode);

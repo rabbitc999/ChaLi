@@ -270,109 +270,28 @@ Memory::String CAbiType(const std::shared_ptr<MType> &type)
 }
 
 /**
- * @brief 判断语言单元可以复制的非拥有记录或枚举值。
- * @param type 已解析语言类型。
- * @return 字段没有拥有资源且采用普通记录布局时为真。
+ * @brief 判断是否需要将语言逻辑槽封送为平台 C ABI。
+ * @param function 已验证的外部函数声明。
+ * @return 结果或参数含非标量类型时为真。
  */
-bool LibraryPlainValue(const std::shared_ptr<MType> &type)
+bool CAbiNeedsMarshalling(const MFunctionDecl &function)
 {
-    if (!type || type->kind != MType::Struct) return false;
-    const auto &name = type->name;
-    const auto found = g_structs.find(name);
-    return found != g_structs.end() && !g_opcodeTypes.count(name)
-           && !found->second.abiPacked && !found->second.nonCopyable && !CAbiType(type).empty();
-}
-/**
- * @brief 判断共用运行时传递的标准拥有字符串，不把用户同名类型当成 String。
- * @param type 已解析的语言类型。
- * @return 类型为标准库 String 时为真。
- */
-bool LibraryOwnedString(const std::shared_ptr<MType> &type)
-{
-    return type && IsStandardOpcode(type, "String");
-}
-/**
- * @brief 核对仅含基础值、标准 String 及嵌套普通记录的可复制布局。
- * @param type 待导出或借用的已解析类型。
- * @return 布局有限且不含未接入的拥有资源时为真。
- */
-bool LibraryValueRecord(const std::shared_ptr<MType> &type)
-{
-    if (!type || type->kind != MType::Struct || g_opcodeTypes.count(type->name)) return false;
-    Memory::Set<Memory::String> visiting;
-    Memory::Function<bool(const std::shared_ptr<MType> &, unsigned)> visit;
-    visit = [&](const std::shared_ptr<MType> &value, unsigned depth) {
-        if (!value || depth > 64) return false;
-        if (LibraryOwnedString(value)) return true;
-        if (value->kind != MType::Struct)
-            return (value->kind == MType::Int || value->kind == MType::Double || value->kind == MType::Bool || value->kind == MType::Char)
-                && !CAbiType(value).empty();
-        const auto found = g_structs.find(value->name);
-        if (found == g_structs.end() || g_opcodeTypes.count(value->name) || found->second.fields.empty()
-            || found->second.abiPacked || found->second.nonCopyable || !visiting.insert(value->name).second) return false;
-        bool valid = true;
-        for (const auto &field : found->second.fields)
-            if (!visit(field.type, depth + 1)) valid = false;
-        visiting.erase(value->name);
-        return valid;
+    const auto scalar = [](const std::shared_ptr<MType> &type) {
+        return type && (type->kind == MType::Void || type->kind == MType::Bool || type->kind == MType::Int || type->kind == MType::Double);
     };
-    return visit(type, 0);
+    if (!scalar(function.signature.result)) return true;
+    for (const auto &parameter : function.signature.params)
+        if (!scalar(parameter.type)) return true;
+    return false;
 }
-/**
- * @brief 判断通过标准 String 字段持有资源的受支持普通记录或枚举。
- * @param type 已解析类型。
- * @return 可复制布局含拥有字段时为真。
- */
-bool LibraryOwnedRecord(const std::shared_ptr<MType> &type)
-{
-    return LibraryValueRecord(type) && !LibraryPlainValue(type);
-}
-/**
- * @brief 判断使用逻辑值而非物理 C 封送的语言库入口。
- * @param convention 经过能力校验的调用约定。
- * @return 借用、普通聚合或拥有值入口时为真。
- */
-bool LibraryLanguageAbi(const Memory::String &convention)
-{
-    return convention == "ChaLiBorrow" || convention == "ChaLiValue" || convention == "ChaLiOwned";
-}
-/**
- * @brief 判断基础标量槽位的逻辑引用，不接受 void、宿主包装或其他资源。
- * @param type 已解析语言类型。
- * @return 引用目标属于受支持固定宽度基础类型时为真。
- */
-bool LibraryScalarReference(const std::shared_ptr<MType> &type)
-{
-    if (!type || type->kind != MType::Ptr || !type->elem) return false;
-    const auto &element = type->elem;
-    return element->kind == MType::Bool || element->kind == MType::Char
-           || (element->kind == MType::Int && (element->bits == 8 || element->bits == 16 || element->bits == 32 || element->bits == 64))
-           || (element->kind == MType::Double && (element->bits == 32 || element->bits == 64));
-}
-/**
- * @brief 判断逻辑地址传递的基础标量、受支持记录、枚举或标准 String 槽位借用。
- * @param type 已解析语言类型。
- * @return 目标是受支持基础标量、记录、枚举或 String 槽位时为真。
- */
-bool LibraryBorrowParameter(const std::shared_ptr<MType> &type)
-{
-    return type && type->kind == MType::Ptr && (LibraryScalarReference(type) || LibraryValueRecord(type->elem) || LibraryOwnedString(type->elem));
-}
-/**
- * @brief 为私有语言聚合或 String 入口选择逻辑字宽；其余类型沿用固定标量 C ABI。
- * @param type 语言类型。
- * @return 记录、枚举及其引用为逻辑地址字，其余为原生 C 类型。
- */
-Memory::String LibraryNativeType(const std::shared_ptr<MType> &type)
-{
-    return LibraryBorrowParameter(type) || LibraryValueRecord(type) || LibraryOwnedString(type) ? Memory::String("long long") : CAbiType(type);
-}
+
 /**
  * @brief 在完整声明与导入已知后解析类型裸名，并隔离不同模块的同名类型。
  * @param registerOpcodes 是否同时登记 opcode 声明；延迟宏只归一化新增类型时为假。
+ * @param comparisonType 仅解析已选宏条件中的类型，空值表示解析活动语法。
  * @return 无歧义时返回 true；失败保留普通名称解析错误。
  */
-bool ResolveImportedTypeNames(bool registerOpcodes = true)
+bool ResolveImportedTypeNames(bool registerOpcodes = true, const std::shared_ptr<MType> &comparisonType = {})
 {
     for (const int id : g_top)
         if (N(id).kind == MNode::ImportDecl) g_moduleImports[N(id).module].insert(N(id).s);
@@ -405,6 +324,7 @@ bool ResolveImportedTypeNames(bool registerOpcodes = true)
         {
             const auto qualifier = name.substr(0, split);
             const auto exact = owners.find(qualifier == "__root" ? Memory::String() : qualifier);
+            if (comparisonType && exact == owners.end()) return Fail("没有声明的类型：" + name);
             *result = exact == owners.end() ? name : exact->second;
             return true;
         }
@@ -427,17 +347,21 @@ bool ResolveImportedTypeNames(bool registerOpcodes = true)
                 return Fail("类型 " + name + " 有歧义；请使用作用域限定名");
             chosen = found->second;
         }
+        if (comparisonType && chosen.empty()) return Fail("没有可见的类型：" + name);
         *result = chosen.empty() ? name : chosen;
         return true;
     };
-    for (const int id : g_top)
+    if (!comparisonType)
     {
-        auto &node = g_nodes[id];
-        ReductionSourceScope source(id);
-        const auto found = declarations.find(BareTypeName(node.s));
-        if (found == declarations.end()) continue;
-        if (node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl || node.kind == MNode::HostTypeDecl || node.kind == MNode::OpcodeDecl)
-            node.s = found->second.at(node.module);
+        for (const int id : g_top)
+        {
+            auto &node = g_nodes[id];
+            ReductionSourceScope source(id);
+            const auto found = declarations.find(BareTypeName(node.s));
+            if (found == declarations.end()) continue;
+            if (node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl || node.kind == MNode::HostTypeDecl || node.kind == MNode::OpcodeDecl)
+                node.s = found->second.at(node.module);
+        }
     }
     for (const int id : g_top)
     {
@@ -500,17 +424,23 @@ bool ResolveImportedTypeNames(bool registerOpcodes = true)
         for (const auto &parameter : type->paramTypes) collectType(parameter);
         for (const auto &argument : type->genericArguments) collectType(argument);
     };
-    for (const auto &type : g_types) collectType(type);
+    if (comparisonType)
+        collectType(comparisonType);
+    else
+        for (const auto &type : g_types) collectType(type);
     for (const auto &type : parsedTypes)
     {
-        if (!type || (g_macroSyntaxFiltering && !g_macroActiveTypes.count(type.get())) || !type->unresolvedName) continue;
+        if (!type || (!comparisonType && g_macroSyntaxFiltering && !g_macroActiveTypes.count(type.get())) || !type->unresolvedName) continue;
         const auto original = type->name;
         if (!resolve(original, type->lookupModule, &type->name)) return false;
         if (type->name == original && original.find("::") == Memory::String::npos && declarations.count(original) == 0)
         {
             const int core = BuiltinTypeByName(original);
             if (core >= 0) *type = *T(core);
+            else if (comparisonType) return Fail("没有声明的类型：" + original);
         }
+        if (comparisonType && original.find("::") != Memory::String::npos && declarations.count(BareTypeName(original)) == 0)
+            return Fail("没有声明的类型：" + original);
         if (const auto opcode = g_opcodeTypes.find(type->name); opcode != g_opcodeTypes.end())
         {
             type->kind = opcode->second.aggregate ? MType::Struct : MType::Opcode;
@@ -520,6 +450,7 @@ bool ResolveImportedTypeNames(bool registerOpcodes = true)
         // 早期宏／派生查询只归一名称；opcode 注册前不能冻结其临时 Struct 表示。
         type->unresolvedName = opcodeNames.count(type->name) && !g_opcodeTypes.count(type->name);
     }
+    if (comparisonType) return true;
     for (auto &node : g_nodes)
     {
         if ((!g_macroSyntaxFiltering || g_macroActiveNodes.count(&node)) && node.kind == MNode::EnumCtor && declarations.count(BareTypeName(node.s)))
@@ -579,90 +510,11 @@ std::shared_ptr<MType> DeclaredFieldType(const MNode &member)
 }
 
 /**
- * @brief 为已验证的无正文方法建立私有 ABI 声明和受普通语义检查的转发体。
- * @param owner 已限定身份的所属类型。
- * @param declaration 保存原生符号与接收者契约的方法原型。
- * @param method 接收生成正文及桥接标志的方法签名。
- * @param pending 接收本轮需要登记的私有外部函数节点。
- * @return 桥接建立成功时返回真，非法原型返回诊断。
- */
-bool RegisterNativeMethodBridge(const MNode &owner, const MNode &declaration, MMethod &method, Memory::Vector<int> &pending)
-{
-    if (declaration.abiConvention.empty()) return true;
-    if (declaration.kids.size() != 2 || declaration.kids[1] >= 0) return Fail("原生方法接口不能携带实现正文");
-    const auto first = g_nodes.size();
-    const auto key = declaration.s2 + "\n" + owner.s + "\n" + method.source;
-    const auto hash = chali_digest::hex(chali_digest::sha256(std::string_view(key.data(), key.size())));
-    const auto helperName = Memory::String(("__chali_native_method_" + hash).c_str());
-    const int parameters = M_List(), arguments = M_List();
-    if (!method.isStatic)
-    {
-        auto receiver = Memory::makeShared<MType>();
-        receiver->kind = MType::Ptr;
-        receiver->elem = NamedType(owner.s);
-        receiver->readOnly = declaration.abiLength == "const";
-        Memory::String receiverName = "chaliReceiver";
-        while (std::any_of(method.params.begin(), method.params.end(), [&](const auto &parameter) { return parameter.source == receiverName; })) receiverName += '_';
-        g_nodes[parameters].kids.push_back(M_Param(M_AddType(receiver), M_Name(receiverName.c_str())));
-        g_nodes[arguments].kids.push_back(M_Un("&", M_Var(M_Name("self"))));
-    }
-    for (const auto parameter : N(declaration.kids[0]).kids)
-    {
-        const auto original = N(parameter);
-        const int copy = M_Param(original.type, M_Name(original.s.c_str()));
-        g_nodes[copy].i = original.i;
-        g_nodes[parameters].kids.push_back(copy);
-        const int value = M_Var(M_Name(original.s.c_str()));
-        const auto type = T(original.type);
-        const bool transfer = type && (type->kind == MType::Struct || LibraryOwnedString(type));
-        // 桥接体在全局位置扫描之后创建；显式登记移动所需槽位，再沿用普通 move 检查。
-        if (transfer) g_addressTakenNames.insert(original.s);
-        g_nodes[arguments].kids.push_back(transfer ? M_Move(value) : value);
-    }
-    const int helper = M_AbiFunc(declaration.type, M_Name(helperName.c_str()), parameters, -1);
-    auto &external = g_nodes[helper];
-    external.abiConvention = declaration.abiConvention;
-    external.abiLibrary = declaration.abiLibrary;
-    external.abiSourceFile = declaration.abiSourceFile;
-    external.s2 = declaration.s2;
-    external.moduleLocal = true;
-    external.generatedDeclaration = true;
-    pending.push_back(helper);
-    const int call = M_CallOn(M_Var(M_Name(helperName.c_str())), arguments);
-    method.bodyId = M_Block(M_List1(method.result->kind == MType::Void ? M_ExprStmt(call) : M_Return(call)));
-    method.nativeBridge = true;
-    for (auto index = first; index < g_nodes.size(); ++index)
-    {
-        auto &node = g_nodes[index];
-        node.module = owner.module;
-        node.sourceLine = declaration.sourceLine;
-        node.sourceColumn = declaration.sourceColumn;
-        node.expansionLine = declaration.expansionLine;
-        node.expansionModule = declaration.expansionModule;
-    }
-    if (method.isNamedConstructor)
-    {
-        auto bodyDeclaration = declaration;
-        bodyDeclaration.type = M_TypeVoid();
-        bodyDeclaration.type2 = 0;
-        bodyDeclaration.s2 += "_body";
-        bodyDeclaration.abiLength = "mut";
-        auto bodyMethod = method;
-        bodyMethod.result = SimpleType(MType::Void);
-        bodyMethod.isStatic = bodyMethod.isConstructor = bodyMethod.isNamedConstructor = false;
-        if (!RegisterNativeMethodBridge(owner, bodyDeclaration, bodyMethod, pending)) return false;
-        method.nativeConstructorBody = bodyMethod.bodyId;
-    }
-    return true;
-}
-
-/**
  * @brief 登记所有顶层声明及方法，建立完整类型、重载和默认参数环境。
  * @return 登记成功时返回真；失败保留实际声明位置的诊断。
  */
 bool RegisterTop()
 {
-    Memory::Vector<int> nativeMethods;
     RefreshMacroActiveSyntax();
     for (const int topId : g_top)
     {
@@ -1046,7 +898,6 @@ bool RegisterTop()
             if (!ValidateVariadicParameters(method.params,
                                             "enum 方法 " + top.s + "." + member.s))
                 return false;
-            if (!RegisterNativeMethodBridge(top, member, method, nativeMethods)) return false;
             definition.methods.push_back(method);
             g_nodes[static_cast<std::size_t>(memberId)].i =
                 static_cast<long long>(definition.methods.size()) - 1;
@@ -1145,7 +996,6 @@ bool RegisterTop()
                     if (!ValidateVariadicParameters(method.params,
                                                     "方法 " + top.s + "." + member.s))
                         return false;
-                    if (!RegisterNativeMethodBridge(top, member, method, nativeMethods)) return false;
                     definition.methods.push_back(method);
                     /* 记录方法在定义表里的下标：降级时按同一个下标取标签与签名。 */
                     g_nodes[static_cast<std::size_t>(memberId)].i =
@@ -1457,7 +1307,6 @@ bool RegisterTop()
 
     /* ---- 4. 普通函数：先把同名的一起收齐，再按"是不是重载"分配标签 ---- */
     Memory::Vector<int> functionDeclarations(g_top.begin(), g_top.end());
-    functionDeclarations.insert(functionDeclarations.end(), nativeMethods.begin(), nativeMethods.end());
     for (const int topId : functionDeclarations)
     {
         const MNode top = N(topId);
@@ -1508,19 +1357,18 @@ bool RegisterTop()
                 return Fail("abi 库路径和符号不能包含 NUL 字节");
             if (declaration.abiLibrary.empty() || declaration.abiSymbol.empty())
                 return Fail("abi 库路径与 C 符号名不能为空");
-            const bool languageAbi = LibraryLanguageAbi(declaration.abiConvention);
-            const bool ownedAbi = declaration.abiConvention == "ChaLiOwned";
-            if (ownedAbi && (!declaration.abiRelease.empty() || !top.abiLength.empty()))
-                return Fail("拥有值语言 ABI 不接受物理 C 释放函数或数组长度约定");
+            if (chali_aot::isDirectLinkLibrary(declaration.abiLibrary)
+                && (!declaration.abiRelease.empty() || CAbiNeedsMarshalling(declaration)))
+                return Fail("@link 当前仅支持固定标量 C ABI 签名，不接受释放函数");
             if (!declaration.abiRelease.empty())
             {
                 const auto result = CAbiUnderlying(declaration.signature.result);
                 if (!IsStandardOpcode(result, "String") && result->kind != MType::Ptr && result->kind != MType::Array && !CAbiOptionalReference(declaration.signature.result))
                     return Fail("abi 释放函数只能用于字符串、引用或数组返回值");
             }
-            if (!languageAbi && (CAbiUnderlying(declaration.signature.result)->kind == MType::Func || CAbiType(declaration.signature.result).empty()))
+            if (CAbiUnderlying(declaration.signature.result)->kind == MType::Func || CAbiType(declaration.signature.result).empty())
                 return Fail("abi 函数 " + declaration.source + " 的返回类型不是受支持的 C ABI 类型");
-            if (!languageAbi && CAbiUnderlying(declaration.signature.result)->kind == MType::Array)
+            if (CAbiUnderlying(declaration.signature.result)->kind == MType::Array)
             {
                 for (std::size_t i = 0; i < declaration.signature.params.size(); ++i)
                     if (declaration.signature.params[i].source == top.abiLength && CAbiUnderlying(declaration.signature.params[i].type)->kind == MType::Int)
@@ -1529,66 +1377,8 @@ bool RegisterTop()
                     return Fail("abi 数组返回值的 [长度] 必须引用整数形参");
             }
             for (const MParam &param : declaration.signature.params)
-                if (param.variadic || (!languageAbi && (CAbiType(param.type).empty() || CAbiType(param.type) == "void")))
+                if (param.variadic || CAbiType(param.type).empty() || CAbiType(param.type) == "void")
                     return Fail("abi 函数 " + declaration.source + " 的参数必须是固定的 C ABI 标量、纯值结构体或单对象引用");
-            if (LibraryLanguageAbi(declaration.abiConvention))
-            {
-                const bool scalarReferences = LibraryScalarReference(declaration.signature.result)
-                    || std::any_of(declaration.signature.params.begin(), declaration.signature.params.end(), [](const auto &parameter) { return LibraryScalarReference(parameter.type); });
-                if (scalarReferences)
-                {
-                    const auto permitted = [&](std::size_t line) {
-                        return line && line <= g_sourceFiles.size() && g_libraryScalarRefSources.count(g_sourceFiles[line - 1]);
-                    };
-                    if (!permitted(top.sourceLine) && !permitted(top.expansionLine))
-                        return Fail("基础标量引用入口需要已验证的 scalar-reference-v1 能力");
-                }
-                const auto scalar = [](const std::shared_ptr<MType> &type, bool result) {
-                    return type && ((result && type->kind == MType::Void) || type->kind == MType::Bool || type->kind == MType::Char || type->kind == MType::Int || type->kind == MType::Double);
-                };
-                const bool values = declaration.abiConvention == "ChaLiValue" || ownedAbi;
-                const auto stringValue = [](const std::shared_ptr<MType> &type) {
-                    return LibraryOwnedString(type) || (type && type->kind == MType::Ptr && LibraryOwnedString(type->elem));
-                };
-                if (!ownedAbi && (stringValue(declaration.signature.result)
-                    || std::any_of(declaration.signature.params.begin(), declaration.signature.params.end(), [&](const auto &parameter) { return stringValue(parameter.type); })))
-                    return Fail("String 语言入口需要 ChaLiOwned 及已验证的 owned-string-value-v1 能力");
-                const auto recordValue = [](const std::shared_ptr<MType> &type) {
-                    return LibraryOwnedRecord(type) || (type && type->kind == MType::Ptr && LibraryOwnedRecord(type->elem));
-                };
-                if (recordValue(declaration.signature.result)
-                    || std::any_of(declaration.signature.params.begin(), declaration.signature.params.end(), [&](const auto &parameter) { return recordValue(parameter.type); }))
-                {
-                    const auto permitted = [&](std::size_t line) {
-                        return line && line <= g_sourceFiles.size() && g_libraryOwnedRecordSources.count(g_sourceFiles[line - 1]);
-                    };
-                    if (!ownedAbi || (!permitted(top.sourceLine) && !permitted(top.expansionLine)))
-                        return Fail("拥有字段聚合入口需要 ChaLiOwned 及已验证的 owned-record-value-v1 能力");
-                }
-                if (!scalar(declaration.signature.result, true))
-                {
-                    const auto dataSource = [&](std::size_t line) {
-                        return line && line <= g_sourceFiles.size() && g_libraryDataSources.count(g_sourceFiles[line - 1]);
-                    };
-                    const auto borrowedSource = [&](std::size_t line) {
-                        return line && line <= g_sourceFiles.size() && g_libraryBorrowResultSources.count(g_sourceFiles[line - 1]);
-                    };
-                    if (ownedAbi && LibraryOwnedString(declaration.signature.result))
-                    {
-                        // 新鲜返回值转交调用方；普通 String 值参数由被调函数按语言规则复制。
-                    }
-                    else if (LibraryBorrowParameter(declaration.signature.result))
-                    {
-                        if (!borrowedSource(top.sourceLine) && !borrowedSource(top.expansionLine))
-                            return Fail("语言借用返回缺少已验证的 borrowed-result-v1 能力");
-                    }
-                    else if (!values || !LibraryValueRecord(declaration.signature.result) || (!dataSource(top.sourceLine) && !dataSource(top.expansionLine)))
-                        return Fail("语言记录返回需要已验证的单元数据登记");
-                }
-                for (const auto &parameter : declaration.signature.params)
-                    if (!scalar(parameter.type, false) && !LibraryBorrowParameter(parameter.type) && !(values && LibraryValueRecord(parameter.type))
-                        && !(ownedAbi && LibraryOwnedString(parameter.type))) return Fail("语言入口参数类型不受支持");
-            }
             for (const auto &previous : g_functionDecls)
             {
                 if (previous.superseded || previous.abiLibrary != declaration.abiLibrary || previous.abiSymbol != declaration.abiSymbol) continue;
@@ -1599,12 +1389,6 @@ bool RegisterTop()
                 if (compatible)
                     for (std::size_t index = 0; index < declaration.signature.params.size(); ++index)
                         if (CAbiType(previous.signature.params[index].type) != CAbiType(declaration.signature.params[index].type)) compatible = false;
-                if (compatible && ownedAbi)
-                {
-                    compatible = SameType(previous.signature.result, declaration.signature.result);
-                    for (std::size_t index = 0; compatible && index < declaration.signature.params.size(); ++index)
-                        compatible = SameType(previous.signature.params[index].type, declaration.signature.params[index].type);
-                }
                 if (!compatible) return Fail("同一 C 符号的 ABI 签名不一致：" + declaration.abiSymbol);
             }
         }
@@ -1660,15 +1444,6 @@ bool RegisterTop()
                     for (const auto &source : borrow.second)
                         if (!parameters.count(source)) return Fail("[CHL1210] 外部借用契约来源必须是形参：" + source);
                 }
-            }
-            if (LibraryLanguageAbi(declaration.abiConvention) && LibraryBorrowParameter(declaration.signature.result))
-            {
-                if (contract == g_lifetimeContracts.end() || !contract->second.hasRet || contract->second.retParams.empty())
-                    return Fail("语言借用返回必须显式声明形参来源契约");
-                for (const int index : contract->second.retParams)
-                    if (index < 0 || static_cast<std::size_t>(index) >= declaration.signature.params.size()
-                        || !LibraryBorrowParameter(declaration.signature.params[static_cast<std::size_t>(index)].type))
-                        return Fail("语言借用返回只能来源于受支持的借用形参");
             }
         }
         PublishLifetimeContractName(topId, declaration.source);

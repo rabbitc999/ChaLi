@@ -1,6 +1,9 @@
 #include "core_assets.hpp"
 #include "../../library/caspp/core_assets.hpp"
 #include "../chali_runtime_allocator.hpp"
+#ifdef CHALI_GENERATOR_NO_MAIN
+#include "../chali_stdlib.hpp"
+#endif
 #include "../../source/template/engine.hpp"
 
 #include <algorithm>
@@ -576,6 +579,7 @@ int runCli(int argc, char **argv)
             {"../../source/chali_i18n.hpp", "chali_i18n.hpp"},
             {"../chali_i18n.hpp", "chali_i18n.hpp"},
             {"../source/ircode/value_text.hpp", "runtime/value_text.hpp"},
+            {"ircode/value_text.hpp", "runtime/value_text.hpp"},
             {"../../source/ircode/stackvm.hpp", "runtime/stackvm.hpp"},
             {"../source/ircode/stackvm.hpp", "runtime/stackvm.hpp"},
             {"../../source/lztext/lztext.hpp", "lztext/lztext.hpp"},
@@ -642,14 +646,20 @@ int runCli(int argc, char **argv)
     ok = copy(mc / "tools/abi_import.hpp", "tools/abi_import.hpp") && ok;
     for (const char *name : {"runtime_windows.ll", "runtime_linux.ll", "runtime_linux_arm64.ll", "runtime.c", "native_runtime.cpp", "backend_profile.cpp"})
         ok = copy(mc / "source/aot" / name, Memory::String("aot/") + name) && ok;
-    ok = copy(mc / "build/chali-aot-host/assets.txt", "aot/host_assets.txt") && ok;
+#ifdef CHALI_GENERATOR_NO_MAIN
+    Memory::String hostAssets;
+    if (chali_module::embedded::findGeneratorAssetByPath("aot/host_assets.txt", &hostAssets))
+        project["aot/host_assets.txt"] = std::move(hostAssets);
+    else
+#endif
+        ok = copy(mc / "build/chali-aot-host/assets.txt", "aot/host_assets.txt") && ok;
     for (const char *name : {"chali_parser.cpp", "chali_parser.hpp",
                              "chali_parser_user.h", "chali_main.cpp", "RESULT.md"})
         ok = copy(stage / name, name) && ok;
-    for (const char *name : {"chali_digest.hpp", "chali_digest.cpp", "chali_library.hpp", "chali_library_manifest.cpp", "chali_library_package.cpp", "chali_library_import.cpp", "chali_library_bitcode.cpp", "chali_bitcode.cpp", "chali_library_build.cpp", "chali_library_tools.cpp", "chali_linker.hpp", "chali_linker.cpp", "chali_archive_llvm.cpp", "chali_native_objects.hpp", "chali_native_objects.cpp", "chali_assembler.hpp", "chali_assembler.cpp", "chali_assembler_llvm.cpp", "chali_native_tools.hpp", "chali_native_tools.cpp", "chali_driver.cpp", "chali_i18n.hpp", "chali_diagnostics.hpp", "chali_warnings.hpp", "chali_borrow_checker.hpp", "chali_borrow_flow.hpp", "chali_resource_cleanup.hpp", "chali_resource_cleanup.cpp", "chali_module.hpp",
+    for (const char *name : {"chali_digest.hpp", "chali_digest.cpp", "chali_library.hpp", "chali_library_manifest.cpp", "chali_library_package.cpp", "chali_library_templates.cpp", "chali_library_bitcode.cpp", "chali_library_tools.cpp", "chali_linker.hpp", "chali_linker.cpp", "chali_archive_llvm.cpp", "chali_native_objects.hpp", "chali_native_objects.cpp", "chali_assembler.hpp", "chali_assembler.cpp", "chali_assembler_llvm.cpp", "chali_native_tools.hpp", "chali_native_tools.cpp", "chali_driver.cpp", "chali_i18n.hpp", "chali_diagnostics.hpp", "chali_warnings.hpp", "chali_borrow_checker.hpp", "chali_borrow_flow.hpp", "chali_resource_cleanup.hpp", "chali_resource_cleanup.cpp", "chali_module.hpp",
                              "chali_incremental.hpp", "chali_package.hpp", "chali_project.hpp", "chali_cli.hpp",
                              "chali_lambda.hpp", "chali_generic.hpp", "chali_generic_name.hpp",
-                             "chali_stdlib_embedded.cpp", "chali_stdlib.hpp", "chali_precompiled.cpp", "chali_precompiled.hpp", "chali_precompiled_data.inc", "chali_generic.cpp", "chali_lambda.cpp", "chali_generic_closure.cpp", "chali_package.cpp", "chali_report.cpp", "chali_aot.hpp", "chali_aot_library.hpp", "chali_aot.cpp", "chali_aot_ast.hpp", "chali_aot_numeric_list.hpp", "chali_aot_target.hpp", "chali_aot_target.cpp", "chali_aot_debug.hpp", "chali_aot_debug.cpp", "chali_aot_llvm.hpp", "chali_aot_llvm.cpp", "aot/linker_assets.txt", "chali_runtime_allocator.hpp",
+                             "chali_stdlib_embedded.cpp", "chali_stdlib.hpp", "chali_precompiled.cpp", "chali_precompiled.hpp", "chali_precompiled_data.inc", "chali_generic.cpp", "chali_lambda.cpp", "chali_generic_closure.cpp", "chali_package.cpp", "chali_report.cpp", "chali_aot.hpp", "chali_aot.cpp", "chali_aot_ast.hpp", "chali_aot_numeric_list.hpp", "chali_aot_target.hpp", "chali_aot_target.cpp", "chali_aot_debug.hpp", "chali_aot_debug.cpp", "chali_aot_llvm.hpp", "chali_aot_llvm.cpp", "aot/linker_assets.txt", "chali_runtime_allocator.hpp",
                              "chali_aot_runtime_assets.hpp", "chali_aot_runtime_assets.cpp", "chali_temp.hpp", "chali_temp.cpp", "chali_ast.hpp", "chali_semantics.cpp"})
         ok = copy(mc / "source" / name, name) && ok;
     ok = copy(mc / "source/generic/standard_templates.cpp", "generic/standard_templates.cpp") && ok;

@@ -198,12 +198,12 @@ LowerProgram()          // ordinary typed methods, normal ownership checks
 
 ### 自定义接口派生
 
-下面的接口规定公开能力，成员宏实现重复的方法体。编译器把 `Record` 作为宏的唯一类型实参，无须在指令里重复写类型。
+下面的例子在类型体内显式调用成员宏，将 `Record` 和公开方法名 `count` 作为实参。
 
 ```chali
 interface Count { int64 count(); }
-$macro Count<T>() -> member
-int64 count() {
+$macro Count<T>(method:ident) -> member
+int64 method() {
     int64 result = 0;
     $for field in $fields<T>()
     result += 1;
@@ -211,16 +211,19 @@ int64 count() {
     return result;
 }
 $end_macro
-#derive(Count)
-struct Record { int64 number; String text; }
-void main() { Record value; assert(value.count() == 2); }
+struct Record : Count { int64 number; String text; $Count<Record>(count); }
+void main() { Record value; Count counted = value; println("fields={}", counted.count()); }
 ```
 
-`Count` 接口与 `Count` 宏必须定义在同一模块。宏使用一个类型形参和空实参组，结果类别为 `member`；生成内容只允许方法。类型的布局字段和关联类型由类型自身声明。`$fields<T>()` 读取实际实例字段，静态循环在编译期展开，运行时方法直接执行生成的语句。
+```text
+fields=2
+```
+
+显式成员宏调用把 `method:ident` 用作方法名。下述同模块、同名接口与宏的约束适用于通用 `#derive` 指令。该指令使用一个类型形参和空实参组，结果类别为 `member`；生成内容只允许方法。类型的布局字段和关联类型由类型自身声明。`$fields<T>()` 读取实际实例字段，静态循环在编译期展开，运行时方法直接执行生成的语句。
 
 签名与接口要求一致的方法公开；其他辅助方法保持卫生名称。若一个方法名称下存在重载，匹配接口的名称会公开整个生成重载组。派生不覆盖已有同签名方法。接口默认实现、继承要求、方法体类型、借用、返回与资源清理继续执行普通规则；签名不匹配不会自动转换成满足接口的方法。
 
-`import derive_tools;` 后可用 `#derive(derive_tools::Count)` 显式选择模块。未限定名沿用宏的本模块／导入查找规则；歧义必须限定。泛型结构体在每个具体实例上展开。配对接口也可有一个实现者类型形参，例如 `interface Describe<T> { String describe(T value); }` 对应 `$macro Describe<T>() -> member`。类型实参由编译器提供，指令只写 `#derive(Describe)`。
+`import derive_tools;` 后可用 `#derive(derive_tools::Describe)` 显式选择模块。未限定名沿用宏的本模块／导入查找规则；歧义必须限定。泛型结构体在每个具体实例上展开。配对接口也可有一个实现者类型形参，例如 `interface Describe<T> { String describe(T value); }` 对应 `$macro Describe<T>() -> member`。类型实参由编译器提供，指令只写 `#derive(Describe)`。
 
 派生中的字段、方法或变体元数据需要额外泛型实例时，编译器先补充该实例，再重试展开。递归宏和循环依赖受现有预算限制。编辑器的一层／全部展开可在 `#derive` 位置查询，保留宏定义、调用和元数据声明来源；辅助卫生名称不作为可手写的公共名称暴露。
 

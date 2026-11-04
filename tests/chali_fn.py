@@ -14,7 +14,7 @@ def main():
     parser.add_argument('--front-end-only', action='store_true')
     options = parser.parse_args()
     compiler = options.chali.resolve()
-    env = dict(os.environ, CHALI_LANG='zh', CHALI_NO_STDIN_INPUT='1')
+    env = dict(os.environ, CHALI_LANG='zh', CHALI_QUIET='1', CHALI_NO_STDIN_INPUT='1')
     with tempfile.TemporaryDirectory(prefix='chali-fn-') as directory:
 
         def invoke(command):
@@ -23,7 +23,8 @@ def main():
         for name in ('fn_let', 'fn_capture_modes', 'lambda_let', 'lambda_capture_modes'):
             expected = (ROOT / 'example/expected' / (name + '.txt')).read_text(encoding='utf-8')
             for level in (0, 2):
-                result = invoke([compiler, 'run', ROOT / 'example/samples' / (name + '.chl')])
+                result = invoke([compiler, 'run', ROOT / 'example/samples' / (name + '.chl'),
+                                 '--out', Path(directory) / f'{name}-{level}'])
                 assert (result.returncode, result.stdout, result.stderr) == (0, expected, ''), (name, result)
                 print(f'[通过] {name} run O{level}', flush=True)
             if not options.front_end_only and name.startswith('fn_'):

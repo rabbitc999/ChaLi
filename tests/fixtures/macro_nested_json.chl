@@ -1,0 +1,102 @@
+import std::json;
+
+String jsonText(String value) {
+    String result = "\"";
+    String digits = "0123456789abcdef";
+    int64 start = 0;
+    int64 i = 0;
+    while (i < value.length()) {
+        int64 byte = (int64)value.byteAt(i).unwrap();
+        if (byte < 32 || byte == 34 || byte == 92) {
+            result += value.slice(start, i);
+            if (byte == 34) { result += "\\\""; }
+            elif (byte == 92) { result += "\\\\"; }
+            else { result += "\\u00" + digits.substring(byte / 16, 1) + digits.substring(byte % 16, 1); }
+            start = i + 1;
+        }
+        i += 1;
+    }
+    return result + value.slice(start, value.length()) + "\"";
+}
+String jsonBool(bool value) { if (value) { return "true"; } return "false"; }
+
+struct JsonType<T> { T item; }
+
+$macro JSON_VALUE(T:type)[value:value] -> expr
+String result = "";
+$for info in $fields<JsonType<T>>()
+$if info.type == String
+result = jsonText(value);
+$elif info.type == int64
+result = value.toString();
+$elif info.type == bool
+result = jsonBool(value);
+$elif info.type == List<?> || info.type == Set<?>
+result = "[";
+int64 i = 0;
+while (i < value.len()) {
+    if (i > 0) { result += ","; }
+    let item = value.at(i);
+    result += $JSON_VALUE(info.typeArguments[0])[item];
+    i += 1;
+}
+result += "]";
+$elif info.type == Map<String, ?>
+result = "{";
+int64 i = 0;
+while (i < value.len()) {
+    if (i > 0) { result += ","; }
+    let item = value.valAt(i);
+    result += jsonText(value.keyAt(i)) + ":" + $JSON_VALUE(info.typeArguments[1])[item];
+    i += 1;
+}
+result += "}";
+$elif info.type == Map
+$compile_error("JSON Map 的键必须是 String: " + info.type.name);
+$else
+result = "{";
+$for field in info.chlids
+$if field.index > 0
+result += ",";
+$end_if
+result += jsonText(field.name) + ":" + $JSON_VALUE(field.type)[$member(value, field)];
+$end_for
+result += "}";
+$end_if
+$end_for
+result
+$end_macro
+
+struct Empty {}
+struct Leaf { int64 count; String text; bool enabled; Empty empty; }
+struct Middle<T> { T inner; }
+struct Root {
+    Middle<Leaf> middle;
+    List<int64> items;
+    Set<std::lang::String> unique;
+    Map<std::lang::String, List<Leaf>> byName;
+    List<int64> emptyList;
+    Set<int64> emptySet;
+    Map<String, bool> emptyMap;
+}
+void main() {
+    Root value;
+    value.middle.inner.count = 42;
+    value.middle.inner.text = "a\"\\\n";
+    value.middle.inner.enabled = true;
+    value.items.push(5);
+    value.items.push(8);
+    value.unique.add("only");
+    value.unique.add("only");
+    List<Leaf> bucket;
+    bucket.push(value.middle.inner);
+    value.byName.put("b\"ox", bucket);
+    String encoded = $JSON_VALUE(Root)[value];
+    let parsed = std::json::parse(encoded).unwrap();
+    let parsedItems = parsed.find("items").unwrap();
+    let parsedBucket = parsed.find("byName").unwrap().find("b\"ox").unwrap();
+    assert(parsedItems.at(1).unwrap().asInt().unwrap() == 8);
+    assert(parsedBucket.at(0).unwrap().find("count").unwrap().asInt().unwrap() == 42);
+    println("{}", encoded);
+    assert(value.items.len() == 2 && value.unique.len() == 1 && value.byName.len() == 1);
+}

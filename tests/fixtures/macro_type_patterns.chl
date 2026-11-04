@@ -1,0 +1,73 @@
+struct Box<T> { T value; }
+struct Data {
+    String name;
+    int64 count;
+    Box<bool> boxed;
+    Map<String, Set<int64>> index;
+    Set<String> tags;
+    List<uint8> bytes;
+}
+
+$macro ONE(T:type) -> expr
+cast<int64>(cast<T>(1))
+$end_macro
+
+$macro CLASSIFY<T, Expected>() -> expr
+int64 result = 0;
+$for field in $fields<T>()
+$if field.type == String && field.type == std::lang::String
+$compile_assert(field.genericName == "" && field.typeArguments.count == 0);
+result += 1;
+$else_if field.type == int64
+result += 2;
+$elif field.type == Expected && field.type == Box<?>
+$compile_assert(field.typeArguments[0].name == "bool");
+result += 4;
+$elif field.type == Map<String, Set<int64>> && field.type == Map<String, Set<?>> && field.type == Map<String, ?>
+$compile_assert(field.genericName == "std::lang::Map");
+$compile_assert(field.typeArguments[0].name == "std::lang::String");
+$compile_assert(field.typeArguments[1].typeArguments[0].name == "int64");
+$for arg in field.typeArguments[1].typeArguments
+result += $ONE(arg);
+$end_for
+$if field.type != Map<uint64, ?> && field.type != Set<?> && field.type != Map<String, List<?>>
+result += 7;
+$end_if
+$elif field.type == Set<String> && field.type == Set<?>
+String value = $EMPTY(field.typeArguments[0]);
+$compile_assert(field.typeArguments.count == 1);
+result += 16;
+$elif field.type == List<?>
+$compile_assert(field.genericName == "std::lang::List");
+$compile_assert(field.typeArguments[0].name == "uint8");
+result += 32;
+$else
+$compile_error("unexpected " + field.type.name);
+$end_if
+$end_for
+result
+$end_macro
+
+$macro EMPTY(T:type) -> expr
+T value;
+value
+$end_macro
+
+$macro VISIT_ARGUMENTS<T>() -> expr
+String order = "";
+$for field in $fields<T>()
+$if field.type == Map && field.type == std::lang::Map && field.type == Map<?, ?>
+$for arg in field.typeArguments
+order = order + arg.genericName + "/" + arg.name + ";";
+$end_for
+$end_if
+$end_for
+order
+$end_macro
+
+void main() {
+    assert($CLASSIFY<Data, Box<bool>>() == 63);
+    String order = $VISIT_ARGUMENTS<Data>();
+    assert(order.startsWith("/std::lang::String;std::lang::Set/"));
+    assert(4 == 4);
+}

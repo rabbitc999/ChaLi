@@ -5,7 +5,6 @@
 #include "preprocess.hpp"
 #include "chali_incremental.hpp"
 #include "chali_package.hpp"
-#include "chali_library.hpp"
 #include "chali_report.hpp"
 #include "chali_stdlib.hpp"
 #include "chali_interpolation.hpp"
@@ -259,7 +258,7 @@ inline bool inspect(const preprocess::Result &input, UnitInfo &info, Memory::Str
 }
 
 inline bool findModule(const Memory::String &name, const Memory::String &fromDir,
-                       const Memory::Vector<Memory::String> &includeDirs, Memory::String &path, bool packages = false)
+                       const Memory::Vector<Memory::String> &includeDirs, Memory::String &path)
 {
     namespace fs = std::filesystem;
     Memory::String relative = name;
@@ -270,18 +269,6 @@ inline bool findModule(const Memory::String &name, const Memory::String &fromDir
     candidates.push_back(fs::path(fromDir) / "modules" / (relative + ".chl"));
     for (const Memory::String &dir : includeDirs)
         candidates.push_back(fs::path(dir) / (relative + ".chl"));
-    if (packages)
-    {
-        Memory::Vector<fs::path> expanded;
-        for (const auto &candidate : candidates)
-        {
-            auto package = candidate;
-            package.replace_extension(".chlib");
-            expanded.push_back(package);
-            expanded.push_back(candidate);
-        }
-        candidates = std::move(expanded);
-    }
     for (const fs::path &candidate : candidates)
     {
         std::error_code ec;
@@ -375,9 +362,8 @@ class Loader
 public:
     Loader(preprocess::Options options, Memory::Vector<Memory::String> includeDirs,
            chali_incremental::Cache *cache = nullptr,
-           const chali_package::Project *project = nullptr, chali_library::ImportSession *libraries = nullptr) : options_(std::move(options)), includeDirs_(std::move(includeDirs)), cache_(cache), project_(project)
+           const chali_package::Project *project = nullptr) : options_(std::move(options)), includeDirs_(std::move(includeDirs)), cache_(cache), project_(project)
     {
-        libraries_ = libraries;
         options_.allowIncludes = false;
 #if defined(_WIN32)
         const char *os = "windows";
@@ -431,10 +417,6 @@ public:
     }
 
     bool preprocessError() const { return preprocessError_; }
-    /** @brief 取得入口单元实际声明的模块身份。
-     * @return 无显式声明时为 program。 */
-    const Memory::String &rootModule() const { return rootModule_; }
-
     /**
      * @brief 源文件 → 模块名（`$module` 的取值来源）。
      *
@@ -572,77 +554,20 @@ private:
      * @param base 当前模块目录。
      * @param output 合并输入。
      * @param error 失败诊断。
-     * @param pin 可选依赖清单中的精确锁。
-     * @return 成功为真；不执行库初始化。
+     * @return 成功为真。
      */
     bool importFile(const Memory::String &name, const Memory::String &base, preprocess::Result &output,
-                    Memory::String &error, const chali_library::Dependency *pin = nullptr)
+                    Memory::String &error)
     {
         Memory::String path;
-        if (!findModule(name, base, includeDirs_, path, libraries_ != nullptr))
+        if (!findModule(name, base, includeDirs_, path))
         {
-            error = "找不到模块 " + name + "（需要 .chlib 或 .chl）";
+            error = "找不到模块 " + name + "（需要 .chl）";
             return false;
         }
-        const bool packaged = std::filesystem::u8path(path.c_str()).extension() == ".chlib";
-        const auto prior = modulePackageKinds_.find(name);
-        if (prior != modulePackageKinds_.end() && prior->second != packaged)
-        {
-            error = "同一模块不能混用源码与预编译库：" + name;
-            return false;
-        }
-        modulePackageKinds_[name] = packaged;
         preprocess::Result child;
         const auto parent = std::filesystem::u8path(path.c_str()).parent_path().u8string();
-        if (packaged)
-        {
-            if (!libraries_)
-            {
-                error = "当前入口未启用库包加载";
-                return false;
-            }
-            try
-            {
-                const auto &package = libraries_->open(std::filesystem::u8path(path.c_str()), name.c_str(), pin);
-                const Memory::String label = path + ".interface.chl";
-                auto libraryRoot = std::filesystem::u8path(parent);
-                for (std::size_t at = 0; (at = name.find("::", at)) != Memory::String::npos; at += 2)
-                    libraryRoot = libraryRoot.parent_path();
-                const Memory::String rootDirectory(libraryRoot.u8string().c_str());
-                if (std::find(includeDirs_.begin(), includeDirs_.end(), rootDirectory) == includeDirs_.end())
-                    includeDirs_.push_back(rootDirectory);
-                libraryUnits_[label] = &package;
-                chali_report::registerVirtualSource(label, Memory::String(package.find(package.manifest.interface)->bytes.c_str()));
-                preprocess::Preprocessor processor(options_);
-                if (!processor.runText(Memory::String(package.find(package.manifest.interface)->bytes.c_str()), label,
-                                       Memory::String(parent.c_str()), child)) return diagnostics(child, error);
-                if (!package.manifest.templates.empty())
-                {
-                    const auto source = chali_library::templateSource(package.manifest, package.find(package.manifest.templates)->bytes);
-                    const Memory::String templateLabel = path + ".templates.chl";
-                    const Memory::String templateText(source.data(), source.size());
-                    chali_report::registerVirtualSource(templateLabel, templateText);
-                    preprocess::Result definitions;
-                    if (!processor.runText(templateText, templateLabel, Memory::String(parent.c_str()), definitions))
-                        return diagnostics(definitions, error);
-                    append(child, definitions);
-                }
-                child.dependencies.clear();
-            } catch (const std::exception &failure)
-            {
-                error = failure.what();
-                return false;
-            }
-        }
-        else
-        {
-            if (pin || (libraries_ && libraries_->requiresPackage(name.c_str())))
-            {
-                error = "锁定的库依赖不能回退到源码：" + name;
-                return false;
-            }
-            if (!preprocessFile(path, child)) return diagnostics(child, error);
-        }
+        if (!preprocessFile(path, child)) return diagnostics(child, error);
         if (!load(child, Memory::String(parent.c_str()), name, false, output, error)) return false;
         output.dependencies.push_back(path);
         return true;
@@ -686,7 +611,6 @@ private:
             error = "import " + expected + " 找到的文件声明的是 module " + info.name;
             return false;
         }
-        if (root) rootModule_ = info.name;
         const Memory::String key = info.hasModule ? info.name : Memory::String("__root");
         if (visiting_.count(key) != 0u)
         {
@@ -698,28 +622,8 @@ private:
         /* 这个单元（连同它 `%include` 的文件）属于哪个模块 —— `$module` 就查这张表。 */
         for (const preprocess::LineOrigin &origin : effective.lineMap)
             if (!origin.file.empty()) moduleByFile_[origin.file] = key;
-        if (!unit.lineMap.empty())
-        {
-            const auto library = libraryUnits_.find(unit.lineMap.front().file);
-            if (library != libraryUnits_.end())
-                for (const auto &dependency : library->second->manifest.dependencies)
-                    if (!importFile(Memory::String(dependency.module.c_str()), base, output, error, &dependency)) return false;
-        }
         for (const Memory::String &imported : info.imports)
         {
-            if (!unit.lineMap.empty() && imported.compare(0, 5, "std::") != 0)
-            {
-                const auto library = libraryUnits_.find(unit.lineMap.front().file);
-                if (library != libraryUnits_.end())
-                {
-                    const auto &dependencies = library->second->manifest.dependencies;
-                    if (std::none_of(dependencies.begin(), dependencies.end(), [&](const auto &item) { return imported == item.module.c_str(); }))
-                    {
-                        error = "库接口导入未在清单中锁定：" + imported;
-                        return false;
-                    }
-                }
-            }
             if (imported == "std::lang") continue;
             /* `std::algorithms` 没有 CHALI 文件，但仍在合并源码里保留模块边界。限定调用由
              * 编译器直接降级到 StackVM 胶水，不在这里注入函数体。 */
@@ -769,10 +673,6 @@ private:
         return true;
     }
 
-    chali_library::ImportSession *libraries_ = nullptr;
-    Memory::Map<Memory::String, const chali_library::Package *> libraryUnits_;
-    Memory::Map<Memory::String, bool> modulePackageKinds_;
-    Memory::String rootModule_;
     preprocess::Options options_;
     Memory::Vector<Memory::String> includeDirs_;
     Memory::Set<Memory::String> visiting_;
