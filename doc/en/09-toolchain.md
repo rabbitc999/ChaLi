@@ -4,7 +4,7 @@
 **English** · [简体中文](../09-toolchain.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Since 1.0.8, `run` compiles and executes checked AOT code, while `aot` defaults to unchecked export. The compiler no longer embeds a VM execution engine. `.svmb` export has been removed; use native AOT artifacts. See [Native AOT debugging](43-native-debugging.md).
+`run` compiles and executes checked AOT code. `aot` defaults to unchecked native export. See [Native AOT debugging](43-native-debugging.md).
 
 ChaLi executes programs through checked AOT by default. The front end preprocesses, parses and checks source, then generates LLVM code directly from the checked AST. The explicit [AOT entry](38-aot.md) can generate LLVM modules and native products.
 
@@ -16,7 +16,7 @@ chali aot app.chl --emit-llvm out build/app
 chali aot app.chl --out build/app
 ```
 
-A direct source file also runs; following arguments are passed to the program. `aot --emit-llvm --out PREFIX` generates `.ll` directly from the AST; Bytecode export has been removed. The compiler embeds the standard library and its required assets.
+A direct source file also runs; following arguments are passed to the program. `aot --emit-llvm --out PREFIX` generates `.ll` directly from the AST. The compiler embeds the standard library and its required assets.
 
 ## Development tools
 
@@ -43,7 +43,7 @@ Back-end debugging switches change diagnostics or the execution path, never prog
 | `CHALI_NO_SLOT_REUSE=1` | Fall back to "parameters first, then one slot per declaration in order" |
 | `CHALI_ONE_SLOT_PER_SYMBOL=1` | One slot per symbol but still through the allocator — separates aliasing bugs from numbering bugs |
 
-AOT fast-path comparison switches are listed in [AOT lowering switches and counters](40-backend-ownership.md); the internal quad optimizer and the register execution core were removed in 1.0.8, so their switches no longer exist.
+AOT fast-path comparison switches are listed in [AOT lowering switches and counters](40-backend-ownership.md).
 
 Instruction-selection coverage and frame slots before/after reuse are both visible in `--stats`:
 
@@ -52,7 +52,7 @@ Instruction-selection coverage and frame slots before/after reuse are both visib
 帧槽分配：362 个函数，符号 1622 个 → 槽 1346 个（省掉 276 个）
 ```
 
-Project execution uses run; interpret remains only as an AOT alias, and svmb has been removed. See [projects](13-projects.md), [deployment](06-deployment.md) and the [migration note](../16-compact-symbols.md) and [build artifacts](../15-artifacts.md).
+Set the project execution mode to `run`. See [projects](13-projects.md), [deployment](06-deployment.md), and [build artifacts](../15-artifacts.md).
 
 ## Source modules and incremental builds
 
@@ -118,7 +118,7 @@ The compiler carries a binary parse unit for the `std::core` core. Normal compil
 
 `make all` builds a separate standard-library stage compiler, generates each binary twice with `tools/build_stdlib_units.py` to check determinism, atomically updates the assets, and builds the final compiler. The package contains no user source, project paths or process pointers. Parse-unit format 7 preserves the complete type-reference graph and lifetime contracts. Template-record format 1 stores no user instances or process addresses. Package format 2 validates content/compiler identity, reflection configuration, lengths and integrity. Core source locations are canonicalized so unrelated user input lengths do not change the binary. A missing content profile uses in-memory source parsing; a damaged matching asset produces an error.
 
-`--no-stdlib-cache` and `CHALI_NO_STDLIB_CACHE=1` remain compatibility controls for source parsing. Neither path writes a standard-library cache. `--stdlib-cache-dir` has been removed, and `CHALI_STDLIB_CACHE_DIR` no longer chooses a loading directory. Existing project files are preserved. `--stats` reports core, module-AST and template-record hits and source fallbacks, including matched module names. `std::__range` identifies a generated standard-library asset; it is not a user-importable module.
+`--no-stdlib-cache` and `CHALI_NO_STDLIB_CACHE=1` remain compatibility controls for source parsing. Neither path writes a standard-library cache. `--stats` reports core, module-AST and template-record hits and source fallbacks, including matched module names. `std::__range` identifies a generated standard-library asset; it is not a user-importable module.
 
 ## Warning configuration
 
@@ -185,7 +185,7 @@ Code actions can fill directly listed non-generic interface methods and add a fa
 
 Static and external LLVM builds use separate build directories and versioned artifact names. Before packaging, check `--build-info`, extension versions, exact VSIX compiler bytes and the actual variant's build configuration. Do not substitute the other variant's configuration. `tools/release_variants.py --package-only` accepts `--static-build-root` and `--external-build-root` for these directories. Check installer and ZIP executables, versions, LICENSE/NOTICE and dependency licenses separately. Record cross-object generation separately from execution on the target system.
 
-The LSP performance comparison records the hashes of the compilers that were measured. Later artifact checks preserve those original measurement identifiers. [LSP performance comparison](../../benchmarks/results/lsp-1.0.12-final/README.md)
+The LSP performance comparison records the hashes of the compilers that were measured. The report path retains `1.0.12`, the original identifier of a development build preceding the 1.0.0 release. [LSP performance comparison](../../benchmarks/results/lsp-1.0.12-final/README.md)
 
 ## Target machine assembly
 

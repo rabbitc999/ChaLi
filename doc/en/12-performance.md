@@ -1,14 +1,16 @@
-# ChaLi 1.0.11 performance: previous version and language baselines
+# ChaLi 0.32.10 performance: previous version and language baselines
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../12-performance.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-This report compares the original **ChaLi 1.0.10 release with the measured 1.0.11 implementation**, alongside frozen C++, Rust, Lua and Java JIT references, with older verifiable C, Go, Node and Python supplements. List and String reading beat Lua in this run. Map, Set, concatenation, slicing and search remain slower. Interfaces meet the 40/400 ms limits with the pool; the default malloc configuration misses the polymorphic limit in this measurement.
+This page records historical development baselines. The 1.0.0 release is a separate build. Frozen report paths and reproduction commands retain the original build identifiers `1.0.10` and `1.0.11`, corresponding to baselines 0.32.9 and 0.32.10.
+
+This report compares the original **ChaLi 0.32.9 release with the measured 0.32.10 implementation**, alongside frozen C++, Rust, Lua and Java JIT references, with older verifiable C, Go, Node and Python supplements. List and String reading beat Lua in this run. Map, Set, concatenation, slicing and search remain slower. Interfaces meet the 40/400 ms limits with the pool; the default malloc configuration misses the polymorphic limit in this measurement.
 
 Optimization stops after the current LLVM List work. Unmet targets remain visible; historical language references retain their original identities and dates.
 
-These measurements are frozen at the performance-stage commit a522cf0. Later 1.0.11 additions for owned interface values, joint patterns, propagation conversions and hygienic macro parameters receive separate functional validation. They are not retimed or assigned these older measurements.
+These measurements are frozen at the performance-stage commit a522cf0. Later 0.32.10 additions for owned interface values, joint patterns, propagation conversions and hygienic macro parameters receive separate functional validation. They are not retimed or assigned these older measurements.
 
 ## Identity and environment
 
@@ -16,14 +18,14 @@ The new measurements were collected on **2026-10-29**, Windows 10 x64, AMD Ryzen
 
 | Measured compiler | Source identity | SHA-256 |
 | --- | --- | --- |
-| Original 1.0.10 release, unchanged bytes | `001cdd6` | `35e6d2602054e757452ce570bf7fd6051a2b46d196e1e8ab2da3fa69b974ce6b` |
-| Measured 1.0.11 implementation | `a522cf0` | `7f781f0ad808c2bfc5414302907b12fbb9e493d437b30a6695a1ceb87a6f736c` |
+| Original 0.32.9 release, unchanged bytes | `001cdd6` | `35e6d2602054e757452ce570bf7fd6051a2b46d196e1e8ab2da3fa69b974ce6b` |
+| Measured 0.32.10 implementation | `a522cf0` | `7f781f0ad808c2bfc5414302907b12fbb9e493d437b30a6695a1ceb87a6f736c` |
 
 The benchmark driver snapshot is `0bb28ec`. [Final data](../../benchmarks/results/1.0.11-final/results.json) records commands, input hashes, compiler and kernel hashes, verification results and every raw process sample. Final documentation rebuilds embedded assets and the compiler; these measurements keep the identities above, while functional gates for the final documentation build are recorded separately.
 
-The three complete configurations are **1.0.10 pool, 1.0.11 pool and 1.0.11 malloc**. Version 1.0.10 has no allocator switch. The first two compare versions with the same allocator; the malloc column preserves the system-allocator baseline. Results do not combine per-case winners from different configurations.
+The three complete configurations are **0.32.9 pool, 0.32.10 pool and 0.32.10 malloc**. Version 0.32.9 has no allocator switch. The first two compare versions with the same allocator; the malloc column preserves the system-allocator baseline. Results do not combine per-case winners from different configurations.
 
-The isolated 1.0.10 ABI build needs its own AST-header include path and an explicit clang path. The driver extracts headers from the matching Git snapshot; it changes no release compiler, standard library, runtime or production LLVM generator. Both versions already generate LLVM from the semantically checked AST.
+The isolated 0.32.9 ABI build needs its own AST-header include path and an explicit clang path. The driver extracts headers from the matching Git snapshot; it changes no release compiler, standard library, runtime or production LLVM generator. Both versions already generate LLVM from the semantically checked AST.
 
 ## Timing and verification
 
@@ -111,7 +113,7 @@ Most references were collected on 2026-10-28. The first four C++ O2 cases reuse 
 
 All tables report medians in **ms; lower is faster**. A dash means no frozen corresponding reference.
 
-| Workload | 1.0.10 pool | 1.0.11 pool | 1.0.11 malloc | C++ O2 | Rust -O | Lua 5.5.1 |
+| Workload | 0.32.9 pool | 0.32.10 pool | 0.32.10 malloc | C++ O2 | Rust -O | Lua 5.5.1 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | `int_chain` | 0.8655 | 0.8634 | 0.8633 | 4.33 | 0.864 | 27.762 |
 | `float_chain` | 1.2956 | 1.2955 | 1.3017 | 1.303 | 1.295 | 6.106 |
@@ -121,15 +123,15 @@ All tables report medians in **ms; lower is faster**. A dash means no frozen cor
 | `map_growth` | 345.0664 | 179.256 | 169.6778 | 1.836 | 2.021 | 4.676 |
 | `set_growth` | 291.6311 | 123.9572 | 148.9858 | 1.8816 | 1.554 | 4.563 |
 
-Integer, floating-point and small-function results are effectively unchanged from 1.0.10; tiny last-digit differences are not treated as established improvements. The fixed array drops from 76.4546 to 9.8599 ms with the pool. List drops from 374.1419 to 3.4057 ms under the same allocator, an observed **109.86×** ratio. The malloc result, 6.4306 ms, also beats Lua at 11.722 ms.
+Integer, floating-point and small-function results are effectively unchanged from 0.32.9; tiny last-digit differences are not treated as established improvements. The fixed array drops from 76.4546 to 9.8599 ms with the pool. List drops from 374.1419 to 3.4057 ms under the same allocator, an observed **109.86×** ratio. The malloc result, 6.4306 ms, also beats Lua at 11.722 ms.
 
-Map and Set improve over 1.0.10 but still miss Lua: pool Map is 179.256 versus 4.676 ms, and Set is 123.9572 versus 4.563 ms. List success does not satisfy those separate conditions.
+Map and Set improve over 0.32.9 but still miss Lua: pool Map is 179.256 versus 4.676 ms, and Set is 123.9572 versus 4.563 ms. List success does not satisfy those separate conditions.
 
 ### Supplementary frozen C, Go, Node and Python baselines
 
 These four basic cases retain 2026-10-27 observations: GCC 11.2.0 C at `-O2`, Go 1.27.1 with default optimization, Node 26.5.0/V8 and CPython 3.12.3. Their source matches archive snapshot `06478a5`, and their sinks match this run. None was remeasured.
 
-| Workload | 1.0.11 pool | 1.0.11 malloc | C O2 | Go | Node / V8 | CPython |
+| Workload | 0.32.10 pool | 0.32.10 malloc | C O2 | Go | Node / V8 | CPython |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | `int_chain` | 0.8634 | 0.8633 | 4.322 | 4.657 | 72.138 | 341.159 |
 | `float_chain` | 1.2955 | 1.3017 | 1.302 | 1.546 | 1.301 | 31.328 |
@@ -140,7 +142,7 @@ The older report lacks contemporaneous source hashes. Retained hashes are explic
 
 ## Payload enums, interfaces, nested records and arrays
 
-| Workload | 1.0.10 pool | 1.0.11 pool | 1.0.11 malloc | C++ O2 | Rust -O | Java JIT |
+| Workload | 0.32.9 pool | 0.32.10 pool | 0.32.10 malloc | C++ O2 | Rust -O | Java JIT |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | `enum_payload` | 338.9185 | 0.8353 | 0.8329 | 1.6884 | 1.214 | — |
 | `interface_mono` | 1205.4122 | 33.1437 | 33.9196 | 0.2825 | — | 0.2845 |
@@ -155,14 +157,14 @@ Both monomorphic results meet 40 ms. Polymorphic pool at 314.9402 ms meets 400 m
 
 ## String
 
-| Workload | 1.0.10 pool | 1.0.11 pool | 1.0.11 malloc | C++ O2 | Rust -O | Lua 5.5.1 |
+| Workload | 0.32.9 pool | 0.32.10 pool | 0.32.10 malloc | C++ O2 | Rust -O | Lua 5.5.1 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | `string_read` | 3610.6336 | 2.5745 | 2.5599 | 0.5427 | 0.5437 | 6.0014 |
 | `string_concat` | 1865.9993 | 6.662 | 14.2666 | 0.1012 | 0.0699 | 4.1247 |
 | `string_slice` | 2068.8784 | 9.6465 | 9.7462 | 0.1329 | 0.1323 | 0.3515 |
 | `string_find` | 12212.2159 | 14.1769 | 11.7448 | 0.1123 | 0.0451 | 0.1703 |
 
-Inputs include Chinese and emoji with UTF-8 byte semantics. Reading drops from 3610.6336 ms in 1.0.10 pool to 2.5745 ms in 1.0.11 pool; malloc is 2.5599 ms. Both beat frozen Lua at 6.0014 ms. This is the combination of existing changes, including scalar immediate byteAt/unwrap and String/address fast paths.
+Inputs include Chinese and emoji with UTF-8 byte semantics. Reading drops from 3610.6336 ms in 0.32.9 pool to 2.5745 ms in 0.32.10 pool; malloc is 2.5599 ms. Both beat frozen Lua at 6.0014 ms. This is the combination of existing changes, including scalar immediate byteAt/unwrap and String/address fast paths.
 
 Concatenation, slicing and search still miss their Lua references. Owned results, copying, temporaries, storage access and search implementations remain relevant costs; no single cause is established by this run.
 
@@ -172,8 +174,8 @@ Pool has lower medians in 10 of 17 cases. The equal-weight geometric time ratio 
 
 | Uniform configuration | Cases with conditions | Passed | Missed | Unassessed |
 | --- | ---: | ---: | ---: | ---: |
-| 1.0.11 pool | 13 | 8 | 5 | 4 |
-| 1.0.11 malloc | 13 | 7 | 6 | 4 |
+| 0.32.10 pool | 13 | 8 | 5 | 4 |
+| 0.32.10 malloc | 13 | 7 | 6 | 4 |
 
 Conditions are strictly faster than Lua where a reference exists, monomorphic ≤40 ms and polymorphic ≤400 ms. C++ O2 is informational. Payload enum, nested record, 2D and 3D arrays have no independent limits. Saved-data evaluations are [pool](../../benchmarks/results/1.0.11-final/gate-pool/results.json) and [malloc](../../benchmarks/results/1.0.11-final/gate-malloc/results.json); neither configuration passes every condition.
 

@@ -14,7 +14,7 @@
 
 ## new 与作用域清理
 
-[std_parse_random_path_memory.chl](../example/samples/std_parse_random_path_memory.chl) 使用 new 和作用域释放观察分配。标准库 Arena 已删除；普通拥有值沿现有所有权规则清理，已释放分配的旧别名仍然失效。
+[std_parse_random_path_memory.chl](../example/samples/std_parse_random_path_memory.chl) 使用 new 和作用域释放观察分配。拥有值按所有权规则清理，已释放分配的旧别名仍然失效。
 
 ## 用样例观察内存统计
 
@@ -23,7 +23,7 @@ mkdir -p tmp/doc-example
 chali run example/samples/std_parse_random_path_memory.chl --allocator malloc --out tmp/doc-example/memory
 ```
 
-ChaLi 通过 Memory 命名空间管理容器和对象，1.0.11 缺省使用系统 malloc，pool 可选，默认预算 512 MiB；全局 C++ new/delete 保留宿主行为。实现位于 [`source/allocator/`](../source/allocator)，原生导出使用构建时嵌入的匹配资产。
+ChaLi 通过 Memory 命名空间管理容器和对象，0.32.10 缺省使用系统 malloc，pool 可选，默认预算 512 MiB；全局 C++ new/delete 保留宿主行为。实现位于 [`source/allocator/`](../source/allocator)，原生导出使用构建时嵌入的匹配资产。
 
 ## PC 容量与统计
 
@@ -112,7 +112,7 @@ ChaLi 翻译单元及其依赖库必须一致定义 `CHALI_CUSTOM_ALLOCATOR=1`�
 
 ## 活跃分配与代次隔离
 
-运行时只保存活跃逻辑区间与物理块首的最新代次，不保存释放墓碑或清扫边界。释放立即移除活跃记录；重复释放返回失败。自定义 `HeapAllocator` 保持相同契约，不再提供清扫和已释放身份查询接口。
+运行时只保存活跃逻辑区间与物理块首的最新代次，不保存释放墓碑或清扫边界。释放立即移除活跃记录；重复释放返回失败。自定义 `HeapAllocator` 保持相同契约。
 
 物理空间可以复用，逻辑引用编码槽号、分配代次与块内偏移，旧引用不能命中新对象。每个曾使用的物理块首仅占一个身份槽，累计分配次数不增加槽数；代次耗尽时拒绝复用该身份，不回绕。身份槽是防止旧引用复活的分配元数据，不是已释放对象列表。
 

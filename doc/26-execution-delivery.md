@@ -4,7 +4,7 @@
 [English](en/26-execution-delivery.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-正常运行与 AOT 直接从语义检查后的 AST 生成 LLVM 代码，绕过四元式生成和组装。编译器里没有解释器核，`.svmb` 字节码导出已删除。
+正常运行与 AOT 直接从语义检查后的 AST 生成 LLVM 代码，绕过四元式生成和组装。
 
 | 场景 | 入口 | 结果 |
 | --- | --- | --- |
@@ -25,7 +25,7 @@
 - `--out 前缀` 显式给路径时按用户要求全部保留，不做清理；`--incremental` 与 `--emit-llvm` 同样保留；
 - `.chali/` 已由 `chali new` 生成的 `.gitignore` 排除，不进版本库。
 
-`aot` 的可执行文件默认与源文件同级，Linux 等平台没有可执行文件后缀。LLVM IR 按显式 `--out` 前缀保留；`emit` 模式已删除。
+`aot` 的可执行文件默认与源文件同级，Linux 等平台没有可执行文件后缀。LLVM IR 按显式 `--out` 前缀保留；
 
 ```powershell
 chali run app.chl                     # 运行后清理中间产物，不写标准库缓存

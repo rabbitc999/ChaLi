@@ -8,7 +8,18 @@
 
 默认 `run` 与 `aot` 的最终产物位于 `.chl` 同级，run 生成的可执行文件也会保留。中间文件使用源码旁 `.chali` 中的独占工作区，Windows 下隐藏，成功或失败结束后清理并删除空目录；既有用户文件保留。显式输出与保留选项继续可用。VSCode 默认同样输出到源码旁；static VSIX 不提供 `Chali › Build: Llvm Path`，external 必须配置，构建和运行均传递 `--llvm`。
 
-从 1.0.8 起，`run` 使用 checked AOT 编译执行，`aot` 默认 unchecked 导出；编译器不再内置 VM 执行器。`.svmb` 导出已删除，新项目使用 AOT 原生产物。原生调试见[原生 AOT 调试](43-native-debugging.md)。
+`run` 使用 checked AOT 编译执行，`aot` 默认 unchecked 导出。原生调试见[原生 AOT 调试](43-native-debugging.md)。
+
+### Windows 应用的控制台
+
+Windows 可执行文件默认使用控制台子系统。GUI 应用可用 `--subsystem windows`，从资源管理器启动时不会为它创建控制台窗口。该选项只选择 PE 子系统，应用窗口由程序自己创建。
+
+```powershell
+chali aot app.chl --subsystem console --out app-console
+chali aot app.chl --subsystem windows --out app-gui
+```
+
+在 `chali.toml` 的 `[aot]` 中设置 `subsystem = "windows"` 可用于项目构建，`run` 和编辑器构建也会读取该设置。命令行选项优先。分步构建时把选项传给 `chali link`；导出的 LLVM IR、汇编或对象尚未设置 PE 子系统。
 
 `chali aot input.chl --out build/program` 从语义检查后的 AST 直接生成 LLVM 代码，不经过四元式生成或组装，由 LLVM 优化、生成机器码并链接原生产物。也可使用 `chali --mode aot input.chl`。默认源码运行同样使用 AOT，且开启检查。
 
@@ -21,7 +32,7 @@ AOT 的 LLVM 优化始终全开：外置 LLVM 使用 `-O3`，静态 LLVM 使用 
 | `--out 前缀` | 输出 `.ll` 模块、C ABI 头文件及原生产物；Windows 使用 .exe/.dll，Linux 使用无后缀可执行文件或 .so |
 | `--llvm 路径` | 指定外置 LLVM clang 驱动；静态变体缺省使用内置后端，外置变体也可用 `CHALI_LLVM_CLANG` 选择工具 |
 | `--emit-llvm` | 只生成 LLVM 模块与 C ABI 头文件，不执行目标代码生成或链接 |
-| `--allocator malloc\|pool` | 1.0.11 起缺省使用系统 malloc；pool 保留连续 arena 与原有字节堆分配策略 |
+| `--allocator malloc\|pool` | 0.32.10 起缺省使用系统 malloc；pool 保留连续 arena 与原有字节堆分配策略 |
 | `--checked` | 生成 AST 中已检查的数组边界与指针检查；run 默认启用，aot 导出默认关闭 |
 | `--unchecked` | 显式关闭这些检查，仅用于调试或性能对照；仍检查对象存活与实际内存访问 |
 | `--shared` | 生成动态库 |
@@ -36,7 +47,7 @@ AOT 的 LLVM 优化始终全开：外置 LLVM 使用 `-O3`，静态 LLVM 使用 
 
 ## 运行分配器
 
-1.0.11 起，原生程序默认使用系统 `malloc`，可通过 `--allocator pool` 选择原有内存池。系统模式同时作用于宿主对象与语言字节堆：每块语言存储独立分配，不再从连续字节缓冲区细分。逻辑引用身份、释放撤销、范围验证、零初始化和内存预算继续保留；`--unchecked` 不关闭这些保护。
+0.32.10 起，原生程序默认使用系统 `malloc`，可通过 `--allocator pool` 选择原有内存池。系统模式同时作用于宿主对象与语言字节堆：每块语言存储独立分配，不再从连续字节缓冲区细分。逻辑引用身份、释放撤销、范围验证、零初始化和内存预算继续保留；`--unchecked` 不关闭这些保护。
 
 ```sh
 chali aot app.chl --allocator malloc --out build/app-malloc
@@ -52,7 +63,7 @@ chali aot app.chl --allocator pool --out build/app-pool
 | `make` 或 `make CHALI_STATIC_LLVM=0` | 调用外置 LLVM clang；工具链位于 `library/llvm/` | `llvm-external` |
 | `make llvm-static` | 静态链接 LLVM 优化与 x64 代码生成库、LLD；内嵌 CRT 链接资产，编译时无需 clang 或 LLVM DLL | `llvm-static` |
 
-首次静态构建由 [setup_static.py](../library/llvm/setup_static.py) 自动下载固定版本 LLVM/LLD 预编译开发库与匹配的 GCC，核对 SHA-256 并安装到隔离 SDK 目录。已有开发库时可直接使用 `make CHALI_STATIC_LLVM=1`；Windows x64 的编译器产物为 `chali-1.0.8-llvm-static-windows-x64.exe`，外置变体为 `chali-1.0.8-llvm-external-windows-x64.exe`，文件名版本取自 `VERSION`。`CHALI_LLVM_SDK` 可指定同 ABI 的开发库目录。当前静态分发验收目标为 Windows x64。静态变体默认使用内置后端；显式 `--llvm` 可选择外部工具。只导出 LLVM 模块时，两种变体都不需要运行代码生成工具。
+首次静态构建由 [setup_static.py](../library/llvm/setup_static.py) 自动下载固定版本 LLVM/LLD 预编译开发库与匹配的 GCC，核对 SHA-256 并安装到隔离 SDK 目录。已有开发库时可直接使用 `make CHALI_STATIC_LLVM=1`；Windows x64 的编译器产物为 `chali-1.0.0-llvm-static-windows-x64.exe`，外置变体为 `chali-1.0.0-llvm-external-windows-x64.exe`，文件名版本取自 `VERSION`。`CHALI_LLVM_SDK` 可指定同 ABI 的开发库目录。当前静态分发验收目标为 Windows x64。静态变体默认使用内置后端；显式 `--llvm` 可选择外部工具。只导出 LLVM 模块时，两种变体都不需要运行代码生成工具。
 
 `python tools/release_variants.py` 顺序构建和验收两个程序与插件变体，发布 ZIP 分别保存在 `dist/llvm-static/` 与 `dist/llvm-external/`。插件版本与 VERSION 中的编译器版本一致，VSIX 文件名分别使用 `-llvm-static` 与 `-llvm-external` 后缀；二者安装为同一个扩展的替代变体。单独打包可在 `vscode/` 使用 `npm run package -- --llvm-variant static --compiler 编译器路径`，或将 static 改为 external。发布脚本只生成本地产物，远端发布仍需显式执行。
 

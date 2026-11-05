@@ -4,7 +4,7 @@
 **English** · [简体中文](../26-execution-delivery.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Normal run and AOT compilation generate LLVM code directly from the semantically checked AST, bypassing quadruple generation and assembly. The compiler carries no interpreter core and `.svmb` bytecode export has been removed.
+Normal run and AOT compilation generate LLVM code directly from the semantically checked AST, bypassing quadruple generation and assembly.
 
 | Task | Command or API | Result |
 | --- | --- | --- |
@@ -25,7 +25,7 @@ Compiler intermediates (`.ll`, the ABI header, LLVM compilation logs) all land i
 - An explicit `--out PREFIX` keeps everything at the path you gave and skips cleanup; `--incremental` and `--emit-llvm` also keep artifacts;
 - `.chali/` is already excluded by the `.gitignore` that `chali new` writes.
 
-The `aot` executable defaults to the source directory and has no suffix on Linux and similar platforms. Preserve LLVM IR with an explicit `--out` prefix. The `emit` mode has been removed.
+The `aot` executable defaults to the source directory and has no suffix on Linux and similar platforms. Preserve LLVM IR with an explicit `--out` prefix.
 
 ```powershell
 chali run app.chl                     # cleans intermediates; no standard-library disk cache

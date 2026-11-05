@@ -260,6 +260,9 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行 fn 匿名函数与 lambda 兼容回归" "$PYTHON" tests/chali_fn.py --chali "$CHALI_BIN"
     run_step "运行 LLVM AOT 原生产物与 C 双向互调回归" "$PYTHON" tests/chali_aot.py --chali "$CHALI_BIN"
     run_step "运行工程 AOT 配置与链接输入回归" "$PYTHON" tests/chali_aot_project_config.py --chali "$CHALI_BIN"
+    if [ "${OS:-}" = Windows_NT ]; then
+        run_step "运行 Windows 应用 PE 子系统回归" "$PYTHON" tests/chali_windows_subsystem.py --chali "$CHALI_BIN"
+    fi
     run_step "运行有界增长与 List／Map／Set 容量复用回归" "$PYTHON" tests/chali_buffer_growth.py --chali "$CHALI_BIN"
     run_step "运行 String 缓冲区、复制、Drop 与借用回归" "$PYTHON" tests/chali_string_buffer.py --chali "$CHALI_BIN"
     run_step "运行 String 字节 Option 标量化及回退回归" "$PYTHON" tests/chali_string_byte_unwrap.py --chali "$CHALI_BIN"

@@ -10,6 +10,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <set>
@@ -103,6 +104,8 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
         Memory::String targetError;
         if (!chali_aot::describeTarget(request.options.target, target, &targetError)) throw std::runtime_error(targetError.c_str());
         if (request.inputs.empty() && request.libraryNames.empty()) throw std::runtime_error("链接需要对象或库输入");
+        const auto subsystemError = chali_aot::windowsSubsystemError(request.options.subsystem, target.windows && !request.options.shared);
+        if (!subsystemError.empty()) throw std::runtime_error(subsystemError.c_str());
         if (!request.entry.empty() && !symbolName(request.entry, target.windows)) throw std::runtime_error("入口符号不受支持");
         for (const auto &name : request.options.exports)
             if (!symbolName(name, target.windows)) throw std::runtime_error("导出符号不受支持");
@@ -131,6 +134,7 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
         {
             const auto compiler = chali_aot::llvmCompilerPath(request.options.compiler);
             std::vector<std::string> arguments{ compiler.c_str(), "--target=" + std::string(target.triple.c_str()), "-fuse-ld=lld", "-o", temporary.u8string(), "-Wl,--gc-sections" };
+            if (!request.options.subsystem.empty()) arguments.push_back(request.options.subsystem == "windows" ? "-mwindows" : "-mconsole");
             if (request.options.lto)
             {
                 arguments.push_back(request.options.thinLto ? "-flto=thin" : "-flto=full");
@@ -286,7 +290,7 @@ int runCli(int argc, char **argv)
         }
         if (argument == "--help" || argument == "-h")
         {
-            std::puts(ar ? "chali ar [OBJECT ...] --out LIB.a [--target TARGET] [--llvm LLVM-AR]" : "chali link INPUT ... [--out FILE] [--target TARGET] [--cpu CPU] [--shared] [--export SYMBOL] [--entry SYMBOL] [--no-runtime] [--lto|--no-lto|--lto-mode off|full|thin] [-L DIR] [--library NAME] [--llvm CLANG] [--sysroot DIR] [--runtime-dir DIR] [--debug]");
+            std::puts(ar ? "chali ar [OBJECT ...] --out LIB.a [--target TARGET] [--llvm LLVM-AR]" : "chali link INPUT ... [--out FILE] [--target TARGET] [--cpu CPU] [--subsystem console|windows] [--shared] [--export SYMBOL] [--entry SYMBOL] [--no-runtime] [--lto|--no-lto|--lto-mode off|full|thin] [-L DIR] [--library NAME] [--llvm CLANG] [--sysroot DIR] [--runtime-dir DIR] [--debug]");
             return 0;
         }
         if (!ar && argument == "--shared")
@@ -321,7 +325,7 @@ int runCli(int argc, char **argv)
             request.noRuntime = true;
             continue;
         }
-        if (argument == "--out" || argument == "--target" || argument == "--llvm" || (!ar && argument == "--cpu") || (!ar && (argument == "--entry" || argument == "--export" || argument == "--sysroot" || argument == "--runtime-dir" || argument == "--library" || argument == "--library-path" || argument == "-L" || argument == "--link")))
+        if (argument == "--out" || argument == "--target" || argument == "--llvm" || (!ar && (argument == "--cpu" || argument == "--subsystem" || argument == "--entry" || argument == "--export" || argument == "--sysroot" || argument == "--runtime-dir" || argument == "--library" || argument == "--library-path" || argument == "-L" || argument == "--link")))
         {
             if (++index >= argc)
             {
@@ -332,6 +336,15 @@ int runCli(int argc, char **argv)
             if (argument == "--out") output = value;
             if (argument == "--target") request.options.target = value;
             if (argument == "--cpu") request.options.cpu = value;
+            if (argument == "--subsystem")
+            {
+                if (std::strcmp(value, "console") != 0 && std::strcmp(value, "windows") != 0)
+                {
+                    std::fputs("chali: --subsystem 需要 console 或 windows\n", stderr);
+                    return 2;
+                }
+                request.options.subsystem = value;
+            }
             if (argument == "--llvm") request.options.compiler = value;
             if (argument == "--entry") request.entry = value;
             if (argument == "--export") request.options.exports.push_back(value);

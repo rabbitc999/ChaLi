@@ -57,7 +57,7 @@ Every non-void value has default `toString()` and String conversion: structs `{.
 
 ## Execution, optimization and deployment
 
-run compiles and executes checked AOT code; aot defaults to unchecked export with explicit --checked available. The compiler and embedded source assets exclude the VM interpreter. The .svmb format and editor commands have been removed; quadruple export remains for analysis.
+`run` compiles and executes checked AOT code. `aot` defaults to unchecked export and accepts an explicit `--checked` flag. Quadruple export is available for analysis.
 
 Release builds run LLVM O3, global DCE, full LTO and section GC; quadruples are not optimized internally — LLVM does all optimization. Reachable data uses sparse initialization, and arrays reuse runtime zeroing. Hosts embed native shared libraries through generated C ABI headers.
 

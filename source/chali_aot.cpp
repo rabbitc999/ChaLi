@@ -2872,6 +2872,15 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     const bool objectOnly = request.options.emitObjectOnly;
     const bool assemblyOnly = request.options.emitAssemblyOnly;
     const bool codeOnly = objectOnly || assemblyOnly;
+    if (!codeOnly && !request.options.emitLLVMOnly)
+    {
+        const auto error = windowsSubsystemError(request.options.subsystem, target.windows && !request.options.shared);
+        if (!error.empty())
+        {
+            if (diagnostics) diagnostics->push_back(error);
+            return 1;
+        }
+    }
     if (int(objectOnly) + int(assemblyOnly) + int(request.options.emitLLVMOnly) > 1)
     {
         if (diagnostics) diagnostics->push_back("AOT：LLVM 文本、对象文件与机器汇编输出只能选择一种");
@@ -2995,6 +3004,8 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     else
     {
         command += "-fuse-ld=lld -Wl,--gc-sections ";
+        if (!request.options.subsystem.empty())
+            command += request.options.subsystem == "windows" ? "-mwindows " : "-mconsole ";
         if (request.options.lto)
         {
             command += request.options.thinLto ? "-flto=thin " : "-flto=full ";

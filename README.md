@@ -7,26 +7,28 @@
 ChaLi is a statically typed language with observable value semantics, explicit borrowing and moves, and scope-based resource cleanup. Its type, ownership and runtime rules are defined by the language. Supported hosts, export targets and external-library requirements are documented separately.
 
 The ChaLi compiler's front end is generated from this repository's `source/chali.gram` by
-[ParseEngine](https://github.com/rabbitc999/ParseEngine). It generates LLVM IR directly from the semantically checked AST and compiles native code through LLVM AOT. run uses checked compilation and execution; aot defaults to unchecked export. .svmb has been removed.
+[ParseEngine](https://github.com/rabbitc999/ParseEngine). It generates LLVM IR directly from the semantically checked AST and compiles native code through LLVM AOT. run uses checked compilation and execution; aot defaults to unchecked export.
 
 
 See [current capabilities](doc/en/17-capabilities.md) for implemented features, defaults and platform limits; read the current version from [`VERSION`](VERSION).
 
 ## Name and capability references
 
-| Area | Current behavior |
-| --- | --- |
-| Values | Independent observable values, explicit references and moves; copies may be removed when behavior is preserved |
-| Macros | Hygienic names and parameter categories with defined evaluation rules |
-| Type erasure | Any retains concrete type information and follows ownership and provenance restrictions |
-| References | Static source and lifetime checks; unsafe and foreign-code preconditions remain separate |
-| Interfaces | Generic behavior, inheritance and concrete-type matching; known calls may be devirtualized or inlined |
+The five letters in ChaLi refer to the language features below. The language name capitalizes C and L.
+
+| Letter | Meaning | Language feature |
+| --- | --- | --- |
+| **C** | **Copy** | Independent observable values, explicit references and moves; copies may be removed when behavior is preserved |
+| **h** | **Hygienic** | Hygienic names and parameter categories with defined evaluation rules |
+| **a** | **Any** | Any retains concrete type information and follows ownership and provenance restrictions |
+| **L** | **Lifetime** | Static source and lifetime checks; unsafe and foreign-code preconditions remain separate |
+| **i** | **Interface** | Generic behavior, inheritance and concrete-type matching; known calls may be devirtualized or inlined |
 
 See [naming and related capabilities](doc/en/37-name-freeze.md) for references and verification entry points.
 
 ## Compilation
 
-Conditional preprocessing precedes the generated parser. Hygienic AST macros expand during semantic analysis alongside type inference. After name, type, generic and borrow checks, the C++ backend generates LLVM IR directly from the checked AST; LLVM optimizes it and generates native code. Normal run and AOT paths skip quadruple generation, serialization and assembly. The .svmb format has been removed.
+Conditional preprocessing precedes the generated parser. Hygienic AST macros expand during semantic analysis alongside type inference. After name, type, generic and borrow checks, the C++ backend generates LLVM IR directly from the checked AST; LLVM optimizes it and generates native code. Normal run and AOT paths skip quadruple generation, serialization and assembly.
 
 ![ChaLi compilation: conditional preprocessing, parsing, semantic macro expansion, borrow checks, checked AST and LLVM AOT](doc/images/chali-compilation-en.png)
 
@@ -40,7 +42,7 @@ The generated application needs no VM or LLVM DLL. Ship application-specific C A
 
 ## Execution
 
-`run` compiles and executes checked AOT machine code. `aot` exports unchecked native products by default. The compiler and embedded generator assets omit the VM interpreter; shared memory, ownership, host callbacks and thread services remain. `.svmb` export has been removed.
+`run` compiles and executes checked AOT machine code. `aot` exports unchecked native products by default. The native runtime provides shared memory, ownership, host callbacks, and thread services.
 
 ## Documentation
 
@@ -69,10 +71,6 @@ Companion resources:
 - [`example/samples-error/`](example/samples-error/) — samples expected to fail; diagnostics in [`example/expected-error/`](example/expected-error/).
 - [`doc/examples/`](doc/examples/) — examples that need a companion project layout (ABI, SQLite).
 - [Full grammar reference (EBNF)](doc/14-grammar-ebnf.md) — the authoritative form of the grammar.
-
-The 36 old developer-facing chapters have been removed; the 7 that are standalone specs
-([14 EBNF](doc/14-grammar-ebnf.md)–[20 memory allocator](doc/20-memory-allocator.md)) moved into `doc/`
-and were rewritten in the current voice. The rest remain in Git history.
 
 The Chinese and English technical text keep corresponding code examples, including comments. The book and selected guides have executable verification scripts; reports identify the compiler, commands and checks actually run. The [English book](doc/book/en/README.md) contains technical chapters and appendices without the Chinese literary extras.
 

@@ -11,6 +11,7 @@ ChaLi uses LLVM AOT to generate native code. Prepare target runtimes, C ABI libr
 Read the current language/toolchain version from [`VERSION`](../../VERSION).
 
 For AI-assisted ChaLi programming, use the repository's [ChaLi programming skill](../../skills/chali-programming/SKILL.md), covering syntax choices, API lookup, macros and execution checks.
+For maintaining ChaLi itself, see the [maintenance knowledge base (Chinese)](../knowledge/README.md) for code entry points, diagnosis and release verification.
 Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 
 > This is the English edition. The Chinese edition is the default and is the one maintained first —
@@ -35,7 +36,7 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 | Looking up commands, config, tests | [Toolchain](09-toolchain.md) |
 | Querying APIs in a terminal or checking editor caches | [Command line manual](../man/en/README.md) → [LSP incremental hints and caching](../man/en/lsp.md) |
 | Looking for the authoritative grammar | [EBNF grammar reference](../14-grammar-ebnf.md) |
-| Comparing 1.0.10 and 1.0.11, allocators, and frozen C++/Rust/Lua/Java JIT references across 17 workloads | [Version and language performance baselines](12-performance.md) |
+| Comparing 0.32.9 and 0.32.10, allocators, and frozen C++/Rust/Lua/Java JIT references across 17 workloads | [Version and language performance baselines](12-performance.md) |
 | Installing MSI/DEB/RPM packages or building another CPU architecture | [Installation packages and architecture builds](39-installation-packages.md) |
 | Want to contribute / see the roadmap | [Roadmap and ecosystem](10-roadmap.md) |
 

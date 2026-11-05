@@ -334,6 +334,11 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                     if (value.empty()) throw std::runtime_error("aot value cannot be empty: " + key);
                     if (key == "target") project.aotTarget = value;
                     else if (key == "cpu") project.aotCpu = value;
+                    else if (key == "subsystem")
+                    {
+                        if (value != "console" && value != "windows") throw std::runtime_error("aot.subsystem expects console or windows");
+                        project.aotSubsystem = value;
+                    }
                     else if (key == "sysroot") project.aotSysroot = path(value, base);
                     else if (key == "runtime_dir") project.aotRuntimeDirectory = path(value, base);
                     else if (key == "allocator")

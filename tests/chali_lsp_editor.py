@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse
 import json
+import os
 import shutil
 import struct
 import subprocess
@@ -100,8 +101,13 @@ def main():
         # 项目清单由编辑结果决定目标与输出；只验证 Linux ARM64 对象，不执行目标机器码。
         command = [str(compiler), 'aot', str(source), '--out', str(root / 'cross')]
         if info['llvm'] == 'external':
-            clang = Path(__file__).resolve().parents[1] / 'build/dependencies/llvm/toolchain/bin/clang.exe'
-            if clang.exists(): command += ['--llvm', str(clang)]
+            clang = os.environ.get('CHALI_LLVM_CLANG')
+            if not clang and os.name == 'nt':
+                bundled = Path(__file__).resolve().parents[1] / 'build/dependencies/llvm/toolchain/bin/clang.exe'
+                if bundled.exists():
+                    clang = str(bundled)
+            if clang:
+                command += ['--llvm', clang]
         result = subprocess.run(command, cwd=project,
                                 capture_output=True, encoding='utf-8', timeout=180)
         assert result.returncode == 0, result.stdout + result.stderr

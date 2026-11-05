@@ -98,6 +98,6 @@ make CXXFLAGS="-DNO_CHALI_PANIC_TRACE"
 | 行级来源 | 宏、`import`、嵌套调用的行号与文件正确 |
 
 ```sh
-python tests/test_chali_panic.py --chali chali-1.0.8-llvm-external-windows-x64.exe
-python tests/test_chali_source_lines.py --chali chali-1.0.8-llvm-external-windows-x64.exe
+python tests/test_chali_panic.py --chali chali-1.0.0-llvm-external-windows-x64.exe
+python tests/test_chali_source_lines.py --chali chali-1.0.0-llvm-external-windows-x64.exe
 ```

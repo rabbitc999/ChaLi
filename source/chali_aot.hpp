@@ -54,6 +54,7 @@ struct Options
     bool emitObjectOnly = false;                     ///< 只生成目标机器的对象文件，不执行链接。
     Memory::String target;                           ///< 目标三元组，空值使用实际宿主。
     Memory::String cpu;                              ///< 目标 CPU，空值使用目标的通用 CPU。
+    Memory::String subsystem;                        ///< Windows 可执行文件的 PE 子系统，空值使用工具链默认值。
     Memory::String sysroot;                          ///< 完整交叉链接使用的目标 sysroot。
     Memory::String runtimeDirectory;                 ///< 目标 libchali_aot_host.a 所在目录。
     Memory::String allocator;                        ///< malloc 或 pool；空值默认系统 malloc。

@@ -60,12 +60,13 @@ sum=10
 | 容器 | `List<T>`、`Map<K, V>`、`Set<T>`、`Pair<K, V>` |
 | 可选值与错误 | `Option<T>`、`Result<T, E>`；标准库错误实现 `Error.toString()`，文本错误使用 `MessageError`，配合模式匹配、查询和取值方法 |
 | 类型擦除盒子 | `Any`（第 13 章的运行期多态） |
-| 大数 | `BigInteger`、`BigDecimal` |
-| 输入 | `inputInt()`、`inputUInt()`、`inputFloat()`、`inputBool()`、`inputChar()`、`inputBigInteger()`、`inputBigDecimal()` |
+| 输入 | `inputInt()`、`inputUInt()`、`inputFloat()`、`inputBool()`、`inputChar()` |
 | 整行输入 | `readLine()`，保留空格，不含 LF/CRLF |
 | 多行输入 | `readLines(int32 N)`，LF 连接，EOF 提前结束 |
 
 完整类型、接口与内建入口见[核心库参考](../library/std-core.md)。其余模块按需显式 `import`。
+
+核心库也提供 `inputBigInteger()` 和 `inputBigDecimal()` 输入入口。它们返回的类型定义在 [`std::big_number`](../library/std-big_number.md)。需要声明或构造大数类型时，按后文示例显式导入该模块。
 
 ---
 
@@ -75,6 +76,7 @@ sum=10
 
 | 模块 | 能干什么 |
 | --- | --- |
+| [`std::big_number`](../library/std-big_number.md) | `BigInteger` 任意精度整数与 `BigDecimal` 高精度十进制数 |
 | [`std::math`](../library/std-math.md) | `sin` `cos` `sqrt` 等常用函数；`abs` `min` `max` 是泛型入口，`min`/`max` 可以给任意多个实参（常数 `std::math::PI`、`std::math::E`） |
 | [`std::numerics`](../library/std-numerics.md) | 标量数值方法：导数、辛普森积分、二分、RK4、牛顿迭代 |
 | [`std::number_theory`](../library/std-number_theory.md) | 整数数论：模块级泛型 `gcd` `lcm`（任意多个实参）、`add_mod` `mul_mod` `pow_mod` `mod_inverse`，以及确定性的 `is_prime`（Miller-Rabin） |

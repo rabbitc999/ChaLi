@@ -14,7 +14,7 @@ Distinguish immediate development execution from exporting a native artifact for
 
 The relevant unchecked defaults mainly affect runtime array and pointer checking; static types, ownership and borrowing remain. Include configuration when comparing executions rather than checking source identity alone.
 
-Use chali help and the [LLVM AOT reference](../../en/38-aot.md) for exact options. The emit and .svmb paths have been removed.
+Use chali help and the [LLVM AOT reference](../../en/38-aot.md) for exact options.
 
 Default run/aot publishes final artifacts beside the source and uses the adjacent `.chali` directory for intermediates; Windows marks it hidden. Success or failure cleans the session workspace while preserving existing user files. Successful compilation and publication reports completion on standard error, then run launches the native program. `--quiet` or `CHALI_QUIET=1` suppresses only that notice. Explicit output, retention and incremental settings follow the [artifact reference](../../en/38-aot.md).
 
@@ -24,9 +24,9 @@ Default run/aot publishes final artifacts beside the source and uses the adjacen
 
 Normal run and aot execution generates LLVM IR directly from the semantically checked AST. The frontend parses declarations and expressions, expands macros and checks names, types, ownership and borrowing. The backend reads the checked tree and emits LLVM instructions and required runtime calls. LLVM performs optimization and target code generation. Linking combines objects with runtime components, system libraries and application dependencies.
 
-Unqualified IR in this book means ChaLi quadruple IR; LLVM IR is named explicitly. Quadruple export and compatibility entry points for independent callers remain, but normal AOT does not require generating quadruples, writing them to disk and reading them back. Internal quadruple and aggregate optimization passes have been removed; LLVM performs optimization through O3/LTO. Results depend on the program and configuration.
+Unqualified IR in this book means ChaLi quadruple IR; LLVM IR is named explicitly. Quadruple export and compatibility entry points for independent callers remain, but normal AOT does not require generating quadruples, writing them to disk and reading them back. LLVM performs optimization through O3/LTO. Results depend on the program and configuration.
 
-Run combines compilation and execution through checked AOT. It does not interpret quadruples in a VM. The current compiler and embedded assets contain no VM interpreter core, and .svmb export has been removed. A program validated with run still needs its export target, check settings and link configuration verified; the two commands have different defaults.
+`run` compiles and executes programs through checked AOT. A program validated with run still needs its export target, check settings and link configuration verified; the two commands have different defaults.
 
 Checked execution helps detect the corresponding invalid accesses at runtime, while static checking rejects invalid programs before execution. Their coverage differs, and neither proves business inputs valid. Understand the actual switches before selecting unchecked and validate the release configuration itself rather than relying only on a development run.
 

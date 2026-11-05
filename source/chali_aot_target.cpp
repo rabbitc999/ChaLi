@@ -64,4 +64,18 @@ bool describeTarget(const Memory::String &requested, TargetInfo &target, Memory:
     }
     return true;
 }
+
+/**
+ * @brief 检查 Windows PE 子系统选项。
+ * @param subsystem 为空或为 console、windows。
+ * @param executable 是否链接 Windows 可执行文件。
+ * @return 选项可用时返回空串，否则返回诊断。
+ */
+Memory::String windowsSubsystemError(const Memory::String &subsystem, bool executable)
+{
+    if (subsystem.empty()) return {};
+    if (subsystem != "console" && subsystem != "windows") return "--subsystem 需要 console 或 windows";
+    if (!executable) return "--subsystem 仅用于链接 Windows 可执行文件";
+    return {};
+}
 }  // namespace chali_aot

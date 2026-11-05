@@ -259,8 +259,9 @@ DEMO_OBJS += $(CHALI_NATIVE_DEVELOPMENT)
 $(TARGET): $(CHALI_NATIVE_DEVELOPMENT)
 $(CHALI_BUILD_ROOT)/chali-native: | tmp
 	$(CHALI_RUNTIME_MKDIR)
-$(CHALI_NATIVE_DEVELOPMENT): tools/native_development.cpp tools/native_development.hpp source/syntax/source_text.hpp source/chali_module.hpp source/chali_stdlib.hpp | $(CHALI_BUILD_ROOT)/chali-native
+$(CHALI_NATIVE_DEVELOPMENT): tools/native_development.cpp tools/native_development.hpp source/syntax/source_text.hpp source/chali_module.hpp source/chali_stdlib.hpp source/chali_package.hpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(CHALI_BUILD_ROOT)/chali-native
 	$(CXX) $(CXXFLAGS) -MMD -MP -MF $(CHALI_BUILD_ROOT)/chali-native-development.d -I. -c $< -o $@
+-include $(CHALI_BUILD_ROOT)/chali-native-development.d
 $(CHALI_NATIVE_DEVELOPMENT): source/chali_i18n.hpp source/console/utf8.hpp
 $(FRONTEND_BUILD)/chali_tool.o: tools/native_development.hpp
 

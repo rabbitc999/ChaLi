@@ -8,7 +8,7 @@ When a small program needs collections, text, I/O or time handling, start by ide
 
 ## 30.1 Start with the auto-loaded core module
 
-Strings and lists are available directly. This program imports math for the module constant PI, computes the circumference at radius 2, and explicitly converts the result to an integer. The conversion discards the fractional part. For more decimal precision, use pi(digits).
+`std::core` makes strings and collections available automatically. Import `std::math` for the `float64` module constants `std::math::PI` and `std::math::E`. The program uses `PI` to compute the circumference at radius 2, converts it to the integer 12, and checks the expected range of `E`. For more decimal precision, call `std::math::pi(digits)`.
 
 <!-- verify-book -->
 ```chali
@@ -20,6 +20,7 @@ void main() {
     names.push("Lin");
 
     float64 perimeter = 2.0 * std::math::PI * 2.0;
+    assert(std::math::E > 2.7 && std::math::E < 2.8);
     println("{} / {}", names.len(), (int64)perimeter);
 }
 ```
@@ -117,6 +118,35 @@ void main() {
 ```
 
 
-## 30.6 When to install optional modules
+## 30.6 Work with numbers outside the machine integer range
 
-The compiler includes the modules used in the preceding examples. Install the [optional host libraries](../../en/45-optional-libraries.md) when the program needs windows, audio, XML, cryptography or streaming HTTP. Use the [standard-library appendix](B-standard-library.md) and [API reference](../../library/README.md) to check inputs, results and limits.
+`BigInteger` and `BigDecimal` belong to `std::big_number`. Import the module to use short names, or use their qualified names. Constructing numbers from decimal text lets you express integers outside `int64` and preserve the precision of decimal input.
+
+<!-- verify-book -->
+```chali
+import std::big_number;
+
+void main() {
+    BigInteger count = BigInteger("9000000000000000000000") + BigInteger(7);
+    BigDecimal total = BigDecimal("1.25") + BigDecimal("2.50");
+    println("{} {}", count, total);
+}
+```
+
+```text
+9000000000000000000007 3.75
+```
+
+## 30.7 Choose standard modules and optional host libraries
+
+The compiler embeds the standard modules used in this chapter. Import `std::math` for `PI` and `E`, and `std::tree` for ordered AVL tree queries. Use `std::iter` for `group_by`, `chunk`, and `zip`. Use `std::io::copy_to` for large file copies, `walk_directory` for traversal, and `create_temp_file` with `replace_file` for temporary files and replacement. `std::path::PathString` provides `parent()` and `stem()`. The chapter's `std::date_time` and `std::log` examples show UTC offsets and structured logging.
+
+| Optional module | Use it for |
+| --- | --- |
+| `desktop_gui` | Windows, drawing, controls, and window events |
+| `desktop_audio` | Loading and playing sounds, and managing devices and resources |
+| `xml` | Parsing UTF-8 XML and reading elements, attributes, and mixed content |
+| `std::crypto` | Secure random bytes, SHA-256, HMAC, and Ed25519 verification |
+| `std::net::http` | Streaming uploads and downloads, timeouts, cancellation, and connection reuse |
+
+Follow the [optional host library guide](../../en/45-optional-libraries.md) to build the required modules and configure their import paths and shared libraries. Consult the [standard-library appendix](B-standard-library.md) and [API reference](../../library/README.md) for inputs, results, and limits.

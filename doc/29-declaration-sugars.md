@@ -144,7 +144,7 @@ fn 名<类型形参>(形参)             =>  void 名<类型形参>(形参)
 
 1. 后置函数类型只写在返回类型位置，可加括号也可不加：`-> fn(T v) -> T` 与 `-> (fn(T v) -> T)` 等价；`fn` 后面直接跟 `(` 一律是 `fn (形参) { 体 }` 的 lambda。两者共用同一个前缀，单记号前瞻区分不开，文法上让给既有的 lambda。声明与变量类型位置仍写 `int64 fn(int64, int64)` 或 `(T fn(T v))`。
 2. 后置写法的形参名会自动擦掉，`fn(T v) -> T` 与 `fn(T) -> T` 类型身份相同；默认值仍被拒绝。前置写法保持严格：函数类型的形参只写类型，`int64 fn(int64 v)` 会报"函数类型的形参只写类型"。
-3. lambda 的箭头返回类型是 0.12.0 已移除的写法，`fn (int64 x) -> int64 { ... }` 仍被拒绝；推导返回类型时省略箭头，需要标注时写成 `int64 fn(int64 x) { ... }`。
+3. lambda 可推导返回类型。需要标注时，写成 `int64 fn(int64 x) { ... }`。
 4. 具名函数在语句位置就是具名闭包：`fn read(int64 v) -> int64 { ... }` 在函数体内等价于 `int64 read(int64 v) { ... }`，默认只读借用外层变量。`fn` 后紧跟的关键字（`const` / `mut` / `copy` / `move`）一律当捕获方式，函数名只接受标识符。
 
 核心入口为 [`fn_named` / `fn_result`](../source/chali.gram) 与 [`M_NamedFunctionOf`](../source/semantics/named_function_ast.cpp)。

@@ -24,7 +24,9 @@ Build timing defaults to three repetitions each for native consumer-object compi
 
 Compilers and VSIX packages rebuilt after documentation receive separate functional acceptance; frozen measurements are not relabeled as results for those new binaries. These workloads establish no universal benefit across programs, platforms or LLVM variants and provide no cross-language ranking.
 
-## Frozen comparison with 1.0.12 static LLVM
+## Frozen comparison with a pre-release static LLVM build
+
+The measured development build predates the 1.0.0 release and retains its original identifier, `1.0.12`.
 
 This comparison ran on 2026-11-02 under Windows 10 x64 on an AMD Ryzen 5 5600X (6 cores/12 logical processors), using embedded LLVM 23.1.4 and GCC 11.2.0 for the C11 timing shell. Compiler source was `66afd9adc30650649493c4d618638b84d1edbdae`, with actual binary SHA-256 `2bc93306c8b4825bcf1242a3e123b353a0bc76c310ab68fda396d03f20126d68`. These measurements belong only to those frozen bytes. Compilers and VSIX packages rebuilt after documentation receive separate functional checks without relabeling this data.
 

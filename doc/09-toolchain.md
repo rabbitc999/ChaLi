@@ -4,7 +4,7 @@
 [English](en/09-toolchain.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-从 1.0.8 起，`run` 使用 checked AOT 编译执行，`aot` 默认 unchecked 导出；编译器不再内置 VM 执行器。`.svmb` 导出已删除，新项目使用 AOT 原生产物。原生调试见[原生 AOT 调试](43-native-debugging.md)。
+`run` 使用 checked AOT 编译执行，`aot` 默认 unchecked 导出。原生调试见[原生 AOT 调试](43-native-debugging.md)。
 
 ChaLi 默认通过 checked AOT 执行程序。源码经过前处理、语法与语义检查，直接从已检查的 AST 生成 LLVM IR；正常路径绕过四元式生成及组装，可显式使用 [AOT 编译入口](38-aot.md)生成 LLVM 模块与原生产物。
 
@@ -19,7 +19,7 @@ chali aot app.chl --out build/app
 ```
 
 直接传入 `.chl` 文件也会运行，文件后的参数传给程序；显式 `run` 可配置产物前缀。
-`aot --emit-llvm --out 前缀` 直接生成 `.ll`，不生成四元式中间文件；字节码导出已删除。运行时资产与标准库内嵌在编译器中。
+`aot --emit-llvm --out 前缀` 直接生成 `.ll`，不生成四元式中间文件；运行时资产与标准库内嵌在编译器中。
 
 ## 开发工具
 
@@ -50,7 +50,7 @@ chali clear out build/compiler
 | `CHALI_NO_SLOT_REUSE=1` | 退回「形参在前 + 声明顺序一人一槽」，不看活跃性 |
 | `CHALI_ONE_SLOT_PER_SYMBOL=1` | 一人一槽但仍走分配器，用来分辨「别名」与「编号」两类问题 |
 
-AOT 快速路径的对照开关见[AOT 降低开关与计数](40-backend-ownership.md)；四元式内部优化与寄存器执行核在 1.0.8 已删除，对应的旧开关不再存在。
+AOT 快速路径的对照开关见[AOT 降低开关与计数](40-backend-ownership.md)。
 
 指令选择覆盖率与帧槽复用前后都能在 `--stats` 里看到：
 
@@ -59,8 +59,8 @@ AOT 快速路径的对照开关见[AOT 降低开关与计数](40-backend-ownersh
 帧槽分配：362 个函数，符号 1622 个 → 槽 1346 个（省掉 276 个）
 ```
 
-项目配置使用 `run`，旧 interpret 仅作为 AOT 运行的别名；svmb 配置已删除。
-配置见[工程与包管理](13-projects.md)，旧格式迁移见[迁移说明](16-compact-symbols.md)，产物位置见[构建产物](15-artifacts.md)。
+项目配置使用 `run`。
+配置见[工程与包管理](13-projects.md)，原生符号见[原生产物符号](16-compact-symbols.md)，产物位置见[构建产物](15-artifacts.md)。
 
 ## 源码模块与增量构建
 
@@ -120,7 +120,6 @@ C 宿主包含 `chali_abi.h`，需要集中登记标准库时另包含 `chali_st
 - 解析单元格式为 7，保留完整类型引用闭包及生命周期契约；模板记录格式为 1，不保存用户实例或进程地址；包格式为 2，记录内容与编译器身份、反射配置、长度和校验信息。整包损坏或匹配单元格式不兼容时报告明确错误。
 - 宏来源位置按文件与原始行归一，用户输入长度、模块与路径改变时核心二进制保持一致。
 - `--no-stdlib-cache` 和 `CHALI_NO_STDLIB_CACHE=1` 保留为兼容开关，含义为关闭内嵌单元、从源码解析；两条路径都不写标准库缓存。
-- `--stdlib-cache-dir` 已删除，`CHALI_STDLIB_CACHE_DIR` 不再控制加载目录。已有项目文件和旧目录不会被编译器擅自删除。
 - `--stats` 分别报告核心、模块 AST 和模板记录的命中／源码回退，并列出命中的模块名称。`std::__range` 是编译器生成的标准辅助资产，不是可供用户导入的模块。
 
 反射元数据和具体泛型实例仍在本次编译中处理，不能用核心解析被跳过推断整个标准库已经完成目标代码生成。
@@ -199,7 +198,7 @@ allocator = "malloc"
 
 静态与外置 LLVM 使用独立构建目录和同版本命名。打包前核对 `--build-info`、插件版本、VSIX 内嵌 EXE 字节和实际构建配置；不要用另一变体的配置文件代替核对。`tools/release_variants.py --package-only` 可用 `--static-build-root`／`--external-build-root` 指定本次配置目录。安装包和 ZIP 另核对 EXE、版本及 LICENSE／NOTICE／依赖许可；生成交叉对象与在目标系统执行分别记录。
 
-语言服务的性能对照按参与测量的编译器摘要保存。后续产物核对沿用这组数据的原始标识。[语言服务性能对照](../benchmarks/results/lsp-1.0.12-final/README.md)
+语言服务的性能对照按参与测量的编译器摘要保存。报告路径中的 `1.0.12` 是 1.0.0 发布前的开发构建标识。[语言服务性能对照](../benchmarks/results/lsp-1.0.12-final/README.md)
 
 ## 目标机器汇编
 

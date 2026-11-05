@@ -54,7 +54,7 @@ AOT 动态库通过 `export` 标记普通函数，源码可省略 `main`，全�
 
 ## 执行、优化与部署
 
-run 统一使用 checked AOT 编译执行，aot 默认 unchecked 导出，保留显式 --checked；编译器和内嵌源码资产不包含 VM 解释执行器，.svmb 导出及编辑器入口已删除。四元式仍可导出用于分析。
+`run` 使用 checked AOT 编译执行，`aot` 默认 unchecked 导出，并支持显式 `--checked`。四元式可单独导出用于分析。
 
 IR 指四元式，四元式不做内部优化，优化全部交给 LLVM；发布构建执行 LLVM O3、全局死代码消除、完整 LTO 和节区回收。可达常量采用稀疏初始化，数组复用运行时清零。AOT 动态库通过生成的 C ABI 头文件嵌入宿主。
 

@@ -14,6 +14,8 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 
 让 AI 编写 ChaLi 程序可使用仓库自带的 [ChaLi 编程 Skill](../skills/chali-programming/SKILL.md)，其中包含语法选择、标准库查阅、宏示例与运行验证步骤。
 
+接手 ChaLi 本身的开发从[维护知识库](knowledge/README.md)开始，查阅源码入口、故障定位路径和发行验收步骤。
+
 编译与运行的图解见 [编译过程](../README.cn.md) 和 [运行过程](../README.cn.md)。
 
 ---
@@ -35,7 +37,7 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 | 查命令行、配置、测试、多诊断与独立借用检查 | [工具链使用](09-toolchain.md) |
 | 在终端查 API，或了解编辑器增量缓存 | [命令行手册](man/README.md) → [LSP 增量提示与缓存](man/lsp.md) |
 | 使用 VSCode 的工程提示、标准库文档和在线依赖 | [编辑器插件](../vscode/README.md) |
-| 想知道产物落在哪、旧格式怎么迁移 | [15 构建产物与中间文件](15-artifacts.md) → [16 原生产物符号与旧格式迁移](16-compact-symbols.md) |
+| 想知道产物位置和原生符号 | [15 构建产物与中间文件](15-artifacts.md) → [16 原生产物符号](16-compact-symbols.md) |
 | 用注解 / 反射，或接宿主内存 | [19 注解与反射](19-reflection.md)、[20 内存分配器](20-memory-allocator.md) |
 | 查语法的权威写法 | [EBNF 语法参考](14-grammar-ebnf.md) |
 | 想看用"方块世界"讲明白的 ChaLi | [99 方块里的 ChaLi 语言](99-chali-in-blocks.md) |
@@ -64,14 +66,14 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 | [13](13-projects.md) | 示例项目 | 想直接跑东西的人 | 仓库里的应用型与能力型示例：位置、运行命令、验证入口与前置条件 |
 | [14](14-grammar-ebnf.md) | EBNF 语法参考 | 查文法细节的人 | 从 `source/chali.gram` 生成的全部产生式与词法登记，权威语法的可读形式 |
 | [15](15-artifacts.md) | 构建产物与中间文件 | 想知道文件落在哪、交付带什么的人 | `.chali/` 目录、中间产物清理规则、交付清单 |
-| [16](16-compact-symbols.md) | 原生产物符号与旧格式迁移 | 从旧版本升级的人 | `.svmb` 与符号压缩删除后的替代做法 |
+| [16](16-compact-symbols.md) | 原生产物符号 | 部署和调试 | 发布构建的符号保留、裁剪和 DWARF |
 | [17](17-capabilities.md) | 当前能力与实现边界 | 评估与集成人员 | 语言、VM、借用、反射、标准库及目标宿主的统一说明 |
 | [18](18-panic-trace.md) | panic 与源码行号 | 排查崩溃的人 | 失败输出、函数栈、源码位置与压缩隐藏策略 |
 | [19](19-reflection.md) | 注解与反射 | 用注解 / 动态调用的人 | 声明元数据、类型化查询与封闭值动态调用 |
 | [20](20-memory-allocator.md) | 内存分配器 | 接宿主内存的人 | 池与容量统计、分配范围检查、外部缓冲区接入 |
 | [21](21-semantics-frozen.md) | 语义冻结清单 | 要采用、或要升级的人 | 核心语义、版本规则与仍需完善的实现边界 |
 | [22](22-resource-lifetime.md) | 资源生命周期与借用控制流 | 修改运行时的人 | 分配身份、资源回收合并、临时所有权与闭包借用参考 |
-| [99](99-chali-in-blocks.md) | 方块里的 ChaLi 语言 | 喜欢比喻、想先建立直觉的人 | 用方块世界讲 MC（Magic-C）的每条规矩：值语义、非空引用、无 GC、迭代器、穷尽 match，以及删掉了什么 |
+| [99](99-chali-in-blocks.md) | 方块里的 ChaLi 语言 | 喜欢比喻、想先建立直觉的人 | 用方块世界讲 MC（Magic-C）的每条规矩：值语义、非空引用、无 GC、迭代器、穷尽 match，以及当前语法速查 |
 
 ---
 
@@ -114,7 +116,7 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 
 - [11 借用控制流与算法验证](11-algorithm-validation.md)：独立数据流检查、链表 / BST / DFS / BFS、NOIP2015 运输计划与暴力对照。
 
-- [12 性能对比：版本基线与其他语言](12-performance.md)：17 个负载的 1.0.10／1.0.11、pool／malloc 实测，冻结的 C++、Rust、Lua 与 Java JIT 参考，测试代码、原始样本、结果分析及静态优化趋势图。
+- [12 性能对比：版本基线与其他语言](12-performance.md)：17 个负载的 0.32.9／0.32.10、pool／malloc 实测，冻结的 C++、Rust、Lua 与 Java JIT 参考，测试代码、原始样本、结果分析及静态优化趋势图。
 
 - 静态 SQLite 与 MySQL/MariaDB 连接入口：[SQL 接口](../example/sql-chali/doc/01-sql-library.md)、[SQLite 实库回归](../tests/chali_sqlite.py)、[连接 ABI 夹具回归](../tests/chali_sql_connections.py)、[MySQL/PostgreSQL 实库回归](../tests/chali_sql_live.py)。
 

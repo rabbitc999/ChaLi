@@ -8,7 +8,18 @@ Successful `run` and `aot` compilation reports `Compilation completed: OUTPUT` o
 
 Default `run` and `aot` publish final outputs beside the `.chl` source, including executables produced by run. Intermediate files use a unique workspace under the source-adjacent `.chali` directory, hidden on Windows and removed when empty after success or failure. Existing user files are preserved. Explicit output/retention settings remain available. VS Code defaults to source-adjacent output; static VSIX packages omit `Chali › Build: Llvm Path`, while external packages require it and pass `--llvm` for both build and run.
 
-Since 1.0.8, `run` compiles and executes checked AOT code, while `aot` defaults to unchecked export. The compiler no longer embeds a VM execution engine. `.svmb` export has been removed; use native AOT artifacts. See [Native AOT debugging](43-native-debugging.md).
+`run` compiles and executes checked AOT code. `aot` defaults to unchecked native export. See [Native AOT debugging](43-native-debugging.md).
+
+### Windows application consoles
+
+Windows executables use the console subsystem by default. Use `--subsystem windows` for GUI applications to launch from File Explorer without a console window. The option selects the PE subsystem. The program creates its own application windows.
+
+```powershell
+chali aot app.chl --subsystem console --out app-console
+chali aot app.chl --subsystem windows --out app-gui
+```
+
+Set `subsystem = "windows"` under `[aot]` in `chali.toml` to apply it to project builds, `run`, and editor builds. Command-line options take precedence. When building in stages, pass the option to `chali link`. Exported LLVM IR, assembly, and object files acquire a PE subsystem at final link time.
 
 `chali aot input.chl --out build/program` generates LLVM code directly from the semantically checked AST without generating or assembling quadruples. LLVM optimizes the module, emits machine code and links the native product. `chali --mode aot input.chl` selects the same path. Ordinary source execution uses checked AOT.
 
@@ -35,7 +46,7 @@ Exporting complex C ABI signatures also requires a GNU C++17 compiler compatible
 
 ## Runtime allocator
 
-Since 1.0.11, native applications default to system `malloc`. Select `--allocator pool` to retain the previous arena and byte-heap allocation strategy. The malloc backend covers both host objects and individual language allocations, rather than subdividing a continuous byte buffer. Logical reference identities, invalidation on release, range checks, zero initialization and memory budgets remain active, including unchecked exports.
+Since 0.32.10, native applications default to system `malloc`. Select `--allocator pool` to retain the previous arena and byte-heap allocation strategy. The malloc backend covers both host objects and individual language allocations, rather than subdividing a continuous byte buffer. Logical reference identities, invalidation on release, range checks, zero initialization and memory budgets remain active, including unchecked exports.
 
 ```sh
 chali aot app.chl --allocator malloc --out build/app-malloc
@@ -51,7 +62,7 @@ The `[aot]` table accepts `allocator = "malloc"` or `allocator = "pool"`; explic
 | `make` or `make CHALI_STATIC_LLVM=0` | External LLVM clang under `library/llvm/` | `llvm-external` |
 | `make llvm-static` | Statically linked LLVM optimization, x64 code generation and LLD, with embedded CRT link assets; no clang or LLVM DLL required | `llvm-static` |
 
-The first static build runs [setup_static.py](../../library/llvm/setup_static.py), downloads pinned LLVM sources, verifies SHA-256 and incrementally builds the SDK under `library/llvm/`. With an existing SDK, use `make CHALI_STATIC_LLVM=1`. Windows x64 compiler outputs are named `chali-1.0.8-llvm-static-windows-x64.exe` and `chali-1.0.8-llvm-external-windows-x64.exe`; the version is read from `VERSION`. `CHALI_LLVM_SDK` selects an SDK with the same C++ ABI. The validated static distribution targets Windows x64. Static variants use the built-in backend by default; explicit `--llvm` selects an external driver. LLVM module export requires no code generation tools in either variant.
+The first static build runs [setup_static.py](../../library/llvm/setup_static.py), downloads pinned LLVM sources, verifies SHA-256 and incrementally builds the SDK under `library/llvm/`. With an existing SDK, use `make CHALI_STATIC_LLVM=1`. Windows x64 compiler outputs are named `chali-1.0.0-llvm-static-windows-x64.exe` and `chali-1.0.0-llvm-external-windows-x64.exe`; the version is read from `VERSION`. `CHALI_LLVM_SDK` selects an SDK with the same C++ ABI. The validated static distribution targets Windows x64. Static variants use the built-in backend by default; explicit `--llvm` selects an external driver. LLVM module export requires no code generation tools in either variant.
 
 `python tools/release_variants.py` builds and validates both program and plugin variants in sequence. Release ZIPs are placed in `dist/llvm-static/` and `dist/llvm-external/`. Both plugins retain their independent 1.0.0 version; VSIX filenames use `-llvm-static` and `-llvm-external` suffixes. They are alternative builds of the same extension. To package one, run `npm run package -- --llvm-variant static --compiler COMPILER_PATH` in `vscode/`, or replace static with external. The script creates local artifacts; remote publication requires an explicit action.
 

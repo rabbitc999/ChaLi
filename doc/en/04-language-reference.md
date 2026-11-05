@@ -851,7 +851,7 @@ An `#abi` directive imports C ABI functions from a library. The path resolves re
 Type mapping, nullable references and glue bindings: see
 [Host integration and C ABI](08-host-integration.md).
 
-`#abi("C", "library", "native_symbol")` applies to one imported function declaration. The old `abi "library" { ... }` block syntax has been removed. `#export("native_symbol")` applies to a function implementation; `aot --shared --out` selects the output library. Exports marshal scalars and resource-free value structures using the target C ABI and emit accurate C declarations.
+`#abi("C", "library", "native_symbol")` applies to one imported function declaration. `#export("native_symbol")` applies to a function implementation; `aot --shared --out` selects the output library. Exports marshal scalars and resource-free value structures using the target C ABI and emit accurate C declarations.
 
 `unsafe { ... }` grants raw-operation permission to the current block. An `unsafe T f(...)` declaration requires an unsafe caller and cannot become a safe function value. Closure bodies do not inherit permission from their creation site. Ordinary array, reference and arithmetic checks remain active.
 

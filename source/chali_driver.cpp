@@ -167,7 +167,8 @@ void PrintUsage(std::FILE *out)
              "  --emit-asm             生成目标机器汇编 .s，不链接；可配合 --target\n"
              "  --emit-obj             生成目标 .o，不链接；可配合 --target 交叉生成\n",
              "  --sysroot 目录         目标 SDK 的系统根目录\n",
-             "  --runtime-dir 目录     目标 libchali_aot_host.a 所在目录\n",
+             "  --runtime-dir 目录     目标 libchali_aot_host.a 所在目录\n"
+             "  --subsystem 值        Windows 可执行文件子系统：console 或 windows\n",
              "  --cpu 名称             目标 CPU；也可在 chali.toml 的 [aot] 表配置\n",
              "  --allocator malloc|pool  选择系统 malloc 或内存池；缺省 malloc\n",
              "  --hard-realtime        禁止整个编译单元使用反射\n",
@@ -458,7 +459,7 @@ try
             if (argument == "--emit-obj") aotOptions.emitObjectOnly = true;
             continue;
         }
-        if ((aot || run) && (argument == "--llvm" || argument == "--export" || argument == "--link" || argument == "--asm" || argument == "--asm-include" || argument == "--target" || argument == "--cpu" || argument == "--sysroot" || argument == "--runtime-dir" || argument == "--allocator"))
+        if ((aot || run) && (argument == "--llvm" || argument == "--export" || argument == "--link" || argument == "--asm" || argument == "--asm-include" || argument == "--target" || argument == "--cpu" || argument == "--sysroot" || argument == "--runtime-dir" || argument == "--allocator" || argument == "--subsystem"))
         {
             if (index + 1 >= argc)
             {
@@ -476,6 +477,15 @@ try
             if (argument == "--cpu") aotOptions.cpu = value;
             if (argument == "--sysroot") aotOptions.sysroot = value;
             if (argument == "--runtime-dir") aotOptions.runtimeDirectory = value;
+            if (argument == "--subsystem")
+            {
+                if (value != "console" && value != "windows")
+                {
+                    std::fputs("chali: --subsystem 需要 console 或 windows\n", stderr);
+                    return 2;
+                }
+                aotOptions.subsystem = value;
+            }
             continue;
         }
         /* `--mode`：与统一入口一致的运行方式；interpret / run / aot 折到 run，svmb 已删除。 */
@@ -883,6 +893,7 @@ try
     if (project.debug) { stripDebug = false; debugEnabled = true; aotOptions.debug = true; }
     if (aotOptions.target.empty()) aotOptions.target = project.aotTarget;
     if (aotOptions.cpu.empty()) aotOptions.cpu = project.aotCpu;
+    if (aotOptions.subsystem.empty()) aotOptions.subsystem = project.aotSubsystem;
     if (aotOptions.sysroot.empty()) aotOptions.sysroot = project.aotSysroot;
     if (aotOptions.runtimeDirectory.empty()) aotOptions.runtimeDirectory = project.aotRuntimeDirectory;
     if (aotOptions.allocator.empty()) aotOptions.allocator = project.aotAllocator;

@@ -191,6 +191,7 @@ int link(const chali_linker::Request &request, const Memory::String &product, Me
         runtimeLibrary = runtime.root.generic_u8string();
     }
     std::vector<std::string> storage{"ld.lld", "-m", target.windows ? "i386pep" : target.arm64 ? "aarch64linux" : "elf_x86_64", "-o", product.c_str(), "--gc-sections"};
+    if (!request.options.subsystem.empty()) storage.insert(storage.end(), {"--subsystem", request.options.subsystem.c_str()});
     if (!request.options.debug) storage.push_back("--strip-all");
     if (request.options.shared) storage.push_back("--shared");
     if (target.windows && request.options.shared) storage.push_back("--exclude-all-symbols");
@@ -378,6 +379,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     const std::string builtins = (assets.root / "libclang_rt.builtins-x86_64.a").generic_u8string();
     std::vector<std::string> storage{ "ld.lld", "-m", "i386pep", "-Bdynamic", "-o", product.c_str(),
                                       library + (request.options.shared ? "/dllcrt2.o" : "/crt2.o"), library + "/crtbegin.o", "-L" + library, object };
+    if (!request.options.subsystem.empty()) storage.insert(storage.end(), {"--subsystem", request.options.subsystem.c_str()});
     storage.push_back((request.options.debug && !request.options.debugOptimized) ? "--lto-O0" : "--lto-O3");
     storage.push_back((request.options.debug && !request.options.debugOptimized) ? "--lto-CGO0" : "--lto-CGO3");
     storage.push_back("--gc-sections");

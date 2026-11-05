@@ -4,7 +4,7 @@
 **English** · [简体中文](../06-deployment.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Since 1.0.8 there is a single execution path: the normal execution path lowers the checked AST directly to LLVM IR, LLVM performs AOT, and the result is native machine code for the target platform. There is no shared VM and no `.svmb`, so "deployment" means shipping the build output and supplying the system libraries it needs.
+ChaLi lowers the checked AST to LLVM IR and uses LLVM AOT to produce native machine code for the target platform. Deploy the build output together with the system libraries it needs.
 
 ## Run from source
 

@@ -48,11 +48,14 @@ range(1, 5) includes 1 through 4. Check endpoint and error conventions separatel
 
 The core includes String, List, Map, Set, Pair, Option, Result, Error, MessageError, Any, formatting, assertions and numeric input. Value operations, borrowing and resources retain their type-specific rules. Explicit absence uses None; do not infer absence from default construction.
 
+The core functions `inputBigInteger()` and `inputBigDecimal()` return types defined in [`std::big_number`](../../library/std-big_number.md). Import that module explicitly when declaring or constructing these types, as in the example below.
+
 ## B.3 Modules by task
 
 | Module | Task |
 | --- | --- |
-| [`std::math`](../../library/std-math.md) | Scalar mathematics |
+| [`std::big_number`](../../library/std-big_number.md) | Arbitrary-precision `BigInteger` and high-precision decimal `BigDecimal` |
+| [`std::math`](../../library/std-math.md) | Scalar mathematics and the `float64` module constants `PI` and `E` |
 | [`std::numerics`](../../library/std-numerics.md) | Numerical methods |
 | [`std::number_theory`](../../library/std-number_theory.md) | Integer number theory |
 | [`std::complex`](../../library/std-complex.md) | Complex arithmetic |

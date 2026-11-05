@@ -43,8 +43,8 @@ def main():
         env = dict(os.environ, CHALI_LANG='zh', PYTHONUTF8='1', CHALI_BIN=str(binary))
         build_root = getattr(args, variant + '_build_root')
         if build_root:
-            env['CHALI_BUILD_ROOT'] = str(build_root.resolve())
-            env['CHALI_EMBED_OUTPUT'] = str(build_root.resolve() / 'chali-frontend/chali_stdlib_embedded.cpp')
+            env['CHALI_BUILD_ROOT'] = build_root.resolve().as_posix()
+            env['CHALI_EMBED_OUTPUT'] = (build_root.resolve() / 'chali-frontend/chali_stdlib_embedded.cpp').as_posix()
         if not args.package_only:
             release.run(['sh', '-c', 'exec "$@"', 'chali-variant', 'make', '-j' + str(args.jobs),
                          'CHALI_STATIC_LLVM=' + ('1' if variant == 'static' else '0'),
@@ -52,6 +52,7 @@ def main():
             if not args.skip_tests:
                 release.run([sys.executable, 'tests/chali_aot.py', '--chali', binary], env=env)
                 release.run([sys.executable, 'tests/chali_aot_project_config.py', '--chali', binary], env=env)
+                release.run([sys.executable, 'tests/chali_windows_subsystem.py', '--chali', binary], env=env)
                 if variant == 'static':
                     release.run([sys.executable, 'tests/chali_aot_static.py', '--chali', binary], env=env)
             release.run(['npm.cmd', 'run', 'package', '--', '--llvm-variant', variant,

@@ -18,7 +18,7 @@ ChaLi 只有一条执行路径：语义检查后的 AST 直接生成 LLVM 代码
 | `chali aot app.chl --emit-llvm --out build/app` | `.ll` | 指定的 `build/app` 前缀 |
 | `chali aot app.chl --target linux-arm64 --emit-obj --out build/app` | ARM64 ELF `.o` | 指定的 `build/app` 前缀 |
 
-`emit` 模式已删除。`run` 与 `aot` 的中间文件默认留在 `.chali/` 下；显式 `--out` 将其保留在指定前缀。
+`run` 与 `aot` 的中间文件默认留在 `.chali/` 下；显式 `--out` 将其保留在指定前缀。
 
 ## `.chali/` 目录
 
@@ -59,8 +59,3 @@ ChaLi 只有一条执行路径：语义检查后的 AST 直接生成 LLVM 代码
 - 交付 `--shared` 内核：连同生成的 `.h` 与运行时一起给对方，接口约定见[宿主集成](08-host-integration.md)。
 
 其余情况只交付那一个可执行文件；`.chali/` 不用带，也不该带。
-
-## 旧格式
-
-1.0.8 删除了 `.svmb` 字节码容器与符号压缩。旧格式的说明、测量与逆向评估保留在 Git 历史里，
-迁移要点见[原生产物符号与旧格式迁移](16-compact-symbols.md)。

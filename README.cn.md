@@ -6,26 +6,28 @@
 
 ChaLi 是一门静态类型语言，提供可观察的值语义、显式借用与移动，以及按作用域清理资源的机制。类型、所有权和运行期规则由语言定义；宿主平台、导出目标与外部库要求分别核对。
 
-ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，从已检查的 AST 直接生成 LLVM IR，再通过 LLVM AOT 生成原生程序。run 使用 checked 编译执行，aot 默认 unchecked 导出；.svmb 已删除。
+ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，从已检查的 AST 直接生成 LLVM IR，再通过 LLVM AOT 生成原生程序。run 使用 checked 编译执行，aot 默认 unchecked 导出。
 
 当前已实现能力、默认配置与平台边界统一见[能力说明](doc/17-capabilities.md)，版本以 [`VERSION`](VERSION) 为准。
 
 ## 名称与能力入口
 
-| 领域 | 当前行为 |
-| --- | --- |
-| 值 | 独立的可观察值，显式引用和移动；行为不变时可消除复制 |
-| 宏 | 卫生绑定和具有明确求值规则的参数类别 |
-| 类型擦除 | Any 保留具体类型信息，继续遵守所有权与引用来源规则 |
-| 引用 | 静态检查来源和存活范围；unsafe 与外部代码另有前提 |
-| 接口 | 泛型、继承与具体类型匹配；已知调用可静态化或内联 |
+ChaLi 的五个字母分别代表以下语言特性。语言名中 C 与 L 大写。
+
+| 字母 | 英文含义 | 对应特性 |
+| --- | --- | --- |
+| **C** | **Copy** | 独立的可观察值，显式引用和移动；行为不变时可消除复制 |
+| **h** | **Hygienic** | 卫生绑定和具有明确求值规则的参数类别 |
+| **a** | **Any** | Any 保留具体类型信息，继续遵守所有权与引用来源规则 |
+| **L** | **Lifetime** | 静态检查来源和存活范围；unsafe 与外部代码另有前提 |
+| **i** | **Interface** | 泛型、继承与具体类型匹配；已知调用可静态化或内联 |
 
 名称写法、相关参考与验证入口见[名称与相关能力](doc/37-name-freeze.md)。
 
 ## 编译过程
 
 条件预处理之后，文法生成的前端构建 AST；卫生宏在语义分析期间展开，并与类型推导配合。名称、类型、泛型和独立借用检查完成后，直接遍历 AST 生成 LLVM IR，由 LLVM 优化并生成原生代码。
-正常运行与导出跳过 ChaLi 四元式的生成、写盘、重读与组装。`emit` 模式和 `.svmb` 格式已删除。
+正常运行与导出跳过 ChaLi 四元式的生成、写盘、重读与组装。
 
 ![ChaLi 编译流程：源码、条件预处理、解析、语义期宏展开、借用检查、已检查 AST 与 LLVM AOT](doc/images/chali-compilation.png)
 
@@ -39,7 +41,7 @@ ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://git
 
 ## 运行过程
 
-`run` 编译并执行 checked AOT 机器码；`aot` 默认导出 unchecked 原生产物。编译器及内嵌生成资产移除 VM 执行器，保留共享内存、所有权、宿主回调与线程服务。`.svmb` 导出已删除，新项目使用 AOT 原生产物。
+`run` 编译并执行 checked AOT 机器码；`aot` 默认导出 unchecked 原生产物。原生运行时提供共享内存、所有权、宿主回调与线程服务。
 
 ## 文档
 
@@ -73,9 +75,6 @@ ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://git
 - [`example/samples-error/`](example/samples-error/) —— 预期报错的样例，诊断文本在 [`example/expected-error/`](example/expected-error/)。
 - [`doc/examples/`](doc/examples/) —— 需要配套工程布局的示例（ABI、SQLite）。
 - [完整语法参考（EBNF）](doc/14-grammar-ebnf.md) —— 文法的权威形式。
-
-旧的开发者向 36 章已删除，其中属独立规格的 7 篇（[14 EBNF](doc/14-grammar-ebnf.md)–[20 内存分配器](doc/20-memory-allocator.md)）
-迁入 `doc/` 并改写为当前口径，其余见 Git 历史。
 
 ## 构建
 
