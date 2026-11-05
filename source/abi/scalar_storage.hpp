@@ -1,5 +1,6 @@
 /** @file scalar_storage.hpp @brief 数值内核私有的定长标量槽及转换，不作为 C 宿主头暴露。 */
 #pragma once
+#include "allocator/c_heap_allocator.hpp"
 #include "../allocator/chali_allocator.hpp"
 #include "chali_abi.h"
 #include <memory>
@@ -60,5 +61,5 @@ Slot encode(Scalar value)
  * @param value 待转移记录。
  * @return 新记录句柄，失败为零。
  */
-int64_t publish(const ChaliAbiFrame *frame, std::unique_ptr<Storage> value);
+int64_t publish(const ChaliAbiFrame *frame, Memory::CHeapUniquePtr<Storage> value);
 }  // namespace scalar_buffer

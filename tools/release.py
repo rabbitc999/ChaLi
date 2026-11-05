@@ -109,8 +109,8 @@ def package_assets(root, output, binary, vsix, version, target, revision, dirty,
     output.mkdir(parents=True, exist_ok=True)
     files = [(binary, binary.name), (vsix, vsix.name),
              (root / 'doc/book/latex/book.pdf', 'ChaLi-book.pdf')]
-    files.extend((root / ('licenses' if name == 'miniz' else 'library') / name / 'LICENSE', 'licenses/' + name + '/LICENSE')
-                 for name in ('miniz', 'ipage', 'caspp'))
+    files.extend((root / ('library' if name in ('ipage', 'caspp') else 'licenses') / name / 'LICENSE', 'licenses/' + name + '/LICENSE')
+                 for name in ('miniz', 'ipage', 'caspp', 'yyjson', 'tomlc17', 'raylib', 'raygui', 'expat'))
     if llvm_variant is not None:
         llvm = root / 'library/llvm'
         files.append((llvm / 'LICENSE.TXT', 'licenses/llvm/LICENSE.TXT'))
@@ -212,6 +212,7 @@ def main(argv=None):
     if args.toolchain_dir:
         env['PATH'] = str(args.toolchain_dir.resolve(strict=True)) + os.pathsep + env.get('PATH', '')
     if not args.package_only:
+        run([sys.executable, 'tools/setup_native_extensions.py', '--jobs', str(args.jobs)], env=env)
         for script in ('tools/library_reference.py', 'doc/book/latex/tools/md2tex.py'):
             run([sys.executable, script], env=env)
         latex = ROOT / 'doc/book/latex'

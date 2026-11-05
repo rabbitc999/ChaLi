@@ -62,7 +62,7 @@ while host entry tables live under `source/abi/`. The C11 header `chali_abi.h` d
 slots, opaque registry handles and caller-owned error buffers; `chali_standard.h` exposes standard registration.
 Implementations may use C or C++17, and their public boundaries use C types.
 
-`glue/aot_modules.inc` holds module names and C table providers. Standard registration excludes demo;
+`abi/aot_modules.inc` holds module names and C table providers. Standard registration excludes demo;
 AOT selects modules by actual reachable entry names. Each table registers atomically, and the first failure
 stops registration with its diagnostic. The runtime shares one function table and seals it after setup.
 

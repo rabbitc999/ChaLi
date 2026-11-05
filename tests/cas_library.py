@@ -1,6 +1,7 @@
 """重点构建并运行 caspp 全部独立测试，不扩展到其他库的全量回归。"""
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+import argparse
 import json
 import os
 import subprocess
@@ -10,13 +11,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     """串行构建后并行运行隔离的 CAS 测试进程，保留每项日志。"""
-    output = ROOT / 'tmp/cas-library-tests'
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--build-dir', type=Path, help='隔离 Windows/Linux 或不同 C/C++ 工具链的对象与测试')
+    parser.add_argument('--evidence-dir', type=Path, default=ROOT / 'tmp/cas-library-tests')
+    args = parser.parse_args()
+    output = args.evidence_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
     library = ROOT / 'library/caspp'
+    build = args.build_dir.resolve() if args.build_dir else library / 'build'
     with (output / 'build.log').open('w', encoding='utf-8') as log:
-        subprocess.run(['make', '-C', str(library), '-j4', 'all'], stdout=log, stderr=subprocess.STDOUT, check=True)
+        subprocess.run(['make', '-C', str(library), '-j4', 'BUILD_DIR=' + build.as_posix(), 'all'], stdout=log, stderr=subprocess.STDOUT, check=True)
     suffix = '.exe' if os.name == 'nt' else ''
-    binaries = [(source.stem, library / 'build/tests' / (source.stem + suffix))
+    binaries = [(source.stem, build / 'tests' / (source.stem + suffix))
                 for source in sorted((library / 'tests').glob('*.cpp'))]
 
     def run(entry):

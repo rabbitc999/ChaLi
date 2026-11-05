@@ -1,7 +1,8 @@
-module desktop_gui;
+module std::gui;
+import std::macro;
 
 #abi("C", "./@LIBRARY@", "chali_gui_open")
-bool open(int32 width, int32 height, String title);
+bool __open_native(int32 width, int32 height, String title);
 
 #abi("C", "./@LIBRARY@", "chali_gui_should_close")
 bool should_close();
@@ -16,7 +17,600 @@ void end_frame();
 void close();
 
 #abi("C", "./@LIBRARY@", "chali_gui_label")
-void label(int32 x, int32 y, int32 width, int32 height, String text);
+void __label_native(int32 x, int32 y, int32 width, int32 height, String text);
 
 #abi("C", "./@LIBRARY@", "chali_gui_button")
-bool button(int32 x, int32 y, int32 width, int32 height, String text);
+bool __button_native(int32 x, int32 y, int32 width, int32 height, String text);
+
+/** 保留原即时接口，并允许与控件工厂重载。 */
+bool open(int32 width, int32 height, String title) { return __open_native(width, height, title); }
+void label(int32 x, int32 y, int32 width, int32 height, String text) { __label_native(x, y, width, height, text); }
+bool button(int32 x, int32 y, int32 width, int32 height, String text) { return __button_native(x, y, width, height, text); }
+
+/** 窗口及输入事件；控件事件在 draw 中同步派发。 */
+enum EventKind {
+    None, Opened, Closing, Resized, Focused, Blurred, KeyPressed, KeyReleased,
+    TextEntered, MousePressed, MouseReleased, MouseMoved, MouseWheel, Control, Custom;
+    $std::macro::Equal<EventKind>(leftEqual);
+    $std::macro::Clone<EventKind>(clone);
+};
+/** C ABI 只传递数值，不跨调用保留借用。 */
+struct __RawEvent { int64 kind; int64 source; int64 code; float64 x; float64 y; float64 delta_x; float64 delta_y; };
+/** 独立事件快照；控件的 code 为组合标记，窗口事件为键码或按钮号。 */
+struct Event {
+    int64 __kind;
+    int64 source;
+    int64 code;
+    float64 x;
+    float64 y;
+    float64 delta_x;
+    float64 delta_y;
+    String name;
+    String text;
+    float64 value;
+    bool is_valid() { return self.isValid(); }
+    bool isValid() { return self.__kind != 0; }
+    EventKind kind() {
+        if (self.__kind == 1) { return EventKind::Opened; }
+        if (self.__kind == 2) { return EventKind::Closing; }
+        if (self.__kind == 3) { return EventKind::Resized; }
+        if (self.__kind == 4) { return EventKind::Focused; }
+        if (self.__kind == 5) { return EventKind::Blurred; }
+        if (self.__kind == 6) { return EventKind::KeyPressed; }
+        if (self.__kind == 7) { return EventKind::KeyReleased; }
+        if (self.__kind == 8) { return EventKind::TextEntered; }
+        if (self.__kind == 9) { return EventKind::MousePressed; }
+        if (self.__kind == 10) { return EventKind::MouseReleased; }
+        if (self.__kind == 11) { return EventKind::MouseMoved; }
+        if (self.__kind == 12) { return EventKind::MouseWheel; }
+        if (self.__kind == 13) { return EventKind::Control; }
+        if (self.__kind == 14) { return EventKind::Custom; }
+        return EventKind::None;
+    }
+    bool changed() { return self.__kind == 13 && (self.code & 1) != 0; }
+    bool clicked() { return self.__kind == 13 && (self.code & 2) != 0; }
+    bool submitted() { return self.__kind == 13 && (self.code & 4) != 0; }
+    bool editingChanged() { return self.__kind == 13 && (self.code & 8) != 0; }
+    bool closed() { return self.__kind == 2 || (self.__kind == 13 && (self.code & 16) != 0); }
+    bool selectionChanged() { return self.__kind == 13 && (self.code & 32) != 0; }
+    bool scrolled() { return self.__kind == 13 && (self.code & 64) != 0; }
+    bool hovered() { return self.__kind == 13 && (self.code & 128) != 0; }
+    bool focusChanged() { return self.__kind == 4 || self.__kind == 5 || (self.__kind == 13 && (self.code & 256) != 0); }
+};
+/** 以逻辑像素表示的控件边界。 */
+struct Rect {
+    float32 x;
+    float32 y;
+    float32 width;
+    float32 height;
+    static Rect at(float64 x, float64 y, float64 width, float64 height) {
+        Rect result; result.x = (float32)x; result.y = (float32)y;
+        result.width = (float32)width; result.height = (float32)height; return result;
+    }
+    bool contains(float64 x, float64 y) { return self.isValid() && x >= self.x && y >= self.y && x < self.x + self.width && y < self.y + self.height; }
+    Rect intersection(Rect other) {
+        float64 x = self.x; if (other.x > x) { x = other.x; }
+        float64 y = self.y; if (other.y > y) { y = other.y; }
+        float64 right = self.x + self.width; if (other.x + other.width < right) { right = other.x + other.width; }
+        float64 bottom = self.y + self.height; if (other.y + other.height < bottom) { bottom = other.y + other.height; }
+        float64 width = right - x; if (width < 0) { width = 0; }
+        float64 height = bottom - y; if (height < 0) { height = 0; }
+        return Rect::at(x, y, width, height);
+    }
+    bool is_valid() { return self.isValid(); }
+    bool isValid() { return self.x >= -10000000 && self.x <= 10000000 && self.y >= -10000000 && self.y <= 10000000 && self.width > 0 && self.width <= 10000000 && self.height > 0 && self.height <= 10000000; }
+};
+/** 滚动偏移、网格坐标或二维尺寸。 */
+struct Point {
+    float64 x; float64 y;
+    static Point at(float64 x, float64 y) { Point result; result.x = x; result.y = y; return result; }
+};
+
+#abi("C", "./@LIBRARY@", "chali_gui_open_ex")
+bool __open_options(int32 width, int32 height, String title, int32 options);
+#abi("C", "./@LIBRARY@", "chali_gui_window_id")
+int64 __window_id();
+#abi("C", "./@LIBRARY@", "chali_gui_close_id")
+void __close_id(int64 id);
+#abi("C", "./@LIBRARY@", "chali_gui_request_close")
+void request_close();
+#abi("C", "./@LIBRARY@", "chali_gui_poll_event")
+__RawEvent __poll_event();
+#abi("C", "./@LIBRARY@", "chali_gui_window_value")
+float64 __window_value(int32 property);
+#abi("C", "./@LIBRARY@", "chali_gui_set_window_value")
+bool __set_window_value(int32 property, float64 value);
+#abi("C", "./@LIBRARY@", "chali_gui_set_title")
+bool __set_title(String text, int64 length);
+#abi("C", "./@LIBRARY@", "chali_gui_background")
+void set_background(uint32 rgba);
+#abi("C", "./@LIBRARY@", "chali_gui_begin_clip")
+bool __begin_clip(float32 x, float32 y, float32 width, float32 height);
+#abi("C", "./@LIBRARY@", "chali_gui_end_clip")
+void end_clip();
+#abi("C", "./@LIBRARY@", "chali_gui_configure")
+bool __configure(int32 operation, float64 value);
+#abi("C", "./@LIBRARY@", "chali_gui_set_style")
+bool set_style(int32 control, int32 property, int32 value);
+#abi("C", "./@LIBRARY@", "chali_gui_get_style")
+int32 get_style(int32 control, int32 property);
+#abi("C", "./@LIBRARY@", "chali_gui_tooltip")
+bool __tooltip(String text, int64 length);
+#abi("C", "./@LIBRARY@", "chali_gui_load_font")
+bool load_font(String path, int32 size, String glyphs);
+#abi("C", "./@LIBRARY@", "chali_gui_widget_create")
+int64 __widget_create(int32 kind, String text, int64 length);
+#abi("C", "./@LIBRARY@", "chali_gui_widget_valid")
+bool __widget_valid(int64 id);
+#abi("C", "./@LIBRARY@", "chali_gui_widget_close")
+void __widget_close(int64 id);
+#abi("C", "./@LIBRARY@", "chali_gui_widget_set_integer")
+bool __set_integer(int64 id, int32 property, int64 value);
+#abi("C", "./@LIBRARY@", "chali_gui_widget_integer")
+int64 __get_integer(int64 id, int32 property);
+#abi("C", "./@LIBRARY@", "chali_gui_widget_set_real")
+bool __set_real(int64 id, int32 property, float64 value);
+#abi("C", "./@LIBRARY@", "chali_gui_widget_real")
+float64 __get_real(int64 id, int32 property);
+#abi("C", "./@LIBRARY@", "chali_gui_widget_range")
+bool __set_range(int64 id, float64 minimum, float64 maximum);
+#abi("C", "./@LIBRARY@", "chali_gui_widget_set_text")
+bool __set_text(int64 id, int32 property, String text, int64 length);
+#abi("C", "./@LIBRARY@", "chali_gui_widget_text")
+String __get_text(int64 id, int32 property) ["chali_gui_free"];
+#abi("C", "./@LIBRARY@", "chali_gui_widget_capacity")
+bool __set_capacity(int64 id, int32 capacity);
+#abi("C", "./@LIBRARY@", "chali_gui_widget_draw")
+int64 __draw_widget(int64 id, float32 x, float32 y, float32 width, float32 height);
+
+/** 支持默认整数宽高；options 的 1/2/4 分别为可缩放、隐藏和垂直同步。 */
+bool open_window(int64 width, int64 height, String title, int64 options) {
+    if (width <= 0 || width > 2147483647 || height <= 0 || height > 2147483647 || options < 0 || options > 7) { return false; }
+    return __open_options((int32)width, (int32)height, title, (int32)options);
+}
+bool open(int64 width, int64 height, String title) { return open_window(width, height, title, 0); }
+bool set_title(String text) { return __set_title(text, len(text)); }
+bool set_target_fps(int64 fps) { return fps >= 0 && fps <= 1000 && __set_window_value((int32)0, (float64)fps); }
+bool set_exit_key(int64 key) { return key >= 0 && key < 512 && __set_window_value((int32)1, (float64)key); }
+bool set_min_size(int64 width, int64 height) {
+    if (width < 1 || width > 2147483647 || height < 1 || height > 2147483647) { return false; }
+    return __set_window_value((int32)2, (float64)width) && __set_window_value((int32)3, (float64)height);
+}
+bool set_opacity(float64 value) { return __set_window_value((int32)4, value); }
+int64 width() { return (int64)__window_value((int32)0); }
+int64 height() { return (int64)__window_value((int32)1); }
+float64 frame_time() { return __window_value((int32)2); }
+Point mouse_position() { Point result; result.x = __window_value((int32)3); result.y = __window_value((int32)4); return result; }
+Point mouse_wheel() { Point result; result.x = __window_value((int32)5); result.y = __window_value((int32)6); return result; }
+Point dpi_scale() { Point result; result.x = __window_value((int32)7); result.y = __window_value((int32)8); return result; }
+bool focused() { return __window_value((int32)9) != 0; }
+float64 time() { return __window_value((int32)10); }
+bool begin_clip(Rect bounds) { return bounds.isValid() && __begin_clip(bounds.x, bounds.y, bounds.width, bounds.height); }
+bool enable(bool value) { return __configure((int32)0, (float64)value); }
+bool lock(bool value) { return __configure((int32)1, (float64)value); }
+bool set_alpha(float64 value) { return __configure((int32)2, value); }
+bool set_state(int64 value) { return __configure((int32)3, (float64)value); }
+bool enable_tooltips(bool value) { return __configure((int32)4, (float64)value); }
+bool reset_style() { return __configure((int32)5, 0); }
+bool set_font_size(int64 value) { return __configure((int32)6, (float64)value); }
+bool set_tooltip(String text) { return __tooltip(text, len(text)); }
+/** 每个颜色通道为 0..255，返回稳定的 RRGGBBAA。 */
+uint32 rgba(int64 red, int64 green, int64 blue, int64 alpha) {
+    assert(red >= 0 && red <= 255 && green >= 0 && green <= 255 && blue >= 0 && blue <= 255 && alpha >= 0 && alpha <= 255, "颜色通道必须在 0..255");
+    return (uint32)((red << 24) | (green << 16) | (blue << 8) | alpha);
+}
+
+/** 把宿主标量事件复制为语言事件。 */
+Event poll_event() {
+    let raw = __poll_event(); Event result;
+    result.__kind = raw.kind; result.source = raw.source; result.code = raw.code;
+    result.x = raw.x; result.y = raw.y; result.delta_x = raw.delta_x; result.delta_y = raw.delta_y;
+    if (raw.kind == 8 && raw.code > 0 && raw.code <= 1114111) { result.text = __codepoint_text((int32)raw.code); }
+    return result;
+}
+/** 无捕获的默认处理器，清空回调时立即释放原捕获。 */
+void __ignore_event(Event event) {}
+
+/** 控件模型由窗口拥有；语言对象持有回调，原生库只保存数值与文本。 */
+struct Widget {
+    int64 __id;
+    void fn(Event) __event;
+    void fn(Event) __click;
+    void fn(Event) __change;
+    void fn(Event) __submit;
+    void fn(Event) __closed;
+    bool __has_event;
+    bool __has_click;
+    bool __has_change;
+    bool __has_submit;
+    bool __has_closed;
+    bool is_valid() { return self.isValid(); }
+    bool isValid() { return self.__id != 0 && __widget_valid(self.__id); }
+    int64 id() { return self.__id; }
+    void clear_callbacks() {
+        self.__has_event = false; self.__has_click = false; self.__has_change = false; self.__has_submit = false; self.__has_closed = false;
+        self.__event = __ignore_event; self.__click = __ignore_event; self.__change = __ignore_event;
+        self.__submit = __ignore_event; self.__closed = __ignore_event;
+    }
+    void close() { if (self.__id != 0) { __widget_close(self.__id); self.__id = 0; } self.clear_callbacks(); }
+    void on_event(void fn(Event) callback) { self.__event = callback; self.__has_event = true; }
+    void on_click(void fn(Event) callback) { self.__click = callback; self.__has_click = true; }
+    void on_change(void fn(Event) callback) { self.__change = callback; self.__has_change = true; }
+    void on_submit(void fn(Event) callback) { self.__submit = callback; self.__has_submit = true; }
+    void on_close(void fn(Event) callback) { self.__closed = callback; self.__has_closed = true; }
+    /** 每帧同一模型绘制一次，回调可关闭控件或窗口。 */
+    Event draw(Rect bounds) {
+        Event event;
+        if (!self.isValid() || !bounds.isValid()) { return event; }
+        int64 flags = __draw_widget(self.__id, bounds.x, bounds.y, bounds.width, bounds.height);
+        if (flags == 0) { return event; }
+        int64 original = self.__id;
+        event.__kind = 13; event.source = original; event.code = flags; event.x = bounds.x; event.y = bounds.y;
+        if (self.__has_event) { self.__event(event); }
+        if (self.__id != original || !self.isValid()) { return event; }
+        if (event.clicked() && self.__has_click) { self.__click(event); }
+        if (self.__id != original || !self.isValid()) { return event; }
+        if (event.changed() && self.__has_change) { self.__change(event); }
+        if (self.__id != original || !self.isValid()) { return event; }
+        if (event.submitted() && self.__has_submit) { self.__submit(event); }
+        if (self.__id != original || !self.isValid()) { return event; }
+        if (event.closed() && self.__has_closed) { self.__closed(event); }
+        return event;
+    }
+    bool set_text(String text) { return __set_text(self.__id, (int32)0, text, len(text)); }
+    String text() { if (!self.isValid()) { return ""; } return __get_text(self.__id, (int32)0); }
+    bool set_left_text(String text) { return __set_text(self.__id, (int32)1, text, len(text)); }
+    bool set_right_text(String text) { return __set_text(self.__id, (int32)2, text, len(text)); }
+    bool set_message(String text) { return __set_text(self.__id, (int32)3, text, len(text)); }
+    bool set_buttons(String text) { return __set_text(self.__id, (int32)4, text, len(text)); }
+    /** 分号和换行用于上游的多项文字协议；每项本身不可包含分隔符。 */
+    bool set_items(List<String> items) {
+        if (items.len() > 128) { return false; }
+        String text = ""; bool first = true;
+        for (String item in items) {
+            if (item.contains(";") || item.contains("\n")) { return false; }
+            if (!first) { text += ";"; } text += item; first = false;
+        }
+        return self.set_text(text);
+    }
+    bool set_text_capacity(int64 capacity) { return capacity >= 2 && capacity <= 1048576 && __set_capacity(self.__id, (int32)capacity); }
+    bool set_checked(bool value) { return __set_integer(self.__id, (int32)4, (int64)value); }
+    bool checked() { return __get_integer(self.__id, (int32)4) != 0; }
+    bool set_editing(bool value) { return __set_integer(self.__id, (int32)5, (int64)value); }
+    bool editing() { return __get_integer(self.__id, (int32)5) != 0; }
+    bool set_secret(bool value) { return __set_integer(self.__id, (int32)6, (int64)value); }
+    bool secret() { return __get_integer(self.__id, (int32)6) != 0; }
+    bool set_visible(bool value) { return __set_integer(self.__id, (int32)7, (int64)value); }
+    bool visible() { return __get_integer(self.__id, (int32)7) != 0; }
+    bool set_enabled(bool value) { return __set_integer(self.__id, (int32)8, (int64)value); }
+    bool enabled() { return __get_integer(self.__id, (int32)8) != 0; }
+    bool set_selected(int64 value) { return __set_integer(self.__id, (int32)0, value); }
+    int64 selected() { return __get_integer(self.__id, (int32)0); }
+    bool set_number(int64 value) { return __set_integer(self.__id, (int32)1, value); }
+    int64 number() { return __get_integer(self.__id, (int32)1); }
+    int64 result() { return __get_integer(self.__id, (int32)9); }
+    bool set_scroll_index(int64 value) { return __set_integer(self.__id, (int32)2, value); }
+    int64 scroll_index() { return __get_integer(self.__id, (int32)2); }
+    int64 focus_index() { return __get_integer(self.__id, (int32)3); }
+    bool set_range(float64 minimum, float64 maximum) { return __set_range(self.__id, minimum, maximum); }
+    bool set_value(float64 value) { return __set_real(self.__id, (int32)0, value); }
+    float64 value() { return __get_real(self.__id, (int32)0); }
+    bool set_color(uint32 rgba) { return __set_integer(self.__id, (int32)12, (int64)rgba); }
+    uint32 color() { return (uint32)__get_integer(self.__id, (int32)12); }
+    bool set_hsv(float64 hue, float64 saturation, float64 brightness) {
+        if (!(hue >= 0 && hue <= 360 && saturation >= 0 && saturation <= 1 && brightness >= 0 && brightness <= 1)) { return false; }
+        return __set_real(self.__id, (int32)13, hue) && __set_real(self.__id, (int32)14, saturation) && __set_real(self.__id, (int32)15, brightness);
+    }
+    float64 hue() { return __get_real(self.__id, (int32)13); }
+    float64 saturation() { return __get_real(self.__id, (int32)14); }
+    float64 brightness() { return __get_real(self.__id, (int32)15); }
+    bool set_spacing(float64 spacing, int64 subdivisions) {
+        return subdivisions >= 1 && subdivisions <= 64 && __set_real(self.__id, (int32)16, spacing) && __set_integer(self.__id, (int32)10, subdivisions);
+    }
+    bool set_content(Rect bounds) {
+        return bounds.isValid() && __set_real(self.__id, (int32)9, bounds.x) && __set_real(self.__id, (int32)10, bounds.y) &&
+               __set_real(self.__id, (int32)11, bounds.width) && __set_real(self.__id, (int32)12, bounds.height);
+    }
+    Rect viewport() { return Rect::at(__get_real(self.__id, (int32)5), __get_real(self.__id, (int32)6), __get_real(self.__id, (int32)7), __get_real(self.__id, (int32)8)); }
+    Point scroll_offset() { Point result; result.x = __get_real(self.__id, (int32)3); result.y = __get_real(self.__id, (int32)4); return result; }
+    bool set_scroll_offset(float64 x, float64 y) {
+        if (!(x >= -10000000 && x <= 10000000 && y >= -10000000 && y <= 10000000)) { return false; }
+        return __set_real(self.__id, (int32)3, x) && __set_real(self.__id, (int32)4, y);
+    }
+    bool begin_content() { return std::gui::begin_clip(self.viewport()); }
+};
+
+/** 创建指定种类；通常使用下方具名工厂，失败可用 isValid 检查。 */
+Widget create_control(int64 kind, String text) {
+    Widget result;
+    if (kind >= 0 && kind < @CONTROL_COUNT@) { result.__id = __widget_create((int32)kind, text, len(text)); }
+    return result;
+}
+int64 control_count() { return @CONTROL_COUNT@; }
+@CONTROL_FACTORIES@
+@CONTROL_NAMES@
+
+#abi("C", "./@LIBRARY@", "chali_gui_frame_active")
+bool frame_active();
+#abi("C", "./@LIBRARY@", "chali_gui_input_enabled")
+bool input_enabled();
+
+/** 当前绘制帧；只在创建窗口的线程上读取。 */
+#abi("C", "./@LIBRARY@", "chali_gui_frame_id")
+uint64 frame_count();
+#abi("C", "./@LIBRARY@", "chali_gui_codepoint_text")
+String __codepoint_text(int32 codepoint) ["chali_gui_free"];
+struct __ClipBounds { float64 x; float64 y; float64 width; float64 height; };
+#abi("C", "./@LIBRARY@", "chali_gui_clip_bounds")
+__ClipBounds __clip_bounds();
+/** 当前逻辑像素裁剪区，可用于自定义控件的命中测试。 */
+Rect clip_bounds() { let bounds = __clip_bounds(); return Rect::at(bounds.x, bounds.y, bounds.width, bounds.height); }
+
+#abi("C", "./@LIBRARY@", "chali_gui_draw_pixel")
+bool __draw_pixel(float32 x, float32 y, uint32 color);
+#abi("C", "./@LIBRARY@", "chali_gui_draw_line")
+bool __draw_line(float32 x1, float32 y1, float32 x2, float32 y2, float32 thickness, uint32 color);
+#abi("C", "./@LIBRARY@", "chali_gui_draw_rectangle")
+bool __draw_rectangle(float32 x, float32 y, float32 width, float32 height, float32 roundness, int32 segments, float32 thickness, uint32 color);
+#abi("C", "./@LIBRARY@", "chali_gui_draw_circle")
+bool __draw_circle(float32 x, float32 y, float32 radius, float32 thickness, int32 segments, uint32 color);
+#abi("C", "./@LIBRARY@", "chali_gui_draw_ellipse")
+bool __draw_ellipse(float32 x, float32 y, float32 radius_x, float32 radius_y, int32 outline, uint32 color);
+#abi("C", "./@LIBRARY@", "chali_gui_draw_triangle")
+bool __draw_triangle(float32 x1, float32 y1, float32 x2, float32 y2, float32 x3, float32 y3, int32 outline, uint32 color);
+#abi("C", "./@LIBRARY@", "chali_gui_draw_polygon")
+bool __draw_polygon(float32 x, float32 y, int32 sides, float32 radius, float32 rotation, float32 thickness, uint32 color);
+#abi("C", "./@LIBRARY@", "chali_gui_draw_bezier")
+bool __draw_bezier(float32 x1, float32 y1, float32 cx1, float32 cy1, float32 cx2, float32 cy2, float32 x2, float32 y2, float32 thickness, uint32 color);
+#abi("C", "./@LIBRARY@", "chali_gui_draw_ring")
+bool __draw_ring(float32 x, float32 y, float32 inner_radius, float32 outer_radius, float32 start_angle, float32 end_angle, int32 segments, uint32 color);
+#abi("C", "./@LIBRARY@", "chali_gui_draw_text")
+bool __draw_text(String text, float32 x, float32 y, float32 size, float32 spacing, uint32 color);
+#abi("C", "./@LIBRARY@", "chali_gui_measure_text")
+Point __measure_text(String text, float32 size, float32 spacing);
+
+/** 绘图仅在 begin_frame/end_frame 内执行；颜色为 RRGGBBAA。 */
+bool draw_pixel(Point point, uint32 color) { return __draw_pixel((float32)point.x, (float32)point.y, color); }
+bool draw_line(Point start, Point end, float64 thickness, uint32 color) { return __draw_line((float32)start.x, (float32)start.y, (float32)end.x, (float32)end.y, (float32)thickness, color); }
+/** thickness 为零填充矩形；大于零绘制边框，roundness 为 0..1。 */
+bool draw_rectangle(Rect bounds, uint32 color, float64 thickness = 0, float64 roundness = 0) { return bounds.isValid() && __draw_rectangle(bounds.x, bounds.y, bounds.width, bounds.height, (float32)roundness, (int32)16, (float32)thickness, color); }
+bool draw_circle(Point center, float64 radius, uint32 color, float64 thickness = 0) { return __draw_circle((float32)center.x, (float32)center.y, (float32)radius, (float32)thickness, (int32)64, color); }
+bool draw_ellipse(Point center, Point radius, uint32 color, bool outline = false) { return __draw_ellipse((float32)center.x, (float32)center.y, (float32)radius.x, (float32)radius.y, (int32)outline, color); }
+bool draw_triangle(Point a, Point b, Point c, uint32 color, bool outline = false) { return __draw_triangle((float32)a.x, (float32)a.y, (float32)b.x, (float32)b.y, (float32)c.x, (float32)c.y, (int32)outline, color); }
+bool draw_polygon(Point center, int64 sides, float64 radius, float64 rotation, uint32 color, float64 thickness = 0) { return sides >= 3 && sides <= 256 && __draw_polygon((float32)center.x, (float32)center.y, (int32)sides, (float32)radius, (float32)rotation, (float32)thickness, color); }
+bool draw_bezier(Point start, Point first_control, Point second_control, Point end, float64 thickness, uint32 color) { return __draw_bezier((float32)start.x, (float32)start.y, (float32)first_control.x, (float32)first_control.y, (float32)second_control.x, (float32)second_control.y, (float32)end.x, (float32)end.y, (float32)thickness, color); }
+/** 以角度制绘制环带；inner_radius 为零时绘制扇形。 */
+bool draw_ring(Point center, float64 inner_radius, float64 outer_radius, float64 start_angle, float64 end_angle, uint32 color) { return __draw_ring((float32)center.x, (float32)center.y, (float32)inner_radius, (float32)outer_radius, (float32)start_angle, (float32)end_angle, (int32)64, color); }
+bool draw_text(String text, Point position, float64 size, uint32 color, float64 spacing = 1) { return __draw_text(text, (float32)position.x, (float32)position.y, (float32)size, (float32)spacing, color); }
+Point measure_text(String text, float64 size, float64 spacing = 1) { return __measure_text(text, (float32)size, (float32)spacing); }
+
+#abi("C", "./@LIBRARY@", "chali_gui_texture_load")
+int64 __texture_load(String path);
+#abi("C", "./@LIBRARY@", "chali_gui_texture_valid")
+bool __texture_valid(int64 id);
+#abi("C", "./@LIBRARY@", "chali_gui_texture_close")
+void __texture_close(int64 id);
+#abi("C", "./@LIBRARY@", "chali_gui_texture_size")
+Point __texture_size(int64 id);
+#abi("C", "./@LIBRARY@", "chali_gui_texture_draw")
+bool __texture_draw(int64 id, float32 sx, float32 sy, float32 sw, float32 sh, float32 x, float32 y, float32 width, float32 height, float32 origin_x, float32 origin_y, float32 rotation, uint32 tint);
+/** 窗口拥有 GPU 纹理，别名关闭后共同失效，重开窗口不会复用旧身份。 */
+struct Texture {
+    int64 __id;
+    bool is_valid() { return self.isValid(); }
+    bool isValid() { return __id != 0 && __texture_valid(self.__id); }
+    void close() { if (self.__id != 0) { __texture_close(self.__id); self.__id = 0; } }
+    Point size() { return __texture_size(self.__id); }
+    bool draw(Rect destination, uint32 tint = (uint32)4294967295) {
+        if (!self.isValid() || !destination.isValid()) { return false; }
+        let size = self.size();
+        return __texture_draw(self.__id, (float32)0, (float32)0, (float32)size.x, (float32)size.y, destination.x, destination.y, destination.width, destination.height, (float32)0, (float32)0, (float32)0, tint);
+    }
+    bool draw_region(Rect source, Rect destination, Point origin, float64 rotation, uint32 tint = (uint32)4294967295) {
+        return self.isValid() && source.isValid() && destination.isValid() && __texture_draw(self.__id, source.x, source.y, source.width, source.height, destination.x, destination.y, destination.width, destination.height, (float32)origin.x, (float32)origin.y, (float32)rotation, tint);
+    }
+};
+Texture load_texture(String path) { Texture result; result.__id = __texture_load(path); return result; }
+
+/** 创建带名称与可独立拥有负载的用户事件。 */
+Event custom_event(String name, String text = "", int64 code = 0, float64 value = 0) { Event result; result.__kind = 14; result.name = name; result.text = text; result.code = code; result.value = value; return result; }
+
+struct __EventListener { int64 id; String name; void fn(Event) callback; bool once; bool active; };
+/** 同一线程中的命名事件总线；支持退订、一次性回调、重入和延迟队列。 */
+struct EventBus {
+    List<__EventListener> __listeners;
+    List<Event> __queue;
+    int64 __head;
+    int64 __next_id;
+    int64 __depth;
+    bool __pumping;
+    bool __dirty;
+    uint64 __generation;
+    void __compact() {
+        if (self.__depth != 0 || !self.__dirty) { return; }
+        List<__EventListener> remaining;
+        for (__EventListener listener in self.__listeners) { if (listener.active) { remaining.push(listener); } }
+        self.__listeners = remaining; self.__dirty = false;
+    }
+    int64 __listen(String name, void fn(Event) callback, bool once) {
+        self.__compact();
+        if (name == "" || self.__next_id == 9223372036854775807 || self.__listeners.len() >= 4096) { return 0; }
+        self.__next_id += 1;
+        __EventListener listener; listener.id = self.__next_id; listener.name = name; listener.callback = callback; listener.once = once; listener.active = true;
+        self.__listeners.push(listener); return listener.id;
+    }
+    int64 on(String name, void fn(Event) callback) { return self.__listen(name, callback, false); }
+    int64 once(String name, void fn(Event) callback) { return self.__listen(name, callback, true); }
+    bool off(int64 id) {
+        int64 index = 0;
+        while (index < self.__listeners.len()) {
+            let listener = self.__listeners[index];
+            if (listener.id == id && listener.active) { listener.active = false; listener.callback = __ignore_event; self.__listeners[index] = listener; self.__dirty = true; self.__compact(); return true; }
+            index += 1;
+        }
+        return false;
+    }
+    void clear() {
+        int64 index = 0;
+        while (index < self.__listeners.len()) { let listener = self.__listeners[index]; listener.active = false; listener.callback = __ignore_event; self.__listeners[index] = listener; index += 1; }
+        self.__queue.clear(); self.__head = 0; self.__generation += (uint64)1; self.__dirty = true; self.__compact();
+    }
+    int64 emit(Event event) {
+        if (event.name == "" || !event.isValid() || self.__depth >= 64) { return 0; }
+        self.__depth += 1; int64 limit = self.__listeners.len(); int64 index = 0; int64 delivered = 0;
+        while (index < limit && index < self.__listeners.len()) {
+            let listener = self.__listeners[index];
+            if (listener.active && listener.name == event.name) {
+                if (listener.once) { let removed = listener; removed.active = false; removed.callback = __ignore_event; self.__listeners[index] = removed; self.__dirty = true; }
+                let callback = listener.callback; callback(event); delivered += 1;
+            }
+            index += 1;
+        }
+        self.__depth -= 1; self.__compact(); return delivered;
+    }
+    bool post(Event event) { if (event.name == "" || !event.isValid() || self.pending() >= 4096) { return false; } self.__queue.push(event); return true; }
+    int64 pending() { return self.__queue.len() - self.__head; }
+    int64 pump(int64 maximum = 256) {
+        if (self.__pumping || maximum <= 0) { return 0; }
+        self.__pumping = true; uint64 generation = self.__generation;
+        int64 count = self.pending(); if (count > maximum) { count = maximum; }
+        int64 processed = 0;
+        while (processed < count && self.__head < self.__queue.len()) {
+            let event = self.__queue[self.__head]; Event empty; self.__queue[self.__head] = empty; self.__head += 1;
+            self.emit(event); processed += 1; if (self.__generation != generation) { break; }
+        }
+        if (self.__head == self.__queue.len()) { self.__queue.clear(); self.__head = 0; }
+        if (self.__head >= 1024 && self.__head >= self.pending()) {
+            List<Event> remaining; int64 index = self.__head;
+            while (index < self.__queue.len()) { remaining.push(self.__queue[index]); index += 1; }
+            self.__queue = remaining; self.__head = 0;
+        }
+        self.__pumping = false; return processed;
+    }
+};
+
+void __ignore_paint(Rect bounds) {}
+/** 自绘控件：绘制使用绝对坐标，输入回调使用控件内坐标；通过 handle 接入窗口事件。 */
+struct CustomWidget {
+    Widget __state;
+    void fn(Rect) __paint;
+    void fn(Event) __event;
+    bool __has_paint;
+    bool __has_event;
+    bool __clip;
+    bool __has_bounds;
+    bool __last_focus;
+    Rect __bounds;
+    Rect __hit;
+    uint64 __frame;
+    int64 __capture;
+    int64 __depth;
+    EventBus __events;
+    bool is_valid() { return self.isValid(); }
+    bool isValid() { return self.__state.isValid(); }
+    int64 id() { return self.__state.id(); }
+    void on_draw(void fn(Rect) callback) { self.__paint = callback; self.__has_paint = true; }
+    void on_event(void fn(Event) callback) { self.__event = callback; self.__has_event = true; }
+    int64 on(String name, void fn(Event) callback) { return self.__events.on(name, callback); }
+    int64 once(String name, void fn(Event) callback) { return self.__events.once(name, callback); }
+    bool off(int64 id) { return self.__events.off(id); }
+    void clear_callbacks() { self.__has_paint = false; self.__has_event = false; self.__paint = __ignore_paint; self.__event = __ignore_event; self.__events.clear(); }
+    void close() { self.__state.close(); self.__capture = 0; self.__has_bounds = false; self.clear_callbacks(); }
+    bool __dispatch(Event event) {
+        if (!self.isValid() || self.__depth >= 64) { return false; }
+        self.__depth += 1; event.source = self.id();
+        if (self.__has_event) { self.__event(event); }
+        if (self.isValid()) { self.__events.emit(event); }
+        self.__depth -= 1; return true;
+    }
+    void __sync_focus() {
+        bool next = self.isValid() && self.__state.visible() && self.__state.enabled() && self.__state.editing();
+        if (self.isValid() && !next && self.__state.editing()) { self.__state.set_editing(false); }
+        if (next != self.__last_focus) {
+            self.__last_focus = next; Event event;
+            if (next) { event.__kind = 4; event.name = "focus.gained"; } else { event.__kind = 5; event.name = "focus.lost"; self.__capture = 0; }
+            self.__dispatch(event);
+        }
+    }
+    bool focus() { if (!self.isValid() || !self.__state.enabled() || !self.__state.visible()) { return false; } self.__state.set_editing(true); self.__sync_focus(); return self.isValid() && self.__state.editing(); }
+    void blur() { if (self.isValid()) { self.__state.set_editing(false); } self.__sync_focus(); }
+    bool has_focus() { return self.isValid() && self.__state.editing(); }
+    bool set_visible(bool visible) { bool result = self.__state.set_visible(visible); self.__sync_focus(); return result; }
+    bool set_enabled(bool enabled) { bool result = self.__state.set_enabled(enabled); self.__sync_focus(); return result; }
+    bool visible() { return self.__state.visible(); }
+    bool enabled() { return self.__state.enabled(); }
+    bool set_text(String text) { return self.__state.set_text(text); }
+    String text() { return self.__state.text(); }
+    bool set_range(float64 minimum, float64 maximum) { return self.__state.set_range(minimum, maximum); }
+    bool set_value(float64 value) { return self.__state.set_value(value); }
+    float64 value() { return self.__state.value(); }
+    bool set_number(int64 value) { return self.__state.set_number(value); }
+    int64 number() { return self.__state.number(); }
+    bool set_checked(bool value) { return self.__state.set_checked(value); }
+    bool checked() { return self.__state.checked(); }
+    Rect bounds() { return self.__bounds; }
+    void set_clipping(bool enabled) { self.__clip = enabled; }
+    bool draw(Rect bounds) {
+        if (!frame_active() || !self.isValid() || !bounds.isValid() || !self.__state.visible() || self.__frame == frame_count()) { return false; }
+        self.__frame = frame_count(); self.__bounds = bounds; self.__hit = bounds.intersection(clip_bounds()); self.__has_bounds = true;
+        self.__sync_focus(); if (!self.isValid()) { return false; }
+        bool clipped = false; if (self.__clip) { clipped = begin_clip(bounds); if (!clipped) { return false; } }
+        int64 window = __window_id(); uint64 frame = frame_count();
+        if (self.__has_paint) { self.__paint(bounds); }
+        if (clipped && window == __window_id() && frame == frame_count()) { end_clip(); }
+        return true;
+    }
+    bool handle(Event event) {
+        self.__sync_focus();
+        if (!self.isValid() || !self.__has_bounds || !self.__state.visible() || !self.__state.enabled()) { self.__capture = 0; return false; }
+        int64 kind = event.__kind;
+        if (kind >= 6 && kind <= 12 && !input_enabled()) { self.__capture = 0; return false; }
+        bool pointer = kind >= 9 && kind <= 12; bool handled = true;
+        bool inside = self.__hit.contains(event.x, event.y);
+        if (kind == 9) {
+            if (!inside) { self.blur(); return false; }
+            self.focus(); if (!self.isValid()) { return true; }
+            if (event.code >= 0 && event.code < 8) { self.__capture = self.__capture | (1 << event.code); }
+            event.name = "pointer.down";
+        } else if (kind == 10) {
+            int64 bit = 0; if (event.code >= 0 && event.code < 8) { bit = 1 << event.code; }
+            bool captured = (self.__capture & bit) != 0; self.__capture = self.__capture & ~bit;
+            if (!inside && !captured) { return false; } event.name = "pointer.up";
+        } else if (kind == 11) { if (!inside && self.__capture == 0) { return false; } event.name = "pointer.move";
+        } else if (kind == 12) { if (!inside) { return false; } event.name = "pointer.wheel";
+        } else if (kind == 6 || kind == 7 || kind == 8) {
+            if (!self.has_focus()) { return false; }
+            if (kind == 6) { event.name = "key.down"; } else if (kind == 7) { event.name = "key.up"; } else { event.name = "text.input"; }
+        } else if (kind == 5 || kind == 2) {
+            self.blur(); if (!self.isValid()) { return false; } self.__capture = 0; handled = false;
+            if (kind == 5) { event.name = "window.blur"; } else { event.name = "window.close"; }
+        } else if (kind == 3) { event.name = "window.resize"; handled = false;
+        } else { return false; }
+        if (pointer || kind == 6 || kind == 7 || kind == 8) { event.x -= self.__bounds.x; event.y -= self.__bounds.y; }
+        self.__dispatch(event); return handled;
+    }
+    bool emit(Event event) { if (event.name == "") { return false; } event.__kind = 14; return self.__dispatch(event); }
+};
+CustomWidget custom_widget() { CustomWidget result; result.__state = dummy_rec(""); result.__clip = true; return result; }
+
+/** draw 中构建一帧；窗口输入在控件之后派发，不保存临时原生回调。 */
+void run(void fn() draw, void fn(Event) on_event) {
+    int64 original = __window_id();
+    if (original == 0) { return; }
+    while (__window_id() == original) {
+        if (should_close()) {
+            Event event = poll_event();
+            while (event.isValid() && __window_id() == original) { on_event(event); if (__window_id() != original) { break; } event = poll_event(); }
+            break;
+        }
+        if (!begin_frame()) { break; }
+        draw();
+        if (__window_id() != original) { break; }
+        Event event = poll_event();
+        while (event.isValid() && __window_id() == original) { on_event(event); if (__window_id() != original) { break; } event = poll_event(); }
+        if (__window_id() != original) { break; }
+        end_frame();
+    }
+    __close_id(original);
+}
+void run(void fn() draw) { run(draw, __ignore_event); }

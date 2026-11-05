@@ -3,7 +3,7 @@
  * @brief 隔离线程的创建、取消、等待与完成结果。
  */
 #include "concurrent_call_state.hpp"
-#include "../chali_i18n.hpp"
+#include "runtime_i18n.hpp"
 
 namespace stackvm
 {
@@ -53,7 +53,7 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
             return false;
         if (!threadsEnabled_ || threadRuntime_ == nullptr)
         {
-            fail(CHALI_TEXT("多线程已关闭；run／aot 构建时去掉 --no-threads"));
+            fail(CHALI_RUNTIME_TEXT("多线程已关闭；run／aot 构建时去掉 --no-threads"));
             pending.clear();
             return true;
         }
@@ -127,7 +127,7 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
             const auto nativeEntry = nativeThreadEntry_;
             try
             {
-                worker->host = std::thread([worker, group, shared, registry, heapFactory, &program, label,
+                worker->host = HostThread([worker, group, shared, registry, heapFactory, &program, label,
                                             snapshot = std::move(snapshot), parentId, id,
                                             slots, stepLimit, workerAllocator, childPanicDetails, services, clock, nativeEntry]() mutable {
                     Memory::AllocationScope allocationScope(workerAllocator);

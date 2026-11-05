@@ -3,6 +3,7 @@
  * @brief 将内嵌原生服务解压至隔离的链接目录。
  */
 #include "chali_aot_runtime_assets.hpp"
+#include "chali_aot_target.hpp"
 #include "chali_stdlib.hpp"
 #include "chali_temp.hpp"
 #include "chali_native_tools.hpp"
@@ -45,18 +46,16 @@ RuntimeAssets::~RuntimeAssets()
 }
 
 /**
- * @brief 还原构建时内嵌的原生服务与静态链接依赖。
- * @param diagnostics 接收缺失或损坏资产的诊断。
- * @return 所有文件完整恢复时返回 true。
+ * @brief 还原一组内嵌的静态链接文件。
+ * @param asset 内嵌资产表中的路径。
+ * @param root 本次链接的隔离目录。
+ * @param link 可选的归档路径输出。
+ * @return 完整恢复的文件数；遇到错误返回零。
  */
-bool RuntimeAssets::restore(Memory::Vector<Memory::String> *diagnostics)
+static std::size_t restoreArchives(const char *asset, const std::filesystem::path &root, Memory::Vector<Memory::String> *link)
 {
     Memory::String text;
-    if (root.empty() || !chali_module::embedded::findGeneratorAssetByPath("aot/host_assets.txt", &text))
-    {
-        if (diagnostics) diagnostics->push_back("AOT：缺少构建时生成的共享原生服务资产");
-        return false;
-    }
+    if (root.empty() || !chali_module::embedded::findGeneratorAssetByPath(asset, &text)) return 0;
     std::istringstream input(std::string(text.data(), text.size()));
     std::string name, hex;
     std::size_t size = 0, count = 0;
@@ -79,9 +78,48 @@ bool RuntimeAssets::restore(Memory::Vector<Memory::String> *diagnostics)
         std::ofstream file(root / name, std::ios::binary);
         file.write(reinterpret_cast<const char *>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
         if (!file) return false;
+        if (link) link->push_back((root / name).generic_u8string());
         ++count;
     }
-    return count >= 4;
+    return input.eof() ? count : 0;
+}
+
+/**
+ * @brief 还原构建时内嵌的原生服务与静态链接依赖。
+ * @param diagnostics 接收缺失或损坏资产的诊断。
+ * @return 所有文件完整恢复时返回 true。
+ */
+bool RuntimeAssets::restore(Memory::Vector<Memory::String> *diagnostics)
+{
+    if (restoreArchives("aot/host_assets.txt", root, nullptr) >= 4) return true;
+    if (diagnostics) diagnostics->push_back("AOT：缺少或无法恢复共享原生服务资产");
+    return false;
+}
+
+/**
+ * @brief 恢复实际使用的扩展归档，交由链接器按符号提取代码。
+ * @param libraries 已发现的内置服务标识。
+ * @param link 接收链接输入。
+ * @param diagnostics 接收缺失或损坏资产的诊断。
+ * @return 所需归档完整时为真。
+ */
+bool RuntimeAssets::prepareNative(const Memory::Set<Memory::String> &libraries, Memory::Vector<Memory::String> &link,
+                                  Memory::Vector<Memory::String> *diagnostics)
+{
+    const auto append = [&](const char *name) {
+        const auto asset = Memory::String("aot/native_") + hostTarget() + "_" + name + ".txt";
+        if (restoreArchives(asset.c_str(), root, &link)) return true;
+        if (diagnostics) diagnostics->push_back(Memory::String("AOT：此编译器缺少内置原生归档 ") + name +
+            "；请先构建 native-extensions 并重编译 ChaLi");
+        return false;
+    };
+    const bool gui = libraries.count("@chali/desktop") != 0;
+    const bool audio = libraries.count("@chali/audio") != 0;
+    if (gui && !append("desktop")) return false;
+    if (audio && !append("audio")) return false;
+    if (libraries.count("@chali/xml") && !append("xml")) return false;
+    if ((gui || audio) && !append("raylib")) return false;
+    return true;
 }
 
 /**
@@ -118,7 +156,7 @@ bool RuntimeAssets::prepareAbi(const Memory::String &source, Memory::String *obj
     }
     const char *configured = std::getenv("CHALI_ABI_CXX");
     const std::string compiler = configured && *configured ? configured : "g++";
-    const std::vector<std::string> arguments{compiler, "-std=c++17", "-O2", "-fPIC", "-DCHALI_CUSTOM_ALLOCATOR=1",
+    const std::vector<std::string> arguments{compiler, "-std=c++17", "-O2", "-fPIC", "-ffunction-sections", "-fdata-sections", "-DCHALI_CUSTOM_ALLOCATOR=1",
         "-DCHALI_WITH_REFLECTION=" + std::to_string(CHALI_WITH_REFLECTION),
         "-DSTACKVM_WITH_REFLECTION=" + std::to_string(STACKVM_WITH_REFLECTION),
         "-I" + root.u8string(), "-I" + (root / "allocator").u8string(), "-I" + (root / "ircode").u8string(),

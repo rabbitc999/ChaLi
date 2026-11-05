@@ -38,6 +38,7 @@ int main(int argc,char **argv) {
         std::ifstream file(entry.path(),std::ios::binary);assert(file);std::ostringstream text;text<<file.rdbuf();
         assert(assets.count(name)&&normalized(assets.at(name))==normalized(text.str()));++count;
     }
+    for (const auto &asset : assets) assert(asset.first.rfind("glue/", 0) != 0);
     assert(!assets.count("chali_glue.hpp"));
     for (const auto *name : { "chali_library_import.cpp", "chali_library_build.cpp", "chali_aot_library.hpp", "chali_bitcode.cpp" })
         assert(!assets.count(name));
@@ -49,6 +50,6 @@ int main(int argc,char **argv) {
     }
     assert(count>20&&assets.count("abi/collection_operations.inc")&&assets.count("abi/abi_big_number.cpp")&&assets.count("abi/abi_cas.cpp"));
     for(auto *name:{"std_native_record.hpp","std_native_record.cpp","std_big_number.hpp","std_big_number.cpp","std_cas.hpp","std_cas.cpp","std_demo.cpp","std_demo.hpp","std_registry.hpp","std_glue.cpp","std_glue.hpp","std_records.cpp","std_records.hpp","std_binding.hpp"})
-        assert(!assets.count(std::string("glue/")+name));
+        assert(!assets.count(std::string("abi/")+name));
     std::cout<<count<<" ABI assets decoded from actual compiler library match sources; retired glue absent\n";
 }

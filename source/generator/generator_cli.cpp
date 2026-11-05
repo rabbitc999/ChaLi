@@ -330,7 +330,7 @@ Memory::String shellQuote(const Memory::String &text)
 
 /* 把「文件在导出工程里的位置」换算成相对它的 `#include` 写法。
  * 例：文件在 `runtime/`、目标在 `runtime/chali_allocator.hpp` -> `chali_allocator.hpp`；
- *     文件在 `glue/`、目标在 `json/json.hpp`            -> `../json/json.hpp`。 */
+ *     文件在 `abi/`、目标在 `json/json.hpp`            -> `../json/json.hpp`。 */
 /**
  * @brief 按导出文件位置计算其目标头文件的相对引用。
  * @param target 当前导出文件在工程中的逻辑路径。
@@ -567,6 +567,13 @@ int runCli(int argc, char **argv)
             {"ircode/native_memory.hpp", "runtime/native_memory.hpp"},
             {"ircode/native_protocol.hpp", "runtime/native_protocol.hpp"},
             {"allocator/system_arena.hpp", "runtime/system_arena.hpp"},
+            {"../allocator/c_sequence.hpp", "runtime/c_sequence.hpp"},
+            {"allocator/c_sequence.hpp", "runtime/c_sequence.hpp"},
+            {"../allocator/c_index.hpp", "runtime/c_index.hpp"},
+            {"allocator/c_index.hpp", "runtime/c_index.hpp"},
+            {"../../source/allocator/c_heap_allocator.hpp", "runtime/c_heap_allocator.hpp"},
+            {"../allocator/c_heap_allocator.hpp", "runtime/c_heap_allocator.hpp"},
+            {"allocator/c_heap_allocator.hpp", "runtime/c_heap_allocator.hpp"},
             {"../../library/ipage/source/ipage/sql.hpp", "ipage/sql.hpp"},
             {"../../library/ipage/source/ipage/dialect.hpp", "ipage/dialect.hpp"},
             {"../../library/ipage/source/ipage/model.hpp", "ipage/model.hpp"},
@@ -679,6 +686,9 @@ int runCli(int argc, char **argv)
         ok = copy(mc / "source/semantics" / name, Memory::String("semantics/") + name) && ok;
     const Memory::Map<Memory::String, fs::path> runtime{
         {"chali_allocator.hpp", mc / "source/allocator/chali_allocator.hpp"},
+        {"c_heap_allocator.hpp", mc / "source/allocator/c_heap_allocator.hpp"},
+        {"c_sequence.hpp", mc / "source/allocator/c_sequence.hpp"},
+        {"c_index.hpp", mc / "source/allocator/c_index.hpp"},
         {"chali_pool.h", mc / "source/allocator/chali_pool.h"},
         {"chali_pool.c", mc / "source/allocator/chali_pool.c"},
         {"system_arena.hpp", mc / "source/allocator/system_arena.hpp"},
@@ -698,8 +708,10 @@ int runCli(int argc, char **argv)
     };
     for (const char *name : {"ast_type.cpp", "ast_node.cpp", "ast_data.cpp", "ast_storage_detail.hpp"})
         ok = copy(mc / "source/ast" / name, Memory::String("runtime/") + name) && ok;
-    for (const char *name : {"bigint_multiplication.cpp", "bigfloat_roots.cpp", "bigint_division.cpp", "bigint_number_theory.cpp", "bigint_bits.cpp", "bigint_modular.cpp", "bigint_conversion.cpp"})
+    for (const char *name : {"chali_bigint.c", "chali_bigint.h", "chali_bigint_bits.c", "chali_bigint_conversion.c", "chali_bigint_division.c", "chali_bigint_internal.h", "chali_bigint_modular.c", "chali_bigint_multiplication.c", "chali_bigint_ntt.inc", "chali_bigint_number_theory.c", "chali_bigint_primality.c", "chali_bigint_roots.c", "bigfloat_roots.cpp", "chali_bigfloat.h", "chali_bigfloat.c", "chali_bigfloat_internal.h", "chali_bigfloat_arithmetic.c", "chali_bigfloat_conversion.c", "chali_bigfloat_roots.c", "chali_bigfloat_math.h", "chali_bigfloat_math_internal.h", "chali_bigfloat_transcendental.c", "chali_bigfloat_logarithm.c", "chali_bigfloat_trigonometry.c", "bigfloat_c_adapter.hpp", "chali_bigint_schoolbook.c", "chali_bigint_toom.c"})
         ok = copy(mc / "source/bignum" / name, Memory::String("runtime/") + name) && ok;
+    for (const char *name : {"chali_memory.c", "chali_memory.h", "chali_buffer.c", "chali_buffer.h", "chali_sequence.c", "chali_sequence.h", "chali_index.c", "chali_index.h", "chali_json.c", "chali_json.h", "chali_json_internal.h", "chali_toml.c", "chali_toml.h"})
+        ok = copy(mc / "source/runtime_c" / name, Memory::String("runtime_c/") + name) && ok;
     for (const auto &[name, source] : runtime) ok = copy(source, "runtime/" + name) && ok;
     for (const char *name : stackvm::assets::kCoreAssets)
         ok = copy(mc / "source/ircode" / name, Memory::String("runtime/") + name) && ok;
@@ -724,12 +736,6 @@ int runCli(int argc, char **argv)
         if (entry.is_regular_file() && name.rfind("chali_parser", 0) != 0 &&
             (extension == ".hpp" || extension == ".h" || extension == ".inc"))
             ok = copy(entry.path(), name) && ok;
-    }
-    for (const auto &entry : fs::directory_iterator(mc / "source/glue"))
-    {
-        const auto extension = entry.path().extension().string();
-        if (entry.is_regular_file() && (extension == ".hpp" || extension == ".h" || extension == ".cpp" || extension == ".inc"))
-            ok = copy(entry.path(), "glue/" + entry.path().filename().u8string()) && ok;
     }
     for (const auto &entry : fs::directory_iterator(mc / "source/abi"))
     {
@@ -765,7 +771,7 @@ int runCli(int argc, char **argv)
     }
     for (const char *name : {"fetch_dependencies.py", "dependencies.lock.json", "cmake_dependencies.cmake"})
         ok = copy(mc / "tools" / name, Memory::String("tools/") + name) && ok;
-    for (const char *name : {"LICENSE", "NOTICE", "licenses/miniz/LICENSE", "licenses/llvm/LICENSE.TXT"})
+    for (const char *name : {"LICENSE", "NOTICE", "licenses/miniz/LICENSE", "licenses/yyjson/LICENSE", "licenses/tomlc17/LICENSE", "licenses/llvm/LICENSE.TXT"})
         ok = copy(mc / name, name) && ok;
     Memory::String coreSource;
     Memory::String coreTemplate;

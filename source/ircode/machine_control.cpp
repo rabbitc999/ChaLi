@@ -12,7 +12,7 @@ using namespace runtimeDetail;
  * @brief 建立虚拟机独立的协作停止标志。
  * @param trace 是否记录逐指令执行轨迹。
  */
-Machine::Machine(bool trace) : control_(std::make_shared<ExecutionControl>()), trace_(trace) {}
+Machine::Machine(bool trace) : control_(Memory::makeShared<ExecutionControl>()), trace_(trace) {}
 /**
  * @brief 设置协作停止请求，执行与等待安全点将观察此原子标志。
  */

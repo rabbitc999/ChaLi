@@ -164,6 +164,28 @@ void testIntegration(Cas::Engine &engine)
     // 分部积分
     expect(engine, "integrate(x^2*exp(x), x)", "x^2*exp(x) - 2*x*exp(x) + 2*exp(x)");
     expect(engine, "integrate(x^3*exp(x), x)", "x^3*exp(x) - 3*x^2*exp(x) + 6*x*exp(x) - 6*exp(x)");
+    // 幂与自然对数：用求导回代验证闭式，含 n=-1、分数幂、系数和线性换元。
+    for (const char *expression : {"x*ln(x)", "x^2*ln(x)", "x^100*ln(x)",
+                                   "ln(x)/x", "x^(-2)*ln(x)", "x^(1/2)*ln(x)",
+                                   "x^(-1/2)*ln(x)", "3*x^2*ln(x)", "x^n*ln(x)",
+                                   "(2*x+1)^2*ln(2*x+1)", "ln(2*x+1)/(2*x+1)"}) {
+        ++g_total;
+        const Cas::Result integral = engine.integrate(expression, "x");
+        const Cas::Result derivative = integral.ok ? engine.differentiate(integral.text, "x") : integral;
+        const Cas::Result expanded = derivative.ok ? engine.expand("(" + derivative.text + ")-(" + expression + ")") : derivative;
+        const Cas::Result combined = expanded.ok ? engine.together(expanded.text) : expanded;
+        const Cas::Result normalized = combined.ok ? engine.expand(combined.text) : combined;
+        const Cas::Result verified = normalized.ok ? engine.simplify(normalized.text) : normalized;
+        if (verified.ok && verified.text == "0")
+            std::printf("ok   幂对数积分回代 %-30s\n", expression);
+        else {
+            std::printf("FAIL 幂对数积分回代 %s ← %s\n", expression, verified.ok ? verified.text.c_str() : verified.message.c_str());
+            ++g_failures;
+        }
+    }
+    expect(engine, "integrate(ln(x)/x,x)", "1/2*log(x)^2");
+    expectError(engine, "integrate(x^x,x)");
+    expectError(engine, "integrate(x^x*ln(x),x)");
     // 定积分
     expect(engine, "integrate(x^2, 0, 1)", "1/3");
     expect(engine, "integrate(2x, 0, 2)", "4");

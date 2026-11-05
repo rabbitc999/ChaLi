@@ -40,6 +40,13 @@ bool usesDynamicAbiLibrary(const ExternFunction &function);
 bool isDirectLinkLibrary(const Memory::String &library);
 
 /**
+ * @brief 识别需由 AOT 链接器提供的内置 C 服务。
+ * @param library ABI 库标识。
+ * @return GUI、音频或 XML 的保留标识为真。
+ */
+bool isBuiltinNativeLibrary(const Memory::String &library);
+
+/**
  * @brief AOT 输出的形态与开关。
  */
 struct Options
@@ -137,13 +144,14 @@ void setAbiExternProvider(Memory::Vector<ExternFunction> (*provider)());
  * @brief 登记前端生成复杂 C ABI 宿主绑定源码的入口。
  * @param provider 返回绑定源码的回调；空指针清除登记。
  */
-void setAbiGlueProvider(Memory::String (*provider)());
+void setAbiGlueProvider(Memory::String (*provider)(const Memory::Set<Memory::String> &));
 
 /**
  * @brief 取得需要结构体、引用、缓冲区或回调封送的宿主绑定源码。
+ * @param reachableBuiltin 需要生成绑定的内置 C 服务函数。
  * @return 没有复杂 ABI 声明时为空串。
  */
-[[nodiscard]] Memory::String collectAbiGlue();
+[[nodiscard]] Memory::String collectAbiGlue(const Memory::Set<Memory::String> &reachableBuiltin = {});
 
 /**
  * @brief 生成自包含的 LLVM 模块。

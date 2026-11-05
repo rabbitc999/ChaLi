@@ -64,3 +64,8 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_compress_records(size_t *cou
     if (count) *count = sizeof(records) / sizeof(records[0]);
     return records;
 }
+
+#ifndef GLUE_NO_STD_COMPRESS
+#define CHALI_AOT_BIND_MODULE compress
+#include "aot_bind_module.h"
+#endif

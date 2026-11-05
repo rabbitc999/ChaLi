@@ -1,229 +1,117 @@
 /** @file abi_file.cpp @brief 文件资源的 C 帧入口与私有文件流内核。 */
 #include "chali_standard.h"
+#include "allocator/c_heap_allocator.hpp"
+#include "allocator/chali_allocator.hpp"
+#include "chali_file.h"
 #include <algorithm>
-#include <filesystem>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
 
 namespace
 {
-/** @brief 私有文件流内核；不作为宿主 ABI 暴露。 */
+/** @brief C 文件服务的所有权适配，不持有 C++ 流。 */
 class FileDevice
 {
+    ChaliFile file_{};
+    bool unreadableEof_ = false;
 public:
-    /**
-     * @brief 保存桌面宿主文件流及其打开模式。
-     * @param path 目标文件或目录的路径。
-     * @param mode 文件访问或工具运行模式。
-     */
-    FileDevice(const std::string &path, const std::string &mode)
+    /** @brief 打开 C 文件。 @param path 路径。 @param mode 访问模式。 */
+    FileDevice(const Memory::String &path, const Memory::String &mode)
+    { chali_file_open(&file_, path.c_str(), mode.c_str()); }
+    /** @brief 释放仍然打开的 C 文件句柄。 */
+    ~FileDevice() { if (file_.stream) chali_file_close(&file_); }
+    FileDevice(const FileDevice &) = delete;
+    FileDevice &operator=(const FileDevice &) = delete;
+    /** @brief 查询文件是否打开。 @return 打开为真。 */
+    bool isOpen() const { return file_.stream != nullptr; }
+    /** @brief 读取一行，去掉 LF 并保留 CR。 @param line 输出。 @param error 错误。 @return 成功为真。 */
+    bool readLine(Memory::String &line, Memory::String &error)
     {
-        std::ios::openmode flags = std::ios::binary;
-        readable_ = mode.find('r') != std::string::npos || mode.find('+') != std::string::npos;
-        writable_ = mode.find('w') != std::string::npos || mode.find('a') != std::string::npos || mode.find('+') != std::string::npos;
-        if (readable_) flags |= std::ios::in;
-        if (mode.find('w') != std::string::npos) flags |= std::ios::out | std::ios::trunc;
-        if (mode.find('a') != std::string::npos) flags |= std::ios::out | std::ios::app;
-        if (mode.find('+') != std::string::npos) flags |= std::ios::in | std::ios::out;
-        try
-        {
-            stream_.open(std::filesystem::u8path(path), flags);
-        } catch (const std::filesystem::filesystem_error &)
-        {
-        } catch (const std::range_error &) {}
-    }
-
-    /**
-     * @brief 判断文件句柄是否处于打开状态。
-     * @retval 文件句柄处于打开状态时为 true，否则为 false。
-     */
-    [[nodiscard]] bool isOpen() const { return stream_.is_open(); }
-
-    /**
-     * @brief 从文件读取一行并报告到达末尾或读取错误。
-     * @param line 接收去掉 LF 的行文本；旧读取接口保留行尾 CR。
-     * @param error 接收失败原因的错误信息。
-     * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
-     */
-    bool readLine(std::string &line, std::string &error)
-    {
-        if (std::getline(stream_, line)) return true;
-        if (stream_.bad())
-        {
-            error = "读取文件失败";
-            return false;
-        }
-        stream_.clear(stream_.rdstate() & ~std::ios::failbit);
         line.clear();
-        return true;
+        if (!file_.readable) { unreadableEof_ = true; return true; }
+        unsigned char byte;
+        int status;
+        while ((status = chali_file_get(&file_, &byte)) > 0)
+        {
+            if (byte == '\n') return true;
+            line.push_back(static_cast<char>(byte));
+        }
+        if (status >= 0) return true;
+        error = "读取文件失败";
+        return false;
     }
-
-    /**
-     * @brief 读取原始字节，EOF 是成功的短读取。
-     * @param count 上限。
-     * @param bytes 结果。
-     * @param error 错误。
-     * @return 是否成功。
-     */
-    bool readBytes(std::size_t count, std::string &bytes, std::string &error)
+    /** @brief 分块读取字节。 @param count 上限。 @param bytes 输出。 @param error 错误。 @return 成功为真。 */
+    bool readBytes(std::size_t count, Memory::String &bytes, Memory::String &error)
     {
         bytes.clear();
-        if (!readable_)
-        {
-            error = "文件未以读取模式打开";
-            return false;
-        }
+        if (!file_.readable) { error = "文件未以读取模式打开"; return false; }
         char block[4096];
         while (bytes.size() < count)
         {
-            const auto size = std::min(count - bytes.size(), sizeof(block));
-            stream_.read(block, static_cast<std::streamsize>(size));
-            const auto read = stream_.gcount();
-            if (read > 0) bytes.append(block, static_cast<std::size_t>(read));
-            if (stream_.bad() || (stream_.fail() && !stream_.eof()))
-            {
-                error = "读取文件失败";
-                return false;
-            }
-            if (stream_.eof())
-            {
-                stream_.clear(stream_.rdstate() & ~std::ios::failbit);
-                break;
-            }
+            std::size_t read = 0;
+            const bool ok = chali_file_read(&file_, block, std::min(count - bytes.size(), sizeof(block)), &read);
+            if (read) bytes.append(block, read);
+            if (!ok) { error = "读取文件失败"; return false; }
+            if (chali_file_eof(&file_)) break;
         }
         return true;
     }
-
-    /**
-     * @brief 将给定文本写入文件。
-     * @param text 待处理的文本。
-     * @param error 接收失败原因的错误信息。
-     * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
-     */
-    bool write(const std::string &text, std::string &error)
+    /** @brief 写入并刷新。 @param text 输入。 @param error 错误。 @return 成功为真。 */
+    bool write(const Memory::String &text, Memory::String &error)
     {
-        stream_ << text;
-        if (!stream_)
-        {
-            error = "写入文件失败";
-            return false;
-        }
-        stream_.flush();
-        return true;
+        if (!unreadableEof_ && chali_file_write(&file_, text.data(), text.size())) return true;
+        error = "写入文件失败";
+        return false;
     }
-
-    /**
-     * @brief 刷新尚未提交的输出数据。
-     * @param error 接收失败原因的错误信息。
-     * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
-     */
-    bool flush(std::string &error)
+    /** @brief 刷新输出。 @param error 错误。 @return 成功为真。 */
+    bool flush(Memory::String &error)
     {
-        stream_.flush();
-        if (stream_) return true;
+        if (!unreadableEof_ && chali_file_flush(&file_)) return true;
         error = "刷新文件失败";
         return false;
     }
-
-    /**
-     * @brief 按指定基准调整文件读写位置。
-     * @param offset 相对于起点的字节偏移。
-     * @param origin 定位基准：零为开头，一为当前位置，二为结尾。
-     * @param position 接收定位后的文件字节位置。
-     * @param error 接收失败原因的错误信息。
-     * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
-     */
-    bool seek(std::int64_t offset, int origin, std::int64_t &position,
-              std::string &error)
+    /** @brief 调整位置。 @param offset 偏移。 @param origin 基准。 @param position 结果。 @param error 错误。 @return 成功为真。 */
+    bool seek(std::int64_t offset, int origin, std::int64_t &position, Memory::String &error)
     {
-        std::ios::seekdir direction = std::ios::beg;
-        if (origin == 1)
-            direction = std::ios::cur;
-        else if (origin == 2)
-            direction = std::ios::end;
-        else if (origin != 0)
-        {
-            error = "未知的 seek 起点";
-            return false;
-        }
-        stream_.clear();
-        if (readable_) stream_.seekg(static_cast<std::streamoff>(offset), direction);
-        if (!stream_)
-        {
-            error = "文件定位失败";
-            return false;
-        }
-        if (writable_) stream_.seekp(static_cast<std::streamoff>(offset), direction);
-        if (!stream_)
-        {
-            error = "文件定位失败";
-            return false;
-        }
-        const std::streampos readPosition = readable_ ? stream_.tellg() : std::streampos(-1);
-        const std::streampos writePosition = writable_ ? stream_.tellp() : std::streampos(-1);
-        const std::streampos selected = readPosition != std::streampos(-1) ? readPosition : writePosition;
-        if (selected == std::streampos(-1))
-        {
-            error = "读取文件位置失败";
-            return false;
-        }
-        position = static_cast<std::int64_t>(selected);
-        return true;
+        if (origin < 0 || origin > 2) { error = "未知的 seek 起点"; return false; }
+        unreadableEof_ = false;
+        if (chali_file_seek(&file_, offset, origin, &position)) return true;
+        error = "文件定位失败";
+        return false;
     }
-
-    /**
-     * @brief 判断文件读取是否到达末尾。
-     * @retval 文件读取到达末尾时为 true，否则为 false。
-     */
-    [[nodiscard]] bool eof() const { return stream_.eof(); }
-    /**
-     * @brief 关闭文件并释放宿主句柄。
-     */
-    void close() { stream_.close(); }
-    /**
-     * @brief 关闭桌面文件并检查缓冲写入或关闭错误。
-     * @param error 接收失败原因。
-     * @return 关闭成功时为 true。
-     */
-    bool closeChecked(std::string &error)
+    /** @brief 查询末尾标记。 @return 到达末尾为真。 */
+    bool eof() const { return unreadableEof_ || chali_file_eof(&file_); }
+    /** @brief 关闭并清空句柄。 */
+    void close() { chali_file_close(&file_); }
+    /** @brief 检查关闭结果。 @param error 错误。 @return 成功为真。 */
+    bool closeChecked(Memory::String &error)
     {
-        stream_.clear();
-        stream_.close();
-        if (stream_.fail())
-        {
-            error = "文件关闭失败";
-            return false;
-        }
-        return true;
+        if (chali_file_close(&file_)) return true;
+        error = "文件关闭失败";
+        return false;
     }
-
-private:
-    std::fstream stream_;
-    bool readable_ = false;
-    bool writable_ = false;
 };
 
 /** @brief 独立拥有的文件流、路径及最近操作状态；文件不可复制。 */
 struct FileRecord
 {
-    std::unique_ptr<FileDevice> file;
-    std::string path, error;
+    Memory::CHeapUniquePtr<FileDevice> file;
+    Memory::String path, error;
     bool succeeded = true;
 };
 constexpr const char *fileType = "file";
 /** @brief 销毁文件记录；私有流析构自动关闭仍打开的文件。
  * @param record 拥有的文件记录。
  */
-void CHALI_ABI_CALL destroyFile(void *record) { delete static_cast<FileRecord *>(record); }
+void CHALI_ABI_CALL destroyFile(void *record) { Memory::destroyCHeap(static_cast<FileRecord *>(record)); }
 /** @brief 复制文本实参，保留显式长度和零字节。
  * @param frame 当前帧。
  * @param index 实参下标。
  * @param output 接收独立内容。
  * @return 读取成功为真。
  */
-bool textArgument(const ChaliAbiFrame *frame, int64_t index, std::string &output)
+bool textArgument(const ChaliAbiFrame *frame, int64_t index, Memory::String &output)
 {
     int64_t handle = 0;
     const unsigned char *data = nullptr;
@@ -265,10 +153,10 @@ try
 {
     if constexpr (op == Operation::Open || op == Operation::TryOpen)
     {
-        std::string path, mode;
+        Memory::String path, mode;
         if (!textArgument(frame, 0, path) || !textArgument(frame, 1, mode)) return;
-        auto record = std::make_unique<FileRecord>();
-        record->file = std::make_unique<FileDevice>(path, mode);
+        auto record = Memory::makeCHeapUnique<FileRecord>();
+        record->file = Memory::makeCHeapUnique<FileDevice>(path, mode);
         if (!record->file->isOpen())
         {
             if constexpr (op == Operation::Open)
@@ -315,7 +203,7 @@ try
     }
     if constexpr (op == Operation::LastError)
     {
-        const std::string error = record ? record->error : "无效的 file 句柄";
+        const Memory::String error = record ? record->error : "无效的 file 句柄";
         chali_abi_return_integer(frame, chali_abi_string_bytes(frame, error.data(), error.size()));
         return;
     }
@@ -341,12 +229,12 @@ try
                                                                                      "feof";
         if (!record)
         {
-            chali_abi_fail(frame, (std::string(who) + " 用的 file 已经释放过了（句柄 " + std::to_string(handle) + "）").c_str());
+            chali_abi_fail(frame, (Memory::String(who) + " 用的 file 已经释放过了（句柄 " + Memory::toString(handle) + "）").c_str());
             return;
         }
         if (!record->file || !record->file->isOpen())
         {
-            chali_abi_fail(frame, (std::string(who) + " 用到的文件已经关闭").c_str());
+            chali_abi_fail(frame, (Memory::String(who) + " 用到的文件已经关闭").c_str());
             return;
         }
         if constexpr (op == Operation::Eof) chali_abi_return_integer(frame, record->file->eof());
@@ -357,7 +245,7 @@ try
         }
         if constexpr (op == Operation::Read)
         {
-            std::string line, error;
+            Memory::String line, error;
             if (!record->file->readLine(line, error))
             {
                 chali_abi_fail(frame, (error + "：" + record->path).c_str());
@@ -367,7 +255,7 @@ try
         }
         if constexpr (op == Operation::Write)
         {
-            std::string text, error;
+            Memory::String text, error;
             if (!textArgument(frame, 1, text)) return;
             if (!record->file->write(text, error))
             {
@@ -394,7 +282,7 @@ try
     }
     if constexpr (op == Operation::TryRead || op == Operation::TryReadLine)
     {
-        std::string line, error;
+        Memory::String line, error;
         if (!record->file->readLine(line, error))
         {
             record->error = error.empty() ? "读取文件失败" : error;
@@ -403,7 +291,7 @@ try
         }
         if constexpr (op == Operation::TryReadLine)
         {
-            if (line.find('\0') != std::string::npos)
+            if (line.find('\0') != Memory::String::npos)
             {
                 record->error = "text contains a zero byte";
                 chali_abi_return_integer(frame, 0);
@@ -424,7 +312,7 @@ try
             chali_abi_return_integer(frame, 0);
             return;
         }
-        std::string bytes, error;
+        Memory::String bytes, error;
         if (!record->file->readBytes(size_t(count), bytes, error))
         {
             record->error = error.empty() ? "字节读取失败" : error;
@@ -437,7 +325,7 @@ try
     }
     if constexpr (op == Operation::TryWrite || op == Operation::TryWriteBytes)
     {
-        std::string text, error;
+        Memory::String text, error;
         if constexpr (op == Operation::TryWrite)
         {
             if (!textArgument(frame, 1, text)) return;
@@ -447,7 +335,7 @@ try
             int64_t list = 0;
             size_t length = 0;
             if (!chali_abi_argument_integer(frame, 1, &list) || !chali_abi_list_bytes(frame, list, nullptr, 0, &length)) return;
-            std::vector<unsigned char> bytes(length);
+            Memory::Vector<unsigned char> bytes(length);
             if (!chali_abi_list_bytes(frame, list, bytes.data(), bytes.size(), &length)) return;
             text.assign(bytes.empty() ? "" : reinterpret_cast<const char *>(bytes.data()), bytes.size());
         }
@@ -521,3 +409,6 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_file_records(size_t *count)
     if (count) *count = sizeof(records) / sizeof(records[0]);
     return records;
 }
+
+#define CHALI_AOT_BIND_MODULE file
+#include "aot_bind_module.h"

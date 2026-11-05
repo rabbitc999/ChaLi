@@ -60,7 +60,7 @@ std::optional<NativeValue> Machine::invokeNativeService(const Program &program, 
     context.machine = this;
     context.threadId = threadId_;
 #if STACKVM_WITH_THREADS
-    if (!events_) events_ = std::make_shared<EventQueue>();
+    if (!events_) events_ = Memory::makeShared<EventQueue>();
     if (!sharedRuntime_) sharedRuntime_ = Memory::makeShared<SharedRuntime>();
     if (threadsEnabled_ && !threadRuntime_)
     {

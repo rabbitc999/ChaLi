@@ -22,7 +22,7 @@ foreach(feature THREADS DEFAULT_HEAP HOST_EXCEPTION_GUARD HOST_IO)
 endforeach()
 target_compile_definitions(chali_stackvm PUBLIC STACKVM_WITH_REFLECTION=$<BOOL:${STACKVM_WITH_REFLECTION}>)
 target_compile_definitions(chali_stackvm PUBLIC STACKVM_WITH_PANIC_TRACE=$<BOOL:${STACKVM_WITH_PANIC_TRACE}>)
-add_subdirectory(../../source/glue ${CMAKE_CURRENT_BINARY_DIR}/standard-records)
+add_subdirectory(../../source/abi ${CMAKE_CURRENT_BINARY_DIR}/standard-records)
 
 # AOT 共享服务，不再生成 VM、字节码工具及解释器测试。
 target_compile_definitions(chali_stackvm PUBLIC CHALI_CUSTOM_ALLOCATOR=1 STACKVM_AOT_ONLY=1)

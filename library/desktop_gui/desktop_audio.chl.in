@@ -1,4 +1,4 @@
-module desktop_audio;
+module std::audio;
 
 #abi("C", "./@LIBRARY@", "chali_audio_open")
 bool open();

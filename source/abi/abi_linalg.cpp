@@ -80,7 +80,7 @@ void writeOwnedValues(ChaliAbiFrame *frame, int64_t output, size_t slot, const V
 {
     const auto previous = readSlot(frame, output, slot);
     if (previous && !chali_abi_record_probe(frame, previous, "std::linear_algebra::ScalarStorage")) fail(frame, "矩阵输出存储类型不匹配");
-    auto storage = std::make_unique<scalar_buffer::Storage>();
+    auto storage = Memory::makeCHeapUnique<scalar_buffer::Storage>();
     storage->values.reserve(values.size());
     for (auto value : values) storage->values.push_back(scalar_buffer::encode(value));
     const auto handle = scalar_buffer::publish(frame, std::move(storage));
@@ -99,11 +99,11 @@ struct MatrixData
 {
     int rows = 0;
     int cols = 0;
-    std::vector<double> values;
+    Memory::Vector<double> values;
 };
 struct VectorData
 {
-    std::vector<double> values;
+    Memory::Vector<double> values;
 };
 struct LUResult
 {
@@ -137,7 +137,7 @@ MatrixData readMatrix(ChaliAbiFrame *frame, int64_t input)
     const auto values = readValues<double>(frame, readSlot(frame, input, 2));
     if (rows < 0 || cols < 0 || rows > INT_MAX || cols > INT_MAX || (cols == 0 ? !values.empty() : (values.size() / uint64_t(cols) != uint64_t(rows) || values.size() % uint64_t(cols))))
         fail(frame, "矩阵存储长度与维度不匹配");
-    return { int(rows), int(cols), std::vector<double>(values.begin(), values.end()) };
+    return { int(rows), int(cols), Memory::Vector<double>(values.begin(), values.end()) };
 }
 /** @brief 将矩阵写入语言拥有的结果字段。
  * @param frame 当前 C 帧。
@@ -181,13 +181,13 @@ inline void set(MatrixData &m, int i, int j, double v) { m.values[static_cast<st
  * @param cols 输出矩阵的列数。
  * @return 具有指定行列数且独占元素数组的矩阵。
  */
-inline MatrixData zerosMatrix(int rows, int cols) { return { rows, cols, std::vector<double>(static_cast<std::size_t>(rows) * static_cast<std::size_t>(cols), 0.0) }; }
+inline MatrixData zerosMatrix(int rows, int cols) { return { rows, cols, Memory::Vector<double>(static_cast<std::size_t>(rows) * static_cast<std::size_t>(cols), 0.0) }; }
 /**
  * @brief 创建指定长度的全零向量。
  * @param n 输出向量长度或方阵阶数。
  * @return 具有独立元素数组的零向量。
  */
-inline VectorData zerosVector(int n) { return { std::vector<double>(static_cast<std::size_t>(n), 0.0) }; }
+inline VectorData zerosVector(int n) { return { Memory::Vector<double>(static_cast<std::size_t>(n), 0.0) }; }
 /**
  * @brief 创建指定阶数的单位矩阵。
  * @param n 输出向量长度或方阵阶数。

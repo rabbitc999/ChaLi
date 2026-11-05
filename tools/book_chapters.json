@@ -214,8 +214,11 @@
       "id": 30,
       "zh": "30-标准库初探.md",
       "en": "30-standard-library-tour.md",
-      "title": "标准库初探",
-      "description": "按任务选择集合、文件、时间和可选模块"
+      "title": "项目：康威生命游戏",
+      "description": "用 GUI、自定义控件和稀疏棋盘完成可编辑的生命游戏",
+      "imports": [
+        "example/desktop-gui"
+      ]
     }
   ]
 }

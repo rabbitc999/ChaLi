@@ -1,33 +1,11 @@
 #include "../../source/allocator/chali_allocator.hpp"
 /**
  * @file bigint.hpp
- * @brief 任意精度大整数：加 / 减 / 乘 / 除 / 取余 / 幂 / 最大公约数，十进制字符串互转。
+ * @brief C11 大整数内核的 C++17 所有权、运算符和异常兼容接口。
  *
- * 定位：`library/` 里的小工具库，C++17 + 只依赖标准库。实现参考
- * `eigenmath-plus/eigenmath_bigint.c`（同一套"符号 + limb 数组 + 有效位数"的结构），
- * 但把 C 的手工内存管理换成 `std::vector`，接口换成 C++ 的运算符重载。
- *
- * 表示：**基 2^32 的小端 limb 数组**（每个 limb 一个 `uint32_t`），
- *
- * ```text
- *   value = sign × Σ limbs[i] × 2^(32 i)
- * ```
- *
- * 约定（与参考实现一致）：
- *   - 0 只有一种表示：`sign == 0`、limbs 为空；
- *   - 高位不存 0 limb（每次运算后 `normalize()`）；
- *   - `a / b`、`a % b` 按**向零截断**（C / C++ 的整数除法语义），
- *     `a = (a / b) × b + a % b`，余数符号跟被除数；
- *   - 除以零：`divmod` 返回 false；`operator/`、`operator%` 抛 `std::domain_error`
- *     （不想处理异常就用 `divmod`）。
- *
- * 乘法内核在 **Karatsuba** 和 **双素数 NTT + CRT** 间按补齐规模选择；
- * 递归终点仅使用单个原生整数乘法，不保留学校乘法内核。
- * 除法使用 **Burnikel-Ziegler**，除数不超过 256 limb 时使用 Knuth 分块长除法。
- *
- * 同一个库里还有十进制浮点 `bigfloat::BigFloat`（`bigfloat.hpp`，尾数就是这个 `BigInt`）。
- * 明确不做（参考实现里有、这里不做）：**分数 / 大有理数**
- * （`BigRational_T`）、以及 `BigFloat` 的 `exp / log / π / 三角函数`。
+ * 基 2^32 小端幅值；预算分配经 C 回调转接原所有者。
+ * 乘法组合学校算法、Karatsuba、Toom-Cook 3 与双素数 NTT+CRT；除法沿用 Knuth / Burnikel-Ziegler。
+ * 运算实现位于 chali_bigint*.c；本接口不包含独立的 C++ 大整数算法。
  */
 
 #ifndef PARSE_ENGINE_BIGINT_HPP
@@ -36,8 +14,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
-#include <vector>
+#include "chali_bigint.h"
 
+namespace bigfloat
+{
+struct CFloatAccess;
+}
 namespace bigint
 {
 
@@ -52,7 +34,31 @@ public:
     /**
      * @brief 造一个 0。
      */
-    BigInt() = default;
+    BigInt();
+    /**
+     * @brief 复制到当前分配上下文。
+     * @param other 来源。
+     */
+    BigInt(const BigInt &other);
+    /**
+     * @brief 接管原分配所有权。
+     * @param other 来源。
+     */
+    BigInt(BigInt &&other) noexcept;
+    /** @brief 释放 C 内核的存储。 */
+    ~BigInt();
+    /**
+     * @brief 保留目标所有者复制。
+     * @param other 来源。
+     * @return 当前对象。
+     */
+    BigInt &operator=(const BigInt &other);
+    /**
+     * @brief 接管原所有者移动。
+     * @param other 来源。
+     * @return 当前对象。
+     */
+    BigInt &operator=(BigInt &&other) noexcept;
 
     /**
      * @brief 从 64 位有符号整数构造（`INT64_MIN` 也正确）。
@@ -106,12 +112,12 @@ public:
     /**
      * @brief 是不是 0。
      */
-    [[nodiscard]] bool isZero() const { return sign_ == 0; }
+    [[nodiscard]] bool isZero() const { return value_.sign == 0; }
 
     /**
      * @brief 符号：-1 / 0 / 1。
      */
-    [[nodiscard]] int sign() const { return sign_; }
+    [[nodiscard]] int sign() const { return value_.sign; }
 
     /**
      * @brief 十进制位数（0 算 1 位）。
@@ -121,12 +127,12 @@ public:
     /**
      * @brief 有效 limb（32 位）个数；0 是 0 个。
      */
-    [[nodiscard]] std::size_t limbCount() const { return limbs_.size(); }
+    [[nodiscard]] std::size_t limbCount() const { return value_.limbs.length; }
 
     /**
      * @brief NTT 候选下限：两边 limb 数之和达到它后再比较补齐成本。
      *
-     * 支持原生 128 位乘积时默认 3072，否则为 768；`1` 强制可支持的多块输入走 NTT。
+     * 默认 6144；它是候选下限，仍按变换补齐规模比较成本；`1` 强制可支持的多块输入走 NTT。
      * @param limbs 两侧块数之和的候选下限。
      */
     static void setMultiplicationThreshold(std::size_t limbs);
@@ -137,15 +143,15 @@ public:
     [[nodiscard]] static std::size_t multiplicationThreshold();
 
     /**
-     * @brief Karatsuba 保护阈值：较短操作数不超过该 limb 数时保留 Karatsuba。
+     * @brief NTT 的短侧保护阈值：较短操作数不超过该 limb 数时保留第一阶段算法。
      *
      * 默认 96；不再控制学校算法基线，0 按 1 处理；强制 NTT 模式优先。
-     * @param limbs 较短操作数优先保留 Karatsuba 的最大块数。
+     * @param limbs 较短操作数不参与 NTT 成本比较的最大块数。
      */
     static void setKaratsubaThreshold(std::size_t limbs);
     /**
-     * @brief 当前 Karatsuba 保护阈值。
-     * @return 自动分派保留 Karatsuba 的短侧块数上限。
+     * @brief 查询兼容接口保存的 NTT 短侧保护阈值。
+     * @return 自动分派保留第一阶段算法的短侧块数上限。
      */
     [[nodiscard]] static std::size_t karatsubaThreshold();
 
@@ -321,19 +327,19 @@ public:
     /**
      * @brief 是不是偶数（0 算偶数）。
      */
-    [[nodiscard]] bool isEven() const { return limbs_.empty() || (limbs_[0] & 1u) == 0u; }
+    [[nodiscard]] bool isEven() const { return (value_.limbs.length == 0) || (static_cast<const std::uint32_t *>(value_.limbs.data)[0] & 1u) == 0u; }
     /**
      * @brief 是不是奇数。
      */
-    [[nodiscard]] bool isOdd() const { return !limbs_.empty() && (limbs_[0] & 1u) != 0u; }
+    [[nodiscard]] bool isOdd() const { return !(value_.limbs.length == 0) && (static_cast<const std::uint32_t *>(value_.limbs.data)[0] & 1u) != 0u; }
     /**
      * @brief 是不是负数。
      */
-    [[nodiscard]] bool isNegative() const { return sign_ < 0; }
+    [[nodiscard]] bool isNegative() const { return value_.sign < 0; }
     /**
      * @brief 是不是正数（0 不算）。
      */
-    [[nodiscard]] bool isPositive() const { return sign_ > 0; }
+    [[nodiscard]] bool isPositive() const { return value_.sign > 0; }
 
     /**
      * @brief 两者中较小的一个。
@@ -403,84 +409,29 @@ public:
      */
     static BigInt fromString(const Memory::String &text, unsigned int base, bool *ok = nullptr);
 
+    /**
+     * @brief 借用只读 C 数值视图，供数值与符号服务互操作。
+     * @return 有效期与当前整数一致的 C 存储，调用方不得修改或释放。
+     */
+    [[nodiscard]] const ChaliBigInt &cValue() const noexcept { return value_; }
+
 private:
-    int sign_ = 0;                         ///< -1 / 0 / 1
-    Memory::Vector<std::uint32_t> limbs_;  ///< 小端 32 位 limb（高位不存 0）
-
+    friend struct bigfloat::CFloatAccess;
+    ChaliBigInt value_{};
     /**
-     * @brief 去掉高位 0 并同步符号（0 时 limbs 清空）。
+     * @brief 将 C 内核状态恢复为原有异常协议。
+     * @param status C 内核返回状态。
+     * @param message 失败诊断。
      */
-    void normalize();
-
+    static void check(ChaliCStatus status, const char *message = "bigint: 数值操作失败");
     /**
-     * @brief 幅值比较：|a| 与 |b|。
+     * @brief 把 C 内核的文本复制为调用方拥有的字符串。
+     * @param base 进制，零表示默认十进制协议。
+     * @return 按当前预算分配的字符串。
      */
-    static int compareMagnitude(const BigInt &left, const BigInt &right);
-    /**
-     * @brief 幅值相加（都按非负处理）。
-     */
-    static BigInt addMagnitude(const BigInt &left, const BigInt &right);
-    /**
-     * @brief 幅值相减：要求 |left| ≥ |right|。
-     */
-    static BigInt subMagnitude(const BigInt &left, const BigInt &right);
-    /**
-     * @brief 按补齐成本选择 Karatsuba 或 NTT 计算幅值乘积。
-     * @param left 左操作数，仅使用其幅值。
-     * @param right 右操作数，仅使用其幅值。
-     * @return 非负的幅值乘积。
-     */
-    static BigInt mulMagnitude(const BigInt &left, const BigInt &right);
-    /**
-     * @brief 幅值除取整（Burnikel-Ziegler 分治，小规模使用 Knuth 分块长除法）。
-     * @param left 被除数，仅使用其幅值。
-     * @param right 非零除数，仅使用其幅值。
-     * @param quotient 非空时接收非负商。
-     * @param remainder 非空时接收非负余数。
-     */
-    static void divmodMagnitude(const BigInt &left, const BigInt &right,
-                                BigInt *quotient, BigInt *remainder);
-    /**
-     * @brief 归一化后按 32 位块估商、校正的 Knuth 长除法基线。
-     * @param left 被除数，仅使用其幅值。
-     * @param right 非零除数，仅使用其幅值。
-     * @param quotient 非空时接收非负商。
-     * @param remainder 非空时接收非负余数。
-     */
-    static void divmodBase(const BigInt &left, const BigInt &right,
-                           BigInt *quotient, BigInt *remainder);
-    /**
-     * @brief Burnikel-Ziegler 的 2n/1n 子问题。
-     */
-    static void divTwoByOne(const BigInt &dividend, const BigInt &divisor,
-                            std::size_t blockSize, BigInt *quotient, BigInt *remainder);
-    /**
-     * @brief Burnikel-Ziegler 的 3n/2n 子问题。
-     */
-    static void divThreeByTwo(const BigInt &dividend, const BigInt &divisor,
-                              std::size_t blockSize, BigInt *quotient, BigInt *remainder);
-    /**
-     * @brief 取一段小端 limb。
-     */
-    static BigInt limbSlice(const BigInt &value, std::size_t offset, std::size_t count);
-    /**
-     * @brief `high * base^lowWidth + low`。
-     */
-    static BigInt combineBlocks(const BigInt &high, const BigInt &low, std::size_t lowWidth);
-
-    /**
-     * @brief 幅值 = 幅值 × small + add（small < 2^32）。
-     */
-    void mulSmallAdd(std::uint32_t small, std::uint32_t add);
-    /**
-     * @brief 幅值 / small 并返回余数（small ≠ 0）。
-     */
-    std::uint32_t divSmall(std::uint32_t small);
-
-    /**
-     * @brief 把十进制文本按 10^9 一段一段地吃进来（`ok` 见 fromString）。
-     */
-    static BigInt parseDecimal(const Memory::String &decimal, bool *ok);
+    Memory::String format(unsigned base) const;
+    friend BigInt integerSqrt(const BigInt &value);
+    friend BigInt integerRoot(const BigInt &value, std::uint64_t degree);
 };
 
 /**

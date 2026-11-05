@@ -1,0 +1,22 @@
+import life_model;
+
+/**
+ * @brief 核对稀疏棋盘编辑及经典图案的准确演化。
+ */
+void main() {
+    life_model::Board board; board.reset();
+    board.toggle(-10000, 20000); assert(board.at(-10000, 20000) == 1);
+    board.toggle(-10000, 20000); assert(board.at(-10000, 20000) == 0 && board.population() == 0);
+    board.step(); assert(board.population() == 0);
+    board.place(-2, -2); board.place(-1, -2); board.place(-2, -1); board.place(-1, -1);
+    board.step(); assert(board.population() == 4 && board.at(-2, -2) == 1 && board.at(-1, -1) == 1);
+    board.reset(); board.place(-1, 0); board.place(0, 0); board.place(1, 0);
+    board.step(); assert(board.population() == 3 && board.at(0, -1) == 1 && board.at(0, 1) == 1 && board.at(-1, 0) == 0);
+    board.step(); assert(board.at(-1, 0) == 1 && board.at(1, 0) == 1);
+    board.reset(); board.place(1, 0); board.place(2, 1); board.place(0, 2); board.place(1, 2); board.place(2, 2);
+    board.step(); board.step(); board.step(); board.step();
+    assert(board.population() == 5 && board.generation == 4);
+    assert(board.at(2, 1) == 1 && board.at(3, 2) == 1 && board.at(1, 3) == 1 && board.at(2, 3) == 1 && board.at(3, 3) == 1);
+    board.place(3, 3); assert(board.population() == 5);
+    println("Life sparse board, toggle, still life, oscillator and glider passed");
+}

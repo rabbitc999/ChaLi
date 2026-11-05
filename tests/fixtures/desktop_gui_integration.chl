@@ -1,0 +1,65 @@
+import std::gui;
+#abi("C", "./chali_desktop.dll", "chali_gui_test_input")
+bool inject(int32 kind, int32 a, int32 b);
+#abi("C", "./chali_desktop.dll", "chali_gui_test_character")
+bool character(int32 codepoint);
+void main() {
+ assert(std::gui::control_count() == 34);
+ assert(std::gui::open_window(640, 480, "ChaLi GUI integration", 2));
+ let opened = std::gui::poll_event();
+ assert(opened.kind() == std::gui::EventKind::Opened);
+ let button = std::gui::button("Click");
+ int64 clicks = 0;
+ button.on_click(void fn mut(std::gui::Event event) { assert(event.clicked()); clicks += 1; });
+ assert(inject((int32)0, (int32)40, (int32)40));
+ assert(inject((int32)1, (int32)0, (int32)0));
+ assert(std::gui::begin_frame());
+ button.draw(std::gui::Rect::at(20, 20, 120, 40));
+ std::gui::end_frame();
+ assert(inject((int32)2, (int32)0, (int32)0));
+ assert(std::gui::begin_frame());
+ button.draw(std::gui::Rect::at(20, 20, 120, 40));
+ std::gui::end_frame();
+ assert(clicks == 1);
+ let text = std::gui::text_box("中文 input");
+ assert(text.text() == "中文 input");
+ assert(text.set_text("changed")); assert(text.text() == "changed");
+ int64 kind = 0; while (kind < 34) {
+   let widget = std::gui::create_control(kind, "One;Two;Three");
+   assert(widget.isValid());
+   assert(std::gui::begin_frame());
+   widget.draw(std::gui::Rect::at(20, 80, 200, 100));
+   std::gui::end_frame(); widget.close(); assert(!widget.isValid()); kind += 1;
+ }
+ int64 changes = 0;
+ text.on_change(void fn mut(std::gui::Event event) { assert(event.changed()); changes += 1; });
+ assert(text.set_editing(true));
+ assert(character((int32)0x4e2d));
+ assert(std::gui::begin_frame()); std::gui::end_frame();
+ assert(std::gui::begin_frame());
+ text.draw(std::gui::Rect::at(20, 80, 200, 40));
+ std::gui::end_frame();
+ assert(text.text() == "中changed"); assert(changes == 1);
+ button.close(); text.close(); std::gui::close();
+ assert(std::gui::open_window(320, 240, "Loop", 2));
+ int64 frames = 0; int64 closing = 0;
+ std::gui::run(void fn mut() { frames += 1; if (frames == 3) { std::gui::request_close(); } },
+   void fn mut(std::gui::Event event) { if (event.closed()) { closing += 1; } });
+ assert(frames == 3); assert(closing == 1);
+ assert(std::gui::open_window(320, 240, "Callback lifecycle", 2));
+ let victim = std::gui::button("Destroy"); int64 after_close = 0;
+ victim.on_event(void fn mut(std::gui::Event event) { if (event.clicked()) { victim.close(); } });
+ victim.on_click(void fn mut(std::gui::Event event) { after_close += 1; });
+ assert(inject((int32)0, (int32)40, (int32)40));
+ assert(inject((int32)1, (int32)0, (int32)0));
+ assert(std::gui::begin_frame()); victim.draw(std::gui::Rect::at(20, 20, 120, 40)); std::gui::end_frame();
+ assert(inject((int32)2, (int32)0, (int32)0));
+ assert(std::gui::begin_frame()); victim.draw(std::gui::Rect::at(20, 20, 120, 40)); std::gui::end_frame();
+ assert(!victim.isValid()); assert(after_close == 0);
+ std::gui::run(void fn() {
+   std::gui::close();
+   assert(std::gui::open_window(320, 240, "Replacement", 2));
+ });
+ assert(std::gui::begin_frame()); std::gui::end_frame(); std::gui::close();
+ println("GUI language ABI, click callback, UTF-8 text and 34 controls passed");
+}

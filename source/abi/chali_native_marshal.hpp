@@ -4,6 +4,7 @@
  */
 #pragma once
 #include "chali_abi.h"
+#include "../allocator/c_heap_allocator.hpp"
 #include <array>
 #include <cstring>
 #include <cstdint>
@@ -266,7 +267,7 @@ std::shared_ptr<PointerState<T>> pointer(Frame frame, std::int64_t address, bool
             result->writable = result->writable || writable;
             return result;
         }
-    auto result = std::make_shared<State>(frame, address, writable);
+    auto result = std::allocate_shared<State>(Memory::CHeapAllocator<State>(), frame, address, writable);
     result->owner = result;
     result->next = State::head;
     State::head = result.get();
@@ -337,7 +338,7 @@ struct Argument<T *>
 template <>
 struct Argument<const char *>
 {
-    std::string value;
+    std::basic_string<char, std::char_traits<char>, Memory::CHeapAllocator<char>> value;
     /**
      * @brief 复制文本并拒绝内嵌零字节。
      * @param frame 当前 C 帧。
@@ -397,7 +398,7 @@ struct Argument<Array<T>>
     {
         Frame frame;
         std::int64_t address;
-        std::unique_ptr<T[]> values;
+        Memory::CHeapArrayPtr<T> values;
         std::size_t count = 0;
         State *next = nullptr;
         std::weak_ptr<State> owner;
@@ -410,7 +411,7 @@ struct Argument<Array<T>>
         State(Frame current, std::int64_t at) : frame(current), address(at)
         {
             count = checkedCount(Storage<std::int64_t>::read(frame, address - 8), Storage<T>::slots * 8);
-            if (count) values = std::make_unique<T[]>(count);
+            values = Memory::makeCHeapArray<T>(count);
             for (std::size_t i = 0; i < count; ++i) values[i] = Storage<T>::read(frame, address + i * Storage<T>::slots * 8);
         }
         /** @brief 回写全部数组元素并移除共享节点。 */
@@ -438,7 +439,7 @@ struct Argument<Array<T>>
                 state = at->owner.lock();
                 return;
             }
-        state = std::make_shared<State>(frame, address);
+        state = std::allocate_shared<State>(Memory::CHeapAllocator<State>(), frame, address);
         state->owner = state;
         state->next = State::head;
         State::head = state.get();

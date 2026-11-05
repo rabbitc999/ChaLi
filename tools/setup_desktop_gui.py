@@ -3,6 +3,7 @@ from pathlib import Path, PurePosixPath
 import argparse
 import hashlib
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -49,6 +50,23 @@ def prepare(name, version, expected, cache, workspace, offline):
     return workspace / prefix
 
 
+def render_gui_module(template, library):
+    """由维护的控件清单生成具名工厂，与 C 枚举使用同一顺序。"""
+    definitions = (ROOT / 'library/desktop_gui/controls.def').read_text(encoding='utf-8')
+    controls = re.findall(r'^CHALI_GUI_CONTROL\((\w+),\s*(Gui\w+)\)', definitions, re.M)
+    if not controls or len({name for name, _ in controls}) != len(controls):
+        raise ValueError('GUI 控件清单为空或包含重复名称')
+    factories = []
+    names = ['/** 查询清单中的控件名称，非法下标返回空串。 */', 'String control_name(int64 index) {']
+    for index, (name, upstream) in enumerate(controls):
+        factories += [f'/** 创建 {upstream} 对应的控件状态，绘制时同步派发变化。 */',
+                      f'Widget {name}(String text) {{ return create_control({index}, text); }}']
+        names.append(f'    if (index == {index}) {{ return "{name}"; }}')
+    names += ['    return "";', '}']
+    return (template.replace('@LIBRARY@', library).replace('@CONTROL_COUNT@', str(len(controls)))
+            .replace('@CONTROL_FACTORIES@', '\n'.join(factories)).replace('@CONTROL_NAMES@', '\n'.join(names)))
+
+
 def main():
     """用 CMake 生成窗体宿主并部署库、模块和依赖许可证。"""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -57,6 +75,7 @@ def main():
     parser.add_argument('--offline', action='store_true')
     parser.add_argument('--icons', action='store_true')
     parser.add_argument('--audio', action='store_true')
+    parser.add_argument('--static', action='store_true', help='构建供编译器内嵌的原生静态库')
     parser.add_argument('--jobs', type=int, default=2)
     options = parser.parse_args()
     if options.jobs < 1:
@@ -77,15 +96,26 @@ def main():
         subprocess.run(['cmake', '-S', str(sources), '-B', str(build), '-G', 'Ninja',
                         '-DCMAKE_BUILD_TYPE=Release', f'-DRAYLIB_SOURCE={deps["raylib"].as_posix()}',
                         f'-DRAYGUI_SOURCE={deps["raygui"].as_posix()}', f'-DCHALI_GUI_ICONS={"ON" if options.icons else "OFF"}',
+                        f'-DCHALI_NATIVE_STATIC={"ON" if options.static else "OFF"}',
                         f'-DCHALI_DESKTOP_AUDIO={"ON" if options.audio else "OFF"}'], check=True)
         subprocess.run(['cmake', '--build', str(build), '--parallel', str(options.jobs)], check=True)
         subprocess.run(['cmake', '--install', str(build), '--prefix', stage.as_posix()], check=True)
+        if options.static:
+            shutil.copytree(stage, output, dirs_exist_ok=True)
+            print(output / 'chali_desktop.a')
+            return
         for name in ('desktop_gui', 'desktop_audio') if options.audio else ('desktop_gui',):
             template = (sources / (name + '.chl.in')).read_text(encoding='utf-8')
-            (stage / (name + '.chl')).write_text(template.replace('@LIBRARY@', library), encoding='utf-8')
+            if name == 'desktop_gui':
+                template = render_gui_module(template, '../' + library)
+            module_name = 'gui' if name == 'desktop_gui' else 'audio'
+            (stage / 'std').mkdir(exist_ok=True)
+            (stage / 'std' / (module_name + '.chl')).write_text(template.replace('@LIBRARY@', '../' + library), encoding='utf-8')
         shutil.copytree(stage, output, dirs_exist_ok=True)
         if not options.audio:
-            (output / 'desktop_audio.chl').unlink(missing_ok=True)
+            (output / 'std' / 'audio.chl').unlink(missing_ok=True)
+        for legacy in ('desktop_gui.chl', 'desktop_audio.chl'):
+            (output / legacy).unlink(missing_ok=True)
     print(output / library)
 
 

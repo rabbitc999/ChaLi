@@ -29,6 +29,15 @@ struct RuntimeAssets
      */
     bool restore(Memory::Vector<Memory::String> *diagnostics);
     /**
+     * @brief 恢复用到的内置扩展静态归档并加入链接输入。
+     * @param libraries 实际需要的逻辑库标识。
+     * @param link 接收归档路径及平台链接选项。
+     * @param diagnostics 接收缺失或损坏资产的诊断。
+     * @return 所有选中归档可用时为真。
+     */
+    bool prepareNative(const Memory::Set<Memory::String> &libraries, Memory::Vector<Memory::String> &link,
+                       Memory::Vector<Memory::String> *diagnostics);
+    /**
      * @brief 用内嵌胶水头生成复杂 C ABI 的宿主封送目标文件。
      * @param source 前端生成的类型定义与绑定函数。
      * @param object 成功时接收本目录内的目标文件路径。

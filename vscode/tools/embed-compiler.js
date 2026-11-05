@@ -80,8 +80,8 @@ function main() {
   fs.cpSync(path.join(llvm, 'licenses'), path.join(notices, 'licenses'), { recursive: true });
   const runtimeNotices = path.join(EXT_ROOT, 'third-party', 'runtime');
   fs.mkdirSync(runtimeNotices, { recursive: true });
-  for (const name of ['miniz', 'ipage', 'caspp']) {
-    fs.copyFileSync(path.join(EXT_ROOT, '..', name === 'miniz' ? 'licenses' : 'library', name, 'LICENSE'),
+  for (const name of ['miniz', 'ipage', 'caspp', 'yyjson', 'tomlc17', 'raylib', 'raygui', 'expat']) {
+    fs.copyFileSync(path.join(EXT_ROOT, '..', ['ipage', 'caspp'].includes(name) ? 'library' : 'licenses', name, 'LICENSE'),
       path.join(runtimeNotices, `${name}-LICENSE.txt`));
   }
   const source = findSource();

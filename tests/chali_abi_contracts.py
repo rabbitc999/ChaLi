@@ -12,7 +12,7 @@ def main():
     """构建原生测试库并通过实际编译器验证 ABI 合约。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
-    parser.add_argument('--cc', default='gcc')
+    parser.add_argument('--cc', default=os.environ.get('CHALI_ABI_CC', 'gcc'))
     parser.add_argument('--aot', action='store_true', help='验证原生产物中的所有权、闭包和同步 C 回调')
     args = parser.parse_args()
     compiler = args.chali.resolve()

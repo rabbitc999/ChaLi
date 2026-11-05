@@ -4,7 +4,7 @@
 [English（中文原文）](AGENTS.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-本目录维护 C++17 SQL 生成后端，仅负责模型元数据、条件树、查询和方言；数据库宿主适配位于 `source/glue/std_sql_ipage.cpp` 与 `std_sql.cpp`。其余约定沿用根目录 `AGENTS.md`。
+本目录维护 C++17 SQL 生成后端，仅负责模型元数据、条件树、查询和方言；数据库宿主适配位于 `source/abi/abi_sql.cpp`。其余约定沿用根目录 `AGENTS.md`。
 
 - 依赖仅限 C++17 标准库。`source/Makefile` 和 `source/CMakeLists.txt` 都必须可用。
 - 标识符经过 `Dialect::quote` / `qualify`；字段名通过 `ModelMeta` 白名单校验。

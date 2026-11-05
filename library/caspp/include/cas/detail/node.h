@@ -148,6 +148,7 @@ private:
     mutable std::uint64_t m_hash = 0;
 
     friend class NodeArena;
+    friend struct CNodeAccess;
 };
 
 /* ------------------------------------------------------------------ 符号表 */

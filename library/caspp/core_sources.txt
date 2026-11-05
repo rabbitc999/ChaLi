@@ -5,6 +5,8 @@ src/detail/matrix.cpp
 src/detail/memory_pool.cpp
 src/detail/multivariate.cpp
 src/detail/node.cpp
+src/detail/symbol_table.c
+src/detail/node_structure.c
 src/detail/ode.cpp
 src/detail/parser.cpp
 src/detail/polynomial.cpp

@@ -1,4 +1,4 @@
-# big_number：任意精度大整数 + 十进制浮点（C++17）
+# big_number：C11 任意精度数值内核与 C++17 兼容接口
 
 <!-- LANGUAGE NAVIGATION -->
 [English（中文原文）](README.md) · **简体中文**
@@ -16,9 +16,11 @@
 非负取模）/ 概率素性测试 / 位运算 / 2..36 进制互转 / 整数 k 次方根，
 以及十进制字符串互转。实现参考
 `eigenmath-plus/eigenmath_bigint.c` 的整数部分（同一套"符号 + 小端 limb + 有效长度"的
-结构），把手工内存管理换成 `std::vector`、把 C 接口换成 C++ 的运算符重载。
+结构），整数运算由 C11 内核实现，C++17 层只负责原有运算符、所有权和异常协议。
+C 内核使用带上下文的分配/释放回调；独立使用默认 malloc/free，语言运行时接入原有内存预算和统计。
 
 同一个库里还有 `bigfloat::BigFloat`（`bigfloat.hpp` / `bigfloat.cpp`）：**十进制浮点**，
+基础算术、转换、方根、指数、对数及三角运算均由 `chali_bigfloat*.c` 实现，C++ 层保留原有接口与异常转换。
 `值 = 尾数 × 10^指数`、尾数就是上面的 `BigInt` —— 对应参考实现的 `BigFloat_T`。
 所以 `0.1 + 0.2` 精确等于 `0.3`（二进制浮点那套表示误差这里不存在），
 大整数乘除法的优化也会用于浮点尾数运算。
@@ -26,6 +28,45 @@
 目录名是 `bignum`（一个库装下整数与浮点），C++ 里的名字仍按类型走：
 整数是 `bigint::BigInt`（`bigint.hpp`）、十进制浮点是 `bigfloat::BigFloat`
 （`bigfloat.hpp`）—— 头文件名与命名空间说的都是"类型"，不是库目录。
+
+
+## 乘法分层与阈值复测
+
+第一阶段按输入形状选择学校乘法、专用平方、Karatsuba 与 Toom-Cook 3，第二阶段为双素数 CRT+NTT。
+Toom-Cook 3 用五次递归乘法处理三路分块，按标准多项式插值独立实现；没有复制 OpenJDK 的 Java 源码。
+分层思路参考 [OpenJDK BigInteger](https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/java/math/BigInteger.java)，
+具体阈值依据本库 C 实现测量，不能直接套用 JVM 的数值。
+
+所有长度均为 **32 位分块数**，不是十进制位数。当前默认参数如下：
+
+| 参数 | 支持原生 128 位乘积 | portable 乘积 |
+| --- | ---: | ---: |
+| 学校乘法直接路径的短侧上限 | 64 | 128 |
+| 学校乘法成本比较的短侧候选上限 | 512 | 4096 |
+| 专用学校平方候选上限 | 256 | 256 |
+| Toom-Cook 3 普通乘法候选下限 | 160 | 160 |
+| Toom-Cook 3 平方候选下限 | 256 | 256 |
+| NTT 候选下限（两侧长度之和） | 6144 | 6144 |
+| NTT 短侧保护上限 | 96 | 96 |
+
+候选阈值不表示强制切换。单分块乘法保留原快速路径；Toom 按求值、常数项与最高项的实际切片成本比较，不设置固定长短比上限。
+学校、Karatsuba、Toom 比较预计工作量，学校算法保留约一成、Toom 保留 6.25% 的选择裕量。NTT 比较实际补齐后的变换长度乘其层数，
+平方使用较低系数，因为可以复用正变换。成本估计只用整数运算，不需要浮点幂或额外宿主服务。
+例如 NTT 补齐边界前后的长度可能分别适合 NTT 和 Toom，因此不承诺超过某个长度就永久使用 NTT。
+Toom 成本分别计入三个求值乘积、常数项与最高项；空切片计零成本，单分块最高项按实际线性乘法计价，避免比例或最高段边界造成错误切换。
+
+正确性与性能分别复现：
+
+```powershell
+python tests/chali_bigint_multiplication.py
+python tests/chali_bigint_multiplication.py --portable
+python tests/bigint_multiplication_benchmark.py --build --binary tmp/bigint-bench.exe --phase audit --default-policy --paired --samples 11 --target-us 10000 --output tmp/bigint-audit.json
+python tests/bigint_multiplication_benchmark.py --build --portable --binary tmp/bigint-bench-portable.exe --phase audit --default-policy --paired --samples 11 --target-us 10000 --output tmp/bigint-audit-portable.json
+```
+
+Linux 使用相同 Python 入口，将可执行文件名改为不含 `.exe` 的路径即可。基准原始 CSV、JSON 包含中位数、
+p10/p90、活动工作区峰值与分配次数，并记录二进制及 C 源码 SHA-256。计时采用同一输入交错算法顺序，
+每轮完整比较乘积并核对活动分配归零。只设置基准线程亲和性，不修改系统电源或其他进程。
 
 ## 表示与约定
 
@@ -139,7 +180,8 @@ X 为科学记数法指数（`值 = d.ddd × 10^X`），则 `X < -4 || X >= P` �
 | 操作 | 做法 | 复杂度 |
 | --- | --- | --- |
 | 加 / 减 | limb 级带进位 / 借位（符号交叉在 `operator±` 里分派） | O(n) |
-| 乘（默认） | **Karatsuba**：`z0 + ((z1-z0-z2) << m) + (z2 << 2m)`，一次分配工作区，递归终点为原生整数乘法 | O(n^log2(3)) |
+| 乘（小规模） | 学校乘法；专用平方仅计算一次交叉项 | O(n²) |
+| 乘（中等规模） | Karatsuba / Toom-Cook 3，比较输入形状及补齐成本 | O(n^log2(3)) / O(n^log3(5)) |
 | 乘（超大规模） | **双素数 NTT + CRT 重建**（15 位数字，`p1 = 998244353`、`p2 = 1004535809`，原根 3） | **O(n log n)** |
 | 除 / 取余（默认） | **Burnikel-Ziegler**：递归求解 `2n/1n` 与 `3n/2n` 子问题 | 分治复杂度，取决于乘法内核 |
 | 除 / 取余（小规模） | **Knuth D 分块长除法**，默认递归基线不超过 256 limb；单块除数线性扫描 | O((n−m+1)×m) |
@@ -147,33 +189,21 @@ X 为科学记数法指数（`值 = d.ddd × 10^X`），则 `X < -4 || X >= P` �
 | gcd | 欧几里得（相除取余） | O(log min(a,b)) 次除法 |
 | 十进制互转 | 每 9 位一段，反复乘 / 除 10^9 | O(段数 × n) |
 | 浮点加 / 减 | 对齐到较小的十进制指数、整数加减、再规范化 | O(位数) |
-| 浮点乘 | 尾数相乘（默认 Karatsuba，超大规模走 NTT）+ 指数相加 | O(n^log2(3)) / O(n log n) |
+| 浮点乘 | 尾数调用同一 C 整数分层乘法+ 指数相加 | 取决于整数乘法分派 |
 | 浮点除 | 放大被除数到 `digits + 2` 位有效数字，整数除 + 舍入 | 一次大整数除法 |
 | 浮点平方根 | 指数凑成偶数、尾数放大到 `2×digits + 2` 位，`integerSqrt` + 舍入 | 一次整数开方 |
 
-乘法仅保留 Karatsuba 与 NTT。Karatsuba 使用差值形式，工作区一次分配，递归分支复用；
-长短操作数按较短一侧的补齐宽度分块，避免将短数扩展到长数宽度。
-递归终点是 32 位原生乘法；支持 `unsigned __int128` 时，两块使用一次 64 位原生乘法，
-四块使用三个 64 位乘积展开的 Karatsuba，不使用学校乘法双循环。
+学校算法以逐行进位避免 64 位累积溢出；专用平方对交叉项计算一次再恢复对称项。
+Karatsuba 使用差值形式，工作区一次分配，递归分支复用；长短操作数按较短一侧的补齐宽度分块。
+支持 `unsigned __int128` 时，原有两块、四块原生快速终点继续使用。
+Toom-Cook 3 在 0、1、−1、2、无穷处求值；五个递归乘积后用精确除二、除三插值，复用 C 工作缓冲。
 
-NTT 将 32 位块以滑动窗口转换为 15 位数字，每级预计算并复用旋转因子；
-平方在每个素数域只做一次正变换，CRT 只重建实际乘积系数。
-共同支持的变换长度上限是 **2^21**，超过时使用 Karatsuba，避免执行无效变换。
+NTT 将 32 位块转换为 15 位数字，每级预计算并复用旋转因子；平方在每个素数域只做一次正变换。
+CRT 只重建实际乘积系数。共同支持的变换长度上限为 **2^21**；超过时退回第一阶段，避免无效变换。
+两个素数均小于 2^31，蝶形加减采用等价的无符号掩码修正，避免部分编译器生成数据相关条件跳转。
 
-NTT 的候选下限与实际分派区分如下：
-
-- 支持原生 128 位乘积时，两侧块数合计至少 **3,072**；可移植递归路径为 **768**。
-- 较短操作数不超过 **96** 块时保留 Karatsuba，避免为长短悬殊的乘法启动大变换。
-- 设 `w` 为较短操作数补齐到 2 的幂后的宽度，`k = log2(w)`，长侧为 `L`，
-  Karatsuba 工作量取 `3^k × ceil(L/w)`；NTT 工作量取按块数上界推算的补齐变换长度 `t × log2(t)`。
-  支持原生 128 位乘积时比较 `2 × Karatsuba工作量` 与 `4 × NTT工作量`，
-  平方将后者权重改为 3；可移植路径的 Karatsuba 权重为 6。估计 NTT 较快时才切换。
-
-这些规则保留变换长度的阶梯效应：当前原生宽度配置下，等长的 1,536 块普通乘法走
-Karatsuba、平方走 NTT；3,072 块普通乘法走 NTT，4,096 块又优先 Karatsuba，
-6,144 块走 NTT。它们不是按十进制位数划出一个永不回退的界限。
-`setMultiplicationThreshold()` 调整候选下限，设为 `1` 强制支持范围内的多块输入走 NTT；
-`setKaratsubaThreshold()` 保留接口，现表示短侧的 Karatsuba 保护区，不再控制学校算法基线。
+当前分派参数与复测入口见上文“乘法分层与阈值复测”。`setMultiplicationThreshold()` 调整 NTT 候选下限；
+设为 `1` 强制支持范围内的多块输入走 NTT。`setKaratsubaThreshold()` 保留兼容接口，控制 NTT 短侧保护区。
 
 除法将 Knuth D 作为 Burnikel–Ziegler 的递归基线：归一化后，每次估计一个 32 位商块，
 根据次高块校正估商，减乘结果为负时回加除数。单块除数直接扫描，最多两块商的输入也直接
@@ -187,10 +217,8 @@ Karatsuba、平方走 NTT；3,072 块普通乘法走 NTT，4,096 块又优先 Ka
 可复现命令（从仓库根目录执行）：
 
 ```sh
-g++ -std=c++17 -O2 tests/bigint_benchmark.cpp source/bignum/bigint*.cpp -o tmp/bigint-benchmark
-tmp/bigint-benchmark
-tmp/bigint-benchmark --tune
-tmp/bigint-benchmark --division
+python tests/chali_bigint_multiplication.py
+python tests/chali_bigint_multiplication.py --portable
 python tests/bigint_arithmetic.py
 python tests/bigint_arithmetic.py --portable --binary tmp/bigint-portable/arithmetic.exe
 ```
@@ -289,12 +317,13 @@ ChaLi 的 `std::math` 使用这些函数计算 `BigDecimal` 分支，有效位�
 
 公开接口保留在 `bigint.hpp`、`bigfloat.hpp` 与 `bigfloat_math.hpp`；实现按职责独立编译：
 
-- `bigint.cpp`：构造、规范化、基础幅值与有符号算术、整数方根。
-- `bigint_multiplication.cpp`：Karatsuba/NTT 内核与算法阈值。
-- `bigint_division.cpp`：Knuth 与 Burnikel-Ziegler 幅值除法。
-- `bigint_bits.cpp`、`bigint_number_theory.cpp`、`bigint_modular.cpp`、`bigint_conversion.cpp`：位操作、幂与公约数、模运算与素性、文本与机器数值转换。
-- `bigfloat.cpp`：解析、格式化、舍入、比较和四则运算。
-- `bigfloat_roots.cpp`：幂、方根和取整。
-- `bigfloat_transcendental.cpp`、`bigfloat_trigonometry.cpp`：高精度数学。
+- `bigint.cpp`：C 内核的所有权、异常和运算符兼容适配；原算法已转入 `chali_bigint*.c`。原功能包括：构造、规范化、基础幅值与有符号算术、整数方根。
+- `chali_bigint_multiplication.c`：形状成本分派、Karatsuba、NTT 及算法阈值；`chali_bigint_schoolbook.c` / `chali_bigint_toom.c`：学校算法、专用平方及 Toom-Cook 3。
+- `chali_bigint_division.c`：Knuth 与 Burnikel-Ziegler 幅值除法。
+- `chali_bigint_bits.c`、`chali_bigint_number_theory.c`、`chali_bigint_modular.c`、`chali_bigint_conversion.c`：位操作、幂与公约数、模运算与素性、文本与机器数值转换。
+- `bigfloat.cpp`、`bigfloat_roots.cpp`、`bigfloat_transcendental.cpp`、`bigfloat_trigonometry.cpp`：原 C++ 接口的薄适配，算法均转入 C。
+- `chali_bigfloat.c`、`chali_bigfloat_arithmetic.c`、`chali_bigfloat_conversion.c`：所有权、解析、格式化、舍入、比较和四则运算。
+- `chali_bigfloat_roots.c`：幂、方根和取整。
+- `chali_bigfloat_transcendental.c`、`chali_bigfloat_logarithm.c`、`chali_bigfloat_trigonometry.c`：高精度数学。
 
 使用 CMake 静态库目标链接全部实现；不要只编译 `bigint.cpp` 或 `bigfloat.cpp`。ChaLi 的 Makefile、内嵌资产与导出编译器模板包含相同单元，保留大数裁剪宏。当前修改限于本仓库副本。

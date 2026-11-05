@@ -4,6 +4,7 @@
  */
 #pragma once
 #include "chali_allocator.hpp"
+#include "c_heap_allocator.hpp"
 #include <map>
 
 namespace Memory
@@ -20,7 +21,8 @@ class SystemRuntimeArena final : public RuntimeAllocator
     };
     std::size_t capacity_;
     mutable std::mutex mutex_;
-    std::map<std::uintptr_t, Allocation> allocations_;
+    std::map<std::uintptr_t, Allocation, std::less<std::uintptr_t>,
+             CHeapAllocator<std::pair<const std::uintptr_t, Allocation>>> allocations_;
     Stats stats_{};
 
 public:

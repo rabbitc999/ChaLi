@@ -184,7 +184,7 @@ JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL
 | 某个函数的确切签名、默认值、返回与错误 | [库函数 API 参考](../library/README.md) 与[全部函数索引](../library/symbols.md) |
 | 按能力域通读一遍标准库 | [07 标准库概览](../07-stdlib-overview.md) |
 | 标准库源码（每个模块头部都有能力说明） | [`source/std/`](../../source/std) 下的 `source/std/<名字>.chl` |
-| 宿主侧绑定（`std::*` 的真正实现） | [`source/glue/`](../../source/glue) 下按功能组织的 `std_*` 模块 |
+| 宿主侧 C ABI 服务与适配 | [`source/abi/`](../../source/abi) 下按功能组织的 `abi_*` 服务及集合适配 |
 | 可直接运行的标准库样例 | [`example/samples/`](../../example/samples/) |
 
 模块声明、宿主胶水和编译器注入实现按职责组织，文件名不必与模块名逐字对应；

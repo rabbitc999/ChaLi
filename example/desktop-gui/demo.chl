@@ -1,15 +1,29 @@
-import desktop_gui;
+import std::gui;
 
 void main() {
-    assert(desktop_gui::open((int32)400, (int32)220, "ChaLi desktop"));
+    assert(std::gui::open_window(560, 380, "ChaLi desktop", 1));
+    let count = std::gui::button("Count");
+    let quit = std::gui::button("Close");
+    let enabled = std::gui::check_box("Enable counter");
+    let input = std::gui::text_box("Edit this text");
+    let slider = std::gui::slider("Value");
+    let progress = std::gui::progress_bar("");
+    assert(enabled.set_checked(true));
+    assert(slider.set_range(0, 100)); assert(progress.set_range(0, 100));
     int64 clicks = 0;
-    while (!desktop_gui::should_close()) {
-        assert(desktop_gui::begin_frame());
-        desktop_gui::label((int32)24, (int32)24, (int32)352, (int32)32, "Clicks: " + clicks.toString());
-        if (desktop_gui::button((int32)24, (int32)80, (int32)152, (int32)40, "Count")) { clicks = clicks + 1; }
-        if (desktop_gui::button((int32)200, (int32)80, (int32)152, (int32)40, "Close")) { break; }
-        desktop_gui::end_frame();
-    }
-    desktop_gui::close();
+    count.on_click(void fn mut(std::gui::Event event) { clicks += 1; });
+    quit.on_click(void fn(std::gui::Event event) { std::gui::request_close(); });
+    std::gui::run(void fn mut() {
+        std::gui::label((int32)24, (int32)20, (int32)500, (int32)28, "Clicks: " + clicks.toString());
+        enabled.draw(std::gui::Rect::at(24, 64, 24, 24));
+        count.set_enabled(enabled.checked());
+        count.draw(std::gui::Rect::at(24, 108, 152, 36));
+        quit.draw(std::gui::Rect::at(200, 108, 152, 36));
+        input.draw(std::gui::Rect::at(24, 168, 328, 32));
+        slider.draw(std::gui::Rect::at(80, 228, 272, 24));
+        progress.set_value(slider.value());
+        progress.draw(std::gui::Rect::at(24, 284, 328, 24));
+    });
+    count.close(); quit.close(); enabled.close(); input.close(); slider.close(); progress.close();
     println("clicks={}", clicks);
 }

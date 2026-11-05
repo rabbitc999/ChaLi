@@ -54,3 +54,6 @@ const ChaliAbiRecord *abi_string_records(size_t *count)
     if (count != NULL) *count = sizeof(kRecords) / sizeof(kRecords[0]);
     return kRecords;
 }
+
+#define CHALI_AOT_BIND_MODULE string
+#include "aot_bind_module.h"

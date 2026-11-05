@@ -9,7 +9,7 @@ constexpr const char *typeName = "std::linear_algebra::ScalarStorage";
 /** @brief 销毁数值缓冲及其最终容量。
  * @param value 拥有的记录。
  */
-void CHALI_ABI_CALL destroy(void *value) { delete static_cast<Storage *>(value); }
+void CHALI_ABI_CALL destroy(void *value) { Memory::destroyCHeap(static_cast<Storage *>(value)); }
 /** @brief 深复制纯数值槽，失败不跨 C 边界抛出异常。
  * @param value 只读源记录。
  * @return 独立副本，失败为空。
@@ -17,14 +17,14 @@ void CHALI_ABI_CALL destroy(void *value) { delete static_cast<Storage *>(value);
 void *CHALI_ABI_CALL clone(const void *value)
 try
 {
-    return new Storage(*static_cast<const Storage *>(value));
+    return Memory::makeCHeapUnique<Storage>(*static_cast<const Storage *>(value)).release();
 } catch (...) { return nullptr; }
 /** @brief 发布完整数值缓冲，失败时仍保留本地所有权。
  * @param frame 当前 C 帧。
  * @param value 待转移的记录。
  * @return 新句柄，失败为零。
  */
-int64_t publish(const ChaliAbiFrame *frame, std::unique_ptr<Storage> value)
+int64_t publish(const ChaliAbiFrame *frame, Memory::CHeapUniquePtr<Storage> value)
 {
     const auto handle = chali_abi_record_make_clonable(frame, typeName, value.get(), destroy, clone);
     if (handle) value.release();
@@ -88,7 +88,7 @@ try
 {
     if constexpr (op == Operation::New)
     {
-        chali_abi_return_integer(frame, publish(frame, std::make_unique<Storage>()));
+        chali_abi_return_integer(frame, publish(frame, Memory::makeCHeapUnique<Storage>()));
         return;
     }
     int64_t handle = 0;
@@ -103,9 +103,9 @@ try
     if constexpr (op == Operation::Copy)
     {
         if (!handle)
-            chali_abi_return_integer(frame, publish(frame, std::make_unique<Storage>()));
+            chali_abi_return_integer(frame, publish(frame, Memory::makeCHeapUnique<Storage>()));
         else if (auto *value = get(frame, handle))
-            chali_abi_return_integer(frame, publish(frame, std::make_unique<Storage>(*value)));
+            chali_abi_return_integer(frame, publish(frame, Memory::makeCHeapUnique<Storage>(*value)));
         return;
     }
     if constexpr (op == Operation::Clear || op == Operation::Set || op == Operation::Push)
@@ -227,3 +227,8 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_scalar_records(size_t *count
     if (count) *count = sizeof(records) / sizeof(records[0]);
     return records;
 }
+
+#ifndef GLUE_NO_STD_LINALG
+#define CHALI_AOT_BIND_MODULE linalg
+#include "aot_bind_module.h"
+#endif

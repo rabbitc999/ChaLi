@@ -163,8 +163,8 @@ The standard library source is itself the best reference, and each module header
 capabilities:
 
 - [`source/std/`](../../source/std) — all module sources, `source/std/<name>.chl`
-- [`source/glue/`](../../source/glue) — host-side C++ glue; `source/glue/std_*.hpp` is authoritative for each module's
-  bindings
+- [`source/abi/`](../../source/abi) — host C ABI services and necessary C++ adapters; `abi_*.c` / `abi_*.cpp` implement services,
+  and `aot_modules.inc` organizes demand-driven AOT bindings
 - [`example/samples/`](../../example/samples/) — runnable samples organised by feature
 - Per-domain API reference: [`doc/library/`](../library/README.md) has one page per module
   (`std-json.md`, `std-toml.md`, `std-regex.md`, `std-linear_algebra.md`, `std-complex.md`, `std-net.md`,

@@ -6,7 +6,8 @@ endif
 ifeq ($(filter -std=%,$(CFLAGS)),)
 CFLAGS += -std=c11
 endif
-CFLAGS += -Isource -O2 -DNDEBUG
+CFLAGS += -Isource -O2 -DNDEBUG -ffunction-sections -fdata-sections
+CFLAGS += $(CHALI_TRIM_FLAGS)
 
 # Linux 安装包的宿主对象还会进入 clang 链接的 AOT PIE。
 ifeq ($(CHALI_RELEASE_PIC),1)
@@ -38,7 +39,7 @@ HOST_BUILD := $(CHALI_BUILD_ROOT)/chali-host-records
 HOST_LIB := $(HOST_BUILD)/librecords.a
 CAS_BUILD := $(CHALI_BUILD_ROOT)/chali-cas
 CAS_SOURCE_NAMES := $(shell $(PYTHON) tools/cas_sources.py)
-CAS_OBJS := $(addprefix $(CAS_BUILD)/,$(CAS_SOURCE_NAMES:.cpp=.o))
+CAS_OBJS := $(addprefix $(CAS_BUILD)/,$(patsubst %.c,%.o,$(CAS_SOURCE_NAMES:.cpp=.o)))
 IPAGE_OBJS := $(HOST_BUILD)/ipage_sql.o $(HOST_BUILD)/ipage_dialect.o
 ifneq ($(filter 1,$(NO_CHALI_STD) $(NO_CHALI_STD_CAS) $(NO_CHALI_BIG_INT)),)
 CAS_OBJS :=
@@ -61,7 +62,7 @@ CHALI_DEPENDENCY_STAMP := $(CHALI_DEPENDENCY_DIR)/.verified
 $(CHALI_DEPENDENCY_STAMP): tools/fetch_dependencies.py tools/dependencies.lock.json
 	$(PYTHON) tools/fetch_dependencies.py --dest $(CHALI_DEPENDENCY_DIR)
 	$(PYTHON) -c "from pathlib import Path; Path(r'$@').touch()"
-$(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.c $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h $(CHALI_DEPENDENCY_DIR)/miniz/miniz_tinfl.c $(CHALI_DEPENDENCY_DIR)/miniz/miniz_tinfl.h: $(CHALI_DEPENDENCY_STAMP)
+$(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.c $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h $(CHALI_DEPENDENCY_DIR)/miniz/miniz_tinfl.c $(CHALI_DEPENDENCY_DIR)/miniz/miniz_tinfl.h $(CHALI_DEPENDENCY_DIR)/yyjson/src/yyjson.c $(CHALI_DEPENDENCY_DIR)/yyjson/src/yyjson.h $(CHALI_DEPENDENCY_DIR)/tomlc17/src/chali_tomlc17.c $(CHALI_DEPENDENCY_DIR)/tomlc17/src/tomlc17.h: $(CHALI_DEPENDENCY_STAMP)
 	@$(PYTHON) tools/fetch_dependencies.py --dest $(CHALI_DEPENDENCY_DIR)
 # 代码里的裸文件名 include 靠这组搜索路径解析：搬进 source/ 的九个库走 CHALI_SOURCE_DIR，
 # caspp / ipage 走 CHALI_LIBRARY_DIR；SQLite / miniz 从构建缓存读取。
@@ -126,9 +127,20 @@ $(HOST_BUILD)/bigint.o: source/bignum/bigint.cpp source/bignum/bigint.hpp | $(HO
 $(HOST_BUILD)/bigfloat.o: source/bignum/bigfloat.cpp source/bignum/bigfloat.hpp source/bignum/bigint.hpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I$(CHALI_LIBRARY_DIR)/bignum -c $< -o $@
 
-BIGINT_MODULE_OBJS := $(HOST_BUILD)/bigint_multiplication.o $(HOST_BUILD)/bigint_division.o $(HOST_BUILD)/bigint_number_theory.o $(HOST_BUILD)/bigint_bits.o $(HOST_BUILD)/bigint_modular.o $(HOST_BUILD)/bigint_conversion.o
-$(BIGINT_MODULE_OBJS): $(HOST_BUILD)/%.o: source/bignum/%.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(HOST_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I$(CHALI_LIBRARY_DIR)/bignum -c $< -o $@
+BIGINT_C_SRCS := $(wildcard source/bignum/chali_big*.c)
+BIGINT_MODULE_OBJS := $(patsubst source/bignum/%.c,$(HOST_BUILD)/%.o,$(BIGINT_C_SRCS))
+$(filter-out $(HOST_BUILD)/runtime_%,$(BIGINT_MODULE_OBJS)): $(HOST_BUILD)/%.o: source/bignum/%.c $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(HOST_BUILD)
+	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+RUNTIME_C_SRCS := $(wildcard source/runtime_c/*.c)
+RUNTIME_C_OBJS := $(patsubst source/runtime_c/%.c,$(HOST_BUILD)/runtime_%.o,$(RUNTIME_C_SRCS))
+$(HOST_BUILD)/runtime_%.o: source/runtime_c/%.c $(CHALI_DEPENDENCY_DIR)/yyjson/src/yyjson.h $(CHALI_DEPENDENCY_DIR)/tomlc17/src/tomlc17.h | $(HOST_BUILD)
+	$(CC) $(CFLAGS) -I$(CHALI_DEPENDENCY_DIR)/yyjson/src -I$(CHALI_DEPENDENCY_DIR)/tomlc17/src -MMD -MP -c $< -o $@
+$(HOST_BUILD)/tomlc17.o: $(CHALI_DEPENDENCY_DIR)/tomlc17/src/chali_tomlc17.c $(CHALI_DEPENDENCY_DIR)/tomlc17/src/tomlc17.h | $(HOST_BUILD)
+	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+
+$(HOST_BUILD)/yyjson.o: $(CHALI_DEPENDENCY_DIR)/yyjson/src/yyjson.c $(CHALI_DEPENDENCY_DIR)/yyjson/src/yyjson.h | $(HOST_BUILD)
+	$(CC) $(CFLAGS) -DYYJSON_DISABLE_FILE=1 -DYYJSON_DISABLE_WRITER=1 -DYYJSON_DISABLE_UTILS=1 -DYYJSON_DISABLE_INCR_READER=1 -DYYJSON_READER_DEPTH_LIMIT=256 -MMD -MP -c $< -o $@
+
 -include $(BIGINT_MODULE_OBJS:.o=.d) $(HOST_BUILD)/bigint.d $(HOST_BUILD)/bigfloat.d
 
 BIGFLOAT_MATH_OBJS := $(HOST_BUILD)/bigfloat_roots.o $(HOST_BUILD)/bigfloat_transcendental.o $(HOST_BUILD)/bigfloat_trigonometry.o
@@ -143,9 +155,9 @@ $(VM_LIB): $(VM_OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
 # 每个标准库模块独立编译；实际包含关系由编译器生成 .d 文件追踪。
-CHALI_STANDARD_SRCS := $(wildcard source/glue/std_*.cpp)
-CHALI_STANDARD_OBJS := $(patsubst source/glue/%.cpp,$(HOST_BUILD)/%.o,$(CHALI_STANDARD_SRCS))
-$(HOST_BUILD)/std_%.o: source/glue/std_%.cpp | $(HOST_BUILD)
+CHALI_STANDARD_SRCS := $(wildcard source/abi/std_*.cpp)
+CHALI_STANDARD_OBJS := $(patsubst source/abi/%.cpp,$(HOST_BUILD)/%.o,$(CHALI_STANDARD_SRCS))
+$(HOST_BUILD)/std_%.o: source/abi/std_%.cpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 $(HOST_BUILD)/abi_abi_cas.o: private CXXFLAGS += -Ilibrary/caspp/include
 $(HOST_BUILD)/lztext_kernel.o: source/lztext/lztext.cpp source/lztext/lztext.hpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(HOST_BUILD)
@@ -162,6 +174,9 @@ $(CHALI_STANDARD_OBJS) $(HOST_BUILD)/json.o $(HOST_BUILD)/toml.o $(HOST_BUILD)/t
 $(CAS_BUILD)/%.o: library/caspp/%.cpp
 	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"
 	$(CXX) $(CXXFLAGS) -Ilibrary/caspp/include -MMD -MP -c $< -o $@
+$(CAS_BUILD)/%.o: library/caspp/%.c
+	@$(PYTHON) -c "from pathlib import Path; Path('$(dir $@)').mkdir(parents=True, exist_ok=True)"
+	$(CC) $(CFLAGS) -std=c11 -Ilibrary/caspp/include -Isource/bignum -Isource/runtime_c -MMD -MP -c $< -o $@
 -include $(shell $(PYTHON) -c "from pathlib import Path; print(' '.join(str(p).replace(chr(92), '/') for p in Path('$(CAS_BUILD)').rglob('*.d')))")
 $(CAS_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
@@ -171,7 +186,7 @@ $(IPAGE_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
 # 直通 ABI：C 胶水按模块分文件编译，命名沿用 abi_*.c。
 CHALI_ABI_C_SRCS := $(wildcard source/abi/*.c)
-CHALI_ABI_CXX_SRCS := $(wildcard source/abi/*.cpp)
+CHALI_ABI_CXX_SRCS := $(filter-out $(CHALI_STANDARD_SRCS),$(wildcard source/abi/*.cpp))
 CHALI_ABI_OBJS := $(patsubst source/abi/%.c,$(HOST_BUILD)/abi_%.o,$(CHALI_ABI_C_SRCS)) \
                      $(patsubst source/abi/%.cpp,$(HOST_BUILD)/abi_%.o,$(CHALI_ABI_CXX_SRCS))
 $(HOST_BUILD)/abi_%.o: source/abi/%.c | $(HOST_BUILD)
@@ -180,7 +195,7 @@ $(HOST_BUILD)/abi_%.o: source/abi/%.cpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 $(CHALI_ABI_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
-$(HOST_LIB): $(HOST_BUILD)/lztext_kernel.o $(BIGINT_MODULE_OBJS) $(HOST_BUILD)/sqlite3.o $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o $(BIGFLOAT_MATH_OBJS) $(CHALI_STANDARD_OBJS) $(HOST_BUILD)/json.o $(HOST_BUILD)/toml.o $(HOST_BUILD)/toml_source.o $(CAS_OBJS) $(IPAGE_OBJS) $(CHALI_ABI_OBJS)
+$(HOST_LIB): $(RUNTIME_C_OBJS) $(HOST_BUILD)/yyjson.o $(HOST_BUILD)/tomlc17.o $(HOST_BUILD)/lztext_kernel.o $(BIGINT_MODULE_OBJS) $(HOST_BUILD)/sqlite3.o $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o $(BIGFLOAT_MATH_OBJS) $(CHALI_STANDARD_OBJS) $(HOST_BUILD)/json.o $(HOST_BUILD)/toml.o $(HOST_BUILD)/toml_source.o $(CAS_OBJS) $(IPAGE_OBJS) $(CHALI_ABI_OBJS)
 	$(PYTHON) -c "from pathlib import Path; Path(r'$@').unlink(missing_ok=True)"
 	$(AR) $(ARFLAGS) $@ $^
 

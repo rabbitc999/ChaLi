@@ -1,12 +1,12 @@
-import xml;
+import std::xml;
 void main() {
-    let document = xml::parse("<message from='ChaLi'>Hi<em>there</em></message>").unwrap();
+    let document = std::xml::parse("<message from='ChaLi'>Hi<em>there</em></message>").unwrap();
     assert(document.name() == "message");
     assert(document.attribute("from").unwrap() == "ChaLi");
     assert(document.text(0).unwrap() == "Hi");
     assert(document.child(1).unwrap().name() == "em");
-    assert(xml::escape_attribute("<&\"") == "&lt;&amp;&quot;");
-    assert(xml::parse("<bad></wrong>").isErr());
-    assert(xml::parse("<!DOCTYPE a SYSTEM 'file:///missing'><a/>").isErr());
+    assert(std::xml::escape_attribute("<&\"") == "&lt;&amp;&quot;");
+    assert(std::xml::parse("<bad></wrong>").isErr());
+    assert(std::xml::parse("<!DOCTYPE a SYSTEM 'file:///missing'><a/>").isErr());
     println("XML OK");
 }

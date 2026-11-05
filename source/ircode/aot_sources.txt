@@ -1,10 +1,15 @@
+aot_debug_console.cpp
+aot_thread_services.cpp
 artifact_binary.cpp
 binary_stream.cpp
 data_area.cpp
+data_area_file.cpp
+data_layout.cpp
 event_service.cpp
 execution_plan.cpp
 instruction_select.cpp
 heap_allocator.cpp
+host_thread.cpp
 mailbox_service.cpp
 native_arena.cpp
 native_closure.cpp
@@ -28,6 +33,7 @@ reflection.cpp
 register_allocate.cpp
 runtime_heap.cpp
 symbol_build.cpp
+source_location.cpp
 thread_runtime.cpp
 thread_service.cpp
 native_service.cpp

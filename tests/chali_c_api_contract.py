@@ -44,7 +44,7 @@ def main():
         run(cc, '-std=c11', *target_flags, *common, packed, obj, '-o', host)
         run(host)
         objects = [obj]
-        for name in ('chali_abi', 'abi_print', 'abi_string', 'abi_math', 'abi_clock', 'abi_random', 'abi_parse', 'abi_process', 'abi_demo'):
+        for name in ('chali_abi', 'chali_abi_frame', 'abi_print', 'abi_string', 'abi_math', 'abi_clock', 'abi_random', 'abi_parse', 'abi_process', 'abi_demo', 'abi_json', 'abi_toml', 'abi_serialization', 'chali_file', 'chali_real_text', 'chali_thread'):
             module_object = work / (name + '.o')
             run(cc, '-std=c11', *target_flags, *common, '-c', ROOT / 'source/abi' / (name + '.c'), '-o', module_object)
             objects.append(module_object)
@@ -55,8 +55,20 @@ def main():
         run(cc,'-std=c11',*target_flags,'-O0','-DSQLITE_THREADSAFE=1','-DSQLITE_OMIT_LOAD_EXTENSION=1',
             '-c',ROOT/'build/dependencies/sqlite/sqlite3.c','-o',sqlite_object)
         objects.append(sqlite_object)
+        c_sources = sorted((ROOT/'source/bignum').glob('chali_big*.c'))
+        c_sources += sorted((ROOT/'source/runtime_c').glob('*.c'))
+        c_sources += [ROOT/'build/dependencies/yyjson/src/yyjson.c', ROOT/'build/dependencies/tomlc17/src/chali_tomlc17.c']
+        for number, source in enumerate(c_sources):
+            target = work / ('kernel-c-' + str(number) + '.o')
+            run(cc, '-std=c11', *target_flags, *common,
+                '-I' + str(ROOT/'build/dependencies/yyjson/src'),
+                '-I' + str(ROOT/'build/dependencies/tomlc17/src'),
+                '-DYYJSON_DISABLE_FILE=1', '-DYYJSON_DISABLE_WRITER=1', '-DYYJSON_DISABLE_UTILS=1',
+                '-DYYJSON_DISABLE_INCR_READER=1', '-DYYJSON_READER_DEPTH_LIMIT=256',
+                '-c', source, '-o', target)
+            objects.append(target)
         table = work / ('table.exe' if os.name == 'nt' else 'table')
-        kernels = [ROOT / name for name in ('source/abi/abi_collection.cpp', 'source/abi/abi_cas.cpp', 'source/abi/abi_big_number.cpp', 'source/abi/abi_serialization.cpp', 'source/abi/abi_compress.cpp', 'source/abi/abi_scalar.cpp', 'source/abi/abi_linalg.cpp', 'source/abi/abi_image.cpp', 'source/abi/abi_net.cpp', 'source/abi/abi_sql.cpp', 'source/abi/abi_sql_ipage.cpp', 'library/ipage/source/ipage/sql.cpp', 'library/ipage/source/ipage/dialect.cpp', 'source/abi/abi_file.cpp', 'source/abi/abi_filesystem.cpp', 'source/abi/abi_regex.cpp', 'source/abi/abi_structured_data.cpp', 'source/lztext/lztext.cpp', 'source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp')]
+        kernels = [ROOT / name for name in ('source/abi/abi_collection.cpp', 'source/abi/abi_cas.cpp', 'source/abi/abi_big_number.cpp', 'source/abi/abi_compress.cpp', 'source/abi/abi_scalar.cpp', 'source/abi/abi_linalg.cpp', 'source/abi/abi_image.cpp', 'source/abi/abi_net.cpp', 'source/abi/abi_sql.cpp', 'source/abi/abi_sql_ipage.cpp', 'library/ipage/source/ipage/sql.cpp', 'library/ipage/source/ipage/dialect.cpp', 'source/abi/abi_file.cpp', 'source/abi/abi_filesystem.cpp', 'source/abi/abi_regex.cpp', 'source/lztext/lztext.cpp', 'source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp')]
         kernels += [ROOT / 'library/caspp' / line for line in (ROOT / 'library/caspp/core_sources.txt').read_text(encoding='utf-8').splitlines()]
         kernels += [p for p in (ROOT / 'source/bignum').glob('*.cpp') if p.name not in ('main.cpp','test_bigint.cpp','test_bigfloat.cpp')]
         run(cxx, '-std=c++17', *target_flags, *common, '-I' + str(ROOT / 'source/bignum'), '-I' + str(ROOT / 'library/caspp/include'),

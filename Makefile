@@ -70,7 +70,7 @@ else
 TARGET := chali
 endif
 
-.PHONY: all lib demo run clean gen check samples reflection llvm llvm-static
+.PHONY: all lib demo run clean gen check samples reflection llvm llvm-static native-extensions
 
 all: stdlib-embedded
 
@@ -84,6 +84,10 @@ llvm:
 llvm-static:
 	python library/llvm/setup_static.py
 	$(MAKE) CHALI_STATIC_LLVM=1
+
+# 两步执行：先构建归档，再由 stdlib-embedded 在下一次 make 中登记依赖。
+native-extensions:
+	python tools/setup_native_extensions.py --build-root "$(CHALI_BUILD_ROOT)" --cc "$(CC)" $(if $(filter 1,$(CHALI_STATIC_LLVM)),--sysroot "$(CHALI_LLVM_SDK)") $(CHALI_NATIVE_EXTENSIONS_FLAGS)
 
 lib: $(LIB)
 

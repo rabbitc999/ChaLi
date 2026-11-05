@@ -13,7 +13,7 @@
 #include "chali_aot_runtime_assets.hpp"
 #include "chali_stdlib.hpp"
 #include "chali_i18n.hpp"
-#include "glue/std_aot_modules.hpp"
+#include "abi/std_aot_modules.hpp"
 #include "chali_temp.hpp"
 #include "console/utf8.hpp"
 #include <chrono>
@@ -46,7 +46,7 @@ namespace chali_aot
  */
 bool usesDynamicAbiLibrary(const ExternFunction &function)
 {
-    if (function.library.empty() || isDirectLinkLibrary(function.library)) return false;
+    if (function.library.empty() || isDirectLinkLibrary(function.library) || isBuiltinNativeLibrary(function.library)) return false;
     const auto extension = std::filesystem::u8path(std::string(function.library.c_str())).extension().u8string();
     return extension != ".a" && extension != ".lib" && extension != ".o" && extension != ".obj";
 }
@@ -58,6 +58,15 @@ bool usesDynamicAbiLibrary(const ExternFunction &function)
 bool isDirectLinkLibrary(const Memory::String &library)
 {
     return library == "@link";
+}
+/**
+ * @brief 检查编译器内置的静态 C 服务标识。
+ * @param library 原始库标识。
+ * @return 三个内置服务标识之一为真。
+ */
+bool isBuiltinNativeLibrary(const Memory::String &library)
+{
+    return library == "@chali/desktop" || library == "@chali/audio" || library == "@chali/xml";
 }
 namespace
 {
@@ -2266,7 +2275,7 @@ Text profileSiteDeclarations(const Translator &state)
  * @brief 前端提供的 ABI 声明读取回调。
  */
 Memory::Vector<ExternFunction> (*g_abiExternProvider)() = nullptr;
-Memory::String (*g_abiGlueProvider)() = nullptr;
+Memory::String (*g_abiGlueProvider)(const Memory::Set<Memory::String> &) = nullptr;
 }  // namespace
 
 namespace
@@ -2319,18 +2328,19 @@ Memory::Vector<ExternFunction> collectAbiExterns()
  * @brief 登记前端生成复杂 C ABI 宿主绑定源码的入口。
  * @param provider 返回绑定源码的回调；空指针清除登记。
  */
-void setAbiGlueProvider(Memory::String (*provider)())
+void setAbiGlueProvider(Memory::String (*provider)(const Memory::Set<Memory::String> &))
 {
     g_abiGlueProvider = provider;
 }
 
 /**
  * @brief 取得复杂 C ABI 宿主绑定源码。
+ * @param reachableBuiltin 可达的内置服务函数。
  * @return 未登记或不需要封送时返回空串。
  */
-Memory::String collectAbiGlue()
+Memory::String collectAbiGlue(const Memory::Set<Memory::String> &reachableBuiltin)
 {
-    return g_abiGlueProvider ? g_abiGlueProvider() : Memory::String();
+    return g_abiGlueProvider ? g_abiGlueProvider(reachableBuiltin) : Memory::String();
 }
 
 /**
@@ -2433,14 +2443,15 @@ Text exportDispatcher(Translator &state)
 
 /**
  * @brief 从 AST 直接生成包含运行时的 LLVM 模块，保留独立四元式调用方的兼容入口。
- * @param inputRequest 已检查 AST 或显式四元式兼容输入、数据和输出选项。
+ * @param request 已检查 AST 或显式兼容输入；更新可达 ABI 绑定和布局。
  * @param diagnostics 接收类型、操作和运行时资产错误。
  * @param header 可选的 C ABI 头文件输出。
+ * @param nativeLibraries 接收需要链接的内置原生服务。
  * @return LLVM 文本；生成失败时为空。
  */
-Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::String> *diagnostics, Memory::String *header)
+static Memory::String generateLinkedLLVM(Request &request, Memory::Vector<Memory::String> *diagnostics, Memory::String *header,
+                                        Memory::Set<Memory::String> &nativeLibraries)
 {
-    Request request = inputRequest;
     Translator state(request, diagnostics);
     if (state.target.runtime.empty()) return {};
     if (header != nullptr) header->clear();
@@ -2451,7 +2462,15 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     }
     for (const auto &external : request.externs)
         if (external.abiConvention != "C") state.fail("AOT：外部调用约定不受支持");
-    if (request.syntax) prepareAst(request, state);
+    Memory::Set<Memory::String> reachableBuiltin;
+    if (request.syntax)
+    {
+        prepareAst(request, state);
+        for (const auto &external : request.externs)
+            if (isBuiltinNativeLibrary(external.library) && state.reachable.count(textOf(external.label)))
+                reachableBuiltin.insert(external.label);
+        if (!reachableBuiltin.empty()) request.abiGlue = collectAbiGlue(reachableBuiltin);
+    }
     else { loadLayout(state); analyze(state); }
     if (diagnostics != nullptr && !diagnostics->empty()) return {};
     for (const auto &name : request.options.exports)
@@ -2687,6 +2706,15 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
     Memory::Vector<Memory::String> requiredNames;
     for (const auto &entry : state.nativeNames) requiredNames.push_back(entry.first.c_str());
     const auto modules = std_registry::aotModulesFor(requiredNames, diagnostics);
+    bool needsThreadServices = request.options.debug || request.options.shared || !request.abiGlue.empty();
+    for (const auto &name : requiredNames)
+        for (const char *prefix : {"std::thread::", "std::concurrency::", "std::event::", "__std_thread_",
+                                  "__std_channel_", "__std_mail_", "__std_message_", "__std_shared_"})
+            if (name.rfind(prefix, 0) == 0u) needsThreadServices = true;
+    if (needsThreadServices) out += "declare ptr @chali_aot_thread_services()\n";
+    out += "define hidden ptr @chali_program_thread_services() {\nentry:\n";
+    out += needsThreadServices ? "  %services = call ptr @chali_aot_thread_services()\n  ret ptr %services\n}\n" : "  ret ptr null\n}\n";
+
     out += "; AOT standard modules:";
     for (const auto &module : modules) out += " " + textOf(module);
     out += "\n";
@@ -2755,7 +2783,29 @@ Memory::String generateLLVM(const Request &inputRequest, Memory::Vector<Memory::
         }
         state.debugInfo.finish(out);
     }
+    for (const auto &external : request.externs)
+        if (isBuiltinNativeLibrary(external.library) &&
+            (reachableBuiltin.count(external.label) || state.usedExternLabels.count(textOf(external.label)) ||
+             state.nativeNames.count(textOf(external.label))))
+            nativeLibraries.insert(external.library);
+    if (nativeLibraries.empty())
+        request.externs.erase(std::remove_if(request.externs.begin(), request.externs.end(),
+            [](const auto &external) { return isBuiltinNativeLibrary(external.library); }), request.externs.end());
     return Memory::String(out.data(), out.size());
+}
+
+/**
+ * @brief 生成 LLVM 文本，不修改调用方的输入。
+ * @param request 已检查 AST 或四元式请求。
+ * @param diagnostics 可选的生成诊断。
+ * @param header 可选的 C ABI 头文件输出。
+ * @return 生成的 LLVM 文本或空串。
+ */
+Memory::String generateLLVM(const Request &request, Memory::Vector<Memory::String> *diagnostics, Memory::String *header)
+{
+    Request linked = request;
+    Memory::Set<Memory::String> nativeLibraries;
+    return generateLinkedLLVM(linked, diagnostics, header, nativeLibraries);
 }
 
 namespace
@@ -2891,19 +2941,21 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
         if (diagnostics) diagnostics->push_back("AOT：跨目标链接需要 --runtime-dir 指定目标 libchali_aot_host.a，并准备目标 sysroot；可先使用 --emit-obj、--emit-asm 或 --emit-llvm");
         return 1;
     }
-    if (!target.native && !codeOnly && !request.options.emitLLVMOnly && !request.abiGlue.empty())
-    {
-        if (diagnostics) diagnostics->push_back("AOT：跨目标复杂 C ABI 封送需要目标 C++ 工具链；请先使用 --emit-obj 导出对象及 .abi.cpp，再在目标 SDK 中链接");
-        return 1;
-    }
     if (!request.options.assemblySources.empty() && (codeOnly || request.options.emitLLVMOnly))
     {
         if (diagnostics) diagnostics->push_back("AOT：--asm 只用于最终链接，不能与 --emit-asm、--emit-obj 或 --emit-llvm 组合");
         return 1;
     }
     Memory::String header;
-    const Memory::String source = generateLLVM(request, diagnostics, &header);
+    Request linked = request;
+    Memory::Set<Memory::String> nativeLibraries;
+    const Memory::String source = generateLinkedLLVM(linked, diagnostics, &header, nativeLibraries);
     if (source.empty()) return 1;
+    if (!target.native && !codeOnly && !request.options.emitLLVMOnly && (!linked.abiGlue.empty() || !nativeLibraries.empty()))
+    {
+        if (diagnostics) diagnostics->push_back("AOT：内置原生扩展和复杂 ABI 的链接需要同目标平台的工具链；可先用 --emit-obj 导出对象及 .abi.cpp");
+        return 1;
+    }
     const Text prefix = request.options.outputPrefix.empty() ? "chali_aot" : textOf(request.options.outputPrefix);
     const Text llvmPath = prefix + ".ll";
     if (!writeFile(llvmPath, source) || (!header.empty() && !writeFile(prefix + ".h", header)))
@@ -2913,14 +2965,15 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     }
     if (request.options.emitLLVMOnly) return 0;
     RuntimeAssets abiAssets;
-    Request linked = request;
-    if (!request.abiGlue.empty() && !codeOnly)
+    if (!codeOnly && !nativeLibraries.empty() &&
+        !abiAssets.prepareNative(nativeLibraries, linked.options.linkLibraries, diagnostics)) return 1;
+    if (!linked.abiGlue.empty() && !codeOnly)
     {
         Memory::String object;
-        if (!abiAssets.prepareAbi(request.abiGlue, &object, diagnostics)) return 1;
+        if (!abiAssets.prepareAbi(linked.abiGlue, &object, diagnostics)) return 1;
         linked.options.linkObjects.push_back(object);
     }
-    if (codeOnly && !request.abiGlue.empty() && !writeFile(prefix + ".abi.cpp", request.abiGlue))
+    if (codeOnly && !linked.abiGlue.empty() && !writeFile(prefix + ".abi.cpp", linked.abiGlue))
     {
         if (diagnostics) diagnostics->push_back("AOT：无法写入目标 ABI 封送源码");
         return 1;

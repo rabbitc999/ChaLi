@@ -17,6 +17,21 @@
 /* 本测试只验证表结构，不运行任何胶水函数。这里给运行时服务提供空实现，
  * 使测试可以脱离运行时核心与桥接层单独编译。 */
 extern "C" {
+/**
+ * @brief 表结构测试不提供实际注册表；误用注册入口时明确失败。
+ * @param registry 未使用的注册表。
+ * @param module 未使用的模块描述符。
+ * @param error 未使用的错误缓冲。
+ * @return 固定返回参数无效，实际注册语义由注册表专项验证。
+ */
+int32_t CHALI_ABI_CALL chali_abi_registry_register(ChaliAbiRegistry *registry,
+    const ChaliAbiModuleDescriptor *module, ChaliAbiError *error)
+{
+    (void)registry;
+    (void)module;
+    (void)error;
+    return ChaliAbiInvalidArgument;
+}
 int chali_abi_bytes(const ChaliAbiFrame *, int64_t, const unsigned char **data, size_t *length)
 {
     if (data != nullptr) *data = nullptr;

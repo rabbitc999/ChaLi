@@ -3,6 +3,7 @@
  * @brief 运行时值的递归文本表示。
  */
 #include "runtime_internal.hpp"
+#include "../abi/chali_real_text.h"
 
 namespace stackvm
 {
@@ -298,8 +299,8 @@ struct ValueTextRenderer
         if (shape.kind == 'f')
         {
             char buffer[128];
-            const auto result = std::to_chars(buffer, buffer + sizeof(buffer), value.isFloat ? value.real : static_cast<double>(value.integer));
-            return result.ec == std::errc{} ? Memory::String(buffer, result.ptr) : Memory::String("nan");
+            const auto size = chali_format_real(value.isFloat ? value.real : static_cast<double>(value.integer), buffer, sizeof(buffer));
+            return size ? Memory::String(buffer, size) : Memory::String("nan");
         }
         if (shape.kind == 'S' || shape.kind == 'T' || shape.kind == 'N')
         {

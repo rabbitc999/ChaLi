@@ -1,5 +1,7 @@
 /** @file abi_regex.cpp @brief 正则表达式的 C 帧入口及不可变模式内核。 */
 #include "chali_standard.h"
+#include "allocator/c_heap_allocator.hpp"
+#include "allocator/chali_allocator.hpp"
 #include <memory>
 #include <regex>
 #include <string>
@@ -13,7 +15,7 @@ constexpr const char *patternName = "std::regex::Regex";
 /** @brief 销毁一份模式引用。
  * @param value 拥有的记录。
  */
-void CHALI_ABI_CALL destroyPattern(void *value) { delete static_cast<Pattern *>(value); }
+void CHALI_ABI_CALL destroyPattern(void *value) { Memory::destroyCHeap(static_cast<Pattern *>(value)); }
 /** @brief 创建独立模式引用，失败不抛出异常。
  * @param value 只读记录。
  * @return 新引用或空指针。
@@ -21,7 +23,7 @@ void CHALI_ABI_CALL destroyPattern(void *value) { delete static_cast<Pattern *>(
 void *CHALI_ABI_CALL clonePattern(const void *value)
 try
 {
-    return new Pattern(*static_cast<const Pattern *>(value));
+    return Memory::makeCHeapUnique<Pattern>(*static_cast<const Pattern *>(value)).release();
 } catch (...) { return nullptr; }
 /** @brief 完整创建引用后交给语言运行时。
  * @param frame 当前帧。
@@ -30,7 +32,7 @@ try
  */
 int64_t makePattern(const ChaliAbiFrame *frame, std::shared_ptr<const std::regex> compiled = {})
 {
-    auto value = std::make_unique<Pattern>();
+    auto value = Memory::makeCHeapUnique<Pattern>();
     value->compiled = std::move(compiled);
     auto handle = chali_abi_record_make_clonable(frame, patternName, value.get(), destroyPattern, clonePattern);
     if (handle) value.release();
@@ -42,7 +44,7 @@ int64_t makePattern(const ChaliAbiFrame *frame, std::shared_ptr<const std::regex
  * @param text 接收独立输入。
  * @return 读取成功为真。
  */
-bool textArgument(const ChaliAbiFrame *frame, int64_t index, std::string &text)
+bool textArgument(const ChaliAbiFrame *frame, int64_t index, Memory::String &text)
 {
     int64_t handle = 0;
     const unsigned char *data = nullptr;
@@ -81,12 +83,12 @@ try
     }
     if constexpr (op == Operation::Compile)
     {
-        std::string text;
+        Memory::String text;
         if (!textArgument(frame, 0, text)) return;
         std::shared_ptr<const std::regex> compiled;
         try
         {
-            compiled = std::make_shared<const std::regex>(text, std::regex::ECMAScript);
+            compiled = std::allocate_shared<const std::regex>(Memory::CHeapAllocator<const std::regex>(), text, std::regex::ECMAScript);
         } catch (const std::regex_error &) {}
         chali_abi_return_integer(frame, makePattern(frame, std::move(compiled)));
         return;
@@ -104,7 +106,7 @@ try
         chali_abi_return_integer(frame, 0);
         return;
     }
-    std::string text, replacement;
+    Memory::String text, replacement;
     int64_t groupSlot = 0;
     if constexpr (op >= Operation::FullMatch)
         if (!textArgument(frame, 1, text)) return;
@@ -128,7 +130,8 @@ try
     if constexpr (op == Operation::Contains) chali_abi_return_integer(frame, std::regex_search(text, *compiled));
     if constexpr (op == Operation::Find || op == Operation::Capture)
     {
-        std::smatch match;
+        using Match = std::sub_match<Memory::String::const_iterator>;
+        std::match_results<Memory::String::const_iterator, Memory::Allocator<Match>> match;
         const bool found = std::regex_search(text, match, *compiled);
         if constexpr (op == Operation::Find)
             chali_abi_return_integer(frame, found ? int64_t(match.position()) : -1);
@@ -136,7 +139,7 @@ try
         {
             // 旧入口的宿主参数为 int，保留槽缩窄后的组编号行为。
             const int group = static_cast<int>(groupSlot);
-            const std::string captured = found && group >= 0 && size_t(group) < match.size() ? match[size_t(group)].str() : std::string();
+            const Memory::String captured = found && group >= 0 && size_t(group) < match.size() ? Memory::String(match[size_t(group)].first, match[size_t(group)].second) : Memory::String();
             chali_abi_return_integer(frame, chali_abi_string_bytes(frame, captured.data(), captured.size()));
         }
     }
@@ -174,3 +177,8 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_regex_records(size_t *count)
     if (count) *count = sizeof(records) / sizeof(records[0]);
     return records;
 }
+
+#ifndef GLUE_NO_STD_REGEX
+#define CHALI_AOT_BIND_MODULE regex
+#include "aot_bind_module.h"
+#endif

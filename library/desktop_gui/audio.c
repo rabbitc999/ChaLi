@@ -1,3 +1,4 @@
+#include "desktop.h"
 #include "raylib.h"
 #include <stdint.h>
 
@@ -27,7 +28,7 @@ static SoundSlot *find_sound(int64_t id)
  * @brief 初始化当前进程的音频设备。
  * @return 音频设备就绪时为真。
  */
-bool chali_audio_open(void)
+CHALI_GUI_API bool chali_audio_open(void)
 {
     if (!IsAudioDeviceReady()) InitAudioDevice();
     return IsAudioDeviceReady();
@@ -38,7 +39,7 @@ bool chali_audio_open(void)
  * @param path 由 raylib 支持的音频文件路径。
  * @return 声音标识，设备不可用、文件错误或槽位耗尽时返回零。
  */
-int64_t chali_audio_load(const char *path)
+CHALI_GUI_API int64_t chali_audio_load(const char *path)
 {
     if (!IsAudioDeviceReady() || !FileExists(path) || next_id == INT64_MAX) return 0;
     for (unsigned index = 0; index < sizeof sounds / sizeof *sounds; ++index)
@@ -58,7 +59,7 @@ int64_t chali_audio_load(const char *path)
  * @param id 声音标识。
  * @return 调用有效时为真。
  */
-bool chali_audio_play(int64_t id)
+CHALI_GUI_API bool chali_audio_play(int64_t id)
 {
     SoundSlot *slot = find_sound(id);
     if (!slot) return false;
@@ -71,7 +72,7 @@ bool chali_audio_play(int64_t id)
  * @param id 声音标识。
  * @return 调用有效时为真。
  */
-bool chali_audio_stop(int64_t id)
+CHALI_GUI_API bool chali_audio_stop(int64_t id)
 {
     SoundSlot *slot = find_sound(id);
     if (!slot) return false;
@@ -84,7 +85,7 @@ bool chali_audio_stop(int64_t id)
  * @param id 声音标识。
  * @return 正在播放时为真。
  */
-bool chali_audio_is_playing(int64_t id)
+CHALI_GUI_API bool chali_audio_is_playing(int64_t id)
 {
     SoundSlot *slot = find_sound(id);
     return slot && IsSoundPlaying(slot->sound);
@@ -95,7 +96,7 @@ bool chali_audio_is_playing(int64_t id)
  * @param id 声音标识。
  * @return 释放有效声音时为真。
  */
-bool chali_audio_unload(int64_t id)
+CHALI_GUI_API bool chali_audio_unload(int64_t id)
 {
     SoundSlot *slot = find_sound(id);
     if (!slot) return false;
@@ -108,7 +109,7 @@ bool chali_audio_unload(int64_t id)
 /**
  * @brief 释放已登记的声音，然后关闭设备。
  */
-void chali_audio_close(void)
+CHALI_GUI_API void chali_audio_close(void)
 {
     if (!IsAudioDeviceReady()) return;
     for (unsigned index = 0; index < sizeof sounds / sizeof *sounds; ++index)

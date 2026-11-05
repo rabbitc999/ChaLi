@@ -1,0 +1,90 @@
+module life_model;
+/**
+ * @brief 稀疏棋盘，仅保存活细胞，视口外仍参与演化；坐标使用 int64。
+ */
+struct Board {
+    int64 generation;
+    List<int64> xs;
+    List<int64> ys;
+    Map<String, int64> live;
+    /**
+     * @brief 生成无歧义坐标键。
+     * @param x 世界列。
+     * @param y 世界行。
+     * @return 坐标字符串。
+     */
+    String key(int64 x, int64 y) { return x.toString() + ":" + y.toString(); }
+    /**
+     * @brief 清空所有细胞并重置代数。
+     */
+    void reset() { self.xs.clear(); self.ys.clear(); self.live.clear(); self.generation = 0; }
+    /**
+     * @brief 查询世界坐标上的细胞。
+     * @param x 世界列。
+     * @param y 世界行。
+     * @return 0 或 1。
+     */
+    int64 at(int64 x, int64 y) { return self.live.getOption(self.key(x, y)).unwrapOr(0); }
+    /**
+     * @brief 放置活细胞，已有细胞保持不变。
+     * @param x 世界列。
+     * @param y 世界行。
+     */
+    void place(int64 x, int64 y) {
+        if (self.at(x, y) == 0) { self.live.put(self.key(x, y), 1); self.xs.push(x); self.ys.push(y); }
+    }
+    /**
+     * @brief 切换指定细胞；删除时同步维护坐标表，避免幽灵邻居。
+     * @param x 世界列。
+     * @param y 世界行。
+     */
+    void toggle(int64 x, int64 y) {
+        if (self.at(x, y) == 0) { self.place(x, y); return; }
+        self.live.remove(self.key(x, y));
+        List<int64> nx; List<int64> ny;
+        for (int64 i in range(0, self.xs.len())) {
+            if (self.xs[i] != x || self.ys[i] != y) { nx.push(self.xs[i]); ny.push(self.ys[i]); }
+        }
+        self.xs = nx; self.ys = ny;
+    }
+    /**
+     * @brief 累计活细胞邻居，以双缓冲同时应用 B3/S23 规则。
+     */
+    void step() {
+        Map<String, int64> counts; List<int64> cx; List<int64> cy;
+        for (int64 i in range(0, self.xs.len())) {
+            for (int64 dy in range(-1, 2)) {
+                for (int64 dx in range(-1, 2)) {
+                    if (dx != 0 || dy != 0) {
+                        int64 x = self.xs[i] + dx; int64 y = self.ys[i] + dy;
+                        String k = self.key(x, y); int64 n = counts.getOption(k).unwrapOr(0);
+                        if (n == 0) { cx.push(x); cy.push(y); }
+                        counts.put(k, n + 1);
+                    }
+                }
+            }
+        }
+        List<int64> nx; List<int64> ny; Map<String, int64> next;
+        for (int64 i in range(0, cx.len())) {
+            String k = self.key(cx[i], cy[i]); int64 n = counts[k];
+            if (n == 3 || (n == 2 && self.at(cx[i], cy[i]) == 1)) {
+                nx.push(cx[i]); ny.push(cy[i]); next.put(k, 1);
+            }
+        }
+        self.xs = nx; self.ys = ny; self.live = next; self.generation += 1;
+    }
+    /**
+     * @brief 获取活细胞数量。
+     * @return 当前活细胞数。
+     */
+    int64 population() { return self.xs.len(); }
+    /**
+     * @brief 装入滑翔机、闪烁器和静物。
+     */
+    void seed() {
+        self.reset();
+        self.place(8, 5); self.place(9, 6); self.place(7, 7); self.place(8, 7); self.place(9, 7);
+        self.place(22, 12); self.place(23, 12); self.place(24, 12);
+        self.place(34, 7); self.place(35, 7); self.place(34, 8); self.place(35, 8);
+    }
+};

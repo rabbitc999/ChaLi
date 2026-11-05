@@ -77,8 +77,8 @@ def msi(binary, version, arch, variant, output, work):
     feature = ET.SubElement(package, 'Feature', Id='Main', Title='ChaLi compiler', Level='1')
     ET.SubElement(feature, 'ComponentRef', Id='Compiler')
     license_files = [(ROOT / 'LICENSE', 'LICENSE'), (ROOT / 'NOTICE', 'NOTICE')]
-    license_files += [(ROOT / ('licenses' if name == 'miniz' else 'library') / name / 'LICENSE', name + '-LICENSE.txt')
-                      for name in ('miniz', 'ipage', 'caspp')]
+    license_files += [(ROOT / ('library' if name in ('ipage', 'caspp') else 'licenses') / name / 'LICENSE', name + '-LICENSE.txt')
+                      for name in ('miniz', 'ipage', 'caspp', 'yyjson', 'tomlc17', 'raylib', 'raygui', 'expat')]
     if variant == 'static':
         license_files += [(ROOT / 'library/llvm/LICENSE.TXT', 'LLVM-LICENSE.txt')]
         license_files += [(path, 'LLVM-' + path.name) for path in sorted((ROOT / 'library/llvm/licenses').glob('*')) if path.is_file()]
@@ -149,8 +149,8 @@ def main():
                 shutil.copy2(ROOT / name, docs / name)
         notices = docs / 'licenses'
         notices.mkdir()
-        for name in ('miniz', 'ipage', 'caspp'):
-            shutil.copy2(ROOT / ('licenses' if name == 'miniz' else 'library') / name / 'LICENSE', notices / (name + '-LICENSE.txt'))
+        for name in ('miniz', 'ipage', 'caspp', 'yyjson', 'tomlc17', 'raylib', 'raygui', 'expat'):
+            shutil.copy2(ROOT / ('library' if name in ('ipage', 'caspp') else 'licenses') / name / 'LICENSE', notices / (name + '-LICENSE.txt'))
         for kind in dict.fromkeys(args.formats):
             destination = output / (stem + ('.tar.gz' if kind == 'tar' else '.' + kind))
             if kind == 'msi':

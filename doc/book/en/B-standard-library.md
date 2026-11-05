@@ -105,7 +105,7 @@ Database parameter binding varies by backend; the current MySQL example uses Dat
 
 ## B.5 API and source lookup
 
-Use the [full symbol index](../../library/symbols.md) for signatures and source locations. Module bodies live in [source/std](../../../source/std/) and host services in [source/glue](../../../source/glue/); filenames need not match module names exactly. Current execution uses checked AOT or native exports.
+Use the [full symbol index](../../library/symbols.md) for signatures and source locations. Module bodies live in [source/std](../../../source/std/) and host services in [source/abi](../../../source/abi/); filenames need not match module names exactly. Current execution uses checked AOT or native exports.
 
 ## B.6 Verify a combination
 

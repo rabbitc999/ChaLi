@@ -28,7 +28,7 @@ MODULES = {
     "sql": ["chali_sqlite", "chali_sql_connections", "chali_sql_backends", "chali_reflection_serialization"],
     "net": ["chali_net_c_api", "chali_opcode_std_storage"],
     "image": ["chali_image", "chali_opcode_std_storage"],
-    "collections": ["chali_collection_glue", "chali_numeric_list_storage", "chali_numeric_list_append", "chali_map_pair_iterator"],
+    "collections": ["chali_c_runtime_storage", "chali_collection_glue", "chali_numeric_list_storage", "chali_numeric_list_append", "chali_map_pair_iterator"],
     "scalar": ["chali_scalar_c_api", "chali_linalg_column", "chali_linalg_solve"],
     "linalg": ["chali_linalg_column", "chali_linalg_solve", "chali_linalg_decomposition"],
     "file": ["chali_file_c_api", "chali_filesystem_c_api", "chali_opcode_resources", "chali_print_streams"],

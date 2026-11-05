@@ -1,5 +1,6 @@
 /** @file chali_native_library.cpp @brief 私有动态库加载及符号查询。 */
 #include "chali_native_library.hpp"
+#include "../allocator/c_heap_allocator.hpp"
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -38,9 +39,9 @@ bool NativeLibrary::open(const Memory::String &inputPath, Memory::String *error)
     const int length = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.c_str(), -1, nullptr, 0);
     if (length > 0)
     {
-        std::wstring wide(static_cast<std::size_t>(length), L'\0');
+        Memory::CHeapVector<wchar_t> wide(static_cast<std::size_t>(length));
         if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path.c_str(), -1, wide.data(), length) > 0)
-            handle = LoadLibraryW(wide.c_str());
+            handle = LoadLibraryW(wide.data());
     }
 #elif defined(__unix__) || defined(__APPLE__)
     if (handle) dlclose(handle);

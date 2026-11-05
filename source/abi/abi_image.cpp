@@ -1,5 +1,6 @@
 /** @file abi_image.cpp @brief 图像私有数值内核及 C 帧入口，无模板胶水封送。 */
 #include "chali_standard.h"
+#include "allocator/c_heap_allocator.hpp"
 #include "../allocator/chali_allocator.hpp"
 #include <algorithm>
 #include <cstdint>
@@ -21,7 +22,7 @@ struct ImageData
 /** @brief 销毁图片及其最终缓冲。
  * @param pointer 拥有的图片。
  */
-void CHALI_ABI_CALL destroyImage(void *pointer) { delete static_cast<ImageData *>(pointer); }
+void CHALI_ABI_CALL destroyImage(void *pointer) { Memory::destroyCHeap(static_cast<ImageData *>(pointer)); }
 /** @brief 深复制图片，不让异常跨越 C 回调边界。
  * @param pointer 源图片。
  * @return 独立副本，失败为空。
@@ -29,14 +30,14 @@ void CHALI_ABI_CALL destroyImage(void *pointer) { delete static_cast<ImageData *
 void *CHALI_ABI_CALL copyImage(const void *pointer)
 try
 {
-    return new ImageData(*static_cast<const ImageData *>(pointer));
+    return Memory::makeCHeapUnique<ImageData>(*static_cast<const ImageData *>(pointer)).release();
 } catch (...) { return nullptr; }
 /** @brief 发布完整图片，失败保持本地所有权。
  * @param frame 当前 C 帧。
  * @param image 待发布记录。
  * @return 新句柄，失败为零。
  */
-int64_t publish(ChaliAbiFrame *frame, std::unique_ptr<ImageData> image)
+int64_t publish(ChaliAbiFrame *frame, Memory::CHeapUniquePtr<ImageData> image)
 {
     const auto handle = chali_abi_record_make_clonable(frame, "std::image::Image", image.get(), destroyImage, copyImage);
     if (handle) image.release();
@@ -125,7 +126,7 @@ int64_t makeImage(ChaliAbiFrame *frame, int64_t width, int64_t height, Bytes pix
         chali_abi_fail(frame, "图片像素缓冲长度与尺寸不符");
         return 0;
     }
-    return publish(frame, std::make_unique<ImageData>(ImageData{ width, height, std::move(pixels) }));
+    return publish(frame, Memory::makeCHeapUnique<ImageData>(ImageData{ width, height, std::move(pixels) }));
 }
 /** @brief 通过 C 数值服务读取并按原槽规则转换基础类型数组。
  * @tparam Scalar 目标基础类型。
@@ -174,7 +175,7 @@ void appendNumbers(ChaliAbiFrame *frame, int64_t reply, size_t slot, const Value
  * @param reply 回执地址。
  * @param message 错误文本。
  */
-void replyError(ChaliAbiFrame *frame, int64_t reply, const std::string &message)
+void replyError(ChaliAbiFrame *frame, int64_t reply, const Memory::String &message)
 {
     const auto previous = readSlot(frame, reply, 0);
     const auto text = chali_abi_string(frame, message.data(), message.size());
@@ -265,7 +266,7 @@ inline std::uint8_t luma(std::uint8_t r, std::uint8_t g, std::uint8_t b)
  * @param pixels 接收 RGBA 像素。
  * @return 空字符串表示成功，否则为错误。
  */
-inline std::string decodeBmp(const Bytes &data, std::int64_t &width, std::int64_t &height, Bytes &pixels)
+inline Memory::String decodeBmp(const Bytes &data, std::int64_t &width, std::int64_t &height, Bytes &pixels)
 {
     if (data.size() < 54 || data[0] != 'B' || data[1] != 'M') return "BMP：文件头不合法";
     const std::uint32_t offset = readU32LE(data.data() + 10);
@@ -350,7 +351,7 @@ inline Bytes encodeBmp(std::int64_t width, std::int64_t height, const Bytes &pix
  * @param pixels 接收 RGBA 像素。
  * @return 空字符串表示成功，否则为错误。
  */
-inline std::string decodeNetpbm(const Bytes &data, std::int64_t &width, std::int64_t &height, Bytes &pixels)
+inline Memory::String decodeNetpbm(const Bytes &data, std::int64_t &width, std::int64_t &height, Bytes &pixels)
 {
     if (data.size() < 2 || data[0] != 'P') return "Netpbm：魔数不合法";
     const char kind = static_cast<char>(data[1]);
@@ -411,7 +412,7 @@ inline std::string decodeNetpbm(const Bytes &data, std::int64_t &width, std::int
 inline Bytes encodeNetpbm(const char *magic, std::int64_t width, std::int64_t height, const Bytes &pixels)
 {
     Bytes out;
-    std::string header = std::string(magic) + "\n" + std::to_string(width) + " " + std::to_string(height) + "\n255\n";
+    Memory::String header = Memory::String(magic) + "\n" + Memory::toString(width) + " " + Memory::toString(height) + "\n255\n";
     out.insert(out.end(), header.begin(), header.end());
     for (std::size_t p = 0; p < static_cast<std::size_t>(width) * static_cast<std::size_t>(height); ++p)
     {
@@ -433,7 +434,7 @@ inline Bytes encodeNetpbm(const char *magic, std::int64_t width, std::int64_t he
  * @param frame 当前 C 帧。
  * @return 图像、数值或独立像素结果。
  */
-std::int64_t imageNew(ChaliAbiFrame *frame) { return publish(frame, std::make_unique<ImageData>()); }
+std::int64_t imageNew(ChaliAbiFrame *frame) { return publish(frame, Memory::makeCHeapUnique<ImageData>()); }
 /** @brief 解码 std::image::__std_imageNew 的 C 实参并隔离异常。
  * @param frame 实参及返回帧。
  */
@@ -475,7 +476,7 @@ try
 std::int64_t imageCopy(ChaliAbiFrame *frame, std::int64_t handle)
 {
     auto *image = imageData(frame, handle);
-    return image ? publish(frame, std::make_unique<ImageData>(*image)) : 0;
+    return image ? publish(frame, Memory::makeCHeapUnique<ImageData>(*image)) : 0;
 }
 /** @brief 解码 std::image::__std_imageCopy 的 C 实参并隔离异常。
  * @param frame 实参及返回帧。
@@ -684,7 +685,7 @@ void imageDecode(ChaliAbiFrame *frame, Bytes data, int64_t reply)
 {
     std::int64_t width = 0, height = 0;
     Bytes pixels;
-    std::string message;
+    Memory::String message;
     if (data.size() >= 2 && data[0] == 'B' && data[1] == 'M')
         message = decodeBmp(data, width, height, pixels);
     else if (data.size() >= 2 && data[0] == 'P')
@@ -1462,3 +1463,8 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_image_records(size_t *count)
     if (count) *count = sizeof(records) / sizeof(records[0]);
     return records;
 }
+
+#ifndef GLUE_NO_STD_IMAGE
+#define CHALI_AOT_BIND_MODULE image
+#include "aot_bind_module.h"
+#endif

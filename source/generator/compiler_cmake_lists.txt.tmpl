@@ -8,6 +8,9 @@ if(CHALI_STATIC_LLVM AND CMAKE_HOST_WIN32)
     set(CMAKE_EXE_LINKER_FLAGS_INIT "-static -fuse-ld=lld")
 endif()
 project(chali_compiler LANGUAGES C CXX)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-ffunction-sections -fdata-sections)
+endif()
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build configuration" FORCE)
 endif()
@@ -22,7 +25,6 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_
 file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/runtime/aot_sources.txt" STACKVM_CORE_SOURCES)
 list(TRANSFORM STACKVM_CORE_SOURCES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/runtime/")
 add_library(chali_vm_core STATIC ${STACKVM_CORE_SOURCES})
-file(GLOB CHALI_STANDARD_SOURCES CONFIGURE_DEPENDS glue/std_*.cpp)
 file(GLOB CHALI_ABI_SOURCES CONFIGURE_DEPENDS abi/*.c abi/*.cpp)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/caspp/core_sources.txt")
 file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/caspp/core_sources.txt" CHALI_CAS_SOURCES)
@@ -30,11 +32,14 @@ list(TRANSFORM CHALI_CAS_SOURCES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/caspp/")
 if(NO_CHALI_STD OR NO_CHALI_STD_CAS OR NO_CHALI_BIG_INT)
     set(CHALI_CAS_SOURCES "")
 endif()
-add_library(chali_host_records STATIC ${CHALI_STANDARD_SOURCES} ${CHALI_ABI_SOURCES} ${CHALI_CAS_SOURCES} ipage/sql.cpp ipage/dialect.cpp runtime/bigint.cpp runtime/bigint_multiplication.cpp runtime/bigint_division.cpp runtime/bigint_number_theory.cpp runtime/bigint_bits.cpp runtime/bigint_modular.cpp runtime/bigint_conversion.cpp runtime/bigfloat.cpp runtime/bigfloat_roots.cpp runtime/bigfloat_transcendental.cpp runtime/bigfloat_trigonometry.cpp
-    "${CHALI_SQLITE_DIR}/sqlite3.c" json/json.cpp toml/toml.cpp toml/toml_source.cpp lztext/lztext.cpp)
+file(GLOB CHALI_BIGNUM_C_SOURCES CONFIGURE_DEPENDS runtime/chali_big*.c runtime_c/*.c)
+add_library(chali_host_records STATIC ${CHALI_BIGNUM_C_SOURCES} ${CHALI_ABI_SOURCES} ${CHALI_CAS_SOURCES} ipage/sql.cpp ipage/dialect.cpp runtime/bigint.cpp runtime/bigfloat.cpp runtime/bigfloat_roots.cpp runtime/bigfloat_transcendental.cpp runtime/bigfloat_trigonometry.cpp
+    "${CHALI_SQLITE_DIR}/sqlite3.c" "${CHALI_YYJSON_DIR}/src/yyjson.c" "${CHALI_TOMLC17_DIR}/src/chali_tomlc17.c" json/json.cpp toml/toml.cpp toml/toml_source.cpp lztext/lztext.cpp)
 add_library(chali_runtime STATIC runtime/ast.cpp runtime/ast_type.cpp runtime/ast_node.cpp runtime/ast_data.cpp runtime/preprocess.cpp runtime/system_arena.cpp
     "${CHALI_MINIZ_DIR}/miniz_tinfl.c")
 target_link_libraries(chali_runtime PUBLIC chali_vm_core chali_host_records Threads::Threads)
+set_source_files_properties("${CHALI_YYJSON_DIR}/src/yyjson.c" "${CHALI_TOMLC17_DIR}/src/chali_tomlc17.c" PROPERTIES
+    COMPILE_DEFINITIONS "YYJSON_DISABLE_FILE=1;YYJSON_DISABLE_WRITER=1;YYJSON_DISABLE_UTILS=1;YYJSON_DISABLE_INCR_READER=1;YYJSON_READER_DEPTH_LIMIT=256")
 set_source_files_properties("${CHALI_SQLITE_DIR}/sqlite3.c" PROPERTIES
     COMPILE_DEFINITIONS "SQLITE_THREADSAFE=1;SQLITE_OMIT_LOAD_EXTENSION=1")
 set_source_files_properties("${CHALI_MINIZ_DIR}/miniz_tinfl.c" PROPERTIES
@@ -46,8 +51,8 @@ option(STACKVM_WITH_REFLECTION "启用注解与反射运行时支持" ON)
 foreach(target chali_vm_core chali_host_records chali_runtime)
     add_dependencies(${target} chali_dependencies_check)
     target_include_directories(${target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/runtime
-        ${CMAKE_CURRENT_SOURCE_DIR}/json ${CMAKE_CURRENT_SOURCE_DIR}/toml ${CMAKE_CURRENT_SOURCE_DIR}/caspp/include
-        "${CHALI_SQLITE_DIR}" "${CHALI_MINIZ_DIR}")
+        ${CMAKE_CURRENT_SOURCE_DIR}/json ${CMAKE_CURRENT_SOURCE_DIR}/toml ${CMAKE_CURRENT_SOURCE_DIR}/runtime_c ${CMAKE_CURRENT_SOURCE_DIR}/caspp/include
+        "${CHALI_SQLITE_DIR}" "${CHALI_MINIZ_DIR}" "${CHALI_YYJSON_DIR}/src" "${CHALI_TOMLC17_DIR}/src")
     target_compile_definitions(${target} PUBLIC STACKVM_AOT_ONLY=1 CHALI_CUSTOM_ALLOCATOR=1
         CHALI_WITH_REFLECTION=$<BOOL:${CHALI_WITH_REFLECTION}>
         STACKVM_WITH_REFLECTION=$<BOOL:${STACKVM_WITH_REFLECTION}>)

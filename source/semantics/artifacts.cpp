@@ -98,13 +98,15 @@ Memory::String CAbiBindingType(const std::shared_ptr<MType> &type)
 
 /**
  * @brief 生成外部 ABI 声明对应的宿主胶水源码。
- * @retval 生成或读取的结果文本。
+ * @param reachableBuiltin 非空时只生成其中登记的内置服务函数。
+ * @return ABI 封送源码。
  */
-Memory::String AbiGlueSource()
+Memory::String AbiGlueSource(const Memory::Set<Memory::String> *reachableBuiltin = nullptr)
 {
     Memory::Map<Memory::String, Memory::Vector<const MFunctionDecl *>> libraries;
     for (const MFunctionDecl &function : g_functionDecls)
-        if (!function.abiLibrary.empty() && !::chali_aot::isDirectLinkLibrary(function.abiLibrary) && !function.superseded)
+        if (!function.abiLibrary.empty() && !::chali_aot::isDirectLinkLibrary(function.abiLibrary) && !function.superseded &&
+            (!reachableBuiltin || !::chali_aot::isBuiltinNativeLibrary(function.abiLibrary) || reachableBuiltin->count(function.label)))
             libraries[function.abiLibrary].push_back(&function);
     if (libraries.empty() && CAbiExportFunctions().empty()) return {};
     Memory::String definitions;
@@ -173,6 +175,11 @@ Memory::String AbiGlueSource()
     {
         const auto &function = *functions[index];
         const auto suffix = Memory::toString(index);
+        const bool linked = ::chali_aot::isBuiltinNativeLibrary(function.abiLibrary);
+        const auto callAlias = "chali_static_call_" + suffix;
+        const auto freeAlias = "chali_static_free_" + suffix;
+        if (linked && !function.abiRelease.empty())
+            source += "extern \"C\" void " + freeAlias + "(void *) asm(" + CxxStringLiteral(function.abiRelease) + ");\n";
         const auto result = CAbiBindingType(function.signature.result);
         const bool returns = CAbiType(function.signature.result) != "void";
         source += "/**\n * @brief 通过 C 帧封送一次原生调用。\n * @param raw 当前 C 调用帧。\n */\nstatic void chali_abi_call_" + suffix + "(ChaliAbiFrame *raw) {\n";
@@ -180,7 +187,8 @@ Memory::String AbiGlueSource()
         source += "if (chali_abi_check_frame(raw, " + Memory::toString(function.signature.params.size()) + ", &error) != ChaliAbiOk) { chali_abi_fail(raw, diagnostic); return; }\n";
         source += "chali_abi_return_integer(raw, 0);\ntry {\nusing namespace chali_native_marshal; Frame frame{raw}; OwnedReturn owned;\n";
         if (!function.abiRelease.empty())
-            source += "owned.release = reinterpret_cast<void (*)(void *)>(chali_host_abi_symbol(" + CxxStringLiteral(function.abiLibrary) + ", " + CxxStringLiteral(function.abiRelease) + "));\n";
+            source += linked ? "owned.release = &" + freeAlias + ";\n" :
+                "owned.release = reinterpret_cast<void (*)(void *)>(chali_host_abi_symbol(" + CxxStringLiteral(function.abiLibrary) + ", " + CxxStringLiteral(function.abiRelease) + "));\n";
         source += "const auto count = " + (function.abiResultCountIndex < 0 ? Memory::String("std::size_t{1}") :
             "checkedCount(frame.integer(" + Memory::toString(function.abiResultCountIndex) + "), Result<" + result + ">::stride)") + ";\n";
         Memory::String signature = "typename Result<" + result + ">::Native (*) (", arguments;
@@ -194,7 +202,8 @@ Memory::String AbiGlueSource()
             source += "Argument<" + type + "> a" + n + "(frame, " + n + ");\n";
         }
         source += "using NativeFunction = " + signature + ");\n";
-        source += "static const auto call = reinterpret_cast<NativeFunction>(chali_host_abi_symbol(" + CxxStringLiteral(function.abiLibrary) + ", " + CxxStringLiteral(function.abiSymbol) + "));\n";
+        source += linked ? "extern std::remove_pointer_t<NativeFunction> " + callAlias + " asm(" + CxxStringLiteral(function.abiSymbol) + ");\nconst auto call = &" + callAlias + ";\n" :
+            "static const auto call = reinterpret_cast<NativeFunction>(chali_host_abi_symbol(" + CxxStringLiteral(function.abiLibrary) + ", " + CxxStringLiteral(function.abiSymbol) + "));\n";
         source += (returns ? "const auto returned = " : "") + Memory::String("call(") + arguments + ");\n";
         if (returns && CAbiType(function.signature.result).find('*') != Memory::String::npos)
             source += "owned.pointer = returned;\n";
@@ -208,6 +217,7 @@ Memory::String AbiGlueSource()
     source += "if (!registry) return chali_abi_status(error, ChaliAbiInvalidArgument, \"missing registry\");\n";
     for (const auto *function : functions)
     {
+        if (::chali_aot::isBuiltinNativeLibrary(function->abiLibrary)) continue;
         source += "if (!chali_host_abi_lookup(" + CxxStringLiteral(function->abiLibrary) + ", " + CxxStringLiteral(function->abiSymbol) + ", error)) return ChaliAbiHostFailure;\n";
         if (!function->abiRelease.empty())
             source += "if (!chali_host_abi_lookup(" + CxxStringLiteral(function->abiLibrary) + ", " + CxxStringLiteral(function->abiRelease) + ", error)) return ChaliAbiHostFailure;\n";
@@ -275,15 +285,17 @@ Memory::Vector<::chali_aot::ExternFunction> ChaliAotAbiExterns()
  * 所以由前端在静态初始化时注入一次取 abi 声明的办法。 */
 /**
  * @brief 为不能按标量直接调用的 ABI 声明生成统一宿主封送绑定。
+ * @param reachableBuiltin 可达的内置服务函数。
  * @return 存在非标量 ABI 类型时返回全部绑定源码，否则返回空串。
  */
-Memory::String ChaliAotAbiGlue()
+Memory::String ChaliAotAbiGlue(const Memory::Set<Memory::String> &reachableBuiltin)
 {
-    if (!CAbiExportFunctions().empty()) return AbiGlueSource();
+    if (!CAbiExportFunctions().empty()) return AbiGlueSource(&reachableBuiltin);
     for (const auto &function : g_functionDecls)
     {
         if (function.abiLibrary.empty() || function.superseded) continue;
-        if (CAbiNeedsMarshalling(function)) return AbiGlueSource();
+        if (::chali_aot::isBuiltinNativeLibrary(function.abiLibrary) && !reachableBuiltin.count(function.label)) continue;
+        if (CAbiNeedsMarshalling(function)) return AbiGlueSource(&reachableBuiltin);
     }
     return {};
 }

@@ -282,6 +282,39 @@ Ptr replaceSubtree(const Ptr &expression, const Ptr &pattern, const Ptr &replace
  */
 Ptr integrateByParts(const Ptr &product, std::uint32_t variable, int depth = 0);
 
+/**
+ * @brief 对线性底数的幂与同底自然对数乘积直接使用分部积分闭式。
+ * @param product 已提取常数系数的乘积。
+ * @param variable 积分变量。
+ * @return 原函数；形状不匹配、指数依赖变量或底数非线性时为空。
+ */
+Ptr integratePowerLog(const Ptr &product, std::uint32_t variable) {
+    if (!product || product->kind() != NodeKind::Mul || product->size() != 2) return Ptr();
+    for (std::size_t index = 0; index < 2; ++index) {
+        Ptr logarithm = Ptr::borrow(product->operand(index));
+        if (logarithm->kind() != NodeKind::Function || !logarithm->name() ||
+            std::strcmp(logarithm->name(), "log") != 0 || logarithm->size() != 1) continue;
+        Ptr base = argumentOf(logarithm, 0);
+        Ptr factor = Ptr::borrow(product->operand(1 - index));
+        Ptr exponent;
+        if (factor->equals(base.get())) exponent = integer(1);
+        else if (factor->kind() == NodeKind::Pow && factor->operand(0)->equals(base.get()))
+            exponent = Ptr::borrow(factor->operand(1));
+        else continue;
+        if (dependsOn(exponent.get(), variable)) continue;
+        Ptr slope, offset;
+        if (!linearForm(base, variable, &slope, &offset) || slope->isZero()) continue;
+        Ptr next = makeAdd(exponent, integer(1));
+        if (next->isZero())
+            return makeDivide(makePow(logarithm, integer(2)), makeMul(integer(2), slope));
+        Ptr power = makePow(base, next);
+        Ptr boundary = makeDivide(makeMul(power, logarithm), makeMul(slope, next));
+        Ptr correction = makeDivide(power, makeMul(slope, makePow(next, integer(2))));
+        return makeAdd(boundary, makeNegate(correction));
+    }
+    return Ptr();
+}
+
 /** @brief 求导结果的"排名"：数值越小越适合当 u。 */
 int uRank(const Ptr &factor, std::uint32_t variable) {
     if (!dependsOn(factor.get(), variable)) return 100;
@@ -385,6 +418,9 @@ Ptr integrateRecursive(const Ptr &expression, std::uint32_t variable, int depth)
         }
         if (varying.empty()) return makeMul(expression, variableNode(variable));
 
+        Ptr logarithmic = integratePowerLog(makeMulMany(varying), variable);
+        if (logarithmic) return makeMul(constant, logarithmic);
+
         // 一般换元：∫ F(g(x))·g'(x) dx = ∫ F(u) du（先于常数提取尝试，
         // 否则 `2·x·e^{x²}` 在常数分支里就走不到换元了）。
         if (depth < 3 && varying.size() >= 2) {
@@ -452,7 +488,8 @@ Ptr integrateRecursive(const Ptr &expression, std::uint32_t variable, int depth)
         Ptr exponent = Ptr::borrow(expression->operand(1));
 
         // x^n
-        if (base->kind() == NodeKind::Symbol && base->symbolId() == variable) {
+        if (base->kind() == NodeKind::Symbol && base->symbolId() == variable &&
+            !dependsOn(exponent.get(), variable)) {
             if (isInt(exponent, -1)) {
                 // ∫ dx/x = ln|x|
                 Memory::Vector<NodePtr> arguments;

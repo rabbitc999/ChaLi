@@ -86,7 +86,17 @@ def fetch(name, package, destination, cache, offline):
             relative = PurePosixPath(filename)
             if relative.is_absolute() or '..' in relative.parts or '\\' in filename:
                 raise ValueError('依赖清单路径不安全：' + filename)
-            data = record['generated'].encode('utf-8') if 'generated' in record else source.read(package['prefix'] + filename)
+            member = record.get('source', filename)
+            member_path = PurePosixPath(member)
+            if member_path.is_absolute() or '..' in member_path.parts or '\\' in member:
+                raise ValueError('依赖源成员路径不安全：' + member)
+            data = record['generated'].encode('utf-8') if 'generated' in record else source.read(package['prefix'] + member)
+            for replacement in record.get('replacements', []):
+                before = replacement['from'].encode('utf-8')
+                after = replacement['to'].encode('utf-8')
+                if not before or data.count(before) != 1:
+                    raise RuntimeError('依赖兼容补丁上下文不唯一：' + name + '/' + filename)
+                data = data.replace(before, after, 1)
             if digest(data) != record['sha256']:
                 raise RuntimeError('依赖文件 SHA256 不符：' + name + '/' + filename)
             outputs[filename] = data
@@ -109,7 +119,7 @@ def main():
     parser.add_argument('--dest', type=Path, default=ROOT / 'build/dependencies')
     parser.add_argument('--cache', type=Path, default=ROOT / 'tmp/dependency_downloads')
     parser.add_argument('--offline', action='store_true')
-    parser.add_argument('--package', choices=['sqlite', 'miniz'], action='append')
+    parser.add_argument('--package', choices=['sqlite', 'miniz', 'yyjson', 'tomlc17'], action='append')
     options = parser.parse_args()
     lock = json.loads(LOCK.read_text(encoding='utf-8'))
     if lock['schema'] != 1:

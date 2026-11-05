@@ -23,9 +23,12 @@ import io
 from stackvm_sources import asset_names
 from pathlib import Path
 import os
+import platform
+import re
 import shutil
 import subprocess
 import sys
+import zlib
 from project_temp import tempfile
 from embedded_asset_cache import AssetCache
 
@@ -134,7 +137,7 @@ ASSET_ROOT = {
     "toml/": "source/",
     "lztext/": "source/",
     "console/": "source/",
-    "glue/": "source/",
+    "abi/": "source/",
     "allocator/": "source/",
 }
 
@@ -200,6 +203,10 @@ GENERATOR_ASSETS = [
     "abi/chali_abi_registry.hpp",
     "abi/chali_abi.c",
     "abi/chali_abi_frame.c",
+    "abi/chali_real_text.c", "abi/chali_real_text.h",
+    "abi/chali_file.c", "abi/chali_file.h",
+    "abi/chali_net.c", "abi/chali_net.h",
+    "abi/chali_thread.c", "abi/chali_thread.h", "abi/chali_thread_service.h",
     "abi/chali_abi_contract.c",
     "abi/chali_abi_registry.cpp",
     "abi/chali_abi_bridge.cpp",
@@ -220,11 +227,12 @@ GENERATOR_ASSETS = [
     "abi/abi_file.cpp",
     "abi/abi_filesystem.cpp",
     "abi/abi_regex.cpp",
-    "abi/abi_structured_data.cpp",
+    "abi/abi_json.c",
+    "abi/abi_toml.c",
     "abi/abi_process.c",
-    "abi/abi_serialization.cpp",
-    "glue/std_collection.hpp",
-    "glue/std_collection_storage.hpp",
+    "abi/abi_serialization.c",
+    "abi/std_collection.hpp",
+    "abi/std_collection_storage.hpp",
     "json/json.hpp",
     "json/json.cpp",
     "toml/toml.hpp",
@@ -236,11 +244,15 @@ GENERATOR_ASSETS = [
     "allocator/chali_pool.h",
     "allocator/chali_pool.c",
     "allocator/chali_allocator.hpp",
+    "allocator/c_heap_allocator.hpp",
+    "allocator/c_sequence.hpp",
+    "allocator/c_index.hpp",
+    "runtime_c/chali_sequence.h", "runtime_c/chali_sequence.c",
+    "runtime_c/chali_index.h", "runtime_c/chali_index.c",
     "allocator/system_arena.hpp",
     "allocator/system_arena.cpp",
     "bignum/bigint.hpp",
     "bignum/bigint.cpp",
-    "bignum/bigint_multiplication.cpp",
     "bignum/bigfloat.hpp",
     "bignum/bigfloat.cpp",
     "bignum/bigfloat_roots.cpp",
@@ -254,12 +266,16 @@ GENERATOR_ASSETS = [
 if Path(CHALI, os.environ.get("CHALI_BUILD_ROOT", "build") + "/chali-aot-host/assets.txt").exists():
     GENERATOR_ASSETS.append("aot/host_assets.txt")
 
-GENERATOR_ASSETS += ["semantics/macro_diagnostics.cpp", "semantics/macro_controls.cpp", "semantics/macro_control_flow.cpp", "semantics/macro_patterns.cpp", "semantics/macro_metadata.cpp", "semantics/macro_type_metadata.cpp", "semantics/macro_associated_metadata.cpp", "semantics/macro_declarations.cpp", "semantics/abi_export.cpp", "glue/aot_modules.inc",
+GENERATOR_ASSETS += ["semantics/macro_diagnostics.cpp", "semantics/macro_controls.cpp", "semantics/macro_control_flow.cpp", "semantics/macro_patterns.cpp", "semantics/macro_metadata.cpp", "semantics/macro_type_metadata.cpp", "semantics/macro_associated_metadata.cpp", "semantics/macro_declarations.cpp", "semantics/abi_export.cpp", "abi/aot_modules.inc", "abi/aot_bind_module.h",
                      "tools/fetch_dependencies.py", "tools/dependencies.lock.json", "tools/cmake_dependencies.cmake",
                      "tools/llvm_static_imports.cpp",
-                     "LICENSE", "NOTICE", "licenses/miniz/LICENSE", "licenses/llvm/LICENSE.TXT"]
+                     "LICENSE", "NOTICE", "licenses/miniz/LICENSE", "licenses/yyjson/LICENSE", "licenses/tomlc17/LICENSE", "licenses/llvm/LICENSE.TXT"]
 
-GENERATOR_ASSETS += ['ast/ast_type.cpp', 'ast/ast_node.cpp', 'ast/ast_data.cpp', 'ast/ast_storage_detail.hpp', 'bignum/bigint_division.cpp', 'bignum/bigint_number_theory.cpp', 'bignum/bigint_bits.cpp', 'bignum/bigint_modular.cpp', 'bignum/bigint_conversion.cpp']
+GENERATOR_ASSETS += ['ast/ast_type.cpp', 'ast/ast_node.cpp', 'ast/ast_data.cpp', 'ast/ast_storage_detail.hpp',]
+
+GENERATOR_ASSETS += ['bignum/chali_bigint.c', 'bignum/chali_bigint.h', 'bignum/chali_bigint_bits.c', 'bignum/chali_bigint_conversion.c', 'bignum/chali_bigint_division.c', 'bignum/chali_bigint_internal.h', 'bignum/chali_bigint_modular.c', 'bignum/chali_bigint_multiplication.c', 'bignum/chali_bigint_ntt.inc', 'bignum/chali_bigint_number_theory.c', 'bignum/chali_bigint_primality.c', 'bignum/chali_bigint_roots.c', 'runtime_c/chali_memory.h', 'runtime_c/chali_memory.c', 'runtime_c/chali_buffer.h', 'runtime_c/chali_buffer.c', 'runtime_c/chali_json.c', 'runtime_c/chali_json.h', 'runtime_c/chali_json_internal.h', 'runtime_c/chali_toml.c', 'runtime_c/chali_toml.h']
+GENERATOR_ASSETS += ['bignum/chali_bigfloat.h', 'bignum/chali_bigfloat.c', 'bignum/chali_bigfloat_internal.h', 'bignum/chali_bigfloat_arithmetic.c', 'bignum/chali_bigfloat_conversion.c', 'bignum/chali_bigfloat_roots.c', 'bignum/chali_bigfloat_math.h', 'bignum/chali_bigfloat_math_internal.h', 'bignum/chali_bigfloat_transcendental.c', 'bignum/chali_bigfloat_logarithm.c', 'bignum/chali_bigfloat_trigonometry.c', 'bignum/bigfloat_c_adapter.hpp']
+GENERATOR_ASSETS += ['bignum/chali_bigint_schoolbook.c', 'bignum/chali_bigint_toom.c']
 
 GENERATOR_ASSETS += ["ircode/" + name for name in asset_names()]
 from cas_sources import asset_names as cas_asset_names
@@ -282,7 +298,7 @@ GENERATOR_ASSETS += [
 ]
 GENERATOR_ASSETS = list(dict.fromkeys(GENERATOR_ASSETS + [
     directory + "/" + path.name
-    for directory in ("glue", "abi")
+    for directory in ("abi",)
     for path in sorted(Path(CHALI, "source", directory).iterdir())
     if path.suffix in (".cpp", ".hpp", ".h", ".c", ".inc")
 ]))
@@ -292,15 +308,73 @@ def collect_generator_assets():
     assets = []
     for relative in GENERATOR_ASSETS:
         assets.append((relative, read(os.path.join(CHALI, asset_disk_path(relative)))))
+    for group, files in native_inputs().items():
+        if not all(path.is_file() for path in files):
+            continue
+        lines = []
+        for path in files:
+            raw = path.read_bytes()
+            compressor = zlib.compressobj(9, wbits=-15)
+            packed = compressor.compress(raw) + compressor.flush()
+            lines.append(f"{path.name} {len(raw)} {packed.hex()}\n")
+        assets.append((f"aot/native_{native_target()}_{group}.txt", "".join(lines)))
     return assets
 
 
+def native_inputs():
+    """按原生服务列出构建目录中可供内嵌的归档及平台依赖。"""
+    if not native_target():
+        return {}
+    root = Path(CHALI, os.environ.get("CHALI_BUILD_ROOT", "build"), "native-extensions")
+    groups = {
+        "desktop": ("chali_desktop.a",),
+        "audio": ("libchali_audio.a",),
+        "raylib": ("libraylib.a",),
+        "xml": ("chali_xml.a", "lib/libexpat.a"),
+    }
+    if os.name == "nt":
+        groups["raylib"] += ("lib/libgdi32.a", "lib/libwinmm.a")
+    return {name: [root / file for file in names] for name, names in groups.items()}
+
+
+def native_target():
+    """限定构建归档的目标，避免异构独立编译器误用原宿主归档。"""
+    arch = platform.machine().lower()
+    if os.name == "nt" and arch in ("x86_64", "amd64"):
+        return "x86_64-w64-windows-gnu"
+    if sys.platform.startswith("linux"):
+        if arch in ("x86_64", "amd64"):
+            return "x86_64-unknown-linux-gnu"
+        if arch in ("aarch64", "arm64"):
+            return "aarch64-unknown-linux-gnu"
+    return ""
+
+
 def collect():
+    from setup_desktop_gui import render_gui_module
+
     modules = []  # (name, content)
     std_dir = os.path.join(CHALI, "source", "std")
     for name in sorted(os.listdir(std_dir)):
         if name.endswith(".chl"):
-            modules.append(("std::" + os.path.splitext(name)[0], read(os.path.join(std_dir, name))))
+            qualified = "std::" + os.path.splitext(name)[0]
+            content = read(os.path.join(std_dir, name))
+            declaration = re.search(r'^\s*module\s+([A-Za-z_][A-Za-z_0-9:]*)\s*;', content, re.M)
+            if not declaration or declaration.group(1) != qualified:
+                raise ValueError(f"内置标准库模块必须声明为 {qualified}：{name}")
+            modules.append((qualified, content))
+    for name, template, service in (
+        ("gui", "desktop_gui/desktop_gui.chl.in", "desktop"),
+        ("audio", "desktop_gui/desktop_audio.chl.in", "audio"),
+        ("xml", "xml/xml.chl.in", "xml"),
+    ):
+        qualified = "std::" + name
+        content = read(os.path.join(CHALI, "library", template)).replace("./@LIBRARY@", "@LIBRARY@")
+        library = "@chali/" + service
+        content = render_gui_module(content, library) if name == "gui" else content.replace("@LIBRARY@", library)
+        if not content.startswith(f"module {qualified};"):
+            raise ValueError(f"内置扩展必须声明为 {qualified}：{template}")
+        modules.append((qualified, content))
     return modules
 
 
@@ -310,8 +384,13 @@ def dependencies():
     root = Path(CHALI)
     paths = {Path(asset_disk_path(name)) for name in GENERATOR_ASSETS}
     paths.add(Path(os.environ.get("CHALI_BUILD_ROOT", "build") + "/chali-aot-host/assets.txt"))
+    for files in native_inputs().values():
+        paths.update(path.relative_to(root) for path in files if path.is_file())
     for pattern in ("source/std/*.chl", "doc/book/*.md", "doc/book/images/*", "doc/library/*.md"):
         paths.update(path.relative_to(root) for path in root.glob(pattern) if path.is_file())
+    paths.update(map(Path, ("tools/setup_desktop_gui.py", "library/desktop_gui/desktop_gui.chl.in",
+                           "library/desktop_gui/desktop_audio.chl.in", "library/desktop_gui/controls.def",
+                           "library/xml/xml.chl.in")))
     paths.update(map(Path, ("tools/embed_stdlib.py", "tools/project_temp.py", "tools/embedded_asset_cache.py", "tools/stackvm_sources.py", "tools/embed_manual.py", "source/chali.gram",
                            "source/chali_token.gram", "doc/04-language-reference.md",
                            "doc/25-literals-operators-macros.md", "skills/chali-programming/SKILL.md")))
@@ -321,8 +400,10 @@ def dependencies():
     indirect = [name for name in names if not name.isascii() or any(ch.isspace() for ch in name)]
     marker = root / (os.environ.get("CHALI_BUILD_ROOT", "build") + "/chali-frontend/stdlib_manual_inputs.json")
     import json
-    payload = json.dumps([(name, (root / name).stat().st_mtime_ns, (root / name).stat().st_size)
-                          for name in indirect], ensure_ascii=False, separators=(",", ":")) + "\n"
+    payload = json.dumps([[(name, (root / name).stat().st_mtime_ns, (root / name).stat().st_size)
+                           for name in indirect],
+                          [str(path.relative_to(root)) for files in native_inputs().values()
+                           for path in files if path.is_file()]], ensure_ascii=False, separators=(",", ":")) + "\n"
     marker.parent.mkdir(parents=True, exist_ok=True)
     if not marker.exists() or marker.read_text(encoding="utf-8") != payload:
         marker.write_text(payload, encoding="utf-8")

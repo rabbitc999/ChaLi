@@ -8,7 +8,8 @@
  */
 #include "chali_abi_internal.h"
 #include "chali_abi_runtime.hpp"
-#include "../glue/std_collection.hpp"
+#include "allocator/c_heap_allocator.hpp"
+#include "std_collection.hpp"
 
 #include "ircode/runtime_internal.hpp"
 #include "ircode/native_memory_access.hpp"
@@ -41,21 +42,21 @@ NativeContext *contextOf(const ChaliAbiFrame *frame)
 
 /**
  * @brief 按类型名缓存的宿主记录描述符；地址稳定，供对象表长期持有。
- * @note 名称用宿主堆的 `std::string`：本表是进程级静态存储，析构时机晚于运行时
+ * @note 名称用独立 C 堆：本表是进程级静态存储，析构时机晚于运行时
  *       arena 的收尾检查，若用 `Memory::String` 会留下无法回收的活动块。
  */
 struct RecordTypeBinding
 {
-    std::string name;
+    std::basic_string<char, std::char_traits<char>, Memory::CHeapAllocator<char>> name;
     NativeRecordType descriptor{};
 };
 
 /**
  * @brief 已登记的记录描述符；只增不删，生命周期与进程相同。
  */
-std::vector<std::unique_ptr<RecordTypeBinding>> &recordTypes()
+std::vector<Memory::CHeapUniquePtr<RecordTypeBinding>, Memory::CHeapAllocator<Memory::CHeapUniquePtr<RecordTypeBinding>>> &recordTypes()
 {
-    static std::vector<std::unique_ptr<RecordTypeBinding>> storage;
+    static std::vector<Memory::CHeapUniquePtr<RecordTypeBinding>, Memory::CHeapAllocator<Memory::CHeapUniquePtr<RecordTypeBinding>>> storage;
     return storage;
 }
 }  // namespace
@@ -91,7 +92,7 @@ try
         if (binding->name == typeName)
             return destroy == nullptr || (binding->descriptor.destroy == destroy && binding->descriptor.cloneC == clone && binding->descriptor.formatC == format) ? &binding->descriptor : nullptr;
     if (destroy == nullptr) return nullptr;
-    auto binding = std::make_unique<RecordTypeBinding>();
+    auto binding = Memory::makeCHeapUnique<RecordTypeBinding>();
     binding->name = typeName;
     binding->descriptor.name = binding->name.c_str();
     binding->descriptor.destroy = destroy;

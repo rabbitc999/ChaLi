@@ -15,6 +15,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, default=ROOT / 'build/xml')
     parser.add_argument('--archive', type=Path)
+    parser.add_argument('--static', action='store_true', help='构建供编译器内嵌的原生静态库')
     parser.add_argument('--jobs', type=int, default=2)
     options = parser.parse_args()
     if options.jobs < 1:
@@ -24,15 +25,23 @@ def main():
     with tempfile.TemporaryDirectory(prefix='xml-build-') as directory:
         work = Path(directory)
         args = ['cmake','-S',str(source),'-B',str(work/'build'),'-G','Ninja','-DCMAKE_BUILD_TYPE=Release']
+        if options.static:
+            args.append('-DCHALI_NATIVE_STATIC=ON')
         if options.archive:
             args.append('-DEXPAT_ARCHIVE='+options.archive.resolve().as_posix())
         subprocess.run(args, check=True)
         subprocess.run(['cmake','--build',str(work/'build'),'--parallel',str(options.jobs)],check=True)
         stage = work/'install'
         subprocess.run(['cmake','--install',str(work/'build'),'--prefix',stage.as_posix()],check=True)
+        if options.static:
+            shutil.copytree(stage, options.out.resolve(), dirs_exist_ok=True)
+            print(options.out.resolve() / 'chali_xml.a')
+            return
         template = (source/'xml.chl.in').read_text(encoding='utf-8')
-        (stage/'xml.chl').write_text(template.replace('@LIBRARY@',library),encoding='utf-8')
+        (stage/'std').mkdir(exist_ok=True)
+        (stage/'std/xml.chl').write_text(template.replace('@LIBRARY@','../'+library),encoding='utf-8')
         shutil.copytree(stage,options.out.resolve(),dirs_exist_ok=True)
+    (options.out.resolve()/'xml.chl').unlink(missing_ok=True)
     print(options.out.resolve()/library)
 
 

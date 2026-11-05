@@ -40,7 +40,15 @@ def main():
     parser.add_argument('--reuse-build',action='store_true',help='复验失败后保留的独立构建，仅替换与新导出内容不同的受管理文件')
     parser.add_argument('--retain-compiler',type=Path,help='将验证过的独立编译器保留到仓库 build/ 下的指定文件')
     parser.add_argument('--evidence-dir',type=Path,help='把成功及失败的构建输出保留到仓库 tmp/ 下')
+    parser.add_argument('--static-llvm-sdk',type=Path,help='使用匹配的 Windows 静态 LLVM SDK 构建并验收完整导出编译器')
+    parser.add_argument('--dependency-dir',type=Path,help='复用依赖锁定清单逐文件校验的第三方源码缓存')
     options=parser.parse_args()
+    exported_compiler = EXPORTED_COMPILER
+    if options.static_llvm_sdk:
+        assert os.name == 'nt', '静态 SDK 导出验收当前仅支持 Windows'
+        options.static_llvm_sdk = options.static_llvm_sdk.resolve()
+        assert (options.static_llvm_sdk / 'bin/g++.exe').is_file()
+        exported_compiler = f'chali-{VERSION}-llvm-static-windows-x64.exe'
     if options.retain_compiler:
         options.retain_compiler=options.retain_compiler.resolve()
         assert options.retain_compiler.is_relative_to((ROOT/'build').resolve())
@@ -109,9 +117,17 @@ def main():
         required += ["runtime/aot_sources.txt", "toml/toml_source.cpp", "toml/toml_source.hpp"]
         required += ["runtime/bigfloat_math.hpp", "runtime/bigfloat_math_detail.hpp", "runtime/bigfloat_transcendental.cpp", "runtime/bigfloat_trigonometry.cpp", "std/cas.chl", "abi/abi_cas.cpp", "caspp/core_sources.txt"]
         required += ["caspp/" + name for name in (ROOT / "library/caspp/core_sources.txt").read_text().splitlines()]
-        required += ["runtime/" + name for name in ["ast_type.cpp", "ast_node.cpp", "ast_data.cpp", "ast_storage_detail.hpp", "bigint_multiplication.cpp", "bigint_division.cpp", "bigint_bits.cpp", "bigint_number_theory.cpp", "bigint_modular.cpp", "bigint_conversion.cpp", "bigfloat_roots.cpp"]]
+        required += ["runtime/" + name for name in ["ast_type.cpp", "ast_node.cpp", "ast_data.cpp", "ast_storage_detail.hpp", "bigfloat_roots.cpp", "chali_bigint.c", "chali_bigint.h", "chali_bigint_bits.c", "chali_bigint_conversion.c", "chali_bigint_division.c", "chali_bigint_internal.h", "chali_bigint_modular.c", "chali_bigint_multiplication.c", "chali_bigint_ntt.inc", "chali_bigint_number_theory.c", "chali_bigint_primality.c", "chali_bigint_roots.c"]]
+        required += ["runtime/" + name for name in ['chali_bigfloat.h', 'chali_bigfloat.c', 'chali_bigfloat_internal.h', 'chali_bigfloat_arithmetic.c', 'chali_bigfloat_conversion.c', 'chali_bigfloat_roots.c', 'chali_bigfloat_math.h', 'chali_bigfloat_math_internal.h', 'chali_bigfloat_transcendental.c', 'chali_bigfloat_logarithm.c', 'chali_bigfloat_trigonometry.c', 'bigfloat_c_adapter.hpp']]
+        required += ["runtime/" + name for name in ['chali_bigint_schoolbook.c', 'chali_bigint_toom.c']]
+        required += ["runtime_c/" + name for name in ("chali_memory.h", "chali_memory.c", "chali_buffer.h", "chali_buffer.c", "chali_json.h", "chali_json.c", "chali_json_internal.h", "chali_toml.h", "chali_toml.c")]
+        required += ["abi/abi_json.c", "abi/abi_toml.c", "abi/abi_serialization.c", "licenses/yyjson/LICENSE", "licenses/tomlc17/LICENSE"]
+        required += ["abi/chali_net.c", "abi/chali_net.h", "runtime/c_sequence.hpp", "runtime/c_index.hpp",
+                     "runtime_c/chali_sequence.c", "runtime_c/chali_sequence.h", "runtime_c/chali_index.c", "runtime_c/chali_index.h"]
+        assert not (compiler / "glue").exists(), "导出工程不能保留旧 glue 目录"
+        required += ["abi/" + name for name in ("std_collection.cpp", "std_collection.hpp", "std_collection_bootstrap.cpp", "std_collection_state.hpp", "std_collection_storage.cpp", "std_collection_storage.hpp", "std_numeric_list_storage.hpp", "std_registry.cpp", "std_aot_modules.cpp", "std_aot_modules.hpp", "aot_bind_module.h", "aot_modules.inc")]
         missing = [name for name in required if not (compiler / name).is_file()]
-        assert not (compiler / "sqlite").exists() and not (compiler / "miniz").exists(), "在线依赖源码不能进入导出工程"
+        assert not (compiler / "sqlite").exists() and not (compiler / "miniz").exists() and not (compiler / "yyjson").exists() and not (compiler / "tomlc17").exists(), "在线依赖源码不能进入导出工程"
         if missing:
             raise AssertionError(f"compiler export is incomplete: {missing}")
         cmake = (compiler / "CMakeLists.txt").read_text(encoding="utf-8")
@@ -132,6 +148,10 @@ def main():
         configure = ["cmake", "-S", str(compiler), "-B", str(build), "-DCMAKE_BUILD_TYPE=Release"]
         if os.name == "nt":
             configure += ["-G", "MinGW Makefiles"]
+        if options.static_llvm_sdk:
+            configure += ['-DCHALI_STATIC_LLVM=ON', '-DCHALI_LLVM_SDK=' + options.static_llvm_sdk.as_posix()]
+        if options.dependency_dir:
+            configure += ['-DCHALI_DEPENDENCY_DIR=' + options.dependency_dir.resolve().as_posix()]
         for label, arguments in (("configure",configure), ("build",["cmake", "--build", str(build), "--target", "chali", "-j4"])):
             result = subprocess.run(arguments, cwd=ROOT, capture_output=True, text=True,
                                     encoding="utf-8", errors="replace", timeout=900)
@@ -166,13 +186,13 @@ def main():
                          '    assert(($fields<Box<int64>>())[0].sourceLine>0);\n'
                          '    int64 visits=0;loop{visits+=1;$Escape({break;});visits+=100;break;}assert(visits==1);\n'
                          '    println("exported compiler AOT/TOML OK");\n}\n', encoding="utf-8")
-        result = subprocess.run([str(build / EXPORTED_COMPILER), "run", str(probe), "--quiet", "--out", str(WORK / "export_probe")],
+        result = subprocess.run([str(build / exported_compiler), "run", str(probe), "--quiet", "--out", str(WORK / "export_probe")],
                                 cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
         assert result.returncode == 0 and result.stdout == "exported compiler AOT/TOML OK\n" and not result.stderr, result
         aot_probe = WORK / "aot_probe.chl"
         aot_probe.write_text('void main()\n{\n    println("exported AOT entry OK");\n}\n', encoding="utf-8")
         aot_prefix = WORK / "aot_probe"
-        result = subprocess.run([str(build / EXPORTED_COMPILER), "aot", str(aot_probe), "--quiet", "--emit-llvm", "--out", str(aot_prefix)],
+        result = subprocess.run([str(build / exported_compiler), "aot", str(aot_probe), "--quiet", "--emit-llvm", "--out", str(aot_prefix)],
                                 cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
         assert result.returncode == 0 and aot_prefix.with_suffix(".ll").is_file(), result
 
@@ -180,7 +200,7 @@ def main():
             # 全量红黑树混合负载以 AOT 验证导出编译器；VM 全量另由运行时回归执行。
             native = sample == "std_red_black_delete"
             target = WORK / (sample + "-aot")
-            arguments = [str(build / EXPORTED_COMPILER), "aot" if native else "run",
+            arguments = [str(build / exported_compiler), "aot" if native else "run",
                          str(ROOT / "example/samples" / (sample + ".chl"))]
             arguments += ["--out", str(target)]
             environment = dict(os.environ)
@@ -195,14 +215,14 @@ def main():
             expected = (ROOT / "example/expected" / (sample + ".txt")).read_text(encoding="utf-8")
             assert result.returncode == 0 and result.stdout == expected and not result.stderr, (sample, result)
         for script in ('chali_abi_contracts','chali_native_marshal'):
-            result=subprocess.run([sys.executable,str(ROOT/'tests'/(script+'.py')),'--chali',str(build/EXPORTED_COMPILER)],
+            result=subprocess.run([sys.executable,str(ROOT/'tests'/(script+'.py')),'--chali',str(build/exported_compiler)],
                                   cwd=ROOT,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=600)
             if options.evidence_dir:
                 (options.evidence_dir/(script+'.log')).write_text(result.stdout+result.stderr,encoding='utf-8')
             assert result.returncode==0,(script,result.stdout,result.stderr)
         if options.retain_compiler:
             options.retain_compiler.parent.mkdir(parents=True,exist_ok=True)
-            shutil.copy2(build/EXPORTED_COMPILER,options.retain_compiler)
+            shutil.copy2(build/exported_compiler,options.retain_compiler)
             print('已保留验证过的独立编译器：'+str(options.retain_compiler),flush=True)
         shutil.rmtree(build)
         (compiler / "keep.txt").write_text("user\n", encoding="utf-8")

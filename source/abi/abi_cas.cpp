@@ -1,5 +1,6 @@
 #include "chali_standard.h"
 #include "allocator/chali_allocator.hpp"
+#include "allocator/c_heap_allocator.hpp"
 #include <memory>
 #include <cstring>
 
@@ -47,7 +48,7 @@ struct ExpressionRecord
  */
 std::recursive_mutex &casMutex()
 {
-    static auto *guard = new std::recursive_mutex;
+    static auto *guard = ::Memory::makeCHeapUnique<std::recursive_mutex>().release();
     return *guard;
 }
 /**
@@ -59,7 +60,7 @@ void *cloneExpression(const void *source)
 try
 {
     std::lock_guard<std::recursive_mutex> lock(casMutex());
-    return new ExpressionRecord{ static_cast<const ExpressionRecord *>(source)->root.share() };
+    return ::Memory::makeCHeapUnique<ExpressionRecord>(ExpressionRecord{ static_cast<const ExpressionRecord *>(source)->root.share() }).release();
 } catch (...) { return nullptr; }
 /**
  * @brief 在 CAS 锁保护下释放根节点引用。
@@ -68,7 +69,7 @@ try
 void destroyExpression(void *record)
 {
     std::lock_guard<std::recursive_mutex> lock(casMutex());
-    delete static_cast<ExpressionRecord *>(record);
+    ::Memory::destroyCHeap(static_cast<ExpressionRecord *>(record));
 }
 /**
  * @brief 有界查询或写入规范中缀文本，不改变表达式。
@@ -111,7 +112,7 @@ ExpressionRecord *expression(ChaliAbiFrame *state, int64_t value)
 int64_t makeExpression(ChaliAbiFrame *state, Ptr root)
 {
     if (!root) throw std::runtime_error("CAS 无法计算给定表达式");
-    auto owner = std::make_unique<ExpressionRecord>(ExpressionRecord{ std::move(root) });
+    auto owner = ::Memory::makeCHeapUnique<ExpressionRecord>(ExpressionRecord{ std::move(root) });
     const auto result = chali_abi_record_make_textual(state, "std::cas::Expr", owner.get(), destroyExpression, cloneExpression, textExpression);
     if (result) owner.release();
     return result;
@@ -649,3 +650,6 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_cas_records(size_t *count)
     if (count) *count = sizeof(records) / sizeof(records[0]);
     return records;
 }
+
+#define CHALI_AOT_BIND_MODULE cas
+#include "aot_bind_module.h"

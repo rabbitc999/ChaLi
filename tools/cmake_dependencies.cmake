@@ -7,13 +7,15 @@ execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/fetch
     --dest "${CHALI_DEPENDENCY_DIR}"
     RESULT_VARIABLE CHALI_DEPENDENCY_STATUS)
 if(NOT CHALI_DEPENDENCY_STATUS STREQUAL "0")
-    message(FATAL_ERROR "SQLite/miniz dependency download or checksum verification failed")
+    message(FATAL_ERROR "SQLite/miniz/yyjson/tomlc17 dependency download or checksum verification failed")
 endif()
 set(CHALI_SQLITE_DIR "${CHALI_DEPENDENCY_DIR}/sqlite")
 set(CHALI_MINIZ_DIR "${CHALI_DEPENDENCY_DIR}/miniz")
+set(CHALI_YYJSON_DIR "${CHALI_DEPENDENCY_DIR}/yyjson")
+set(CHALI_TOMLC17_DIR "${CHALI_DEPENDENCY_DIR}/tomlc17")
 if(NOT TARGET chali_dependencies_check)
     add_custom_target(chali_dependencies_check
         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/fetch_dependencies.py"
             --dest "${CHALI_DEPENDENCY_DIR}"
-        COMMENT "Verify locked SQLite/miniz build dependencies")
+        COMMENT "Verify locked SQLite/miniz/yyjson/tomlc17 build dependencies")
 endif()

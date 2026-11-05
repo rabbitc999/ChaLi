@@ -1,4 +1,4 @@
-module xml;
+module std::xml;
 import std::json;
 
 #abi("C", "./@LIBRARY@", "chali_xml_parse")

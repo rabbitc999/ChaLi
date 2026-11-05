@@ -12,7 +12,7 @@ def source_names():
     if len(names) != len(set(names)):
         raise ValueError('CAS 编译单元清单重复')
     for name in names:
-        if not name.startswith('src/') or '..' in Path(name).parts or name == 'src/main.cpp' or not name.endswith('.cpp') or not (DIRECTORY / name).is_file():
+        if not name.startswith('src/') or '..' in Path(name).parts or name == 'src/main.cpp' or Path(name).suffix not in ('.c', '.cpp') or not (DIRECTORY / name).is_file():
             raise ValueError(f'CAS 编译单元无效：{name}')
     return names
 

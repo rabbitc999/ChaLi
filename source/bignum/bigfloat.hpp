@@ -239,6 +239,7 @@ public:
     void normalize();
 
 private:
+    friend struct CFloatAccess;
     bigint::BigInt mant_;  ///< 尾数（符号在里面）。
     int exp10_ = 0;        ///< 十进制指数。
 };

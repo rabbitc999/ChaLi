@@ -292,3 +292,8 @@ const ChaliAbiRecord *abi_random_records(size_t *count)
     if (count != NULL) *count = sizeof(kRecords) / sizeof(kRecords[0]);
     return kRecords;
 }
+
+#ifndef GLUE_NO_STD_RANDOM
+#define CHALI_AOT_BIND_MODULE random
+#include "aot_bind_module.h"
+#endif

@@ -3,7 +3,7 @@
  * @brief 线程邮箱、共享值与整数原子操作。
  */
 #include "concurrent_call_state.hpp"
-#include "../chali_i18n.hpp"
+#include "runtime_i18n.hpp"
 
 namespace stackvm
 {
@@ -61,7 +61,7 @@ std::optional<bool> Machine::callMailboxService(runtimeDetail::ConcurrentCallSta
 #if STACKVM_WITH_THREADS
         if ((messageSendThread || messageReceiveThread) && (!threadsEnabled_ || threadRuntime_ == nullptr))
         {
-            fail(CHALI_TEXT("多线程已关闭；run／aot 构建时去掉 --no-threads"));
+            fail(CHALI_RUNTIME_TEXT("多线程已关闭；run／aot 构建时去掉 --no-threads"));
             pending.clear();
             return true;
         }

@@ -65,8 +65,8 @@ extern "C" ChaliAbiRegistry *chali_abi_registry_create(ChaliAbiError *error)
 try
 {
     Memory::AllocationScope allocation(nullptr);
-    auto owned = std::make_unique<stackvm::NativeRegistry>();
-    auto *registry = new ChaliAbiRegistry{ std::move(owned), nullptr };
+    auto owned = Memory::makeCHeapUnique<stackvm::NativeRegistry>();
+    auto *registry = Memory::makeCHeapUnique<ChaliAbiRegistry>(ChaliAbiRegistry{ std::move(owned), nullptr }).release();
     registry->backend = registry->owned.get();
     chali_abi_status(error, ChaliAbiOk, nullptr);
     return registry;
@@ -82,7 +82,7 @@ try
  */
 extern "C" void chali_abi_registry_destroy(ChaliAbiRegistry *registry)
 {
-    if (registry && registry->owned) delete registry;
+    if (registry && registry->owned) Memory::destroyCHeap(registry);
 }
 
 /**

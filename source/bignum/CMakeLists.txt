@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(big_number LANGUAGES CXX)
+project(big_number LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,7 +11,10 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic -finput-charset=UTF-8 -fexec-charset=UTF-8)
 endif()
 
-add_library(big_number STATIC bigint.cpp bigint_multiplication.cpp bigint_division.cpp bigint_number_theory.cpp bigint_bits.cpp bigint_modular.cpp bigint_conversion.cpp bigfloat.cpp bigfloat_roots.cpp bigfloat_transcendental.cpp bigfloat_trigonometry.cpp)
+file(GLOB BIGINT_C_SOURCES CONFIGURE_DEPENDS chali_big*.c)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+add_library(big_number STATIC ${BIGINT_C_SOURCES} ../runtime_c/chali_memory.c ../runtime_c/chali_buffer.c bigint.cpp bigfloat.cpp bigfloat_roots.cpp bigfloat_transcendental.cpp bigfloat_trigonometry.cpp)
 target_include_directories(big_number PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(big_number-demo main.cpp)

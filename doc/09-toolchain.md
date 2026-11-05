@@ -76,7 +76,7 @@ AOT 快速路径的对照开关见[AOT 降低开关与计数](40-backend-ownersh
 公开 C11 头 `chali_abi.h` 定义调用帧、固定宽度槽、不透明注册句柄与错误缓冲；
 `chali_standard.h` 提供标准库登记。实现文件可以使用 C 或 C++17，公开边界均使用 C 类型。
 
-模块提供只读的 `ChaliAbiRecord` 入口表。`glue/aot_modules.inc` 统一维护模块名与取表函数，
+模块提供只读的 `ChaliAbiRecord` 入口表。`abi/aot_modules.inc` 统一维护模块名与取表函数，
 集中标准库登记排除 demo，AOT 根据实际入口名称选择需要链接的模块。
 每张入口表通过 `chali_abi_registry_register` 原子登记，失败保留首个诊断；
 注册完成后封存。同一运行时只使用一张函数表，不另建类型化绑定表。

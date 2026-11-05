@@ -1,5 +1,6 @@
 /** @file abi_sql.cpp @brief 数据库私有驱动内核及 C 帧入口，连接由 C 记录协议拥有。 */
 #include "chali_standard.h"
+#include "allocator/c_heap_allocator.hpp"
 #include "../allocator/chali_allocator.hpp"
 #include "../../source/json/json.hpp"
 
@@ -197,14 +198,14 @@ inline void *librarySymbol(void *library, const char *name)
  * @param path 候选客户端库路径。
  * @return 已加载库句柄，失败为空。
  */
-inline void *tryLoad(const std::string &path)
+inline void *tryLoad(const Memory::CHeapString &path)
 {
     std::error_code code;
     if (!path.empty() && std::filesystem::exists(path, code))
     {
 #if defined(_WIN32)
         const std::filesystem::path parent = std::filesystem::path(path).parent_path().parent_path();
-        const std::string binary = (parent / "bin").string();
+        const auto binary = (parent / "bin").string< char, std::char_traits<char>, Memory::CHeapAllocator<char>>();
         if (std::filesystem::exists(binary, code)) ::SetDllDirectoryA(binary.c_str());
 #endif
         if (void *handle = openLibrary(path.c_str())) return handle;
@@ -256,7 +257,7 @@ inline void loadSymbols(void *library)
 /** @brief 按版本和系统目录添加客户端库候选路径。
  * @param out 接收按搜索优先级排列的候选路径。
  */
-inline void appendCandidates(std::vector<std::string> &out)
+inline void appendCandidates(Memory::CHeapVector<Memory::CHeapString> &out)
 {
 #if defined(_WIN32)
     static const char *versions[] = { "9.4", "9.3", "9.2", "9.1", "9.0", "8.4", "8.3", "8.2",
@@ -265,7 +266,7 @@ inline void appendCandidates(std::vector<std::string> &out)
                                    "C:/Program Files (x86)/MySQL/MySQL Server " };
     for (const char *root : roots)
         for (const char *version : versions)
-            out.push_back(std::string(root) + version + "/lib/libmysql.dll");
+            out.push_back(Memory::CHeapString(root) + version + "/lib/libmysql.dll");
     out.push_back("libmysql.dll");
     out.push_back("libmysqlclient.dll");
     out.push_back("libmariadb.dll");
@@ -285,7 +286,7 @@ inline void appendCandidates(std::vector<std::string> &out)
 inline bool initMysql()
 {
     if (apiReady()) return true;
-    std::vector<std::string> candidates;
+    Memory::CHeapVector<Memory::CHeapString> candidates;
     const char *overridePath = std::getenv("MYSQL_LIBRARY");
     if (overridePath != nullptr && overridePath[0] != '\0') candidates.push_back(overridePath);
     appendCandidates(candidates);
@@ -434,7 +435,7 @@ inline bool initPostgres()
 {
     static bool ready = false;
     if (ready) return true;
-    std::vector<std::string> candidates;
+    Memory::CHeapVector<Memory::CHeapString> candidates;
     if (const char *path = std::getenv("POSTGRES_LIBRARY"))
         if (*path) candidates.emplace_back(path);
 #if defined(_WIN32)
@@ -534,9 +535,9 @@ inline bool odbcSuccess(std::int16_t status) { return status == 0 || status == 1
  * @param text UTF-8 文本。
  * @return UTF-16 编码。
  */
-inline std::u16string sqlUtf16(const std::string &text)
+inline Memory::CHeapU16String sqlUtf16(const Memory::CHeapString &text)
 {
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t, Memory::CHeapAllocator<char16_t>, Memory::CHeapAllocator<char>> converter;
     return converter.from_bytes(text);
 }
 
@@ -545,9 +546,9 @@ inline std::u16string sqlUtf16(const std::string &text)
  * @param text UTF-16 文本。
  * @return UTF-8 编码。
  */
-inline std::string sqlUtf8(const std::u16string &text)
+inline Memory::CHeapString sqlUtf8(const Memory::CHeapU16String &text)
 {
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t, Memory::CHeapAllocator<char16_t>, Memory::CHeapAllocator<char>> converter;
     return converter.to_bytes(text);
 }
 
@@ -565,7 +566,7 @@ inline void odbcError(std::int16_t type, void *handle, char *output)
     if (odbcSuccess(odbcApi().diagnostic(type, handle, 1, state, &native, message, 512, &length)))
     {
         const std::size_t size = static_cast<std::size_t>(std::max<std::int16_t>(0, std::min<std::int16_t>(length, 511)));
-        std::u16string text;
+        Memory::CHeapU16String text;
         for (std::size_t i = 0; i < size; ++i) text.push_back(static_cast<char16_t>(message[i]));
         setErrorText(output, sqlUtf8(text).c_str());
     }
@@ -581,7 +582,7 @@ inline bool initOdbc()
 {
     static bool ready = false;
     if (ready) return true;
-    std::vector<std::string> candidates;
+    Memory::CHeapVector<Memory::CHeapString> candidates;
     if (const char *path = std::getenv("ODBC_LIBRARY"))
         if (*path) candidates.emplace_back(path);
 #if defined(_WIN32)
@@ -656,7 +657,7 @@ struct Cell
     int kind = 0; /* 0 空值、1 整数、2 实数、3 文本 */
     long long intValue = 0;
     double realValue = 0.0;
-    std::string text;
+    Memory::CHeapString text;
 };
 
 struct ResultSlot
@@ -665,17 +666,17 @@ struct ResultSlot
     int rows = 0;
     int cols = 0;
     unsigned long long affected = 0;
-    std::vector<std::string> colNames;
-    std::vector<Cell> cells;
+    Memory::CHeapVector<Memory::CHeapString> colNames;
+    Memory::CHeapVector<Cell> cells;
 };
 
 /**
  * @brief 取得 SQL 胶水拥有的数据库连接槽表。
  * @return 进程内持久保存的连接槽数组。
  */
-inline std::vector<DatabaseSlot> &databases()
+inline Memory::CHeapVector<DatabaseSlot> &databases()
 {
-    static std::vector<DatabaseSlot> instance(kMaxDatabases);
+    static Memory::CHeapVector<DatabaseSlot> instance(kMaxDatabases);
     return instance;
 }
 
@@ -683,9 +684,9 @@ inline std::vector<DatabaseSlot> &databases()
  * @brief 取得 SQL 胶水拥有的结果集槽表。
  * @return 进程内持久保存的结果槽数组。
  */
-inline std::vector<ResultSlot> &results()
+inline Memory::CHeapVector<ResultSlot> &results()
 {
-    static std::vector<ResultSlot> instance(kMaxResults);
+    static Memory::CHeapVector<ResultSlot> instance(kMaxResults);
     return instance;
 }
 
@@ -730,7 +731,7 @@ inline Cell classify(const char *text, unsigned long long length)
         return cell;
     }
     cell.text.assign(text, static_cast<std::size_t>(length));
-    const std::string &value = cell.text;
+    const Memory::CHeapString &value = cell.text;
     bool integer = !value.empty();
     std::size_t start = (value[0] == '-' || value[0] == '+') ? 1u : 0u;
     if (start >= value.size()) integer = false;
@@ -924,10 +925,10 @@ inline std::int32_t sqlOpenOdbc(String options)
     if (!initOdbc()) return -1;
     const int index = freeDatabaseSlot();
     if (index < 0) return -1;
-    std::u16string text;
+    Memory::CHeapU16String text;
     try
     {
-        text = sqlUtf16(std::string(options.data(), options.size()));
+        text = sqlUtf16(Memory::CHeapString(options.data(), options.size()));
     } catch (const std::range_error &)
     {
         setErrorText(lastErrorText(), "ODBC 连接串不是有效 UTF-8");
@@ -1128,7 +1129,7 @@ inline bool executePostgres(DatabaseSlot &slot, ResultSlot &result, const String
  */
 inline bool odbcCell(void *statement, std::uint16_t column, int kind, Cell &cell, char *error)
 {
-    std::u16string text;
+    Memory::CHeapU16String text;
     while (true)
     {
         std::uint16_t buffer[1024] = {};
@@ -1153,7 +1154,7 @@ inline bool odbcCell(void *statement, std::uint16_t column, int kind, Cell &cell
         for (std::size_t i = 0; i < units; ++i) text.push_back(static_cast<char16_t>(buffer[i]));
         if (status == 0 || (length >= 0 && length < static_cast<std::intptr_t>(sizeof(buffer)))) break;
     }
-    const std::string bytes = sqlUtf8(text);
+    const Memory::CHeapString bytes = sqlUtf8(text);
     cell = typedCell(bytes.data(), bytes.size(), kind);
     return true;
 }
@@ -1168,10 +1169,10 @@ inline bool odbcCell(void *statement, std::uint16_t column, int kind, Cell &cell
 inline bool executeOdbc(DatabaseSlot &slot, ResultSlot &result, const String &sql)
 {
     auto &table = odbcApi();
-    std::u16string query;
+    Memory::CHeapU16String query;
     try
     {
-        query = sqlUtf16(std::string(sql.data(), sql.size()));
+        query = sqlUtf16(Memory::CHeapString(sql.data(), sql.size()));
     } catch (const std::range_error &)
     {
         setErrorText(slot.error, "ODBC SQL 不是有效 UTF-8");
@@ -1201,7 +1202,7 @@ inline bool executeOdbc(DatabaseSlot &slot, ResultSlot &result, const String &sq
             return fail();
         }
         result.cols = columns;
-        std::vector<int> kinds;
+        Memory::CHeapVector<int> kinds;
         for (std::int16_t c = 1; c <= columns; ++c)
         {
             std::uint16_t name[1024] = {};
@@ -1217,7 +1218,7 @@ inline bool executeOdbc(DatabaseSlot &slot, ResultSlot &result, const String &sq
                 setErrorText(slot.error, "ODBC 列名超出支持长度");
                 return fail();
             }
-            std::u16string wide;
+            Memory::CHeapU16String wide;
             for (int i = 0; i < length; ++i) wide.push_back(static_cast<char16_t>(name[i]));
             result.colNames.push_back(sqlUtf8(wide));
             if (type == -2 || type == -3 || type == -4)
@@ -1278,7 +1279,7 @@ inline bool collectResult(DatabaseSlot &slot, ResultSlot &result, void *res)
     result.colNames.clear();
     result.cells.clear();
     result.colNames.resize(columns);
-    std::vector<int> kinds(columns, 0);
+    Memory::CHeapVector<int> kinds(columns, 0);
     for (unsigned int c = 0; c < columns; ++c)
     {
         void *field = api().fetch_field != nullptr ? api().fetch_field(res) : nullptr;
@@ -1635,7 +1636,7 @@ inline String sqlColName(std::int32_t handle, std::int32_t column)
 {
     ResultSlot *slot = resultAt(handle);
     if (slot == nullptr || column < 0 || column >= slot->cols) return String();
-    return slot->colNames[static_cast<std::size_t>(column)];
+    return String(slot->colNames[static_cast<std::size_t>(column)]);
 }
 
 /**
@@ -1731,7 +1732,7 @@ struct DatabaseOwner
  */
 void CHALI_ABI_CALL destroyDatabaseOwner(void *value)
 {
-    delete static_cast<DatabaseOwner *>(value);
+    Memory::destroyCHeap(static_cast<DatabaseOwner *>(value));
 }
 
 /**
@@ -1795,7 +1796,7 @@ String readText(ChaliAbiFrame *frame, int64_t address)
 std::int64_t ownDatabase(ChaliAbiFrame *frame, std::int32_t connection, std::int64_t driver)
 {
     ConnectionOwner pending{ connection };
-    auto owner = std::make_unique<DatabaseOwner>();
+    auto owner = Memory::makeCHeapUnique<DatabaseOwner>();
     owner->connection = pending.release();
     owner->driver = driver;
     if (connection < 0) owner->error = sqlError(connection);
@@ -1811,7 +1812,7 @@ std::int64_t ownDatabase(ChaliAbiFrame *frame, std::int32_t connection, std::int
  */
 std::int64_t newDatabaseOwner(ChaliAbiFrame *frame)
 {
-    auto owner = std::make_unique<DatabaseOwner>();
+    auto owner = Memory::makeCHeapUnique<DatabaseOwner>();
     const auto handle = chali_abi_record_make(frame, "std::sql::Database", owner.get(), destroyDatabaseOwner);
     if (handle) owner.release();
     return handle;
@@ -2352,3 +2353,8 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_sql_records(size_t *count)
     if (count) *count = sizeof(records) / sizeof(records[0]);
     return records;
 }
+
+#ifndef GLUE_NO_STD_SQL
+#define CHALI_AOT_BIND_MODULE sql
+#include "aot_bind_module.h"
+#endif

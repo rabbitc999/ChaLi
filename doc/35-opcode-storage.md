@@ -8,7 +8,7 @@
 
 ## 38.1 VM 核心与宿主胶水
 
-String、BigInteger、BigDecimal、File、Process、List、Map、Set 由语言声明与宿主胶水协作实现。VM 维护通用句柄、存活管理和不透明记录协议；记录布局、比较、哈希和克隆回调由 `source/glue/` 中的实现提供。
+String、BigInteger、BigDecimal、File、Process、List、Map、Set 由语言声明与宿主胶水协作实现。VM 维护通用句柄、存活管理和不透明记录协议；记录布局、比较、哈希和克隆回调由 `source/abi/` 中的实现提供。
 
 内部 `ObjectKind` 包含 `NativeRecord`、`Obj`、`Arena`、`Closure`。这属于实现分类，不是允许应用把所有对象都当整数操作的公开接口。公开类型以标准库声明为准。
 

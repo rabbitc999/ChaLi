@@ -4,6 +4,7 @@ import decimal
 import json
 from pathlib import Path
 import subprocess
+from bignum_build import compile_c_kernel
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -16,9 +17,9 @@ def main():
     binary = ROOT / args.binary
     binary.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(['g++', '-std=c++17', '-O2', '-Isource/bignum',
-                    'tests/bigfloat_math_driver.cpp', 'source/bignum/bigint.cpp', 'source/bignum/bigint_multiplication.cpp', 'source/bignum/bigint_division.cpp', 'source/bignum/bigint_number_theory.cpp', 'source/bignum/bigint_bits.cpp', 'source/bignum/bigint_modular.cpp', 'source/bignum/bigint_conversion.cpp',
+                    'tests/bigfloat_math_driver.cpp', 'source/bignum/bigint.cpp',
                     'source/bignum/bigfloat.cpp', 'source/bignum/bigfloat_roots.cpp', 'source/bignum/bigfloat_transcendental.cpp',
-                    'source/bignum/bigfloat_trigonometry.cpp', '-o', str(binary)], cwd=ROOT, check=True)
+                    'source/bignum/bigfloat_trigonometry.cpp', *compile_c_kernel(binary.parent / (binary.stem + '-c'), False), '-o', str(binary)], cwd=ROOT, check=True)
     cases = []
     for digits in [1, 2, 7, 17, 34, 50, 100, 250, 1000]:
         for name, values in {

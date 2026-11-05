@@ -13,6 +13,14 @@ The non-finite complex multiplication recovery in source/std/signal.chl is
 adapted from LLVM compiler-rt muldc3 (The LLVM Project), licensed under
 Apache License v2.0 with LLVM Exceptions; see licenses/llvm/LICENSE.TXT.
 
-Optional host libraries preserve the corresponding notices in their build outputs:
-raylib and raygui (zlib), Expat (MIT), libsodium (ISC), and libcurl (curl license).
-These dependencies are used only by the optional host modules.
+raylib 5.5 and raygui 4.0 (zlib), and Expat 2.10.0 (MIT), may be linked
+statically into ChaLi applications. See licenses/raylib/LICENSE,
+licenses/raygui/LICENSE and licenses/expat/LICENSE.
+The optional dynamic libsodium (ISC) and libcurl (curl license) builds
+preserve their corresponding notices in their build outputs.
+
+yyjson 0.13.0: MIT license; see licenses/yyjson/LICENSE.
+
+tomlc17 R261003: MIT license; see licenses/tomlc17/LICENSE.
+The locked derived source preserves ChaLi 1.0.0 nesting, Unicode and date behavior;
+exact compatibility replacements and both source hashes are in tools/dependencies.lock.json.

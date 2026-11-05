@@ -67,7 +67,7 @@ def main():
                  ' * @param callback 浮点语言函数值。\n * @return 回调的精确浮点结果。\n */\n'
                  'API double floating_callback(double (*callback)(double)){return callback(1.25); }\n')
         native.write_text(body, encoding='utf-8')
-        result = subprocess.run(['gcc', '-std=c11', '-shared', '-fPIC', str(native), '-o', str(library)],
+        result = subprocess.run([os.environ.get('CHALI_ABI_CC', 'gcc'), '-std=c11', '-shared', '-fPIC', str(native), '-o', str(library)],
                                 capture_output=True, text=True, encoding='utf-8', timeout=90)
         assert result.returncode == 0, result.stderr
         declarations = []

@@ -3165,7 +3165,9 @@
       "panic": false
     },
     "usage": "obj.simplify();",
-    "examples": [],
+    "examples": [
+      "example/samples/cas.chl"
+    ],
     "sourceLanguage": "zh",
     "source": "source/std/cas.chl",
     "line": 123,
@@ -3190,7 +3192,9 @@
       "panic": false
     },
     "usage": "obj.expand();",
-    "examples": [],
+    "examples": [
+      "example/samples/cas.chl"
+    ],
     "sourceLanguage": "zh",
     "source": "source/std/cas.chl",
     "line": 125,
@@ -3682,7 +3686,9 @@
       "panic": false
     },
     "usage": "obj.ln();",
-    "examples": [],
+    "examples": [
+      "example/samples/cas.chl"
+    ],
     "sourceLanguage": "zh",
     "source": "source/std/cas.chl",
     "line": 157,

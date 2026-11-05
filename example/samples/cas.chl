@@ -32,4 +32,9 @@ void main()
     let children = tree.children();
     assert(children[0].kind() == NodeKind::Symbol);
     println("ast = {}({})", tree.name(), children[0].name());
+
+    Expr logarithmic = Expr::parse("x^2*ln(x)");
+    assert(logarithmic.integrate("x").differentiate("x").expand().simplify() == logarithmic.expand().simplify());
+    Expr reciprocalLog = Expr::parse("ln(x)/x");
+    assert(reciprocalLog.integrate("x").differentiate("x").simplify() == reciprocalLog.simplify());
 }

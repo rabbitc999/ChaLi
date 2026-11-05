@@ -1,7 +1,7 @@
 /** @file chali_c_api_registry.cpp @brief 注册事务、异常隔离、生命周期与并发查询。 */
 #include "abi/chali_abi_registry.hpp"
 #include "abi/chali_standard_internal.h"
-#include "glue/std_aot_modules.hpp"
+#include "abi/std_aot_modules.hpp"
 #include "abi/chali_abi_runtime.hpp"
 #include "c_api_failure_arena.hpp"
 #include <cassert>
@@ -227,7 +227,7 @@ void standardModules()
             } \
         } \
     }
-#include "glue/aot_modules.inc"
+#include "abi/aot_modules.inc"
 #undef CHALI_AOT_MODULE
 #undef CHALI_STANDARD_ONLY
     size_t count = 0;

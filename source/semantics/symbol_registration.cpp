@@ -1410,7 +1410,8 @@ bool RegisterTop()
         if (!top.abiLibrary.empty())
         {
             declaration.abiLibrary = DecodeAbiLibraryPath(top.abiLibrary);
-            if (!declaration.abiLibrary.empty() && !chali_aot::isDirectLinkLibrary(declaration.abiLibrary))
+            if (!declaration.abiLibrary.empty() && !chali_aot::isDirectLinkLibrary(declaration.abiLibrary)
+                && !chali_aot::isBuiltinNativeLibrary(declaration.abiLibrary))
             {
                 namespace fs = std::filesystem;
                 const auto library = Memory::u8path(declaration.abiLibrary);

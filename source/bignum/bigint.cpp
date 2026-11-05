@@ -1,596 +1,337 @@
 #if !defined(NO_CHALI_BIG_INT)
 /**
  * @file bigint.cpp
- * @brief 大整数构造、规范化、基础幅值运算、有符号算术与整数方根。
- *
- * 参考 `eigenmath-plus/eigenmath_bigint.c` 的整数部分：同样是"符号 + 小端 limb +
- * 有效长度 + 每次运算后规范化"，只是把手工 `malloc` 换成 `std::vector`。
- * 乘法按补齐规模在 Karatsuba 与 NTT 之间切换，递归工作区一次分配。
+ * @brief 大整数 C 内核的 C++ 所有权与异常兼容层。
  */
-
 #include "bigint.hpp"
-
-#include <algorithm>
-#include <limits>
 #include <stdexcept>
+#include <utility>
 
 namespace bigint
 {
 namespace
 {
-constexpr std::uint64_t kLimbBase = 1ull << 32;
 /**
- * @brief 检查十进制输入字符是否为 ASCII 数字。
- * @param ch 待检查的输入字符。
- * @return 字符位于 0 到 9 时返回 true。
+ * @brief 将 C 分配接到原有预算和所有者。
+ * @param context 所有者。
+ * @param bytes 大小。
+ * @return 地址或空。
  */
-bool isDigit(char ch) { return ch >= '0' && ch <= '9'; }
-}  // namespace
-
-// ---------------------------------------------------------------------------
-//  构造 / 规范化
-// ---------------------------------------------------------------------------
-
-/**
- * @brief 从 64 位有符号整数构造（`INT64_MIN` 也正确）。
- * @param value 值。
- */
-BigInt::BigInt(std::int64_t value)
+void *allocate(void *context, std::size_t bytes) noexcept
 {
-    if (value == 0) return;
-    sign_ = (value < 0) ? -1 : 1;
-    // INT64_MIN 取负会溢出，所以先按无符号取幅值
-    std::uint64_t magnitude = (value < 0) ? (~static_cast<std::uint64_t>(value) + 1ull) : static_cast<std::uint64_t>(value);
-    while (magnitude != 0)
+    try
     {
-        limbs_.push_back(static_cast<std::uint32_t>(magnitude & 0xFFFFFFFFull));
-        magnitude >>= 32u;
-    }
+        return Memory::allocate(static_cast<Memory::RuntimeAllocator *>(context), bytes, alignof(std::max_align_t));
+    } catch (...) { return nullptr; }
 }
-
 /**
- * @brief 从十进制字符串构造（可带 `+` / `-` 号，允许前导 0）。
- * @param decimal 十进制文本。
- * @throws std::invalid_argument 文本不是合法十进制整数时。
+ * @brief 通过原所有者释放 C 存储。
+ * @param context 所有者。
+ * @param pointer 地址。
+ * @param bytes 大小。
  */
-BigInt::BigInt(const Memory::String &decimal)
+void release(void *context, void *pointer, std::size_t bytes) noexcept
 {
-    *this = parseDecimal(decimal, nullptr);
+    (void)bytes;
+    Memory::release(static_cast<Memory::RuntimeAllocator *>(context), pointer);
 }
-
 /**
- * @brief 从 64 位**无符号**整数构造（`uint64_t` 上界也不会被当成 -1）。
- *
- * 与参考实现的 `EigenMath_BigIntFromU64` 对应：`int64_t` 构造只吃有符号范围，
- * 大于 `INT64_MAX` 的无符号值请显式用这个。
- * @param value 值。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ * @brief 捕获当前分配上下文，空所有者保持原默认池的延迟创建。
+ * @return C 分配接口。
+ */
+ChaliCAllocator currentAllocator() { return { Memory::currentRuntimeAllocator(), allocate, release }; }
+/**
+ * @brief 独占 C 文本，构造 C++ 文本失败时仍能释放。
+ */
+struct Text
+{
+    ChaliBigString value{};
+    /**
+     * @brief 将工作区绑定到当前所有者。
+     */
+    Text() { value.allocator = currentAllocator(); }
+    /**
+     * @brief 归还临时 C 文本。
+     */
+    ~Text() { chali_big_string_clear(&value); }
+};
+}  // namespace
+/**
+ * @brief 将 C 状态恢复为既有 C++ 异常。
+ * @param status 状态。
+ * @param message 操作诊断。
+ */
+void BigInt::check(ChaliCStatus status, const char *message)
+{
+    if (status == CHALI_C_OK) return;
+    if (status == CHALI_C_OUT_OF_MEMORY) throw std::bad_alloc();
+    if (status == CHALI_C_RANGE_ERROR) throw std::length_error(message);
+    if (status == CHALI_C_DOMAIN_ERROR) throw std::domain_error(message);
+    throw std::invalid_argument(message);
+}
+/**
+ * @brief 构造无分配的零，保留当前所有者。
+ */
+BigInt::BigInt()
+{
+    auto allocator = currentAllocator();
+    check(chali_bigint_init(&value_, &allocator));
+}
+/**
+ * @brief 按当前所有者复制。
+ * @param other 原值。
+ */
+BigInt::BigInt(const BigInt &other) : BigInt() { check(chali_bigint_copy(&value_, &other.value_)); }
+/**
+ * @brief 移动 C 存储与原始所有者。
+ * @param other 原值。
+ */
+BigInt::BigInt(BigInt &&other) noexcept : value_(other.value_)
+{
+    other.value_.sign = 0;
+    other.value_.limbs.data = nullptr;
+    other.value_.limbs.length = other.value_.limbs.capacity = 0;
+}
+/**
+ * @brief 析构 C 存储。
+ */
+BigInt::~BigInt() { chali_bigint_clear(&value_); }
+/**
+ * @brief 保留目标所有者复制。
+ * @param other 原值。
+ * @return 当前对象。
+ */
+BigInt &BigInt::operator=(const BigInt &other)
+{
+    check(chali_bigint_copy(&value_, &other.value_));
+    return *this;
+}
+/**
+ * @brief 释放旧存储并接管来源。
+ * @param other 原值。
+ * @return 当前对象。
+ */
+BigInt &BigInt::operator=(BigInt &&other) noexcept
+{
+    if (this != &other)
+    {
+        chali_bigint_clear(&value_);
+        value_ = other.value_;
+        other.value_.sign = 0;
+        other.value_.limbs.data = nullptr;
+        other.value_.limbs.length = other.value_.limbs.capacity = 0;
+    }
+    return *this;
+}
+/**
+ * @brief 从有符号机器整数构造。
+ * @param value 数值。
+ */
+BigInt::BigInt(std::int64_t value) : BigInt() { check(chali_bigint_set_i64(&value_, value)); }
+/**
+ * @brief 从无符号机器整数构造。
+ * @param value 数值。
+ * @return 大整数。
  */
 BigInt BigInt::fromU64(std::uint64_t value)
 {
     BigInt out;
-    while (value != 0u)
-    {
-        out.limbs_.push_back(static_cast<std::uint32_t>(value & 0xFFFFFFFFull));
-        value >>= 32u;
-    }
-    if (!out.limbs_.empty()) out.sign_ = 1;
+    check(chali_bigint_set_u64(&out.value_, value));
     return out;
 }
-
 /**
- * @brief 从十进制字符串构造（不抛异常版）。
- * @param decimal 十进制文本。
- * @param ok 非空时写入是否解析成功。
- * @return 解析成功时的值；失败返回 0。
+ * @brief 解析十进制，非法输入保持既有零结果。
+ * @param decimal 文本。
+ */
+BigInt::BigInt(const Memory::String &decimal) : BigInt()
+{
+    const auto status = chali_bigint_parse(&value_, decimal.data(), decimal.size(), 0);
+    if (status != CHALI_C_INVALID_ARGUMENT) check(status);
+}
+/**
+ * @brief 解析严格十进制。
+ * @param decimal 文本。
+ * @param ok 成功标记。
+ * @return 数值或零。
  */
 BigInt BigInt::fromString(const Memory::String &decimal, bool *ok)
 {
-    bool parsed = false;
-    BigInt value = parseDecimal(decimal, &parsed);
-    if (ok != nullptr) *ok = parsed;
-    return parsed ? value : BigInt();
+    BigInt out;
+    const auto status = chali_bigint_parse(&out.value_, decimal.data(), decimal.size(), 0);
+    if (ok) *ok = status == CHALI_C_OK;
+    if (status != CHALI_C_INVALID_ARGUMENT) check(status);
+    return out;
 }
-
 /**
- * @brief 把十进制文本按 10^9 一段一段地吃进来（`ok` 见 fromString）。
- * @param decimal 十进制数值文本。
- * @param ok 非空时接收操作是否成功的标志。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ * @brief 按指定进制解析。
+ * @param text 文本。
+ * @param base 进制。
+ * @param ok 成功标记。
+ * @return 数值或零。
  */
-BigInt BigInt::parseDecimal(const Memory::String &decimal, bool *ok)
+BigInt BigInt::fromString(const Memory::String &text, unsigned base, bool *ok)
 {
-    auto report = [&](bool success) {
-        if (ok != nullptr) *ok = success;
-    };
-
-    std::size_t index = 0u;
-    while (index < decimal.size() && (decimal[index] == ' ' || decimal[index] == '\t')) ++index;
-    int sign = 1;
-    if ((index < decimal.size()) && (decimal[index] == '+' || decimal[index] == '-'))
-    {
-        if (decimal[index] == '-') sign = -1;
-        ++index;
-    }
-    if (index >= decimal.size()) /* 只有符号 / 空串 */
-    {
-        report(false);
-        return BigInt();
-    }
-    for (std::size_t cursor = index; cursor < decimal.size(); ++cursor)
-    {
-        if (!isDigit(decimal[cursor]))
-        {
-            report(false);
-            return BigInt();
-        }
-    }
-
-    /* 从高位往低位：每 9 位凑一段，`value = value × 10^9 + 段`。 */
-    BigInt value;
-    std::size_t cursor = index;
-    while (cursor < decimal.size())
-    {
-        const std::size_t take = std::min<std::size_t>(9u, decimal.size() - cursor);
-        std::uint32_t chunk = 0u;
-        std::uint32_t scale = 1u;
-        for (std::size_t offset = 0u; offset < take; ++offset)
-        {
-            chunk = chunk * 10u + static_cast<std::uint32_t>(decimal[cursor + offset] - '0');
-            scale *= 10u;
-        }
-        value.mulSmallAdd(scale, chunk);
-        cursor += take;
-    }
-    if (!value.isZero()) value.sign_ = sign;
-    report(true);
-    return value;
+    if (base < 2 || base > 36) throw std::invalid_argument("bigint: 进制必须在 2..36");
+    BigInt out;
+    const auto status = chali_bigint_parse(&out.value_, text.data(), text.size(), base);
+    if (ok) *ok = status == CHALI_C_OK;
+    if (status != CHALI_C_INVALID_ARGUMENT) check(status);
+    return out;
 }
-
 /**
- * @brief 规范化数值内部表示并移除冗余零位。
+ * @brief 从 C 文本创建既有字符串类型。
+ * @param base 进制。
+ * @return 独占文本。
  */
-void BigInt::normalize()
+Memory::String BigInt::format(unsigned base) const
 {
-    while (!limbs_.empty() && limbs_.back() == 0u) limbs_.pop_back();
-    if (limbs_.empty()) sign_ = 0;
+    if (isZero()) return Memory::String("0");
+    Text text;
+    check(chali_bigint_to_string(&text.value, &value_, base));
+    return Memory::String(text.value.data, text.value.length);
 }
-
 /**
- * @brief 绝对值。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ * @brief 十进制输出。
+ * @return 独占文本。
+ */
+Memory::String BigInt::toString() const { return format(0); }
+/**
+ * @brief 按指定进制输出。
+ * @param base 进制。
+ * @return 独占文本。
+ */
+Memory::String BigInt::toString(unsigned base) const
+{
+    if (base < 2 || base > 36) throw std::invalid_argument("bigint: 进制必须在 2..36");
+    return format(base);
+}
+/**
+ * @brief 十进制位数，工作区使用当前上下文。
+ * @return 位数。
+ */
+std::size_t BigInt::decimalDigits() const
+{
+    std::size_t count = 0;
+    auto allocator = currentAllocator();
+    check(chali_bigint_decimal_digits(&value_, &count, &allocator));
+    return count;
+}
+/**
+ * @brief 取幅值低位。
+ * @return 幅值低 64 位。
+ */
+std::uint64_t BigInt::toU64() const { return chali_bigint_to_u64(&value_); }
+/**
+ * @brief 保持既有幅值低位强转。
+ * @return 有符号位模式。
+ */
+std::int64_t BigInt::toI64() const { return static_cast<std::int64_t>(toU64()); }
+/**
+ * @brief 显式整数转换。
+ * @return 有符号位模式。
+ */
+BigInt::operator std::int64_t() const { return toI64(); }
+/**
+ * @brief 浮点近似。
+ * @return 近似数。
+ */
+double BigInt::toDouble() const { return chali_bigint_to_double(&value_); }
+/**
+ * @brief 显式浮点转换。
+ * @return 近似数。
+ */
+BigInt::operator double() const { return toDouble(); }
+/**
+ * @brief 绝对值副本。
+ * @return 非负副本。
  */
 BigInt BigInt::abs() const
 {
-    BigInt value = *this;
-    if (!value.isZero()) value.sign_ = 1;
-    return value;
-}
-
-// ---------------------------------------------------------------------------
-//  位操作 / 小整数除法（除法与十进制输出用）
-// ---------------------------------------------------------------------------
-
-/**
- * @brief 二进制位长度（0 返回 0）。
- * @retval 数值的有效二进制位数，零值为 0。
- */
-std::size_t BigInt::bitLength() const
-{
-    if (limbs_.empty()) return 0u;
-    std::size_t bits = (limbs_.size() - 1u) * 32u;
-    std::uint32_t top = limbs_.back();
-    while (top != 0u)
-    {
-        ++bits;
-        top >>= 1u;
-    }
-    return bits;
-}
-
-/**
- * @brief 取第 bit 位是不是 1。
- * @param bit 待写入或查询的二进制位。
- * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
- */
-bool BigInt::bitAt(std::size_t bit) const
-{
-    const std::size_t index = bit / 32u;
-    if (index >= limbs_.size()) return false;
-    return ((limbs_[index] >> (bit % 32u)) & 1u) != 0u;
-}
-
-/**
- * @brief 把第 bit 位置 1。
- * @param bit 待写入或查询的二进制位。
- */
-void BigInt::setBit(std::size_t bit)
-{
-    const std::size_t index = bit / 32u;
-    if (index >= limbs_.size()) limbs_.resize(index + 1u, 0u);
-    limbs_[index] |= (1u << (bit % 32u));
-    if (sign_ == 0) sign_ = 1; /* 对 0 置位后应变成 +1，而不是留在"零表示" */
-}
-
-/**
- * @brief 左移 bits 位（就地）。
- * @param bits 数值类型的位宽。
- */
-void BigInt::shiftLeft(std::size_t bits)
-{
-    if (limbs_.empty() || bits == 0u) return;
-    const std::size_t whole = bits / 32u;
-    const std::size_t part = bits % 32u;
-    Memory::Vector<std::uint32_t> out(limbs_.size() + whole + 1u, 0u);
-    for (std::size_t index = 0u; index < limbs_.size(); ++index)
-    {
-        const std::uint64_t value = static_cast<std::uint64_t>(limbs_[index]) << part;
-        out[index + whole] |= static_cast<std::uint32_t>(value & 0xFFFFFFFFull);
-        out[index + whole + 1u] |= static_cast<std::uint32_t>(value >> 32u);
-    }
-    limbs_.swap(out);
-    normalize();
-}
-
-/**
- * @brief 右移 bits 位（就地）。
- * @param bits 数值类型的位宽。
- */
-void BigInt::shiftRight(std::size_t bits)
-{
-    if (limbs_.empty() || bits == 0u) return;
-    const std::size_t whole = bits / 32u;
-    const std::size_t part = bits % 32u;
-    if (whole >= limbs_.size())
-    {
-        limbs_.clear();
-        sign_ = 0;
-        return;
-    }
-    Memory::Vector<std::uint32_t> out(limbs_.size() - whole, 0u);
-    for (std::size_t index = 0u; index + whole < limbs_.size(); ++index)
-    {
-        std::uint64_t value = limbs_[index + whole] >> part;
-        if (part != 0u && index + whole + 1u < limbs_.size())
-        {
-            value |= static_cast<std::uint64_t>(limbs_[index + whole + 1u]) << (32u - part);
-        }
-        out[index] = static_cast<std::uint32_t>(value & 0xFFFFFFFFull);
-    }
-    limbs_.swap(out);
-    normalize();
-}
-
-/**
- * @brief 幅值 = 幅值 × small + add（small < 2^32）。
- * @param small 小整数乘数或除数。
- * @param add 乘法后需要累加的小整数。
- */
-void BigInt::mulSmallAdd(std::uint32_t small, std::uint32_t add)
-{
-    std::uint64_t carry = add;
-    for (std::size_t index = 0u; index < limbs_.size(); ++index)
-    {
-        const std::uint64_t value =
-            static_cast<std::uint64_t>(limbs_[index]) * small + carry;
-        limbs_[index] = static_cast<std::uint32_t>(value & 0xFFFFFFFFull);
-        carry = value >> 32u;
-    }
-    while (carry != 0u)
-    {
-        limbs_.push_back(static_cast<std::uint32_t>(carry & 0xFFFFFFFFull));
-        carry >>= 32u;
-    }
-    normalize();
-    if (!limbs_.empty() && sign_ == 0) sign_ = 1;
-}
-
-/**
- * @brief 幅值 / small 并返回余数（small ≠ 0）。
- * @param small 小整数乘数或除数。
- * @retval 除法运算得到的余数。
- */
-std::uint32_t BigInt::divSmall(std::uint32_t small)
-{
-    std::uint64_t remainder = 0u;
-    for (std::size_t index = limbs_.size(); index-- > 0u;)
-    {
-        const std::uint64_t value = (remainder << 32u) | limbs_[index];
-        limbs_[index] = static_cast<std::uint32_t>(value / small);
-        remainder = value % small;
-    }
-    normalize();
-    return static_cast<std::uint32_t>(remainder);
-}
-
-// ---------------------------------------------------------------------------
-//  幅值运算
-// ---------------------------------------------------------------------------
-
-/**
- * @brief 幅值比较：|a| 与 |b|。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 左侧幅值小于、等于、大于右侧幅值时分别为负数、0、正数。
- */
-int BigInt::compareMagnitude(const BigInt &left, const BigInt &right)
-{
-    if (left.limbs_.size() != right.limbs_.size())
-    {
-        return (left.limbs_.size() < right.limbs_.size()) ? -1 : 1;
-    }
-    for (std::size_t index = left.limbs_.size(); index-- > 0u;)
-    {
-        if (left.limbs_[index] != right.limbs_[index])
-        {
-            return (left.limbs_[index] < right.limbs_[index]) ? -1 : 1;
-        }
-    }
-    return 0;
-}
-
-/**
- * @brief 幅值相加（都按非负处理）。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
- */
-BigInt BigInt::addMagnitude(const BigInt &left, const BigInt &right)
-{
-    BigInt out;
-    const std::size_t count = std::max(left.limbs_.size(), right.limbs_.size());
-    out.limbs_.assign(count, 0u);
-    std::uint64_t carry = 0u;
-    for (std::size_t index = 0u; index < count; ++index)
-    {
-        const std::uint64_t a = (index < left.limbs_.size()) ? left.limbs_[index] : 0u;
-        const std::uint64_t b = (index < right.limbs_.size()) ? right.limbs_[index] : 0u;
-        const std::uint64_t value = a + b + carry;
-        out.limbs_[index] = static_cast<std::uint32_t>(value & 0xFFFFFFFFull);
-        carry = value >> 32u;
-    }
-    if (carry != 0u) out.limbs_.push_back(static_cast<std::uint32_t>(carry));
-    out.normalize();
-    if (!out.limbs_.empty()) out.sign_ = 1;
+    BigInt out(*this);
+    if (out.value_.sign) out.value_.sign = 1;
     return out;
 }
-
 /**
- * @brief 幅值相减：要求 |left| ≥ |right|。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
- */
-BigInt BigInt::subMagnitude(const BigInt &left, const BigInt &right)
-{
-    BigInt out;
-    out.limbs_.assign(left.limbs_.size(), 0u);
-    std::int64_t borrow = 0; /* 0 或 -1 */
-    for (std::size_t index = 0u; index < left.limbs_.size(); ++index)
-    {
-        const std::int64_t a = static_cast<std::int64_t>(left.limbs_[index]);
-        const std::int64_t b = (index < right.limbs_.size()) ? static_cast<std::int64_t>(right.limbs_[index]) : 0;
-        std::int64_t value = a - b + borrow;
-        if (value < 0)
-        {
-            value += static_cast<std::int64_t>(kLimbBase);
-            borrow = -1;
-        }
-        else
-        {
-            borrow = 0;
-        }
-        out.limbs_[index] = static_cast<std::uint32_t>(value);
-    }
-    out.normalize();
-    if (!out.limbs_.empty()) out.sign_ = 1;
-    return out;
-}
-
-/**
- * @brief 整数平方根（向下取整）：二分 / 牛顿迭代，只用大整数的加减乘除。
- *
- * 大浮点的 `sqrt` 靠它（先放大到 2×digits 位有效数字再开方）。
- * @param value 非负整数；为负时抛 `std::domain_error`。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
- */
-BigInt integerSqrt(const BigInt &value)
-{
-    if (value.sign() < 0) throw std::domain_error("bigint: 负数没有整数平方根");
-    if (value.isZero()) return BigInt();
-    /* 二分：先找一个 high 使 high² > value，再不断折半逼近 */
-    BigInt low(0);
-    BigInt high(1);
-    while (high * high <= value) high *= BigInt(2);
-    while (high - low > BigInt(1))
-    {
-        const BigInt middle = (low + high) / BigInt(2);
-        if (middle * middle <= value)
-            low = middle;
-        else
-            high = middle;
-    }
-    return low;
-}
-
-/**
- * @brief 10 的 `exponent` 次幂（大浮点对齐指数时大量使用；幂用 NTT 乘法）。
- * @param exponent 幂运算的指数。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
- */
-BigInt pow10(std::uint64_t exponent) { return BigInt(10).pow(exponent); }
-
-/**
- * @brief 整数 `k` 次方根（向下取整）：二分，只用大整数的加减乘除与幂。
- * @param value 非负整数。
- * @param k 根次（≥ 1）。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
- */
-BigInt integerRoot(const BigInt &value, std::uint64_t k)
-{
-    if (k == 0u) throw std::invalid_argument("bigint: 根次必须为正");
-    if (value.sign() < 0) throw std::domain_error("bigint: 负数没有整数 k 次方根");
-    if (value.isZero() || k == 1u) return value;
-    /* 二分：high = 2^(bitLength / k + 1)，保证 high^k > value */
-    BigInt low(0);
-    BigInt high(1);
-    high.shiftLeft(value.bitLength() / k + 1u);
-    while (high - low > BigInt(1))
-    {
-        const BigInt middle = (low + high) / BigInt(2);
-        if (middle.pow(k) <= value)
-            low = middle;
-        else
-            high = middle;
-    }
-    return low;
-}
-
-// ---------------------------------------------------------------------------
-//  比较 / 算术
-// ---------------------------------------------------------------------------
-
-/**
- * @brief 比较当前数值与另一数值的大小。
- * @param other 参与当前运算或比较的另一对象。
- * @retval 当前值小于、等于、大于另一值时分别为负数、0、正数。
- */
-int BigInt::compare(const BigInt &other) const
-{
-    if (sign_ != other.sign_) return (sign_ < other.sign_) ? -1 : 1;
-    const int magnitude = compareMagnitude(*this, other);
-    return (sign_ >= 0) ? magnitude : -magnitude;
-}
-
-/**
- * @brief 计算两个数值的和。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
- */
-BigInt operator+(const BigInt &left, const BigInt &right)
-{
-    if (left.isZero()) return right;
-    if (right.isZero()) return left;
-    if (left.sign_ == right.sign_)
-    {
-        BigInt out = BigInt::addMagnitude(left, right);
-        out.sign_ = left.sign_;
-        return out;
-    }
-    const int magnitude = BigInt::compareMagnitude(left, right);
-    if (magnitude == 0) return BigInt();
-    if (magnitude > 0)
-    {
-        BigInt out = BigInt::subMagnitude(left, right);
-        out.sign_ = left.sign_;
-        return out;
-    }
-    BigInt out = BigInt::subMagnitude(right, left);
-    out.sign_ = right.sign_;
-    return out;
-}
-
-/**
- * @brief 计算数值之差或当前数值的相反数。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
- */
-BigInt operator-(const BigInt &left, const BigInt &right) { return left + (-right); }
-
-/**
- * @brief 一元负号。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ * @brief 取负副本。
+ * @return 相反数。
  */
 BigInt BigInt::operator-() const
 {
-    BigInt out = *this;
-    out.sign_ = -out.sign_;
+    BigInt out(*this);
+    out.value_.sign = -out.value_.sign;
     return out;
 }
+/**
+ * @brief 比较整数。
+ * @param other 另一值。
+ * @return 三态比较值。
+ */
+int BigInt::compare(const BigInt &other) const { return chali_bigint_compare(&value_, &other.value_); }
 
 /**
- * @brief 计算两个数值的乘积。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 两个数值相乘得到的积。
+ * @brief 调用 C 有符号算术。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 运算结果。
+ */
+BigInt operator+(const BigInt &left, const BigInt &right)
+{
+    BigInt out;
+    BigInt::check(chali_bigint_add(&out.value_, &left.value_, &right.value_));
+    return out;
+}
+/**
+ * @brief 调用 C 有符号算术。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 运算结果。
+ */
+BigInt operator-(const BigInt &left, const BigInt &right)
+{
+    BigInt out;
+    BigInt::check(chali_bigint_subtract(&out.value_, &left.value_, &right.value_));
+    return out;
+}
+/**
+ * @brief 调用 C 有符号算术。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 运算结果。
  */
 BigInt operator*(const BigInt &left, const BigInt &right)
 {
-    if (left.isZero() || right.isZero()) return BigInt();
-    BigInt out = BigInt::mulMagnitude(left, right);
-    out.sign_ = left.sign_ * right.sign_;
+    BigInt out;
+    BigInt::check(chali_bigint_multiply(&out.value_, &left.value_, &right.value_));
     return out;
 }
-
 /**
- * @brief 除取整：`this / divisor` 与余数（向零截断，`this = q × divisor + r`）。
- * @param divisor 除数。
- * @param quotient 非空时写入商。
- * @param remainder 非空时写入余数。
- * @return 除数为零返回 false（此时不写输出）。
- */
-bool BigInt::divmod(const BigInt &divisor, BigInt *quotient, BigInt *remainder) const
-{
-    if (divisor.isZero()) return false;
-    if (isZero())
-    {
-        if (quotient != nullptr) *quotient = BigInt();
-        if (remainder != nullptr) *remainder = BigInt();
-        return true;
-    }
-    BigInt q;
-    BigInt r;
-    BigInt::divmodMagnitude(*this, divisor, &q, &r);
-    /* 向零截断：商的符号是两边符号的积，余数符号跟被除数 */
-    if (!q.isZero())
-    {
-        q.sign_ = sign_ * divisor.sign_;
-        /* |a| ≥ |b| 时商的幅值正确；否则上面已经是 0 */
-    }
-    if (!r.isZero()) r.sign_ = sign_;
-    if (quotient != nullptr) *quotient = q;
-    if (remainder != nullptr) *remainder = r;
-    return true;
-}
-
-/**
- * @brief 计算两个数值相除的商。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ * @brief 除法适配。
+ * @param left 被除数。
+ * @param right 除数。
+ * @return 商。
  */
 BigInt operator/(const BigInt &left, const BigInt &right)
 {
-    BigInt quotient;
-    if (!left.divmod(right, &quotient, nullptr))
-    {
-        throw std::domain_error("bigint: 除以零");
-    }
-    return quotient;
+    BigInt out;
+    BigInt::check(chali_bigint_divmod(&out.value_, nullptr, &left.value_, &right.value_), "bigint: 除以零");
+    return out;
 }
-
 /**
- * @brief 计算两个整数相除的余数。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 计算得到的大数值；复合赋值运算返回当前对象。
+ * @brief 余数适配。
+ * @param left 被除数。
+ * @param right 除数。
+ * @return 余数。
  */
 BigInt operator%(const BigInt &left, const BigInt &right)
 {
-    BigInt remainder;
-    if (!left.divmod(right, nullptr, &remainder))
-    {
-        throw std::domain_error("bigint: 除以零");
-    }
-    return remainder;
+    BigInt out;
+    BigInt::check(chali_bigint_divmod(nullptr, &out.value_, &left.value_, &right.value_), "bigint: 除以零");
+    return out;
 }
-
 /**
- * @brief 将右操作数累加到当前值。
- * @param other 参与当前运算或比较的另一对象。
- * @retval 更新后的当前数值对象引用。
+ * @brief 复合运算并接管结果。
+ * @param other 右值。
+ * @return 当前对象。
  */
 BigInt &BigInt::operator+=(const BigInt &other)
 {
@@ -598,9 +339,9 @@ BigInt &BigInt::operator+=(const BigInt &other)
     return *this;
 }
 /**
- * @brief 从当前值减去右操作数。
- * @param other 参与当前运算或比较的另一对象。
- * @retval 更新后的当前数值对象引用。
+ * @brief 复合运算并接管结果。
+ * @param other 右值。
+ * @return 当前对象。
  */
 BigInt &BigInt::operator-=(const BigInt &other)
 {
@@ -608,9 +349,9 @@ BigInt &BigInt::operator-=(const BigInt &other)
     return *this;
 }
 /**
- * @brief 将当前值乘以右操作数。
- * @param other 参与当前运算或比较的另一对象。
- * @retval 更新后的当前数值对象引用。
+ * @brief 复合运算并接管结果。
+ * @param other 右值。
+ * @return 当前对象。
  */
 BigInt &BigInt::operator*=(const BigInt &other)
 {
@@ -618,9 +359,9 @@ BigInt &BigInt::operator*=(const BigInt &other)
     return *this;
 }
 /**
- * @brief 将当前值除以右操作数。
- * @param other 参与当前运算或比较的另一对象。
- * @retval 更新后的当前数值对象引用。
+ * @brief 复合运算并接管结果。
+ * @param other 右值。
+ * @return 当前对象。
  */
 BigInt &BigInt::operator/=(const BigInt &other)
 {
@@ -628,19 +369,18 @@ BigInt &BigInt::operator/=(const BigInt &other)
     return *this;
 }
 /**
- * @brief 将当前值更新为除以右操作数后的余数。
- * @param other 参与当前运算或比较的另一对象。
- * @retval 更新后的当前数值对象引用。
+ * @brief 复合运算并接管结果。
+ * @param other 右值。
+ * @return 当前对象。
  */
 BigInt &BigInt::operator%=(const BigInt &other)
 {
     *this = *this % other;
     return *this;
 }
-
 /**
- * @brief 推进迭代器或将当前数值增加一。
- * @retval 前置形式返回更新后的对象引用，后置形式返回修改前的数值副本。
+ * @brief 前置递增。
+ * @return 当前对象。
  */
 BigInt &BigInt::operator++()
 {
@@ -648,18 +388,18 @@ BigInt &BigInt::operator++()
     return *this;
 }
 /**
- * @brief 推进迭代器或将当前数值增加一。
- * @retval 前置形式返回更新后的对象引用，后置形式返回修改前的数值副本。
+ * @brief 后置递增。
+ * @return 原值。
  */
 BigInt BigInt::operator++(int)
 {
-    BigInt before = *this;
-    ++(*this);
-    return before;
+    BigInt out(*this);
+    ++*this;
+    return out;
 }
 /**
- * @brief 将当前数值减小一。
- * @retval 前置形式返回更新后的对象引用，后置形式返回修改前的数值副本。
+ * @brief 前置递减。
+ * @return 当前对象。
  */
 BigInt &BigInt::operator--()
 {
@@ -667,59 +407,355 @@ BigInt &BigInt::operator--()
     return *this;
 }
 /**
- * @brief 将当前数值减小一。
- * @retval 前置形式返回更新后的对象引用，后置形式返回修改前的数值副本。
+ * @brief 后置递减。
+ * @return 原值。
  */
 BigInt BigInt::operator--(int)
 {
-    BigInt before = *this;
-    --(*this);
-    return before;
+    BigInt out(*this);
+    --*this;
+    return out;
 }
-
 /**
- * @brief 判断两个值是否相等。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 两个值相等时为 true，否则为 false。
+ * @brief 调用 C 比较。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 关系成立时为真。
  */
 bool operator==(const BigInt &left, const BigInt &right) { return left.compare(right) == 0; }
 /**
- * @brief 判断两个值是否不相等。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 两个值不相等时为 true，否则为 false。
+ * @brief 调用 C 比较。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 关系成立时为真。
  */
 bool operator!=(const BigInt &left, const BigInt &right) { return left.compare(right) != 0; }
 /**
- * @brief 判断左值是否小于右值。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 左值小于右值时为 true，否则为 false。
+ * @brief 调用 C 比较。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 关系成立时为真。
  */
 bool operator<(const BigInt &left, const BigInt &right) { return left.compare(right) < 0; }
 /**
- * @brief 判断左值是否小于或等于右值。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 左值小于或等于右值时为 true，否则为 false。
+ * @brief 调用 C 比较。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 关系成立时为真。
  */
 bool operator<=(const BigInt &left, const BigInt &right) { return left.compare(right) <= 0; }
 /**
- * @brief 判断左值是否大于右值。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 左值大于右值时为 true，否则为 false。
+ * @brief 调用 C 比较。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 关系成立时为真。
  */
 bool operator>(const BigInt &left, const BigInt &right) { return left.compare(right) > 0; }
 /**
- * @brief 判断左值是否大于或等于右值。
- * @param left 左操作数。
- * @param right 右操作数。
- * @retval 左值大于或等于右值时为 true，否则为 false。
+ * @brief 调用 C 比较。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 关系成立时为真。
  */
 bool operator>=(const BigInt &left, const BigInt &right) { return left.compare(right) >= 0; }
-
+/**
+ * @brief 商余接口，除零按旧接口返回假。
+ * @param divisor 除数。
+ * @param quotient 商。
+ * @param remainder 余数。
+ * @return 除数非零。
+ */
+bool BigInt::divmod(const BigInt &divisor, BigInt *quotient, BigInt *remainder) const
+{
+    if (divisor.isZero()) return false;
+    if (isZero())
+    {
+        if (quotient) *quotient = BigInt();
+        if (remainder) *remainder = BigInt();
+        return true;
+    }
+    auto allocator = currentAllocator();
+    auto status = chali_bigint_divmod_work(quotient ? &quotient->value_ : nullptr, remainder ? &remainder->value_ : nullptr, &value_, &divisor.value_, &allocator);
+    if (status == CHALI_C_DOMAIN_ERROR) return false;
+    check(status);
+    return true;
+}
+/**
+ * @brief 整数快速幂。
+ * @param exponent 指数。
+ * @return 幂。
+ */
+BigInt BigInt::pow(std::uint64_t exponent) const
+{
+    BigInt out;
+    check(chali_bigint_pow(&out.value_, &value_, exponent));
+    return out;
+}
+/**
+ * @brief 最大公约数。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 公约数。
+ */
+BigInt BigInt::gcd(const BigInt &left, const BigInt &right)
+{
+    BigInt out;
+    check(chali_bigint_gcd(&out.value_, &left.value_, &right.value_));
+    return out;
+}
+/**
+ * @brief 最小公倍数。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 公倍数。
+ */
+BigInt BigInt::lcm(const BigInt &left, const BigInt &right)
+{
+    BigInt out;
+    check(chali_bigint_lcm(&out.value_, &left.value_, &right.value_));
+    return out;
+}
+/**
+ * @brief 非负模。
+ * @param modulus 模数。
+ * @return 余数。
+ */
+BigInt BigInt::modNonNegative(const BigInt &modulus) const
+{
+    BigInt out;
+    check(chali_bigint_mod(&out.value_, &value_, &modulus.value_), "bigint: 模数为零");
+    return out;
+}
+/**
+ * @brief 大指数模幂。
+ * @param exponent 指数。
+ * @param modulus 模数。
+ * @return 结果。
+ */
+BigInt BigInt::powmod(const BigInt &exponent, const BigInt &modulus) const
+{
+    if (modulus.isZero()) throw std::domain_error("bigint: 模数为零");
+    if (exponent.isNegative()) throw std::invalid_argument("bigint: 负指数没有模幂（请先求模逆元）");
+    BigInt out;
+    check(chali_bigint_powmod(&out.value_, &value_, &exponent.value_, &modulus.value_));
+    return out;
+}
+/**
+ * @brief 机器指数模幂。
+ * @param exponent 指数。
+ * @param modulus 模数。
+ * @return 结果。
+ */
+BigInt BigInt::powmod(std::uint64_t exponent, const BigInt &modulus) const
+{
+    if (modulus.isZero()) throw std::domain_error("bigint: 模数为零");
+    return powmod(fromU64(exponent), modulus);
+}
+/**
+ * @brief 扩展欧几里得。
+ * @param a 左值。
+ * @param b 右值。
+ * @return 三元结果。
+ */
+ExtendedGcd BigInt::extendedGcd(const BigInt &a, const BigInt &b)
+{
+    ExtendedGcd out;
+    check(chali_bigint_extended_gcd(&out.gcd.value_, &out.x.value_, &out.y.value_, &a.value_, &b.value_));
+    return out;
+}
+/**
+ * @brief 模逆元。
+ * @param value 数值。
+ * @param modulus 模数。
+ * @return 逆元。
+ */
+BigInt BigInt::modInverse(const BigInt &value, const BigInt &modulus)
+{
+    if (modulus.isZero()) throw std::domain_error("bigint: 模数为零");
+    BigInt out;
+    check(chali_bigint_inverse(&out.value_, &value.value_, &modulus.value_), "bigint: 模逆元不存在（两数不互素）");
+    return out;
+}
+/**
+ * @brief 概率素性。
+ * @param rounds 轮数。
+ * @return 判定。
+ */
+bool BigInt::isProbablePrime(std::size_t rounds) const
+{
+    int out = 0;
+    auto allocator = currentAllocator();
+    check(chali_bigint_is_probable_prime(&value_, rounds, &out, &allocator));
+    return out != 0;
+}
+/**
+ * @brief 下一个概率素数。
+ * @param rounds 轮数。
+ * @return 素数。
+ */
+BigInt BigInt::nextProbablePrime(std::size_t rounds) const
+{
+    BigInt out;
+    check(chali_bigint_next_probable_prime(&out.value_, &value_, rounds));
+    return out;
+}
+/**
+ * @brief 调用 C 非负位运算。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 位运算结果。
+ */
+BigInt operator&(const BigInt &left, const BigInt &right)
+{
+    BigInt out;
+    BigInt::check(chali_bigint_bitwise(&out.value_, &left.value_, &right.value_, 0), "bigint: 位运算只支持非负整数");
+    return out;
+}
+/**
+ * @brief 调用 C 非负位运算。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 位运算结果。
+ */
+BigInt operator|(const BigInt &left, const BigInt &right)
+{
+    BigInt out;
+    BigInt::check(chali_bigint_bitwise(&out.value_, &left.value_, &right.value_, 1), "bigint: 位运算只支持非负整数");
+    return out;
+}
+/**
+ * @brief 调用 C 非负位运算。
+ * @param left 左值。
+ * @param right 右值。
+ * @return 位运算结果。
+ */
+BigInt operator^(const BigInt &left, const BigInt &right)
+{
+    BigInt out;
+    BigInt::check(chali_bigint_bitwise(&out.value_, &left.value_, &right.value_, 2), "bigint: 位运算只支持非负整数");
+    return out;
+}
+/**
+ * @brief 保留补码等式定义。
+ * @return 取反结果。
+ */
+BigInt BigInt::operator~() const { return -*this - BigInt(1); }
+/**
+ * @brief 查询有效位数。
+ * @return 位数。
+ */
+std::size_t BigInt::bitLength() const { return chali_bigint_bit_length(&value_); }
+/**
+ * @brief 查询幅值位。
+ * @param bit 位号。
+ * @return 位值。
+ */
+bool BigInt::bitAt(std::size_t bit) const { return chali_bigint_bit_at(&value_, bit) != 0; }
+/**
+ * @brief 设置位。
+ * @param bit 位号。
+ */
+void BigInt::setBit(std::size_t bit) { check(chali_bigint_change_bit(&value_, bit, 1)); }
+/**
+ * @brief 清除位。
+ * @param bit 位号。
+ */
+void BigInt::clearBit(std::size_t bit) { check(chali_bigint_change_bit(&value_, bit, 0)); }
+/**
+ * @brief 翻转位。
+ * @param bit 位号。
+ */
+void BigInt::flipBit(std::size_t bit) { check(chali_bigint_change_bit(&value_, bit, 2)); }
+/**
+ * @brief 左移幅值。
+ * @param bits 位数。
+ */
+void BigInt::shiftLeft(std::size_t bits)
+{
+    if (!isZero() && bits && value_.limbs.allocator.context != Memory::currentRuntimeAllocator())
+    {
+        BigInt shifted(*this);
+        check(chali_bigint_shift_left(&shifted.value_, bits));
+        *this = std::move(shifted);
+    }
+    else
+        check(chali_bigint_shift_left(&value_, bits));
+}
+/**
+ * @brief 右移幅值。
+ * @param bits 位数。
+ */
+void BigInt::shiftRight(std::size_t bits)
+{
+    if (!isZero() && bits && bits / 32 < value_.limbs.length && value_.limbs.allocator.context != Memory::currentRuntimeAllocator())
+    {
+        BigInt shifted(*this);
+        chali_bigint_shift_right(&shifted.value_, bits);
+        *this = std::move(shifted);
+    }
+    else
+        chali_bigint_shift_right(&value_, bits);
+}
+/**
+ * @brief 设置 NTT 阈值。
+ * @param limbs 阈值。
+ */
+void BigInt::setMultiplicationThreshold(std::size_t limbs) { chali_bigint_set_multiplication_threshold(limbs); }
+/**
+ * @brief 读取 NTT 阈值。
+ * @return 阈值。
+ */
+std::size_t BigInt::multiplicationThreshold() { return chali_bigint_multiplication_threshold(); }
+/**
+ * @brief 设置 Karatsuba 阈值。
+ * @param limbs 阈值。
+ */
+void BigInt::setKaratsubaThreshold(std::size_t limbs) { chali_bigint_set_karatsuba_threshold(limbs); }
+/**
+ * @brief 读取 Karatsuba 阈值。
+ * @return 阈值。
+ */
+std::size_t BigInt::karatsubaThreshold() { return chali_bigint_karatsuba_threshold(); }
+/**
+ * @brief 设置除法阈值。
+ * @param limbs 阈值。
+ */
+void BigInt::setDivisionThreshold(std::size_t limbs) { chali_bigint_set_division_threshold(limbs); }
+/**
+ * @brief 读取除法阈值。
+ * @return 阈值。
+ */
+std::size_t BigInt::divisionThreshold() { return chali_bigint_division_threshold(); }
+/**
+ * @brief 整数平方根。
+ * @param value 非负数。
+ * @return 根。
+ */
+BigInt integerSqrt(const BigInt &value)
+{
+    BigInt out;
+    BigInt::check(chali_bigint_sqrt(&out.value_, &value.value_), "bigint: 负数没有整数平方根");
+    return out;
+}
+/**
+ * @brief 整数 k 次根。
+ * @param value 非负数。
+ * @param degree 根次。
+ * @return 根。
+ */
+BigInt integerRoot(const BigInt &value, std::uint64_t degree)
+{
+    if (!degree) throw std::invalid_argument("bigint: 根次必须为正");
+    BigInt out;
+    BigInt::check(chali_bigint_root(&out.value_, &value.value_, degree), "bigint: 负数没有整数 k 次方根");
+    return out;
+}
+/**
+ * @brief 十进制缩放因子，运算仍由 C 快速幂完成。
+ * @param exponent 指数。
+ * @return 十的幂。
+ */
+BigInt pow10(std::uint64_t exponent) { return BigInt(10).pow(exponent); }
 }  // namespace bigint
 
 #endif

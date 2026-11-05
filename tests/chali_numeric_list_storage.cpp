@@ -3,7 +3,7 @@
  * @brief 核对数值列表槽布局、读取、兼容物化、容量和最终释放。
  */
 #include "ircode/runtime_internal.hpp"
-#include "glue/std_collection_state.hpp"
+#include "abi/std_collection_state.hpp"
 #include "allocator/system_arena.hpp"
 #include <cassert>
 #include <cstdio>

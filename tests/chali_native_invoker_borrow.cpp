@@ -4,7 +4,7 @@
  */
 #include "ircode/runtime_internal.hpp"
 #include "allocator/system_arena.hpp"
-#include "glue/std_collection_state.hpp"
+#include "abi/std_collection_state.hpp"
 #include <cassert>
 
 /**

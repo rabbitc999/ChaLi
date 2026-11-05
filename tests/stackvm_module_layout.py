@@ -17,7 +17,8 @@ def main():
         namespace = re.search(r"^namespace\b", text, re.M)
         if namespace:
             assert not re.search(r"^\s*#include\b", text[namespace.start():], re.M), name
-    target = "build/chali-ircode-aot-core/libstackvm.a"
+    build_root = os.environ.get("CHALI_BUILD_ROOT", "build").replace("\\", "/").rstrip("/")
+    target = build_root + "/chali-ircode-aot-core/libstackvm.a"
     probe = directory / "native_text.cpp"
     saved = probe.stat()
     make = os.environ.get("MAKE", "make")
@@ -25,7 +26,8 @@ def main():
         os.utime(probe, ns=(saved.st_atime_ns, max(saved.st_mtime_ns, (ROOT / target).stat().st_mtime_ns) + 1_000_000))
         # 配置写入器每次都会运行但内容未变时不更新时间；干跑需保留已经验收的配置戳，
         # 避免 make 假设该伪目标改变而把全部对象误记为重编。
-        result = subprocess.run([make, "-n", "-o", "build/chali-runtime/buildConfig.json", target], cwd=ROOT, capture_output=True,
+        result = subprocess.run([make, "-n", "-o", build_root + "/chali-runtime/buildConfig.json",
+                                 "CHALI_BUILD_ROOT=" + build_root, target], cwd=ROOT, capture_output=True,
                                 text=True, encoding="utf-8", errors="replace", timeout=60)
         assert result.returncode == 0, result
         units = re.findall(r"\s-c\s+source/ircode/([a-z0-9_]+\.cpp)\s", result.stdout)

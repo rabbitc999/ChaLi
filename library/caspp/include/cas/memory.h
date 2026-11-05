@@ -17,6 +17,9 @@
 #include "detail/memory_pool.hpp"
 
 #include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <limits>
 #include <deque>
 #include <functional>
 #include <list>
@@ -53,23 +56,53 @@ public:
     {
     }
 
-    /** @brief 从进程级 CAS 池分配；池未初始化时退回标准分配。 */
+    /**
+     * @brief 从 CAS 池分配；后备存储使用 C malloc 并保持元素对齐。
+     * @param count 元素数量。
+     * @return 存储地址；无法分配时抛出 bad_alloc。
+     */
     T *allocate(std::size_t count)
     {
         if (count > static_cast<std::size_t>(-1) / sizeof(T)) throw std::bad_alloc();
         void *raw = Allocator::ready() ? Allocator::allocate(count * sizeof(T), alignof(T)) : nullptr;
         if (!raw)
         {
-            // 池未就绪或容量不足：交给标准分配器。释放时按同一判据归还，配对不会错。
-            raw = ::operator new(count * sizeof(T));
+            if constexpr (alignof(T) <= alignof(std::max_align_t))
+            {
+                const auto bytes = count * sizeof(T);
+                raw = std::malloc(bytes ? bytes : 1);
+                if (!raw) throw std::bad_alloc();
+            }
+            else
+            {
+                constexpr auto alignment = alignof(T) > alignof(void *) ? alignof(T) : alignof(void *);
+                constexpr auto overhead = sizeof(void *) + alignment - 1u;
+                const auto bytes = count * sizeof(T);
+                if (bytes > std::numeric_limits<std::size_t>::max() - overhead) throw std::bad_alloc();
+                void *storage = std::malloc(bytes + overhead);
+                if (!storage) throw std::bad_alloc();
+                const auto start = reinterpret_cast<std::uintptr_t>(storage) + sizeof(void *);
+                const auto address = (start + alignment - 1u) & ~static_cast<std::uintptr_t>(alignment - 1u);
+                raw = reinterpret_cast<void *>(address);
+                reinterpret_cast<void **>(raw)[-1] = storage;
+            }
         }
         return static_cast<T *>(raw);
     }
-    /** @brief 归还：池内地址回池，其余交给标准分配器。 */
-    void deallocate(T *pointer, std::size_t) noexcept
+    /**
+     * @brief 池内地址回池，后备存储用配对的 C free 释放。
+     * @param pointer 待释放地址。
+     * @param count 原元素数量。
+     */
+    void deallocate(T *pointer, std::size_t count) noexcept
     {
+        (void)count;
         if (!pointer) return;
-        if (!Allocator::release(pointer)) ::operator delete(static_cast<void *>(pointer));
+        if (!Allocator::release(pointer))
+        {
+            if constexpr (alignof(T) <= alignof(std::max_align_t)) std::free(pointer);
+            else std::free(reinterpret_cast<void **>(pointer)[-1]);
+        }
     }
 
     template <class U>

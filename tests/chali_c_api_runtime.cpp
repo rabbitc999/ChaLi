@@ -4,7 +4,7 @@
 #include "abi/chali_abi_registry.hpp"
 #include "ircode/runtime_internal.hpp"
 #include "c_api_failure_arena.hpp"
-#include "glue/std_collection.hpp"
+#include "abi/std_collection.hpp"
 #include "abi/scalar_storage.hpp"
 #include "ircode/native_value_text.hpp"
 #include <cassert>

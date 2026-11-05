@@ -1,5 +1,6 @@
 #include "chali_standard.h"
 #include "allocator/chali_allocator.hpp"
+#include "allocator/c_heap_allocator.hpp"
 #include <memory>
 #include <cstring>
 #include <limits>
@@ -111,12 +112,12 @@ struct BigIntRecord
 void *cloneBigIntRecord(const void *source)
 try
 {
-    return new BigIntRecord(*static_cast<const BigIntRecord *>(source));
+    return Memory::makeCHeapUnique<BigIntRecord>(*static_cast<const BigIntRecord *>(source)).release();
 } catch (...) { return nullptr; }
 /** @brief 销毁拥有的数值记录。
  * @param record 待销毁对象。
  */
-void destroyBigIntRecord(void *record) { delete static_cast<BigIntRecord *>(record); }
+void destroyBigIntRecord(void *record) { Memory::destroyCHeap(static_cast<BigIntRecord *>(record)); }
 /** @brief 查询或有界写入数值的默认十进制文本。
  * @param record 存活记录。
  * @param data 写入缓冲，查询时为空。
@@ -166,12 +167,12 @@ struct BigFloatRecord
 void *cloneBigFloatRecord(const void *source)
 try
 {
-    return new BigFloatRecord(*static_cast<const BigFloatRecord *>(source));
+    return Memory::makeCHeapUnique<BigFloatRecord>(*static_cast<const BigFloatRecord *>(source)).release();
 } catch (...) { return nullptr; }
 /** @brief 销毁拥有的数值记录。
  * @param record 待销毁对象。
  */
-void destroyBigFloatRecord(void *record) { delete static_cast<BigFloatRecord *>(record); }
+void destroyBigFloatRecord(void *record) { Memory::destroyCHeap(static_cast<BigFloatRecord *>(record)); }
 /** @brief 查询或有界写入数值的默认十进制文本。
  * @param record 存活记录。
  * @param data 写入缓冲，查询时为空。
@@ -227,8 +228,8 @@ inline int64_t bigIntDisabled(ChaliAbiFrame *ctx)
  */
 inline int64_t nativeNewBigInt(ChaliAbiFrame *ctx, bigint::BigInt value)
 {
-    auto *record = new BigIntRecord{ std::move(value) };
-    std::unique_ptr<BigIntRecord> owner(record);
+    auto owner = Memory::makeCHeapUnique<BigIntRecord>(BigIntRecord{ std::move(value) });
+    auto *record = owner.get();
     const auto handle = chali_abi_record_make_textual(ctx, "BigInteger", record, destroyBigIntRecord, cloneBigIntRecord, textBigIntRecord);
     if (handle) owner.release();
     return (handle);
@@ -777,8 +778,8 @@ STACKVM_BINT_STUB(readBigInt)
  */
 inline int64_t nativeNewBigFloat(ChaliAbiFrame *ctx, bigfloat::BigFloat value, int precision = 0)
 {
-    auto *record = new BigFloatRecord{ std::move(value), precision };
-    std::unique_ptr<BigFloatRecord> owner(record);
+    auto owner = Memory::makeCHeapUnique<BigFloatRecord>(BigFloatRecord{ std::move(value), precision });
+    auto *record = owner.get();
     const auto handle = chali_abi_record_make_textual(ctx, "BigDecimal", record, destroyBigFloatRecord, cloneBigFloatRecord, textBigFloatRecord);
     if (handle) owner.release();
     return (handle);
@@ -1411,3 +1412,6 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_big_number_records(size_t *c
     if (count) *count = sizeof(records) / sizeof(records[0]);
     return records;
 }
+
+#define CHALI_AOT_BIND_MODULE big_number
+#include "aot_bind_module.h"

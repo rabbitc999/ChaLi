@@ -16,7 +16,7 @@ CXX      ?= g++
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -Wpedantic
 # ChaLi 使用 source/bignum 副本；独立 caspp 工程仍可使用同级 bignum。
 BIGNUM_DIR ?= $(if $(wildcard ../../source/bignum/bigint.hpp),../../source/bignum,../bignum)
-CPPFLAGS += -Iinclude -I$(BIGNUM_DIR)
+CPPFLAGS += -Iinclude -I$(BIGNUM_DIR) -I$(BIGNUM_DIR)/../runtime_c
 LDFLAGS  ?=
 LDLIBS   ?=
 
@@ -29,10 +29,22 @@ endif
 
 # 库源文件（不含 main.cpp）
 LIB_SOURCES := $(shell python -c "from pathlib import Path; print(' '.join(Path('core_sources.txt').read_text().splitlines()))")
-LIB_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(LIB_SOURCES))
+LIB_OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(filter %.cpp,$(LIB_SOURCES))) $(patsubst %.c,$(BUILD_DIR)/%.o,$(filter %.c,$(LIB_SOURCES)))
 SHARED_BIGINT_SOURCES := $(wildcard $(BIGNUM_DIR)/bigint*.cpp)
 SHARED_BIGINT_OBJECTS := $(patsubst $(BIGNUM_DIR)/%.cpp,$(BUILD_DIR)/shared_%.o,$(SHARED_BIGINT_SOURCES))
-LIB_OBJECTS += $(SHARED_BIGINT_OBJECTS)
+SHARED_BIGINT_C_SOURCES := $(wildcard $(BIGNUM_DIR)/chali_big*.c)
+SHARED_MEMORY_C_SOURCES := $(wildcard $(BIGNUM_DIR)/../runtime_c/chali_memory.c $(BIGNUM_DIR)/../runtime_c/chali_buffer.c $(BIGNUM_DIR)/../runtime_c/chali_index.c)
+SHARED_BIGINT_C_OBJECTS := $(patsubst $(BIGNUM_DIR)/%.c,$(BUILD_DIR)/shared_c_%.o,$(SHARED_BIGINT_C_SOURCES))
+SHARED_MEMORY_C_OBJECTS := $(patsubst $(BIGNUM_DIR)/../runtime_c/%.c,$(BUILD_DIR)/shared_memory_%.o,$(SHARED_MEMORY_C_SOURCES))
+CFLAGS ?= -std=c11 -O2 -Wall -Wextra
+LIB_OBJECTS += $(SHARED_BIGINT_OBJECTS) $(SHARED_BIGINT_C_OBJECTS) $(SHARED_MEMORY_C_OBJECTS)
+$(SHARED_BIGINT_C_OBJECTS): $(BUILD_DIR)/shared_c_%.o: $(BIGNUM_DIR)/%.c
+	@python -c "from pathlib import Path; Path('$(dir $@)').mkdir(parents=True, exist_ok=True)"
+	$(CC) $(CFLAGS) $(CPPFLAGS) -MMD -MP -c $< -o $@
+$(SHARED_MEMORY_C_OBJECTS): $(BUILD_DIR)/shared_memory_%.o: $(BIGNUM_DIR)/../runtime_c/%.c
+	@python -c "from pathlib import Path; Path('$(dir $@)').mkdir(parents=True, exist_ok=True)"
+	$(CC) $(CFLAGS) $(CPPFLAGS) -MMD -MP -c $< -o $@
+
 
 $(SHARED_BIGINT_OBJECTS): $(BUILD_DIR)/shared_%.o: $(BIGNUM_DIR)/%.cpp $(BIGNUM_DIR)/bigint.hpp
 	@python -c "from pathlib import Path; Path('$(dir $@)').mkdir(parents=True, exist_ok=True)"
@@ -56,6 +68,9 @@ all: $(TARGET) $(TEST_TARGETS)
 $(BUILD_DIR)/%.o: %.cpp
 	@python -c "from pathlib import Path; Path('$(dir $@)').mkdir(parents=True, exist_ok=True)"
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -MMD -MP -c $< -o $@
+$(BUILD_DIR)/%.o: %.c
+	@python -c "from pathlib import Path; Path('$(dir $@)').mkdir(parents=True, exist_ok=True)"
+	$(CC) $(CFLAGS) $(CPPFLAGS) -MMD -MP -c $< -o $@
 
 $(TARGET): $(LIB_OBJECTS) $(MAIN_OBJECT)
 	@python -c "from pathlib import Path; Path('$(dir $@)').mkdir(parents=True, exist_ok=True)"

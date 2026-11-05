@@ -3,20 +3,19 @@
  * @brief LLVM 原生程序复用共享堆、对象表和标准库胶水，不解释语言指令。
  */
 #include "ircode/runtime_internal.hpp"
+#include "ircode/aot_thread_services.hpp"
 #include "abi/chali_native_library.hpp"
-#include "chali_i18n.hpp"
+#include "ircode/runtime_i18n.hpp"
 #include "abi/chali_abi_runtime.hpp"
 #include "abi/chali_abi_internal.h"
 #include "allocator/system_arena.hpp"
 #include "abi/chali_abi_registry.hpp"
-#include "glue/std_collection.hpp"
+#include "abi/std_collection.hpp"
 #include "console/utf8.hpp"
 #include <memory>
 #include <cstddef>
 #include <cstring>
 #include <cstdlib>
-#include <filesystem>
-#include <fstream>
 #include <limits>
 #include <map>
 #include <mutex>
@@ -41,6 +40,7 @@
 namespace
 {
 bool debugArgumentsEnabled = false;
+bool (*debugArgumentReader)() = nullptr;
 static_assert(sizeof(ChaliDebugAllocation) == 24 && sizeof(ChaliDebugMemoryThread) == 232
                   && sizeof(ChaliDebugObject) == 32 && sizeof(ChaliDebugValue) == 48
                   && sizeof(ChaliDebugMoved) == 24 && sizeof(ChaliDebugFrameContext) == 24
@@ -48,61 +48,17 @@ static_assert(sizeof(ChaliDebugAllocation) == 24 && sizeof(ChaliDebugMemoryThrea
               "调试内存目录需要固定的 64 位布局");
 }
 extern "C" {
-/** @brief 只读调试目录的稳定根，具体区间在调试源码停点前发布。 */
-ChaliDebugMemoryIndex chali_debug_memory{ 5, 8, 0 };
 /**
- * @brief 启用调试参数传输并连接会话专属终端，Linux 的 @ 前缀表示抽象套接字。
- * @return 无返回值；未设置终端时保持宿主标准流，连接失败则报告并退出。
+ * @brief 安装调试参数读取器并启用调试目录发布。
+ * @param reader 仅在调试产物中链接的读取器。
  */
-void chali_debug_console()
+void chali_host_enable_debug(bool (*reader)())
 {
     debugArgumentsEnabled = true;
-    const char *endpoint = std::getenv("CHALI_DEBUG_CONSOLE");
-    if (!endpoint || !*endpoint) return;
-    const auto openDescriptor = [&](const char *suffix) {
-        const auto name = std::string(endpoint) + suffix;
-#ifdef _WIN32
-        const HANDLE pipe = CreateFileA(name.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
-        if (pipe == INVALID_HANDLE_VALUE) return -1;
-        const int descriptor = _open_osfhandle(reinterpret_cast<intptr_t>(pipe), _O_RDWR | _O_BINARY);
-        if (descriptor < 0) CloseHandle(pipe);
-        return descriptor;
-#elif defined(__linux__)
-        sockaddr_un address{};
-        address.sun_family = AF_UNIX;
-        if (name.size() >= sizeof(address.sun_path)) return -1;
-        const bool abstract = name.front() == '@';
-        if (abstract) std::memcpy(address.sun_path + 1, name.data() + 1, name.size() - 1);
-        else std::strcpy(address.sun_path, name.c_str());
-        const auto addressSize = abstract ? offsetof(sockaddr_un, sun_path) + name.size() : sizeof(address);
-        const int descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
-        if (descriptor >= 0 && connect(descriptor, reinterpret_cast<sockaddr *>(&address), static_cast<socklen_t>(addressSize)) == 0) return descriptor;
-        if (descriptor >= 0) close(descriptor);
-        return -1;
-#else
-        return -1;
-#endif
-    };
-    const int input = openDescriptor("-stdin"), output = openDescriptor("-stdout");
-#ifdef _WIN32
-    const bool valid = input >= 0 && output >= 0 && _dup2(input, 0) == 0 && _dup2(output, 1) == 0 && _dup2(output, 2) == 0;
-    if (input > 2) _close(input);
-    if (output > 2) _close(output);
-#elif defined(__linux__)
-    const bool valid = input >= 0 && output >= 0 && dup2(input, 0) >= 0 && dup2(output, 1) >= 0 && dup2(output, 2) >= 0;
-    if (input > 2) close(input);
-    if (output > 2) close(output);
-#else
-    const bool valid = false;
-#endif
-    if (!valid)
-    {
-        std::fputs("chali: cannot connect debug terminal\n", stderr);
-        std::exit(2);
-    }
-    std::setvbuf(stdout, nullptr, _IONBF, 0);
-    std::setvbuf(stderr, nullptr, _IONBF, 0);
+    debugArgumentReader = reader;
 }
+/** @brief 只读调试目录的稳定根，具体区间在调试源码停点前发布。 */
+ChaliDebugMemoryIndex chali_debug_memory{ 5, 8, 0 };
 /**
  * @brief 登记当前程序实际可达的标准库模块。
  * @param registry 注册表。
@@ -146,33 +102,13 @@ extern const char __start_chali_code[], __stop_chali_code[];
 #endif
 }
 
+thread_local stackvm::aot::NativeThreadState stackvm::aot::nativeThreadState{};
+
 namespace
 {
 using namespace stackvm;
 using namespace stackvm::runtimeDetail;
-/**
- * @brief 同一原生线程的短期服务状态，共用一个 TLS 槽以减少重复寻址。
- * @note 各线程仍独立保存上下文、浮点返回标记、回调深度及清理状态。
- */
-struct NativeThreadState
-{
-    NativeContext *activeContext;
-    execution_detail::DataCapacityIndex *activeDataCapacity;
-    std::size_t callbackDepth;
-    std::uint64_t logicalSteps;
-    unsigned char nativeResultFloat;
-    bool nativeCleanup;
-};
-thread_local NativeThreadState nativeThreadState{};
-
-/**
- * @brief 在隔离宿主线程内建立上下文并调用已经生成的机器码。
- * @param machine 共享线程服务配置的子线程宿主。
- * @param data 从父线程复制的数据映像。
- * @param label 已验证的无捕获任务入口。
- * @return 原生任务的完成、取消或错误结果。
- */
-RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label);
+using namespace stackvm::aot;
 
 /**
  * @brief 将共享原生服务的输出直接写入宿主标准输出。
@@ -190,10 +126,10 @@ void writeOutput(void *user, const char *bytes, std::size_t count)
  * @brief 根据模块配置创建宿主对象和语言字节堆共用的分配后端。
  * @return 系统 malloc 分配器或原有连续内存池，所有者由模块持有。
  */
-std::unique_ptr<Memory::RuntimeAllocator> createRuntimeArena()
+Memory::CHeapUniquePtr<Memory::RuntimeAllocator> createRuntimeArena()
 {
-    if (chali_allocator_kind == 1) return std::make_unique<Memory::SystemRuntimeArena>(chali_heap_size);
-    return std::make_unique<Memory::DynamicRuntimeArena>(chali_heap_size);
+    if (chali_allocator_kind == 1) return Memory::makeCHeapUnique<Memory::SystemRuntimeArena>(chali_heap_size);
+    return Memory::makeCHeapUnique<Memory::DynamicRuntimeArena>(chali_heap_size);
 }
 
 /**
@@ -201,7 +137,7 @@ std::unique_ptr<Memory::RuntimeAllocator> createRuntimeArena()
  */
 struct Runtime
 {
-    std::unique_ptr<Memory::RuntimeAllocator> arena;
+    Memory::CHeapUniquePtr<Memory::RuntimeAllocator> arena;
     Memory::AllocationScope session;
     DataArea data;
     Memory::UniquePtr<execution_detail::DataCapacityIndex> dataCapacity;
@@ -209,7 +145,8 @@ struct Runtime
     NativeInvoker invoker;
     NativeRegistry registry;
     ChaliAbiRegistry registryHandle{{}, &registry};
-    Machine machine;
+    const ChaliThreadServices *threadServices = nullptr;
+    std::unique_ptr<void, void (*)(void *)> machine{nullptr, nullptr};
     Program program;
     Memory::Vector<Memory::String> arguments;
     NativeContext context;
@@ -245,10 +182,12 @@ struct Runtime
         context.exitRequested = &exiting;
         context.exitCode = &exitCode;
         context.invoker = &invoker;
-        context.machine = &machine;
-        machine.setData(&data);
-        machine.setThreadsEnabled(chali_threads_enabled != 0);
-        machine.setNativeThreadEntry(runChild);
+        threadServices = chali_program_thread_services();
+        if (threadServices)
+        {
+            machine = {threadServices->create(&context, &program, arena.get(), chali_threads_enabled != 0), threadServices->destroy};
+            context.machine = static_cast<Machine *>(machine.get());
+        }
         for (std::size_t at = 0; at < chali_function_count; ++at)
             program.labels.emplace(data.readCString(static_cast<std::size_t>(chali_function_addresses[at])), at);
         invoker = [](std::int64_t function, const Memory::Vector<NativeValue> &values, NativeValue &result) {
@@ -295,7 +234,7 @@ struct Runtime
      */
     ~Runtime()
     {
-        machine.finishNativeServices(context);
+        if (threadServices) threadServices->finish(&context);
         if (!context.error.empty()) chali_panic(context.error.c_str());
         for (const auto handle : objects.materializedObjects) objects.release(handle);
         for (const auto address : objects.materializedHeap)
@@ -332,10 +271,10 @@ std::size_t debugMemoryThreadCount = 0;  ///< 进程目录节点总数，包含�
 /** @brief 每个调试线程的宿主观察缓冲，不计入语言对象或堆分配。 */
 struct DebugMemoryState
 {
-    std::vector<ChaliDebugObject> objects;
-    std::vector<ChaliDebugValue> values;
-    std::vector<char> text;
-    std::vector<ChaliDebugMoved> moved;
+    std::vector<ChaliDebugObject, Memory::CHeapAllocator<ChaliDebugObject>> objects;
+    std::vector<ChaliDebugValue, Memory::CHeapAllocator<ChaliDebugValue>> values;
+    std::vector<char, Memory::CHeapAllocator<char>> text;
+    std::vector<ChaliDebugMoved, Memory::CHeapAllocator<ChaliDebugMoved>> moved;
     ChaliDebugMemoryThread *record = nullptr;
     ChaliDebugAllocation *allocations = nullptr;
     std::size_t capacity = 0;
@@ -655,7 +594,7 @@ struct DebugMemoryState
  */
 void NTAPI releaseDebugMemoryState(void *value) noexcept
 {
-    delete static_cast<DebugMemoryState *>(value);
+    Memory::destroyCHeap(static_cast<DebugMemoryState *>(value));
 }
 /** @brief 用 Windows 生命周期回调管理观察状态，避开旧 MinGW 仿真 TLS 的析构顺序。 */
 struct DebugMemorySlot
@@ -681,7 +620,7 @@ DebugMemoryState &debugMemoryState()
     auto *state = static_cast<DebugMemoryState *>(FlsGetValue(slot.index));
     if (!state)
     {
-        auto created = std::make_unique<DebugMemoryState>();
+        auto created = Memory::makeCHeapUnique<DebugMemoryState>();
         if (!FlsSetValue(slot.index, created.get())) throw std::runtime_error("无法登记调试观察状态");
         state = created.release();
     }
@@ -692,128 +631,6 @@ DebugMemoryState &debugMemoryState()
 #endif
 }
 
-/**
- * @brief 子线程安全点使用的协作取消信号。
- */
-struct NativeCancelled
-{
-};
-
-/**
- * @brief 原生子线程主动正常退出时保留的状态码。
- */
-struct NativeExit
-{
-    int code;
-};
-
-/**
- * @brief 让对象析构及其同步回调始终使用所属隔离线程的上下文。
- */
-struct ContextScope
-{
-    NativeContext *previous = nativeThreadState.activeContext;
-    execution_detail::DataCapacityIndex *previousCapacity = nativeThreadState.activeDataCapacity;
-    /**
-     * @brief 进入子线程上下文并借用预建的数据容量索引。
-     * @param context 本线程上下文，生命周期必须覆盖本作用域。
-     * @param capacity 本线程数据快照的容量索引。
-     */
-    ContextScope(NativeContext &context, execution_detail::DataCapacityIndex &capacity)
-    {
-        chali_reset_address_view();
-        nativeThreadState.activeContext = &context;
-        nativeThreadState.activeDataCapacity = &capacity;
-    }
-    /**
-     * @brief 所属对象全部销毁后恢复外层上下文。
-     */
-    ~ContextScope()
-    {
-        chali_reset_address_view();
-        nativeThreadState.activeContext = previous;
-        nativeThreadState.activeDataCapacity = previousCapacity;
-    }
-};
-
-/**
- * @brief 在隔离数据、堆与对象表中调用原生任务，不建立语言解释循环。
- * @param machine 子线程的共享服务宿主。
- * @param data 父线程数据快照。
- * @param label 无捕获任务标签。
- * @return 任务完成状态和诊断。
- */
-RunResult runChild(Machine &machine, DataArea &data, const Memory::String &label)
-{
-    auto &root = current();
-    Memory::AllocationScope allocation(root.arena.get());
-    NativeContext context = root.context;
-    execution_detail::DataCapacityIndex capacityIndex(&data);
-    ContextScope scope(context, capacityIndex);
-    Heap heap;
-    heap.reset(data.size());
-    Memory::Vector<Memory::String> arguments;
-    NativeServices services = root.services;
-    ObjectStore objects;
-    bool exiting = false;
-    int exitCode = 0;
-    context.heap = &heap;
-    context.data = &data;
-    context.objects = &objects;
-    services["native.rev.v1"] = &objects.nativeRecordRevision;
-    context.hostServices = &services;
-    context.machine = &machine;
-    context.programArguments = &arguments;
-    context.exitRequested = &exiting;
-    context.exitCode = &exitCode;
-    context.error.clear();
-    context.memoryFault.clear();
-    machine.setHeapAllocator(&heap);
-    machine.setThreadHeapFactory([] { return Memory::makeUnique<Heap>(); });
-    machine.invokeNativeService(root.program, context, "std::thread::current", {}, 0);
-    objects.recordContext = context;
-    RunResult result;
-    nativeThreadState.logicalSteps = 0;
-    nativeThreadState.nativeCleanup = false;
-    try
-    {
-        const auto address = data.binary.empty() ? Memory::String::npos :
-                                                   Memory::String(reinterpret_cast<const char *>(data.binary.data()), data.binary.size()).find(label + Memory::String(1, '\0'));
-        if (address == Memory::String::npos)
-            context.error = "原生任务入口没有函数地址";
-        else
-        {
-            const auto initial = machine.nativeThreadArgument(context);
-            std::int64_t bits = initial ? initial->integer : 0;
-            if (initial && initial->isFloat()) std::memcpy(&bits, &initial->floating, sizeof(bits));
-            if (context.error.empty()) chali_invoke(static_cast<std::int64_t>(address), initial ? 1 : 0, initial ? &bits : nullptr);
-        }
-    } catch (const NativeExit &exit)
-    {
-        result.exitCode = exit.code;
-        exiting = false;
-    } catch (const NativeCancelled &)
-    {
-        result.cancelled = true;
-    } catch (const std::exception &error)
-    {
-        context.error = error.what();
-    }
-    result.error = std::move(context.error);
-    context.error.clear();
-    nativeThreadState.nativeCleanup = true;
-    machine.finishNativeServices(context);
-    for (const auto handle : objects.materializedObjects) objects.release(handle);
-    for (const auto address : objects.materializedHeap)
-    {
-        std::size_t capacity = 0;
-        if (heap.capacityAt(address, capacity)) heap.release(address);
-    }
-    if (result.error.empty()) result.error = std::move(context.error);
-    context.error.clear();
-    result.ok = result.error.empty() && !result.recoverable && !result.cancelled;
-    return result;
-}
 }  // namespace
 
 extern "C" {
@@ -891,7 +708,10 @@ void *chali_host_abi_lookup(const char *path, const char *name, ChaliAbiError *f
         return nullptr;
     }
     static std::mutex mutex;
-    static std::map<std::string, std::shared_ptr<chali_host_detail::NativeLibrary>> libraries;
+    using LibraryPath = std::basic_string<char, std::char_traits<char>, Memory::CHeapAllocator<char>>;
+    using LibraryReference = std::shared_ptr<chali_host_detail::NativeLibrary>;
+    static std::map<LibraryPath, LibraryReference, std::less<>,
+                    Memory::CHeapAllocator<std::pair<const LibraryPath, LibraryReference>>> libraries;
     std::shared_ptr<chali_host_detail::NativeLibrary> library;
     {
         std::lock_guard<std::mutex> guard(mutex);
@@ -901,7 +721,7 @@ void *chali_host_abi_lookup(const char *path, const char *name, ChaliAbiError *f
     Memory::String error;
     if (!library)
     {
-        auto opened = std::make_shared<chali_host_detail::NativeLibrary>();
+        auto opened = std::allocate_shared<chali_host_detail::NativeLibrary>(Memory::CHeapAllocator<chali_host_detail::NativeLibrary>());
         if (!opened->open(path, &error))
         {
             chali_abi_status(failure, ChaliAbiHostFailure, error.c_str());
@@ -950,7 +770,7 @@ void chali_host_init()
     nativeThreadState.nativeCleanup = false;
     nativeThreadState.nativeResultFloat = 0;
     chali_reset_slots();
-    runtime = new Runtime;
+    runtime = Memory::makeCHeapUnique<Runtime>().release();
 }
 
 /**
@@ -967,7 +787,7 @@ void chali_host_trace()
     for (std::size_t at = 0; at < chali_trace_count; ++at)
         if (chali_trace_functions[at] == function) name = chali_trace_names[at];
     if (file && *file && line > 0)
-        std::fprintf(stderr, CHALI_TEXT("出错位置：%s:%lld%s%s%s\n"), file, static_cast<long long>(line), name ? "（" : "", name ? name : "", name ? "）" : "");
+        std::fprintf(stderr, CHALI_RUNTIME_TEXT("出错位置：%s:%lld%s%s%s\n"), file, static_cast<long long>(line), name ? "（" : "", name ? name : "", name ? "）" : "");
     void *frames[96];
     std::size_t count = 0;
 #ifdef _WIN32
@@ -983,7 +803,7 @@ void chali_host_trace()
     bool printed = false;
     if (name && *name)
     {
-        std::fputs(CHALI_TEXT("调用栈（内 → 外）：\n"), stderr);
+        std::fputs(CHALI_RUNTIME_TEXT("调用栈（内 → 外）：\n"), stderr);
         std::fprintf(stderr, "  %s\n", name);
         printed = true;
     }
@@ -1009,7 +829,7 @@ void chali_host_trace()
         {
             if (chali_trace_functions[at] != start || !*chali_trace_names[at]) continue;
             if (name && std::strcmp(name, chali_trace_names[at]) == 0) continue;
-            if (!printed) std::fputs(CHALI_TEXT("调用栈（内 → 外）：\n"), stderr);
+            if (!printed) std::fputs(CHALI_RUNTIME_TEXT("调用栈（内 → 外）：\n"), stderr);
             std::fprintf(stderr, "  %s\n", chali_trace_names[at]);
             printed = true;
             break;
@@ -1023,7 +843,7 @@ void chali_host_trace()
 void chali_host_finish()
 {
     chali_reset_address_view();
-    delete runtime;
+    Memory::destroyCHeap(runtime);
     runtime = nullptr;
     chali_reset_address_view();
 }
@@ -1035,7 +855,7 @@ void chali_host_poll()
 {
     if (nativeThreadState.nativeCleanup) return;
     auto &context = currentContext();
-    context.machine->checkNativeExecution(context);
+    if (const auto *services = current().threadServices) services->poll(&context);
     if (!context.error.empty())
     {
         if (context.threadId != 0) throw NativeCancelled{};
@@ -1063,6 +883,15 @@ void chali_host_tick(std::uint64_t steps)
 }
 
 /**
+ * @brief 接收调试服务解析的有界 UTF-8 字节串集合。
+ * @param values 已验证参数，允许空串及内嵌零。
+ */
+void chali_host_set_debug_arguments(const Memory::Vector<Memory::String> *values)
+{
+    current().arguments = *values;
+}
+
+/**
  * @brief 将原生入口收到的用户参数交给标准库，排除可执行文件名。
  * @param count 用户实参数量。
  * @param values UTF-8 参数字符串数组。
@@ -1081,36 +910,7 @@ void chali_host_arguments(int count, const char *const *values)
  */
 void chali_host_process_arguments(int argc, char **argv)
 {
-    const char *path = debugArgumentsEnabled ? std::getenv("CHALI_DEBUG_ARGUMENTS") : nullptr;
-    if (path && *path)
-    {
-        std::ifstream input(std::filesystem::u8path(path), std::ios::binary | std::ios::ate);
-        const auto length = input.tellg();
-        if (!input || length < 4 || length > 16 * 1024 * 1024) chali_panic("调试参数文件长度无效");
-        Memory::String bytes(static_cast<std::size_t>(length), '\0');
-        input.seekg(0);
-        if (!input.read(bytes.data(), length)) chali_panic("无法读取调试参数文件");
-        std::size_t offset = 0;
-        const auto readSize = [&]() {
-            if (bytes.size() - offset < 4) chali_panic("调试参数文件被截断");
-            std::uint32_t value = 0;
-            for (unsigned shift = 0; shift != 32; shift += 8) value |= static_cast<std::uint32_t>(static_cast<unsigned char>(bytes[offset++])) << shift;
-            return value;
-        };
-        const auto count = readSize();
-        if (count > 65536) chali_panic("调试参数数量超过限制");
-        auto &arguments = current().arguments;
-        arguments.clear();
-        for (std::uint32_t at = 0; at < count; ++at)
-        {
-            const auto size = readSize();
-            if (size > bytes.size() - offset) chali_panic("调试参数文件被截断");
-            arguments.emplace_back(bytes.data() + offset, size);
-            offset += size;
-        }
-        if (offset != bytes.size()) chali_panic("调试参数文件包含尾随数据");
-        return;
-    }
+    if (debugArgumentReader && debugArgumentReader()) return;
     const auto converted = tool_console::arguments(argc, argv);
     auto &arguments = current().arguments;
     arguments.clear();
@@ -1428,7 +1228,23 @@ std::int64_t chali_host_call(const char *name, std::int64_t count, const std::in
             }
             else
             {
-                const auto handled = context.machine->invokeNativeService(state.program, context, name, makeArguments(), nativeThreadState.callbackDepth);
+                std::optional<NativeValue> handled;
+                if (state.threadServices)
+                {
+                    state.threadServices->invoke(&state.program, &context, name, std::strlen(name),
+                                                  static_cast<std::size_t>(count), bits, floating, nativeThreadState.callbackDepth,
+                        [](void *target, int kind, std::int64_t raw, const char *text, std::size_t size) {
+                            auto &value = *static_cast<std::optional<NativeValue> *>(target);
+                            if (kind == 2) value.emplace(NativeValue::fromText(Memory::String(text, size)));
+                            else if (kind == 1)
+                            {
+                                double real = 0;
+                                std::memcpy(&real, &raw, sizeof(real));
+                                value.emplace(NativeValue::fromFloat(real));
+                            }
+                            else value.emplace(NativeValue::fromInt(raw));
+                        }, &handled);
+                }
                 if (!handled) chali_panic((Memory::String("找不到原生服务：") + name).c_str());
                 result.emplace(*handled);
             }

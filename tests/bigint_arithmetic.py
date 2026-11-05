@@ -4,6 +4,7 @@ import argparse
 import json
 import random
 import subprocess
+from bignum_build import compile_c_kernel
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -51,7 +52,7 @@ def main():
     subprocess.run(['g++', '-std=c++17', '-O2', '-Wall', '-Wextra', '-D_GLIBCXX_ASSERTIONS',
                     *(['-DBIGINT_FORCE_PORTABLE_MULTIPLY'] if args.portable else []),
                     str(ROOT / 'tests/bigint_arithmetic.cpp'),
-                    str(ROOT / 'source/bignum/bigint.cpp'), str(ROOT / 'source/bignum/bigint_multiplication.cpp'), str(ROOT / 'source/bignum/bigint_division.cpp'), str(ROOT / 'source/bignum/bigint_number_theory.cpp'), str(ROOT / 'source/bignum/bigint_bits.cpp'), str(ROOT / 'source/bignum/bigint_modular.cpp'), str(ROOT / 'source/bignum/bigint_conversion.cpp'), '-o', str(binary)], check=True)
+                    str(ROOT / 'source/bignum/bigint.cpp'), *compile_c_kernel(binary.parent / (binary.stem + '-c'), args.portable), '-o', str(binary)], check=True)
     inputs = list(cases())
     rows = [(mode, left, right) for mode in range(3) for left, right in inputs]
     text = ''.join(f'{mode} {left:x} {right:x}\n' for mode, left, right in rows)

@@ -812,3 +812,6 @@ int CHALI_ABI_CALL abi_demo_declarations_used(const char *source, size_t length)
     }
     return 0;
 }
+
+#define CHALI_AOT_BIND_MODULE demo
+#include "aot_bind_module.h"

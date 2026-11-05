@@ -126,3 +126,8 @@ const ChaliAbiRecord *abi_math_records(size_t *count)
     if (count != NULL) *count = sizeof(kRecords) / sizeof(kRecords[0]);
     return kRecords;
 }
+
+#ifndef GLUE_NO_STD_MATH
+#define CHALI_AOT_BIND_MODULE math
+#include "aot_bind_module.h"
+#endif

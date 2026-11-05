@@ -47,6 +47,66 @@
           "generated": "#pragma once\n#define MINIZ_EXPORT\n"
         }
       }
+    },
+    "yyjson": {
+      "version": "0.13.0",
+      "url": "https://codeload.github.com/ibireme/yyjson/zip/refs/tags/0.13.0",
+      "sha256": "fe8e0136947cf0066794a602ffc25cb50fce0ec756b1458a8225ab12ae557f6b",
+      "prefix": "yyjson-0.13.0/",
+      "files": {
+        "src/yyjson.c": {
+          "sha256": "d2d58ef0a3b2267862dc363832c4f3185fd375aea933d5d3419d1a940d6ece2e"
+        },
+        "src/yyjson.h": {
+          "sha256": "ef803cda5c06b8962face6dfa39c3284b3bcf3e73f4d7317664690cc779679ca"
+        },
+        "LICENSE": {
+          "sha256": "45e384d3d52c73cba3a64d6e6c25d47cd738cd8a55c30629e3201046eda62947"
+        }
+      }
+    },
+    "tomlc17": {
+      "version": "R261003",
+      "url": "https://codeload.github.com/cktan/tomlc17/zip/refs/tags/R261003",
+      "sha256": "744acedfd0cbabf0d5ab3d8075f8048e00d5178a5e069ae78c85f03524c7f80b",
+      "prefix": "tomlc17-R261003/",
+      "files": {
+        "src/tomlc17.c": {
+          "sha256": "c382824bdfdd12f89a6a228d0838f99deae2f2c1763c3215547a0d7137ffa39d"
+        },
+        "src/tomlc17.h": {
+          "sha256": "fa7f05a6057d7b4da1b63ce6185f07f5c734c98043a5d3a30ee7b9289060cba8"
+        },
+        "LICENSE": {
+          "sha256": "f949d0976f85076c96fc5122f0632b5a1b806d8b2badbe968c42c97230e6e79e"
+        },
+        "src/chali_tomlc17.c": {
+          "sha256": "6eece618512456e5b66cdcdafac3ba52bb0b5bb414cc39e16e78855a7c06207b",
+          "source": "src/tomlc17.c",
+          "replacements": [
+            {
+              "from": "#define BRACKET_LEVEL_MAX 30",
+              "to": "#define BRACKET_LEVEL_MAX 256"
+            },
+            {
+              "from": "#define BRACE_LEVEL_MAX 30",
+              "to": "#define BRACE_LEVEL_MAX 256"
+            },
+            {
+              "from": "if (0xD800 <= ucs && ucs <= 0xDFFF) {",
+              "to": "if (0 && 0xD800 <= ucs && ucs <= 0xDFFF) {"
+            },
+            {
+              "from": "if (!(1 <= year)) {",
+              "to": "if (!(0 <= year)) {"
+            },
+            {
+              "from": "  int is_leap_year = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);\n  int days_in_month[] = {\n      31, 28 + is_leap_year, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};\n  return (1 <= day && day <= days_in_month[month - 1]);",
+              "to": "  return (1 <= day && day <= 31);"
+            }
+          ]
+        }
+      }
     }
   }
 }

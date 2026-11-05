@@ -257,18 +257,31 @@ inline bool inspect(const preprocess::Result &input, UnitInfo &info, Memory::Str
     return true;
 }
 
+/**
+ * @brief 按模块限定名查找源文件。
+ * @param name 完整模块名。
+ * @param fromDir 导入者所在目录。
+ * @param includeDirs 显式包含目录。
+ * @param path 命中时接收规范路径。
+ * @param explicitOnly 仅查找显式目录，供内置原生模块的覆盖机制使用。
+ * @return 存在对应普通文件时为真。
+ */
 inline bool findModule(const Memory::String &name, const Memory::String &fromDir,
-                       const Memory::Vector<Memory::String> &includeDirs, Memory::String &path)
+                       const Memory::Vector<Memory::String> &includeDirs, Memory::String &path,
+                       bool explicitOnly = false)
 {
     namespace fs = std::filesystem;
     Memory::String relative = name;
     for (std::size_t at = 0; (at = relative.find("::", at)) != Memory::String::npos;)
         relative.replace(at, 2u, "/");
     Memory::Vector<fs::path> candidates;
-    candidates.push_back(fs::path(fromDir) / (relative + ".chl"));
-    candidates.push_back(fs::path(fromDir) / "modules" / (relative + ".chl"));
+    if (!explicitOnly)
+    {
+        candidates.push_back(Memory::u8path(fromDir) / (relative + ".chl"));
+        candidates.push_back(Memory::u8path(fromDir) / "modules" / (relative + ".chl"));
+    }
     for (const Memory::String &dir : includeDirs)
-        candidates.push_back(fs::path(dir) / (relative + ".chl"));
+        candidates.push_back(Memory::u8path(dir) / (relative + ".chl"));
     for (const fs::path &candidate : candidates)
     {
         std::error_code ec;
@@ -556,13 +569,13 @@ private:
      * @param base 当前模块目录。
      * @param output 合并输入。
      * @param error 失败诊断。
+     * @param path 已由显式搜索目录选定的文件；为空时使用普通路径查找。
      * @return 成功为真。
      */
     bool importFile(const Memory::String &name, const Memory::String &base, preprocess::Result &output,
-                    Memory::String &error)
+                    Memory::String &error, Memory::String path = {})
     {
-        Memory::String path;
-        if (!findModule(name, base, includeDirs_, path))
+        if (path.empty() && !findModule(name, base, includeDirs_, path))
         {
             error = "找不到模块 " + name + "（需要 .chl）";
             return false;
@@ -639,6 +652,14 @@ private:
                         preprocess::LineOrigin{ "<内建 std::algorithms>", 1u });
                     append(output, intrinsic);
                 }
+                continue;
+            }
+            /* 兼容显式安装的扩展版本；未指定 -I 时始终优先使用内建模块。 */
+            Memory::String overridePath;
+            if ((imported == "std::gui" || imported == "std::audio" || imported == "std::xml") &&
+                findModule(imported, base, includeDirs_, overridePath, true))
+            {
+                if (!importFile(imported, base, output, error, std::move(overridePath))) return false;
                 continue;
             }
             Memory::String embeddedText;

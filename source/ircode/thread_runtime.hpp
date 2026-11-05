@@ -4,6 +4,7 @@
  */
 #pragma once
 #include "runtime_internal.hpp"
+#include "host_thread.hpp"
 namespace stackvm
 {
 using runtimeDetail::TransferPacket;
@@ -11,7 +12,7 @@ using runtimeDetail::TransferPacket;
 /**
  * @brief 线程运行时：每个隔离宿主线程一个 VM，消息在它们之间复制传递。
  *
- * 裁剪配置（`STACKVM_WITH_THREADS=0`）整段裁掉：不编 `std::thread` /
+ * 裁剪配置（`STACKVM_WITH_THREADS=0`）整段裁掉：不编 C 线程服务 /
  * `std::mutex` / `std::condition_variable`，`std::thread::*` 与
  * `std::concurrency::Shared` 走"函数入口不存在"的普通错误。
  */
@@ -19,10 +20,10 @@ struct ThreadRuntime
 {
     struct Worker
     {
-        std::thread host;
+        HostThread host;
         Memory::Deque<std::shared_ptr<TransferPacket>> inbox;
         RunResult result;
-        std::shared_ptr<ExecutionControl> control = std::make_shared<ExecutionControl>();
+        std::shared_ptr<ExecutionControl> control = Memory::makeShared<ExecutionControl>();
         std::shared_ptr<TransferPacket> initial;
         std::shared_ptr<TransferPacket> reserved;
         bool inboxClosed = false;
