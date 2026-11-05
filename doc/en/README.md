@@ -123,3 +123,5 @@ The [30-chapter English book](../book/en/README.md) contains technical chapters 
 - [Library containers and asset inspection](44-library-packages.md): canonical manifests, independent ABIs, target assets, digests and budgets.
 
 - [Optional host libraries](45-optional-libraries.md): windows, audio, XML, cryptography and streaming HTTP.
+
+- [AOT executable size and sample validation](46-aot-executable-size.md)

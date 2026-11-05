@@ -161,3 +161,5 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 - [库包格式与资产检查](44-library-packages.md)：规范清单、独立 ABI、目标实现、摘要与预算。
 
 - [可选宿主库](45-optional-libraries.md)：窗体、音频、XML、密码学与 HTTP 流式传输。
+
+- [AOT 可执行文件体积与抽样验证](46-aot-executable-size.md)
