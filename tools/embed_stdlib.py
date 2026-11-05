@@ -199,6 +199,7 @@ GENERATOR_ASSETS = [
     "abi/chali_abi_runtime.hpp",
     "abi/chali_abi_registry.hpp",
     "abi/chali_abi.c",
+    "abi/chali_abi_frame.c",
     "abi/chali_abi_contract.c",
     "abi/chali_abi_registry.cpp",
     "abi/chali_abi_bridge.cpp",

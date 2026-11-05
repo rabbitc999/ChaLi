@@ -333,35 +333,6 @@ bool NativeRegistry::add(const Memory::String &name, std::size_t arity, NativeCa
 }
 
 /**
- * @brief 把直通表里尚未登记的入口补进本注册表。
- * @return 补登记的数量。
- */
-std::size_t NativeRegistry::bindDirectEntries()
-{
-    if (sealed_) return 0;
-    std::size_t total = 0;
-    std::size_t registered = 0;
-    const auto *records = chali_abi_records(&total);
-    if (!records || total == 0) throw std::runtime_error("C 入口表初始化失败");
-    for (std::size_t at = 0; at < total; ++at)
-    {
-        const Memory::String name(records[at].name);
-        if (entries_.count(name) != 0u) continue;
-        const auto key = symbols::key(symbols::logicalId(name));
-        if (compactNames_.count(key) != 0u) continue;
-        Entry entry;
-        entry.arity = records[at].arity < 0 ? static_cast<std::size_t>(-1) : static_cast<std::size_t>(records[at].arity);
-        entry.direct = records[at].entry;
-        entry.directArity = records[at].arity;
-        compactNames_.emplace(key, name);
-        entries_.emplace(name, std::move(entry));
-        ++registered;
-        ++revision_;
-    }
-    return registered;
-}
-
-/**
  * @brief 移除指定名称的原生函数绑定。
  * @param name 名称文本。
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。

@@ -39,6 +39,18 @@ def main():
         env = dict(os.environ, CHALI_LANG='zh', CHALI_NO_STDIN_INPUT='1',
                    PATH=str(Path(os.environ['SystemRoot']) / 'System32'),
                    CHALI_LLVM_CLANG=str(root / 'clang-does-not-exist.exe'))
+        compact_source = root / 'compact.chl'
+        compact_source.write_text('void main() { println("Hello World"); }\n', encoding='utf-8')
+        for mode in ('off', 'full', 'thin'):
+            compact = root / ('compact-' + mode + '.exe')
+            result = subprocess.run([str(compiler), 'aot', str(compact_source),
+                                     '--out', str(compact.with_suffix('')), '--lto-mode', mode],
+                                    cwd=root, env=env, capture_output=True, text=True, encoding='utf-8', timeout=180)
+            assert result.returncode == 0, result
+            assert compact.stat().st_size < 64 * 1024, (mode, compact.stat().st_size)
+            result = subprocess.run([str(compact), '--help', 'argument'], cwd=root, env=env,
+                                    capture_output=True, text=True, encoding='utf-8', timeout=30)
+            assert (result.returncode, result.stdout, result.stderr) == (0, 'Hello World\n', ''), result
         prefix = root / 'program'
         result = subprocess.run([str(compiler), 'aot', str(source), '--out', str(prefix)], cwd=root,
                                 env=env, capture_output=True, text=True, encoding='utf-8', timeout=180)

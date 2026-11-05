@@ -6,6 +6,7 @@
 #include "chali_aot_runtime_assets.hpp"
 #include "chali_temp.hpp"
 #include <filesystem>
+#include <string_view>
 #include <fstream>
 #include <chrono>
 #include <sstream>
@@ -21,12 +22,15 @@
 #include <llvm-c/TargetMachine.h>
 #include <llvm-c/Transforms/PassBuilder.h>
 #include <lld/Common/Driver.h>
+#include <llvm/ADT/STLExtras.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Config/llvm-config.h>
 #include <llvm/Analysis/ModuleSummaryAnalysis.h>
 #include <llvm/Analysis/ProfileSummaryInfo.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/IR/Module.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/Transforms/IPO/Internalize.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Transforms/Utils/AssignGUID.h>
 #include "chali_stdlib.hpp"
@@ -134,6 +138,62 @@ bool writeBitcode(LLVMModuleRef program, const Memory::String &path, bool thin, 
     }
     return true;
 }
+/**
+ * @brief 从指定函数移除生成器插入的一个宿主生命周期调用。
+ * @param caller 生成的入口或收尾函数。
+ * @param callee 被移除的宿主调用目标。
+ * @return 找到直接调用时返回 true。
+ */
+bool omitHostCall(llvm::Function *caller, const llvm::Function *callee)
+{
+    if (!caller || !callee) return false;
+    for (auto &block : *caller)
+        for (auto &instruction : block)
+            if (auto *call = llvm::dyn_cast<llvm::CallInst>(&instruction); call && call->getCalledFunction() == callee && call->getType()->isVoidTy())
+            {
+                call->eraseFromParent();
+                return true;
+            }
+    return false;
+}
+
+/**
+ * @brief 试编只依赖 C 运行库的独立 EXE，保留依赖语言宿主的程序的原始模块。
+ * @param program 尚未优化的生成模块。
+ * @param machine 当前目标机。
+ * @param passes 优化遍配置。
+ * @return 无宿主引用的已优化模块，或空指针。
+ */
+LLVMModuleRef standaloneProgram(LLVMModuleRef program, LLVMTargetMachineRef machine, LLVMPassBuilderOptionsRef passes)
+{
+    LLVMModuleRef candidate = LLVMCloneModule(program);
+    auto &module = *llvm::unwrap(candidate);
+    auto *main = module.getFunction("main");
+    if (omitHostCall(main, module.getFunction("chali_init")) &&
+        omitHostCall(main, module.getFunction("chali_host_process_arguments")) &&
+        omitHostCall(module.getFunction("chali_finish"), module.getFunction("chali_host_finish")))
+    {
+        llvm::internalizeModule(module, [main](const llvm::GlobalValue &value) { return &value == main; });
+        main->addFnAttr(llvm::Attribute::OptimizeForSize);
+        if (auto error = LLVMRunPasses(candidate, "default<O2>,globaldce", machine, passes))
+            LLVMConsumeError(error);
+        else
+        {
+            // 只接受已知的 CRT 引用；任何剩余的宿主符号都走完整运行时。
+            const auto crtOnly = [](const llvm::GlobalValue &value) {
+                if (!value.isDeclaration() || value.use_empty()) return true;
+                if (const auto *function = llvm::dyn_cast<llvm::Function>(&value); function && function->isIntrinsic()) return true;
+                const std::string_view name(value.getName().data(), value.getName().size());
+                return name == "__acrt_iob_func" || name == "fwrite" || name == "fflush" ||
+                       name == "fputc" || name == "fputs" || name == "puts" || name == "putchar";
+            };
+            if (llvm::all_of(module.global_values(), crtOnly)) return candidate;
+        }
+    }
+    LLVMDisposeModule(candidate);
+    return nullptr;
+}
+
 }  // namespace
 #endif
 /**
@@ -321,6 +381,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
             LLVMDisposeTargetData(layout);
         }
     }
+    bool standalone = false;
     if (!failed)
     {
         if (request.options.lto)
@@ -330,7 +391,20 @@ int compile(const Request &request, const Memory::String &module, const Memory::
             module.setModuleFlag(llvm::Module::Error, "ThinLTO", std::uint32_t(request.options.thinLto));
         }
         LLVMPassBuilderOptionsRef options = LLVMCreatePassBuilderOptions();
-        LLVMErrorRef error = LLVMRunPasses(program, (request.options.debug && !request.options.debugOptimized) ? "default<O0>,globaldce" : "default<O3>,globaldce", machine, options);
+        const auto &build = request.options;
+        if (targetInfo.windows && !build.debug && !build.shared && !build.emitObjectOnly &&
+            !build.emitAssemblyOnly && build.exports.empty() && build.linkObjects.empty() &&
+            build.linkLibraries.empty() && request.externs.empty() && request.abiExports.empty() &&
+            request.abiGlue.empty())
+        {
+            if (LLVMModuleRef compact = standaloneProgram(program, machine, options))
+            {
+                LLVMDisposeModule(program);
+                program = compact;
+                standalone = true;
+            }
+        }
+        LLVMErrorRef error = standalone ? nullptr : LLVMRunPasses(program, (build.debug && !build.debugOptimized) ? "default<O0>,globaldce" : "default<O3>,globaldce", machine, options);
         LLVMDisposePassBuilderOptions(options);
         if (error)
         {
@@ -373,7 +447,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
         return 1;
     }
     RuntimeAssets runtimeAssets;
-    if (!runtimeAssets.restore(diagnostics)) return 1;
+    if (!standalone && !runtimeAssets.restore(diagnostics)) return 1;
     const std::string runtimeLibrary = runtimeAssets.root.generic_u8string();
     const std::string library = assets.root.generic_u8string();
     const std::string builtins = (assets.root / "libclang_rt.builtins-x86_64.a").generic_u8string();
@@ -387,10 +461,13 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     if (request.options.shared) storage.push_back("--shared");
     storage.push_back("--start-group");
     for (const auto &object : request.options.linkObjects) storage.emplace_back(object.c_str());
-    storage.push_back("-L" + runtimeLibrary);
-    storage.push_back(runtimeLibrary + "/libstdc++.a");
-    for (const char *name : { "chali_aot_host", "gcc_eh", "gcc", "winpthread", "winhttp", "ws2_32", "crypt32", "bcrypt" }) storage.push_back(std::string("-l") + name);
-    for (const char *name : { "gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a" }) storage.push_back(runtimeLibrary + "/" + name);
+    if (!standalone)
+    {
+        storage.push_back("-L" + runtimeLibrary);
+        storage.push_back(runtimeLibrary + "/libstdc++.a");
+        for (const char *name : { "chali_aot_host", "gcc_eh", "gcc", "winpthread", "winhttp", "ws2_32", "crypt32", "bcrypt" }) storage.push_back(std::string("-l") + name);
+        for (const char *name : { "gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a" }) storage.push_back(runtimeLibrary + "/" + name);
+    }
     for (const auto &path : request.options.linkLibraries) storage.emplace_back(path.c_str());
     storage.push_back("--end-group");
     for (int round = 0; round < 2; ++round)
