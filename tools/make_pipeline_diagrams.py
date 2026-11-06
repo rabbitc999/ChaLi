@@ -86,7 +86,7 @@ def compilation(english=False):
          "Code generation and link-time optimization" if english else "机器码生成与链接时优化"], green=True)
     outputs = [
         (40, "LLVM IR / object" if english else "LLVM IR／目标文件", ["--emit-llvm / --emit-obj", "--target selects platform and CPU"] if english else ["--emit-llvm / --emit-obj", "--target 选择目标平台与架构"]),
-        (560, "run · checked Build", ["Compile native code and execute", "Checks enabled"] if english else ["编译原生机器码并执行", "开启数组与指针检查"]),
+        (560, "Run · checked Build", ["Compile native code and execute", "Checks enabled"] if english else ["编译原生机器码并执行", "开启数组与指针检查"]),
         (1080, "Build · native export" if english else "Build · 原生导出", ["Unchecked export by default", "Executable or shared library"] if english else ["缺省 unchecked 导出", "可执行文件或动态库"]),
     ]
     arrow(c, ((40, 375), (20, 375), (20, 675), (260, 675), (260, 720)))
