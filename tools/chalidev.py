@@ -43,6 +43,21 @@ def _language():
 
 # CHALI_CATALOG_BEGIN
 _MESSAGES = {
+  "未导入模块：": [
+    "Module not imported: "
+  ],
+  "；请先添加 `import ": [
+    "; add `import "
+  ],
+  " 后再调用：": [
+    " before calling: "
+  ],
+  "调用的模块不存在或未加载：": [
+    "Called module does not exist or is not loaded: "
+  ],
+  "模块中未定义函数：": [
+    "Function is not defined in module: "
+  ],
   "运行时数组必须初始化：": [
     "Runtime arrays require an initializer: "
   ],

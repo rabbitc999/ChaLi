@@ -1,4 +1,9 @@
 # 中文|English；反斜线 n 表示换行，竖线用 \p 表示。
+未导入模块：|Module not imported:\x20
+；请先添加 `import |; add `import\x20
+ 后再调用：| before calling:\x20
+调用的模块不存在或未加载：|Called module does not exist or is not loaded:\x20
+模块中未定义函数：|Function is not defined in module:\x20
 运行时数组必须初始化：|Runtime arrays require an initializer:\x20
 元组下标必须是整数常量表达式|Tuple indices must be compile-time integer expressions
 元组下标超出范围：|Tuple index out of range:\x20

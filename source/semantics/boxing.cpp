@@ -3801,7 +3801,28 @@ bool ResolveCall(int id, Memory::String *label, Memory::Vector<Memory::String> *
         const Memory::String key = ModuleSymbol(callee.s, callee.s2);
         const auto found = g_functionIndex.find(key);
         if (found == g_functionIndex.end())
-            return Fail("调用了没导入或没定义的模块函数：" + key);
+        {
+            bool loaded = callee.s == callee.module || callee.s == "std::core";
+            for (const auto &entry : g_moduleImports)
+                if (entry.second.count(callee.s)) loaded = true;
+            if (!loaded)
+                for (const auto &declaration : g_nodes)
+                    if (declaration.module == callee.s)
+                    {
+                        loaded = true;
+                        break;
+                    }
+            if (!loaded)
+            {
+                for (const auto *entry = chali_module::embedded::table(); entry->name; ++entry)
+                    if (callee.s == entry->name)
+                        return Fail(Memory::String(CHALI_TEXT("未导入模块：")) + callee.s +
+                                    CHALI_TEXT("；请先添加 `import ") + callee.s + ";`" +
+                                    CHALI_TEXT(" 后再调用：") + key);
+                return Fail(Memory::String(CHALI_TEXT("调用的模块不存在或未加载：")) + callee.s);
+            }
+            return Fail(Memory::String(CHALI_TEXT("模块中未定义函数：")) + key);
+        }
         candidates = found->second;
         subject = "函数 " + key;
     }

@@ -1,5 +1,6 @@
 #include "chali_lambda.hpp"
 #include "chali_temp.hpp"
+#include "chali_stdlib.hpp"
 #ifdef _WIN32
 #include <io.h>
 #else
