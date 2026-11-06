@@ -1,0 +1,1 @@
+chali: example/samples-error/std_gui_undefined_function.chl 第 5 行第 5 列：模块中未定义函数：std::gui::missingFunction

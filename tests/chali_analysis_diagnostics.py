@@ -40,8 +40,8 @@ def main():
         assert plain.returncode != 0 and len(re.findall(r"^chali: ", plain.stderr, re.MULTILINE)) == len(expected), plain
         assert "chali：" not in plain.stderr, plain.stderr
     module_cases = {
-        "gui_not_imported": ("void main(){\n std::gui::drawText();\n}\n", "未导入模块：std::gui", "Module not imported: std::gui", "import std::gui;"),
-        "math_not_imported": ("void main(){\n std::math::sqrt(4.0);\n}\n", "未导入模块：std::math", "Module not imported: std::math", "import std::math;"),
+        "gui_not_imported": ("void main(){\n std::gui::drawText();\n}\n", "未导入模块：std::gui；请先添加 `import std::gui;` 后再调用：std::gui::drawText", "Module not imported: std::gui; add `import std::gui;` before calling: std::gui::drawText", "import std::gui;"),
+        "math_not_imported": ("void main(){\n std::math::sqrt(4.0);\n}\n", "未导入模块：std::math；请先添加 `import std::math;` 后再调用：std::math::sqrt", "Module not imported: std::math; add `import std::math;` before calling: std::math::sqrt", "import std::math;"),
         "gui_missing_function": ("import std::gui;\nvoid main(){\n std::gui::missingFunction();\n}\n", "模块中未定义函数：std::gui::missingFunction", "Function is not defined in module: std::gui::missingFunction", None),
         "gui_wrong_arguments": ("import std::gui;\nvoid main(){\n std::gui::drawText();\n}\n", "找不到匹配的重载", "找不到匹配的重载", None),
         "unknown_module": ("void main(){\n std::missing_module::call();\n}\n", "调用的模块不存在或未加载：std::missing_module", "Called module does not exist or is not loaded: std::missing_module", None),
@@ -59,6 +59,8 @@ def main():
             assert len(diagnostics) == 1, (name, diagnostics)
             diagnostic = diagnostics[0]
             assert expected in diagnostic["message"], (name, language, diagnostic)
+            if name != "gui_wrong_arguments":
+                assert diagnostic["message"] == expected, (name, language, diagnostic)
             assert diagnostic["code"] == "CHL1200", (name, diagnostic)
             assert Path(diagnostic["span"]["file"]).resolve() == source.resolve(), diagnostic
             if suggestion:

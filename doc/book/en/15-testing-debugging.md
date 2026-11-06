@@ -65,6 +65,24 @@ Keep inputs, expected results, and actual diagnostics. Investigate a disagreemen
 
 First distinguish syntax checking, type checking, and runtime assertions. Reduce a failure to the necessary data and functions. Temporary prints can expose an intermediate value; remove them after understanding the problem. Native debugging uses a build with debug information; the [documentation index](../../en/README.md) points to the tools.
 
+### Counterexample: calling a function before importing its module
+
+A qualified name identifies the owning module; it does not load that module. This example deliberately omits `import std::math;`. The function name and argument are valid, but checking still fails at the call. The excerpt uses the compiler's Chinese language setting.
+
+<!-- verify-book-error: check -->
+```chali
+void main()
+{
+    std::math::sqrt(4.0);
+}
+```
+
+```text
+未导入模块：std::math；请先添加 `import std::math;` 后再调用：std::math::sqrt
+```
+
+This is a semantic error, before execution. Add `import std::math;` at the beginning of the file so the call can proceed to function and overload checks. The same rule applies to `std::gui::drawText`: load it with `import std::gui;` first. An absent function in a loaded module and an argument mismatch have separate diagnostics. The appendix's [GUI missing import example](A-common-errors.md#a8-missing-module-imports) illustrates those checks.
+
 ### Counterexample: an assertion reports a bad result
 
 Use a fixed input and an incorrect expectation to see where execution stops. The diagnostic excerpt below uses the compiler’s Chinese language setting.

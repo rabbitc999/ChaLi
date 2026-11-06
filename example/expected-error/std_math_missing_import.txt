@@ -1,0 +1,1 @@
+chali: example/samples-error/std_math_missing_import.chl 第 3 行第 5 列：未导入模块：std::math；请先添加 `import std::math;` 后再调用：std::math::sqrt

@@ -1,0 +1,6 @@
+import std::gui;
+
+void main()
+{
+    std::gui::missingFunction();
+}

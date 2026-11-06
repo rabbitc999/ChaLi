@@ -18,6 +18,18 @@ chali aot app.chl --out build/app
 
 A direct source file also runs; following arguments are passed to the program. `aot --emit-llvm --out PREFIX` generates `.ll` directly from the AST. The compiler embeds the standard library and its required assets.
 
+## Module function diagnostics
+
+A fully qualified name does not import a module. Calling `std::gui::drawText` before `std::gui` has been loaded reports the following with `--lang en`:
+
+```text
+Module not imported: std::gui; add `import std::gui;` before calling: std::gui::drawText
+```
+
+Add `import std::gui;` to the source that uses it, then check the function name and arguments. If the module is loaded but the function is absent, the diagnostic is `Function is not defined in module: std::gui::missingFunction`. An existing function with incompatible arguments reports an overload mismatch. A module that cannot be identified in the current program or embedded module table reports `Called module does not exist or is not loaded: MODULE`; check its spelling and dependency configuration.
+
+These are semantic errors. Plain text and JSON diagnostics retain the original source location and use `CHL1200`. The book's [missing import counterexample](../book/en/15-testing-debugging.md#counterexample-calling-a-function-before-importing-its-module) shows a minimal failure and its repair.
+
 ## Development tools
 
 ```sh

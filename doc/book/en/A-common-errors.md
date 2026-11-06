@@ -167,6 +167,40 @@ Option<int64> permits an integer to be present, but none explicitly holds None. 
 Unlike the uninitialized reference case, the Option declaration itself is valid; failure occurs when unwrap executes. Handle both arms with match, select an unwrapOr fallback or propagate absence instead of assuming a different variable name can establish presence.
 
 
-## A.8 Investigation order
+## A.8 Missing module imports
+
+A qualified name does not replace `import`. Observe the diagnostic before `std::gui` is loaded; the excerpt uses the compiler's Chinese language setting.
+
+<!-- fail -->
+```chali
+void main()
+{
+    std::gui::drawText();
+}
+```
+
+```text
+未导入模块：std::gui；请先添加 `import std::gui;` 后再调用：std::gui::drawText
+```
+
+### Code walkthrough
+
+Checking fails while resolving the module function, before opening a window or drawing. The compiler recognizes `std::gui` in its embedded library and suggests the specific import statement. This minimal example also omits drawing arguments. Adding the import alone exposes an argument mismatch; it does not make the empty argument list valid.
+
+With both the import and arguments supplied, use `chali check hello.chl` to check this call:
+
+```chali
+import std::gui;
+
+void main()
+{
+    std::gui::Point position;
+    std::gui::drawText("Hello", position, 20.0, (uint32)0xffffffff);
+}
+```
+
+This only checks the call signature. Actual drawing also requires the GUI window and drawing lifecycle. Calling `std::gui::missingFunction()` in a loaded module reports `Function is not defined in module: std::gui::missingFunction` with `--lang en`; check the function name. Distinguish missing modules, missing functions, and incompatible arguments.
+
+## A.9 Investigation order
 
 Keep a minimal reproducer, compiler version, command, configuration and first diagnostic. Separate external input, files, networking and databases from language checks. Verify both the original failure and a successful path after a change; do not report unexecuted checks as passed. Consult the [language reference](../../en/04-language-reference.md), [AOT reference](../../en/38-aot.md) and [library](../../library/README.md).

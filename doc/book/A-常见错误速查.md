@@ -167,6 +167,40 @@ none 的 Option<int64> 类型说明“可能有整数”，但当前分支明确
 与未初始化引用不同，这个 Option 声明本身合法，失败发生在实际执行 unwrap 时。修复方式是在 match 中处理两种分支、提供 unwrapOr 后备值，或把缺失传播给调用者，而不是把 None 改名成一个看起来更有值的变量。
 
 
-## A.8 排查顺序
+## A.8 未导入模块
+
+模块限定名不会代替 `import`。下面先观察 `std::gui` 未加载时的诊断：
+
+<!-- fail -->
+```chali
+void main()
+{
+    std::gui::drawText();
+}
+```
+
+```text
+未导入模块：std::gui；请先添加 `import std::gui;` 后再调用：std::gui::drawText
+```
+
+### 代码详解
+
+检查在解析模块函数时失败，程序不会打开窗口或执行绘制。编译器知道内嵌库中存在 `std::gui`，因此提示具体的导入语句。这个最小反例还省略了绘制参数；只补上导入会继续暴露参数不匹配，而不会让空参数调用自动合法。
+
+同时补全导入与实参后，可以用 `chali check hello.chl` 检查下面的调用：
+
+```chali
+import std::gui;
+
+void main()
+{
+    std::gui::Point position;
+    std::gui::drawText("Hello", position, 20.0, (uint32)0xffffffff);
+}
+```
+
+这里仅检查调用签名；实际绘制还要按 GUI 接口建立窗口和绘制流程。模块已加载却调用 `std::gui::missingFunction()` 时，诊断为 `模块中未定义函数：std::gui::missingFunction`，应核对函数名。不要把缺少模块、缺少函数与参数不匹配都当成同一种错误。
+
+## A.9 排查顺序
 
 先保存触发问题的最小程序，保留编译器版本、命令、配置和首条诊断。把外部输入、文件、网络或数据库问题与语言检查区分开。改动后重新验证原失败条件和正常路径；未运行的检查不写成通过。更多诊断和接口边界见[语言参考](../04-language-reference.md)、[AOT](../38-aot.md)和[标准库](../library/README.md)。

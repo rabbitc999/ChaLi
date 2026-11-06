@@ -1,0 +1,1 @@
+chali: example/samples-error/std_gui_missing_import.chl 第 3 行第 5 列：未导入模块：std::gui；请先添加 `import std::gui;` 后再调用：std::gui::drawText
