@@ -535,7 +535,7 @@ static std::core::String toUpper(std::core::String text);
 
 将 ASCII 小写字母转换成大写。
 
-ASCII 大小写（运行时里不认区域设置，结果可复现）。
+ASCII 大小写（运行时不使用区域设置，结果可复现）。
 
 **参数**
 

@@ -1,1 +1,1 @@
-chali aot: BigDecimal 有效位数必须在 1..100000 之间，现在是 0
+chali build: BigDecimal 有效位数必须在 1..100000 之间，现在是 0

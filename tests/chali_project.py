@@ -44,7 +44,7 @@ class ProjectTests(unittest.TestCase):
         env = dict(os.environ, CHALI_PYTHON=sys.executable)
         report = self.run_cli('test', 'tests', '--json', cwd=project, env=env)
         self.assertEqual(json.loads(report.stdout)['summary'], {'passed': 1, 'failed': 0, 'skipped': 0})
-        self.run_cli('aot', 'src/main.chl', '--out', 'build/main', cwd=project)
+        self.run_cli('build', 'src/main.chl', '--out', 'build/main', cwd=project)
         for suffix in ('.quad', '.data.bin', '.layout', '.svmb'):
             self.assertFalse((project / ('build/main' + suffix)).exists(), suffix)
         self.assertTrue((project / 'build/main.ll').is_file())

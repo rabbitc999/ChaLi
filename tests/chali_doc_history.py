@@ -2,10 +2,10 @@
 from pathlib import Path
 import re
 
-"""1.0.8 起 run 使用 checked AOT、aot 默认 unchecked 导出，编译器与内嵌资产
+"""run 使用 checked 原生构建执行、build 默认 unchecked 发布构建，编译器与内嵌资产
 不含 VM 解释执行核；本书与文档不得再把运行期描述成「解释执行」或「组装 VM
-指令」。历史版本的真实措辞只保留在 CHANGELOG（更改记录）、benchmarks（历史
-测量）与 tools/history（历史清理映射）里，扫描时整体跳过这三处。"""
+指令」。历史版本的真实措辞只保留在 CHANGELOG（更改记录）、benchmarks（性能
+测试源码）与 tools/history（历史清理映射）里，扫描时整体跳过这三处。"""
 
 ROOT = Path(__file__).resolve().parents[1]
 

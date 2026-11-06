@@ -7,11 +7,11 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def compile_c_kernel(directory, portable=False):
+def compile_c_kernel(directory, portable=False, extra_flags=()):
     """按 C11 编译内核，返回供 C++ 链接的对象路径。"""
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    flags = shlex.split(os.environ.get('CFLAGS', ''))
+    flags = [*shlex.split(os.environ.get('CFLAGS', '')), *extra_flags]
     sources = sorted((ROOT / 'source/bignum').glob('chali_big*.c'))
     sources += [ROOT / 'source/runtime_c/chali_memory.c', ROOT / 'source/runtime_c/chali_buffer.c']
     objects = []

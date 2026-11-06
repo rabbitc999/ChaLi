@@ -17,7 +17,7 @@ def chapter_example(path, heading):
                 for line in block.splitlines() if line.strip()]
     assert len(sources) == 2
     assert commands[0] == ['mkdir', '-p', 'build']
-    assert [command[:2] for command in commands[1:]] == [['chali', 'run'], ['chali', 'aot']]
+    assert [command[:2] for command in commands[1:]] == [['chali', 'run'], ['chali', 'build']]
     return sources, commands[1:]
 
 
@@ -45,7 +45,7 @@ def main():
         executable = work / ('build/counter.exe' if os.name == 'nt' else 'build/counter')
         result = invoke([executable], work)
         assert result.stdout.strip() == '42', result.stdout
-    print('书稿 AOT 示例：双语代码、源码模块运行及 ThinLTO 导出运行通过')
+    print('书稿发布构建示例：双语代码、源码模块运行及 ThinLTO 导出运行通过')
 
 
 if __name__ == '__main__':

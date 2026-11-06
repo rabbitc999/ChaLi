@@ -6,7 +6,7 @@
 
 ## 工作范围
 
-- 后续主要维护后端：四元式导出、VM、LLVM AOT、运行时、宿主胶水、构建与交付。
+- 后续主要维护后端：四元式导出、LLVM 原生构建、运行时、宿主胶水、构建与交付。
 - 用户未提出前端需求时，尽量不动文法、解析、类型与借用语义、宏和 LSP。后端工作确需配套修改时，只做必要改动并说明原因，不顺便重构前端。
 - 用户指令优先。TASK.md 记录已授权任务和验收状态；未完成项保留，全部完成并核对证据后才随交付删除。
 - 当前能力以代码及功能文档为准，计划留在 TASK.md，历史留在 Git 和 CHANGELOG.md。
@@ -15,13 +15,13 @@
 
 - source/ircode/ 是桌面与受支持的嵌入式 Linux 宿主共用核心，要求 C++17 和操作系统服务，不承诺裸机支持。
 - 用户所说的 IR 默认指 ChaLi 四元式；LLVM 中间表示要明确称为 LLVM IR。
-- 1.0.8 起 run 使用 checked AOT，build 默认 unchecked 发布构建；编译器及内嵌资产只提供原生执行路径。构建调试使用 DWARF 与 GDB/MI。
+- run 使用 checked 原生构建执行，build 默认 unchecked 发布构建；编译器及内嵌资产只提供原生执行路径。构建调试使用 DWARF 与 GDB/MI。
 - 优化全部交给 LLVM（O3/LTO）；内部四元式优化遍与聚合优化已删除（2026-10-27 基准实测编译更快且运行不劣），数组与内存快速路径保留边界和存活检查。
 - 帧槽只分配给形参和本函数 Op::Declare 声明的局部。跨帧共享暂存量继续使用全程序暂存表；同时存活的符号不得共槽，分配冲突时整体退回独立槽。
 - 分析位集和区间等临时结构按本函数可达指令规模分配，避免按全程序规模占用共享 arena。
 - 内存池只保证 16 字节对齐；8–120 字节小对象使用 SlabPool，空组立即归还，liveBlocks 只统计实际存活块。
 - 同步回调的公开边界使用 chali_abi_invoke，内部沿用 NativeCallContext::invoke，核对参数、返回值、闭包、重入和错误传播；不把运行时函数值转换为机器函数指针。私有 C++ 封送实现不得恢复旧公开 Registry／Codec／Function 模板接口。
-- VM 与 LLVM AOT 分清交付路径；跨架构编译器构建不等于该架构已支持 AOT。
+- 交付编译器只提供原生执行路径；跨架构编译器构建不等于该架构已支持原生产物导出。
 
 ## 代码与构建
 
@@ -44,7 +44,7 @@
 - doc/book/latex/chapters/ 是 Markdown 自动生成的章节目录，只在本地生成与验证，由 .gitignore 排除；不提交生成章节。Markdown、生成脚本、LaTeX 主文件与高亮定义继续纳入版本控制。tools/history/ 同样只供本地归档，不提交，不为此改写历史。
 - 程序版本以 VERSION 为准，语言服务与插件 chaliCompilerVersion 一致；插件 version 与编译器版本一致，按 LLVM 静态／外置链接分别打包，并核对实际内嵌变体。
 - CHANGELOG.md 从 tools/changelog_data.json 生成。历史测量保留真实版本、配置和原始数据，不因改版本号或 tag 重标结果。
-- 产物名使用 chali-版本-llvm-链接方式-系统或发行版-架构，例如 chali-1.0.8-llvm-external-windows-x64.exe。
+- 产物名使用 chali-版本-llvm-链接方式-系统或发行版-架构，例如 chali-1.0.0-llvm-external-windows-x64.exe。
 - 核对静态/外置 LLVM 编译器、安装包和 VSIX 的版本与内嵌字节；构建目标和实际验证平台分开说明。
 - 每完成一个交付阶段，都使用该阶段重建的编译器生成对应 VSCode 插件（VSIX），优先采用静态内置 LLVM 模式。各 LLVM 变体隔离构建并按实际变体命名；核对插件 version、chaliCompilerVersion 和包内编译器字节，不复用旧阶段产物。只有目标平台或静态工具链确实不支持时才回退外置 LLVM，并说明实际原因；产物留在交付目录，工具打包和验证历史不提交 Git。
 - 项目使用 Apache License 2.0，保留 LICENSE、NOTICE 和依赖各自的许可证及署名。

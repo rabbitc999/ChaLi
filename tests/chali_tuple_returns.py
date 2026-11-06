@@ -18,11 +18,11 @@ def main():
         return subprocess.run([str(x) for x in command], cwd=ROOT, env=env, capture_output=True, encoding='utf-8', errors='replace', timeout=240)
     with tempfile.TemporaryDirectory(prefix='chali-tuple-returns-') as folder:
         work = Path(folder)
-        for backend in ('run','aot'):
+        for backend in ('run','build'):
             output = work / (backend + ('.exe' if os.name == 'nt' else ''))
             result = run(compiler, backend, ROOT / 'tests/fixtures/tuple_returns.chl', 'out', output)
             assert result.returncode == 0, (backend, result.stdout, result.stderr)
-            if backend == 'aot': result = run(output)
+            if backend == 'build': result = run(output)
             assert (result.returncode, result.stdout, result.stderr) == (0, 'tuple returns ok\n', ''), result
             print(backend + '：多值返回与泛型元组通过', flush=True)
         for backend in ('run',):

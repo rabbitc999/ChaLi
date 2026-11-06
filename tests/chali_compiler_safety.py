@@ -1,5 +1,6 @@
 """对已确认的数值边界、拥有值传播和并发数据映像问题执行定向回归。"""
 from compiler_path import compiler_path
+from bignum_build import compile_c_kernel
 import argparse
 import os
 from pathlib import Path
@@ -17,9 +18,10 @@ def run_native(cxx, work, sanitize):
         sources.extend(sorted(ROOT.glob(pattern)))
     sources += [ROOT / name for name in ['source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp']]
     flags = ['-std=c++17', '-O1' if sanitize else '-O2', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1']
-    if sanitize:
-        flags += ['-g', '-fsanitize=address,undefined,float-cast-overflow', '-fno-omit-frame-pointer', '-no-pie']
-    subprocess.run([cxx, *flags, *map(str, sources), '-o', str(executable)], cwd=ROOT, check=True, timeout=300)
+    sanitizer_flags = ['-g', '-fsanitize=address,undefined,float-cast-overflow', '-fno-omit-frame-pointer', '-no-pie'] if sanitize else []
+    flags += sanitizer_flags
+    kernel = compile_c_kernel(work / 'numeric-kernel', extra_flags=sanitizer_flags)
+    subprocess.run([cxx, *flags, *map(str, sources), *kernel, '-o', str(executable)], cwd=ROOT, check=True, timeout=300)
     result = subprocess.run([str(executable)], cwd=work, capture_output=True, text=True, encoding='utf-8', timeout=60)
     assert result.returncode == 0 and result.stdout == 'native adversarial boundaries passed\n' and not result.stderr, result
 

@@ -1,1 +1,1 @@
-chali aot: panic：n 必须为正（源码第 6 行）
+chali build: panic：n 必须为正（源码第 6 行）

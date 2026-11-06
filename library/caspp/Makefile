@@ -12,6 +12,9 @@
 # ---------------------------------------------------------------------------
 
 CXX      ?= g++
+ifeq ($(origin CC),default)
+CC := gcc
+endif
 .DEFAULT_GOAL := all
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -Wpedantic
 # ChaLi 使用 source/bignum 副本；独立 caspp 工程仍可使用同级 bignum。

@@ -3,14 +3,14 @@
 #
 # 用法（在本目录跑）：
 #   sh ci.sh                 快速门禁（默认）：构建 + 样例回归 + 核心测试 + 文档门禁
-#   sh ci.sh --full          发布门禁：在快速门禁之外，再跑全部 stackvm / Python 回归
+#   sh ci.sh --full          发布门禁：在快速门禁之外，再跑额外原生、编辑器及 Python 回归
 #   sh ci.sh --no-python     （只对 --full 有意义）只编 / 跑工具链，不跑 tests/*.py
 #   sh ci.sh --jobs 4       并行独立回归；--jobs 1 串行（也可设 CHALI_GATE_JOBS）
 #   sh ci.sh --help
 #
 # 环境要求：g++ / gcc / make / python3.11+ 必需；cmake 仅发布门禁需要。
 # 发布门禁的真实扩展测试还需 VSCode、GDB 和图形会话；可用 CHALI_VSCODE_EXECUTABLE 指定宿主。
-# 还要一份 **ParseEngine 文法生成器**：默认找 `${ENGINE:-../build/bin/ParseEngine}`，
+# 还要一份 **ParseEngine 文法生成器**：先查 ENGINE、仓库根目录及相邻 ParseEngine 构建目录，
 # 它由 ParseEngine 仓库（不含在本项目里）产出；不在就报错退出 2。
 #
 # 退出码：0 全绿；1 有检查失败；2 环境不满足。
@@ -132,7 +132,7 @@ if [ -n "$missing" ]; then
     exit 2
 fi
 
-# 先登记完整命令；Python 调度器仅并行明确审查过的独立 Python 与 VM 回归。
+# 先登记完整命令；Python 调度器仅并行明确审查过的独立 Python 与原生回归。
 # 生成、构建和未知任务形成屏障，确保不会边运行编译器边覆盖可执行文件。
 export ENGINE
 CHALI_BIN=$($PYTHON tools/compiler_path.py) || exit 2
@@ -159,9 +159,14 @@ if [ "$full" = 1 ] && [ "${OS:-}" = Windows_NT ]; then
     run_required_step "校验并恢复 LLVM 离线工具链" "$PYTHON" library/llvm/setup.py
     run_step "检查 AOT 运行时 LLVM 模块同步" sh tools/build_aot_runtime.sh --check
 fi
-run_required_step "生成 CHALI 解析器（gen.sh）" sh gen.sh
+run_required_step "生成 CHALI 解析器（gen.sh）" env CHALI_DEFER_ASSET_EMBED=1 sh gen.sh
 run_required_step "构建 CHALI 驱动（chali）" "$MAKE" -j4
 
+run_step "检查命令、项目配置与旧运行时文案" "$PYTHON" tests/chali_cli_contract.py
+run_step "验证 build 发布命令与拒绝旧入口" "$PYTHON" tests/chali_build_command.py --chali "$CHALI_BIN"
+run_step "检测文档过时表述" "$PYTHON" tests/chali_doc_history.py
+run_step "检查更改记录同步" "$PYTHON" tools/changelog.py --check
+run_step "检查性能报告计算与完整性" "$PYTHON" tests/chali_benchmark_report.py
 run_step "验证并行门禁调度与失败汇总" "$PYTHON" tests/test_parallel_gates.py
 run_step "验证大整数乘除法与 Python 整数差分" "$PYTHON" tests/bigint_arithmetic.py
 run_step "验证已确认的编译器安全边界" "$PYTHON" tests/chali_compiler_safety.py
@@ -171,7 +176,7 @@ run_step "验证 opcode 值语义、红黑删除与字符串方法" "$PYTHON" te
 run_step "验证反射序列化与注解动态 SQL" "$PYTHON" tests/chali_reflection_serialization.py
 run_step "验证 CAS 核心全部回归" "$PYTHON" tests/cas_library.py
 run_step "验证卫生宏绑定、正则、AST 替换及生成解析器" "$PYTHON" tests/macro_foundations.py
-run_step "验证 AST 表达式宏语义与 VM 执行" "$PYTHON" tests/chali_ast_macros.py --default
+run_step "验证 AST 表达式宏语义与原生执行" "$PYTHON" tests/chali_ast_macros.py --default
 run_step "验证卫生宏参数副本、引用与单次求值" "$PYTHON" tests/chali_macro_parameters.py --chali "$CHALI_BIN"
 run_step "验证接口值、联合匹配与传播转换" "$PYTHON" tests/chali_interface_values.py --chali "$CHALI_BIN"
 run_step "验证 else if 与 elif 统一分支语义" "$PYTHON" tests/chali_else_if.py --chali "$CHALI_BIN"
@@ -216,6 +221,7 @@ run_step "运行泛型闭包与特化回归" "$PYTHON" tests/chali_generic_closu
 run_step "检查模块路径与文本包含指令删除" "$PYTHON" tests/chali_package_paths.py
 run_step "检查统一入口、产物布局与未知文件" "$PYTHON" tests/chali_tool.py
 run_step "检查手册与标准库共享索引同步" "$PYTHON" tools/library_reference.py --check
+run_step "检查标准库命名与内部函数可见性" "$PYTHON" tools/check_std_naming.py
 
 # ---- 以下均为发布门禁（--full）扩展步骤 ----
 if [ "$full" = 1 ]; then
@@ -227,7 +233,7 @@ run_step "验证返回表达式、具名闭包与字段派生" "$PYTHON" tests/c
 
 
 # ---- lztext：内嵌标准库/运行时资产的压缩存储与运行时解压 ----
-# chali/source/lztext 与 ParseEngine 的 source/lztext 是同一份实现，改一个要同步另一个。
+# chali/source/lztext 与 ParseEngine 的 source/lztext 各自在本仓库维护，不修改外部 ParseEngine 副本。
 # 这里既构建构建期要用的 lztext_pack（tools/embed_stdlib.py 通过它压缩），
 # 也跑一遍库自检（往返一致性 + 边界用例 + 随机语料模糊测试）。
 run_required_step "构建 lztext 打包工具" "$MAKE" -C source/lztext pack
@@ -259,7 +265,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行 match 整数模式重叠警告回归" "$PYTHON" tests/chali_match_overlap.py --chali "$CHALI_BIN"
     run_step "运行 fn 匿名函数与 lambda 兼容回归" "$PYTHON" tests/chali_fn.py --chali "$CHALI_BIN"
     run_step "运行 LLVM AOT 原生产物与 C 双向互调回归" "$PYTHON" tests/chali_aot.py --chali "$CHALI_BIN"
-    run_step "运行工程 AOT 配置与链接输入回归" "$PYTHON" tests/chali_aot_project_config.py --chali "$CHALI_BIN"
+    run_step "运行工程 build 配置与链接输入回归" "$PYTHON" tests/chali_aot_project_config.py --chali "$CHALI_BIN"
     if [ "${OS:-}" = Windows_NT ]; then
         run_step "运行 Windows 应用 PE 子系统回归" "$PYTHON" tests/chali_windows_subsystem.py --chali "$CHALI_BIN"
     fi
@@ -282,7 +288,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行 LLVM 内存原语与限定调用回归" "$PYTHON" tests/chali_memory_intrinsics.py --chali "$CHALI_BIN"
     run_step "验证 rawSize 常量与原始存储步长" "$CHALI_BIN" run tests/fixtures/aot_raw_size.chl --out tmp/ci/raw-size
     run_step "验证裸地址字节原语与 UTF-8" "$CHALI_BIN" run tests/fixtures/aot_byte_primitives.chl --out tmp/ci/byte-primitives
-    run_step "运行闭包、标准库及并发的 VM/AOT 差分" "$PYTHON" tests/chali_aot_runtime.py --chali "$CHALI_BIN"
+    run_step "运行闭包、标准库及并发的 checked run/build 对照" "$PYTHON" tests/chali_aot_runtime.py --chali "$CHALI_BIN"
     run_step "运行泛型函数返回闭包与类型拒绝回归" "$PYTHON" tests/chali_generic_function_returns.py --chali "$CHALI_BIN"
     run_step "运行三类代表输入的 checked/unchecked 全部回归" "$PYTHON" tests/chali_compiler_limits.py --chali "$CHALI_BIN" --verify --jobs "$jobs"
     # 总览图（各项目的 make_*_overview.py → 各自 overview 目录；ChaLi 那张由 chali 自己
@@ -301,7 +307,6 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     # 关键字三处对齐（补全表 / 文法登记 / 语法高亮），谁加了关键字忘了同步就红。
     run_step "运行编码、CSV、UTC 日期的 Python 交叉验证" "$PYTHON" tests/chali_std_data.py --chali "$CHALI_BIN"
     run_step "检查补全关键字与高亮关键字一致" "$PYTHON" tools/check_keywords.py
-    run_step "核对标准库公开命名" "$PYTHON" tools/check_stdlib_naming.py
 fi
 
 # ---- 样例回归已在快速门禁跑过；--full 的扩展测试继续 ----
@@ -324,7 +329,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     done
     run_step "运行 AOT 结构体、引用及缓冲区 ABI 回归" "$PYTHON" tests/chali_abi_values.py --chali "$CHALI_BIN" --aot
     run_step "运行 AOT 所有权及同步 C 回调回归" "$PYTHON" tests/chali_abi_contracts.py --chali "$CHALI_BIN" --aot
-    run_step "验证 VM/AOT 的中文参数及原生产物路径" "$PYTHON" tests/chali_aot_arguments.py --chali "$CHALI_BIN"
+    run_step "验证 run/build 的中文参数及原生产物路径" "$PYTHON" tests/chali_aot_arguments.py --chali "$CHALI_BIN"
     run_step "验证综合标准错误样例的编译预算与异常边界" "$PYTHON" tests/chali_compiler_budget.py --chali "$CHALI_BIN"
 fi
 
@@ -333,7 +338,6 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     # doc/ 各页面的相对链接与图片；`doc/book/` 是独立入门书、不在门禁内，脚本会打印跳过页数。
     run_step "检查文档相对链接" "$PYTHON" tools/check_doc_links.py
     run_step "检测更改记录外的历史表述残留" "$PYTHON" tests/chali_doc_history.py
-    run_step "检查标准库公开符号命名" "$PYTHON" tools/check_std_naming.py
     run_step "检查手册与标准库共享索引同步" "$PYTHON" tools/library_reference.py --check
     run_step "运行原生命令行手册回归" "$PYTHON" tests/chali_man.py
     run_step "运行行输入与文件文本读取回归" "$PYTHON" tests/chali_text_readers.py

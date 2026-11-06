@@ -970,7 +970,7 @@ String socketError(ChaliAbiFrame *frame, std::int64_t handle)
 std::int64_t socketStatus(ChaliAbiFrame *frame, std::int64_t handle)
 {
     auto *r = socketResource(frame, handle);
-    return r ? r->status : kNetError;
+    return r ? r->status : static_cast<std::int64_t>(kNetError);
 }
 /** @brief 执行 std::net::__std_netCloseSocket 的固定套接字操作。
  * @param frame 当前 C 帧。

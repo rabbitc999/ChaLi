@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 """检查标准库公开函数、方法、类型的命名及 `__` 内部函数的可见性。"""
 import re
-from library_reference import ROOT, inventory
-
-UNDERSCORE_FUNCTIONS = frozenset(("std::date_time", "std::linear_algebra", "std::number_theory"))
-SNAKE_NAME = re.compile(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*")
-CAMEL_NAME = re.compile(r"[a-z][A-Za-z0-9]*")
-
+from library_reference import ROOT
+from check_stdlib_naming import main as check_public_names
 
 # `__` 内部函数的声明形态：可选 inline，返回类型里可以有 `::`、`<>`、`,`、空格。
 # 只约束顶格书写（顶层）的声明：文法只允许顶层函数写 `inline`，类型体里的成员方法无从声明。
@@ -50,29 +46,11 @@ def non_inline_bodies():
 
 def main():
     """扫描源码及编译器内建签名，拒绝不符合命名约定或可见性约定的公开符号。"""
-    errors = []
-    functions = types = 0
-    for module, rows in inventory().items():
-        for row in rows:
-            name, kind = row['name'], row['kind']
-            # 双下划线是内部编译器/宿主协议；同名构造器沿用类型名。
-            if name.startswith('__') or (kind == 'function' and name == row['owner']):
-                continue
-            if kind == 'function':
-                functions += 1
-                require_snake = not row["owner"] and module in UNDERSCORE_FUNCTIONS
-                if require_snake and not SNAKE_NAME.fullmatch(name):
-                    errors.append(f'{module}::{name}：模块级函数必须使用下划线命名')
-                elif not require_snake and not (CAMEL_NAME.fullmatch(name) or SNAKE_NAME.fullmatch(name)):
-                    errors.append(f'{module}::{row["owner"]}::{name}：名称须使用小驼峰或下划线命名')
-            elif kind in ('struct', 'enum', 'interface', 'opcode'):
-                types += 1
-                if not re.fullmatch(r'[A-Z][a-z0-9]*(?:[A-Z][a-z0-9]+)*', name):
-                    errors.append(f'{module}::{name}：类型必须使用大驼峰')
-    errors += non_inline_bodies()
+    errors = non_inline_bodies()
     if errors:
         raise SystemExit('\n'.join(errors))
-    print(f'标准库命名通过：{functions} 个函数/方法，{types} 个类型。')
+    check_public_names()
+    print('标准库内部函数可见性检查通过。')
 
 
 if __name__ == '__main__':

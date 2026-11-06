@@ -48,7 +48,7 @@ def default_jobs():
 
 
 def independent(command):
-    """只允许审查过的独立 Python 与 VM 检查进入并行组。"""
+    """只允许审查过的独立 Python 与原生检查进入并行组。"""
     return any(Path(str(part)).suffix == ".py" and Path(str(part)).stem in PARALLEL_TESTS
                for part in command[1:2])
 

@@ -43,21 +43,21 @@ def main():
             else:
                 assert result.returncode != 0 and error in result.stderr, (arguments, result)
 
-        chali('aot', source, '--out', work / 'default')
+        chali('build', source, '--out', work / 'default')
         assert subsystem(work / 'default.exe') == 3
-        chali('aot', source, '--subsystem', 'windows', '--out', work / 'gui')
+        chali('build', source, '--subsystem', 'windows', '--out', work / 'gui')
         assert subsystem(work / 'gui.exe') == 2
         subprocess.run([work / 'gui.exe'], cwd=work, check=True, timeout=15)
-        chali('aot', source, '--emit-obj', '--out', work / 'object')
+        chali('build', source, '--emit-obj', '--out', work / 'object')
         chali('link', work / 'object.o', '--subsystem', 'windows', '--out', work / 'linked.exe')
         assert subsystem(work / 'linked.exe') == 2
-        chali('aot', source, '--subsystem', 'bad', error='--subsystem')
-        chali('aot', source, '--subsystem', 'windows', '--shared', error='--subsystem')
-        chali('aot', source, '--subsystem', 'windows', '--target', 'linux-x64', error='--subsystem')
+        chali('build', source, '--subsystem', 'bad', error='--subsystem')
+        chali('build', source, '--subsystem', 'windows', '--shared', error='--subsystem')
+        chali('build', source, '--subsystem', 'windows', '--target', 'linux-x64', error='--subsystem')
         (work / 'chali.toml').write_text('[chali]\nmain = "app.chl"\n[build]\nsubsystem = "windows"\n', encoding='utf-8')
-        chali('aot', source, '--out', work / 'project')
+        chali('build', source, '--out', work / 'project')
         assert subsystem(work / 'project.exe') == 2
-        chali('aot', source, '--subsystem', 'console', '--out', work / 'override')
+        chali('build', source, '--subsystem', 'console', '--out', work / 'override')
         assert subsystem(work / 'override.exe') == 3
         chali('run', source)
     print('Windows PE default, GUI, standalone link, project configuration and console override passed.')

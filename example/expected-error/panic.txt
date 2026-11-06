@@ -1,1 +1,1 @@
-chali aot: panic：不可恢复的状态
+chali build: panic：不可恢复的状态

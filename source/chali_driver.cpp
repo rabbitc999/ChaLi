@@ -730,11 +730,6 @@ try
             incremental = true;
             continue;
         }
-        if (argument == "--svmb")
-        {
-            std::fputs("chali: --svmb 已删除，请使用 aot。\n", stderr);
-            return 2;
-        }
         if (argument == "--no-debug") /* 兼容别名：显式不带调试节（现在也是缺省） */
         {
             stripDebug = true;

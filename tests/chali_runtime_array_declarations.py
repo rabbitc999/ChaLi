@@ -81,12 +81,12 @@ def main():
         work = Path(directory)
         source = work / 'declarations.chl'
         source.write_text(PROGRAM, encoding='utf-8')
-        for backend in ('run', 'aot'):
+        for backend in ('run', 'build'):
             output = work / (backend + ('.exe' if os.name == 'nt' else ''))
             result = subprocess.run([str(compiler), backend, str(source), '--out', str(output)],
                                     cwd=ROOT, env=env, capture_output=True, text=True, encoding='utf-8', timeout=300)
             assert result.returncode == 0, result
-            if backend == 'aot':
+            if backend == 'build':
                 result = subprocess.run([str(output)], cwd=work, env=env, capture_output=True,
                                         text=True, encoding='utf-8', timeout=60)
             assert (result.returncode, result.stdout, result.stderr) == (0, 'runtime array declarations passed\n', ''), result

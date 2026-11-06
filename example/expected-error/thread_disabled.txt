@@ -1,1 +1,1 @@
-chali aot: 多线程已关闭；run／aot 构建时去掉 --no-threads
+chali build: 多线程已关闭；run／aot 构建时去掉 --no-threads

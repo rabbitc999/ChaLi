@@ -86,12 +86,12 @@ def main():
         counts = {}
         for name, flags in [('baseline', DISABLE), ('optimized', ENABLED)]:
             env = dict(os.environ, CHALI_LANG='zh', **flags)
-            for backend in ('run', 'aot'):
+            for backend in ('run', 'build'):
                 target = work / (name + '-' + backend)
                 result = subprocess.run([str(compiler), backend, str(ROOT/'example/samples/backend_ownership.chl'), '--out', str(target)],
                                         cwd=ROOT, env=env, capture_output=True, text=True, encoding='utf-8', timeout=300)
                 assert result.returncode == 0, (name, backend, result.stdout, result.stderr)
-                if backend == 'aot':
+                if backend == 'build':
                     result = subprocess.run([str(target)+('.exe' if os.name=='nt' else '')], cwd=ROOT, env=env,
                                             capture_output=True, text=True, encoding='utf-8', timeout=120)
                 assert result.returncode == 0 and result.stdout == 'backend ownership OK\n' and not result.stderr, (

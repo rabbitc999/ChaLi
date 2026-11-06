@@ -184,13 +184,13 @@ def main():
         work = Path(folder)
         source = work / 'main.chl'
         source.write_text(SOURCE, encoding='utf-8')
-        for mode in ('run', 'aot'):
+        for mode in ('run', 'build'):
             target = work / mode
             result = subprocess.run([str(args.chali.resolve()), mode, str(source), '-I', str(args.desktop.resolve()),
                                      '-I', str(args.xml.resolve()), '--out', str(target)], cwd=ROOT,
                                     capture_output=True, text=True, encoding='utf-8', timeout=240)
             assert result.returncode == 0, (mode, result.stdout, result.stderr)
-            if mode == 'aot':
+            if mode == 'build':
                 result = subprocess.run([str(target.with_suffix('.exe') if os.name == 'nt' else target)], cwd=ROOT,
                                         capture_output=True, text=True, encoding='utf-8', timeout=60)
             assert (result.returncode, result.stdout.strip(), result.stderr) == (

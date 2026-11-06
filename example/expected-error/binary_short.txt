@@ -1,1 +1,1 @@
-chali aot: 二进制读取：数据不足
+chali build: 二进制读取：数据不足

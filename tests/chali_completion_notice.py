@@ -1,4 +1,4 @@
-"""验证 run／aot 的双语完成提示、独立输出流及显式静默行为。"""
+"""验证 run／build 的双语完成提示、独立输出流及显式静默行为。"""
 from pathlib import Path
 import argparse
 import json
@@ -37,16 +37,16 @@ def main():
 
         for language, label in [('zh', '编译完成：'), ('en', 'Compilation completed: ')]:
             expected = label + str(product) + '\n'
-            result = invoke('aot', language=language)
+            result = invoke('build', language=language)
             assert result.stdout == '' and result.stderr == expected, result
             result = invoke('run', language=language)
             assert result.stdout == 'PROGRAM OUTPUT\n' and result.stderr == expected, result
         for flag, suffix in [('--emit-llvm', '.ll'), ('--emit-obj', '.o'), ('--emit-asm', '.s')]:
-            result = invoke('aot', [flag])
+            result = invoke('build', [flag])
             assert result.stdout == '' and result.stderr == '编译完成：' + str(source.with_suffix(suffix)) + '\n', result
         result = invoke('run', ['--quiet'])
         assert result.stdout == 'PROGRAM OUTPUT\n' and result.stderr == '', result
-        result = invoke('aot', quiet='1')
+        result = invoke('build', quiet='1')
         assert result.stdout == result.stderr == '', result
         assert invoke('run', quiet='0').stderr.startswith('编译完成：')
         result = invoke('run', ['--quiet', '--stats'])
@@ -58,7 +58,7 @@ def main():
         assert result.stderr and '编译完成' not in result.stderr, result
         previous = product.read_bytes()
         source.write_text('void main(){missingName();}\n', encoding='utf-8')
-        for command in ('run', 'aot'):
+        for command in ('run', 'build'):
             result = invoke(command, success=False)
             assert '编译完成' not in result.stderr and 'missingName' in result.stderr, result
             assert product.read_bytes() == previous

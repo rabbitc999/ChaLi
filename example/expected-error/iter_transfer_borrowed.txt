@@ -1,1 +1,1 @@
-chali aot: 活跃引用或比较回调期间不能 intoIter 转移容器
+chali build: 活跃引用或比较回调期间不能 intoIter 转移容器

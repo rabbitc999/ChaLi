@@ -46,7 +46,7 @@ MODULES = {
     'std::graph': ('图论与并查集', 'Graph 使用链式前向星存储：head 是每顶点首条边，edgeTo/edgeNext/edgeWeight 是边终点、同起点下一条边与边权，顶点编号 0..vertexCount-1，重边与自环都允许。有向 / 无向由 create 的 directed 决定，无向图加边时自动镜像登记。bfs/dfs 输出可达顶点的访问序；topologicalSort 用 Kahn 算法，有环时输出空表；dijkstra 要求边权非负，不可达顶点距离为 -1；hasCycle 有向图用 Kahn 计数、无向图用并查集；minimumSpanningTreeWeight 用 Kruskal，图不连通返回 -1。Graph 与 UnionFind 使用 ChaLi 结构体及独立数组，普通复制深复制；Graph.snapshot 和 UnionFind.parents/sizes 显式导出独立快照。UnionFind 路径压缩与按大小合并均原地执行，不随每次查询复制容量数组。BFS、DFS、Kahn、Dijkstra、判环、Kruskal 及并查集均由 ChaLi 实现；Kruskal 使用边权最小堆，不调用宿主图算法。'),
     'std::linked_list': ('双向链表', 'LinkedList 以 ChaLi 结构体保存双向节点数组、复用槽与单调游标索引，保留 Iterator<int64>。普通复制深复制节点并在副本内保留对应游标。首尾及按游标插删为平均 O(1)；按值查询和按序迭代 O(n)。游标不重复使用，删除或 clear 后永久失效；toArray 显式导出独立顺序快照。链表连接、插删、反转与游标管理均由 ChaLi 实现，不注册宿主链表算法。'),
     'std::text': ('UTF-8 文本工具', '长度、位置和填充宽度按 UTF-8 字节，不按字符数或显示宽度。大小写转换仅 ASCII。除 charAt 返回字节外，变换返回新字符串。字符串下标要求 UTF-8 字符边界；切片允许任意字节端点，处理中文码点时使用显式 UTF-8 方法。kmpFind/kmpFindAll/kmpFailureTable 是字节级 KMP：kmpFind 返回首个匹配的字节下标，找不到为 -1，空针返回 0（与 find 口径一致）；kmpFindAll 返回升序命中下标、允许重叠匹配，空针给空列表；kmpFailureTable 返回长度等于针长的失配表。KMP 失配表、首次及重叠匹配均由 ChaLi 实现，不依赖宿主 KMP 胶水。stripPrefix 与 stripSuffix 各移除一次匹配，isBlank 只识别 ASCII 空白，countMatches 统计互不重叠的匹配且空子串计零。'),
-    'std::thread': ('隔离线程', '公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次 VM 运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在 VM 安全点及可取消等待处终止任务，释放 VM 持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，VM 无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。'),
+    'std::thread': ('隔离线程', '公开线程类型为 Thread，模块 std::thread；多线程默认启用，运行时可用 --no-threads 关闭。create 使用无参静态入口，createWith 在创建时复制初始参数。wait/waitFor 传播普通失败原始诊断；waitResult/For 收集状态、error 与 trace，普通失败可被调用方处理；panic 始终终止本次程序运行及全部隔离线程。成功收集只允许一次，超时不消费句柄。requestStop 在运行时安全点及可取消等待处终止任务，释放运行时持有的宿主记录和堆；不在取消途中调用用户 Drop 代码，业务收尾应在请求取消前通过消息完成。阻塞宿主调用须由宿主自行支持超时/取消，运行时无法抢占正在执行的 C++ 函数。主程序结束请求停止并回收全部子任务。ThreadGroup 等待时监测失败并取消兄弟任务，离开作用域取消并回收。ThreadPool 使用固定线程和有界静态任务队列，closeAndWait 排空后回收，cancelAll 取消工作线程并丢弃未开始任务；长期阻塞 I/O 使用专用线程。ThreadGroup、ThreadPool 和 Timer 不克隆底层任务或定时源，使用引用或 move 维持单一收尾责任，避免复制拥有者。'),
 }
 
 # 精确名称优先，其后由生成器读取源码注释或按同族接口补全。
@@ -176,7 +176,7 @@ PARAMETERS.update(workers='固定工作线程数量，1..1024', nanos='正纳秒
 CONCURRENCY_BEHAVIOR = {
     'createWith':'创建隔离线程并在创建时复制初始参数，拒绝借用闭包和不可传递载荷。',
     'state':'查询任务状态：0 运行、1 成功、2 失败、3 已取消；不消费句柄。',
-    'requestStop':'请求指定任务在 VM 执行或等待安全点停止，不抢占阻塞宿主函数。',
+    'requestStop':'请求指定任务在运行时执行或等待安全点停止，不抢占阻塞宿主函数。',
     'stopRequested':'查询当前任务是否已收到协作停止请求。',
     'sleepFor':'可取消地睡眠非负毫秒数，成功返回 READY。',
     'waitResult':'收集完成结果和原始 error/trace，普通失败返回 FAILED，panic 继续传播。',

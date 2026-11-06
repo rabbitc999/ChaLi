@@ -32,6 +32,10 @@ jobs:
         run: |
           python tests/chali_cli_contract.py
           python tests/chali_doc_history.py
+      - name: Verify generated API references are synchronized
+        run: |
+          python tools/library_reference.py --check
+          python tools/check_std_naming.py
       - name: Check changelog consistency
         run: python tools/changelog.py --check
       - name: Validate benchmark report completeness and checksums

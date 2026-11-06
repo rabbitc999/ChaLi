@@ -45,7 +45,7 @@ def main():
             assert change['textDocument']['uri'] == config.as_uri() and change['textDocument']['version'] == 7, change
             updated = change['edits'][0]['newText']
             assert tomllib.loads(updated)['package']['description'] == tomllib.loads(original)['package']['description']
-            assert tomllib.loads(updated)['aot']['target'] == 'linux-arm64'
+            assert tomllib.loads(updated)['build']['target'] == 'linux-arm64'
             assert all(comment in updated for comment in ('# preserve this comment', '# target comment', '# unsaved comment'))
             assert config.read_text(encoding='utf-8') == original, 'LSP must not write project files'
             config.write_text(updated, encoding='utf-8')
@@ -95,7 +95,7 @@ def main():
             assert not info['exists'], info
             creation = server.query('chali/projectEdit', dict(uri=other_source.as_uri(), text='', version=None, key='output', value='assembly'))
             assert creation['documentChanges'][0]['kind'] == 'create' and not (other / 'chali.toml').exists()
-            assert tomllib.loads(creation['documentChanges'][1]['edits'][0]['newText'])['aot']['output'] == 'assembly'
+            assert tomllib.loads(creation['documentChanges'][1]['edits'][0]['newText'])['build']['output'] == 'assembly'
         finally:
             server.close()
         # 项目清单由编辑结果决定目标与输出；只验证 Linux ARM64 对象，不执行目标机器码。

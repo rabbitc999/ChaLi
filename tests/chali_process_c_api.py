@@ -23,7 +23,8 @@ def main():
             assert (result.returncode==0)==success,(command,result.returncode,result.stdout,result.stderr)
             return result
         unit=work/'process-unit.exe'
-        run([args.cc,'-std=c11','-Wall','-Wextra','-Werror','-I'+str(ROOT/'source'),ROOT/'tests/chali_process_c_api.c','-o',unit])
+        # 本单元直接调用生产函数表，宿主帧由测试替身提供，不链接独立产物的模块注册器。
+        run([args.cc,'-std=c11','-DGLUE_NO_STD_PROCESS','-Wall','-Wextra','-Werror','-I'+str(ROOT/'source'),ROOT/'tests/chali_process_c_api.c','-o',unit])
         print(run([unit,work/'pipe.tmp']).stdout.strip())
         errors={}
         for method in ('processRead','processClose'):
@@ -34,12 +35,15 @@ def main():
             assert digest=='bab8a357e69a21c293cd43b68ae6e9e5a02bb7c5aeba0bb51d0b75c48706d9bb','仅允许已核对的 a040210d 编译器冻结旧进程行为'
             output=run([compiler,'run',SOURCE,'--out',work/'baseline'])
             BASELINE.write_text(json.dumps(dict(source_commit='a040210d',compiler_sha256=digest,output=output.stdout,errors=errors),ensure_ascii=False,indent=2)+'\n',encoding='utf-8');print('old process behavior frozen');return
-        expected=json.loads(BASELINE.read_text(encoding='utf-8'));assert errors==expected['errors'],(errors,expected['errors'])
+        expected=json.loads(BASELINE.read_text(encoding='utf-8'))
+        # 保留带编译器摘要的旧记录，只在当前比较时适配命令前缀。
+        expected_errors={key:value.replace('chali aot:', 'chali build:', 1) for key,value in expected['errors'].items()}
+        assert errors==expected_errors,(errors,expected_errors)
         for allocator in ('malloc','pool'):
             for checks in ('checked','unchecked'):
                 target=work/f'{allocator}-{checks}.exe';run([compiler,'build',SOURCE,'--allocator',allocator,'--'+checks,'--out',target]);result=run([target])
                 assert result.stdout==expected['output'] and not result.stderr,(allocator,checks,result.stdout,result.stderr)
                 print(f'{allocator}/{checks}: process behavior and ownership match baseline')
-        print('closed-pipe errors preserve original first lines')
+        print('closed-pipe errors match recorded messages with current command prefix')
 
 if __name__=='__main__':main()

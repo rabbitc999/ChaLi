@@ -1,1 +1,1 @@
-chali aot: 下标越界：下标 7，长度 4
+chali build: 下标越界：下标 7，长度 4

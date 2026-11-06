@@ -899,6 +899,8 @@ Result<std::core::File, std::core::Error> fileOpen(std::core::String path, std::
 
 按路径和模式打开文件，返回 Result<File,Error>，失败为 Err。
 
+文件包装函数由 std::io 模块公开，使用前导入 std::io。 底层 __file* 入口由原生运行时提供。
+
 **参数**
 
 | 参数 | 类型／声明 | 含义 | 默认值 |

@@ -41,13 +41,13 @@ def main():
         body = (ROOT / 'tests/fixtures' / (name + '.chl')).read_text(encoding='utf-8')
         body = body.replace('@TEXTURE_PATH@', texture.as_posix()).replace('@CAPTURE_PATH@', (output / 'custom.png').as_posix())
         source.write_text(body, encoding='utf-8')
-        for mode in ('run', 'aot'):
+        for mode in ('run', 'build'):
             prefix = output / (name + '-' + mode)
             result = subprocess.run([str(args.compiler.resolve()), mode, str(source), '-I', str(output),
                                      '--out', str(prefix)], env=environment, cwd=ROOT,
                                     capture_output=True, text=True, encoding='utf-8', timeout=240)
             assert result.returncode == 0, (mode, result.stdout, result.stderr)
-            if mode == 'aot':
+            if mode == 'build':
                 result = subprocess.run([str(prefix.with_suffix('.exe'))], env=environment, cwd=ROOT,
                                         capture_output=True, text=True, encoding='utf-8', timeout=60)
             verify(result, name + '/' + mode, expected)

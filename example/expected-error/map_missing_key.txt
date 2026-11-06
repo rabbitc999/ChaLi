@@ -1,1 +1,1 @@
-chali aot: map 里没有这个键
+chali build: map 里没有这个键

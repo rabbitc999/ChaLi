@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    """构建真实 C 库，在 VM/AOT 中调用，并由宿主按 C ABI 调回导出。"""
+    """构建真实 C 库，在 checked run/build 中调用，并由宿主按 C ABI 调回导出。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     args = parser.parse_args()
@@ -68,10 +68,10 @@ API int32_t callback(int32_t (*f)(int32_t), int32_t x) { return f(x); }
     println("ABI directives OK");
 }
 ''', encoding='utf-8')
-    for backend in ['run', 'aot']:
+    for backend in ['run', 'build']:
         target = work / ('import-' + backend)
         output = invoke([compiler, backend, source, '--out', target], 'import-' + backend + '-build')
-        if backend == 'aot':
+        if backend == 'build':
             output = invoke([str(target) + ('.exe' if os.name == 'nt' else '')], 'import-aot-run')
         assert output == 'ABI directives OK\n', output
     exported = work / 'export.chl'
@@ -112,7 +112,7 @@ API int32_t callback(int32_t (*f)(int32_t), int32_t x) { return f(x); }
     header_check = work / 'header_check.c'
     header_check.write_text('#include "' + header.name + '"\n', encoding='utf-8')
     invoke(['gcc', '-fsyntax-only', header_check], 'header-check')
-    print('ABI directives VM/AOT and native export passed; logs:', work)
+    print('ABI directives checked run/build and native export passed; logs:', work)
 
 
 if __name__ == '__main__':

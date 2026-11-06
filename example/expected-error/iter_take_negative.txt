@@ -1,1 +1,1 @@
-chali aot: panic：take 数量不能为负数
+chali build: panic：take 数量不能为负数

@@ -38,11 +38,11 @@ def main():
     report = dict(compiler_sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(),
                   source=current_source, historical_fixture='budget_followup_0_31_0.json', results={})
     for backend, language, marker in [('run', 'zh', '编译器内存预算不足'),
-                                      ('aot', 'en', 'compiler memory budget exhausted')]:
+                                      ('build', 'en', 'compiler memory budget exhausted')]:
         output = work / backend
         environment = dict(os.environ, CHALI_LANG=language)
         command = [compiler, backend, source, '--out', output]
-        if backend == 'aot':
+        if backend == 'build':
             command += ['--llvm', ROOT / 'build/dependencies/llvm/toolchain/bin' / ('clang.exe' if os.name == 'nt' else 'clang')]
         result = invoke(command, environment, work)
         report['results'][backend] = result
@@ -54,7 +54,7 @@ def main():
             result['outcome'] = 'diagnosed_budget_limit'
         else:
             executed = result
-            if backend == 'aot':
+            if backend == 'build':
                 executed = invoke([str(output) + ('.exe' if os.name == 'nt' else '')], environment, work)
                 result['execution'] = executed
             assert executed['code'] == 0 and executed['stdout'].replace('\r\n', '\n') == 'all Error modules OK\n', (backend, executed, work)

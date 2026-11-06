@@ -65,13 +65,13 @@ void main() {''', 1)
     env = dict(os.environ, CHALI_QUIET='1', CHALI_LANG='en', TMP=str(ROOT / 'tmp'),
                TEMP=str(ROOT / 'tmp'), TMPDIR=str(ROOT / 'tmp'))
     compiler = str(args.compiler.resolve())
-    for mode in ('run', 'aot'):
+    for mode in ('run', 'build'):
         for name, path in [('model', ROOT / 'tests/fixtures/desktop_life_model.chl'), ('gui', out / 'life.chl')]:
             target = out / (name + '-' + mode)
             result = subprocess.run([compiler, mode, str(path), '-I', str(out), '--out', str(target)],
                                     cwd=ROOT, env=env, capture_output=True, text=True, encoding='utf-8', timeout=240)
             assert result.returncode == 0, (name, mode, result.stdout, result.stderr)
-            if mode == 'aot':
+            if mode == 'build':
                 result = subprocess.run([str(target.with_suffix('.exe'))], cwd=ROOT, env=env,
                                         capture_output=True, text=True, encoding='utf-8', timeout=90)
             assert result.returncode == 0 and not result.stderr, (name, mode, result.stdout, result.stderr)

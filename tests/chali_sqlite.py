@@ -21,7 +21,7 @@ def main():
     expected = 'sqlite database checks passed\n'
     with tempfile.TemporaryDirectory(prefix='database-', dir=work) as temporary:
         directory = Path(temporary)
-        for backend in ('run', 'aot'):
+        for backend in ('run', 'build'):
             prefix = work / ('sqlite-' + backend)
             database = directory / (backend + '.db')
             if backend == 'run':

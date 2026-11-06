@@ -1,1 +1,1 @@
-chali aot: obj.get：类型对不上 —— Any 中是 int64，期望 std::core::String。请使用 isType<T> 或 tryGet<T>
+chali build: obj.get：类型对不上 —— Any 中是 int64，期望 std::core::String。请使用 isType<T> 或 tryGet<T>

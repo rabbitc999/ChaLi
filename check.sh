@@ -10,14 +10,14 @@
 # 用法：cd chali && sh check.sh
 #       sh check.sh --sample 5     只跑 5% 的样例（每隔 20 个取一个，确定性的等距抽样）
 #   （路径与 chali_out.* 都相对当前目录，必须在 chali/ 里跑；发布门禁
-#    `ci/run.sh` 就是这么调的。Makefile 里没有 check 目标。）
+#    `ci.sh` 就是这么调的。可直接运行本脚本。）
 #
 # 每个样例使用临时目录中的独立产物前缀，避免与其他模块门禁互相覆盖。
-# 想保留并查看某个样例的四元式，可以单独执行：
+# 想保留并查看某个样例的 LLVM IR，可以单独执行：
 #
-#   ./chali build example/samples/array2d.chl --emit-llvm out tmp/array2d
+#   ./chali build example/samples/array2d.chl --emit-llvm -o tmp/array2d
 #
-# 期望文件是"已验证正确"的输出固化下来的：一旦降级 / 四元式 / 栈机改动，
+# 期望文件是"已验证正确"的输出固化下来的：一旦降低 / LLVM 后端 / 运行时改动，
 # 这里会立刻报出是哪个样例、哪一行不同。
 #
 # 期望文件在 Windows 上检出时可能是 CRLF（仓库 core.autocrlf），比对前两边都去掉
@@ -32,7 +32,7 @@ export CHALI_NO_STDIN_INPUT=1
 
 set -u
 
-# 抽样档位：后端改动只按比例抽前端样例（见 AGENTS.md 门禁分档），默认全跑。
+# 抽样档位：显式指定时按比例抽样；默认全跑。
 samplePercent=100
 while [ "$#" -gt 0 ]; do
     case "$1" in
