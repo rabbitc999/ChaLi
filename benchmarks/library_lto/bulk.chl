@@ -1,7 +1,0 @@
-import bench::bridge;
-int64 work(int64 seed){
-    int64 value=seed+1;
-    int64 index=0;
-    while(index<1048576){value=bench::bridge::bulk(value,index);index=index+256;}
-    return value;
-}

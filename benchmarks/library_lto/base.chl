@@ -1,7 +1,0 @@
-module bench::base;
-int64 step(int64 value,int64 index){return (value*48271+index)&2147483647;}
-int64 bulk(int64 value,int64 start){
-    int64 index=0;
-    while(index<256){value=(value*48271+start+index)&2147483647;index=index+1;}
-    return value;
-}

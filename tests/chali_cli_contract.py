@@ -25,7 +25,7 @@ def main():
             reason = ''
             if code and re.search(r'\bVM\b|虚拟机|\.svmb', line, re.I):
                 reason = '旧解释执行表述或字节码提示'
-            elif guide and re.search(r'\b(?:chali|ChaLi)(?:\.exe)? aot\b|原生\s*AOT\s*调试|Native AOT debugging|00-vision\.md', line, re.I):
+            elif guide and re.search(r'\b(?:chali|ChaLi)(?:\.exe)? aot\b|原生\s*AOT\s*调试|Native AOT debugging|00-vision\.md|99-chali-in-blocks\.md', line, re.I):
                 reason = '已删除命令或旧调试标题'
             elif configuration and re.match(r'\s*\[aot\]', line):
                 reason = '旧构建配置表'

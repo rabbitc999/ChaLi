@@ -104,21 +104,21 @@ def main():
     with tempfile.TemporaryDirectory(prefix='bootstrap-correctness-') as directory:
         work = Path(directory)
         path = work / 'check.chl'
-        prototype = (ROOT / 'benchmarks/perf/bootstrap_containers.chl').read_text(encoding='utf-8')
+        prototype = (ROOT / 'tests/fixtures/unsafe_storage/bootstrap_containers.chl').read_text(encoding='utf-8')
         if args.map_triples:
             start = prototype.index('/** int64 键的开放寻址哈希表')
-            prototype = prototype[:start] + (ROOT / 'benchmarks/perf/bootstrap_map_triples.chl').read_text(encoding='utf-8')
+            prototype = prototype[:start] + (ROOT / 'tests/fixtures/unsafe_storage/bootstrap_map_triples.chl').read_text(encoding='utf-8')
         if args.segmented_list:
             start = prototype.index('struct BootstrapList<T>')
             end = prototype.index('/** 三元组槽位' if args.map_triples else '/** int64 键的开放寻址哈希表')
-            prototype = prototype[:start] + (ROOT / 'benchmarks/perf/bootstrap_list_segmented.chl').read_text(encoding='utf-8') + '\n' + prototype[end:]
+            prototype = prototype[:start] + (ROOT / 'tests/fixtures/unsafe_storage/bootstrap_list_segmented.chl').read_text(encoding='utf-8') + '\n' + prototype[end:]
         path.write_text(prototype + CHECK, encoding='utf-8')
-        for backend in (('aot',) if args.aot_only else ('run',) if args.vm_only else ('run', 'aot')):
+        for backend in (('build',) if args.aot_only else ('run',) if args.vm_only else ('run', 'build')):
             target = work / (backend + ('.exe' if os.name == 'nt' else ''))
-            result = subprocess.run([str(compiler), backend, str(path), '--out', str(target)],
+            result = subprocess.run([str(compiler), backend, str(path), '--quiet', '--out', str(target)],
                                     cwd=ROOT, capture_output=True, text=True, encoding='utf-8', timeout=600)
             assert result.returncode == 0, (backend, result.stdout, result.stderr)
-            if backend == 'aot':
+            if backend == 'build':
                 result = subprocess.run([str(target)], cwd=ROOT, capture_output=True, text=True,
                                         encoding='utf-8', timeout=300)
             assert result.returncode == 0 and result.stdout == 'bootstrap List/Map/Set correctness OK\n' and not result.stderr, (

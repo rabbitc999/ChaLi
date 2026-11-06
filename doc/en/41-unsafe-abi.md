@@ -61,9 +61,8 @@ Lengths in `memcpy<T,U>(destination, source, bytes)` and `memset<T>(destination,
 
 These types and operations belong to the implicit `std::core` core; namespace qualification is optional. `memcpy`/`memset` lower directly from the checked AST to LLVM memory intrinsics, avoiding language wrappers and generic native dispatch. Necessary dynamic raw-storage checks use a scalar kernel, small pointer wrappers are preferred for inlining, and bare dereferences directly extract the address.
 
-Byte operations suit byte buffers and data the caller has established can be handled bitwise. Resource initialization, transfer and cleanup belong to operations such as `initAt`, `takeAt` and `dropAt`; copying handle bytes does not establish independent ownership. The bare-pointer String experiment uses bulk copy/fill. The earlier checked-slot implementation is retained as `bootstrap_string_checked.chl`, and reports distinguish the actual sources measured.
 
-Experimental implementations live in `benchmarks/perf/raw_containers.chl` and `benchmarks/perf/bootstrap_string.chl`. List deletion cleans elements and retains capacity; Map owns key/value/state slots, and Set owns an independent key array. The String experiment stores UTF-8 bytes and implements capacity, append, byte access, naive search and explicit independent copying. It does not implement the full standard String Unicode API. Resource-owning types do not implement `Copy<T>`.
+Experimental implementations live in `tests/fixtures/unsafe_storage/raw_containers.chl` and `tests/fixtures/unsafe_storage/bootstrap_string.chl`. List deletion cleans elements and retains capacity; Map owns key/value/state slots, and Set owns an independent key array. The String experiment stores UTF-8 bytes and implements capacity, append, byte access, naive search and explicit independent copying. It does not implement the full standard String Unicode API. Resource-owning types do not implement `Copy<T>`.
 
 ## Pointer views and IEEE754 bit patterns
 
@@ -83,7 +82,7 @@ Remaining host entry points cover these boundaries rather than the migrated cont
 - Opaque single-slot reservation, swapping, reads, owned-value marshalling, key comparison/Hash callbacks and iterator leases, preserving existing host Codecs and record ABI.
 - I/O, numeric display formatting, operating-system services, reflection, synchronous callbacks and C ABI. Big-number and CAS support retain their existing runtimes.
 
-Existing resource-copy restrictions on safe containers remain in force. Experimental raw-storage containers separately verify moves and exactly-once cleanup of `Closeable` elements. The experimental byte string remains separate; performance reports distinguish the actual old native implementation, the current default self-hosted implementation and the experiment.
+Existing resource-copy restrictions on safe containers remain in force. Experimental raw-storage containers separately verify moves and exactly-once cleanup of `Closeable` elements. The experimental byte string is retained as a separate functional fixture.
 
 ## Imports and exports
 
@@ -128,11 +127,8 @@ A language failure inside a synchronous C callback returns to the checked invoke
 ```text
 python tests/chali_unsafe_storage.py --aot
 python tests/chali_abi_directives.py
-python benchmarks/perf/bootstrap_containers.py --raw-storage --aot-only --operations 1024 --runs 3 --out tmp/raw-containers.json
-python benchmarks/perf/bootstrap_string.py --size 512 --runs 3 --out tmp/string-comparison.json
 ```
 
-String reports retain compiler/source SHA256 hashes, correctness results, raw timings and checksums. The three sides are the old native String, the current default self-hosted String and an experimental raw byte string. Conversion into experimental storage through a byte list is a separate workload. Timed workloads include their construction, allocation and cleanup; compilation is excluded from internal timings. Interpret comparisons alongside the algorithms used by each workload.
 
 ## Current primitive lowering
 

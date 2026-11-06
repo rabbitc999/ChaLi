@@ -80,9 +80,9 @@ def main():
     positive = [('resource', RESOURCE, 'raw resource OK\n'),
                 ('raw_storage', (ROOT / 'example/samples/raw_storage.chl').read_text(encoding='utf-8'), 'raw storage OK\n'),
                 ('raw_pointer', (ROOT / 'example/samples/raw_pointer.chl').read_text(encoding='utf-8'), 'raw pointer OK\n'),
-                ('raw_containers', (ROOT / 'benchmarks/perf/raw_containers.chl').read_text(encoding='utf-8') + '\n' + (ROOT / 'benchmarks/perf/raw_containers_check.chl').read_text(encoding='utf-8'), 'raw containers OK\n'),
-                ('raw_resources', (ROOT / 'benchmarks/perf/raw_containers.chl').read_text(encoding='utf-8') + '\n' + (ROOT / 'benchmarks/perf/raw_resources_check.chl').read_text(encoding='utf-8'), 'raw resource containers OK\n'),
-                ('string', (ROOT / 'benchmarks/perf/bootstrap_string.chl').read_text(encoding='utf-8') + '\n' + (ROOT / 'benchmarks/perf/bootstrap_string_check.chl').read_text(encoding='utf-8'), 'bootstrap String OK\n'),
+                ('raw_containers', (ROOT / 'tests/fixtures/unsafe_storage/raw_containers.chl').read_text(encoding='utf-8') + '\n' + (ROOT / 'tests/fixtures/unsafe_storage/raw_containers_check.chl').read_text(encoding='utf-8'), 'raw containers OK\n'),
+                ('raw_resources', (ROOT / 'tests/fixtures/unsafe_storage/raw_containers.chl').read_text(encoding='utf-8') + '\n' + (ROOT / 'tests/fixtures/unsafe_storage/raw_resources_check.chl').read_text(encoding='utf-8'), 'raw resource containers OK\n'),
+                ('string', (ROOT / 'tests/fixtures/unsafe_storage/bootstrap_string.chl').read_text(encoding='utf-8') + '\n' + (ROOT / 'tests/fixtures/unsafe_storage/bootstrap_string_check.chl').read_text(encoding='utf-8'), 'bootstrap String OK\n'),
                 ('string_assignment_regression', 'void main(){String text="aaa";String needle="b";int64 sum=0;int64 i=0;while(i<32){sum=sum+text.indexOf(needle);i=i+1;}assert(sum==0-32);println("String assignment OK");}', 'String assignment OK\n')]
     failures = {
         'uninitialized': 'std::core::readAt<int64>(slots.pointer(0));',
@@ -98,22 +98,22 @@ def main():
         'byte_source_bounds': 'std::core::BarePtr<int64> p=std::core::barePointer<int64>(slots.pointer(0));std::core::RawStorage<int64> fresh=std::core::RawStorage<int64>::allocate(4);std::core::memcpy<int64,int64>(std::core::barePointer<int64>(fresh.pointer(0)),p,17);',
         'byte_stale': 'std::core::BarePtr<int64> p=std::core::barePointer<int64>(slots.pointer(0));slots.close();std::core::memset<int64>(p,(uint8)0,1);',
     }
-    for backend in (['run', 'aot'] if args.aot else ['run']):
+    for backend in (['run', 'build'] if args.aot else ['run']):
         for name, source, expected in positive:
             path = work / (name + '.chl')
             path.write_text(source, encoding='utf-8')
             target = work / (name + '-' + backend)
-            result = invoke([compiler, backend, path, '--out', target], name + '-' + backend + '-build')
+            result = invoke([compiler, backend, path, '--quiet', '--out', target], name + '-' + backend + '-build')
             assert result.returncode == 0, (name, backend, result)
-            if backend == 'aot':
+            if backend == 'build':
                 result = invoke([str(target) + ('.exe' if os.name == 'nt' else '')], name + '-aot-run')
             assert result.returncode == 0 and result.stdout == expected and not result.stderr, (name, backend, result)
         for name, operation in failures.items():
             path = work / ('failure-' + name + '.chl')
             path.write_text('import std::memory;\nvoid main(){std::core::RawStorage<int64> slots=std::core::RawStorage<int64>::allocate(2);unsafe{' + operation + '}}', encoding='utf-8')
             target = work / ('failure-' + name + '-' + backend)
-            result = invoke([compiler, backend, path, '--out', target], 'failure-' + name + '-' + backend + '-build')
-            if backend == 'aot':
+            result = invoke([compiler, backend, path, '--quiet', '--out', target], 'failure-' + name + '-' + backend + '-build')
+            if backend == 'build':
                 assert result.returncode == 0, result
                 result = invoke([str(target) + ('.exe' if os.name == 'nt' else '')], 'failure-' + name + '-aot-run')
             assert result.returncode != 0 and any(message in result.stderr for message in ('原始', 'assert', 'memcpy')), (name, backend, result)

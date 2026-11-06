@@ -268,7 +268,6 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行 String 字节 Option 标量化及回退回归" "$PYTHON" tests/chali_string_byte_unwrap.py --chali "$CHALI_BIN"
     run_step "运行多项地址视图及持续宿主线程生命周期回归" "$PYTHON" tests/chali_address_multiview.py --chali "$CHALI_BIN"
     run_step "运行字符串描述符 LLVM 读取及旧布局回退回归" "$PYTHON" tests/chali_string_storage_view.py --chali "$CHALI_BIN"
-    run_step "运行 Lua 与接口性能门槛及坏样本拒绝单测" "$PYTHON" tests/chali_performance_gate.py
     run_step "运行接口对象复制标量 ABI 与快照回归" "$PYTHON" tests/chali_interface_copy_scalar.py --chali "$CHALI_BIN"
     run_step "运行新建接口绑定移交与独立快照回归" "$PYTHON" tests/chali_interface_binding_move.py --chali "$CHALI_BIN"
     run_step "运行接口指针快照共享与写时分离回归" "$PYTHON" tests/chali_interface_snapshot.py --chali "$CHALI_BIN"
@@ -277,6 +276,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行 List 数值存储布局与回退回归" "$PYTHON" tests/chali_numeric_list_storage.py
     run_step "运行默认 String 的语言自举回归" "$PYTHON" tests/chali_bootstrap_string.py --chali "$CHALI_BIN"
     run_step "运行数值转换的语言自举回归" "$PYTHON" tests/chali_bootstrap_numeric.py --chali "$CHALI_BIN"
+    run_step "检查跨语言性能报告的格式与计算结果" "$PYTHON" tests/chali_benchmark_report.py
     run_step "运行实验性集合的语言自举回归" "$PYTHON" tests/chali_bootstrap_containers.py --chali "$CHALI_BIN"
     run_step "验证默认 Map／Set 的碰撞与删除模型" "$CHALI_BIN" run tests/fixtures/bootstrap_hashed_default.chl --out tmp/ci/hashed-model
     run_step "运行 LLVM 内存原语与限定调用回归" "$PYTHON" tests/chali_memory_intrinsics.py --chali "$CHALI_BIN"

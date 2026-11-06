@@ -212,7 +212,6 @@ allocator = "malloc"
 
 静态与外置 LLVM 使用独立构建目录和同版本命名。打包前核对 `--build-info`、插件版本、VSIX 内嵌 EXE 字节和实际构建配置；不要用另一变体的配置文件代替核对。`tools/release_variants.py --package-only` 可用 `--static-build-root`／`--external-build-root` 指定本次配置目录。安装包和 ZIP 另核对 EXE、版本及 LICENSE／NOTICE／依赖许可；生成交叉对象与在目标系统执行分别记录。
 
-语言服务的性能对照按参与测量的编译器摘要保存。报告路径中的 `1.0.12` 是 1.0.0 发布前的开发构建标识。[语言服务性能对照](../benchmarks/results/lsp-1.0.12-final/README.md)
 
 ## 目标机器汇编
 

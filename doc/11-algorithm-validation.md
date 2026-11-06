@@ -4,8 +4,6 @@
 [English](en/11-algorithm-validation.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-本文保留历史测试配置及原始数据；执行方式为旧解释后端。
-
 借用检查分为两部分：`source/chali_borrow_checker.hpp` 检查引用逃逸，
 `source/chali_borrow_flow.hpp` 检查函数内的释放后访问和移动后访问。
 前端适配层 `source/semantics/borrow_flow.cpp` 记录已绑定的变量身份、字段、下标和控制流；

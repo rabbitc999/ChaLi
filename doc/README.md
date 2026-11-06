@@ -40,7 +40,6 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 | 想知道产物位置和原生符号 | [15 构建产物与中间文件](15-artifacts.md) → [16 原生产物符号](16-compact-symbols.md) |
 | 用注解 / 反射，或接宿主内存 | [19 注解与反射](19-reflection.md)、[20 内存分配器](20-memory-allocator.md) |
 | 查语法的权威写法 | [EBNF 语法参考](14-grammar-ebnf.md) |
-| 想看用"方块世界"讲明白的 ChaLi | [99 方块里的 ChaLi 语言](99-chali-in-blocks.md) |
 | 要升级版本，怕代码突然不编了 | [21 语义冻结清单](21-semantics-frozen.md)（核心契约、兼容性与实现边界） |
 | 想确认哪些写法已经冻住 | [39 语法冻结清单](36-syntax-frozen.md)（词法、关键字、结构形状与改语法同步项） |
 | 查语言名称、文件后缀及相关能力 | [名称与能力索引](37-name-freeze.md)（名称写法、实现范围及验证入口） |
@@ -72,7 +71,6 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 | [20](20-memory-allocator.md) | 内存分配器 | 接宿主内存的人 | 池与容量统计、分配范围检查、外部缓冲区接入 |
 | [21](21-semantics-frozen.md) | 语义冻结清单 | 要采用、或要升级的人 | 核心语义、版本规则与仍需完善的实现边界 |
 | [22](22-resource-lifetime.md) | 资源生命周期与借用控制流 | 修改运行时的人 | 分配身份、资源回收合并、临时所有权与闭包借用参考 |
-| [99](99-chali-in-blocks.md) | 方块里的 ChaLi 语言 | 喜欢比喻、想先建立直觉的人 | 用方块世界讲 MC（Magic-C）的每条规矩：值语义、非空引用、无 GC、迭代器、穷尽 match，以及当前语法速查 |
 
 ---
 
@@ -114,7 +112,7 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 
 - [11 借用控制流与算法验证](11-algorithm-validation.md)：独立数据流检查、链表 / BST / DFS / BFS、NOIP2015 运输计划与暴力对照。
 
-- [12 性能对比：版本基线与其他语言](12-performance.md)：17 个负载的 0.32.9／0.32.10、pool／malloc 实测，冻结的 C++、Rust、Lua 与 Java JIT 参考，测试代码、原始样本、结果分析及静态优化趋势图。
+- [12 跨语言性能实测](12-performance.md)：18 个项目、八种语言的完整实测，包含原始样本、中位数、平均值、四个分位点、方差、标准差、变异系数和偏度。
 
 - 静态 SQLite 与 MySQL/MariaDB 连接入口：[SQL 接口](../example/sql-chali/doc/01-sql-library.md)、[SQLite 实库回归](../tests/chali_sqlite.py)、[连接 ABI 夹具回归](../tests/chali_sql_connections.py)、[MySQL/PostgreSQL 实库回归](../tests/chali_sql_live.py)。
 

@@ -36,7 +36,7 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 | Looking up commands, config, tests | [Toolchain](09-toolchain.md) |
 | Querying APIs in a terminal or checking editor caches | [Command line manual](../man/en/README.md) → [LSP incremental hints and caching](../man/en/lsp.md) |
 | Looking for the authoritative grammar | [EBNF grammar reference](../14-grammar-ebnf.md) |
-| Comparing 0.32.9 and 0.32.10, allocators, and frozen C++/Rust/Lua/Java JIT references across 17 workloads | [Version and language performance baselines](12-performance.md) |
+| Comparing 18 workloads in eight languages, including complete descriptive statistics and raw records | [Cross-language performance measurements](12-performance.md) |
 | Installing MSI/DEB/RPM packages or building another CPU architecture | [Installation packages and architecture builds](39-installation-packages.md) |
 | Want to contribute / see the roadmap | [Roadmap and ecosystem](10-roadmap.md) |
 

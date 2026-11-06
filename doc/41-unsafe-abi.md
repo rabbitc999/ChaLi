@@ -74,9 +74,9 @@ unsafe {
 
 复杂布局、对象查找、资源协议、回调和失效诊断继续使用相应 C 运行时服务。`checked` 与 `unchecked` 沿用各自的数组／指针检查设置，静态借用和拥有值清理始终保留。生产 LLVM IR 由 C++ 后端生成；Python 测试只调用编译器并核对输出、IR 和目标文件。
 
-字节操作适用于字节缓冲区与调用者确认可按位处理的数据。资源值的初始化、转移和清理由 `initAt`、`takeAt`、`dropAt` 等操作承担；按位复制资源句柄不会建立独立所有权。String 实验的裸指针版使用批量复制和填充，旧的逐槽受检版保存在 `bootstrap_string_checked.chl`，测量按各自实际源码区分。
+字节操作适用于字节缓冲区与调用者确认可按位处理的数据。资源值的初始化、转移和清理由 `initAt`、`takeAt`、`dropAt` 等操作承担；按位复制资源句柄不会建立独立所有权。String 实验的裸指针版使用批量复制和填充，功能夹具核对复制、移动和资源清理。
 
-实验实现位于 `benchmarks/perf/raw_containers.chl` 和 `benchmarks/perf/bootstrap_string.chl`。List 删除保留容量并清理元素；Map 使用含键、值和状态的槽位，Set 独立保存键槽位。String 实验按字节保存 UTF-8 内容，提供容量、追加、读取、朴素查找和显式独立复制；它没有实现完整的标准 String Unicode API。拥有资源的类型不实现 `Copy<T>`。
+实验实现位于 `tests/fixtures/unsafe_storage/raw_containers.chl` 和 `tests/fixtures/unsafe_storage/bootstrap_string.chl`。List 删除保留容量并清理元素；Map 使用含键、值和状态的槽位，Set 独立保存键槽位。String 实验按字节保存 UTF-8 内容，提供容量、追加、读取、朴素查找和显式独立复制；它没有实现完整的标准 String Unicode API。拥有资源的类型不实现 `Copy<T>`。
 
 ## 裸指针视图与 IEEE754 位模式
 
@@ -96,7 +96,7 @@ IEEE754 编解码使用这个方法重解释存储并解引用，不通过整数
 - 不透明容器单槽的预留、交换、读取、拥有值封送、键比较／Hash 回调和迭代租约；它们保持既有宿主 Codec 与记录 ABI。
 - I/O、数值显示格式化、操作系统服务、反射、同步回调和 C ABI；大数及 CAS 继续使用既有运行时。
 
-安全容器对资源元素的既有复制限制不变；拥有 `Closeable` 元素的原始存储实验容器另行验证移动与恰好一次清理。上述实验字节 String 也单独保留，性能报告区分真实旧版原生实现、当前默认自举实现和实验实现。
+安全容器对资源元素的既有复制限制不变；拥有 `Closeable` 元素的原始存储实验容器另行验证移动与恰好一次清理。实验字节 String 作为独立功能夹具保留。
 
 ## 导入与导出
 
@@ -141,11 +141,8 @@ AOT 数据映像只保存可达函数中 `addr` 实际引用的数据和函数�
 ```text
 python tests/chali_unsafe_storage.py --aot
 python tests/chali_abi_directives.py
-python benchmarks/perf/bootstrap_containers.py --raw-storage --aot-only --operations 1024 --runs 3 --out tmp/raw-containers.json
-python benchmarks/perf/bootstrap_string.py --size 512 --runs 3 --out tmp/string-comparison.json
 ```
 
-String 报告保存编译器和源码 SHA256、正确性结果、原始计时和校验值，三方为旧版原生 String、本版默认自举 String 和实验原始字节串。String 转入实验存储的字节列表转换单列，不把它混入字节串核心操作。计时包括各负载中的构造、分配与清理，编译不计入内部计时；比较时应同时查看各负载的具体算法。
 
 
 ## 直接链接的 C ABI

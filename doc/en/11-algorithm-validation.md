@@ -4,8 +4,6 @@
 **English** · [简体中文](../11-algorithm-validation.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Historical configurations and measurements are preserved below. Programs execute through the historical interpreter.
-
 `source/chali_borrow_checker.hpp` checks reference escapes; `source/chali_borrow_flow.hpp` checks
 intraprocedural use after free and use after move. The adapter in
 `source/semantics/borrow_flow.cpp` records bound storage identities and control flow.

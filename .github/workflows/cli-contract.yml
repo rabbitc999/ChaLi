@@ -34,6 +34,8 @@ jobs:
           python tests/chali_doc_history.py
       - name: Check changelog consistency
         run: python tools/changelog.py --check
+      - name: Validate benchmark report completeness and checksums
+        run: python tests/chali_benchmark_report.py
       - name: Verify generated translations are synchronized
         run: |
           python tools/embed_i18n.py

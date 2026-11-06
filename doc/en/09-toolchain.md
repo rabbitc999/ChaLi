@@ -199,7 +199,6 @@ Code actions can fill directly listed non-generic interface methods and add a fa
 
 Static and external LLVM builds use separate build directories and versioned artifact names. Before packaging, check `--build-info`, extension versions, exact VSIX compiler bytes and the actual variant's build configuration. Do not substitute the other variant's configuration. `tools/release_variants.py --package-only` accepts `--static-build-root` and `--external-build-root` for these directories. Check installer and ZIP executables, versions, LICENSE/NOTICE and dependency licenses separately. Record cross-object generation separately from execution on the target system.
 
-The LSP performance comparison records the hashes of the compilers that were measured. The report path retains `1.0.12`, the original identifier of a development build preceding the 1.0.0 release. [LSP performance comparison](../../benchmarks/results/lsp-1.0.12-final/README.md)
 
 ## Target machine assembly
 
