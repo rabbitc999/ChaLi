@@ -30,7 +30,7 @@ See [naming and related capabilities](doc/en/37-name-freeze.md) for references a
 
 Conditional preprocessing precedes the generated parser. Hygienic AST macros expand during semantic analysis alongside type inference. After name, type, generic and borrow checks, the C++ backend generates LLVM IR directly from the checked AST; LLVM optimizes it and generates native code. Normal run and AOT paths skip quadruple generation, serialization and assembly.
 
-![ChaLi compilation: conditional preprocessing, parsing, semantic macro expansion, borrow checks, checked AST and LLVM AOT](doc/images/chali-compilation-en.png)
+![ChaLi compilation: conditional preprocessing, parsing, semantic macro expansion, borrow checks, checked AST and LLVM Build](doc/images/chali-compilation-en.png)
 
 ## Release build
 

@@ -61,8 +61,8 @@ def compilation(english=False):
     """展示语义检查后的 AST 直接生成 LLVM IR 与原生产物。"""
     c = Canvas()
     title(c, "ChaLi · Compilation" if english else "ChaLi · 编译过程",
-          "Generated front end → checked AST → LLVM AOT" if english else
-          "文法生成前端 → 语义与借用检查 → 已检查 AST → LLVM AOT")
+          "Generated front end → checked AST → LLVM Build" if english else
+          "文法生成前端 → 语义与借用检查 → 已检查 AST → LLVM Build")
     nodes = [
         (40, 145, "1  Source" if english else "1  源码与模块", [".chl + imports", "Embedded standard library"] if english else [".chl 与模块依赖", "内嵌标准库"]),
         (560, 145, "2  Preprocessing" if english else "2  条件预处理", ["%define / %if / %ifdef", "Source locations retained"] if english else ["%define / %if / %ifdef", "保留源文件与行号"]),
@@ -86,8 +86,8 @@ def compilation(english=False):
          "Code generation and link-time optimization" if english else "机器码生成与链接时优化"], green=True)
     outputs = [
         (40, "LLVM IR / object" if english else "LLVM IR／目标文件", ["--emit-llvm / --emit-obj", "--target selects platform and CPU"] if english else ["--emit-llvm / --emit-obj", "--target 选择目标平台与架构"]),
-        (560, "run · checked AOT", ["Compile native code and execute", "Checks enabled"] if english else ["编译原生机器码并执行", "开启数组与指针检查"]),
-        (1080, "AOT · native export" if english else "AOT · 原生导出", ["Unchecked export by default", "Executable or shared library"] if english else ["缺省 unchecked 导出", "可执行文件或动态库"]),
+        (560, "run · checked Build", ["Compile native code and execute", "Checks enabled"] if english else ["编译原生机器码并执行", "开启数组与指针检查"]),
+        (1080, "Build · native export" if english else "Build · 原生导出", ["Unchecked export by default", "Executable or shared library"] if english else ["缺省 unchecked 导出", "可执行文件或动态库"]),
     ]
     arrow(c, ((40, 375), (20, 375), (20, 675), (260, 675), (260, 720)))
     arrow(c, ((1100, 605), (1100, 665), (780, 665), (780, 720)))
@@ -111,8 +111,8 @@ def aot(english=False):
          ["Generate LLVM IR directly in C++", "No quadruple serialization"] if english else
          ["C++ 后端直接生成 LLVM IR", "跳过四元式生成、写盘与重读"]),
         (1080, "3  LLVM module" if english else "3  LLVM 中间表示",
-         [".ll + embedded AOT runtime", "--emit-llvm stops here"] if english else
-         [".ll 与内嵌 AOT 运行时", "--emit-llvm 在此停止"]),
+         [".ll + embedded native runtime", "--emit-llvm stops here"] if english else
+         [".ll 与内嵌原生运行时", "--emit-llvm 在此停止"]),
     ]
     for x, heading, lines in rows:
         box(c, x, 150, 440, heading, lines)
@@ -129,8 +129,8 @@ def aot(english=False):
     arrow(c, ((400, 475), (400, 520), (1160, 520), (1160, 475)), head=False)
     arrow(c, ((780, 520), (780, 565)))
     box(c, 40, 565, 1480, "5  Link native artifact" if english else "5  链接原生产物",
-        ["Object code + AOT runtime + CRT + explicit C ABI libraries" if english else
-         "目标代码 + AOT 运行时 + CRT + 显式声明的 C ABI 库",
+        ["Object code + native runtime + CRT + explicit C ABI libraries" if english else
+         "目标代码 + 原生运行时 + CRT + 显式声明的 C ABI 库",
          "--shared / --export / --link select the output and integration" if english else
          "通过 --shared、--export、--link 配置动态库、导出函数与链接库"], green=True)
     arrow(c, ((780, 685), (780, 735)))
@@ -149,10 +149,9 @@ def main():
         for name, draw in (("compilation", compilation), ("aot", aot)):
             path = OUT / f"chali-{name}{'-en' if english else ''}"
             draw(english).save(str(path.with_suffix('.png')), str(path.with_suffix('.svg')))
-            if not english:
-                book_path = ROOT / 'doc/book/images' / path.with_suffix('.png').name
-                book_path.parent.mkdir(parents=True, exist_ok=True)
-                book_path.write_bytes(path.with_suffix('.png').read_bytes())
+            book_path = ROOT / 'doc/book/images' / path.with_suffix('.png').name
+            book_path.parent.mkdir(parents=True, exist_ok=True)
+            book_path.write_bytes(path.with_suffix('.png').read_bytes())
             print(path.name)
 
 
