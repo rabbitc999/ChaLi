@@ -1,12 +1,14 @@
 # ChaLi 语言
 
 <!-- LANGUAGE NAVIGATION -->
-[English](README.md) · **简体中文**
+[English](README.en.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
 ChaLi 是一门静态类型语言，提供可观察的值语义、显式借用与移动，以及按作用域清理资源的机制。类型、所有权和运行期规则由语言定义；宿主平台、导出目标与外部库要求分别核对。
 
 ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，从已检查的 AST 直接生成 LLVM IR，再通过 LLVM AOT 生成原生程序。run 使用 checked 编译执行，build 默认 unchecked 导出。
+
+最新的 [ParseEngine 仓库](https://github.com/rabbitc999/ParseEngine) 支持以五种模式生成用 ChaLi（`--lang chali`）编写的解析器：**LL(1)、SLR(1)、LALR(1)、LR(1) 和 IELR(1)**，分别通过 `--mode ll1`、`slr`、`lalr`、`lr1` 或 `ielr` 选择。生成的 `parser.chl` 可以用 ChaLi 运行或构建。该仓库的编译器前端使用 C++17 输出目标并采用 IELR(1)，配置见 `gen.sh`。
 
 当前已实现能力、默认配置与平台边界统一见[能力说明](doc/17-capabilities.md)，版本以 [`VERSION`](VERSION) 为准。
 
@@ -61,7 +63,7 @@ ChaLi 的五个字母分别代表以下语言特性。语言名中 C 与 L 大�
 | [17 当前能力](doc/17-capabilities.md) | 评估与集成人员 | 实现能力、默认配置、宿主/目标宿主及工具边界 |
 | [10 路线图](doc/10-roadmap.md) | 贡献者、长期用户 | 短中长期目标与「明确不做的事」 |
 
-**英文版**：[`doc/en/`](doc/en/README.md) 维护对应的功能说明；未提供完整译文的底层规格从英文入口链接中文版。
+**英文版**：[`doc/en/`](doc/en/README.en.md) 维护对应的功能说明；未提供完整译文的底层规格从英文入口链接中文版。
 
 - 中文说明优先维护，中英文共有的代码片段保持一致。
 - 当前能力与默认配置见中英文能力页；标准库目录以 API 索引为准。

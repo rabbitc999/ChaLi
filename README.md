@@ -1,181 +1,166 @@
-# The ChaLi Language
+# ChaLi 语言
 
 <!-- LANGUAGE NAVIGATION -->
-**English** · [简体中文](README.cn.md)
+[English](README.en.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-ChaLi is a statically typed language with observable value semantics, explicit borrowing and moves, and scope-based resource cleanup. Its type, ownership and runtime rules are defined by the language. Supported hosts, export targets and external-library requirements are documented separately.
+ChaLi 是一门静态类型语言，提供可观察的值语义、显式借用与移动，以及按作用域清理资源的机制。类型、所有权和运行期规则由语言定义；宿主平台、导出目标与外部库要求分别核对。
 
-The ChaLi compiler's front end is generated from this repository's `source/chali.gram` by
-[ParseEngine](https://github.com/rabbitc999/ParseEngine). It generates LLVM IR directly from the semantically checked AST and compiles native code through LLVM AOT. run uses checked compilation and execution; build defaults to unchecked export.
+ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，从已检查的 AST 直接生成 LLVM IR，再通过 LLVM AOT 生成原生程序。run 使用 checked 编译执行，build 默认 unchecked 导出。
 
+最新的 [ParseEngine 仓库](https://github.com/rabbitc999/ParseEngine) 支持以五种模式生成用 ChaLi（`--lang chali`）编写的解析器：**LL(1)、SLR(1)、LALR(1)、LR(1) 和 IELR(1)**，分别通过 `--mode ll1`、`slr`、`lalr`、`lr1` 或 `ielr` 选择。生成的 `parser.chl` 可以用 ChaLi 运行或构建。该仓库的编译器前端使用 C++17 输出目标并采用 IELR(1)，配置见 `gen.sh`。
 
-The latest [ParseEngine repository](https://github.com/rabbitc999/ParseEngine) supports generating parsers written in ChaLi (`--lang chali`) in five modes: **LL(1), SLR(1), LALR(1), LR(1), and IELR(1)**, selected with `--mode ll1`, `slr`, `lalr`, `lr1`, or `ielr`, respectively. The generated `parser.chl` can be run or built with ChaLi. This repository's compiler front end uses the C++17 output target with IELR(1), as configured in `gen.sh`.
+当前已实现能力、默认配置与平台边界统一见[能力说明](doc/17-capabilities.md)，版本以 [`VERSION`](VERSION) 为准。
 
-See [current capabilities](doc/en/17-capabilities.md) for implemented features, defaults and platform limits; read the current version from [`VERSION`](VERSION).
+## 名称与能力入口
 
-## Name and capability references
+ChaLi 的五个字母分别代表以下语言特性。语言名中 C 与 L 大写。
 
-The five letters in ChaLi refer to the language features below. The language name capitalizes C and L.
-
-| Letter | Meaning | Language feature |
+| 字母 | 英文含义 | 对应特性 |
 | --- | --- | --- |
-| **C** | **Copy** | Independent observable values, explicit references and moves; copies may be removed when behavior is preserved |
-| **h** | **Hygienic** | Hygienic names and parameter categories with defined evaluation rules |
-| **a** | **Any** | Any retains concrete type information and follows ownership and provenance restrictions |
-| **L** | **Lifetime** | Static source and lifetime checks; unsafe and foreign-code preconditions remain separate |
-| **i** | **Interface** | Generic behavior, inheritance and concrete-type matching; known calls may be devirtualized or inlined |
+| **C** | **Copy** | 独立的可观察值，显式引用和移动；行为不变时可消除复制 |
+| **h** | **Hygienic** | 卫生绑定和具有明确求值规则的参数类别 |
+| **a** | **Any** | Any 保留具体类型信息，继续遵守所有权与引用来源规则 |
+| **L** | **Lifetime** | 静态检查来源和存活范围；unsafe 与外部代码另有前提 |
+| **i** | **Interface** | 泛型、继承与具体类型匹配；已知调用可静态化或内联 |
 
-See [naming and related capabilities](doc/en/37-name-freeze.md) for references and verification entry points.
+名称写法、相关参考与验证入口见[名称与相关能力](doc/37-name-freeze.md)。
 
-## Compilation
+## 编译过程
 
-Conditional preprocessing precedes the generated parser. Hygienic AST macros expand during semantic analysis alongside type inference. After name, type, generic and borrow checks, the C++ backend generates LLVM IR directly from the checked AST; LLVM optimizes it and generates native code. Normal run and AOT paths skip quadruple generation, serialization and assembly.
+条件预处理之后，文法生成的前端构建 AST；卫生宏在语义分析期间展开，并与类型推导配合。名称、类型、泛型和独立借用检查完成后，直接遍历 AST 生成 LLVM IR，由 LLVM 优化并生成原生代码。
+正常运行与导出跳过 ChaLi 四元式的生成、写盘、重读与组装。
 
-![ChaLi compilation: conditional preprocessing, parsing, semantic macro expansion, borrow checks, checked AST and LLVM Build](doc/images/chali-compilation-en.png)
+![ChaLi 编译流程：源码、条件预处理、解析、语义期宏展开、借用检查、已检查 AST 与 LLVM Build](doc/images/chali-compilation.png)
 
-## Release build
+## 发布构建
 
-Run `./ChaLi.exe build input.chl --out build/program --checked` to lower the semantically checked AST directly to LLVM code, generate machine code and link a native artifact. The static variant embeds LLVM and LLD; the external variant uses `library/llvm/` or the clang path passed through `--llvm`. Use `--emit-llvm` to export only the LLVM module.
+使用 `./ChaLi.exe build input.chl --out build/program --checked`，从完成语义检查的 AST 直接生成 LLVM 代码，再生成并链接原生产物。内置 LLVM 变体在进程内完成优化、机器码生成和 LLD 链接；外置变体使用 `library/llvm/` 工具链或 `--llvm` 指定的 clang。`--emit-llvm` 可以只导出 `.ll` 模块。
 
-![ChaLi release build: checked AST, LLVM IR, built-in or external LLVM, linking and delivery](doc/images/chali-aot-en.png)
+![ChaLi 发布构建流程：已检查 AST、LLVM IR、内置或外置 LLVM、目标链接与交付](doc/images/chali-aot.png)
 
-The generated application needs no LLVM DLL. Ship application-specific C ABI dynamic libraries when required. See [LLVM AOT compilation](doc/en/38-aot.md) and the Chinese book's [release build chapter](doc/book/en/27-aot-export.md) for the supported scope and steps.
+生成的应用无需 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。当前支持范围和完整选项见 [LLVM AOT 编译](doc/38-aot.md)，逐步操作见书稿[第 27 章 发布构建](doc/book/27-AOT导出.md)。
 
-## Execution
+## 运行过程
 
-`run` compiles and executes checked AOT machine code. `build` exports unchecked native products by default. The native runtime provides shared memory, ownership, host callbacks, and thread services.
+`run` 编译并执行 checked AOT 机器码；`build` 默认导出 unchecked 原生产物。原生运行时提供共享内存、所有权、宿主回调与线程服务。
 
-## Documentation
+## 文档
 
-[Current capabilities and limits](doc/en/17-capabilities.md) describe implementation, defaults and platform contracts.
-
-The [library API reference](doc/library/README.md) (Chinese) covers the module list with signatures, overloads, parameters, return values, error contracts and runnable examples.
-
-| Document | Audience | What it covers |
+| 文档 | 面向 | 内容 |
 | --- | --- | --- |
-| [Documentation index](doc/en/README.md) | Everyone | Jump to any of the documents below by "what do you want to do" |
-| [01 Quickstart](doc/en/01-quickstart.md) | First-time users | Install, first program, command cheat-sheet |
-| [02 Language tour](doc/en/02-language-tour.md) | Experienced developers | 14 runnable snippets walking through what ChaLi looks like |
-| [03 Core concepts](doc/en/03-core-concepts.md) | Users going deeper | Value semantics, non-null references, resource management without a GC |
-| [04 Language reference](doc/en/04-language-reference.md) | Day-to-day writers | Syntax, semantics and common errors by topic |
-| [05 Delivery security](doc/en/05-delivery-security.md) | Teams shipping outward | Four delivery forms, the four steps, reverse-engineering cost, boundary statement |
-| [06 Cross-platform deployment](doc/en/06-deployment.md) | People doing deployment | Source execution and bytecode deployment, desktop / embedded Linux, resources and limits |
-| [07 Standard library overview](doc/en/07-stdlib-overview.md) | Anyone asking "what can it do" | standard-library modules by capability |
-| [08 Host integration and C ABI](doc/en/08-host-integration.md) | Integrators | `abi` blocks, host glue bindings, type mapping, nullable references |
-| [09 Toolchain](doc/en/09-toolchain.md) | Daily `chali` users | Scenario commands, options, `chali.toml`, diagnostics, debugging |
-| [10 Roadmap](doc/en/10-roadmap.md) | Contributors, long-term users | Short/mid/long-term goals and "things we explicitly will not do" |
+| [文档入口](doc/README.md) | 所有人 | 按「你想做什么」跳转到下面任意一篇 |
+| [01 快速开始](doc/01-quickstart.md) | 第一次用的人 | 安装、第一个程序、常用命令速查 |
+| [02 语言速览](doc/02-language-tour.md) | 有经验的开发者 | 14 段可运行片段走一遍 ChaLi 长什么样 |
+| [03 核心概念](doc/03-core-concepts.md) | 准备深入使用的人 | 值语义、非空引用、无 GC 的资源管理 |
+| [04 语言参考](doc/04-language-reference.md) | 日常写代码的人 | 按主题查阅语法、语义与常见错误 |
+| [05 交付安全](doc/05-delivery-security.md) | 需要对外交付的团队 | 四种交付形态、四步法、逆向成本与边界声明 |
+| [06 跨平台部署](doc/06-deployment.md) | 做部署的人 | 源码运行与字节码部署、桌面 / 嵌入式 Linux、资源与边界 |
+| [07 标准库概览](doc/07-stdlib-overview.md) | 想知道「能做什么」的人 | 标准库模块按能力域速查 |
+| [库函数 API 参考](doc/library/README.md) | 查阅库 API 的人 | 模块的声明、重载、参数、返回值、错误边界与完整示例 |
+| [08 宿主集成与 C ABI](doc/08-host-integration.md) | 做集成的人 | `abi` 块、宿主胶水绑定、类型映射、可空引用 |
+| [09 工具链使用](doc/09-toolchain.md) | 日常用 `chali` 的人 | 场景指令、选项、`chali.toml`、报错呈现、调试 |
+| [17 当前能力](doc/17-capabilities.md) | 评估与集成人员 | 实现能力、默认配置、宿主/目标宿主及工具边界 |
+| [10 路线图](doc/10-roadmap.md) | 贡献者、长期用户 | 短中长期目标与「明确不做的事」 |
 
-Companion resources:
+**英文版**：[`doc/en/`](doc/en/README.en.md) 维护对应的功能说明；未提供完整译文的底层规格从英文入口链接中文版。
 
-- [`example/samples/`](example/samples/) — runnable formal samples; expected stdout in [`example/expected/`](example/expected/).
-- [`example/samples-error/`](example/samples-error/) — samples expected to fail; diagnostics in [`example/expected-error/`](example/expected-error/).
-- [`doc/examples/`](doc/examples/) — examples that need a companion project layout (ABI, SQLite).
-- [Full grammar reference (EBNF)](doc/14-grammar-ebnf.md) — the authoritative form of the grammar.
+- 中文说明优先维护，中英文共有的代码片段保持一致。
+- 当前能力与默认配置见中英文能力页；标准库目录以 API 索引为准。
+- 本文件、`README.en.md` 和 `doc/README.md` 提供语言切换入口。
 
-The Chinese and English technical text keep corresponding code examples, including comments. The book and selected guides have executable verification scripts; reports identify the compiler, commands and checks actually run. The [English book](doc/book/en/README.md) contains technical chapters and appendices without the Chinese literary extras.
+配套资源：
 
-## Build
+- [`example/samples/`](example/samples/) —— 可运行的正式样例，标准输出在 [`example/expected/`](example/expected/)。
+- [`example/samples-error/`](example/samples-error/) —— 预期报错的样例，诊断文本在 [`example/expected-error/`](example/expected-error/)。
+- [`doc/examples/`](doc/examples/) —— 需要配套工程布局的示例（ABI、SQLite）。
+- [完整语法参考（EBNF）](doc/14-grammar-ebnf.md) —— 文法的权威形式。
 
-From the repository root:
+## 构建
+
+在项目根目录执行：
 
 ```sh
-sh gen.sh          # generate the parser first; requires ParseEngine
-make               # build chali and build/chali-frontend/libparser.a
+sh gen.sh          # 首次构建先生成解析器，需要 ParseEngine 文法生成器
+make               # 构建 chali 与 build/chali-frontend/libparser.a
 ./chali example/samples/hello.chl
-sh check.sh        # run the passing and the failing samples
+sh check.sh        # 运行正常与错误样例
 ```
 
-After cloning, run `sh gen.sh` with ParseEngine available, then `make`. Parser sources
-(`chali_parser.cpp` / `chali_parser.hpp` / `chali_parser_user.h` / `chali_main.cpp`) are
-generated locally and are not committed to the repository.
+首次构建先执行 `sh gen.sh`，再执行 `make`。解析器源码（`chali_parser.cpp` /
+`chali_parser.hpp` / `chali_parser_user.h` / `chali_main.cpp`）是生成物，不纳入版本管理。
 
-Regenerate for the initial build and after changing these source files; commit the sources,
-not the generated parser files:
+首次构建以及修改下面这些真源后需要重新生成；提交真源，不提交解析器生成物：
 
 ```sh
-sh gen.sh          # regenerate the front end from chali.gram with IELR (needs the [ParseEngine](https://github.com/rabbitc999/ParseEngine) grammar generator)
+sh gen.sh          # 用 IELR 从 chali.gram 重新生成前端（需要 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 文法生成器）
 ```
 
-- `source/chali.gram` / `source/chali_token.gram` (the grammar)
-- `source/chali_semantics.cpp` / `source/semantics/*.cpp` (expanded into `chali_parser.cpp` by `%epilogue include`)
-- `source/chali_driver.cpp` (expanded into `chali_main.cpp` by `%main include`)
+- `source/chali.gram` / `source/chali_token.gram`（文法）
+- `source/chali_semantics.cpp` / `source/semantics/*.cpp`（`%epilogue include` 展开进 `chali_parser.cpp`）
+- `source/chali_driver.cpp`（`%main include` 展开进 `chali_main.cpp`）
 
-> Forgetting `gen.sh` is the easiest trap to fall into: `chali_main.cpp` is a **generated copy** of
-> `source/chali_driver.cpp`, and `make` alone does not regenerate it — you will see "I changed it but
-> nothing happened".
+> 忘了跑 `gen.sh` 是最容易踩的坑：`chali_main.cpp` 是 `source/chali_driver.cpp` 的**生成副本**，
+> 只 `make` 不会重新生成它，于是你会看到"改了没生效"。
 
-`gen.sh` needs a ParseEngine grammar generator. The simplest option is to drop it into the
-repository root as `./ParseEngine[.exe]`; it also works if it stays in a neighboring ParseEngine
-checkout (`gen.sh` looks for `../ParseEngine/build/bin/` automatically).
+`gen.sh` 需要一份 ParseEngine 文法生成器。最省事是把它放到项目根目录 `./ParseEngine[.exe]`；
+也可以让它待在旁边的 ParseEngine 仓库里（`gen.sh` 会自动找 `../ParseEngine/build/bin/`）。
 
-### Building with annotations and reflection
+### 编入注解与反射
 
-The default toolchain build includes annotation and reflection support in both the front end
-and the native runtime:
+默认构建同时编入注解与反射前端、原生运行时支持：
 
 ```sh
-make                # defaults to CHALI_WITH_REFLECTION=1 STACKVM_WITH_REFLECTION=1
-make reflection     # retained as an explicit enable target
+make                # 默认 CHALI_WITH_REFLECTION=1 STACKVM_WITH_REFLECTION=1
+make reflection     # 保留的显式启用入口
 ```
 
-Reflection is a fixed part of the language and is **not trimmable**: `CHALI_WITH_REFLECTION` and
-`STACKVM_WITH_REFLECTION` are pinned to `1` (unlike the `NO_CHALI_*` trim options these are not
-switches), so the reflection front end and runtime are always built in and compilation always runs
-the full reflection pass.
+反射是语言的固定组成，**不可裁剪**：`CHALI_WITH_REFLECTION` 与 `STACKVM_WITH_REFLECTION`
+固定为 `1`（`features.mk` 里不是裁剪项，与 `NO_CHALI_*` 那套可选能力无关），反射前端与运行时
+始终编入，编译流程始终执行完整的反射处理。
 
-Source compilation emits reflection metadata and its artifact feature flag by default;
-`--no-reflection` omits that metadata and rejects annotations/reflection use in the program. It
-decides this artifact only and reduces no compiler workload (metadata and query-source generation
-still run). Use `--no-reflection` when targeting a board runtime without reflection support.
-`make` pins both macros to 1; only a hand-written `-D` build can turn reflection off, and that path
-exists solely to validate the compiler itself — it is not a supported trim configuration.
+单次源码编译默认生成反射元数据及对应产物特征位；`--no-reflection` 不写这份元数据并拒绝程序里的
+注解与反射使用 —— 它只决定这次的产物，**不减少编译期工作量**（元数据与查询源码那一轮照跑）。
+部署到未编入反射的目标宿主运行时时，必须使用 `--no-reflection`。
+`make` 已把两项钉死为 1；只有直接 `-D` 手编才能关掉反射，那条路只用于验证编译器自身，不是受支持的裁剪配置。
 
-## Quick usage
+## 快速使用
 
 ```sh
-./chali run  example/samples/hello.chl        # checked AOT (default)
-./chali new  hello-chali                       # create a new application project
+./chali run  example/samples/hello.chl        # 解释运行（默认）
+./chali new  hello-chali                       # 新建应用工程
 ```
 
-`chali` is the single toolchain entry point: front end, both C/C++ export tiers, project generation
-and cleanup all live in the same program. See [Toolchain](doc/en/09-toolchain.md) for the remaining
-subcommands and `--mode`.
+`chali` 是统一工具链入口：前端、两档 C/C++ 导出、工程生成与清理都在同一程序里。更多子命令与 `--mode` 见 [工具链使用](doc/09-toolchain.md)。
 
-### Debugging
+### 调试
 
-VS Code uses GDB/MI to debug an AOT program with DWARF source locations and variables. Source breakpoints, continue, step in/over/out, stack frames, parameters, locals and expressions are supported. Development debugging retains symbols at O0; `--debug-optimized` or VSCode `debugMode: "optimized"` retains DWARF with O3/LTO and inline frames. Normal release builds retain highest optimization. See [build debugging](doc/en/43-native-debugging.md).
+VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的 AOT 程序，支持源码断点、继续、单步进入／越过／跳出、调用栈、参数、局部变量和表达式。开发调试保留符号并使用 O0；`--debug-optimized` 或 VSCode 的 `debugMode: "optimized"` 保留 DWARF 并使用 O3／LTO，支持内联调用帧。普通发布构建仍使用最高优化。见[构建调试](doc/43-native-debugging.md)。
 
-### Diagnostics
+### 报错
 
-Syntax errors carry **file, line and column**, echo the offending line, and underline it at the
-error position with a caret run sized to the token:
+语法错误给到**文件、行号、列号**，并回显出错那一行、按出错位置的长度画波浪号：
 
 ```text
-syntax error: example/samples-error/syntax_extern_impl_removed.chl line 2 col 8: expected one of identifier / constant(const) / mutable(mut) / new(new) (17 candidates), found impl(impl)
-   |
+语法错误：example/samples-error/syntax_extern_impl_removed.chl 第 2 行第 8 列：期望 标识符 / 常量(const) / 可变(mut) / 新建(new) 等 17 个之一，实际是 实现(impl)
  2 | extern impl Value : Some = binding;
    |        ~~~~
 ```
 
-- The width of the underline is the length of the offending token; tabs are padded to 4-column tab
-  stops and CJK characters count as 2 columns, so the column never drifts.
-- When the error sits in a module loaded by `import`, it points at **the file that actually
-  contains the mistake**, not at the expanded main file.
-- Internal token names are no longer shown: `SEMI` → `semicolon(;)`, `IMPL` → `impl(impl)`,
-  `VARIABLE` → `identifier`.
-- Diagnostic text follows the display language (`CHALI_LANG=zh|en` or `--lang`); the same error
-  reads:
+- 波浪号的宽度就是出错 Token 的长度；制表符按 4 列制表位铺平，中文按 2 列算，所以列不会歪。
+- 出错位置落在 `import` 引入的模块里时，指向**真正写错的那个文件**，不是展开后的主文件。
+- 不再显示 Token 内部名：`SEMI` → `分号(;)`、`IMPL` → `实现(impl)`、`VARIABLE` → `标识符`。
+- 报错文案跟随显示语言（`CHALI_LANG=zh|en` 或 `--lang`），同一处错误分别为：
 
   ```text
   期望 标识符 / 常量(const) / 可变(mut) / 新建(new) 等 17 个之一，实际是 实现(impl)
   expected one of identifier / constant(const) / mutable(mut) / new(new) (17 candidates), found impl(impl)
   ```
 
-  Semantic errors (type mismatch, undefined symbol, …) are still Chinese for now — those messages
-  live in the compiler core, not in the diagnostic presentation layer.
+  语义错误（类型不匹配、未定义符号等）目前仍是中文——那些文案写在编译器核心里，
+  不在报错呈现层。
 
-## Language tour
+## 语言速览
 
 ```c
 struct Item { int64 value; };
@@ -190,17 +175,11 @@ void main() {
 }
 ```
 
-Value semantics is the default: assignment, argument passing and return all copy; share explicitly
-by taking a reference (`T const&` read-only, `T mut&` writable), and there are no pointers and no
-address arithmetic. There is no GC, so resources are released deterministically when they leave
-scope. The standard library ships containers, iterators, JSON/TOML, regex, paths and processes,
-networking, SQL, linear algebra, concurrency and more — see
-[Standard library overview](doc/en/07-stdlib-overview.md).
+值语义是默认：赋值、传参、返回都复制；要共享就显式取引用（`T const&` 只读、`T mut&` 可写），没有指针与地址算术。没有 GC，资源在离开作用域时确定性释放。标准库自带容器、迭代器、JSON/TOML、正则、路径与进程、网络、SQL、线性代数、并发等，详情见 [标准库概览](doc/07-stdlib-overview.md)。
 
-## Configuration
+## 配置
 
-A project can set the run mode, compiler path and search directories in `chali.toml`; command-line
-arguments win. Example:
+项目可用 `chali.toml` 设置运行方式、编译器路径与搜索目录；命令行参数优先。示例：
 
 ```toml
 [chali]
@@ -209,49 +188,46 @@ opt_level = 2
 main = "src/main.chl"
 ```
 
-`[chali] main` names the project's entry file: when you run **without** a source file it is used as
-the entry point (i.e. build the project); when you pass a file explicitly it is a single-file
-compilation and the main file is ignored. Projects generated by `chali new` carry this line by
-default.
+`[chali] main` 指定工程主文件：**不给源文件**执行时用它当入口（即构建项目）；
+命令行显式给了文件就是单文件编译，不看主文件。`chali new` 生成的工程默认带这一行。
 
-## Linux deployment
+## Linux 部署
 
-Desktop and embedded Linux use ordinary operating-system hosts and the same runtime core. Build the compiler and native dependencies for the target architecture; deploy the generated native application, its dynamic dependencies and resource files.
-The runtime services required by standard modules are linked into the application.
-See [deployment](doc/en/06-deployment.md).
+桌面和嵌入式 Linux 共用普通操作系统宿主与运行时核心。编译器及原生依赖按目标架构构建，
+部署生成的原生应用及其动态依赖、资源文件。标准模块需要的运行时服务链接到应用中。
+详细流程见[部署说明](doc/06-deployment.md)。
 
-## Repository layout
+## 目录结构
 
 ```text
 chali/
-├── chali.gram / chali_token.gram   grammar: token declarations and productions
-├── gen.sh / Makefile               build and self-checks
-├── source/                         compiler front end, exporter and glue
-│   ├── std/                        standard library modules (.chl)
-│   ├── glue/                       host-side C++ glue
-│   ├── allocator/                  desktop allocator
-│   ├── lsp/ dap/                   editor integration
-│   └── generator/            entry point that generates standalone compiler projects
-├── library/                        reusable C++ libraries and the board host
-│   ├── ircode/                     Quad IR and AOT shared runtime
+├── chali.gram / chali_token.gram   文法：词法声明与产生式
+├── gen.sh / Makefile               构建与自测
+├── source/                         编译器前端、导出器与胶水
+│   ├── std/                        标准库模块（.chl）
+│   ├── glue/                       宿主侧 C++ 胶水
+│   ├── allocator/                  桌面分配器
+│   ├── lsp/ dap/                   编辑器集成
+│   └── generator/            生成独立编译器工程的入口
+├── library/                        可复用 C++ 库与目标宿主
+│   ├── ircode/                     四元式与 AOT 共享运行时
 │   ├── bignum/ json/ toml/ console/ lztext/ …
 │   └── …
-├── doc/                            user-facing documentation (00–20, 99)
-│   ├── en/                         English edition (index + 00–11, 13, 99; 15 files)
-│   └── library/                    library API reference (one page per module)
-├── example/                        examples (samples, error samples, calculator, …)
-├── tests/                          Python acceptance scripts
-├── tools/                          helper scripts (icon, overview figure, …)
-└── sql-chali/                      minimal SQL usage example
+├── doc/                            面向使用者的文档（00–20、99）
+│   ├── en/                         英文版（入口 + 00–11、13、99，共 15 篇）
+│   └── library/                    库函数 API 参考（按模块分页）
+├── example/                        示例（samples、错误样例、calculator 等）
+├── tests/                          Python 验收脚本
+├── tools/                          图标与总览图等辅助脚本
+└── sql-chali/                      SQL 最小用法示例
 ```
 
-Full details live in the README of each directory and in the [documentation](#documentation)
-section above.
+完整说明见对应目录下的 README 与上面的[文档](#文档)章节。
 
-## License
+## 许可证
 
-Apache License 2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Apache License 2.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。
 
-Generated parser sources, headers and reports live in `source/`. Object files and the parser archive live in `build/chali-frontend/`, keeping the repository root clear.
+解析器生成源码、头文件与报告统一位于 `source/`；对象文件与解析器静态库位于 `build/chali-frontend/`，不会散落到仓库根目录。
 
-SQLite and miniz are downloaded as pinned build dependencies instead of being vendored; see [build dependencies](doc/en/42-build-dependencies.md).
+SQLite 与 miniz 在构建时按锁定版本下载，不在源码树保存副本，详见[在线构建依赖](doc/42-build-dependencies.md)。

@@ -1,7 +1,7 @@
 # The ChaLi Language
 
 <!-- LANGUAGE NAVIGATION -->
-**English** · [简体中文](README.cn.md)
+**English** · [简体中文](README.md)
 <!-- END LANGUAGE NAVIGATION -->
 
 ChaLi is a statically typed language with observable value semantics, explicit borrowing and moves, and scope-based resource cleanup. Its type, ownership and runtime rules are defined by the language. Supported hosts, export targets and external-library requirements are documented separately.
@@ -9,8 +9,10 @@ ChaLi is a statically typed language with observable value semantics, explicit b
 The ChaLi compiler's front end is generated from this repository's `source/chali.gram` by
 [ParseEngine](https://github.com/rabbitc999/ParseEngine). It generates LLVM IR directly from the semantically checked AST and compiles native code through LLVM AOT. run uses checked compilation and execution; build defaults to unchecked export.
 
+The latest [ParseEngine repository](https://github.com/rabbitc999/ParseEngine) supports generating parsers written in ChaLi (`--lang chali`) in five modes: **LL(1), SLR(1), LALR(1), LR(1), and IELR(1)**, selected with `--mode ll1`, `slr`, `lalr`, `lr1`, or `ielr`, respectively. The generated `parser.chl` can be run or built with ChaLi. This repository's compiler front end uses the C++17 output target with IELR(1), as configured in `gen.sh`.
+
 > This is the English edition. The Chinese edition is the default and is the one maintained first —
-> see [中文 README](README.cn.md). Where the two disagree, the Chinese one wins.
+> see [中文 README](README.md). Where the two disagree, the Chinese one wins.
 
 See [current capabilities](doc/en/17-capabilities.md) for implemented features, defaults and platform limits; read the current version from [`VERSION`](VERSION).
 
