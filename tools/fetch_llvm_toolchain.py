@@ -1,5 +1,6 @@
 """下载并校验固定的 llvm-mingw 分发，仅安装外置 AOT 所需工具和目标库。"""
 import argparse
+import copy
 import hashlib
 import json
 import os
@@ -16,6 +17,37 @@ from project_temp import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 DESTINATION = ROOT / 'build/dependencies/llvm/toolchain'
+
+
+def extract_legacy_data(source, destination):
+    """为未提供 data 过滤器的 Python 3.11 安全解包普通文件、目录及包内链接。"""
+    root = destination.resolve()
+    for original in source:
+        member = copy.copy(original)
+        name = PurePosixPath(member.name)
+        if name.is_absolute() or '..' in name.parts or '\\' in member.name or any(':' in part for part in name.parts):
+            raise ValueError('LLVM 归档路径不安全：' + member.name)
+        target = (root / member.name).resolve()
+        if not target.is_relative_to(root):
+            raise ValueError('LLVM 归档路径越界：' + member.name)
+        if member.issym() or member.islnk():
+            if '\\' in member.linkname or any(':' in part for part in PurePosixPath(member.linkname).parts):
+                raise ValueError('LLVM 归档链接不安全：' + member.name)
+            base = target.parent if member.issym() else root
+            linked = base / member.linkname
+            if not linked.resolve().is_relative_to(root):
+                raise ValueError('LLVM 归档链接越界：' + member.name)
+            if member.islnk() and (not linked.is_file() or linked.is_symlink()):
+                raise ValueError('LLVM 硬链接目标必须是已解包的普通文件：' + member.name)
+        elif not (member.isfile() or member.isdir()):
+            raise ValueError('LLVM 归档包含特殊文件：' + member.name)
+        # 不采用归档中的所有者或 setuid/setgid/粘滞位；保留普通执行权限。
+        member.uid = member.gid = 0
+        member.uname = member.gname = ''
+        member.mode &= 0o755
+        source.extract(member, root, set_attrs=False)
+        if not member.issym():
+            target.chmod(member.mode)
 
 
 def platform_key():
@@ -48,7 +80,10 @@ def prepare_unix(key, package, offline):
             extracted.mkdir()
             with tarfile.open(archive) as source:
                 # data 过滤器拒绝越界路径、特殊文件和指向包外的链接。
-                source.extractall(extracted, filter='data')
+                if hasattr(tarfile, 'data_filter'):
+                    source.extractall(extracted, filter='data')
+                else:
+                    extract_legacy_data(source, extracted)
             candidates = [extracted, *[p for p in extracted.iterdir() if p.is_dir()]]
             stage = next((p for p in candidates if (p / 'bin/clang').is_file()), None)
             if stage is None:

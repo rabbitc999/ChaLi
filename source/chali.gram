@@ -536,9 +536,22 @@ decl_stmt := LET LPAREN destructure_items RPAREN ASSIGN expr SEMI
                { $$ = M_ReadOnlyReferenceDecl($1, $3, $5, $7); }
            | type declarator_list SEMI
                { M_SetDeclType($2, $1, 0); $$ = M_LocalDecl($1, $2, 0); }
+           | array_type declarator_list SEMI
+               { M_SetDeclType($2, $1, 0); $$ = M_LocalDecl($1, $2, 0); }
+           /* 具名数组与下标共享前缀，只在局部声明中将空 [] 解释为类型。 */
+           | postfix LBRACKET RBRACKET declarator_list SEMI
+               { $$ = M_RuntimeArrayDecl($1, $4, 0); }
+           | postfix LBRACKET RBRACKET AMP declarator_list SEMI
+               { $$ = M_RuntimeArrayDecl($1, $5, 1); }
+           | postfix LBRACKET RBRACKET CONST AMP declarator_list SEMI
+               { $$ = M_RuntimeArrayDecl($1, $6, 1); }
+           | postfix LBRACKET RBRACKET MUT AMP declarator_list SEMI
+               { $$ = M_RuntimeArrayDecl($1, $6, 2); }
            | ptr_type declarator_list SEMI
                { M_SetDeclType($2, $1, 0); $$ = M_LocalDecl($1, $2, 0); }
            | CONST type declarator_list SEMI
+               { M_SetDeclType($3, $2, 1); $$ = M_LocalDecl($2, $3, 1); }
+           | CONST array_type declarator_list SEMI
                { M_SetDeclType($3, $2, 1); $$ = M_LocalDecl($2, $3, 1); }
            | CONST ptr_type declarator_list SEMI
                { M_SetDeclType($3, $2, 1); $$ = M_LocalDecl($2, $3, 1); }
@@ -699,7 +712,6 @@ postfix := postfix CLOSURE_ARGS_BEGIN closure_type_arguments CLOSURE_ARGS_END { 
          | postfix LBRACKET expr COLON expr RBRACKET { $$ = M_Slice($1, $3, $5); }
          | postfix LBRACKET expr COLON RBRACKET      { $$ = M_Slice($1, $3, -1); }
          | postfix DOT name_token              { $$ = M_Member($1, $3); }
-         | postfix DOT NUMBER                { $$ = M_TupleMember($1, $3); }
          | postfix ARROW name_token            { $$ = M_Arrow($1, $3); }
          | postfix DOT DROP                  { $$ = M_Member($1, M_KeywordName(1)); }
          | postfix ARROW DROP                { $$ = M_Arrow($1, M_KeywordName(1)); }

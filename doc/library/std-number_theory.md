@@ -14,7 +14,7 @@ import std::number_theory;
 
 ## 公共约定与错误边界
 
-实现已全部迁到 .chl，公开入口是模块级泛型自由函数（不再有 NumberTheory 静态方法包装，也没有给胶水用的宿主私有名）。gcd/lcm/add_mod/mul_mod/pow_mod/mod_inverse/is_prime 对任意整数类型 T 成立，含无符号与窄整型；gcd/lcm 接受任意数量实参，逐个折叠，结果非负。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。is_prime 内部加宽到 uint64，使用七个底数的确定性 Miller-Rabin。mod_inverse 要求 modulus>1 且与 value 互素；不存在逆元时停机。lcm 溢出也停机。
+实现已全部迁到 .chl，公开入口是模块级泛型自由函数（不再有 NumberTheory 静态方法包装，也没有给胶水用的宿主私有名）。gcd/lcm/addMod/mulMod/powMod/modInverse/isPrime 对任意整数类型 T 成立，含无符号与窄整型；gcd/lcm 接受任意数量实参，逐个折叠，结果非负。模运算要求 modulus>0；模乘通过逐位加法避免乘法中间溢出。isPrime 内部加宽到 uint64，使用七个底数的确定性 Miller-Rabin。modInverse 要求 modulus>1 且与 value 互素；不存在逆元时停机。lcm 溢出也停机。
 
 ## 参考代码
 
@@ -71,15 +71,15 @@ void main() {
 
     assert(std::number_theory::gcd((uint64)54,(uint64)24)==6);
     assert(std::number_theory::lcm((uint64)6,(uint64)8)==24);
-    assert(std::number_theory::mod_inverse((int64)3,(int64)11)==4);
-    assert(std::number_theory::mod_inverse((int64)-3,(int64)11)==7);
-    assert(std::number_theory::pow_mod((uint64)7,(uint64)128,(uint64)97)==35);
-    assert(std::number_theory::is_prime((uint64)97));
-    assert(!std::number_theory::is_prime((uint64)561));
+    assert(std::number_theory::modInverse((int64)3,(int64)11)==4);
+    assert(std::number_theory::modInverse((int64)-3,(int64)11)==7);
+    assert(std::number_theory::powMod((uint64)7,(uint64)128,(uint64)97)==35);
+    assert(std::number_theory::isPrime((uint64)97));
+    assert(!std::number_theory::isPrime((uint64)561));
     uint64 largePrime=(uint64)2305843009213693951;
     assert(largePrime==(((uint64)1<<61)-1));
-    assert(std::number_theory::mul_mod(largePrime-1,largePrime-1,largePrime)==1);
-    assert(std::number_theory::is_prime((uint64)65537));
+    assert(std::number_theory::mulMod(largePrime-1,largePrime-1,largePrime)==1);
+    assert(std::number_theory::isPrime((uint64)65537));
     println("generic matrix numerics number theory OK");
 }
 ```
@@ -103,11 +103,11 @@ generic matrix numerics number theory OK
 | --- | --- |
 | [gcd](#api-0) | `T gcd<T>(T... values)` |
 | [lcm](#api-1) | `T lcm<T>(T... values)` |
-| [add_mod](#api-2) | `T add_mod<T>(T left, T right, T modulus)` |
-| [mul_mod](#api-3) | `T mul_mod<T>(T left, T right, T modulus)` |
-| [pow_mod](#api-4) | `T pow_mod<T>(T base, T exponent, T modulus)` |
-| [mod_inverse](#api-5) | `T mod_inverse<T>(T value, T modulus)` |
-| [is_prime](#api-6) | `bool is_prime<T>(T value)` |
+| [addMod](#api-2) | `T addMod<T>(T left, T right, T modulus)` |
+| [mulMod](#api-3) | `T mulMod<T>(T left, T right, T modulus)` |
+| [powMod](#api-4) | `T powMod<T>(T base, T exponent, T modulus)` |
+| [modInverse](#api-5) | `T modInverse<T>(T value, T modulus)` |
+| [isPrime](#api-6) | `bool isPrime<T>(T value)` |
 
 <a id="api-0"></a>
 
@@ -191,12 +191,12 @@ std::number_theory::lcm<T>(values);
 
 <a id="api-2"></a>
 
-### add_mod（3）
+### addMod（3）
 
 **声明**
 
 ```chali
-T add_mod<T>(T left, T right, T modulus);
+T addMod<T>(T left, T right, T modulus);
 ```
 
 **行为**
@@ -225,7 +225,7 @@ T add_mod<T>(T left, T right, T modulus);
 **调用形式**
 
 ```chali
-std::number_theory::add_mod<T>(left, right, modulus);
+std::number_theory::addMod<T>(left, right, modulus);
 ```
 
 **源码**：[source/std/number_theory.chl:120](../../source/std/number_theory.chl#L120)。
@@ -234,12 +234,12 @@ std::number_theory::add_mod<T>(left, right, modulus);
 
 <a id="api-3"></a>
 
-### mul_mod（4）
+### mulMod（4）
 
 **声明**
 
 ```chali
-T mul_mod<T>(T left, T right, T modulus);
+T mulMod<T>(T left, T right, T modulus);
 ```
 
 **行为**
@@ -268,7 +268,7 @@ T mul_mod<T>(T left, T right, T modulus);
 **调用形式**
 
 ```chali
-std::number_theory::mul_mod<T>(left, right, modulus);
+std::number_theory::mulMod<T>(left, right, modulus);
 ```
 
 **源码**：[source/std/number_theory.chl:130](../../source/std/number_theory.chl#L130)。
@@ -277,12 +277,12 @@ std::number_theory::mul_mod<T>(left, right, modulus);
 
 <a id="api-4"></a>
 
-### pow_mod（5）
+### powMod（5）
 
 **声明**
 
 ```chali
-T pow_mod<T>(T base, T exponent, T modulus);
+T powMod<T>(T base, T exponent, T modulus);
 ```
 
 **行为**
@@ -311,7 +311,7 @@ T pow_mod<T>(T base, T exponent, T modulus);
 **调用形式**
 
 ```chali
-std::number_theory::pow_mod<T>(base, exponent, modulus);
+std::number_theory::powMod<T>(base, exponent, modulus);
 ```
 
 **源码**：[source/std/number_theory.chl:140](../../source/std/number_theory.chl#L140)。
@@ -320,12 +320,12 @@ std::number_theory::pow_mod<T>(base, exponent, modulus);
 
 <a id="api-5"></a>
 
-### mod_inverse（6）
+### modInverse（6）
 
 **声明**
 
 ```chali
-T mod_inverse<T>(T value, T modulus);
+T modInverse<T>(T value, T modulus);
 ```
 
 **行为**
@@ -353,7 +353,7 @@ T mod_inverse<T>(T value, T modulus);
 **调用形式**
 
 ```chali
-std::number_theory::mod_inverse<T>(value, modulus);
+std::number_theory::modInverse<T>(value, modulus);
 ```
 
 **源码**：[source/std/number_theory.chl:150](../../source/std/number_theory.chl#L150)。
@@ -362,12 +362,12 @@ std::number_theory::mod_inverse<T>(value, modulus);
 
 <a id="api-6"></a>
 
-### is_prime（7）
+### isPrime（7）
 
 **声明**
 
 ```chali
-bool is_prime<T>(T value);
+bool isPrime<T>(T value);
 ```
 
 **行为**
@@ -393,7 +393,7 @@ bool is_prime<T>(T value);
 **调用形式**
 
 ```chali
-std::number_theory::is_prime<T>(value);
+std::number_theory::isPrime<T>(value);
 ```
 
 **源码**：[source/std/number_theory.chl:179](../../source/std/number_theory.chl#L179)。

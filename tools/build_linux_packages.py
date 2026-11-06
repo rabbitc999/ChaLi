@@ -99,13 +99,19 @@ def main():
             run([emulator, probe.with_name('architecture_probe')], work, env)
             runner.append('CHALI_STDLIB_RUNNER=' + emulator)
         binary = work / ('chali-' + version + '-llvm-external-' + distribution + '-' + ('x64' if arch == 'amd64' else arch))
+        if native == arch:
+            run([sys.executable, ROOT / 'tools/setup_native_extensions.py', '--build-root', work / 'build/release-pic',
+                 '--cc', cc, '--jobs', args.jobs], work, env)
+        else:
+            print('交叉编译器仅提供前端与语言服务，不嵌入原宿主的 GUI、音频、XML 和密码学归档：' + arch, flush=True)
         run(['make', '-j' + str(args.jobs), 'PYTHON=' + sys.executable, 'CC=' + cc, 'CXX=' + cxx, 'AR=' + ar,
              'CHALI_STATIC_LLVM=0', 'CHALI_RELEASE_PIC=1', 'CHALI_BUILD_ROOT=build/release-pic',
              'LDFLAGS=-Wl,--gc-sections -s -static-libgcc -static-libstdc++', 'TARGET=' + binary.name, *runner], work, env)
-        output = ROOT / 'dist/installers' / (distribution + '-' + arch)
+        # 平台与架构已包含在文件名中，发行附件统一平铺，直接供 GitHub Release 上传。
+        output = ROOT / 'dist/installers'
         output.mkdir(parents=True, exist_ok=True)
         shutil.copy2(binary, output / binary.name)
-        receipt = output / 'build-source.json'
+        receipt = output / (binary.name + '.build-source.json')
         receipt.write_text(json.dumps({'version': version, 'architecture': arch,
             'binarySha256': hashlib.sha256(binary.read_bytes()).hexdigest(),
             'compiler': subprocess.check_output([cxx, '--version'], text=True).splitlines()[0],

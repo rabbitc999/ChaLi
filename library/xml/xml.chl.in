@@ -20,7 +20,7 @@ struct XmlNode {
     }
 
     /** Return the number of element and text fragments in source order. */
-    int64 child_count() { return self.__value.find("children").unwrap().len(); }
+    int64 childCount() { return self.__value.find("children").unwrap().len(); }
 
     /** Return an element child at a mixed-content index. */
     Option<XmlNode> child(int64 index) {
@@ -54,12 +54,12 @@ Result<XmlNode,Error> parse(String text) {
 }
 
 /** Escape text content for an XML element. */
-String escape_text(String value) {
+String escapeText(String value) {
     return value.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;");
 }
 
 /** Escape a value for a quoted XML attribute. */
-String escape_attribute(String value) {
-    return escape_text(value).replace("\"","&quot;").replace("'","&apos;")
+String escapeAttribute(String value) {
+    return escapeText(value).replace("\"","&quot;").replace("'","&apos;")
         .replace("\r","&#13;").replace("\n","&#10;").replace("\t","&#9;");
 }

@@ -22,7 +22,7 @@ def main():
         for name, statement in variants.items():
             code = source.replace(original, statement)
             code = 'int64 increment(int64 x){return x+1;}\n' + code
-            code = code.replace('int64 x = tuple.2;', 'assert(tuple.0(7)==8 && tuple.1(7)==9);\n    int64 x = tuple.2;')
+            code = code.replace('int64 x = tuple[2];', 'assert(tuple[0](7)==8 && tuple[1](7)==9);\n    int64 x = tuple[2];')
             path = work / (name + '.chl')
             path.write_text(code, encoding='utf-8')
             for level in (0, 2):

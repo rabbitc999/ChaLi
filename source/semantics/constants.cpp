@@ -437,3 +437,5 @@ bool EvaluateConstant(int id, MConstant *out)
     MConstantContext context;
     return EvaluateConstantImpl(id, out, context);
 }
+
+#include "tuple_index.cpp"

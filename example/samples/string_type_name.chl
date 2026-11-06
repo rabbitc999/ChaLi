@@ -24,9 +24,9 @@ void main(){
     assert(copiedWords[0]=="abcd");
     (String,int64) pair=(copied,(int64)7);
     (String,int64) pairCopy=pair;
-    assert(pairCopy.0=="Xbcd" && pairCopy.1==7);
+    assert(pairCopy[0]=="Xbcd" && pairCopy[1]==7);
     ((String,int64),String) nested=(pair,"nested");
-    assert((nested.0).0=="Xbcd" && nested.1=="nested");
+    assert((nested[0])[0]=="Xbcd" && nested[1]=="nested");
     TextBox<String> first;first.value=original;
     TextBox<String> second=first;
     assert(second.value=="abcd");

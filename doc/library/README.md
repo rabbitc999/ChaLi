@@ -66,6 +66,10 @@
 | [`std::tree`](std-tree.md) | 树与堆 | 67 | 0 |
 | [`std::utf8`](std-utf8.md) | UTF-8 与码点 | 8 | 0 |
 | [`std::algorithms`](std-algorithms.md) | 通用算法 | 28 | 0 |
+| [`std::gui`](std-gui.md) | 桌面图形界面 | 206 | 0 |
+| [`std::audio`](std-audio.md) | 音频播放 | 7 | 0 |
+| [`std::xml`](std-xml.md) | XML 文档 | 8 | 0 |
+| [`std::crypto`](std-crypto.md) | 密码学 | 4 | 0 |
 
 ## 查找与维护
 

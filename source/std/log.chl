@@ -34,7 +34,7 @@ inline String __quote(String input) {
 }
 
 /** 编码一条 JSON 日志记录；字段保存在独立的 fields 对象中。 */
-String format_record(LogLevel level, String message, Map<String,String> fields) {
+String formatRecord(LogLevel level, String message, Map<String,String> fields) {
     String line = "{\"level\":" + __quote(level.label()) + ",\"message\":" + __quote(message) + ",\"fields\":{";
     for (int64 index in range(0,fields.len())) {
         if (index > 0) { line = line + ","; }
@@ -44,6 +44,6 @@ String format_record(LogLevel level, String message, Map<String,String> fields) 
 }
 
 /** 将一条结构化记录写到标准错误，附加一个换行。 */
-void write_record(LogLevel level, String message, Map<String,String> fields) {
-    eprintln(format_record(level, message, fields));
+void writeRecord(LogLevel level, String message, Map<String,String> fields) {
+    eprintln(formatRecord(level, message, fields));
 }

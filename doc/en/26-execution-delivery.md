@@ -18,11 +18,12 @@ Normal run and AOT compilation generate LLVM code directly from the semantically
 
 ## Where intermediate files go
 
-Compiler intermediates (`.ll`, the ABI header, LLVM compilation logs) all land in a hidden `.chali/` directory in the current directory, marked hidden on Windows:
+Without `--out`, compiler intermediates (`.ll`, the ABI header, LLVM compilation logs) land in a unique `.chali/build-ID/` directory next to the source file; standard input uses the current directory. Each build has its own subdirectory, and `.chali/` is marked hidden on Windows:
 
 - After a run or export, intermediate files are removed. The standard core binary is embedded in the compiler; no standard-library disk cache is created;
 - `--keep-artifacts` keeps every intermediate for comparison and debugging;
-- An explicit `--out PREFIX` keeps everything at the path you gave and skips cleanup; `--incremental` and `--emit-llvm` also keep artifacts;
+- An explicit `--out PREFIX` keeps everything at the path you gave and skips cleanup; `--incremental` also retains the default workspace;
+- `--emit-llvm`, `--emit-obj` and `--emit-asm` only select the final output format and do not by themselves prevent workspace cleanup. Final outputs are published next to the source or at the explicit output prefix;
 - `.chali/` is already excluded by the `.gitignore` that `chali new` writes.
 
 The `aot` executable defaults to the source directory and has no suffix on Linux and similar platforms. Preserve LLVM IR with an explicit `--out` prefix.

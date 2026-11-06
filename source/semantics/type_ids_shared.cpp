@@ -584,6 +584,12 @@ const char *ObjectCopyFunction(const std::shared_ptr<MType> &type)
 }
 std::shared_ptr<MType> RawExprType(int id);
 /**
+ * @brief 把元组的编译期常量下标归一为内部字段访问，保持只读与借用规则。
+ * @param id 待规范化的表达式节点。
+ * @return 下标合法或表达式不是元组下标时为真。
+ */
+bool NormalizeTupleIndex(int id);
+/**
  * @brief 计算引用及含引用值的来源作用域。
  * @param id 表达式。
  * @param address 是否取得对象地址。

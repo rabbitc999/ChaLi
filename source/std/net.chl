@@ -330,11 +330,11 @@ struct HttpClient {
 
     /** @brief 一次性 GET：连上、发请求、读响应、关闭。 */
     static HttpResponse fetch(std::core::String url) {
-        return HttpClient::fetch_with_timeout(url, (int32)5000);
+        return HttpClient::fetchWithTimeout(url, (int32)5000);
     }
 
     /** 为连接与套接字读写设置正毫秒超时，执行一次 GET。 */
-    static HttpResponse fetch_with_timeout(String url, int32 timeoutMs) {
+    static HttpResponse fetchWithTimeout(String url, int32 timeoutMs) {
         HttpResponse response;
         response.ok = false;
         response.status = 0;
@@ -364,11 +364,11 @@ struct HttpClient {
 
     /** @brief 一次性 POST。 */
     static HttpResponse submit(std::core::String url, std::core::String body, std::core::String contentType) {
-        return HttpClient::submit_with_timeout(url, body, contentType, (int32)5000);
+        return HttpClient::submitWithTimeout(url, body, contentType, (int32)5000);
     }
 
     /** 为连接与套接字读写设置正毫秒超时，执行一次 POST。 */
-    static HttpResponse submit_with_timeout(String url, String body, String contentType, int32 timeoutMs) {
+    static HttpResponse submitWithTimeout(String url, String body, String contentType, int32 timeoutMs) {
         HttpResponse response;
         response.ok = false;
         response.status = 0;

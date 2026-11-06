@@ -31,7 +31,7 @@ T name = value 声明有明确类型的变量，let name = value 推导类型，
 | static T create(...) | 类型级具名工厂，可用 return self | 第 6、18 章 |
 | R fn(A, B) | 函数值类型 | 第 19 章 |
 | T mut&、T const&、T & | 可变引用、只读引用、只读引用简写 | 第 8 章 |
-| (A, B) 与 value.0 | 元组类型与按位置访问 | 本附录 |
+| (A, B) 与 value[0] | 元组类型与按位置访问 | 本附录 |
 | T values[2][3] | 两行三列定长数组 | 第 13 章 |
 | T values[] = new[3] | 运行时长度数组 | 第 13 章 |
 

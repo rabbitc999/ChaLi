@@ -2656,6 +2656,7 @@ ast::NodePtr LowerUncheckedExpr(int id)
 {
     if (id < 0) return Bad();
     InferExpression(id);
+    if (!NormalizeTupleIndex(id)) return Bad();
     const MNode &node = N(id);
     switch (node.kind)
     {

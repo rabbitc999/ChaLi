@@ -24,7 +24,8 @@ def main():
     library = 'chali_xml.dll' if os.name == 'nt' else 'chali_xml.so'
     with tempfile.TemporaryDirectory(prefix='xml-build-') as directory:
         work = Path(directory)
-        args = ['cmake','-S',str(source),'-B',str(work/'build'),'-G','Ninja','-DCMAKE_BUILD_TYPE=Release']
+        args = ['cmake','-S',str(source),'-B',str(work/'build'),'-G','Ninja','-DCMAKE_BUILD_TYPE=Release',
+                '-DCMAKE_INSTALL_LIBDIR=lib']
         if options.static:
             args.append('-DCHALI_NATIVE_STATIC=ON')
         if options.archive:
@@ -34,6 +35,9 @@ def main():
         stage = work/'install'
         subprocess.run(['cmake','--install',str(work/'build'),'--prefix',stage.as_posix()],check=True)
         if options.static:
+            for required in ('chali_xml.a', 'lib/libexpat.a'):
+                if not (stage/required).is_file():
+                    raise ValueError('XML 静态安装缺少内嵌归档：'+required)
             shutil.copytree(stage, options.out.resolve(), dirs_exist_ok=True)
             print(options.out.resolve() / 'chali_xml.a')
             return

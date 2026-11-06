@@ -9,7 +9,7 @@ void main() {
     Map<int64, int64> table;
     table.put(4, 9);
     assert(table.keyAt(0) == 4 && table.valAt(0) == 9);
-    { let cursor = values.iterMut(); assert(cursor.sizeHint().0 == 2); }
+    { let cursor = values.iterMut(); assert(cursor.sizeHint()[0] == 2); }
     let owned = values.intoIter();
     assert(owned.count() == 2);
     List<int64> seed;

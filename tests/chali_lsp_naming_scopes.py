@@ -68,15 +68,16 @@ def main():
         std = document(folder, 'std.chl', 'void main(){std::', 'completion', 'std::')
         # `__` 前缀是编译器/宿主协议：标准库模块补全一个都不该带出来。
         modules = ('std::core', 'std::iter', 'std::math', 'std::number_theory', 'std::numerics',
-                   'std::text', 'std::path', 'std::date_time', 'std::linear_algebra', 'std::macro')
+                   'std::text', 'std::path', 'std::date_time', 'std::linear_algebra', 'std::macro',
+                   'std::gui', 'std::audio', 'std::xml', 'std::crypto')
         private = {module: document(folder, f'private-{index}.chl',
                     f'import {module};\nvoid main(){{ {module}::', 'completion', module + '::')
                    for index, module in enumerate(modules)}
         macro = document(folder, 'std-macro.chl',
             'import std::macro;\nvoid main(){ $std::macro::', 'completion', '$std::macro::')
         function = document(folder, 'function.chl',
-            'import std::date_time;\nvoid main(){DateTime value;let output=std::date_time::format_utc(value);}',
-            'definition', 'std::date_time::format_ut')
+            'import std::date_time;\nvoid main(){DateTime value;let output=std::date_time::formatUtc(value);}',
+            'definition', 'std::date_time::formatUt')
         local = document(folder, 'local.chl', 'import a::iter;\nvoid main(){a::iter::', 'completion', 'a::iter::')
         unrelated = document(folder, 'unrelated.chl', 'import a::iter;\nvoid main(){b::iter::', 'completion', 'b::iter::')
         member = document(folder, 'member.chl', 'import a::iter;\nvoid main(){a::iter::LocalType::', 'completion', 'LocalType::')
@@ -137,9 +138,13 @@ def main():
             assert not leaked, (module, leaked)
         assert 'range' in labels(private['std::core']) and 'abs' in labels(private['std::math'])
         for module, expected, old in (
-            ('std::number_theory', {'gcd', 'pow_mod', 'mod_inverse'}, {'powMod', 'modInverse'}),
-            ('std::date_time', {'format_utc', 'parse_utc'}, {'formatUtc', 'parseUtc'}),
-            ('std::linear_algebra', {'lu_decompose', 'symmetric_eigen'}, {'luDecompose', 'symmetricEigen'}),
+            ('std::number_theory', {'gcd', 'powMod', 'modInverse'}, {'pow_mod', 'mod_inverse'}),
+            ('std::date_time', {'formatUtc', 'parseUtc'}, {'format_utc', 'parse_utc'}),
+            ('std::linear_algebra', {'luDecompose', 'symmetricEigen'}, {'lu_decompose', 'symmetric_eigen'}),
+            ('std::gui', {'openWindow', 'beginFrame', 'controlCount', 'textBox'}, {'open_window', 'begin_frame', 'control_count', 'abi'}),
+            ('std::audio', {'isPlaying', 'load', 'close'}, {'is_playing', 'abi'}),
+            ('std::xml', {'XmlNode', 'escapeText', 'escapeAttribute'}, {'escape_text', 'escape_attribute', 'abi'}),
+            ('std::crypto', {'randomHex', 'sha256', 'hmacSha256', 'verifyEd25519'}, {'random_hex', 'hmac_sha256', 'verify_ed25519', 'abi'}),
         ):
             actual = labels(private[module])
             assert expected <= actual and not old & actual, (module, actual)

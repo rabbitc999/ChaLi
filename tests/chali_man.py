@@ -97,6 +97,13 @@ def main():
         assert overview['documentation']==(ROOT/'doc/library/std-text.md').read_text(encoding='utf-8')
         expected=[r['name'] for r in data['functions']+data['symbols'] if r['module']=='std::text']
         assert sorted(r['name'] for r in overview['symbols'])==sorted(expected)
+        for module, symbol_name in (('std::gui','Widget::draw'), ('std::audio','isPlaying'),
+                                    ('std::xml','escapeAttribute'), ('std::crypto','verifyEd25519')):
+            native=query(module)
+            assert native['documentation']==(ROOT/'doc/library'/(module.replace('::','-')+'.md')).read_text(encoding='utf-8')
+            assert any(r['name']==symbol_name for r in native['symbols']), native
+            detail=query(module+'::'+symbol_name)['symbols'][0]
+            assert detail['parameters'] and detail['returns'] and detail['errors'], detail
         owner=query('std::text::Text')
         assert any(r['kind']=='struct' and r['name']=='Text' for r in owner['symbols']),owner
         assert any(r['name']=='Text::split' for r in owner['symbols'])

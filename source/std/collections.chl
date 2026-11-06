@@ -29,11 +29,11 @@ struct Deque<T>: Iterator<T>, Index<T,int64>, Drop {
     /** 按队首到队尾迭代。 */
     Option<T> iterator(int64 index){if(index<0 || index>=self.len()){return Option<T>::None;}return Option<T>::Value(self.index(index));}
     /** 读取队首副本，空队列返回 None。 */
-    Option<T> peek_front() { return self.iterator(0); }
+    Option<T> peekFront() { return self.iterator(0); }
     /** 读取队尾副本，空队列返回 None。 */
-    Option<T> peek_back() { return self.iterator(self.len() - 1); }
+    Option<T> peekBack() { return self.iterator(self.len() - 1); }
     /** 按队首到队尾导出独立列表。 */
-    List<T> to_list() {
+    List<T> toList() {
         List<T> result;
         int64 index = 0;
         while (index < self.len()) {
@@ -66,7 +66,7 @@ struct Queue<T>: Iterator<T>, Drop {
     /** 读取队首的独立值。 */
     Option<T> peek(){if(self.__front.len()>0){return Option<T>::Value(self.__front.at(self.__front.len()-1));}if(self.values.len()>0){return Option<T>::Value(self.values.at(0));}return Option<T>::None;}
     /** 读取队尾副本，空队列返回 None。 */
-    Option<T> peek_back() { return self.iterator(self.len() - 1); }
+    Option<T> peekBack() { return self.iterator(self.len() - 1); }
     /** 按先进先出顺序迭代。 */
     Option<T> iterator(int64 index){if(index<0 || index>=self.len()){return Option<T>::None;}if(index<self.__front.len()){return Option<T>::Value(self.__front.at(self.__front.len()-1-index));}return Option<T>::Value(self.values.at(index-self.__front.len()));}
     /** 返回有效元素数。 */
@@ -91,7 +91,7 @@ struct Stack<T>: Iterator<T>, Drop {
     /** 读取栈顶的独立副本。 */
     Option<T> peek(){if(self.values.len()==0){return Option<T>::None;}return Option<T>::Value(self.values.at(self.values.len()-1));}
     /** 读取栈底副本，空栈返回 None。 */
-    Option<T> peek_bottom() { return self.iterator(self.len() - 1); }
+    Option<T> peekBottom() { return self.iterator(self.len() - 1); }
     /** 从栈顶开始迭代。 */
     Option<T> iterator(int64 index){if(index<0 || index>=self.values.len()){return Option<T>::None;}return Option<T>::Value(self.values.at(self.values.len()-1-index));}
     /** 返回元素数。 */
@@ -120,11 +120,11 @@ struct RingBuffer<T>: Iterator<T>, Drop {
     /** 返回剩余可写数量。 */
     int64 available(){return self.capacity-self.values.len();}
     /** 判断缓冲是否为空。 */
-    bool is_empty() { return self.len() == 0; }
+    bool isEmpty() { return self.len() == 0; }
     /** 判断缓冲是否已满。 */
-    bool is_full() { return self.available() == 0; }
+    bool isFull() { return self.available() == 0; }
     /** 读取下一次弹出的值的副本，空缓冲返回 None。 */
-    Option<T> peek() { return self.values.peek_front(); }
+    Option<T> peek() { return self.values.peekFront(); }
     /** 清除有效元素，保留配置的容量。 */
     void clear() { self.values.clear(); }
     /** 释放队列存储。 */

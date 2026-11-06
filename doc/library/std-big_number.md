@@ -845,7 +845,7 @@ int64 setPrecision(int64 digits);
 obj.setPrecision(digits);
 ```
 
-**源码**：[source/semantics/lowering.cpp:1780](../../source/semantics/lowering.cpp#L1780)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/lowering.cpp:1781](../../source/semantics/lowering.cpp#L1781)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_bignumber.chl](../../example/samples/std_bignumber.chl)。
 

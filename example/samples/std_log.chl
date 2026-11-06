@@ -4,7 +4,7 @@ void main() {
     Map<String,String> fields;
     fields.put("component","解析");
     String message = "path \\ \"quoted\"\n";
-    let line = std::log::format_record(std::log::LogLevel::Info,message,fields);
+    let line = std::log::formatRecord(std::log::LogLevel::Info,message,fields);
     let record = std::json::parse(line).unwrap();
     assert(record.find("level").unwrap().asString().unwrap() == "info");
     assert(record.find("message").unwrap().asString().unwrap() == message);

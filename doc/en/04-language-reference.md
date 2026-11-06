@@ -98,8 +98,8 @@ Runnable check: [`literal_context_type.chl`](../../example/samples/literal_conte
 | Spelling | Meaning |
 | --- | --- |
 | `T a[N]` | fixed-length array with length in the type |
-| `T a[]` | array whose length is decided at run time, created with `new[n]` |
-| `(A, B)` | tuple; members read via `.0` / `.1` |
+| `T a[]` / local `T[] a` | owning runtime-length array created with `new[n]`; parameters also accept both forms |
+| `(A, B)` | tuple; read members via `[0]` / `[1]` with an in-range compile-time integer index |
 | `R fn(A, B)` | function type |
 | `T mut&` / `T const&` | writable / read-only reference (`T &` ≡ `T const&`) |
 | `Option<T>` | maybe a value: `Value(v)` / `None` |
@@ -187,7 +187,7 @@ The complete source tuple is evaluated and saved once before targets are assigne
 `a, b = (b, a);` or `(a, b) = (b, a);` swaps values. Variables, writable fields, array or container elements, and writable references
 are supported; `a, (b, c) = ...;` matches nested tuples. Element counts, shapes and target types must match.
 Const variables and read-only references cannot be assigned. Ordinary copy, drop, reference and lifetime
-checks apply. Tuple members such as `.0` remain read-only.
+checks apply. Tuple members such as `[0]` remain read-only.
 
 ### `move`: transfer ownership without copying
 
@@ -681,7 +681,7 @@ Iterator chains (`map` / `filter` / `collect`) need `import std::iter;` — see
 
 Write `int64 matrix[2, 3];` or `int64 cube[2, 3, 4];`. Chained brackets such as `int64 cube[2][3][4];` and mixed forms are equivalent, including array fields. Extents are positive compile-time integers. Storage is contiguous and row-major. `cube[i,j,k]` and `cube[i][j][k]` evaluate each index once and check every dimension; all indices are required. Assignment and value parameters preserve independent copies.
 
-`T a[] = new[n];` allocates a fixed-length runtime array on the heap. For growable storage, import `std::array` and use `std::array::DynamicArray<T>`, implemented in ChaLi:
+Local owning arrays accept both `T[] a = new[n];` and `T a[] = new[n];`. Both forms use the same runtime array type and keep a fixed length after allocation. Parameters also accept `T[] a` and `T a[]`; value parameters copy independent elements and length, while `T[] const&` and `T[] mut&` borrow. Local arrays require an initializer: `new[n]`, an array variable or an array-valued call. `const T[] a = ...;` creates a read-only owning binding. Global owning declarations retain `T a[]`. Both local forms share copying, returns, cleanup and borrow checking; see the [runtime array declaration regression](../../tests/chali_runtime_array_declarations.py). For growable storage, import `std::array` and use `std::array::DynamicArray<T>`, implemented in ChaLi:
 
 ```chali
 import std::array;
@@ -1111,7 +1111,7 @@ Expressions such as `yield i + 1;` and `yield makeText();` are evaluated once an
 
 The result is saved before exit callbacks and automatic cleanup. Moving clears the source storage and ends its binding lifetime without invoking close/drop on the source; the final receiver owns cleanup. Types implementing both Closeable and Drop close before dropping. Copies own independent resources, so source and result are cleaned up at their respective lifetime ends. Exits across loops clean up every scope that is left without releasing resources already transferred to the result.
 
-Moving does not extend borrowed lifetimes, including references stored inside aggregates. The [move and cleanup sample](../../example/samples/break_move.chl) checks evaluation counts, raw resource handle identity, external variable copying, destructor counts, cleanup order and VM behavior. See [ownership transfer](24-ownership-move.md) for general rules.
+Moving does not extend borrowed lifetimes, including references stored inside aggregates. The [move and cleanup sample](../../example/samples/break_move.chl) checks evaluation counts, raw resource handle identity, external variable copying, destructor counts, cleanup order and native runtime behavior. See [ownership transfer](24-ownership-move.md) for general rules.
 
 ## Default value text and string conversion
 

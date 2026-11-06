@@ -34,64 +34,64 @@ chali run example/desktop-gui/audio.chl --out build/audio-demo -- path/to/tone.w
 
 ### 控件和回调
 
-使用锁定的 raygui 4.0 全部 **34 种控件**，每种控件都有同名的小写工厂。下表列出 ChaLi 工厂与上游函数的对应关系；`control_count()` 返回 34，`control_name(index)` 返回工厂名。
+使用锁定的 raygui 4.0 全部 **34 种控件**，每种控件都有同名的小写工厂。下表列出 ChaLi 工厂与上游函数的对应关系；`controlCount()` 返回 34，`controlName(index)` 返回工厂名。
 
 | ChaLi 工厂 | raygui 控件 |
 | --- | --- |
-| `window_box` | `GuiWindowBox` |
-| `group_box` | `GuiGroupBox` |
+| `windowBox` | `GuiWindowBox` |
+| `groupBox` | `GuiGroupBox` |
 | `line` | `GuiLine` |
 | `panel` | `GuiPanel` |
-| `tab_bar` | `GuiTabBar` |
-| `scroll_panel` | `GuiScrollPanel` |
+| `tabBar` | `GuiTabBar` |
+| `scrollPanel` | `GuiScrollPanel` |
 | `label` | `GuiLabel` |
 | `button` | `GuiButton` |
-| `label_button` | `GuiLabelButton` |
+| `labelButton` | `GuiLabelButton` |
 | `toggle` | `GuiToggle` |
-| `toggle_group` | `GuiToggleGroup` |
-| `toggle_slider` | `GuiToggleSlider` |
-| `check_box` | `GuiCheckBox` |
-| `combo_box` | `GuiComboBox` |
-| `dropdown_box` | `GuiDropdownBox` |
+| `toggleGroup` | `GuiToggleGroup` |
+| `toggleSlider` | `GuiToggleSlider` |
+| `checkBox` | `GuiCheckBox` |
+| `comboBox` | `GuiComboBox` |
+| `dropdownBox` | `GuiDropdownBox` |
 | `spinner` | `GuiSpinner` |
-| `value_box` | `GuiValueBox` |
-| `text_box` | `GuiTextBox` |
+| `valueBox` | `GuiValueBox` |
+| `textBox` | `GuiTextBox` |
 | `slider` | `GuiSlider` |
-| `slider_bar` | `GuiSliderBar` |
-| `progress_bar` | `GuiProgressBar` |
-| `status_bar` | `GuiStatusBar` |
-| `dummy_rec` | `GuiDummyRec` |
+| `sliderBar` | `GuiSliderBar` |
+| `progressBar` | `GuiProgressBar` |
+| `statusBar` | `GuiStatusBar` |
+| `dummyRec` | `GuiDummyRec` |
 | `grid` | `GuiGrid` |
-| `list_view` | `GuiListView` |
-| `list_view_ex` | `GuiListViewEx` |
-| `message_box` | `GuiMessageBox` |
-| `text_input_box` | `GuiTextInputBox` |
-| `color_picker` | `GuiColorPicker` |
-| `color_panel` | `GuiColorPanel` |
-| `color_bar_alpha` | `GuiColorBarAlpha` |
-| `color_bar_hue` | `GuiColorBarHue` |
-| `color_picker_hsv` | `GuiColorPickerHSV` |
-| `color_panel_hsv` | `GuiColorPanelHSV` |
+| `listView` | `GuiListView` |
+| `listViewEx` | `GuiListViewEx` |
+| `messageBox` | `GuiMessageBox` |
+| `textInputBox` | `GuiTextInputBox` |
+| `colorPicker` | `GuiColorPicker` |
+| `colorPanel` | `GuiColorPanel` |
+| `colorBarAlpha` | `GuiColorBarAlpha` |
+| `colorBarHue` | `GuiColorBarHue` |
+| `colorPickerHsv` | `GuiColorPickerHSV` |
+| `colorPanelHsv` | `GuiColorPanelHSV` |
 
-工厂接收文本并返回 `Widget`。`draw(Rect::at(x, y, width, height))` 绘制并返回事件，每帧同一模型只处理一次。`on_event`、`on_click`、`on_change`、`on_submit`、`on_close` 注册同步的 ChaLi 回调；回调由语言对象持有，C 库只保存文本和控件状态。`clear_callbacks()` 释放注册的捕获，`close()` 同时销毁模型并清空回调。回调可关闭控件或窗口，派发会在对象失效后停止。
+工厂接收文本并返回 `Widget`。`draw(Rect::at(x, y, width, height))` 绘制并返回事件，每帧同一模型只处理一次。`onEvent`、`onClick`、`onChange`、`onSubmit`、`onClose` 注册同步的 ChaLi 回调；回调由语言对象持有，C 库只保存文本和控件状态。`clearCallbacks()` 释放注册的捕获，`close()` 同时销毁模型并清空回调。回调可关闭控件或窗口，派发会在对象失效后停止。
 
-`text_box`、`text_input_box` 使用 C 分配的可编辑 UTF-8 缓冲，`set_text_capacity` 可调整容量，失败保持原文本。复选/切换状态使用 `checked`，选择使用 `selected`，整数编辑使用 `number`，滑块使用 `value` 和 `set_range`，颜色使用 `color` 或 HSV。列表通过 `set_items(List<String>)` 设置最多 128 项，每项不得包含分号或换行；这些字符是 raygui 的项目分隔符。`set_content`、`viewport`、`scroll_offset` 与 `begin_content` 支持滚动面板和裁剪。
+`textBox`、`textInputBox` 使用 C 分配的可编辑 UTF-8 缓冲，`setTextCapacity` 可调整容量，失败保持原文本。复选/切换状态使用 `checked`，选择使用 `selected`，整数编辑使用 `number`，滑块使用 `value` 和 `setRange`，颜色使用 `color` 或 HSV。列表通过 `setItems(List<String>)` 设置最多 128 项，每项不得包含分号或换行；这些字符是 raygui 的项目分隔符。`setContent`、`viewport`、`scrollOffset` 与 `beginContent` 支持滚动面板和裁剪。
 
-`run(draw, on_event)` 管理帧循环和退出清理；绘制完成后轮询窗口事件，文本控件优先消耗字符，窗口 `TextEntered` 只接收剩余字符。事件包括打开、关闭、尺寸、焦点、键盘、字符、鼠标和滚轮。关闭按钮中优先调用 `request_close()`，循环会派发一次 `Closing` 再清理窗口。直接 `close()` 用于立即释放。关闭窗口会释放全部 C 控件，旧控件 ID 在重开后仍失效；语言回调捕获的寿命由语言对象和 `clear_callbacks` 管理。
+`run(draw, onEvent)` 管理帧循环和退出清理；绘制完成后轮询窗口事件，文本控件优先消耗字符，窗口 `TextEntered` 只接收剩余字符。事件包括打开、关闭、尺寸、焦点、键盘、字符、鼠标和滚轮。关闭按钮中优先调用 `requestClose()`，循环会派发一次 `Closing` 再清理窗口。直接 `close()` 用于立即释放。关闭窗口会释放全部 C 控件，旧控件 ID 在重开后仍失效；语言回调捕获的寿命由语言对象和 `clearCallbacks` 管理。
 
-所有窗口、状态、绘制与事件操作必须在创建窗口的线程执行；其他线程的 UI 操作被拒绝。`open_window(width, height, title, options)` 的选项位为 1 可调整大小、2 隐藏、4 垂直同步。`load_font(path, size, glyphs)` 可加载包含所需字符的字体；默认字体不保证覆盖中文。旧版 `open`、即时 `label`、即时 `button` 接口仍可使用。
+所有窗口、状态、绘制与事件操作必须在创建窗口的线程执行；其他线程的 UI 操作被拒绝。`openWindow(width, height, title, options)` 的选项位为 1 可调整大小、2 隐藏、4 垂直同步。`loadFont(path, size, glyphs)` 可加载包含所需字符的字体；默认字体不保证覆盖中文。旧版 `open`、即时 `label`、即时 `button` 接口仍可使用。
 
 [回调示例](../example/desktop-gui/demo.chl) 展示按钮、复选框、文本框、滑块和进度条。原生宿主使用 C11 与平台 C API，不要求 C++ 运行库；音频仍按需独立构建。
 
 ### 绘图、自定义控件与命名事件
 
-绘图在 `begin_frame()` / `end_frame()` 之间或 `run` 的绘制回调中执行，颜色使用 `0xRRGGBBAA`。`draw_pixel`、`draw_line`、`draw_rectangle`、`draw_circle`、`draw_ellipse`、`draw_triangle`、`draw_polygon`、`draw_bezier`、`draw_ring` 和 `draw_text` 覆盖二维基本图形；矩形支持圆角及描边，`measure_text` 返回文字尺寸。`begin_clip` / `end_clip` 支持嵌套裁剪，`clip_bounds()` 返回当前裁剪范围。
+绘图在 `beginFrame()` / `endFrame()` 之间或 `run` 的绘制回调中执行，颜色使用 `0xRRGGBBAA`。`drawPixel`、`drawLine`、`drawRectangle`、`drawCircle`、`drawEllipse`、`drawTriangle`、`drawPolygon`、`drawBezier`、`drawRing` 和 `drawText` 覆盖二维基本图形；矩形支持圆角及描边，`measureText` 返回文字尺寸。`beginClip` / `endClip` 支持嵌套裁剪，`clipBounds()` 返回当前裁剪范围。
 
-`load_texture(path)` 读取 PNG，返回窗口拥有的 `Texture`；`draw` 和 `draw_region` 支持目标区域、旋转及着色。纹理 `close()` 后失效，窗口关闭时释放余下纹理，旧句柄不会在新窗口复用。字体和图片的 Windows UTF-8 路径通过 C/WinAPI 文件入口读取。
+`loadTexture(path)` 读取 PNG，返回窗口拥有的 `Texture`；`draw` 和 `drawRegion` 支持目标区域、旋转及着色。纹理 `close()` 后失效，窗口关闭时释放余下纹理，旧句柄不会在新窗口复用。字体和图片的 Windows UTF-8 路径通过 C/WinAPI 文件入口读取。
 
-`custom_widget()` 不增加内置控件种类；它提供自定义绘制和输入行为。`on_draw(fn(Rect))` 使用屏幕矩形，`on_event(fn(Event))` 与 `on(name, fn(Event))` 接收本控件事件。把窗口事件交给 `handle(event)`；指针事件位置转换为控件局部坐标，支持按下后的鼠标捕获和焦点管理。命名事件包括 `pointer.down`、`pointer.up`、`pointer.move`、`pointer.wheel`、`key.down`、`key.up`、`text.input`、`focus.gained`、`focus.lost` 以及窗口事件。回调可关闭自身控件或窗口。
+`customWidget()` 不增加内置控件种类；它提供自定义绘制和输入行为。`onDraw(fn(Rect))` 使用屏幕矩形，`onEvent(fn(Event))` 与 `on(name, fn(Event))` 接收本控件事件。把窗口事件交给 `handle(event)`；指针事件位置转换为控件局部坐标，支持按下后的鼠标捕获和焦点管理。命名事件包括 `pointer.down`、`pointer.up`、`pointer.move`、`pointer.wheel`、`key.down`、`key.up`、`text.input`、`focus.gained`、`focus.lost` 以及窗口事件。回调可关闭自身控件或窗口。
 
-`custom_event(name, text, code, value)` 创建拥有自身文本的事件。`EventBus.on`、`once`、`off`、`emit` 提供同步订阅，`post` 与 `pump` 提供有界队列。一次性监听器在调用前注销，回调中新注册的监听器延后到下一次派发；回调新增的排队事件留给下一次 `pump`。队列上限为 4096，默认单次处理 256 项，递归派发深度上限为 64，调用者应检查返回值。
+`customEvent(name, text, code, value)` 创建拥有自身文本的事件。`EventBus.on`、`once`、`off`、`emit` 提供同步订阅，`post` 与 `pump` 提供有界队列。一次性监听器在调用前注销，回调中新注册的监听器延后到下一次派发；回调新增的排队事件留给下一次 `pump`。队列上限为 4096，默认单次处理 256 项，递归派发深度上限为 64，调用者应检查返回值。
 
 参考[自定义滑块示例](../example/desktop-gui/custom.chl)与[生命游戏项目](../example/desktop-gui/life.chl)。[书稿第 30 章](book/30-标准库初探.md)提供完整模型、暂停左键切换细胞、右键拖动视口及模拟帧率控制，并附实际运行截图。
 
@@ -104,26 +104,25 @@ chali run example/xml/demo.chl --out build/xml-demo
 ```text
 XML OK
 ```
-`std::xml::parse` 读取 UTF-8 文档并返回根节点。元素名和属性名保留源码中的限定拼写，文本片段和子元素按混合内容顺序读取。`escape_text` 与 `escape_attribute` 分别用于元素文本和带引号的属性值。输入上限为 16 MiB，另有限制嵌套和中间数据。解析错误包含从 1 开始的行列；`DOCTYPE` 被拒绝，解析器不访问外部实体。相邻字符片段可能分成多项。
+`std::xml::parse` 读取 UTF-8 文档并返回根节点。元素名和属性名保留源码中的限定拼写，文本片段和子元素按混合内容顺序读取。`escapeText` 与 `escapeAttribute` 分别用于元素文本和带引号的属性值。输入上限为 16 MiB，另有限制嵌套和中间数据。解析错误包含从 1 开始的行列；`DOCTYPE` 被拒绝，解析器不访问外部实体。相邻字符片段可能分成多项。
 
 ## 密码学
 
 ```powershell
-python tools/setup_crypto.py
-chali run example/crypto/demo.chl -I build/crypto --out build/crypto/std/demo.exe
+chali run example/crypto/demo.chl --out build/crypto-demo
 ```
 
 ```text
 crypto OK
 ```
-`std::crypto` 提供安全随机、SHA-256、HMAC-SHA-256 和 Ed25519 分离签名验证。摘要和随机字节使用小写十六进制，签名验证接收固定长度的十六进制公钥和签名。Windows x64 使用锁定的 libsodium 归档，Linux 从系统开发包取得 libsodium。摘要可用于协议互操作，密码存储需采用专用的密码哈希方案。
+`std::crypto` 的模块与原生静态归档随支持原生服务的发行版内嵌，无需 `-I` 或另行部署 DLL。`randomHex`、`sha256`、`hmacSha256`、`verifyEd25519` 分别提供安全随机、SHA-256、HMAC-SHA-256 和 Ed25519 分离签名验证。随机字节数为 1–65536；摘要和随机字节使用小写十六进制，验签接收固定长度的十六进制公钥和签名。构建 Windows x64 使用锁定的 libsodium 归档，Linux 使用系统静态开发包。完整签名见[密码学 API 参考](library/std-crypto.md)。
 
 ## HTTP 流式传输
 
 ```powershell
 python tools/setup_http_transfer.py
 ```
-导入 `std::net::http` 后，`HttpClient::open()` 创建会话，`download_to` 发起 GET 并写入新文件，`upload_file` 以 PUT 流式读取源文件。同一会话重复请求时，libcurl 在协议允许的情况下复用连接。超时覆盖完整请求；同步回调收到已下载和已上传的字节数，返回非零可取消。`keep_going` 只使用超时。HTTP 状态与传输失败分开返回，下载成功且响应为 2xx 才保留本次创建的文件。调用者使用 `close()` 关闭会话。
+导入 `std::net::http` 后，`HttpClient::open()` 创建会话，`downloadTo` 发起 GET 并写入新文件，`uploadFile` 以 PUT 流式读取源文件。同一会话重复请求时，libcurl 在协议允许的情况下复用连接。超时覆盖完整请求；同步回调收到已下载和已上传的字节数，返回非零可取消。`keepGoing` 只使用超时。HTTP 状态与传输失败分开返回，下载成功且响应为 2xx 才保留本次创建的文件。调用者使用 `close()` 关闭会话。
 
 Windows 可运行 [GUI 与音频](../example/desktop-gui)、[XML 示例](../example/xml/demo.chl) 和 [密码学示例](../example/crypto/demo.chl)。实现使用 [raylib](https://github.com/raysan5/raylib)、[raygui](https://github.com/raysan5/raygui)、[Expat](https://github.com/libexpat/libexpat)、[libsodium](https://doc.libsodium.org/) 与 [libcurl](https://curl.se/libcurl/)。
 

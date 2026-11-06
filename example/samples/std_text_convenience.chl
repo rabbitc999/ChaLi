@@ -1,14 +1,14 @@
 import std::text;
 void main() {
-    assert(Text::strip_prefix("甲乙甲", "甲") == "乙甲");
-    assert(Text::strip_suffix("甲乙甲", "甲") == "甲乙");
-    assert(Text::strip_prefix("甲", "乙") == "甲");
-    assert(Text::strip_suffix("甲", "") == "甲");
-    assert(Text::strip_prefix("甲", "甲") == "");
-    assert(Text::strip_suffix("", "甲") == "");
-    assert(Text::is_blank(" \t\n") && Text::is_blank("") && !Text::is_blank("　"));
-    assert(Text::count_matches("aaaaa", "aa") == 2);
-    assert(Text::count_matches("甲乙甲乙", "甲乙") == 2);
-    assert(Text::count_matches("x", "") == 0 && Text::count_matches("", "x") == 0);
+    assert(Text::stripPrefix("甲乙甲", "甲") == "乙甲");
+    assert(Text::stripSuffix("甲乙甲", "甲") == "甲乙");
+    assert(Text::stripPrefix("甲", "乙") == "甲");
+    assert(Text::stripSuffix("甲", "") == "甲");
+    assert(Text::stripPrefix("甲", "甲") == "");
+    assert(Text::stripSuffix("", "甲") == "");
+    assert(Text::isBlank(" \t\n") && Text::isBlank("") && !Text::isBlank("　"));
+    assert(Text::countMatches("aaaaa", "aa") == 2);
+    assert(Text::countMatches("甲乙甲乙", "甲乙") == 2);
+    assert(Text::countMatches("x", "") == 0 && Text::countMatches("", "x") == 0);
     println("text convenience methods OK");
 }

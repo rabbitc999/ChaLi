@@ -83,8 +83,9 @@ two are not switches), so the reflection front end and runtime are always built 
 always runs the full reflection pass. `--no-reflection` and `--hard-realtime` only decide whether
 **the program being compiled** may use annotations/reflection and whether the artifact carries
 reflection metadata; they change neither the compiler's composition nor its workload (metadata and
-query-source generation still run). Generated compiler projects and embedded hosts pin reflection
-the same way and offer no switch to turn it off. Reflection supports annotations, explicitly exposed
+query-source generation still run). Generated compiler projects enable both reflection CMake options
+by default (`ON`); disabling them is only for capability compatibility checks, not a supported language
+trim configuration. Reflection supports annotations, explicitly exposed
 metadata and restricted dynamic calls; it does not create arbitrary runtime types or offer general field
 writes and arbitrary resource-value invocation. It carries no hard-real-time guarantee.
 See the [reflection specification](../19-reflection.md).

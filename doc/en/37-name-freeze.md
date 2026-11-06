@@ -16,6 +16,9 @@ The letters C, h, a, L, and i in ChaLi stand for Copy, Hygienic, Any, Lifetime, 
 | Source suffix | .chl |
 | Diagnostic prefix | CHL |
 | Project configuration | chali.toml |
+| Standard-library compound types | PascalCase: `DateTime`, `XmlNode`, `EventBus` |
+| Standard-library methods and module functions | camelCase: `childCount`, `isPlaying`, `formatUtc` |
+| Standard-library modules | snake_case: `std::date_time`, `std::number_theory`; single-word modules such as `std::gui`, `std::audio`, `std::xml` remain lowercase |
 | Compiler artifacts | Version, LLVM linkage, system and architecture in the filename |
 
 Commands normally use chali; follow the [installation guide](39-installation-packages.md) for actual build filenames. Git and CHANGELOG retain historical names.

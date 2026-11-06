@@ -9,7 +9,7 @@ bool play(int64 id);
 #abi("C", "./@LIBRARY@", "chali_audio_stop")
 bool stop(int64 id);
 #abi("C", "./@LIBRARY@", "chali_audio_is_playing")
-bool is_playing(int64 id);
+bool isPlaying(int64 id);
 #abi("C", "./@LIBRARY@", "chali_audio_unload")
 bool unload(int64 id);
 #abi("C", "./@LIBRARY@", "chali_audio_close")

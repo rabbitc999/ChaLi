@@ -59,9 +59,9 @@ isObject=1 len=1
 | --- | --- |
 | `std::math` | `sin` `cos` `sqrt` 等常用函数；`abs` `min` `max` 是泛型入口（`min`/`max` 任意数量实参），`clamp` 分 `int64`/`float64` 两份；常数 `std::math::PI`、`std::math::E` |
 | `std::numerics` | 标量数值方法：导数、辛普森积分、二分、RK4、牛顿 |
-| `std::number_theory` | 整数数论：模块级泛型 `gcd` `lcm`（任意数量实参）、`add_mod` `mul_mod` `pow_mod` `mod_inverse`、确定性 Miller-Rabin `is_prime` |
+| `std::number_theory` | 整数数论：模块级泛型 `gcd` `lcm`（任意数量实参）、`addMod` `mulMod` `powMod` `modInverse`、确定性 Miller-Rabin `isPrime` |
 | `std::complex` | 复数 `Complex<T>`，支持加减乘除 trait |
-| `std::linear_algebra` | 稠密向量与矩阵、`lu_decompose` `symmetric_eigen` `svd` `jordan2` `diagonalize2` |
+| `std::linear_algebra` | 稠密向量与矩阵、`luDecompose` `symmetricEigen` `svd` `jordan2` `diagonalize2` |
 | `std::random` | 确定性 LCG 与熵播种；句柄型状态，实现 `Drop` |
 | `std::signal` | DFT / FFT / 逆变换；基 2 FFT 只接受 2 的幂 |
 

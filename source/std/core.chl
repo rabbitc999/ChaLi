@@ -1166,8 +1166,8 @@ struct Pair<K, V> {
      * @return 拥有独立字段值的 Pair。
      */
     static Pair<K, V> create((K, V) value) {
-        self.first = value.0;
-        self.second = value.1;
+        self.first = value[0];
+        self.second = value[1];
     }
 
     /**

@@ -40,18 +40,18 @@ void main() {
         }
         yield (-1, "missing");
     };
-    assert(pair.0 == 2 && pair.1 == "found");
+    assert(pair[0] == 2 && pair[1] == "found");
     let owned = {
         loop {
             List<String> local; local.push("kept");
             yield ("tuple", local);
         };
     };
-    assert(owned.0 == "tuple" && owned.1[0] == "kept");
+    assert(owned[0] == "tuple" && owned[1][0] == "kept");
     let (first, second, nested) = loop {
         yield (next(), next(), (next(), "tuple"));
     };
-    assert(first == 1 && second == 2 && nested.0 == 3 && nested.1 == "tuple" && evaluations == 3);
+    assert(first == 1 && second == 2 && nested[0] == 3 && nested[1] == "tuple" && evaluations == 3);
 
     int64 nearest = {
         int64 inner = loop { yield (7); };
@@ -116,11 +116,11 @@ void main() {
     let branch = if (true) {
         loop { yield (11, "if"); };
     } else { (0, "else") };
-    assert(branch.0 == 11 && branch.1 == "if");
+    assert(branch[0] == 11 && branch[1] == "if");
     let matched = match (1) {
         1 => { loop { yield (12, "match"); }; }
         _ => { (0, "other") }
     };
-    assert(matched.0 == 12 && matched.1 == "match");
+    assert(matched[0] == 12 && matched[1] == "match");
     println("break values OK");
 }

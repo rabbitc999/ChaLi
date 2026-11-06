@@ -175,9 +175,9 @@ response ok=1 status=200 reason=OK len=5 type=text/plain body=hello
 | [HttpClient::exchange](#api-33) | `HttpResponse exchange(std::core::String method, std::core::String url, std::core::String body, std::core::String contentType)` |
 | [HttpClient::close](#api-34) | `void close()` |
 | [HttpClient::fetch](#api-35) | `static HttpResponse fetch(std::core::String url)` |
-| [HttpClient::fetch_with_timeout](#api-36) | `static HttpResponse fetch_with_timeout(String url, int32 timeoutMs)` |
+| [HttpClient::fetchWithTimeout](#api-36) | `static HttpResponse fetchWithTimeout(String url, int32 timeoutMs)` |
 | [HttpClient::submit](#api-37) | `static HttpResponse submit(std::core::String url, std::core::String body, std::core::String contentType)` |
-| [HttpClient::submit_with_timeout](#api-38) | `static HttpResponse submit_with_timeout(String url, String body, String contentType, int32 timeoutMs)` |
+| [HttpClient::submitWithTimeout](#api-38) | `static HttpResponse submitWithTimeout(String url, String body, String contentType, int32 timeoutMs)` |
 
 <a id="api-0"></a>
 
@@ -1549,12 +1549,12 @@ std::net::HttpClient::fetch(url);
 
 <a id="api-36"></a>
 
-### HttpClient::fetch_with_timeout（37）
+### HttpClient::fetchWithTimeout（37）
 
 **声明**
 
 ```chali
-static HttpResponse fetch_with_timeout(String url, int32 timeoutMs);
+static HttpResponse fetchWithTimeout(String url, int32 timeoutMs);
 ```
 
 **行为**
@@ -1579,7 +1579,7 @@ static HttpResponse fetch_with_timeout(String url, int32 timeoutMs);
 **调用形式**
 
 ```chali
-std::net::HttpClient::fetch_with_timeout(url, timeoutMs);
+std::net::HttpClient::fetchWithTimeout(url, timeoutMs);
 ```
 
 **源码**：[source/std/net.chl:337](../../source/std/net.chl#L337)。
@@ -1630,12 +1630,12 @@ std::net::HttpClient::submit(url, body, contentType);
 
 <a id="api-38"></a>
 
-### HttpClient::submit_with_timeout（39）
+### HttpClient::submitWithTimeout（39）
 
 **声明**
 
 ```chali
-static HttpResponse submit_with_timeout(String url, String body, String contentType, int32 timeoutMs);
+static HttpResponse submitWithTimeout(String url, String body, String contentType, int32 timeoutMs);
 ```
 
 **行为**
@@ -1662,7 +1662,7 @@ static HttpResponse submit_with_timeout(String url, String body, String contentT
 **调用形式**
 
 ```chali
-std::net::HttpClient::submit_with_timeout(url, body, contentType, timeoutMs);
+std::net::HttpClient::submitWithTimeout(url, body, contentType, timeoutMs);
 ```
 
 **源码**：[source/std/net.chl:371](../../source/std/net.chl#L371)。

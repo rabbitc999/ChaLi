@@ -54,9 +54,9 @@ void main() {
     println("{}", describe(miss));
 
     (String, String) pair = ("left", "right");
-    println("{}|{}", pair.0, pair.1);
+    println("{}|{}", pair[0], pair[1]);
     pair = ("up", "down");
-    println("{}|{}", pair.0, pair.1);
+    println("{}|{}", pair[0], pair[1]);
 
     match (twice(2)) {
         Result<String, String>::Ok(text) => { println("ok {}", text); }

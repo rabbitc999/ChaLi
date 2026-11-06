@@ -131,10 +131,10 @@ void main(List<String> args) {
 | [fileInfo](#api-35) | `Result<FileInfo,std::core::Error> fileInfo(String path)` |
 | [createDirectories](#api-36) | `Result<int64,std::core::Error> createDirectories(String path)` |
 | [renamePath](#api-37) | `Result<int64,std::core::Error> renamePath(String from, String to)` |
-| [copy_to](#api-38) | `Result<int64,Error> copy_to(FileStream mut& source, FileStream mut& destination)` |
-| [walk_directory](#api-39) | `Result<List<String>,Error> walk_directory(String path)` |
-| [create_temp_file](#api-40) | `Result<String,Error> create_temp_file(String path)` |
-| [replace_file](#api-41) | `Result<int64,Error> replace_file(String from, String to)` |
+| [copyTo](#api-38) | `Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination)` |
+| [walkDirectory](#api-39) | `Result<List<String>,Error> walkDirectory(String path)` |
+| [createTempFile](#api-40) | `Result<String,Error> createTempFile(String path)` |
+| [replaceFile](#api-41) | `Result<int64,Error> replaceFile(String from, String to)` |
 
 <a id="api-0"></a>
 
@@ -1585,12 +1585,12 @@ std::io::renamePath(from, to);
 
 <a id="api-38"></a>
 
-### copy_to（39）
+### copyTo（39）
 
 **声明**
 
 ```chali
-Result<int64,Error> copy_to(FileStream mut& source, FileStream mut& destination);
+Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination);
 ```
 
 **行为**
@@ -1615,7 +1615,7 @@ Result<int64,Error> copy_to(FileStream mut& source, FileStream mut& destination)
 **调用形式**
 
 ```chali
-std::io::copy_to(source, destination);
+std::io::copyTo(source, destination);
 ```
 
 **源码**：[source/std/io.chl:317](../../source/std/io.chl#L317)。
@@ -1624,12 +1624,12 @@ std::io::copy_to(source, destination);
 
 <a id="api-39"></a>
 
-### walk_directory（40）
+### walkDirectory（40）
 
 **声明**
 
 ```chali
-Result<List<String>,Error> walk_directory(String path);
+Result<List<String>,Error> walkDirectory(String path);
 ```
 
 **行为**
@@ -1653,7 +1653,7 @@ Result<List<String>,Error> walk_directory(String path);
 **调用形式**
 
 ```chali
-std::io::walk_directory(path);
+std::io::walkDirectory(path);
 ```
 
 **源码**：[source/std/io.chl:336](../../source/std/io.chl#L336)。
@@ -1662,12 +1662,12 @@ std::io::walk_directory(path);
 
 <a id="api-40"></a>
 
-### create_temp_file（41）
+### createTempFile（41）
 
 **声明**
 
 ```chali
-Result<String,Error> create_temp_file(String path);
+Result<String,Error> createTempFile(String path);
 ```
 
 **行为**
@@ -1691,7 +1691,7 @@ Result<String,Error> create_temp_file(String path);
 **调用形式**
 
 ```chali
-std::io::create_temp_file(path);
+std::io::createTempFile(path);
 ```
 
 **源码**：[source/std/io.chl:343](../../source/std/io.chl#L343)。
@@ -1700,12 +1700,12 @@ std::io::create_temp_file(path);
 
 <a id="api-41"></a>
 
-### replace_file（42）
+### replaceFile（42）
 
 **声明**
 
 ```chali
-Result<int64,Error> replace_file(String from, String to);
+Result<int64,Error> replaceFile(String from, String to);
 ```
 
 **行为**
@@ -1730,7 +1730,7 @@ Result<int64,Error> replace_file(String from, String to);
 **调用形式**
 
 ```chali
-std::io::replace_file(from, to);
+std::io::replaceFile(from, to);
 ```
 
 **源码**：[source/std/io.chl:350](../../source/std/io.chl#L350)。

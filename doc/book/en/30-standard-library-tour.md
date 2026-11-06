@@ -138,7 +138,7 @@ struct Board {
 
 ## 30.4 Custom drawing and input
 
-Create the board with `custom_widget()`. The drawing callback receives screen bounds. Add the viewport offset to world coordinates when drawing. Pointer callbacks receive widget-local coordinates: subtract the offset and divide by cell dimensions when selecting a cell.
+Create the board with `customWidget()`. The drawing callback receives screen bounds. Add the viewport offset to world coordinates when drawing. Pointer callbacks receive widget-local coordinates: subtract the offset and divide by cell dimensions when selecting a cell.
 
 Integer casts truncate toward zero. Correct negative fractional positions by subtracting one when the cast result is greater than the original value, producing floor behavior.
 
@@ -146,7 +146,7 @@ Right-button dragging accumulates pointer deltas. Pointer capture delivers relea
 
 ## 30.5 The complete window program
 
-Mutable callbacks update the model and running state. Accumulate `frame_time()` and advance when a simulation interval has elapsed. Limit catch-up to four generations per frame, dropping excess accumulated time to preserve responsiveness. Pausing does not accumulate simulation debt.
+Mutable callbacks update the model and running state. Accumulate `frameTime()` and advance when a simulation interval has elapsed. Limit catch-up to four generations per frame, dropping excess accumulated time to preserve responsiveness. Pausing does not accumulate simulation debt.
 
 ```chali
 import std::gui;
@@ -156,11 +156,11 @@ import life_model;
  * @brief 康威生命游戏：暂停编辑，自定义棋盘绘制，独立演化速率。
  */
 void main() {
-    assert(std::gui::open_window(1000, 680, "ChaLi | Conway's Game of Life", 1));
-    std::gui::set_target_fps(60);
-    std::gui::set_background((uint32)0x101827ff);
-    bool font = std::gui::load_font("C:/Windows/Fonts/segoeui.ttf", (int32)24, "");
-    if (!font) { std::gui::load_font("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", (int32)24, ""); }
+    assert(std::gui::openWindow(1000, 680, "ChaLi | Conway's Game of Life", 1));
+    std::gui::setTargetFps(60);
+    std::gui::setBackground((uint32)0x101827ff);
+    bool font = std::gui::loadFont("C:/Windows/Fonts/segoeui.ttf", (int32)24, "");
+    if (!font) { std::gui::loadFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", (int32)24, ""); }
     life_model::Board board; board.seed();
     bool running = false; float64 elapsed = 0;
     float64 pan_x = 0; float64 pan_y = 0; bool dragging = false;
@@ -169,12 +169,12 @@ void main() {
     let step = std::gui::button("Step");
     let clear = std::gui::button("Clear");
     let seed = std::gui::button("Load patterns");
-    let speed = std::gui::slider(""); speed.set_range(1, 60); speed.set_value(8);
-    let grid = std::gui::custom_widget();
-    toggle.on_click(void fn mut(std::gui::Event event) { running = !running; elapsed = 0; });
-    step.on_click(void fn mut(std::gui::Event event) { if (!running) { board.step(); } });
-    clear.on_click(void fn mut(std::gui::Event event) { running = false; elapsed = 0; board.reset(); });
-    seed.on_click(void fn mut(std::gui::Event event) { running = false; elapsed = 0; board.seed(); });
+    let speed = std::gui::slider(""); speed.setRange(1, 60); speed.setValue(8);
+    let grid = std::gui::customWidget();
+    toggle.onClick(void fn mut(std::gui::Event event) { running = !running; elapsed = 0; });
+    step.onClick(void fn mut(std::gui::Event event) { if (!running) { board.step(); } });
+    clear.onClick(void fn mut(std::gui::Event event) { running = false; elapsed = 0; board.reset(); });
+    seed.onClick(void fn mut(std::gui::Event event) { running = false; elapsed = 0; board.seed(); });
     grid.on("pointer.down", void fn mut(std::gui::Event event) {
         if (event.code == 1) { dragging = true; drag_x = event.x; drag_y = event.y; }
         if (!running && event.code == 0) {
@@ -189,37 +189,37 @@ void main() {
     });
     grid.on("pointer.up", void fn mut(std::gui::Event event) { if (event.code == 1) { dragging = false; } });
     grid.on("focus.lost", void fn mut(std::gui::Event event) { dragging = false; });
-    grid.on_draw(void fn(std::gui::Rect bounds) {
-        std::gui::draw_rectangle(bounds, (uint32)0x1b293bff);
+    grid.onDraw(void fn(std::gui::Rect bounds) {
+        std::gui::drawRectangle(bounds, (uint32)0x1b293bff);
         int64 left = (int64)(-pan_x / 18) - 1; int64 top = (int64)(-pan_y / 16) - 1;
         for (int64 y in range(top, top + 31)) {
             for (int64 x in range(left, left + 51)) {
                 uint32 color = (uint32)0x142033ff; if (board.at(x, y) == 1) { color = (uint32)0x55dfb2ff; }
-                std::gui::draw_rectangle(std::gui::Rect::at(bounds.x + pan_x + x * 18 + 1, bounds.y + pan_y + y * 16 + 1, 16, 14), color);
+                std::gui::drawRectangle(std::gui::Rect::at(bounds.x + pan_x + x * 18 + 1, bounds.y + pan_y + y * 16 + 1, 16, 14), color);
             }
         }
     });
     std::gui::run(void fn mut() {
         int64 fps = (int64)speed.value();
         if (running) {
-            elapsed += std::gui::frame_time();
+            elapsed += std::gui::frameTime();
             int64 updates = 0;
             while (elapsed >= 1.0 / fps && updates < 4) { board.step(); elapsed -= 1.0 / fps; updates += 1; }
             if (updates == 4) { elapsed = 0; }
         }
-        std::gui::draw_text("CONWAY / LIFE", std::gui::Point::at(68, 24), 32, (uint32)0xf0f6ffff);
-        std::gui::draw_text("A cellular world built with ChaLi custom widgets", std::gui::Point::at(68, 66), 18, (uint32)0x9fb3cfff);
-        if (running) { toggle.set_text("Pause"); } else { toggle.set_text("Start"); }
+        std::gui::drawText("CONWAY / LIFE", std::gui::Point::at(68, 24), 32, (uint32)0xf0f6ffff);
+        std::gui::drawText("A cellular world built with ChaLi custom widgets", std::gui::Point::at(68, 66), 18, (uint32)0x9fb3cfff);
+        if (running) { toggle.setText("Pause"); } else { toggle.setText("Start"); }
         toggle.draw(std::gui::Rect::at(68, 106, 104, 32));
-        step.set_enabled(!running); step.draw(std::gui::Rect::at(184, 106, 88, 32));
+        step.setEnabled(!running); step.draw(std::gui::Rect::at(184, 106, 88, 32));
         clear.draw(std::gui::Rect::at(284, 106, 88, 32));
         seed.draw(std::gui::Rect::at(384, 106, 132, 32));
         speed.draw(std::gui::Rect::at(620, 110, 196, 24));
-        std::gui::draw_text(fps.toString() + " FPS", std::gui::Point::at(840, 112), 18, (uint32)0x55dfb2ff);
+        std::gui::drawText(fps.toString() + " FPS", std::gui::Point::at(840, 112), 18, (uint32)0x55dfb2ff);
         grid.draw(std::gui::Rect::at(68, 158, 864, 448));
         String state = "PAUSED / EDIT"; if (running) { state = "RUNNING"; }
-        std::gui::draw_text(state + "    Generation " + board.generation.toString() + "    Alive " + board.population().toString(), std::gui::Point::at(68, 622), 18, (uint32)0x55dfb2ff);
-        std::gui::draw_text("Paused: left click toggles. Right drag pans the world. Rule: B3/S23", std::gui::Point::at(68, 650), 16, (uint32)0x9fb3cfff);
+        std::gui::drawText(state + "    Generation " + board.generation.toString() + "    Alive " + board.population().toString(), std::gui::Point::at(68, 622), 18, (uint32)0x55dfb2ff);
+        std::gui::drawText("Paused: left click toggles. Right drag pans the world. Rule: B3/S23", std::gui::Point::at(68, 650), 16, (uint32)0x9fb3cfff);
     }, void fn mut(std::gui::Event event) { grid.handle(event); });
     grid.close(); toggle.close(); step.close(); clear.close(); seed.close(); speed.close();
 }

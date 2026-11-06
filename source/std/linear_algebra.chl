@@ -290,7 +290,7 @@ struct LuFactorization {
 
 /* 部分行主元分解，满足 permutation * input == lower * upper。 */
 void __luDecomposeInto(Matrix<float64> const& input, LuFactorization mut& output);
-LuFactorization lu_decompose(Matrix<float64> input) {
+LuFactorization luDecompose(Matrix<float64> input) {
     LuFactorization result;
     __luDecomposeInto(&input, &result);
     return move result;
@@ -298,7 +298,7 @@ LuFactorization lu_decompose(Matrix<float64> input) {
 
 /* LUR 在本库中指带行置换的 LU；返回的 permutation 满足 P*A=L*U。 */
 void __lurDecomposeInto(Matrix<float64> const& input, LuFactorization mut& output);
-LuFactorization lur_decompose(Matrix<float64> input) {
+LuFactorization lurDecompose(Matrix<float64> input) {
     LuFactorization result;
     __lurDecomposeInto(&input, &result);
     return move result;
@@ -311,7 +311,7 @@ struct EigenDecomposition {
 
 /* 实对称矩阵的 Jacobi 特征分解；A=V*diag(values)*V^T。 */
 void __symmetricEigenInto(Matrix<float64> const& input, EigenDecomposition mut& output);
-EigenDecomposition symmetric_eigen(Matrix<float64> input) {
+EigenDecomposition symmetricEigen(Matrix<float64> input) {
     EigenDecomposition result;
     __symmetricEigenInto(&input, &result);
     return move result;

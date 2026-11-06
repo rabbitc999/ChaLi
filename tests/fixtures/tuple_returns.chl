@@ -4,7 +4,7 @@
     return a, value;
 }
 (int64, T) contextual<T>() { T value; return 11, value; }
-T tupleSecond<T>((int32, T) pair) { return pair.1; }
+T tupleSecond<T>((int32, T) pair) { return pair[1]; }
 int64 calls;
 (int64, (String, int64)) nested() {
     calls = calls + 1;
@@ -26,7 +26,13 @@ void main() {
     c, str2 = func("inferred");
     assert(c == 1 && str2 == "inferred");
     (int32, String) saved = func<String>(str1);
-    assert(saved.0 == 1 && saved.1 == "aaa");
+    assert(saved[0] == 1 && saved[1] == "aaa");
+    const int64 secondIndex = 1;
+    assert(saved[secondIndex] == "aaa" && saved[1 - 1] == 1);
+    let nestedAccess = nested();
+    assert(nestedAccess[1][0] == "nested" && nestedAccess[1][1] == 9);
+    assert(nested()[1][0] == "nested" && calls == 2);
+    calls = 0;
     assert(tupleSecond(saved) == "aaa");
     let (declared, text) = func("declaration");
     assert(declared == 1 && text == "declaration");

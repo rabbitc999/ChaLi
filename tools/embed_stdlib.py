@@ -281,7 +281,7 @@ GENERATOR_ASSETS += ["ircode/" + name for name in asset_names()]
 from cas_sources import asset_names as cas_asset_names
 GENERATOR_ASSETS += ["caspp/" + name for name in cas_asset_names()]
 GENERATOR_ASSETS += ["ipage/" + path.name for path in sorted(Path(CHALI, "library/ipage/source/ipage").iterdir()) if path.suffix in (".hpp", ".cpp")]
-GENERATOR_ASSETS += ["ipage/LICENSE"]
+GENERATOR_ASSETS += ["ipage/LICENSE", "licenses/libsodium/LICENSE"]
 
 # 胶水接口及实现作为同一组资产导出，固定清单不能遗漏独立编译单元。
 GENERATOR_ASSETS += ["generic/standard_templates.cpp", "precompiled/standard_templates.cpp"]
@@ -331,9 +331,11 @@ def native_inputs():
         "audio": ("libchali_audio.a",),
         "raylib": ("libraylib.a",),
         "xml": ("chali_xml.a", "lib/libexpat.a"),
+        "crypto": ("chali_crypto.a", "lib/libsodium.a"),
     }
     if os.name == "nt":
         groups["raylib"] += ("lib/libgdi32.a", "lib/libwinmm.a")
+        groups["crypto"] += ("lib/libbcrypt.a",)
     return {name: [root / file for file in names] for name, names in groups.items()}
 
 
@@ -367,6 +369,7 @@ def collect():
         ("gui", "desktop_gui/desktop_gui.chl.in", "desktop"),
         ("audio", "desktop_gui/desktop_audio.chl.in", "audio"),
         ("xml", "xml/xml.chl.in", "xml"),
+        ("crypto", "crypto/crypto.chl.in", "crypto"),
     ):
         qualified = "std::" + name
         content = read(os.path.join(CHALI, "library", template)).replace("./@LIBRARY@", "@LIBRARY@")
@@ -390,7 +393,7 @@ def dependencies():
         paths.update(path.relative_to(root) for path in root.glob(pattern) if path.is_file())
     paths.update(map(Path, ("tools/setup_desktop_gui.py", "library/desktop_gui/desktop_gui.chl.in",
                            "library/desktop_gui/desktop_audio.chl.in", "library/desktop_gui/controls.def",
-                           "library/xml/xml.chl.in")))
+                           "library/xml/xml.chl.in", "library/crypto/crypto.chl.in")))
     paths.update(map(Path, ("tools/embed_stdlib.py", "tools/project_temp.py", "tools/embedded_asset_cache.py", "tools/stackvm_sources.py", "tools/embed_manual.py", "source/chali.gram",
                            "source/chali_token.gram", "doc/04-language-reference.md",
                            "doc/25-literals-operators-macros.md", "skills/chali-programming/SKILL.md")))

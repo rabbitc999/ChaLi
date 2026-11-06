@@ -25,7 +25,7 @@ void main() {
     String & name = &text;
     assert(name[0] == 's');
     (String &, Cell &) namedPair = (&text, &cell);
-    assert(namedPair.0 == "sugar" && (namedPair.1).value == 9);
+    assert(namedPair[0] == "sugar" && (namedPair[1]).value == 9);
     Option<String &> optional = Option<String &>::Value(&text);
     assert(optional.unwrap() == "sugar");
     Box<int64 &> box; box.value = &value;

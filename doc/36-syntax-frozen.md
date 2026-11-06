@@ -41,21 +41,21 @@
 | 内建类型 | `int8` `int16` `int32` `int64` `uint8` `uint16` `uint32` `uint64` `float32` `float64` `bool` `char` `void` |
 | 字面量与通配 | `true` `false` `_` |
 | 声明与修饰 | `let` `const` `mut` `static` `inline` `export` `copy` `move` |
-| 类型定义 | `struct` `enum` `interface` `opcode` `impl` `type` `abi` |
+| 类型定义 | `struct` `enum` `interface` `opcode` `impl` `type` |
 | 模块 | `module` `import` |
 | 控制流 | `if` `elif` `else` `while` `for` `in` `loop` `match` `break` `continue` `return` `yield` `defer` `scope` |
-| 内存与资源 | `new` `drop` |
+| 内存与资源 | `new` `drop` `unsafe` `cast` |
 | 函数值 | `fn` |
-| 编译期指令 | `#NonCopyable` `#No<接口>Replace` `#NoRight<接口>` |
+| 编译期指令 | `#abi` `#export` `#NonCopyable` `#No<接口>Replace` `#NoRight<接口>` |
 | 生命周期契约 | `#borrow` `#static` `#ret` | 写在函数声明前；`#ret` 指返回值 |
-| 宏语法词 | `$macro` `$replace` `$end_macro` `$match` `$else` `$end_match` `$regex` `$end_regex` `$for` `$end_for`，匹配类别 `is` `expr` `ident` `block` `stmt` |
+| 宏语法词 | `$macro` `$replace` `$end_macro` `$match` `$else` `$elif` `$else_if` `$end_match` `$regex` `$end_regex` `$for` `$end_for` `$if` `$end_if` `$implement`，匹配类别 `is` `expr` `ident` `type` `block` `stmt` `pattern` |
 
 约定：
 
 - `let` 是**唯一**的类型推导声明关键字；`auto` 不是关键字，按普通标识符处理。
 - 分配统一使用 `new`，`heap` 不再是关键字；`_` 只作匹配兜底与占位，不参与命名。
-- 宏调用名保留 `$` 前缀且**只认小写**：`$Macro` 不是宏调用，按语法错误处理。
-- `is` / `expr` / `ident` / `block` / `stmt` 只在 `$macro … $match … is` 结构里是关键字。
+- 宏调用名保留 `$` 前缀，名称允许 ASCII 大小写字母及下划线开头，后续还可包含数字，区分大小写；`$Macro` 与 `$macro_name` 都是合法的宏调用名。
+- `is` 与匹配类别词用于宏的类别检查，类别也可标注在宏形参上；`type` 同时用于宿主类型与关联类型声明。宏语法详见[字面量、运算符与宏](25-literals-operators-macros.md)。
 
 ## 4 标点与优先级
 
@@ -96,15 +96,15 @@
 | 局部声明 | `let 名字 = 表达式;`、`类型 名字 = 表达式;`、`let (a, b) = 表达式;` | 解构只能用 `let (...)` |
 | 具名函数 | `返回类型 名字(形参) { … }`，可与 `let` 声明同处语句位置 | 返回类型是参数与函数体的类型锚点 |
 | 引用 | `T&`（只读）、`T const&`、`T mut&` | 引用非空；`Option<T &>` 表示可能没有 |
-| 数组 | `T[]`（运行时长度，中括号写在类型一侧） | 元素个数由字面量或实参决定 |
+| 数组 | 局部拥有数组与形参均可用 `T[] a` / `T a[]`（运行时长度）；定长声明用 `T a[N]` / `T a[N, M]` / `T a[N][M]` | 运行时局部数组必须初始化，可用 `new[n]` 或独立的数组值；固定维度为编译期正整数；全局拥有数组声明使用 `T a[]` |
 | 函数类型 | `返回类型 fn(参数类型)` | 可包含文法允许的形参声明；调用签名按参数类型匹配 |
 | 语句 | 块、`if/elif/else`、`while`、`loop`、`for (x in 源)`、`match`、`return`、`break`、`continue`、`yield`、`defer`、`scope(exit)`、表达式语句 | 表达式语句必须以 `;` 结束 |
 | 循环退出 | `break;` / `break 标签;` / `yield 值;` | 退出最近循环、具名循环或产出表达式的值 |
-| 堆分配 | `new T;` / `new T(实参);` / `new T(实参);` | 分配一律写出类型 |
+| 堆分配 | `new T` / `new T(实参)` / `new[n]` | 单对象写出类型；数组元素类型由声明或赋值目标推导 |
 | 集合字面量 | `[a, b]`（List）、`{a, b}`（Set）、`{k: v}`（Map） | 空 `[]` / `{}` 需要上下文 |
 | match 分支 | `模式 => { … }`，`_` 兜底，`|` 连接备选模式 | 不穿透、不写 `break` |
 | 值表达式 | `if` / `match` / `loop` / 块可作表达式，用 `yield` 出值 | `yield (a, b);` 产生元组 |
-| 宏定义 | `$macro 名字(组…) @!macrobody … $end_macro` | 参数组分 `()` `[]` `{}` 三种，组内可写变长片段 |
+| 宏定义 | `$macro 名字(组…)` 换行后写宏体，以 `$end_macro` 结束 | 参数组分 `()` `[]` `{}` 三种，组内可写变长片段；内部宏体标记由工具链生成 |
 | 编译期指令 | `#NoAddReplace`、`#NoRightAdd` | 写在类型声明前 |
 | 生命周期契约 | `#borrow(out, in)`、`#borrow(out, [in1, in2, in3])`、`#static(a)`、`#borrow(#ret, [a, b])` | 写在函数声明前，可连写多条；名字指本函数的形参与局部变量 |
 
@@ -143,4 +143,4 @@ sh check.sh                                 # 样例输出与错误位置
 - 诊断码的含义与归类见[错误速查](book/A-常见错误速查.md)与[编译器安全](34-compiler-safety.md)；
   文案措辞不冻结。
 - 标准库 API、模块划分与重载集合见 [API 索引](library/README.md)，属于库契约，不是语法契约。
-- 生成的四元式与 VM 指令序列见[执行方式与部署边界](26-execution-delivery.md)；优化会改变指令数量与临时名。
+- 普通 run／aot 从检查后的 AST 直接生成 LLVM 代码，优化由 LLVM 执行；四元式保留独立导出与兼容输入。执行路径见[执行方式与部署边界](26-execution-delivery.md)，内部指令数量与临时名不属于源码语法契约。

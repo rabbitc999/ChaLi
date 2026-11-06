@@ -14,7 +14,7 @@ import std::collections;
 
 ## 公共约定与错误边界
 
-Deque、Queue、Channel 基于 List；Channel 是当前执行上下文的值队列，不是跨线程消息系统。FixedVector 与 RingBuffer 的容量固定，满时 push 返回 false；空时 pop/receive 返回 None。索引从 0 开始。Deque、Queue、Stack 和 RingBuffer 的查看方法返回独立值，空容器返回 None。Deque.to_list 按队首到队尾复制，RingBuffer.clear 保留配置容量。
+Deque、Queue、Channel 基于 List；Channel 是当前执行上下文的值队列，不是跨线程消息系统。FixedVector 与 RingBuffer 的容量固定，满时 push 返回 false；空时 pop/receive 返回 None。索引从 0 开始。Deque、Queue、Stack 和 RingBuffer 的查看方法返回独立值，空容器返回 None。Deque.toList 按队首到队尾复制，RingBuffer.clear 保留配置容量。
 
 ## 参考代码
 
@@ -155,9 +155,9 @@ void main() {
 | [Deque::popFront](#api-4) | `Option<T> popFront()` |
 | [Deque::index](#api-5) | `T index(int64 key)` |
 | [Deque::iterator](#api-6) | `Option<T> iterator(int64 index)` |
-| [Deque::peek_front](#api-7) | `Option<T> peek_front()` |
-| [Deque::peek_back](#api-8) | `Option<T> peek_back()` |
-| [Deque::to_list](#api-9) | `List<T> to_list()` |
+| [Deque::peekFront](#api-7) | `Option<T> peekFront()` |
+| [Deque::peekBack](#api-8) | `Option<T> peekBack()` |
+| [Deque::toList](#api-9) | `List<T> toList()` |
 | [Deque::len](#api-10) | `int64 len()` |
 | [Deque::isEmpty](#api-11) | `bool isEmpty()` |
 | [Deque::clear](#api-12) | `void clear()` |
@@ -166,7 +166,7 @@ void main() {
 | [Queue::push](#api-15) | `void push(T value)` |
 | [Queue::pop](#api-16) | `Option<T> pop()` |
 | [Queue::peek](#api-17) | `Option<T> peek()` |
-| [Queue::peek_back](#api-18) | `Option<T> peek_back()` |
+| [Queue::peekBack](#api-18) | `Option<T> peekBack()` |
 | [Queue::iterator](#api-19) | `Option<T> iterator(int64 index)` |
 | [Queue::len](#api-20) | `int64 len()` |
 | [Queue::isEmpty](#api-21) | `bool isEmpty()` |
@@ -176,7 +176,7 @@ void main() {
 | [Stack::push](#api-25) | `void push(T value)` |
 | [Stack::pop](#api-26) | `Option<T> pop()` |
 | [Stack::peek](#api-27) | `Option<T> peek()` |
-| [Stack::peek_bottom](#api-28) | `Option<T> peek_bottom()` |
+| [Stack::peekBottom](#api-28) | `Option<T> peekBottom()` |
 | [Stack::iterator](#api-29) | `Option<T> iterator(int64 index)` |
 | [Stack::len](#api-30) | `int64 len()` |
 | [Stack::isEmpty](#api-31) | `bool isEmpty()` |
@@ -188,8 +188,8 @@ void main() {
 | [RingBuffer::iterator](#api-37) | `Option<T> iterator(int64 index)` |
 | [RingBuffer::len](#api-38) | `int64 len()` |
 | [RingBuffer::available](#api-39) | `int64 available()` |
-| [RingBuffer::is_empty](#api-40) | `bool is_empty()` |
-| [RingBuffer::is_full](#api-41) | `bool is_full()` |
+| [RingBuffer::isEmpty](#api-40) | `bool isEmpty()` |
+| [RingBuffer::isFull](#api-41) | `bool isFull()` |
 | [RingBuffer::peek](#api-42) | `Option<T> peek()` |
 | [RingBuffer::clear](#api-43) | `void clear()` |
 | [RingBuffer::drop](#api-44) | `void drop()` |
@@ -485,12 +485,12 @@ obj.iterator(index);
 
 <a id="api-7"></a>
 
-### Deque::peek_front（8）
+### Deque::peekFront（8）
 
 **声明**
 
 ```chali
-Option<T> peek_front();
+Option<T> peekFront();
 ```
 
 **行为**
@@ -512,7 +512,7 @@ Option<T> peek_front();
 **调用形式**
 
 ```chali
-obj.peek_front();
+obj.peekFront();
 ```
 
 **源码**：[source/std/collections.chl:32](../../source/std/collections.chl#L32)。
@@ -521,12 +521,12 @@ obj.peek_front();
 
 <a id="api-8"></a>
 
-### Deque::peek_back（9）
+### Deque::peekBack（9）
 
 **声明**
 
 ```chali
-Option<T> peek_back();
+Option<T> peekBack();
 ```
 
 **行为**
@@ -548,7 +548,7 @@ Option<T> peek_back();
 **调用形式**
 
 ```chali
-obj.peek_back();
+obj.peekBack();
 ```
 
 **源码**：[source/std/collections.chl:34](../../source/std/collections.chl#L34)。
@@ -557,12 +557,12 @@ obj.peek_back();
 
 <a id="api-9"></a>
 
-### Deque::to_list（10）
+### Deque::toList（10）
 
 **声明**
 
 ```chali
-List<T> to_list();
+List<T> toList();
 ```
 
 **行为**
@@ -584,7 +584,7 @@ List<T> to_list();
 **调用形式**
 
 ```chali
-obj.to_list();
+obj.toList();
 ```
 
 **源码**：[source/std/collections.chl:36](../../source/std/collections.chl#L36)。
@@ -899,12 +899,12 @@ obj.peek();
 
 <a id="api-18"></a>
 
-### Queue::peek_back（19）
+### Queue::peekBack（19）
 
 **声明**
 
 ```chali
-Option<T> peek_back();
+Option<T> peekBack();
 ```
 
 **行为**
@@ -926,7 +926,7 @@ Option<T> peek_back();
 **调用形式**
 
 ```chali
-obj.peek_back();
+obj.peekBack();
 ```
 
 **源码**：[source/std/collections.chl:69](../../source/std/collections.chl#L69)。
@@ -1281,12 +1281,12 @@ obj.peek();
 
 <a id="api-28"></a>
 
-### Stack::peek_bottom（29）
+### Stack::peekBottom（29）
 
 **声明**
 
 ```chali
-Option<T> peek_bottom();
+Option<T> peekBottom();
 ```
 
 **行为**
@@ -1308,7 +1308,7 @@ Option<T> peek_bottom();
 **调用形式**
 
 ```chali
-obj.peek_bottom();
+obj.peekBottom();
 ```
 
 **源码**：[source/std/collections.chl:94](../../source/std/collections.chl#L94)。
@@ -1743,15 +1743,17 @@ obj.available();
 
 <a id="api-40"></a>
 
-### RingBuffer::is_empty（41）
+### RingBuffer::isEmpty（41）
 
 **声明**
 
 ```chali
-bool is_empty();
+bool isEmpty();
 ```
 
 **行为**
+
+判断 Any 是否为空盒子，不公开内部执行期标签。
 
 判断缓冲是否为空。
 
@@ -1761,7 +1763,7 @@ bool is_empty();
 
 **返回值**
 
-`bool`。判断缓冲是否为空。
+`bool`。判断 Any 是否为空盒子，不公开内部执行期标签。
 
 **错误与边界**
 
@@ -1770,7 +1772,7 @@ bool is_empty();
 **调用形式**
 
 ```chali
-obj.is_empty();
+obj.isEmpty();
 ```
 
 **源码**：[source/std/collections.chl:123](../../source/std/collections.chl#L123)。
@@ -1779,12 +1781,12 @@ obj.is_empty();
 
 <a id="api-41"></a>
 
-### RingBuffer::is_full（42）
+### RingBuffer::isFull（42）
 
 **声明**
 
 ```chali
-bool is_full();
+bool isFull();
 ```
 
 **行为**
@@ -1806,7 +1808,7 @@ bool is_full();
 **调用形式**
 
 ```chali
-obj.is_full();
+obj.isFull();
 ```
 
 **源码**：[source/std/collections.chl:125](../../source/std/collections.chl#L125)。

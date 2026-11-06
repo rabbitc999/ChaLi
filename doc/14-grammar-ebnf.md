@@ -683,8 +683,14 @@ decl_stmt = "let", "(", destructure_items, ")", "=", expr, ";"
     | band_expr, "&", name_token, "=", expr, ";"
     | band_expr, "&", name_token, "=", expr, ",", declarator_list, ";"
     | type, declarator_list, ";"
+    | array_type, declarator_list, ";"
+    | postfix, "[", "]", declarator_list, ";"
+    | postfix, "[", "]", "&", declarator_list, ";"
+    | postfix, "[", "]", "const", "&", declarator_list, ";"
+    | postfix, "[", "]", "mut", "&", declarator_list, ";"
     | ptr_type, declarator_list, ";"
     | "const", type, declarator_list, ";"
+    | "const", array_type, declarator_list, ";"
     | "const", ptr_type, declarator_list, ";"
     | "let", declarator_list, ";" ;
 
@@ -821,7 +827,6 @@ postfix = postfix, "@!<", closure_type_arguments, "@!>"
     | postfix, "[", expr, ":", expr, "]"
     | postfix, "[", expr, ":", "]"
     | postfix, ".", name_token
-    | postfix, ".", NUMBER
     | postfix, "->", name_token
     | postfix, ".", "drop"
     | postfix, "->", "drop"

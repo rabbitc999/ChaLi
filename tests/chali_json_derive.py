@@ -56,7 +56,7 @@ void main(){Numbers value;value.small=(float32)1.5;value.large=std::math::acos(2
 void main(){Node root;root.value=1;Node child;child.value=2;root.children.push(child);let copied=Node::fromJson(root.toJson().unwrap()).unwrap();assert(copied.value==1&&copied.children.at(0).value==2);}''', None, []),
         ('duplicate_name', 'struct Data{@std::json::Field("same") int64 left;@std::json::Field("same") int64 right; $std::json::Json<Data>(toJson, fromJson); }void main(){}', ['重命名发生冲突'], []),
         ('duplicate_annotation', 'struct Data{@std::json::Field @std::json::Field int64 value; $std::json::Json<Data>(toJson, fromJson); }void main(){}', ['只能使用一次'], []),
-        ('control_name', 'struct Data{@std::json::Field("bad\\n") int64 value; $std::json::Json<Data>(toJson, fromJson); }void main(){}', ['控制字节'], []),
+        ('controlName', 'struct Data{@std::json::Field("bad\\n") int64 value; $std::json::Json<Data>(toJson, fromJson); }void main(){}', ['控制字节'], []),
         ('annotation_function', '@std::json::Field\nvoid main(){}', ['只能用于派生 Json'], []),
         ('annotation_owner', 'struct Data{@std::json::Field int64 value;}void main(){}', ['只能用于派生 Json'], []),
         ('annotation_static', 'struct Data{@std::json::Field static int64 value; $std::json::Json<Data>(toJson, fromJson); }void main(){}', ['只能用于派生 Json'], []),

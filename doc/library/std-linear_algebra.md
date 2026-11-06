@@ -258,9 +258,9 @@ LU glue solve OK
 | [Matrix::leftMul](#api-47) | `Matrix<T> leftMul(Matrix<T> right)` |
 | [Matrix::leftMul](#api-48) | `Vector<T> leftMul(Vector<T> right)` |
 | [Matrix::leftMul](#api-49) | `Matrix<T> leftMul(T right)` |
-| [lu_decompose](#api-50) | `LuFactorization lu_decompose(Matrix<float64> input)` |
-| [lur_decompose](#api-51) | `LuFactorization lur_decompose(Matrix<float64> input)` |
-| [symmetric_eigen](#api-52) | `EigenDecomposition symmetric_eigen(Matrix<float64> input)` |
+| [luDecompose](#api-50) | `LuFactorization luDecompose(Matrix<float64> input)` |
+| [lurDecompose](#api-51) | `LuFactorization lurDecompose(Matrix<float64> input)` |
+| [symmetricEigen](#api-52) | `EigenDecomposition symmetricEigen(Matrix<float64> input)` |
 | [svd](#api-53) | `SingularValueDecomposition svd(Matrix<float64> input)` |
 | [jordan2](#api-54) | `JordanDecomposition jordan2(Matrix<float64> input)` |
 | [diagonalize2](#api-55) | `JordanDecomposition diagonalize2(Matrix<float64> input)` |
@@ -2185,12 +2185,12 @@ obj.leftMul(right);
 
 <a id="api-50"></a>
 
-### lu_decompose（51）
+### luDecompose（51）
 
 **声明**
 
 ```chali
-LuFactorization lu_decompose(Matrix<float64> input);
+LuFactorization luDecompose(Matrix<float64> input);
 ```
 
 **行为**
@@ -2214,7 +2214,7 @@ LuFactorization lu_decompose(Matrix<float64> input);
 **调用形式**
 
 ```chali
-std::linear_algebra::lu_decompose(input);
+std::linear_algebra::luDecompose(input);
 ```
 
 **源码**：[source/std/linear_algebra.chl:293](../../source/std/linear_algebra.chl#L293)。
@@ -2223,12 +2223,12 @@ std::linear_algebra::lu_decompose(input);
 
 <a id="api-51"></a>
 
-### lur_decompose（52）
+### lurDecompose（52）
 
 **声明**
 
 ```chali
-LuFactorization lur_decompose(Matrix<float64> input);
+LuFactorization lurDecompose(Matrix<float64> input);
 ```
 
 **行为**
@@ -2252,7 +2252,7 @@ LuFactorization lur_decompose(Matrix<float64> input);
 **调用形式**
 
 ```chali
-std::linear_algebra::lur_decompose(input);
+std::linear_algebra::lurDecompose(input);
 ```
 
 **源码**：[source/std/linear_algebra.chl:301](../../source/std/linear_algebra.chl#L301)。
@@ -2261,12 +2261,12 @@ std::linear_algebra::lur_decompose(input);
 
 <a id="api-52"></a>
 
-### symmetric_eigen（53）
+### symmetricEigen（53）
 
 **声明**
 
 ```chali
-EigenDecomposition symmetric_eigen(Matrix<float64> input);
+EigenDecomposition symmetricEigen(Matrix<float64> input);
 ```
 
 **行为**
@@ -2290,7 +2290,7 @@ EigenDecomposition symmetric_eigen(Matrix<float64> input);
 **调用形式**
 
 ```chali
-std::linear_algebra::symmetric_eigen(input);
+std::linear_algebra::symmetricEigen(input);
 ```
 
 **源码**：[source/std/linear_algebra.chl:314](../../source/std/linear_algebra.chl#L314)。

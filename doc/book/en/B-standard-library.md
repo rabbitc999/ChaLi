@@ -180,9 +180,9 @@ void main() {
 ## B.7 Practical library operations
 
 - Import `std::math` for the module constants `std::math::PI` and `std::math::E`. Use `std::math::pi(digits)` for a high-precision result.
-- `std::date_time::parse_offset` reads a fixed UTC offset. `utc()` converts it to the same instant in UTC.
-- `std::iter::group_by` consumes a finite cursor and groups values by key. `chunk` lazily retains the final short block. `zip` stops at the shorter input.
-- `std::log::format_record` creates a structured JSON line. `write_record` sends it to standard error.
-- `std::io::copy_to` copies by blocks. `walk_directory` lists descendants. Pair `create_temp_file` with `replace_file` for same-filesystem replacement.
+- `std::date_time::parseOffset` reads a fixed UTC offset. `utc()` converts it to the same instant in UTC.
+- `std::iter::groupBy` consumes a finite cursor and groups values by key. `chunk` lazily retains the final short block. `zip` stops at the shorter input.
+- `std::log::formatRecord` creates a structured JSON line. `writeRecord` sends it to standard error.
+- `std::io::copyTo` copies by blocks. `walkDirectory` lists descendants. Pair `createTempFile` with `replaceFile` for same-filesystem replacement.
 
 Build the desktop, audio, XML, cryptography and streaming HTTP extensions on demand. See the [optional host libraries](../../en/45-optional-libraries.md) for build commands, complete programs and outputs.

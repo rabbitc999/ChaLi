@@ -53,6 +53,6 @@ void main() {
     }
     AvlTree independent = tree.copy();
     tree.clear();
-    assert(tree.is_empty() && independent.len() > 0);
+    assert(tree.isEmpty() && independent.len() > 0);
     println("AVL rotations and 1500 mixed operations OK");
 }

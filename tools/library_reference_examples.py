@@ -1,5 +1,9 @@
 """库参考页对应的完整参考程序；复用正式样例，防止文档代码与测试代码分叉。"""
 EXAMPLES = {
+    'std::gui':'example/desktop-gui/demo.chl',
+    'std::audio':'example/desktop-gui/audio.chl',
+    'std::xml':'example/xml/demo.chl',
+    'std::crypto':'example/crypto/demo.chl',
     'std::array':'example/samples/dynamic_array.chl',
     'std::cas':'example/samples/cas.chl',
     'std::encoding':'example/samples/std_encoding.chl',

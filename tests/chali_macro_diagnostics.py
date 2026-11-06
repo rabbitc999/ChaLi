@@ -37,7 +37,7 @@ def main():
         ('named_string', 'void main(){const String text="ab";$compile_assert(text=="a"+"b","named");}',None),
         ('named_message', 'void main(){const String message="named failure";$compile_error(message);}', ['named failure']),
     ])
-    cases.append(('expression', 'bool echo(bool value){return value;}\n$macro VALUE() -> expr\necho($compile_assert(true))\n$end_macro\nvoid main(){assert($VALUE());let pair=($compile_assert(true),false);assert(pair.0 && !pair.1);}',None))
+    cases.append(('expression', 'bool echo(bool value){return value;}\n$macro VALUE() -> expr\necho($compile_assert(true))\n$end_macro\nvoid main(){assert($VALUE());let pair=($compile_assert(true),false);assert(pair[0] && !pair[1]);}',None))
     example_prefix=(ROOT/'example/reflection/macro_fields.chl').read_text(encoding='utf-8').split('void main()',1)[0]
     cases.extend([
         ('json_unsupported',example_prefix+'struct Unsupported{List<int64> values;}void main(){Unsupported value;$JSON_FIELDS<Unsupported>(value);}', ['JSON 示例不支持类型','Unsupported.values']),

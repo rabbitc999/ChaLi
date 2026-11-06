@@ -6,6 +6,8 @@
 
 内嵌编译器使用 Miniz 3.1.2 的 Deflate 解压器。
 
+内嵌原生服务的 libsodium 使用 ISC 许可证，完整声明随插件置于 `third-party/runtime/libsodium-LICENSE.txt`。raylib、raygui、Expat 及其他运行时组件的完整许可证也保存在 `third-party/runtime/`。
+
 来源：https://github.com/richgel999/miniz/tree/3.1.2
 
 ```text

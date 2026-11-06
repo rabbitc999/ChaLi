@@ -55,7 +55,7 @@ struct Iter<T> : Iterator<T> {
         if (!self.buffered || self.pending.isNone()) {
             return hint;
         }
-        Option<int64> upper = hint.1;
+        Option<int64> upper = hint[1];
         if (upper.isValue()) {
             if (upper.unwrap() == 9223372036854775807) {
                 upper = Option<int64>::None;
@@ -64,7 +64,7 @@ struct Iter<T> : Iterator<T> {
                 upper = Option<int64>::Value(upper.unwrap() + 1);
             }
         }
-        int64 lower = hint.0;
+        int64 lower = hint[0];
         if (lower < 9223372036854775807) {
             lower = lower + 1;
         }
@@ -431,7 +431,7 @@ struct IterFilterState<T> : IterNext<T> {
      */
     (int64, Option<int64>) sizeHint() {
         let hint = self.source.sizeHint();
-        return (0, hint.1);
+        return (0, hint[1]);
     }
 };
 
@@ -476,7 +476,7 @@ struct IterFilterMapState<T,U> : IterNext<U> {
      */
     (int64, Option<int64>) sizeHint() {
         let hint = self.source.sizeHint();
-        return (0, hint.1);
+        return (0, hint[1]);
     }
 };
 
@@ -524,7 +524,7 @@ struct IterMapWhileState<T,U> : IterNext<U> {
      */
     (int64, Option<int64>) sizeHint() {
         let hint = self.source.sizeHint();
-        return (0, hint.1);
+        return (0, hint[1]);
     }
 };
 
@@ -572,7 +572,7 @@ struct IterTakeWhileState<T> : IterNext<T> {
      */
     (int64, Option<int64>) sizeHint() {
         let hint = self.source.sizeHint();
-        return (0, hint.1);
+        return (0, hint[1]);
     }
 };
 
@@ -618,7 +618,7 @@ struct IterSkipWhileState<T> : IterNext<T> {
      */
     (int64, Option<int64>) sizeHint() {
         let hint = self.source.sizeHint();
-        return (0, hint.1);
+        return (0, hint[1]);
     }
 };
 
@@ -658,13 +658,13 @@ struct IterTakeState<T> : IterNext<T> {
      */
     (int64, Option<int64>) sizeHint() {
         let hint = self.source.sizeHint();
-        int64 lower = hint.0;
+        int64 lower = hint[0];
         if (lower > self.remaining) {
             lower = self.remaining;
         }
         int64 upper = self.remaining;
-        if ((hint.1).isValue() && (hint.1).unwrap() < upper) {
-            upper = (hint.1).unwrap();
+        if ((hint[1]).isValue() && (hint[1]).unwrap() < upper) {
+            upper = (hint[1]).unwrap();
         }
         return (lower, Option<int64>::Value(upper));
     }
@@ -710,11 +710,11 @@ struct IterSkipState<T> : IterNext<T> {
      */
     (int64, Option<int64>) sizeHint() {
         let hint = self.source.sizeHint();
-        int64 lower = hint.0 - self.remaining;
+        int64 lower = hint[0] - self.remaining;
         if (lower < 0) {
             lower = 0;
         }
-        Option<int64> upper = hint.1;
+        Option<int64> upper = hint[1];
         if (upper.isValue()) {
             int64 value = upper.unwrap() - self.remaining;
             if (value < 0) {
@@ -1051,7 +1051,7 @@ struct IterScanState<T,A,U> : IterNext<U> {
      */
     (int64, Option<int64>) sizeHint() {
         let hint = self.source.sizeHint();
-        return (0, hint.1);
+        return (0, hint[1]);
     }
 };
 
@@ -1653,7 +1653,7 @@ std::core::Any __iterBox<S>(S state);
 
 
 /** 按键分组，保留每组中元素的来源顺序。消费有限游标。 */
-Map<K,List<T>> group_by<T,K>(Iter<T> source, K fn(T) key_of) {
+Map<K,List<T>> groupBy<T,K>(Iter<T> source, K fn(T) key_of) {
     Map<K,int64> positions;
     List<K> keys;
     List<int64> heads;

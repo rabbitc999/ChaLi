@@ -11,7 +11,7 @@ void main(List<String> args) {
         return;
     }
     let client = opened.take();
-    let result = client.download_to(args[0], args[1], 5000, std::net::http::keep_going);
+    let result = client.downloadTo(args[0], args[1], 5000, std::net::http::keepGoing);
     client.close();
     if (result.isErr()) {
         println("{}", result.error().toString());

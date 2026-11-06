@@ -14,7 +14,7 @@ import std::tree;
 
 ## 公共约定与错误边界
 
-BinarySearchTree 是集合语义的二叉搜索树，重复插入返回 false，中序即升序；删除双孩子节点取中序后继替换，被删节点槽回收复用。RedBlackTree 使用 ChaLi 持久红黑节点，insert/remove 原地旋转及变色修复；重复插入或删除不存在的键返回 false，validate 校验排序、父指针、根颜色、红节点约束及黑高，删除节点槽回收复用。MinHeap 是最小二叉堆，可当优先队列用，相等键的出堆顺序不保证插入序。AvlTree 保存唯一 int64 键，插入、删除与上下界查询沿树高路径处理。lower_bound 返回大于等于输入的首键，upper_bound 返回严格大于输入的首键；无匹配与空树极值返回 None。GeneralTree 用"第一个孩子 / 下一个兄弟"存储，toBinary 与 fromBinary 按"左孩子 = 第一个孩子、右孩子 = 下一个兄弟"互转，转换本身不排序、不保证 BST 有序性。树高按节点数计（单节点 1，空树 0）；树与堆由 ChaLi 结构体独立拥有节点数组，普通复制深复制；snapshot 显式导出独立节点或堆数组，遍历只导出结果。树与堆算法均实现在 std::tree 语言源码中，不注册宿主树算法。
+BinarySearchTree 是集合语义的二叉搜索树，重复插入返回 false，中序即升序；删除双孩子节点取中序后继替换，被删节点槽回收复用。RedBlackTree 使用 ChaLi 持久红黑节点，insert/remove 原地旋转及变色修复；重复插入或删除不存在的键返回 false，validate 校验排序、父指针、根颜色、红节点约束及黑高，删除节点槽回收复用。MinHeap 是最小二叉堆，可当优先队列用，相等键的出堆顺序不保证插入序。AvlTree 保存唯一 int64 键，插入、删除与上下界查询沿树高路径处理。lowerBound 返回大于等于输入的首键，upperBound 返回严格大于输入的首键；无匹配与空树极值返回 None。GeneralTree 用"第一个孩子 / 下一个兄弟"存储，toBinary 与 fromBinary 按"左孩子 = 第一个孩子、右孩子 = 下一个兄弟"互转，转换本身不排序、不保证 BST 有序性。树高按节点数计（单节点 1，空树 0）；树与堆由 ChaLi 结构体独立拥有节点数组，普通复制深复制；snapshot 显式导出独立节点或堆数组，遍历只导出结果。树与堆算法均实现在 std::tree 语言源码中，不注册宿主树算法。
 
 ## 参考代码
 
@@ -79,7 +79,7 @@ BinarySearchTree 是集合语义的二叉搜索树，重复插入返回 false，
 | [AvlTree::create](#api-26) | `static AvlTree create()` |
 | [AvlTree::copy](#api-27) | `AvlTree copy()` |
 | [AvlTree::len](#api-28) | `int64 len()` |
-| [AvlTree::is_empty](#api-29) | `bool is_empty()` |
+| [AvlTree::isEmpty](#api-29) | `bool isEmpty()` |
 | [AvlTree::contains](#api-30) | `bool contains(int64 key)` |
 | [AvlTree::clear](#api-31) | `void clear()` |
 | [AvlTree::height](#api-32) | `int64 height()` |
@@ -87,10 +87,10 @@ BinarySearchTree 是集合语义的二叉搜索树，重复插入返回 false，
 | [AvlTree::snapshot](#api-34) | `TreeSnapshot snapshot()` |
 | [AvlTree::min](#api-35) | `Option<int64> min()` |
 | [AvlTree::max](#api-36) | `Option<int64> max()` |
-| [AvlTree::lower_bound](#api-37) | `Option<int64> lower_bound(int64 key)` |
-| [AvlTree::upper_bound](#api-38) | `Option<int64> upper_bound(int64 key)` |
-| [AvlTree::pop_min](#api-39) | `Option<int64> pop_min()` |
-| [AvlTree::pop_max](#api-40) | `Option<int64> pop_max()` |
+| [AvlTree::lowerBound](#api-37) | `Option<int64> lowerBound(int64 key)` |
+| [AvlTree::upperBound](#api-38) | `Option<int64> upperBound(int64 key)` |
+| [AvlTree::popMin](#api-39) | `Option<int64> popMin()` |
+| [AvlTree::popMax](#api-40) | `Option<int64> popMax()` |
 | [AvlTree::insert](#api-41) | `bool insert(int64 key)` |
 | [AvlTree::remove](#api-42) | `bool remove(int64 key)` |
 | [MinHeap::create](#api-43) | `static MinHeap create()` |
@@ -1160,15 +1160,17 @@ obj.len();
 
 <a id="api-29"></a>
 
-### AvlTree::is_empty（30）
+### AvlTree::isEmpty（30）
 
 **声明**
 
 ```chali
-bool is_empty();
+bool isEmpty();
 ```
 
 **行为**
+
+判断 Any 是否为空盒子，不公开内部执行期标签。
 
 判断树是否为空。
 
@@ -1178,7 +1180,7 @@ bool is_empty();
 
 **返回值**
 
-`bool`。判断树是否为空。
+`bool`。判断 Any 是否为空盒子，不公开内部执行期标签。
 
 **错误与边界**
 
@@ -1187,7 +1189,7 @@ bool is_empty();
 **调用形式**
 
 ```chali
-obj.is_empty();
+obj.isEmpty();
 ```
 
 **源码**：[source/std/tree.chl:249](../../source/std/tree.chl#L249)。
@@ -1442,12 +1444,12 @@ obj.max();
 
 <a id="api-37"></a>
 
-### AvlTree::lower_bound（38）
+### AvlTree::lowerBound（38）
 
 **声明**
 
 ```chali
-Option<int64> lower_bound(int64 key);
+Option<int64> lowerBound(int64 key);
 ```
 
 **行为**
@@ -1471,19 +1473,19 @@ Option<int64> lower_bound(int64 key);
 **调用形式**
 
 ```chali
-obj.lower_bound(key);
+obj.lowerBound(key);
 ```
 
 **源码**：[source/std/tree.chl:268](../../source/std/tree.chl#L268)。
 
 <a id="api-38"></a>
 
-### AvlTree::upper_bound（39）
+### AvlTree::upperBound（39）
 
 **声明**
 
 ```chali
-Option<int64> upper_bound(int64 key);
+Option<int64> upperBound(int64 key);
 ```
 
 **行为**
@@ -1507,19 +1509,19 @@ Option<int64> upper_bound(int64 key);
 **调用形式**
 
 ```chali
-obj.upper_bound(key);
+obj.upperBound(key);
 ```
 
 **源码**：[source/std/tree.chl:270](../../source/std/tree.chl#L270)。
 
 <a id="api-39"></a>
 
-### AvlTree::pop_min（40）
+### AvlTree::popMin（40）
 
 **声明**
 
 ```chali
-Option<int64> pop_min();
+Option<int64> popMin();
 ```
 
 **行为**
@@ -1541,19 +1543,19 @@ Option<int64> pop_min();
 **调用形式**
 
 ```chali
-obj.pop_min();
+obj.popMin();
 ```
 
 **源码**：[source/std/tree.chl:272](../../source/std/tree.chl#L272)。
 
 <a id="api-40"></a>
 
-### AvlTree::pop_max（41）
+### AvlTree::popMax（41）
 
 **声明**
 
 ```chali
-Option<int64> pop_max();
+Option<int64> popMax();
 ```
 
 **行为**
@@ -1575,7 +1577,7 @@ Option<int64> pop_max();
 **调用形式**
 
 ```chali
-obj.pop_max();
+obj.popMax();
 ```
 
 **源码**：[source/std/tree.chl:274](../../source/std/tree.chl#L274)。

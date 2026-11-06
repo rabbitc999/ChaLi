@@ -239,6 +239,20 @@ OVERRIDES.update({
 def symbol_description(row):
     """返回类型或字段的实际含义；缺失人工说明时让生成门禁失败。"""
     name, owner, kind = row['name'], row['owner'], row['kind']
+    if row.get('module') == 'std::gui':
+        native_types = {'EventKind':'窗口、输入、控件和自定义事件的分类。',
+                        'Event':'独立拥有的事件快照；控件 code 保存组合标志。',
+                        'Rect':'使用逻辑像素坐标的矩形。', 'Point':'位置、偏移或二维尺寸。',
+                        'Widget':'由窗口拥有的控件句柄与同步回调模型。',
+                        'Texture':'由窗口拥有的 GPU 纹理句柄。',
+                        'EventBus':'同一线程中的事件订阅与延迟派发队列。',
+                        'CustomWidget':'持有绘图、命中检测与输入回调的自绘控件。'}
+        if kind in ('struct','enum','interface','opcode'): return native_types[name]
+        fields = {'source':'事件来源控件的身份编号。', 'code':'事件码；控件事件为组合标志，窗口输入为键码或按钮号。',
+                  'x':'逻辑像素横坐标。', 'y':'逻辑像素纵坐标。', 'delta_x':'横向移动或滚轮增量。',
+                  'delta_y':'纵向移动或滚轮增量。', 'name':'事件名称。', 'text':'独立拥有的事件文本。',
+                  'value':'事件携带的浮点值。', 'width':'逻辑像素宽度。', 'height':'逻辑像素高度。'}
+        if name in fields: return fields[name]
     if row.get('module')=='std::concurrency' and name=='Channel' and not owner: return '跨线程有界传值通道；可复制句柄，显式关闭。'
     if kind in ('struct','enum','interface','opcode'):
         if name in TYPE_DESCRIPTIONS:

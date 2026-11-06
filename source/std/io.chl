@@ -314,7 +314,7 @@ Result<int64,std::core::Error> renamePath(String from, String to) {
 
 
 /** 从当前读位置复制到目标流，分块处理，成功返回总字节数。两端保持打开。 */
-Result<int64,Error> copy_to(FileStream mut& source, FileStream mut& destination) {
+Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination) {
     int64 total = 0;
     while (true) {
         List<uint8> block = source.readBytes(65536)?;
@@ -333,21 +333,21 @@ void __createTempFile(String path, IoReply mut& reply);
 void __replaceFile(String from, String to, IoReply mut& reply);
 
 /** 递归列出目录后代，按 UTF-8 路径排序，不递归进入符号链接。 */
-Result<List<String>,Error> walk_directory(String path) {
+Result<List<String>,Error> walkDirectory(String path) {
     IoReply reply; __walkDirectory(path,&reply);
     if (len(reply.error)>0) { return Result<List<String>,Error>::Err(IoError::ReadFailed(reply.error)); }
     return Result<List<String>,Error>::Ok(reply.paths);
 }
 
 /** 在目录内独占创建空临时文件，成功后调用者拥有路径。 */
-Result<String,Error> create_temp_file(String path) {
+Result<String,Error> createTempFile(String path) {
     IoReply reply; __createTempFile(path,&reply);
     if (len(reply.error)>0) { return Result<String,Error>::Err(IoError::WriteFailed(reply.error)); }
     return Result<String,Error>::Ok(reply.paths[0]);
 }
 
 /** 以同一文件系统内的普通文件原子替换目标，成功后来源路径消失。 */
-Result<int64,Error> replace_file(String from, String to) {
+Result<int64,Error> replaceFile(String from, String to) {
     IoReply reply; __replaceFile(from,to,&reply);
     if (len(reply.error)>0) { return Result<int64,Error>::Err(IoError::WriteFailed(reply.error)); }
     return Result<int64,Error>::Ok(0);

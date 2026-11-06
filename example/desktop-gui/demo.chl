@@ -1,27 +1,27 @@
 import std::gui;
 
 void main() {
-    assert(std::gui::open_window(560, 380, "ChaLi desktop", 1));
+    assert(std::gui::openWindow(560, 380, "ChaLi desktop", 1));
     let count = std::gui::button("Count");
     let quit = std::gui::button("Close");
-    let enabled = std::gui::check_box("Enable counter");
-    let input = std::gui::text_box("Edit this text");
+    let enabled = std::gui::checkBox("Enable counter");
+    let input = std::gui::textBox("Edit this text");
     let slider = std::gui::slider("Value");
-    let progress = std::gui::progress_bar("");
-    assert(enabled.set_checked(true));
-    assert(slider.set_range(0, 100)); assert(progress.set_range(0, 100));
+    let progress = std::gui::progressBar("");
+    assert(enabled.setChecked(true));
+    assert(slider.setRange(0, 100)); assert(progress.setRange(0, 100));
     int64 clicks = 0;
-    count.on_click(void fn mut(std::gui::Event event) { clicks += 1; });
-    quit.on_click(void fn(std::gui::Event event) { std::gui::request_close(); });
+    count.onClick(void fn mut(std::gui::Event event) { clicks += 1; });
+    quit.onClick(void fn(std::gui::Event event) { std::gui::requestClose(); });
     std::gui::run(void fn mut() {
         std::gui::label((int32)24, (int32)20, (int32)500, (int32)28, "Clicks: " + clicks.toString());
         enabled.draw(std::gui::Rect::at(24, 64, 24, 24));
-        count.set_enabled(enabled.checked());
+        count.setEnabled(enabled.checked());
         count.draw(std::gui::Rect::at(24, 108, 152, 36));
         quit.draw(std::gui::Rect::at(200, 108, 152, 36));
         input.draw(std::gui::Rect::at(24, 168, 328, 32));
         slider.draw(std::gui::Rect::at(80, 228, 272, 24));
-        progress.set_value(slider.value());
+        progress.setValue(slider.value());
         progress.draw(std::gui::Rect::at(24, 284, 328, 24));
     });
     count.close(); quit.close(); enabled.close(); input.close(); slider.close(); progress.close();

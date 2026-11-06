@@ -301,6 +301,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     # 关键字三处对齐（补全表 / 文法登记 / 语法高亮），谁加了关键字忘了同步就红。
     run_step "运行编码、CSV、UTC 日期的 Python 交叉验证" "$PYTHON" tests/chali_std_data.py --chali "$CHALI_BIN"
     run_step "检查补全关键字与高亮关键字一致" "$PYTHON" tools/check_keywords.py
+    run_step "核对标准库公开命名" "$PYTHON" tools/check_stdlib_naming.py
 fi
 
 # ---- 样例回归已在快速门禁跑过；--full 的扩展测试继续 ----
@@ -361,6 +362,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行 JSON 成员宏和字段冲突回归" "$PYTHON" tests/chali_json_derive.py --chali "$CHALI_BIN"
     run_step "运行成员宏协议身份和资源回归" "$PYTHON" tests/chali_derive_contracts.py --chali "$CHALI_BIN"
     run_step "运行循环标签与退出清理回归" "$PYTHON" tests/chali_loop_labels.py --chali "$CHALI_BIN"
+    run_step "运行双写法数组声明与所有权回归" "$PYTHON" tests/chali_runtime_array_declarations.py --chali "$CHALI_BIN"
     run_step "运行文件级命名指令与缓存回归" "$PYTHON" tests/chali_module_naming_pragma.py --chali "$CHALI_BIN"
     run_step "运行模块常量、全局可见性、借用来源及流式文件回归" "$PYTHON" tests/chali_module_constants.py --chali "$CHALI_BIN"
     run_step "运行原生 LSP 模块命名与标准库限定补全回归" "$PYTHON" tests/chali_lsp_naming_scopes.py --chali "$CHALI_BIN"

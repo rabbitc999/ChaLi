@@ -1,7 +1,7 @@
 import std::iter;
 int64 parity(int64 value) { return value % 2; }
 void main() {
-    let groups = std::iter::group_by(std::iter::range(0,5),parity);
+    let groups = std::iter::groupBy(std::iter::range(0,5),parity);
     assert(groups[0][0] == 0 && groups[0][2] == 4 && groups[1].len() == 2);
     let blocks = std::iter::chunk(std::iter::range(0,5),2);
     let first = blocks.next().unwrap();

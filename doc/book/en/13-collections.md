@@ -83,6 +83,48 @@ Matrix has two rows and three columns, both indexed from zero. The outer range c
 Copied receives a value copy of the same-shaped array, then its bottom-right entry becomes 99. Printing twelve from the original and 99 from the copy demonstrates independent mutation for multidimensional arrays. Dimensions bound legal indices; `[2][3]` is not the final element. That position is `[1][2]`.
 
 
+Local runtime-length arrays accept brackets on either side: `T[] a = new[n];` and `T a[] = new[n];` are equivalent. Parameters also accept both `T[] a` and `T a[]`. Local owning arrays require initialization; copies and value parameters own independent elements. Borrow with `T[] const&` or `T[] mut&`. This example passes both local forms to both parameter forms and changes the copy independently:
+
+<!-- verify-book -->
+```chali
+int64 firstType(int64[] values)
+{
+    return values[0];
+}
+int64 firstName(int64 values[])
+{
+    return values[0];
+}
+void main()
+{
+    int64[] original = new[2];
+    original[0] = 7;
+    int64 copied[] = original;
+    copied[0] = 9;
+    println("{} {}", firstName(original), firstType(copied));
+}
+```
+
+```text
+7 9
+```
+
+Read tuple elements with zero-based constant subscripts. Tuples inside arrays also use consecutive brackets: `pairs[0][0]` selects the first array element, then its first tuple element. Tuple elements are read-only; assign a complete tuple to update the value.
+
+<!-- verify-book -->
+```chali
+void main()
+{
+    (int64, String)[] pairs = new[1];
+    pairs[0] = (3, "tuple");
+    println("{} {}", pairs[0][0], pairs[0][1]);
+}
+```
+
+```text
+3 tuple
+```
+
 ## 13.3 Choosing List, Map and Set
 
 List preserves sequence positions, Map associates keys with values, and Set keeps unique keys. Map and Set keys need hashing and equality. Any accepts different static types but requires recovery or matching on read. Prefer concrete generic arguments when known.

@@ -141,8 +141,8 @@ import std::utf8;
 void main() {
     List<uint8> bytes = decodeHex("666f6f").unwrap();
     println("{}", encodeBase64(bytes));
-    DateTime utc = parse_utc("2024-02-29T12:34:56Z").unwrap();
-    println("{}", format_utc(add_days(utc, 1).unwrap()).unwrap());
+    DateTime utc = parseUtc("2024-02-29T12:34:56Z").unwrap();
+    println("{}", formatUtc(addDays(utc, 1).unwrap()).unwrap());
     println("{}", sliceCodePoints("A中文😀", 1, 2).unwrap());
 }
 ```
@@ -153,7 +153,7 @@ void main() {
 
 `readAllBytes` 默认预算为 16 MiB，可显式传入上限。`readAllText` 读取完整内容而非一行，拒绝内嵌零字节；二进制文件必须使用字节接口。`listDirectory` 只枚举一层并排序；`fileInfo` 跟随符号链接；`renamePath` 的目标覆盖规则遵从平台。文件操作不承诺事务或原子写入。
 
-自定义宿主通过 C 函数表登记文件服务，使用公开 C 记录、缓冲与错误协议；目录操作需相应系统服务。日期换算不依赖操作系统时区，`now_utc` 的宿主必须提供真实 UTC 时钟。
+自定义宿主通过 C 函数表登记文件服务，使用公开 C 记录、缓冲与错误协议；目录操作需相应系统服务。日期换算不依赖操作系统时区，`nowUtc` 的宿主必须提供真实 UTC 时钟。
 
 ## 四元式兼容格式与历史体积实测
 

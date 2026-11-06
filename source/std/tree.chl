@@ -246,7 +246,7 @@ struct AvlTree: Copy<AvlTree> {
     /** 返回键数量。 */
     int64 len() { return self.__nodes.count; }
     /** 判断树是否为空。 */
-    bool is_empty() { return self.len() == 0; }
+    bool isEmpty() { return self.len() == 0; }
     /** 判断键是否存在。 */
     bool contains(int64 key) { return self.__nodes.find(key) != 0; }
     /** 清空节点与缓存高度。 */
@@ -265,13 +265,13 @@ struct AvlTree: Copy<AvlTree> {
     /** 返回最大键，空树返回 None。 */
     Option<int64> max() { return self.__key(self.__nodes.maximum(self.__nodes.root)); }
     /** 返回大于等于给定值的最小键，无匹配时返回 None。 */
-    Option<int64> lower_bound(int64 key) { return self.__key(self.__bound(key, false)); }
+    Option<int64> lowerBound(int64 key) { return self.__key(self.__bound(key, false)); }
     /** 返回严格大于给定值的最小键，无匹配时返回 None。 */
-    Option<int64> upper_bound(int64 key) { return self.__key(self.__bound(key, true)); }
+    Option<int64> upperBound(int64 key) { return self.__key(self.__bound(key, true)); }
     /** 删除并返回最小键，空树返回 None。 */
-    Option<int64> pop_min() { return self.__pop(self.__nodes.minimum(self.__nodes.root)); }
+    Option<int64> popMin() { return self.__pop(self.__nodes.minimum(self.__nodes.root)); }
     /** 删除并返回最大键，空树返回 None。 */
-    Option<int64> pop_max() { return self.__pop(self.__nodes.maximum(self.__nodes.root)); }
+    Option<int64> popMax() { return self.__pop(self.__nodes.maximum(self.__nodes.root)); }
 
     /** 插入唯一键，重复时返回 false。 */
     bool insert(int64 key) {

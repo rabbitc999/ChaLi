@@ -39,7 +39,7 @@ def main():
         ("replace_string", "$replace URL() \"https://example\" // keep comment\nvoid main() { String s = $URL(); if (s == \"https://example\") { return; } let __boom = 1; }", None),
         ("type_parameter", "$macro DECLARE(T, name, value)\nT name = value;\n$end_macro\nvoid main() { $DECLARE(int32, value, (int32)42); let __boom = value - 42; }", None),
         ("variadic_call", "$macro ADD(...xs)\nadd(xs)\n$end_macro\nint64 add(int64 a, int64 b) { return a + b; } void main() { let __boom = $ADD(40, 2) - 42; }", None),
-        ("variadic_tuple", "$macro PAIR(first, ...rest)\n(first, rest)\n$end_macro\nvoid main() { let pair = $PAIR(1 + 1, 2 + 2); let __boom = pair.0 * 10 + pair.1 - 24; }", None),
+        ("variadic_tuple", "$macro PAIR(first, ...rest)\n(first, rest)\n$end_macro\nvoid main() { let pair = $PAIR(1 + 1, 2 + 2); let __boom = pair[0] * 10 + pair[1] - 24; }", None),
         ("empty_variadic_call", "$macro CALL(...xs)\nzero(xs)\n$end_macro\nint64 zero() { return 0; } void main() { let __boom = $CALL(); }", None),
         ("type_required", "$macro DECLARE(T, name)\nT name;\n$end_macro\nvoid main() { $DECLARE(1 + 2, value); return; }", "类型位置"),
         ("type_iteration", "$macro ADD(mut &out, ...Types)\n$for T in Types\nT temp = 1; out += temp;\n$end_for\n$end_macro\nvoid main() { int64 out = 0; $ADD(out, int32, int64); let __boom = out - 2; }", None),

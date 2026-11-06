@@ -6,7 +6,7 @@ void main(List<String> args) {
     int64 sound = std::audio::load(args[0]);
     if (sound == 0) { std::audio::close(); println("audio file could not be loaded"); return; }
     assert(std::audio::play(sound));
-    while (std::audio::is_playing(sound)) { std::thread::sleepFor(10); }
+    while (std::audio::isPlaying(sound)) { std::thread::sleepFor(10); }
     assert(std::audio::unload(sound));
     std::audio::close();
     println("playback finished");

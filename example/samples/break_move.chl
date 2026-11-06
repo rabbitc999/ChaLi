@@ -64,7 +64,7 @@ void main() {
         List<int64> second; second.push(7);
         yield (first, second);
     };
-    assert(pair.0 == "first" && pair.1[0] == 7);
+    assert(pair[0] == "first" && pair[1][0] == 7);
     String explicitMove = loop { String local = "explicit"; yield (move local); };
     assert(explicitMove == "explicit");
     assert(bump(1) == 101);

@@ -94,7 +94,7 @@ void main(){
     AuditPair<int64,String> tupleCollision;
     AuditBorrow<(int64,String)> tuple;tuple.value=((int64)23,"tuple");
     AuditBorrow<_int64_core__String_> nominal;nominal.value.marker=29;
-    assert(tuple.value.0==23 && tuple.value.1=="tuple" && nominal.value.marker==29);
+    assert(tuple.value[0]==23 && tuple.value[1]=="tuple" && nominal.value.marker==29);
     AuditCallback<int64> callback;callback.operation=auditIncrement;assert(callback.operation(30)==31);
     int64 fn(int64) specialized=auditIdentity<int64>;assert(specialized(32)==32);
     AuditNode<int64> first;AuditNode<int64> second;first.next=&second;first.next.value=37;assert(second.value==37);

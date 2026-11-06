@@ -30,10 +30,10 @@ chali run example/samples/iter_pipeline.chl
 ```chali
 import std::iter;
 int64 observed = 0;
-int64 addRefs((int64 const&,int64 const&) value) { return value.0 + value.1; }
+int64 addRefs((int64 const&,int64 const&) value) { return value[0] + value[1]; }
 bool smallRef(int64 const& value) { return value < 3; }
 Iter<int64 const&> reversedLocal() { List<int64> values; values.push(2); values.push(4); return values.iter().rev(); }
-Iter<int64 const&> prefixLocal() { List<int64> values; values.push(2); values.push(4); let split = values.iter().peekingTakeWhile(smallRef); return split.0; }
+Iter<int64 const&> prefixLocal() { List<int64> values; values.push(2); values.push(4); let split = values.iter().peekingTakeWhile(smallRef); return split[0]; }
 struct IterRecord { String text; int64 number; };
 void updateRecord(IterRecord mut& value) { value.text = value.text + "!"; value.number = value.number + 1; }
 void replaceText(String mut& value) { value = "changed"; }
@@ -74,8 +74,8 @@ struct Flaky : IterNext<int64> {
 void main() {
     let values = std::iter::range(1, 5);
     let hint = values.sizeHint();
-    assert((hint.0) == (4));
-    assert(((hint.1).unwrap()) == (4));
+    assert((hint[0]) == (4));
+    assert(((hint[1]).unwrap()) == (4));
     assert((values.next().unwrap()) == (1));
     assert((values.nth(1).unwrap()) == (3));
     assert((values.count()) == (1));
@@ -106,14 +106,14 @@ void main() {
     assert((std::iter::range(1,4).sameItems(std::iter::range(1,4))) == (true));
     assert((std::iter::range(1,4).sameItems(std::iter::range(1,5))) == (false));
     let indexed = std::iter::range(5,7).enumerate().next().unwrap();
-    assert((indexed.0) == (0));
-    assert((indexed.1) == (5));
+    assert((indexed[0]) == (0));
+    assert((indexed[1]) == (5));
     let zipped = std::iter::range(1,4).zip("ab".chars()).collect();
     assert((zipped.len()) == (2));
-    assert(((zipped[1]).0) == (2));
-    assert(((zipped[1]).1) == ('b'));
+    assert(((zipped[1])[0]) == (2));
+    assert(((zipped[1])[1]) == ('b'));
     let split = std::iter::range(1,7).peekingTakeWhile(belowFour);
-    let first = split.0; let rest = split.1;
+    let first = split[0]; let rest = split[1];
     assert((first.count()) == (3));
     assert((rest.next().unwrap()) == (4));
     assert((rest.next().unwrap()) == (5));
@@ -199,8 +199,8 @@ void main() {
     assert((std::iter::range(1,5).take(0).count()) == (0));
     let extreme = std::iter::range(-(int64)9223372036854775807 - (int64)1, 9223372036854775807);
     let extremeHint = extreme.sizeHint();
-    assert((extremeHint.0) == (0));
-    assert(((extremeHint.1).isNone()) == (true));
+    assert((extremeHint[0]) == (0));
+    assert(((extremeHint[1]).isNone()) == (true));
     assert((std::iter::range(9223372036854775806, 9223372036854775807, 2).count()) == (1));
     assert((std::iter::range(-(int64)9223372036854775807, -(int64)9223372036854775807 - (int64)1, -2).count()) == (1));
     println("iterator pipelines OK");
@@ -463,7 +463,7 @@ iterator pipelines OK
 | [IterRepeatState::next](#api-106) | `Option<T> next()` |
 | [IterRepeatState::sizeHint](#api-107) | `(int64, Option<int64>) sizeHint()` |
 | [repeat](#api-108) | `Iter<T> repeat<T>(T value)` |
-| [group_by](#api-109) | `Map<K,List<T>> group_by<T,K>(Iter<T> source, K fn(T) key_of)` |
+| [groupBy](#api-109) | `Map<K,List<T>> groupBy<T,K>(Iter<T> source, K fn(T) key_of)` |
 | [chunk](#api-110) | `Iter<List<T>> chunk<T>(Iter<T> source, int64 length)` |
 
 <a id="api-0"></a>
@@ -4570,12 +4570,12 @@ std::iter::repeat<T>(value);
 
 <a id="api-109"></a>
 
-### group_by（110）
+### groupBy（110）
 
 **声明**
 
 ```chali
-Map<K,List<T>> group_by<T,K>(Iter<T> source, K fn(T) key_of);
+Map<K,List<T>> groupBy<T,K>(Iter<T> source, K fn(T) key_of);
 ```
 
 **行为**
@@ -4600,7 +4600,7 @@ Map<K,List<T>> group_by<T,K>(Iter<T> source, K fn(T) key_of);
 **调用形式**
 
 ```chali
-std::iter::group_by<T,K>(source, key_of);
+std::iter::groupBy<T,K>(source, key_of);
 ```
 
 **源码**：[source/std/iter.chl:1656](../../source/std/iter.chl#L1656)。

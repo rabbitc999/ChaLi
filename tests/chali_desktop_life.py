@@ -52,10 +52,10 @@ void main() {''', 1)
         if (frames == 60) { assert(inject((int32)0, (int32)80, (int32)170)); assert(inject((int32)1, (int32)0, (int32)0)); }
         if (frames == 62) { assert(board.at(0, 0) == 0); assert(inject((int32)2, (int32)0, (int32)0)); }
         if (frames == 100) { assert(board.generation > 0); assert(inject((int32)0, (int32)718, (int32)122)); assert(inject((int32)1, (int32)0, (int32)0)); }
-        if (frames == 102) { assert(speed.value() > 20 && speed.value() < 40); assert(inject((int32)2, (int32)0, (int32)0)); speed.set_value(30); }
+        if (frames == 102) { assert(speed.value() > 20 && speed.value() < 40); assert(inject((int32)2, (int32)0, (int32)0)); speed.setValue(30); }
         if (frames == 140) { assert(inject((int32)0, (int32)120, (int32)122)); assert(inject((int32)1, (int32)0, (int32)0)); }
         if (frames == 142) { assert(inject((int32)2, (int32)0, (int32)0)); }
-        if (frames == 144) { assert(!running); std::gui::request_close(); }
+        if (frames == 144) { assert(!running); std::gui::requestClose(); }
 '''.replace('@OUT@', out.as_posix())
     source = source.replace('        frames += 1;', '        frames += 1;' + script, 1)
     captures = '\n'.join('        if (frames == ' + str(frame) + ') { assert(capture("' + out.as_posix() + '/' + name + '.png")); }'

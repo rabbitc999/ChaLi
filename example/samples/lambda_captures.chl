@@ -28,7 +28,7 @@ void main(){
     let update=void fn mut(){profile.name="after";profile.scores[0]=99;};
     update();assert(profile.name=="after" && profile.scores[0]==99);
     let pair=(1,2);let updatePair=void fn mut(){pair=(3,4);};updatePair();
-    assert(pair.0==3 && pair.1==4);
+    assert(pair[0]==3 && pair[1]==4);
     int64 mut& alias=&amount;let throughAlias=void fn mut(){alias+=1;};
     throughAlias();assert(amount==102);
     Resource resource;let useResource=void fn mut(){resource.value=9;};

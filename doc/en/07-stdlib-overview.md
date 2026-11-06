@@ -58,9 +58,9 @@ The public opcode types are `std::big_number::BigInteger` and `std::big_number::
 | --- | --- |
 | `std::math` | `sin` `cos` `sqrt` and friends; `abs` `min` `max` are generic entry points (`min`/`max` take any number of arguments) while `clamp` keeps `int64`/`float64` overloads; constants `std::math::PI` and `std::math::E` |
 | `std::numerics` | scalar numerical methods: derivative, Simpson integration, bisection, RK4, Newton |
-| `std::number_theory` | integer number theory: module-level generic `gcd` `lcm` (any number of arguments), `add_mod` `mul_mod` `pow_mod` `mod_inverse`, deterministic Miller-Rabin `is_prime` |
+| `std::number_theory` | integer number theory: module-level generic `gcd` `lcm` (any number of arguments), `addMod` `mulMod` `powMod` `modInverse`, deterministic Miller-Rabin `isPrime` |
 | `std::complex` | complex numbers `Complex<T>` with arithmetic traits |
-| `std::linear_algebra` | dense vectors and matrices, `lu_decompose` `symmetric_eigen` `svd` `jordan2` `diagonalize2` |
+| `std::linear_algebra` | dense vectors and matrices, `luDecompose` `symmetricEigen` `svd` `jordan2` `diagonalize2` |
 | `std::random` | deterministic LCG and entropy seeding; handle-based state, implements `Drop` |
 | `std::signal` | DFT / FFT / inverse; radix-2 FFT requires a power-of-two length |
 

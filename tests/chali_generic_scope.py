@@ -26,7 +26,7 @@ T identity<T>(T value){return value;}
 void main(){List<String> values;String item;item.tag=7;values.push(item);let copied=identity<List<String>>(values);assert(copied[0].tag==7);List<std::core::String> texts;texts.push("中文");let textCopy=identity<List<std::core::String>>(texts);assert(textCopy[0]=="中文");}''',None),
         ('tuple','''struct String{int64 tag;}
 T identity<T>(T value){return value;}
-void main(){String value;value.tag=7;let pair=identity<(String,std::core::String)>((value,"text"));assert(pair.0.tag==7&&pair.1=="text");}''',None),
+void main(){String value;value.tag=7;let pair=identity<(String,std::core::String)>((value,"text"));assert(pair[0].tag==7&&pair[1]=="text");}''',None),
         ('reference','''struct String{int64 tag;}
 T identity<T>(T value){return value;}
 void main(){String value;value.tag=7;let borrowed=identity<String const&>(&value);assert(borrowed.tag==7);}''',None),

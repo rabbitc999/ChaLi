@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
+#ifdef CHALI_CRYPTO_STATIC
+#define CHALI_CRYPTO
+#elif defined(_WIN32)
 #define CHALI_CRYPTO __declspec(dllexport)
 #else
 #define CHALI_CRYPTO __attribute__((visibility("default")))

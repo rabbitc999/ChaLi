@@ -16,7 +16,8 @@ Apache License v2.0 with LLVM Exceptions; see licenses/llvm/LICENSE.TXT.
 raylib 5.5 and raygui 4.0 (zlib), and Expat 2.10.0 (MIT), may be linked
 statically into ChaLi applications. See licenses/raylib/LICENSE,
 licenses/raygui/LICENSE and licenses/expat/LICENSE.
-The optional dynamic libsodium (ISC) and libcurl (curl license) builds
+libsodium (ISC) may be linked statically into ChaLi applications;
+see licenses/libsodium/LICENSE. Optional libcurl (curl license) builds
 preserve their corresponding notices in their build outputs.
 
 yyjson 0.13.0: MIT license; see licenses/yyjson/LICENSE.

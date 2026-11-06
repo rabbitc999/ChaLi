@@ -710,6 +710,7 @@ ast::NodePtr LowerFieldAddress(int memberId, const MField **field, Memory::Strin
  */
 ast::NodePtr LowerAddressOf(int id)
 {
+    if (!NormalizeTupleIndex(id)) return Bad();
     if (const int member = ExplicitReceiverField(id); member >= 0) return LowerAddressOf(member);
     const MNode &node = N(id);
     if (RawExprType(id)->kind == MType::Ptr) return LowerRawExpr(id);
@@ -3124,7 +3125,7 @@ ast::NodePtr LowerLocalDecl(int id)
         }
         else if (decl.i == -2)
         {
-            /* `T a[]` 写法：运行时长度数组（长度靠 `new T[N]` 初始化出来）。 */
+            /* `T a[]` 写法：运行时长度数组，与类型侧的 `T[] a` 使用同一类型。 */
             type = RuntimeArrayType(type);
         }
         if (!CheckDeclaredType(type, decl.s)) return nullptr;
@@ -3133,12 +3134,12 @@ ast::NodePtr LowerLocalDecl(int id)
             return Fail(CHALI_TEXT("引用声明必须初始化，缺省值请使用 Option<T mut&>")), Bad();
         if (IsRuntimeArray(type) && decl.kids[0] < 0)
         {
-            Fail("运行时数组（`T a[]`）必须用 `new T[N]` 初始化：" + decl.s);
+            Fail(CHALI_TEXT("运行时数组必须初始化：") + decl.s);
             return nullptr;
         }
         if (IsRuntimeArray(type) && !InitIsRuntimeArray(decl.kids[0]))
         {
-            Fail("运行时数组（`T a[]`）只能用 `new T[N]` 初始化（这样长度才跟着对象走）：" + decl.s);
+            Fail(CHALI_TEXT("运行时数组初始化需要带长度的数组值或 new[n]：") + decl.s);
             return nullptr;
         }
         if (isConst && decl.kids[0] < 0)

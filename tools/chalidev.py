@@ -43,6 +43,18 @@ def _language():
 
 # CHALI_CATALOG_BEGIN
 _MESSAGES = {
+  "运行时数组必须初始化：": [
+    "Runtime arrays require an initializer: "
+  ],
+  "元组下标必须是整数常量表达式": [
+    "Tuple indices must be compile-time integer expressions"
+  ],
+  "元组下标超出范围：": [
+    "Tuple index out of range: "
+  ],
+  "运行时数组初始化需要带长度的数组值或 new[n]：": [
+    "Runtime array initialization requires an array value with a length or new[n]: "
+  ],
   "  --debug-optimized      保留调试信息并使用 O3／LTO，变量可能被优化\n": [
     "  --debug-optimized      Keep debug info with O3/LTO; variables may be optimized out\n"
   ],

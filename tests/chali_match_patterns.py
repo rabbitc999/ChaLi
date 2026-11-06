@@ -36,7 +36,7 @@ def main():
                 assert 'match 区间' in result.stderr or '语法错误' in result.stderr, result
             rejected += 1
     source = work / 'boundaries.chl'
-    source.write_text('void main(){\n        let pair=(1,2);assert(pair.0==1 && pair.1==2);\n        match(0){std::core::rangeEq(0,0)=>{} _=>{assert(false);}}\n        match(0){std::core::range(0,0)=>{assert(false);} _=>{}}\n        match(1.0){_ if 0.0 <= 1.0 && 1.0 < 1.0 =>{assert(false);} _=>{}}\n        match(1.0){1.0=>{} _=>{assert(false);}}\n        match(""){""=>{} _=>{assert(false);}}\n        match(""){_ if false=>{assert(false);} _=>{}}\n        return;\n    }\n', encoding='utf-8')
+    source.write_text('void main(){\n        let pair=(1,2);assert(pair[0]==1 && pair[1]==2);\n        match(0){std::core::rangeEq(0,0)=>{} _=>{assert(false);}}\n        match(0){std::core::range(0,0)=>{assert(false);} _=>{}}\n        match(1.0){_ if 0.0 <= 1.0 && 1.0 < 1.0 =>{assert(false);} _=>{}}\n        match(1.0){1.0=>{} _=>{assert(false);}}\n        match(""){""=>{} _=>{assert(false);}}\n        match(""){_ if false=>{assert(false);} _=>{}}\n        return;\n    }\n', encoding='utf-8')
     result = run(compiler, 'run', source, 'out', work / 'boundaries')
     assert result.returncode == 0 and (not result.stderr), result
 if __name__ == '__main__':

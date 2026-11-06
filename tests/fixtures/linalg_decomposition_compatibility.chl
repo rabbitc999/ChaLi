@@ -13,11 +13,11 @@ void equalMatrix(std::linear_algebra::Matrix<float64> const& left,std::linear_al
 void main(){
     let a=std::linear_algebra::Matrix<float64>::zeros(2,2);
     a.set(0,0,4.0);a.set(0,1,1.0);a.set(1,0,1.0);a.set(1,1,3.0);
-    let lu=std::linear_algebra::lu_decompose(a);
+    let lu=std::linear_algebra::luDecompose(a);
     let pa=lu.permutation.multiply(a);let product=lu.lower.multiply(lu.upper);equalMatrix(&pa,&product);
-    let lur=std::linear_algebra::lur_decompose(a);
+    let lur=std::linear_algebra::lurDecompose(a);
     let lpa=lur.permutation.multiply(a);let lproduct=lur.lower.multiply(lur.upper);equalMatrix(&lpa,&lproduct);
-    let eigen=std::linear_algebra::symmetric_eigen(a);
+    let eigen=std::linear_algebra::symmetricEigen(a);
     let diagonal=std::linear_algebra::Matrix<float64>::zeros(2,2);
     diagonal.set(0,0,eigen.eigenvalues.at(0));diagonal.set(1,1,eigen.eigenvalues.at(1));
     let ev=eigen.eigenvectors.multiply(diagonal);let vt=eigen.eigenvectors.transpose();let reconstructed=ev.multiply(vt);equalMatrix(&a,&reconstructed);

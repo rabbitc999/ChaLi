@@ -31,7 +31,7 @@ void main() {
     Option<String const&> builtinReference = reference;
     assert(builtinReference.unwrap() == "reference");
     Option<(String,int64)> pair = Option<(std::core::String,int64)>::Value(("tuple",(int64)2));
-    assert(pair.unwrap().0 == "tuple");
+    assert(pair.unwrap()[0] == "tuple");
 
     assert(UNIQUE_NUMBER == 17 && PI > 3.14 && PI < 3.15);
     { int64 UNIQUE_NUMBER = 9; assert(UNIQUE_NUMBER == 9); }

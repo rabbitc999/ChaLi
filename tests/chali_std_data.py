@@ -35,8 +35,8 @@ def main():
     for seconds in [-62135596800, -2208988800, -1, 0, 2147483648, 253402300799] + [rng.randrange(-62135596800,253402300800) for _ in range(40)]:
         value = epoch + dt.timedelta(seconds=seconds)
         formatted = f'{value.year:04}-{value.month:02}-{value.day:02}T{value.hour:02}:{value.minute:02}:{value.second:02}Z'
-        blocks.append(f'assert(format_utc(from_unix_seconds({seconds}).unwrap()).unwrap()=={quote(formatted)});')
-        blocks.append(f'assert(to_unix_seconds(parse_utc({quote(formatted)}).unwrap()).unwrap()=={seconds});')
+        blocks.append(f'assert(formatUtc(fromUnixSeconds({seconds}).unwrap()).unwrap()=={quote(formatted)});')
+        blocks.append(f'assert(toUnixSeconds(parseUtc({quote(formatted)}).unwrap()).unwrap()=={seconds});')
         checks += 2
     for delimiter in (',', ';', '\t'):
         rows = [[rng.choice(['', 'plain', '中文😀', 'a,b;c', 'quote"text', 'line\nnext', 'x\r\ny']) for _ in range(rng.randrange(1,5))] for _ in range(12)]

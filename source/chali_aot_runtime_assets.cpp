@@ -118,6 +118,7 @@ bool RuntimeAssets::prepareNative(const Memory::Set<Memory::String> &libraries, 
     if (gui && !append("desktop")) return false;
     if (audio && !append("audio")) return false;
     if (libraries.count("@chali/xml") && !append("xml")) return false;
+    if (libraries.count("@chali/crypto") && !append("crypto")) return false;
     if ((gui || audio) && !append("raylib")) return false;
     return true;
 }

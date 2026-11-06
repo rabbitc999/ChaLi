@@ -146,8 +146,8 @@ import std::utf8;
 void main() {
     List<uint8> bytes = decodeHex("666f6f").unwrap();
     println("{}", encodeBase64(bytes));
-    DateTime utc = parse_utc("2024-02-29T12:34:56Z").unwrap();
-    println("{}", format_utc(add_days(utc, 1).unwrap()).unwrap());
+    DateTime utc = parseUtc("2024-02-29T12:34:56Z").unwrap();
+    println("{}", formatUtc(addDays(utc, 1).unwrap()).unwrap());
     println("{}", sliceCodePoints("A中文😀", 1, 2).unwrap());
 }
 ```
@@ -158,7 +158,7 @@ void main() {
 
 `readAllBytes` defaults to a 16 MiB limit that callers can change. `readAllText` reads the entire content but rejects embedded zero bytes; use byte APIs for binary files. Directory listing is one level deep and sorted. File metadata follows symbolic links. Rename replacement rules depend on the platform; these operations do not promise transactional or atomic writes.
 
-Custom hosts register file services through the C function table, using public C record, buffer, and error protocols. Desktop directory operations are not automatically available on a board. Date conversion does not depend on the operating system's timezone; `now_utc` requires an actual UTC clock from the host.
+Custom hosts register file services through the C function table, using public C record, buffer, and error protocols. Desktop directory operations are not automatically available on a board. Date conversion does not depend on the operating system's timezone; `nowUtc` requires an actual UTC clock from the host.
 
 ## Compatible quadruple formats and historical measurements
 

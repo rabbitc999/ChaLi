@@ -8,7 +8,7 @@ from project_temp import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 
 def main():
-    """在解释器和 VM 中验证元组值语义及非法赋值诊断。"""
+    """用 checked run 与 unchecked AOT 验证元组下标和值语义。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     compiler = parser.parse_args().chali.resolve()
@@ -18,10 +18,11 @@ def main():
         return subprocess.run([str(x) for x in command], cwd=ROOT, env=env, capture_output=True, encoding='utf-8', errors='replace', timeout=240)
     with tempfile.TemporaryDirectory(prefix='chali-tuple-returns-') as folder:
         work = Path(folder)
-        for backend in ('run',):
+        for backend in ('run','aot'):
             output = work / (backend + ('.exe' if os.name == 'nt' else ''))
             result = run(compiler, backend, ROOT / 'tests/fixtures/tuple_returns.chl', 'out', output)
             assert result.returncode == 0, (backend, result.stdout, result.stderr)
+            if backend == 'aot': result = run(output)
             assert (result.returncode, result.stdout, result.stderr) == (0, 'tuple returns ok\n', ''), result
             print(backend + '：多值返回与泛型元组通过', flush=True)
         for backend in ('run',):
@@ -30,7 +31,14 @@ def main():
             assert result.returncode == 0, (backend, result.stdout, result.stderr)
             assert (result.returncode, result.stdout, result.stderr) == (0, 'tuple swap OK\n', ''), result
             print(backend + '：括号元组交换通过', flush=True)
-        cases = {'parenthesized_arity': ('int64 a,b;(a,b)=(1,2,3);', '数量'), 'parenthesized_const': ('const int64 a=1;int64 b;(a,b)=(2,3);', '不可变'), 'arity': ('int64 a,b;a,b=(1,2,3);', '数量'), 'shape': ('int64 a,b,c;a,(b,c)=(1,2);', '形状'), 'not_tuple': ('int64 a,b;a,b=1;', '必须是元组'), 'const_target': ('const int64 a=1;int64 b;a,b=(2,3);', '不可变'), 'readonly': ('int64 a=1;int64 const& r=&a;int64 b;r,b=(2,3);', '只读'), 'type_mismatch': ('int64 a,b;a,b=(1,"wrong");', '不能隐式转换'), 'invalid_target': ('int64 b;1,b=(1,2);', '赋值'), 'unknown_target': ('int64 b;missing,b=(1,2);', 'missing'), 'return_mismatch': ('', '不能隐式转换'), 'missing_assignment': ('int64 a,b;a,b;', '必须使用'), 'tuple_readonly': ('(int64,int64) pair=(1,2);int64 b;pair.0,b=(3,4);', '元组'), 'return_borrow': ('', '生命周期'), 'capture_write': ('const int64 a=0;int64 b;let f=void fn(){a,b=(1,2);};f();', '不可变')}
+        cases = {'parenthesized_arity': ('int64 a,b;(a,b)=(1,2,3);', '数量'), 'parenthesized_const': ('const int64 a=1;int64 b;(a,b)=(2,3);', '不可变'), 'arity': ('int64 a,b;a,b=(1,2,3);', '数量'), 'shape': ('int64 a,b,c;a,(b,c)=(1,2);', '形状'), 'not_tuple': ('int64 a,b;a,b=1;', '必须是元组'), 'const_target': ('const int64 a=1;int64 b;a,b=(2,3);', '不可变'), 'readonly': ('int64 a=1;int64 const& r=&a;int64 b;r,b=(2,3);', '只读'), 'type_mismatch': ('int64 a,b;a,b=(1,"wrong");', '不能隐式转换'), 'invalid_target': ('int64 b;1,b=(1,2);', '赋值'), 'unknown_target': ('int64 b;missing,b=(1,2);', 'missing'), 'return_mismatch': ('', '不能隐式转换'), 'missing_assignment': ('int64 a,b;a,b;', '必须使用'), 'tuple_readonly': ('(int64,int64) pair=(1,2);int64 b;pair[0],b=(3,4);', '元组'), 'return_borrow': ('', '生命周期'), 'capture_write': ('const int64 a=0;int64 b;let f=void fn(){a,b=(1,2);};f();', '不可变')}
+        cases.update({
+            'tuple_index_oob': ('let pair=(1,"text");println(pair[2]);', '元组下标超出范围'),
+            'tuple_index_negative': ('let pair=(1,"text");println(pair[-1]);', '元组下标超出范围'),
+            'tuple_index_float': ('let pair=(1,"text");println(pair[0.0]);', '元组下标必须是整数常量'),
+            'tuple_index_dynamic': ('let pair=(1,"text");int64 i=0;println(pair[i]);', '常量'),
+            'tuple_old_dot': ('let pair=(1,"text");println(pair.0);', ''),
+        })
         for name, (body, diagnostic) in cases.items():
             code = 'void main(){' + body + '}'
             if name == 'return_mismatch':

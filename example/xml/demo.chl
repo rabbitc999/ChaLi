@@ -5,7 +5,7 @@ void main() {
     assert(document.attribute("from").unwrap() == "ChaLi");
     assert(document.text(0).unwrap() == "Hi");
     assert(document.child(1).unwrap().name() == "em");
-    assert(std::xml::escape_attribute("<&\"") == "&lt;&amp;&quot;");
+    assert(std::xml::escapeAttribute("<&\"") == "&lt;&amp;&quot;");
     assert(std::xml::parse("<bad></wrong>").isErr());
     assert(std::xml::parse("<!DOCTYPE a SYSTEM 'file:///missing'><a/>").isErr());
     println("XML OK");

@@ -1905,6 +1905,7 @@ int M_ReadOnlyReferenceDecl(int typeExpr, int nameId, int value, int rest)
     M_SetDeclType(declarations, type, 0);
     return M_LocalDecl(type, declarations, 0);
 }
+#include "semantics/runtime_array_declaration_ast.cpp"
 /**
  * @brief 构造并登记变量声明项。
  * @param nameId 名称池中的名称编号。

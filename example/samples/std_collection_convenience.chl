@@ -1,23 +1,23 @@
 import std::collections;
 void main() {
     Deque<String> deque = Deque<String>::create();
-    assert(deque.peek_front().isNone() && deque.peek_back().isNone());
+    assert(deque.peekFront().isNone() && deque.peekBack().isNone());
     deque.pushFront("a"); deque.pushBack("b");
-    List<String> items = deque.to_list();
+    List<String> items = deque.toList();
     items[0] = "changed";
-    assert(deque.peek_front().unwrap() == "a" && deque.peek_back().unwrap() == "b");
+    assert(deque.peekFront().unwrap() == "a" && deque.peekBack().unwrap() == "b");
     Queue<int64> queue = Queue<int64>::create();
     queue.push(1); queue.push(2); assert(queue.pop().unwrap() == 1);
-    assert(queue.peek_back().unwrap() == 2); queue.push(3);
-    assert(queue.peek_back().unwrap() == 3);
+    assert(queue.peekBack().unwrap() == 2); queue.push(3);
+    assert(queue.peekBack().unwrap() == 3);
     Stack<int64> stack = Stack<int64>::create();
-    assert(stack.peek_bottom().isNone()); stack.push(4); stack.push(5);
-    assert(stack.peek_bottom().unwrap() == 4);
+    assert(stack.peekBottom().isNone()); stack.push(4); stack.push(5);
+    assert(stack.peekBottom().unwrap() == 4);
     RingBuffer<int64> ring = RingBuffer<int64>::withCapacity(2);
-    assert(ring.is_empty() && ring.peek().isNone());
-    assert(ring.push(6) && ring.push(7) && ring.is_full());
+    assert(ring.isEmpty() && ring.peek().isNone());
+    assert(ring.push(6) && ring.push(7) && ring.isFull());
     assert(ring.peek().unwrap() == 6 && ring.len() == 2);
     ring.clear();
-    assert(ring.is_empty() && ring.available() == 2);
+    assert(ring.isEmpty() && ring.available() == 2);
     println("collection convenience methods OK");
 }

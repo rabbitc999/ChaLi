@@ -33,7 +33,7 @@ void main() {
 
 整数显式标宽：`int8` / `int16` / `int32` / `int64`，无符号是 `uint8` … `uint64`；浮点是 `float32` / `float64`。隐式转换只放行**变宽**（`int8 -> int64`、`uint8 -> int16`、整型 → 浮点、`float32 -> float64`）；缩窄和换符号要显式强转 `(int32)x`。
 
-浮点字面量无后缀时为 `float64`；从 v0.18.1 起，小写 `f` 后缀固定为 `float32`，
+浮点字面量无后缀时为 `float64`；从 v0[18].1 起，小写 `f` 后缀固定为 `float32`，
 例如 `1f`、`1.25f`、`1e2f`。`let value = 1.25f;` 推导为 `float32`，
 可直接传给 `float32` 参数。带后缀的字面量先按 32 位浮点舍入，之后即使扩宽为
 `float64` 也不会恢复精度，例如 `float64 rounded = 16777217f;` 的值为 `16777216`。
@@ -307,7 +307,7 @@ fixed=6 runtime0=10
 
 两种数组：长度写进类型的 `T a[N]`，和长度在运行时决定的 `T a[] = new[n]`。越界访问会被检查到并给出定位，不是未定义行为。
 
-元组用圆括号，成员按 `.0` / `.1` 读：
+元组用圆括号，成员按 `[0]` / `[1]` 读：
 
 ```chali
 (int64, String) describe(int64 id) {
@@ -315,7 +315,7 @@ fixed=6 runtime0=10
 }
 void main() {
     let info = describe(7);
-    println("{} {}", info.0, info.1);
+    println("{} {}", info[0], info[1]);
 }
 ```
 

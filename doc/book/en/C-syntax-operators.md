@@ -31,7 +31,7 @@ Explicit declarations use T name = value, inferred declarations use let, and con
 | static T create(...) | Named factory; return self is supported | 6, 18 |
 | R fn(A, B) | Function-value type | 19 |
 | T mut&, T const&, T & | Mutable or read-only references | 8 |
-| (A, B), value.0 | Tuple type and positional access | This appendix |
+| (A, B), value[0] | Tuple type and positional access | This appendix |
 | T values[2][3] | Fixed multidimensional array | 13 |
 | T values[] = new[3] | Runtime-sized array | 13 |
 

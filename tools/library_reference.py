@@ -7,6 +7,8 @@ import argparse
 import sys
 from documentation_navigation import decorate
 from library_reference_data import MODULES, BEHAVIOR, ITER, PARAMETERS, BIG_BEHAVIOR, CONCURRENCY_BEHAVIOR
+from library_reference_native import MODULES as NATIVE_MODULES
+MODULES.update(NATIVE_MODULES)
 
 ROOT = Path(__file__).resolve().parents[1]
 from chali_api import TOKEN, without_comments, parameters, declarations as scan_declarations
@@ -80,6 +82,8 @@ def inventory():
         if row['kind']=='function':
             row['intrinsic']=True
             data['std::core'].append(row)
+    from library_reference_native import native_inventory
+    data.update(native_inventory())
     return data
 
 
@@ -96,6 +100,9 @@ def comment_text(comment):
 def behavior(entry):
     """合并人工语义说明、同族宿主入口与声明注释。"""
     module, owner, name = entry['module'], entry['owner'], entry['name']
+    if module in NATIVE_MODULES:
+        from library_reference_native import native_behavior
+        return native_behavior(entry)
     if module == 'std::core' and (owner in ('RawStorage', 'BarePtr') or name in ('initAt','readAt','borrowAt','takeAt','dropAt','relocateNonOverlapping','barePointer','pointerFromAddress','dereference','memcpy','memset')):
         return comment_text(entry['comment'])
 
@@ -197,7 +204,7 @@ def render(data):
         title, contract=MODULES[module]
         # `__` 前缀是编译器/宿主协议，不是应用 API：既不进参考页，也不进编辑器索引，
         # 否则 LSP 会把 `__Range` 这类内部类型当成可补全的公开符号。
-        functions=[r for r in records if r['kind']=='function' and not r['owner'].startswith('__')]
+        functions=[r for r in records if r['kind']=='function' and not r['name'].startswith('__') and not r['owner'].startswith('__')]
         macros=[r for r in records if r['kind']=='macro' and not r['owner'].startswith('__')]
         index.append(f'| [`{module}`]({filename(module)}) | {title} | {len(functions)} | {len(macros)} |')
         lines=[f'# {module} — {title}', '', '[返回库目录](README.md) · [全部符号](symbols.md)', '', '## 引入', '', '```chali', '// std::core 自动加载' if module=='std::core' else '// 编译器内建，无需 import std' if module=='std' else 'import '+module+';', '```', '', '## 公共约定与错误边界', '', contract, '']
@@ -212,6 +219,7 @@ def render(data):
             if module=='std::net': lines += ['非阻塞与可取消线程配合的完整程序：[std_net_async.chl](../../example/samples/std_net_async.chl)。', '']
             if module=='std::io': lines+=['先创建 `build` 目录；示例会覆盖给定路径，请使用专用测试文件。','']
             if module=='std::reflect': lines+=['需先用 `make reflection` 构建支持反射的工具链；当前二进制未编入支持时，上述命令会明确报缺失宏。','']
+            if module in ('std::gui','std::audio'): lines+=['交互示例需要图形会话或音频设备；音频示例的输入文件及参数见程序入口。','']
             path=ROOT/example
             if path.exists():
                 example_flags=['--reflection'] if module=='std::reflect' else []
@@ -290,6 +298,9 @@ def render(data):
                 lines+=['| 参数 | 类型／声明 | 含义 | 默认值 |','| --- | --- | --- | --- |']
                 for name,decl,default in params:
                     meaning=PARAMETERS.get(name)
+                    if module in NATIVE_MODULES:
+                        from library_reference_native import PARAMETERS as NATIVE_PARAMETERS
+                        meaning=NATIVE_PARAMETERS.get(name, meaning)
                     param_comment=re.search(r'@param\s+'+re.escape(name)+r'\s+(.*?)(?=@\w+|\*/|$)',r['comment'],re.S)
                     if param_comment: meaning=re.sub(r'\s*\*\s*|\s+', ' ',param_comment.group(1)).strip()
                     if not meaning: missing_parameters.add(name); meaning='见本项行为及声明的类型约束'
@@ -347,7 +358,7 @@ def render(data):
     # 聚合模块可能没有函数，仍须记录导入关系供独立部署的 LSP 使用。
     dependencies={}
     for module,records in data.items():
-        candidates=[ROOT/r['source'] for r in records if r['source'].endswith('.chl')]
+        candidates=[ROOT/r['source'] for r in records if r['source'].endswith(('.chl', '.chl.in'))]
         fallback=ROOT/(module.replace('::','/')+'.chl')
         source=candidates[0] if candidates else fallback
         dependencies[module]=re.findall(r'\bimport\s+([\w:]+)\s*;',without_comments(source.read_text(encoding='utf-8'))) if source.exists() else []

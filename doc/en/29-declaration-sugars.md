@@ -32,14 +32,14 @@ Return(ControlExpr E)
 
 The AST owns a dedicated hidden result declaration, marked together with its control expression by `returnExpression`. `LowerLocalDecl` supplies the function's return type; `LoopValueType` checks precise branch types. `LowerLoop` creates the expression's join slot. Evaluation happens once, before scope cleanup and ordinary function return.
 
-Nested return, `break level N`, `break all`, and early-returning `?` propagation are rejected within the returned control expression. Use explicit matching and value breaks. Validation stops at a nested `fn` or named function boundary, so independent callbacks retain their own return statements.
+Nested `return` and named loop exits (`break label;`) are rejected within the returned control expression. Replace early-returning `?` propagation with explicit matching and `yield value;`. Plain `break;` still exits only the nearest loop and produces no expression result. Validation stops at a nested `fn` or named function boundary, so independent callbacks retain their own return statements.
 
 
 Generic functions follow the same path: `T take<T>(T value) { return { T local = value; yield local; }; }`. Loop, if and match can also return T. Monomorphization substitutes the concrete type before result-slot creation, branch checking and move/copy lowering. Generics do not bypass identical branch types, borrowing or cleanup checks. The regression covers integers, String and a struct owning String.
 
 ## Ownership and compile-time state
 
-The implementation retains value copying for ordinary assignment and introduces no GC. Move selection uses the actual result receiver, rather than the nearest brace.
+The implementation retains value copying for ordinary assignment and introduces no GC. Move selection uses the actual receiver of `yield`, rather than the nearest brace. Internal helpers retain names such as `PrepareBreakValue` and `lowerBreak`.
 
 | Information | Implementation | Purpose |
 | --- | --- | --- |

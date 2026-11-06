@@ -301,17 +301,17 @@ struct Text {
         return __textEqualsAt(hay, hay.len() - pattern.len(), pattern);
     }
     /** 去掉一次匹配的前缀，未匹配时返回原值副本。 */
-    static std::core::String strip_prefix(std::core::String text, std::core::String prefix) {
+    static std::core::String stripPrefix(std::core::String text, std::core::String prefix) {
         if (Text::startsWith(text, prefix)) { return text[len(prefix):]; }
         return text;
     }
     /** 去掉一次匹配的后缀，未匹配时返回原值副本。 */
-    static std::core::String strip_suffix(std::core::String text, std::core::String suffix) {
+    static std::core::String stripSuffix(std::core::String text, std::core::String suffix) {
         if (Text::endsWith(text, suffix)) { return text[0:len(text) - len(suffix)]; }
         return text;
     }
     /** 判断文本是否为空或仅由 ASCII 空白组成。 */
-    static bool is_blank(std::core::String text) {
+    static bool isBlank(std::core::String text) {
         std::core::List<uint8> bytes = __textBytes(text);
         for (uint8 byte in bytes) {
             if (!__textIsSpace(byte)) { return false; }
@@ -319,7 +319,7 @@ struct Text {
         return true;
     }
     /** 统计从左到右互不重叠的匹配，空子串返回零。 */
-    static int64 count_matches(std::core::String text, std::core::String needle) {
+    static int64 countMatches(std::core::String text, std::core::String needle) {
         std::core::List<uint8> hay = __textBytes(text);
         std::core::List<uint8> pattern = __textBytes(needle);
         if (pattern.len() == 0) { return 0; }

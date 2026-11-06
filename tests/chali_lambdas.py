@@ -62,9 +62,9 @@ def main():
     successes = {'const_capture_read': 'const int64 n=1;let f=int64 fn(){n};let __boom = f();', 'readonly_capture_read': 'int64 n=1;int64 const& r=&n;let f=int64 fn(){r};let __boom = f();', 'readonly_match_read': 'match(Option<int64>::Value(10)){Option<int64>::Value(n)=>{let f=int64 fn(){n};let __boom = f();} Option<int64>::None=>{}}', 'local_capture': 'int64 bias=10; let f=fn(int64 x){x+bias}; let __boom = f(1);', 'inferred_capture': 'int64 bias=10; let __boom = apply(fn(x){x+bias},1);', 'global_shadow': 'int64 x=10; let __boom = apply(fn(value){value+x},1);', 'destructure_shadow': 'let (x,y)=(10,20); let f=fn(){x}; let __boom = f();', 'destructure_callback': 'let (x,y)=(10,20); let __boom = apply(fn(value){value+x},1);'}
     successes.update({'reference_capture': 'int64 value=1; int64 mut& ref=&value; let f=fn(){ref}; let __boom = f();'})
     successes.update({'mutate_capture': 'int64 value=1; let f=int64 fn mut(){value+=1;return value;}; let __boom = f();'})
-    successes.update({'aggregate_reference_capture': 'int64 x=1;let pair=(&x,2);let f=fn(){pair.1};let __boom = f();'})
+    successes.update({'aggregate_reference_capture': 'int64 x=1;let pair=(&x,2);let f=fn(){pair[1]};let __boom = f();'})
     successes.update({'reference_list_capture': 'int64 value=1; List<int64 mut&> refs;refs.push(&value);let f=fn(){refs.len()};let __boom = f();'})
-    successes.update({'mutate_aggregate_capture': 'let pair=(1,2);let f=int64 fn mut(){pair=(3,4);return pair.0;};let __boom = f();'})
+    successes.update({'mutate_aggregate_capture': 'let pair=(1,2);let f=int64 fn mut(){pair=(3,4);return pair[0];};let __boom = f();'})
     for name, body in successes.items():
         source = WORK / (name + '.chl')
         source.write_text('int64 x=100; int64 apply(int64 fn(int64) cb,int64 x){return cb(x);}void main(){' + body + '}\n', encoding='utf-8')

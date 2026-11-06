@@ -11,28 +11,28 @@ void main() {
     int64 listener = bus.on("change", void fn mut(std::gui::Event event) { assert(event.text == "payload"); regular += 1; });
     assert(listener != 0);
     assert(bus.once("change", void fn mut(std::gui::Event event) { once += 1; assert(bus.emit(event) == 1); }) != 0);
-    assert(bus.emit(std::gui::custom_event("change", "payload")) == 2);
+    assert(bus.emit(std::gui::customEvent("change", "payload")) == 2);
     assert(regular == 2 && once == 1);
-    assert(bus.emit(std::gui::custom_event("change", "payload")) == 1);
+    assert(bus.emit(std::gui::customEvent("change", "payload")) == 1);
     assert(regular == 3 && once == 1);
     assert(bus.off(listener)); assert(!bus.off(listener));
     int64 added = 0; int64 late = 0;
     bus.on("register", void fn mut(std::gui::Event event) {
         if (added == 0) { added = bus.on("register", void fn mut(std::gui::Event next) { late += 1; }); }
     });
-    assert(bus.emit(std::gui::custom_event("register")) == 1 && late == 0);
-    assert(bus.emit(std::gui::custom_event("register")) == 2 && late == 1);
+    assert(bus.emit(std::gui::customEvent("register")) == 1 && late == 0);
+    assert(bus.emit(std::gui::customEvent("register")) == 2 && late == 1);
     int64 victim = 0; int64 forbidden = 0;
     bus.on("remove", void fn mut(std::gui::Event event) { assert(bus.off(victim)); });
     victim = bus.on("remove", void fn mut(std::gui::Event event) { forbidden += 1; });
-    assert(bus.emit(std::gui::custom_event("remove")) == 1 && forbidden == 0);
+    assert(bus.emit(std::gui::customEvent("remove")) == 1 && forbidden == 0);
     bus.clear();
     int64 queued = 0;
     bus.on("queue", void fn mut(std::gui::Event event) {
         queued += 1; assert(bus.pump() == 0);
-        if (queued == 1) { assert(bus.post(std::gui::custom_event("queue"))); }
+        if (queued == 1) { assert(bus.post(std::gui::customEvent("queue"))); }
     });
-    assert(bus.post(std::gui::custom_event("queue")));
+    assert(bus.post(std::gui::customEvent("queue")));
     assert(bus.pump() == 1 && queued == 1 && bus.pending() == 1);
     assert(bus.pump() == 1 && queued == 2 && bus.pending() == 0);
     bus.clear();
@@ -40,32 +40,32 @@ void main() {
     bus.on("clear", void fn mut(std::gui::Event event) {
         bus.clear();
         bus.on("new", void fn mut(std::gui::Event next) { restored += 1; });
-        assert(bus.post(std::gui::custom_event("new")));
+        assert(bus.post(std::gui::customEvent("new")));
     });
-    assert(bus.post(std::gui::custom_event("clear"))); assert(bus.post(std::gui::custom_event("stale")));
+    assert(bus.post(std::gui::customEvent("clear"))); assert(bus.post(std::gui::customEvent("stale")));
     assert(bus.pump() == 1 && bus.pending() == 1);
     assert(bus.pump() == 1 && restored == 1 && bus.pending() == 0);
     bus.clear();
     String owned = "before"; int64 snapshot = 0;
     bus.on("snapshot", void fn mut(std::gui::Event event) { assert(event.text == "before"); snapshot += 1; });
-    let queued_event = std::gui::custom_event("snapshot", owned); assert(bus.post(queued_event)); owned = "after";
+    let queued_event = std::gui::customEvent("snapshot", owned); assert(bus.post(queued_event)); owned = "after";
     assert(bus.pump() == 1 && snapshot == 1); bus.clear();
 
-    assert(std::gui::open_window(480, 360, "Custom GUI regression", 2));
-    assert(std::gui::control_count() == 34);
-    let texture = std::gui::load_texture("@TEXTURE_PATH@");
+    assert(std::gui::openWindow(480, 360, "Custom GUI regression", 2));
+    assert(std::gui::controlCount() == 34);
+    let texture = std::gui::loadTexture("@TEXTURE_PATH@");
     assert(texture.isValid()); assert(texture.size().x == 16 && texture.size().y == 16);
     assert(!texture.draw(std::gui::Rect::at(0, 0, 16, 16)));
-    let measured = std::gui::measure_text("Custom", 20); assert(measured.x > 0 && measured.y > 0);
-    let custom = std::gui::custom_widget(); assert(custom.isValid());
+    let measured = std::gui::measureText("Custom", 20); assert(measured.x > 0 && measured.y > 0);
+    let custom = std::gui::customWidget(); assert(custom.isValid());
     int64 paints = 0; int64 down = 0; int64 released = 0; int64 typed = 0; int64 keys = 0; int64 focus = 0; int64 user = 0;
-    custom.on_draw(void fn mut(std::gui::Rect bounds) {
+    custom.onDraw(void fn mut(std::gui::Rect bounds) {
         paints += 1;
-        assert(std::gui::draw_rectangle(bounds, (uint32)0x204060ff));
-        assert(std::gui::draw_line(std::gui::Point::at(30, 30), std::gui::Point::at(100, 80), 3, (uint32)0xffffffff));
-        assert(std::gui::draw_circle(std::gui::Point::at(60, 60), 15, (uint32)0xe04040ff));
-        assert(std::gui::draw_polygon(std::gui::Point::at(100, 70), 6, 12, 0, (uint32)0x40c080ff));
-        assert(std::gui::draw_text("Custom", std::gui::Point::at(25, 100), 18, (uint32)0xffffffff));
+        assert(std::gui::drawRectangle(bounds, (uint32)0x204060ff));
+        assert(std::gui::drawLine(std::gui::Point::at(30, 30), std::gui::Point::at(100, 80), 3, (uint32)0xffffffff));
+        assert(std::gui::drawCircle(std::gui::Point::at(60, 60), 15, (uint32)0xe04040ff));
+        assert(std::gui::drawPolygon(std::gui::Point::at(100, 70), 6, 12, 0, (uint32)0x40c080ff));
+        assert(std::gui::drawText("Custom", std::gui::Point::at(25, 100), 18, (uint32)0xffffffff));
         assert(texture.draw(std::gui::Rect::at(130, 30, 32, 32)));
     });
     custom.on("pointer.down", void fn mut(std::gui::Event event) { assert(event.x == 20 && event.y == 20); down += 1; });
@@ -76,32 +76,32 @@ void main() {
     custom.on("changed", void fn mut(std::gui::Event event) { assert(event.code == 7 && event.text == "saved" && event.value == 1.5); user += 1; });
     assert(!custom.draw(std::gui::Rect::at(20, 20, 180, 120)));
     assert(inject((int32)0, (int32)40, (int32)40)); assert(inject((int32)1, (int32)0, (int32)0));
-    assert(std::gui::begin_frame());
+    assert(std::gui::beginFrame());
     assert(custom.draw(std::gui::Rect::at(20, 20, 180, 120)));
     assert(!custom.draw(std::gui::Rect::at(20, 20, 180, 120)));
-    let event = std::gui::poll_event(); while (event.isValid()) { custom.handle(event); event = std::gui::poll_event(); }
-    std::gui::end_frame(); assert(down == 1 && focus == 1 && custom.has_focus());
+    let event = std::gui::pollEvent(); while (event.isValid()) { custom.handle(event); event = std::gui::pollEvent(); }
+    std::gui::endFrame(); assert(down == 1 && focus == 1 && custom.hasFocus());
     assert(inject((int32)0, (int32)320, (int32)220)); assert(inject((int32)2, (int32)0, (int32)0));
-    assert(std::gui::begin_frame()); custom.draw(std::gui::Rect::at(20, 20, 180, 120));
-    event = std::gui::poll_event(); while (event.isValid()) { custom.handle(event); event = std::gui::poll_event(); }
-    std::gui::end_frame(); assert(released == 1);
+    assert(std::gui::beginFrame()); custom.draw(std::gui::Rect::at(20, 20, 180, 120));
+    event = std::gui::pollEvent(); while (event.isValid()) { custom.handle(event); event = std::gui::pollEvent(); }
+    std::gui::endFrame(); assert(released == 1);
     assert(character((int32)0x4e2d)); assert(character((int32)0x1f30f));
-    assert(std::gui::begin_frame()); std::gui::end_frame();
+    assert(std::gui::beginFrame()); std::gui::endFrame();
     assert(inject((int32)3, (int32)65, (int32)0));
-    assert(std::gui::begin_frame()); custom.draw(std::gui::Rect::at(20, 20, 180, 120));
-    event = std::gui::poll_event(); while (event.isValid()) { custom.handle(event); event = std::gui::poll_event(); }
-    assert(capture("@CAPTURE_PATH@")); std::gui::end_frame();
+    assert(std::gui::beginFrame()); custom.draw(std::gui::Rect::at(20, 20, 180, 120));
+    event = std::gui::pollEvent(); while (event.isValid()) { custom.handle(event); event = std::gui::pollEvent(); }
+    assert(capture("@CAPTURE_PATH@")); std::gui::endFrame();
     assert(typed == 2 && keys == 1 && paints == 3);
-    assert(custom.emit(std::gui::custom_event("changed", "saved", 7, 1.5)) && user == 1);
+    assert(custom.emit(std::gui::customEvent("changed", "saved", 7, 1.5)) && user == 1);
     custom.close(); assert(!custom.isValid()); texture.close(); assert(!texture.isValid());
-    let paint_victim = std::gui::custom_widget();
-    paint_victim.on_draw(void fn mut(std::gui::Rect bounds) { std::gui::draw_rectangle(bounds, (uint32)0x445566ff); paint_victim.close(); });
-    assert(std::gui::begin_frame()); assert(paint_victim.draw(std::gui::Rect::at(10, 10, 40, 40))); assert(!paint_victim.isValid());
-    assert(std::gui::clip_bounds().width == 480); std::gui::end_frame();
-    let callback_victim = std::gui::custom_widget(); int64 after_close = 0;
-    callback_victim.on_event(void fn mut(std::gui::Event event) { callback_victim.close(); });
+    let paint_victim = std::gui::customWidget();
+    paint_victim.onDraw(void fn mut(std::gui::Rect bounds) { std::gui::drawRectangle(bounds, (uint32)0x445566ff); paint_victim.close(); });
+    assert(std::gui::beginFrame()); assert(paint_victim.draw(std::gui::Rect::at(10, 10, 40, 40))); assert(!paint_victim.isValid());
+    assert(std::gui::clipBounds().width == 480); std::gui::endFrame();
+    let callback_victim = std::gui::customWidget(); int64 after_close = 0;
+    callback_victim.onEvent(void fn mut(std::gui::Event event) { callback_victim.close(); });
     callback_victim.on("closed", void fn mut(std::gui::Event event) { after_close += 1; });
-    assert(callback_victim.emit(std::gui::custom_event("closed"))); assert(!callback_victim.isValid() && after_close == 0);
+    assert(callback_victim.emit(std::gui::customEvent("closed"))); assert(!callback_victim.isValid() && after_close == 0);
     std::gui::close();
     println("GUI drawing, textures, custom widget input and reentrant event bus passed");
 }

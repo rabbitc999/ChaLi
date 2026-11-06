@@ -14,7 +14,7 @@ import std::date_time;
 
 ## 公共约定与错误边界
 
-Unix 秒与公历 UTC 日期换算，年份 1..9999，秒 0..59，不表示闰秒。ISO 8601 首版只接受 YYYY-MM-DDTHH:MM:SSZ。纯换算不依赖平台时区；now_utc 要求宿主时钟。
+Unix 秒与公历 UTC 日期换算，年份 1..9999，秒 0..59，不表示闰秒。ISO 8601 首版只接受 YYYY-MM-DDTHH:MM:SSZ。纯换算不依赖平台时区；nowUtc 要求宿主时钟。
 
 ## 参考代码
 
@@ -30,20 +30,20 @@ chali run example/samples/std_datetime.chl
 ```chali
 import std::date_time;
 void main(){
-    assert(format_utc(from_unix_seconds(0).unwrap()).unwrap()=="1970-01-01T00:00:00Z");
-    assert(format_utc(from_unix_seconds(-1).unwrap()).unwrap()=="1969-12-31T23:59:59Z");
-    DateTime leap=parse_utc("2024-02-29T12:34:56Z").unwrap();
-    assert(to_unix_seconds(leap).unwrap()==1709210096);
-    assert(format_utc(add_days(leap,1).unwrap()).unwrap()=="2024-03-01T12:34:56Z");
-    assert(format_utc(add_seconds(leap,-1).unwrap()).unwrap()=="2024-02-29T12:34:55Z");
-    assert(!parse_utc("1900-02-29T00:00:00Z").isOk() && parse_utc("2000-02-29T00:00:00Z").isOk());
-    assert(!parse_utc("2024-01-01T24:00:00Z").isOk() && !parse_utc("2024-01-01T00:00:60Z").isOk());
-    assert(!parse_utc("2024-01-01T00:00:00+08:00").isOk());
-    assert(to_unix_seconds(parse_utc("0001-01-01T00:00:00Z").unwrap()).unwrap()== -62135596800);
-    assert(to_unix_seconds(parse_utc("9999-12-31T23:59:59Z").unwrap()).unwrap()==253402300799);
-    assert(!from_unix_seconds(253402300800).isOk());
+    assert(formatUtc(fromUnixSeconds(0).unwrap()).unwrap()=="1970-01-01T00:00:00Z");
+    assert(formatUtc(fromUnixSeconds(-1).unwrap()).unwrap()=="1969-12-31T23:59:59Z");
+    DateTime leap=parseUtc("2024-02-29T12:34:56Z").unwrap();
+    assert(toUnixSeconds(leap).unwrap()==1709210096);
+    assert(formatUtc(addDays(leap,1).unwrap()).unwrap()=="2024-03-01T12:34:56Z");
+    assert(formatUtc(addSeconds(leap,-1).unwrap()).unwrap()=="2024-02-29T12:34:55Z");
+    assert(!parseUtc("1900-02-29T00:00:00Z").isOk() && parseUtc("2000-02-29T00:00:00Z").isOk());
+    assert(!parseUtc("2024-01-01T24:00:00Z").isOk() && !parseUtc("2024-01-01T00:00:60Z").isOk());
+    assert(!parseUtc("2024-01-01T00:00:00+08:00").isOk());
+    assert(toUnixSeconds(parseUtc("0001-01-01T00:00:00Z").unwrap()).unwrap()== -62135596800);
+    assert(toUnixSeconds(parseUtc("9999-12-31T23:59:59Z").unwrap()).unwrap()==253402300799);
+    assert(!fromUnixSeconds(253402300800).isOk());
     List<int64> inputs1;inputs1.push(-62135596800);inputs1.push(-2208988800);inputs1.push(-86401);inputs1.push(-1);inputs1.push(0);inputs1.push(86400);inputs1.push(1709210096);inputs1.push(253402300799);for(int64 seconds in inputs1){
-        assert(to_unix_seconds(from_unix_seconds(seconds).unwrap()).unwrap()==seconds);
+        assert(toUnixSeconds(fromUnixSeconds(seconds).unwrap()).unwrap()==seconds);
     }
     println("UTC dates, epochs and arithmetic OK");
 }
@@ -86,20 +86,20 @@ UTC dates, epochs and arithmetic OK
 | 名称 | 声明 |
 | --- | --- |
 | [DateTimeError::toString](#api-0) | `String toString()` |
-| [is_leap_year](#api-1) | `bool is_leap_year(int64 year)` |
-| [days_in_month](#api-2) | `int64 days_in_month(int64 year, int64 month)` |
-| [to_unix_seconds](#api-3) | `Result<int64,std::core::Error> to_unix_seconds(DateTime value)` |
-| [from_unix_seconds](#api-4) | `Result<DateTime,std::core::Error> from_unix_seconds(int64 seconds)` |
-| [date_digits](#api-5) | `String date_digits(int64 value, int64 width)` |
-| [format_utc](#api-6) | `Result<String,std::core::Error> format_utc(DateTime value)` |
-| [parse_utc](#api-7) | `Result<DateTime,std::core::Error> parse_utc(String text)` |
-| [add_seconds](#api-8) | `Result<DateTime,std::core::Error> add_seconds(DateTime value, int64 delta)` |
-| [add_days](#api-9) | `Result<DateTime,std::core::Error> add_days(DateTime value, int64 days)` |
-| [now_utc](#api-10) | `Result<DateTime,std::core::Error> now_utc()` |
+| [isLeapYear](#api-1) | `bool isLeapYear(int64 year)` |
+| [daysInMonth](#api-2) | `int64 daysInMonth(int64 year, int64 month)` |
+| [toUnixSeconds](#api-3) | `Result<int64,std::core::Error> toUnixSeconds(DateTime value)` |
+| [fromUnixSeconds](#api-4) | `Result<DateTime,std::core::Error> fromUnixSeconds(int64 seconds)` |
+| [dateDigits](#api-5) | `String dateDigits(int64 value, int64 width)` |
+| [formatUtc](#api-6) | `Result<String,std::core::Error> formatUtc(DateTime value)` |
+| [parseUtc](#api-7) | `Result<DateTime,std::core::Error> parseUtc(String text)` |
+| [addSeconds](#api-8) | `Result<DateTime,std::core::Error> addSeconds(DateTime value, int64 delta)` |
+| [addDays](#api-9) | `Result<DateTime,std::core::Error> addDays(DateTime value, int64 days)` |
+| [nowUtc](#api-10) | `Result<DateTime,std::core::Error> nowUtc()` |
 | [DateTimeOffset::utc](#api-11) | `Result<DateTime,Error> utc()` |
-| [at_offset](#api-12) | `Result<DateTimeOffset,Error> at_offset(DateTime utc, int64 offset_minutes)` |
-| [format_offset](#api-13) | `Result<String,Error> format_offset(DateTimeOffset value)` |
-| [parse_offset](#api-14) | `Result<DateTimeOffset,Error> parse_offset(String text)` |
+| [atOffset](#api-12) | `Result<DateTimeOffset,Error> atOffset(DateTime utc, int64 offset_minutes)` |
+| [formatOffset](#api-13) | `Result<String,Error> formatOffset(DateTimeOffset value)` |
+| [parseOffset](#api-14) | `Result<DateTimeOffset,Error> parseOffset(String text)` |
 
 <a id="api-0"></a>
 
@@ -141,12 +141,12 @@ obj.toString();
 
 <a id="api-1"></a>
 
-### is_leap_year（2）
+### isLeapYear（2）
 
 **声明**
 
 ```chali
-bool is_leap_year(int64 year);
+bool isLeapYear(int64 year);
 ```
 
 **行为**
@@ -170,7 +170,7 @@ bool is_leap_year(int64 year);
 **调用形式**
 
 ```chali
-std::date_time::is_leap_year(year);
+std::date_time::isLeapYear(year);
 ```
 
 **源码**：[source/std/date_time.chl:20](../../source/std/date_time.chl#L20)。
@@ -179,12 +179,12 @@ std::date_time::is_leap_year(year);
 
 <a id="api-2"></a>
 
-### days_in_month（3）
+### daysInMonth（3）
 
 **声明**
 
 ```chali
-int64 days_in_month(int64 year, int64 month);
+int64 daysInMonth(int64 year, int64 month);
 ```
 
 **行为**
@@ -209,7 +209,7 @@ int64 days_in_month(int64 year, int64 month);
 **调用形式**
 
 ```chali
-std::date_time::days_in_month(year, month);
+std::date_time::daysInMonth(year, month);
 ```
 
 **源码**：[source/std/date_time.chl:22](../../source/std/date_time.chl#L22)。
@@ -218,12 +218,12 @@ std::date_time::days_in_month(year, month);
 
 <a id="api-3"></a>
 
-### to_unix_seconds（4）
+### toUnixSeconds（4）
 
 **声明**
 
 ```chali
-Result<int64,std::core::Error> to_unix_seconds(DateTime value);
+Result<int64,std::core::Error> toUnixSeconds(DateTime value);
 ```
 
 **行为**
@@ -247,7 +247,7 @@ Result<int64,std::core::Error> to_unix_seconds(DateTime value);
 **调用形式**
 
 ```chali
-std::date_time::to_unix_seconds(value);
+std::date_time::toUnixSeconds(value);
 ```
 
 **源码**：[source/std/date_time.chl:29](../../source/std/date_time.chl#L29)。
@@ -256,12 +256,12 @@ std::date_time::to_unix_seconds(value);
 
 <a id="api-4"></a>
 
-### from_unix_seconds（5）
+### fromUnixSeconds（5）
 
 **声明**
 
 ```chali
-Result<DateTime,std::core::Error> from_unix_seconds(int64 seconds);
+Result<DateTime,std::core::Error> fromUnixSeconds(int64 seconds);
 ```
 
 **行为**
@@ -285,7 +285,7 @@ Result<DateTime,std::core::Error> from_unix_seconds(int64 seconds);
 **调用形式**
 
 ```chali
-std::date_time::from_unix_seconds(seconds);
+std::date_time::fromUnixSeconds(seconds);
 ```
 
 **源码**：[source/std/date_time.chl:44](../../source/std/date_time.chl#L44)。
@@ -294,12 +294,12 @@ std::date_time::from_unix_seconds(seconds);
 
 <a id="api-5"></a>
 
-### date_digits（6）
+### dateDigits（6）
 
 **声明**
 
 ```chali
-String date_digits(int64 value, int64 width);
+String dateDigits(int64 value, int64 width);
 ```
 
 **行为**
@@ -324,7 +324,7 @@ String date_digits(int64 value, int64 width);
 **调用形式**
 
 ```chali
-std::date_time::date_digits(value, width);
+std::date_time::dateDigits(value, width);
 ```
 
 **源码**：[source/std/date_time.chl:58](../../source/std/date_time.chl#L58)。
@@ -333,12 +333,12 @@ std::date_time::date_digits(value, width);
 
 <a id="api-6"></a>
 
-### format_utc（7）
+### formatUtc（7）
 
 **声明**
 
 ```chali
-Result<String,std::core::Error> format_utc(DateTime value);
+Result<String,std::core::Error> formatUtc(DateTime value);
 ```
 
 **行为**
@@ -362,7 +362,7 @@ Result<String,std::core::Error> format_utc(DateTime value);
 **调用形式**
 
 ```chali
-std::date_time::format_utc(value);
+std::date_time::formatUtc(value);
 ```
 
 **源码**：[source/std/date_time.chl:70](../../source/std/date_time.chl#L70)。
@@ -371,12 +371,12 @@ std::date_time::format_utc(value);
 
 <a id="api-7"></a>
 
-### parse_utc（8）
+### parseUtc（8）
 
 **声明**
 
 ```chali
-Result<DateTime,std::core::Error> parse_utc(String text);
+Result<DateTime,std::core::Error> parseUtc(String text);
 ```
 
 **行为**
@@ -400,7 +400,7 @@ Result<DateTime,std::core::Error> parse_utc(String text);
 **调用形式**
 
 ```chali
-std::date_time::parse_utc(text);
+std::date_time::parseUtc(text);
 ```
 
 **源码**：[source/std/date_time.chl:76](../../source/std/date_time.chl#L76)。
@@ -409,12 +409,12 @@ std::date_time::parse_utc(text);
 
 <a id="api-8"></a>
 
-### add_seconds（9）
+### addSeconds（9）
 
 **声明**
 
 ```chali
-Result<DateTime,std::core::Error> add_seconds(DateTime value, int64 delta);
+Result<DateTime,std::core::Error> addSeconds(DateTime value, int64 delta);
 ```
 
 **行为**
@@ -439,7 +439,7 @@ Result<DateTime,std::core::Error> add_seconds(DateTime value, int64 delta);
 **调用形式**
 
 ```chali
-std::date_time::add_seconds(value, delta);
+std::date_time::addSeconds(value, delta);
 ```
 
 **源码**：[source/std/date_time.chl:102](../../source/std/date_time.chl#L102)。
@@ -448,12 +448,12 @@ std::date_time::add_seconds(value, delta);
 
 <a id="api-9"></a>
 
-### add_days（10）
+### addDays（10）
 
 **声明**
 
 ```chali
-Result<DateTime,std::core::Error> add_days(DateTime value, int64 days);
+Result<DateTime,std::core::Error> addDays(DateTime value, int64 days);
 ```
 
 **行为**
@@ -478,7 +478,7 @@ Result<DateTime,std::core::Error> add_days(DateTime value, int64 days);
 **调用形式**
 
 ```chali
-std::date_time::add_days(value, days);
+std::date_time::addDays(value, days);
 ```
 
 **源码**：[source/std/date_time.chl:108](../../source/std/date_time.chl#L108)。
@@ -487,12 +487,12 @@ std::date_time::add_days(value, days);
 
 <a id="api-10"></a>
 
-### now_utc（11）
+### nowUtc（11）
 
 **声明**
 
 ```chali
-Result<DateTime,std::core::Error> now_utc();
+Result<DateTime,std::core::Error> nowUtc();
 ```
 
 **行为**
@@ -514,7 +514,7 @@ Result<DateTime,std::core::Error> now_utc();
 **调用形式**
 
 ```chali
-std::date_time::now_utc();
+std::date_time::nowUtc();
 ```
 
 **源码**：[source/std/date_time.chl:115](../../source/std/date_time.chl#L115)。
@@ -559,12 +559,12 @@ obj.utc();
 
 <a id="api-12"></a>
 
-### at_offset（13）
+### atOffset（13）
 
 **声明**
 
 ```chali
-Result<DateTimeOffset,Error> at_offset(DateTime utc, int64 offset_minutes);
+Result<DateTimeOffset,Error> atOffset(DateTime utc, int64 offset_minutes);
 ```
 
 **行为**
@@ -589,7 +589,7 @@ Result<DateTimeOffset,Error> at_offset(DateTime utc, int64 offset_minutes);
 **调用形式**
 
 ```chali
-std::date_time::at_offset(utc, offset_minutes);
+std::date_time::atOffset(utc, offset_minutes);
 ```
 
 **源码**：[source/std/date_time.chl:139](../../source/std/date_time.chl#L139)。
@@ -598,12 +598,12 @@ std::date_time::at_offset(utc, offset_minutes);
 
 <a id="api-13"></a>
 
-### format_offset（14）
+### formatOffset（14）
 
 **声明**
 
 ```chali
-Result<String,Error> format_offset(DateTimeOffset value);
+Result<String,Error> formatOffset(DateTimeOffset value);
 ```
 
 **行为**
@@ -627,7 +627,7 @@ Result<String,Error> format_offset(DateTimeOffset value);
 **调用形式**
 
 ```chali
-std::date_time::format_offset(value);
+std::date_time::formatOffset(value);
 ```
 
 **源码**：[source/std/date_time.chl:150](../../source/std/date_time.chl#L150)。
@@ -636,12 +636,12 @@ std::date_time::format_offset(value);
 
 <a id="api-14"></a>
 
-### parse_offset（15）
+### parseOffset（15）
 
 **声明**
 
 ```chali
-Result<DateTimeOffset,Error> parse_offset(String text);
+Result<DateTimeOffset,Error> parseOffset(String text);
 ```
 
 **行为**
@@ -665,7 +665,7 @@ Result<DateTimeOffset,Error> parse_offset(String text);
 **调用形式**
 
 ```chali
-std::date_time::parse_offset(text);
+std::date_time::parseOffset(text);
 ```
 
 **源码**：[source/std/date_time.chl:161](../../source/std/date_time.chl#L161)。

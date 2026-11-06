@@ -564,6 +564,7 @@ bool IsTupleElementAccess(int id)
 {
     while (id >= 0)
     {
+        if (!NormalizeTupleIndex(id)) return true;
         const MNode &node = N(id);
         if (node.kind == MNode::Cast)
         {
@@ -820,6 +821,7 @@ std::shared_ptr<MType> RawExprType(int id)
     NormalizeFormattedOutputCall(id);
     ResolveBufferIndexShadowing(id);
     InferExpression(id);
+    if (!NormalizeTupleIndex(id)) return T(M_TypeVoid());
     const MNode node = N(id);
     switch (node.kind)
     {

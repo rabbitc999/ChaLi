@@ -68,6 +68,11 @@ enum Kind { Integer, Symbol };
     assert any(r['name']=='DateTime::year' and '公历年份' in r['documentation'] for r in symbols)
     assert any(r['name']=='LuFactorization' and r['kind']=='struct' for r in symbols)
     assert any(r['module']=='std::big_number' and r['name']=='BigInteger::pow' for r in index)
+    for module, names in {'std::gui': {'openWindow','Widget::draw','textBox','EventBus::pump'},
+                          'std::audio': {'open','isPlaying'}, 'std::xml': {'XmlNode::childCount','escapeAttribute'},
+                          'std::crypto': {'randomHex','sha256','hmacSha256','verifyEd25519'}}.items():
+        assert names <= {r['name'] for r in index if r['module']==module}, module
+    assert not any(r['name'].startswith('__') or '#abi' in r['signature'] for r in index)
     assert not any(r['module']=='std' and r['name']=='pause' for r in index)
     for critical in ('mysql','maria','bytesToFloat32','parseInt64','getStructInfo','zipValue','tryFold'):
         assert any(r['name'].split('::')[-1]==critical for r in index),critical
@@ -98,6 +103,10 @@ def main():
             name=source.stem
             compiler=args.chali
             flags=[]
+            if example in (EXAMPLES['std::gui'], EXAMPLES['std::audio']):
+                run([compiler.resolve(),'check',source])
+                print('[通过语义检查] '+example+'；设备与显示测试由原生模块专项执行',flush=True)
+                continue
             if example==EXAMPLES['std::reflect']:
                 if not args.reflection_compiler:
                     print('[跳过] reflect：需 --reflection-compiler 指定启用反射的工具链',flush=True)

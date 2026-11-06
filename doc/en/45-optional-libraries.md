@@ -32,64 +32,64 @@ chali run example/desktop-gui/audio.chl --out build/audio-demo -- path/to/tone.w
 
 ### Controls and callbacks
 
-The binding covers all **34 controls** in pinned raygui 4.0. Each control has a lowercase factory. `control_count()` returns 34 and `control_name(index)` returns its factory name.
+The binding covers all **34 controls** in pinned raygui 4.0. Each control has a lowercase factory. `controlCount()` returns 34 and `controlName(index)` returns its factory name.
 
 | ChaLi factory | raygui control |
 | --- | --- |
-| `window_box` | `GuiWindowBox` |
-| `group_box` | `GuiGroupBox` |
+| `windowBox` | `GuiWindowBox` |
+| `groupBox` | `GuiGroupBox` |
 | `line` | `GuiLine` |
 | `panel` | `GuiPanel` |
-| `tab_bar` | `GuiTabBar` |
-| `scroll_panel` | `GuiScrollPanel` |
+| `tabBar` | `GuiTabBar` |
+| `scrollPanel` | `GuiScrollPanel` |
 | `label` | `GuiLabel` |
 | `button` | `GuiButton` |
-| `label_button` | `GuiLabelButton` |
+| `labelButton` | `GuiLabelButton` |
 | `toggle` | `GuiToggle` |
-| `toggle_group` | `GuiToggleGroup` |
-| `toggle_slider` | `GuiToggleSlider` |
-| `check_box` | `GuiCheckBox` |
-| `combo_box` | `GuiComboBox` |
-| `dropdown_box` | `GuiDropdownBox` |
+| `toggleGroup` | `GuiToggleGroup` |
+| `toggleSlider` | `GuiToggleSlider` |
+| `checkBox` | `GuiCheckBox` |
+| `comboBox` | `GuiComboBox` |
+| `dropdownBox` | `GuiDropdownBox` |
 | `spinner` | `GuiSpinner` |
-| `value_box` | `GuiValueBox` |
-| `text_box` | `GuiTextBox` |
+| `valueBox` | `GuiValueBox` |
+| `textBox` | `GuiTextBox` |
 | `slider` | `GuiSlider` |
-| `slider_bar` | `GuiSliderBar` |
-| `progress_bar` | `GuiProgressBar` |
-| `status_bar` | `GuiStatusBar` |
-| `dummy_rec` | `GuiDummyRec` |
+| `sliderBar` | `GuiSliderBar` |
+| `progressBar` | `GuiProgressBar` |
+| `statusBar` | `GuiStatusBar` |
+| `dummyRec` | `GuiDummyRec` |
 | `grid` | `GuiGrid` |
-| `list_view` | `GuiListView` |
-| `list_view_ex` | `GuiListViewEx` |
-| `message_box` | `GuiMessageBox` |
-| `text_input_box` | `GuiTextInputBox` |
-| `color_picker` | `GuiColorPicker` |
-| `color_panel` | `GuiColorPanel` |
-| `color_bar_alpha` | `GuiColorBarAlpha` |
-| `color_bar_hue` | `GuiColorBarHue` |
-| `color_picker_hsv` | `GuiColorPickerHSV` |
-| `color_panel_hsv` | `GuiColorPanelHSV` |
+| `listView` | `GuiListView` |
+| `listViewEx` | `GuiListViewEx` |
+| `messageBox` | `GuiMessageBox` |
+| `textInputBox` | `GuiTextInputBox` |
+| `colorPicker` | `GuiColorPicker` |
+| `colorPanel` | `GuiColorPanel` |
+| `colorBarAlpha` | `GuiColorBarAlpha` |
+| `colorBarHue` | `GuiColorBarHue` |
+| `colorPickerHsv` | `GuiColorPickerHSV` |
+| `colorPanelHsv` | `GuiColorPanelHSV` |
 
-Each factory takes text and returns a `Widget`. `draw(Rect::at(x, y, width, height))` renders it and returns an event, processing a model at most once per frame. Register synchronous ChaLi callbacks with `on_event`, `on_click`, `on_change`, `on_submit` and `on_close`. Language objects own the callbacks; the C library retains only text and control state. `clear_callbacks()` releases captured values. `close()` destroys the model and clears callbacks. Dispatch stops if a callback destroys the widget or its window.
+Each factory takes text and returns a `Widget`. `draw(Rect::at(x, y, width, height))` renders it and returns an event, processing a model at most once per frame. Register synchronous ChaLi callbacks with `onEvent`, `onClick`, `onChange`, `onSubmit` and `onClose`. Language objects own the callbacks; the C library retains only text and control state. `clearCallbacks()` releases captured values. `close()` destroys the model and clears callbacks. Dispatch stops if a callback destroys the widget or its window.
 
-`text_box` and `text_input_box` use C-allocated editable UTF-8 buffers. `set_text_capacity` changes capacity transactionally. Use `checked` for boolean state, `selected` for selections, `number` for integer editors, `value` and `set_range` for sliders, and `color` or HSV for colors. `set_items(List<String>)` accepts up to 128 entries; entries cannot contain semicolons or newlines because raygui uses them as separators. `set_content`, `viewport`, `scroll_offset` and `begin_content` support scroll panels and clipping.
+`textBox` and `textInputBox` use C-allocated editable UTF-8 buffers. `setTextCapacity` changes capacity transactionally. Use `checked` for boolean state, `selected` for selections, `number` for integer editors, `value` and `setRange` for sliders, and `color` or HSV for colors. `setItems(List<String>)` accepts up to 128 entries; entries cannot contain semicolons or newlines because raygui uses them as separators. `setContent`, `viewport`, `scrollOffset` and `beginContent` support scroll panels and clipping.
 
-`run(draw, on_event)` manages frames and shutdown. Window events are polled after controls; text controls consume characters first, so window `TextEntered` events contain remaining characters. Events cover opening, closing, resizing, focus, keys, characters, mouse buttons, movement and wheel input. Use `request_close()` from a close button to dispatch one `Closing` event before cleanup. `close()` releases the window immediately. Window shutdown frees all native controls; reopening never makes old IDs valid. Language objects and `clear_callbacks` control the lifetime of callback captures.
+`run(draw, onEvent)` manages frames and shutdown. Window events are polled after controls; text controls consume characters first, so window `TextEntered` events contain remaining characters. Events cover opening, closing, resizing, focus, keys, characters, mouse buttons, movement and wheel input. Use `requestClose()` from a close button to dispatch one `Closing` event before cleanup. `close()` releases the window immediately. Window shutdown frees all native controls; reopening never makes old IDs valid. Language objects and `clearCallbacks` control the lifetime of callback captures.
 
-Perform all UI operations on the creating thread; operations from other threads are rejected. `open_window(width, height, title, options)` accepts bit flags 1 for resizing, 2 for a hidden window and 4 for vsync. `load_font(path, size, glyphs)` loads a font with the required characters; the default font does not guarantee Chinese coverage. The original `open`, immediate `label` and immediate `button` interfaces remain available.
+Perform all UI operations on the creating thread; operations from other threads are rejected. `openWindow(width, height, title, options)` accepts bit flags 1 for resizing, 2 for a hidden window and 4 for vsync. `loadFont(path, size, glyphs)` loads a font with the required characters; the default font does not guarantee Chinese coverage. The original `open`, immediate `label` and immediate `button` interfaces remain available.
 
 The [callback demo](../../example/desktop-gui/demo.chl) shows buttons, a checkbox, text editing, a slider and a progress bar. The native host uses C11 and platform C APIs without requiring the C++ runtime. Audio remains an optional separate build.
 
 ### Drawing, custom widgets, and named events
 
-Draw between `begin_frame()` and `end_frame()` or inside the draw callback passed to `run`. Colors use `0xRRGGBBAA`. The drawing API includes pixels, lines, rounded or outlined rectangles, circles, ellipses, triangles, polygons, cubic Bezier curves, rings, and UTF-8 text. `measure_text` returns text dimensions. Clipping is nested; `clip_bounds()` returns the current intersection.
+Draw between `beginFrame()` and `endFrame()` or inside the draw callback passed to `run`. Colors use `0xRRGGBBAA`. The drawing API includes pixels, lines, rounded or outlined rectangles, circles, ellipses, triangles, polygons, cubic Bezier curves, rings, and UTF-8 text. `measureText` returns text dimensions. Clipping is nested; `clipBounds()` returns the current intersection.
 
-`load_texture(path)` loads a PNG into a window-owned `Texture`. `draw` and `draw_region` support destination rectangles, rotation, and tint. Closing a texture invalidates its handle. Closing the window releases remaining textures, and reopening cannot reuse old identities. Windows UTF-8 font and image paths use C/WinAPI file access.
+`loadTexture(path)` loads a PNG into a window-owned `Texture`. `draw` and `drawRegion` support destination rectangles, rotation, and tint. Closing a texture invalidates its handle. Closing the window releases remaining textures, and reopening cannot reuse old identities. Windows UTF-8 font and image paths use C/WinAPI file access.
 
-`custom_widget()` adds custom drawing and input without changing the 34 built-in control kinds. `on_draw(fn(Rect))` receives screen bounds. `on_event(fn(Event))` and `on(name, fn(Event))` receive events routed through `handle(event)`. Pointer coordinates become widget-local, with pointer capture and focus handling. Names include `pointer.down`, `pointer.up`, `pointer.move`, `pointer.wheel`, `key.down`, `key.up`, `text.input`, `focus.gained`, `focus.lost`, and window events. Callbacks may close their own widget or window safely.
+`customWidget()` adds custom drawing and input without changing the 34 built-in control kinds. `onDraw(fn(Rect))` receives screen bounds. `onEvent(fn(Event))` and `on(name, fn(Event))` receive events routed through `handle(event)`. Pointer coordinates become widget-local, with pointer capture and focus handling. Names include `pointer.down`, `pointer.up`, `pointer.move`, `pointer.wheel`, `key.down`, `key.up`, `text.input`, `focus.gained`, `focus.lost`, and window events. Callbacks may close their own widget or window safely.
 
-`custom_event(name, text, code, value)` owns its text payload. `EventBus` provides `on`, `once`, `off`, synchronous `emit`, and queued `post` / `pump`. One-shot listeners are removed before invocation. Listeners added during dispatch wait for the next dispatch; events posted by queued callbacks wait for the next pump. The queue holds at most 4096 events, a pump processes 256 by default, and recursive dispatch is bounded to depth 64. Check operation results.
+`customEvent(name, text, code, value)` owns its text payload. `EventBus` provides `on`, `once`, `off`, synchronous `emit`, and queued `post` / `pump`. One-shot listeners are removed before invocation. Listeners added during dispatch wait for the next dispatch; events posted by queued callbacks wait for the next pump. The queue holds at most 4096 events, a pump processes 256 by default, and recursive dispatch is bounded to depth 64. Check operation results.
 
 See the [custom slider](../../example/desktop-gui/custom.chl) and [Game of Life](../../example/desktop-gui/life.chl). [Book chapter 30](../book/en/30-standard-library-tour.md) contains the complete model, paused left-click toggling, right-button panning, simulation speed control, and actual screenshots.
 
@@ -107,21 +107,20 @@ XML OK
 ## Cryptography
 
 ```powershell
-python tools/setup_crypto.py
-chali run example/crypto/demo.chl -I build/crypto --out build/crypto/std/demo.exe
+chali run example/crypto/demo.chl --out build/crypto-demo
 ```
 
 ```text
 crypto OK
 ```
-`std::crypto` exposes secure random bytes, SHA-256, HMAC-SHA-256 and detached Ed25519 signature verification. Random bytes and digests use lowercase hexadecimal. Verification takes a fixed-length hexadecimal public key and signature. Windows x64 uses a pinned libsodium archive. Linux uses the system development package.
+Distributions with native services embed the `std::crypto` module and static archives; no `-I` or separate DLL deployment is required. `randomHex`, `sha256`, `hmacSha256` and `verifyEd25519` expose secure random bytes, SHA-256, HMAC-SHA-256 and detached Ed25519 verification. Random byte counts range from 1 to 65536. Random bytes and digests use lowercase hexadecimal. Verification takes fixed-length hexadecimal public keys and signatures. Windows x64 builds use a pinned libsodium archive; Linux builds use system static development packages. See the [cryptography API reference](../library/std-crypto.md).
 
 ## Streaming HTTP
 
 ```powershell
 python tools/setup_http_transfer.py
 ```
-Import `std::net::http` and open an `HttpClient` session. `download_to` streams GET responses to a new file. `upload_file` streams a file using PUT. Requests reuse the same session and eligible connections. The deadline covers the entire request. A synchronous callback can cancel the transfer by returning a nonzero value. HTTP status is separate from transport errors. A download keeps its new file only after a completed 2xx response. Close the session to release connections.
+Import `std::net::http` and open an `HttpClient` session. `downloadTo` streams GET responses to a new file. `uploadFile` streams a file using PUT. Requests reuse the same session and eligible connections. The deadline covers the entire request. A synchronous callback can cancel the transfer by returning a nonzero value. HTTP status is separate from transport errors. A download keeps its new file only after a completed 2xx response. Close the session to release connections.
 
 The extensions use [raylib](https://github.com/raysan5/raylib), [raygui](https://github.com/raysan5/raygui), [Expat](https://github.com/libexpat/libexpat), [libsodium](https://doc.libsodium.org/) and [libcurl](https://curl.se/libcurl/).
 

@@ -53,7 +53,7 @@ These observations apply to the recorded host, implementation and budgets. Re-me
 
 Platform fixes avoid duplicate long/int64 constructors on LP64, delay JSON/TOML member template definitions until value types are complete, and avoid a glibc htons macro collision. The standalone VM CMake target declares its CAS, SQL generation, SQLite, compression, include and host dependencies.
 
-Run `python tests/chali_compiler_safety.py`. On Linux, `--cxx clang++ --sanitize-native` enables ASan, UBSan and float-to-integer checks for native boundaries; `--native-only` runs only that portion. Reflection remains enabled in both frontend and runtime, with default maximum VM and quadruple optimization.
+Run `python tests/chali_compiler_safety.py`. On Linux, `--cxx clang++ --sanitize-native` enables ASan, UBSan and float-to-integer checks for native boundaries; `--native-only` runs only that portion. Reflection remains enabled in both frontend and runtime; checked and unchecked paths retain their respective default optimization levels.
 
 Penetration testing: `python tests/chali_penetration.py` (`--only SUBSTRING` narrows it down). It attacks numeric conversion, literals, container boundaries, ownership propagation and size budgets, then classifies each case as UB / CRASH / TIMEOUT / FAIL / OUTPUT — it collects facts only and leaves the verdict to the reader.
 

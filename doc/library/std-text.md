@@ -14,7 +14,7 @@ import std::text;
 
 ## 公共约定与错误边界
 
-长度、位置和填充宽度按 UTF-8 字节，不按字符数或显示宽度。大小写转换仅 ASCII。除 charAt 返回字节外，变换返回新字符串。字符串下标要求 UTF-8 字符边界；切片允许任意字节端点，处理中文码点时使用显式 UTF-8 方法。kmpFind/kmpFindAll/kmpFailureTable 是字节级 KMP：kmpFind 返回首个匹配的字节下标，找不到为 -1，空针返回 0（与 find 口径一致）；kmpFindAll 返回升序命中下标、允许重叠匹配，空针给空列表；kmpFailureTable 返回长度等于针长的失配表。KMP 失配表、首次及重叠匹配均由 ChaLi 实现，不依赖宿主 KMP 胶水。strip_prefix 与 strip_suffix 各移除一次匹配，is_blank 只识别 ASCII 空白，count_matches 统计互不重叠的匹配且空子串计零。
+长度、位置和填充宽度按 UTF-8 字节，不按字符数或显示宽度。大小写转换仅 ASCII。除 charAt 返回字节外，变换返回新字符串。字符串下标要求 UTF-8 字符边界；切片允许任意字节端点，处理中文码点时使用显式 UTF-8 方法。kmpFind/kmpFindAll/kmpFailureTable 是字节级 KMP：kmpFind 返回首个匹配的字节下标，找不到为 -1，空针返回 0（与 find 口径一致）；kmpFindAll 返回升序命中下标、允许重叠匹配，空针给空列表；kmpFailureTable 返回长度等于针长的失配表。KMP 失配表、首次及重叠匹配均由 ChaLi 实现，不依赖宿主 KMP 胶水。stripPrefix 与 stripSuffix 各移除一次匹配，isBlank 只识别 ASCII 空白，countMatches 统计互不重叠的匹配且空子串计零。
 
 ## 参考代码
 
@@ -91,10 +91,10 @@ void main() {
 | [Text::contains](#api-2) | `static bool contains(std::core::String text, std::core::String needle)` |
 | [Text::startsWith](#api-3) | `static bool startsWith(std::core::String text, std::core::String prefix)` |
 | [Text::endsWith](#api-4) | `static bool endsWith(std::core::String text, std::core::String suffix)` |
-| [Text::strip_prefix](#api-5) | `static std::core::String strip_prefix(std::core::String text, std::core::String prefix)` |
-| [Text::strip_suffix](#api-6) | `static std::core::String strip_suffix(std::core::String text, std::core::String suffix)` |
-| [Text::is_blank](#api-7) | `static bool is_blank(std::core::String text)` |
-| [Text::count_matches](#api-8) | `static int64 count_matches(std::core::String text, std::core::String needle)` |
+| [Text::stripPrefix](#api-5) | `static std::core::String stripPrefix(std::core::String text, std::core::String prefix)` |
+| [Text::stripSuffix](#api-6) | `static std::core::String stripSuffix(std::core::String text, std::core::String suffix)` |
+| [Text::isBlank](#api-7) | `static bool isBlank(std::core::String text)` |
+| [Text::countMatches](#api-8) | `static int64 countMatches(std::core::String text, std::core::String needle)` |
 | [Text::compare](#api-9) | `static int64 compare(std::core::String left, std::core::String right)` |
 | [Text::toUpper](#api-10) | `static std::core::String toUpper(std::core::String text)` |
 | [Text::toLower](#api-11) | `static std::core::String toLower(std::core::String text)` |
@@ -327,12 +327,12 @@ std::text::Text::endsWith(text, suffix);
 
 <a id="api-5"></a>
 
-### Text::strip_prefix（6）
+### Text::stripPrefix（6）
 
 **声明**
 
 ```chali
-static std::core::String strip_prefix(std::core::String text, std::core::String prefix);
+static std::core::String stripPrefix(std::core::String text, std::core::String prefix);
 ```
 
 **行为**
@@ -357,7 +357,7 @@ static std::core::String strip_prefix(std::core::String text, std::core::String 
 **调用形式**
 
 ```chali
-std::text::Text::strip_prefix(text, prefix);
+std::text::Text::stripPrefix(text, prefix);
 ```
 
 **源码**：[source/std/text.chl:304](../../source/std/text.chl#L304)。
@@ -366,12 +366,12 @@ std::text::Text::strip_prefix(text, prefix);
 
 <a id="api-6"></a>
 
-### Text::strip_suffix（7）
+### Text::stripSuffix（7）
 
 **声明**
 
 ```chali
-static std::core::String strip_suffix(std::core::String text, std::core::String suffix);
+static std::core::String stripSuffix(std::core::String text, std::core::String suffix);
 ```
 
 **行为**
@@ -396,7 +396,7 @@ static std::core::String strip_suffix(std::core::String text, std::core::String 
 **调用形式**
 
 ```chali
-std::text::Text::strip_suffix(text, suffix);
+std::text::Text::stripSuffix(text, suffix);
 ```
 
 **源码**：[source/std/text.chl:309](../../source/std/text.chl#L309)。
@@ -405,12 +405,12 @@ std::text::Text::strip_suffix(text, suffix);
 
 <a id="api-7"></a>
 
-### Text::is_blank（8）
+### Text::isBlank（8）
 
 **声明**
 
 ```chali
-static bool is_blank(std::core::String text);
+static bool isBlank(std::core::String text);
 ```
 
 **行为**
@@ -434,7 +434,7 @@ static bool is_blank(std::core::String text);
 **调用形式**
 
 ```chali
-std::text::Text::is_blank(text);
+std::text::Text::isBlank(text);
 ```
 
 **源码**：[source/std/text.chl:314](../../source/std/text.chl#L314)。
@@ -443,12 +443,12 @@ std::text::Text::is_blank(text);
 
 <a id="api-8"></a>
 
-### Text::count_matches（9）
+### Text::countMatches（9）
 
 **声明**
 
 ```chali
-static int64 count_matches(std::core::String text, std::core::String needle);
+static int64 countMatches(std::core::String text, std::core::String needle);
 ```
 
 **行为**
@@ -473,7 +473,7 @@ static int64 count_matches(std::core::String text, std::core::String needle);
 **调用形式**
 
 ```chali
-std::text::Text::count_matches(text, needle);
+std::text::Text::countMatches(text, needle);
 ```
 
 **源码**：[source/std/text.chl:322](../../source/std/text.chl#L322)。

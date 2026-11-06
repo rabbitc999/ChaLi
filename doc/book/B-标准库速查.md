@@ -79,9 +79,9 @@ sum=10
 | [`std::big_number`](../library/std-big_number.md) | `BigInteger` 任意精度整数与 `BigDecimal` 高精度十进制数 |
 | [`std::math`](../library/std-math.md) | `sin` `cos` `sqrt` 等常用函数；`abs` `min` `max` 是泛型入口，`min`/`max` 可以给任意多个实参（常数 `std::math::PI`、`std::math::E`） |
 | [`std::numerics`](../library/std-numerics.md) | 标量数值方法：导数、辛普森积分、二分、RK4、牛顿迭代 |
-| [`std::number_theory`](../library/std-number_theory.md) | 整数数论：模块级泛型 `gcd` `lcm`（任意多个实参）、`add_mod` `mul_mod` `pow_mod` `mod_inverse`，以及确定性的 `is_prime`（Miller-Rabin） |
+| [`std::number_theory`](../library/std-number_theory.md) | 整数数论：模块级泛型 `gcd` `lcm`（任意多个实参）、`addMod` `mulMod` `powMod` `modInverse`，以及确定性的 `isPrime`（Miller-Rabin） |
 | [`std::complex`](../library/std-complex.md) | 复数 `Complex<T>` 及对应算术运算 |
-| [`std::linear_algebra`](../library/std-linear_algebra.md) | 稠密向量与矩阵：`lu_decompose` `symmetric_eigen` `svd` `jordan2` `diagonalize2` |
+| [`std::linear_algebra`](../library/std-linear_algebra.md) | 稠密向量与矩阵：`luDecompose` `symmetricEigen` `svd` `jordan2` `diagonalize2` |
 | [`std::random`](../library/std-random.md) | 确定性随机数（LCG）与熵播种；句柄型状态，实现 `Drop` |
 | [`std::signal`](../library/std-signal.md) | DFT / FFT 与逆变换；基 2 的 FFT 只接受 2 的幂长度 |
 | [`std::cas`](../library/std-cas.md) | `Expr` 精确符号表达式：解析、节点遍历、化简、求导、积分、替换、极限和 Taylor 展开 |
@@ -265,9 +265,9 @@ void main() {
 ## B.7 工程常用操作
 
 - `std::math::PI` 与 `std::math::E` 是模块常量，导入 `std::math` 后可直接读取。高精度圆周率使用 `std::math::pi(digits)`。
-- `std::date_time::parse_offset` 读取 ISO 8601 的显式 UTC 偏移，`utc()` 转回同一时刻的 UTC。偏移是固定数值。
-- `std::iter::group_by` 消费有限游标并按键分组，`chunk` 惰性分块并保留尾块，`zip` 在较短输入结束时停止。
-- `std::log::format_record` 编码结构化 JSON 行，`write_record` 输出到标准错误。
-- `std::io::copy_to` 分块复制；`walk_directory` 递归列出路径；`create_temp_file` 与 `replace_file` 可组合成同目录替换流程。
+- `std::date_time::parseOffset` 读取 ISO 8601 的显式 UTC 偏移，`utc()` 转回同一时刻的 UTC。偏移是固定数值。
+- `std::iter::groupBy` 消费有限游标并按键分组，`chunk` 惰性分块并保留尾块，`zip` 在较短输入结束时停止。
+- `std::log::formatRecord` 编码结构化 JSON 行，`writeRecord` 输出到标准错误。
+- `std::io::copyTo` 分块复制；`walkDirectory` 递归列出路径；`createTempFile` 与 `replaceFile` 可组合成同目录替换流程。
 
 桌面窗体、音频、XML、密码学和 HTTP 流式客户端按需构建。安装命令、完整程序、输出和失败行为见[可选宿主库](../45-optional-libraries.md)。

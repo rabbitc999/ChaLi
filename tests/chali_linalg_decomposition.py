@@ -9,8 +9,8 @@ from compiler_path import compiler_path
 from project_temp import tempfile
 ROOT=Path(__file__).resolve().parents[1]
 BAD=(
- ('let a=std::linear_algebra::Matrix<float64>::zeros(1,2);let result=std::linear_algebra::lu_decompose(a);','LU 分解要求方阵'),
- ('let a=std::linear_algebra::Matrix<float64>::identity(2);a.set(0,1,2.0);let result=std::linear_algebra::symmetric_eigen(a);','symmetricEigen 要求对称矩阵'),
+ ('let a=std::linear_algebra::Matrix<float64>::zeros(1,2);let result=std::linear_algebra::luDecompose(a);','LU 分解要求方阵'),
+ ('let a=std::linear_algebra::Matrix<float64>::identity(2);a.set(0,1,2.0);let result=std::linear_algebra::symmetricEigen(a);','symmetricEigen 要求对称矩阵'),
  ('let a=std::linear_algebra::Matrix<float64>::zeros(0,0);let result=std::linear_algebra::svd(a);','SVD 要求非空矩阵'),
  ('let a=std::linear_algebra::Matrix<float64>::identity(1);let result=std::linear_algebra::jordan2(a);','jordan2 只支持 2x2 矩阵'),
  ('let a=std::linear_algebra::Matrix<float64>::zeros(2,2);a.set(0,1,-1.0);a.set(1,0,1.0);let result=std::linear_algebra::jordan2(a);','jordan2 不支持复特征值'),

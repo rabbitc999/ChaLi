@@ -38,7 +38,7 @@ void main() {
     };
     assert((localWork(5)) == (7));
     assert((std::iter::range(1, 3).zip(std::iter::range(4, 6))
-    .map(fn(pair) { pair.0 + pair.1 }).fold(0, fn(a,b) { a+b })) == (12));
+    .map(fn(pair) { pair[0] + pair[1] }).fold(0, fn(a,b) { a+b })) == (12));
     assert((std::iter::range(1, 5).fold(0, fn(acc, value) { acc + value })) == (10));
     assert((std::iter::range(1, 5).all(fn(value) { value > 0 })) == (true));
     assert((std::iter::range(1, 5).any(fn(value) { value == 3 })) == (true));
@@ -67,8 +67,8 @@ void main() {
     });
     assert((checked.unwrap()) == (6));
     let split = std::iter::range(1, 5).peekingTakeWhile(fn(value) { value < 3 });
-    let prefix = split.0;
-    let rest = split.1;
+    let prefix = split[0];
+    let rest = split[1];
     assert((prefix.count()) == (2));
     assert((rest.next().unwrap()) == (3));
     List<int64> numbers; numbers.push(1); numbers.push(2);

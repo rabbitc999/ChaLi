@@ -121,14 +121,14 @@ void main() {
         (int64, String) mut& tupleRef = &tuple;
         (int64, String) const& tupleRead = tupleRef;
         tupleRef = (2, "two");
-        assert(tuple.0 == 2 && tupleRead.1 == "two");
+        assert(tuple[0] == 2 && tupleRead[1] == "two");
         tupleRef = tupleRef;
-        assert(tupleRead.0 == 2 && tupleRead.1 == "two");
+        assert(tupleRead[0] == 2 && tupleRead[1] == "two");
         tuple = (3, "source");
-        assert(tupleRef.0 == 3 && tupleRead.1 == "source");
+        assert(tupleRef[0] == 3 && tupleRead[1] == "source");
         update(&text, integerRef, decimalRef, setRef, mapRef, tupleRef);
         assert(text == "changed" && (setRead.has(7) != 0) && mapRead["seven"] == 7);
-        assert(tupleRead.0 == 7 && tuple.1 == "seven");
+        assert(tupleRead[0] == 7 && tuple[1] == "seven");
         List<String> list;
         List<String> mut& listRef = &list;
         listRef.push("list");

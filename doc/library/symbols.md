@@ -52,6 +52,13 @@
 | [std::array::DynamicArray::set](std-array.md#api-12) | `void set(int64 position, T value)` |
 | [std::array::DynamicArray::toArray](std-array.md#api-15) | `T[] toArray()` |
 | [std::array::DynamicArray::withCapacity](std-array.md#api-1) | `static DynamicArray<T> withCapacity(int64 capacity)` |
+| [std::audio::close](std-audio.md#api-6) | `void close()` |
+| [std::audio::isPlaying](std-audio.md#api-4) | `bool isPlaying(int64 id)` |
+| [std::audio::load](std-audio.md#api-1) | `int64 load(String path)` |
+| [std::audio::open](std-audio.md#api-0) | `bool open()` |
+| [std::audio::play](std-audio.md#api-2) | `bool play(int64 id)` |
+| [std::audio::stop](std-audio.md#api-3) | `bool stop(int64 id)` |
+| [std::audio::unload](std-audio.md#api-5) | `bool unload(int64 id)` |
 | [std::big_number::BigDecimal::abs](std-big_number.md#api-20) | `BigDecimal abs()` |
 | [std::big_number::BigDecimal::ceil](std-big_number.md#api-23) | `BigInteger ceil()` |
 | [std::big_number::BigDecimal::copy](std-big_number.md#api-17) | `BigDecimal copy()` |
@@ -188,13 +195,13 @@
 | [std::collections::Deque::isEmpty](std-collections.md#api-11) | `bool isEmpty()` |
 | [std::collections::Deque::iterator](std-collections.md#api-6) | `Option<T> iterator(int64 index)` |
 | [std::collections::Deque::len](std-collections.md#api-10) | `int64 len()` |
-| [std::collections::Deque::peek_back](std-collections.md#api-8) | `Option<T> peek_back()` |
-| [std::collections::Deque::peek_front](std-collections.md#api-7) | `Option<T> peek_front()` |
+| [std::collections::Deque::peekBack](std-collections.md#api-8) | `Option<T> peekBack()` |
+| [std::collections::Deque::peekFront](std-collections.md#api-7) | `Option<T> peekFront()` |
 | [std::collections::Deque::popBack](std-collections.md#api-3) | `Option<T> popBack()` |
 | [std::collections::Deque::popFront](std-collections.md#api-4) | `Option<T> popFront()` |
 | [std::collections::Deque::pushBack](std-collections.md#api-1) | `void pushBack(T value)` |
 | [std::collections::Deque::pushFront](std-collections.md#api-2) | `void pushFront(T value)` |
-| [std::collections::Deque::to_list](std-collections.md#api-9) | `List<T> to_list()` |
+| [std::collections::Deque::toList](std-collections.md#api-9) | `List<T> toList()` |
 | [std::collections::FixedVector::capacityValue](std-collections.md#api-51) | `int64 capacityValue()` |
 | [std::collections::FixedVector::drop](std-collections.md#api-52) | `void drop()` |
 | [std::collections::FixedVector::index](std-collections.md#api-48) | `T index(int64 key)` |
@@ -210,14 +217,14 @@
 | [std::collections::Queue::iterator](std-collections.md#api-19) | `Option<T> iterator(int64 index)` |
 | [std::collections::Queue::len](std-collections.md#api-20) | `int64 len()` |
 | [std::collections::Queue::peek](std-collections.md#api-17) | `Option<T> peek()` |
-| [std::collections::Queue::peek_back](std-collections.md#api-18) | `Option<T> peek_back()` |
+| [std::collections::Queue::peekBack](std-collections.md#api-18) | `Option<T> peekBack()` |
 | [std::collections::Queue::pop](std-collections.md#api-16) | `Option<T> pop()` |
 | [std::collections::Queue::push](std-collections.md#api-15) | `void push(T value)` |
 | [std::collections::RingBuffer::available](std-collections.md#api-39) | `int64 available()` |
 | [std::collections::RingBuffer::clear](std-collections.md#api-43) | `void clear()` |
 | [std::collections::RingBuffer::drop](std-collections.md#api-44) | `void drop()` |
-| [std::collections::RingBuffer::is_empty](std-collections.md#api-40) | `bool is_empty()` |
-| [std::collections::RingBuffer::is_full](std-collections.md#api-41) | `bool is_full()` |
+| [std::collections::RingBuffer::isEmpty](std-collections.md#api-40) | `bool isEmpty()` |
+| [std::collections::RingBuffer::isFull](std-collections.md#api-41) | `bool isFull()` |
 | [std::collections::RingBuffer::iterator](std-collections.md#api-37) | `Option<T> iterator(int64 index)` |
 | [std::collections::RingBuffer::len](std-collections.md#api-38) | `int64 len()` |
 | [std::collections::RingBuffer::peek](std-collections.md#api-42) | `Option<T> peek()` |
@@ -231,7 +238,7 @@
 | [std::collections::Stack::iterator](std-collections.md#api-29) | `Option<T> iterator(int64 index)` |
 | [std::collections::Stack::len](std-collections.md#api-30) | `int64 len()` |
 | [std::collections::Stack::peek](std-collections.md#api-27) | `Option<T> peek()` |
-| [std::collections::Stack::peek_bottom](std-collections.md#api-28) | `Option<T> peek_bottom()` |
+| [std::collections::Stack::peekBottom](std-collections.md#api-28) | `Option<T> peekBottom()` |
 | [std::collections::Stack::pop](std-collections.md#api-26) | `Option<T> pop()` |
 | [std::collections::Stack::push](std-collections.md#api-25) | `void push(T value)` |
 | [std::complex::Complex::conjugate](std-complex.md#api-1) | `Complex<T> conjugate()` |
@@ -533,25 +540,29 @@
 | [std::core::tryGet](std-core.md#api-129) | `Option<T> tryGet<T>(Any const& value)` |
 | [std::core::tryGetMut](std-core.md#api-131) | `Option<T mut&> tryGetMut<T>(Any mut& value)` |
 | [std::core::tryGetReference](std-core.md#api-130) | `Option<T const&> tryGetReference<T>(Any const& value)` |
+| [std::crypto::hmacSha256](std-crypto.md#api-2) | `Result<String,Error> hmacSha256(String input, String key)` |
+| [std::crypto::randomHex](std-crypto.md#api-0) | `Result<String,Error> randomHex(int64 count)` |
+| [std::crypto::sha256](std-crypto.md#api-1) | `Result<String,Error> sha256(String input)` |
+| [std::crypto::verifyEd25519](std-crypto.md#api-3) | `bool verifyEd25519(String input, String public_key, String signature)` |
 | [std::csv::CsvError::toString](std-csv.md#api-0) | `String toString()` |
 | [std::csv::csvError](std-csv.md#api-1) | `CsvError csvError(int64 line, int64 column, String message)` |
 | [std::csv::parseCsv](std-csv.md#api-2) | `Result<List<List<String>>,std::core::Error> parseCsv(String text, char delimiter=',')` |
 | [std::csv::writeCsv](std-csv.md#api-3) | `Result<String,std::core::Error> writeCsv(List<List<String>> rows, char delimiter=',')` |
 | [std::date_time::DateTimeError::toString](std-date_time.md#api-0) | `String toString()` |
 | [std::date_time::DateTimeOffset::utc](std-date_time.md#api-11) | `Result<DateTime,Error> utc()` |
-| [std::date_time::add_days](std-date_time.md#api-9) | `Result<DateTime,std::core::Error> add_days(DateTime value, int64 days)` |
-| [std::date_time::add_seconds](std-date_time.md#api-8) | `Result<DateTime,std::core::Error> add_seconds(DateTime value, int64 delta)` |
-| [std::date_time::at_offset](std-date_time.md#api-12) | `Result<DateTimeOffset,Error> at_offset(DateTime utc, int64 offset_minutes)` |
-| [std::date_time::date_digits](std-date_time.md#api-5) | `String date_digits(int64 value, int64 width)` |
-| [std::date_time::days_in_month](std-date_time.md#api-2) | `int64 days_in_month(int64 year, int64 month)` |
-| [std::date_time::format_offset](std-date_time.md#api-13) | `Result<String,Error> format_offset(DateTimeOffset value)` |
-| [std::date_time::format_utc](std-date_time.md#api-6) | `Result<String,std::core::Error> format_utc(DateTime value)` |
-| [std::date_time::from_unix_seconds](std-date_time.md#api-4) | `Result<DateTime,std::core::Error> from_unix_seconds(int64 seconds)` |
-| [std::date_time::is_leap_year](std-date_time.md#api-1) | `bool is_leap_year(int64 year)` |
-| [std::date_time::now_utc](std-date_time.md#api-10) | `Result<DateTime,std::core::Error> now_utc()` |
-| [std::date_time::parse_offset](std-date_time.md#api-14) | `Result<DateTimeOffset,Error> parse_offset(String text)` |
-| [std::date_time::parse_utc](std-date_time.md#api-7) | `Result<DateTime,std::core::Error> parse_utc(String text)` |
-| [std::date_time::to_unix_seconds](std-date_time.md#api-3) | `Result<int64,std::core::Error> to_unix_seconds(DateTime value)` |
+| [std::date_time::addDays](std-date_time.md#api-9) | `Result<DateTime,std::core::Error> addDays(DateTime value, int64 days)` |
+| [std::date_time::addSeconds](std-date_time.md#api-8) | `Result<DateTime,std::core::Error> addSeconds(DateTime value, int64 delta)` |
+| [std::date_time::atOffset](std-date_time.md#api-12) | `Result<DateTimeOffset,Error> atOffset(DateTime utc, int64 offset_minutes)` |
+| [std::date_time::dateDigits](std-date_time.md#api-5) | `String dateDigits(int64 value, int64 width)` |
+| [std::date_time::daysInMonth](std-date_time.md#api-2) | `int64 daysInMonth(int64 year, int64 month)` |
+| [std::date_time::formatOffset](std-date_time.md#api-13) | `Result<String,Error> formatOffset(DateTimeOffset value)` |
+| [std::date_time::formatUtc](std-date_time.md#api-6) | `Result<String,std::core::Error> formatUtc(DateTime value)` |
+| [std::date_time::fromUnixSeconds](std-date_time.md#api-4) | `Result<DateTime,std::core::Error> fromUnixSeconds(int64 seconds)` |
+| [std::date_time::isLeapYear](std-date_time.md#api-1) | `bool isLeapYear(int64 year)` |
+| [std::date_time::nowUtc](std-date_time.md#api-10) | `Result<DateTime,std::core::Error> nowUtc()` |
+| [std::date_time::parseOffset](std-date_time.md#api-14) | `Result<DateTimeOffset,Error> parseOffset(String text)` |
+| [std::date_time::parseUtc](std-date_time.md#api-7) | `Result<DateTime,std::core::Error> parseUtc(String text)` |
+| [std::date_time::toUnixSeconds](std-date_time.md#api-3) | `Result<int64,std::core::Error> toUnixSeconds(DateTime value)` |
 | [std::encoding::EncodingError::toString](std-encoding.md#api-0) | `String toString()` |
 | [std::encoding::decodeBase64](std-encoding.md#api-6) | `Result<List<uint8>,std::core::Error> decodeBase64(String text, bool url=false)` |
 | [std::encoding::decodeBase64Url](std-encoding.md#api-7) | `Result<List<uint8>,std::core::Error> decodeBase64Url(String text)` |
@@ -596,6 +607,212 @@
 | [std::graph::UnionFind::sizeOf](std-graph.md#api-5) | `int64 sizeOf(int64 x)` |
 | [std::graph::UnionFind::sizes](std-graph.md#api-9) | `List<int64> sizes()` |
 | [std::graph::UnionFind::unionSets](std-graph.md#api-3) | `bool unionSets(int64 a,int64 b)` |
+| [std::gui::CustomWidget::blur](std-gui.md#api-183) | `void blur()` |
+| [std::gui::CustomWidget::bounds](std-gui.md#api-198) | `Rect bounds()` |
+| [std::gui::CustomWidget::checked](std-gui.md#api-197) | `bool checked()` |
+| [std::gui::CustomWidget::clearCallbacks](std-gui.md#api-180) | `void clearCallbacks()` |
+| [std::gui::CustomWidget::close](std-gui.md#api-181) | `void close()` |
+| [std::gui::CustomWidget::draw](std-gui.md#api-200) | `bool draw(Rect bounds)` |
+| [std::gui::CustomWidget::emit](std-gui.md#api-202) | `bool emit(Event event)` |
+| [std::gui::CustomWidget::enabled](std-gui.md#api-188) | `bool enabled()` |
+| [std::gui::CustomWidget::focus](std-gui.md#api-182) | `bool focus()` |
+| [std::gui::CustomWidget::handle](std-gui.md#api-201) | `bool handle(Event event)` |
+| [std::gui::CustomWidget::hasFocus](std-gui.md#api-184) | `bool hasFocus()` |
+| [std::gui::CustomWidget::id](std-gui.md#api-174) | `int64 id()` |
+| [std::gui::CustomWidget::isValid](std-gui.md#api-173) | `bool isValid()` |
+| [std::gui::CustomWidget::number](std-gui.md#api-195) | `int64 number()` |
+| [std::gui::CustomWidget::off](std-gui.md#api-179) | `bool off(int64 id)` |
+| [std::gui::CustomWidget::on](std-gui.md#api-177) | `int64 on(String name, void fn(Event) callback)` |
+| [std::gui::CustomWidget::onDraw](std-gui.md#api-175) | `void onDraw(void fn(Rect) callback)` |
+| [std::gui::CustomWidget::onEvent](std-gui.md#api-176) | `void onEvent(void fn(Event) callback)` |
+| [std::gui::CustomWidget::once](std-gui.md#api-178) | `int64 once(String name, void fn(Event) callback)` |
+| [std::gui::CustomWidget::setChecked](std-gui.md#api-196) | `bool setChecked(bool value)` |
+| [std::gui::CustomWidget::setClipping](std-gui.md#api-199) | `void setClipping(bool enabled)` |
+| [std::gui::CustomWidget::setEnabled](std-gui.md#api-186) | `bool setEnabled(bool enabled)` |
+| [std::gui::CustomWidget::setNumber](std-gui.md#api-194) | `bool setNumber(int64 value)` |
+| [std::gui::CustomWidget::setRange](std-gui.md#api-191) | `bool setRange(float64 minimum, float64 maximum)` |
+| [std::gui::CustomWidget::setText](std-gui.md#api-189) | `bool setText(String text)` |
+| [std::gui::CustomWidget::setValue](std-gui.md#api-192) | `bool setValue(float64 value)` |
+| [std::gui::CustomWidget::setVisible](std-gui.md#api-185) | `bool setVisible(bool visible)` |
+| [std::gui::CustomWidget::text](std-gui.md#api-190) | `String text()` |
+| [std::gui::CustomWidget::value](std-gui.md#api-193) | `float64 value()` |
+| [std::gui::CustomWidget::visible](std-gui.md#api-187) | `bool visible()` |
+| [std::gui::Event::changed](std-gui.md#api-9) | `bool changed()` |
+| [std::gui::Event::clicked](std-gui.md#api-10) | `bool clicked()` |
+| [std::gui::Event::closed](std-gui.md#api-13) | `bool closed()` |
+| [std::gui::Event::editingChanged](std-gui.md#api-12) | `bool editingChanged()` |
+| [std::gui::Event::focusChanged](std-gui.md#api-17) | `bool focusChanged()` |
+| [std::gui::Event::hovered](std-gui.md#api-16) | `bool hovered()` |
+| [std::gui::Event::isValid](std-gui.md#api-7) | `bool isValid()` |
+| [std::gui::Event::kind](std-gui.md#api-8) | `EventKind kind()` |
+| [std::gui::Event::scrolled](std-gui.md#api-15) | `bool scrolled()` |
+| [std::gui::Event::selectionChanged](std-gui.md#api-14) | `bool selectionChanged()` |
+| [std::gui::Event::submitted](std-gui.md#api-11) | `bool submitted()` |
+| [std::gui::EventBus::clear](std-gui.md#api-168) | `void clear()` |
+| [std::gui::EventBus::emit](std-gui.md#api-169) | `int64 emit(Event event)` |
+| [std::gui::EventBus::off](std-gui.md#api-167) | `bool off(int64 id)` |
+| [std::gui::EventBus::on](std-gui.md#api-165) | `int64 on(String name, void fn(Event) callback)` |
+| [std::gui::EventBus::once](std-gui.md#api-166) | `int64 once(String name, void fn(Event) callback)` |
+| [std::gui::EventBus::pending](std-gui.md#api-171) | `int64 pending()` |
+| [std::gui::EventBus::post](std-gui.md#api-170) | `bool post(Event event)` |
+| [std::gui::EventBus::pump](std-gui.md#api-172) | `int64 pump(int64 maximum = 256)` |
+| [std::gui::Point::at](std-gui.md#api-22) | `static Point at(float64 x, float64 y)` |
+| [std::gui::Rect::at](std-gui.md#api-18) | `static Rect at(float64 x, float64 y, float64 width, float64 height)` |
+| [std::gui::Rect::contains](std-gui.md#api-19) | `bool contains(float64 x, float64 y)` |
+| [std::gui::Rect::intersection](std-gui.md#api-20) | `Rect intersection(Rect other)` |
+| [std::gui::Rect::isValid](std-gui.md#api-21) | `bool isValid()` |
+| [std::gui::Texture::close](std-gui.md#api-159) | `void close()` |
+| [std::gui::Texture::draw](std-gui.md#api-161) | `bool draw(Rect destination, uint32 tint = (uint32)4294967295)` |
+| [std::gui::Texture::drawRegion](std-gui.md#api-162) | `bool drawRegion(Rect source, Rect destination, Point origin, float64 rotation, uint32 tint = (uint32)4294967295)` |
+| [std::gui::Texture::isValid](std-gui.md#api-158) | `bool isValid()` |
+| [std::gui::Texture::size](std-gui.md#api-160) | `Point size()` |
+| [std::gui::Widget::beginContent](std-gui.md#api-105) | `bool beginContent()` |
+| [std::gui::Widget::brightness](std-gui.md#api-99) | `float64 brightness()` |
+| [std::gui::Widget::checked](std-gui.md#api-74) | `bool checked()` |
+| [std::gui::Widget::clearCallbacks](std-gui.md#api-57) | `void clearCallbacks()` |
+| [std::gui::Widget::close](std-gui.md#api-58) | `void close()` |
+| [std::gui::Widget::color](std-gui.md#api-95) | `uint32 color()` |
+| [std::gui::Widget::draw](std-gui.md#api-64) | `Event draw(Rect bounds)` |
+| [std::gui::Widget::editing](std-gui.md#api-76) | `bool editing()` |
+| [std::gui::Widget::enabled](std-gui.md#api-82) | `bool enabled()` |
+| [std::gui::Widget::focusIndex](std-gui.md#api-90) | `int64 focusIndex()` |
+| [std::gui::Widget::hue](std-gui.md#api-97) | `float64 hue()` |
+| [std::gui::Widget::id](std-gui.md#api-56) | `int64 id()` |
+| [std::gui::Widget::isValid](std-gui.md#api-55) | `bool isValid()` |
+| [std::gui::Widget::number](std-gui.md#api-86) | `int64 number()` |
+| [std::gui::Widget::onChange](std-gui.md#api-61) | `void onChange(void fn(Event) callback)` |
+| [std::gui::Widget::onClick](std-gui.md#api-60) | `void onClick(void fn(Event) callback)` |
+| [std::gui::Widget::onClose](std-gui.md#api-63) | `void onClose(void fn(Event) callback)` |
+| [std::gui::Widget::onEvent](std-gui.md#api-59) | `void onEvent(void fn(Event) callback)` |
+| [std::gui::Widget::onSubmit](std-gui.md#api-62) | `void onSubmit(void fn(Event) callback)` |
+| [std::gui::Widget::result](std-gui.md#api-87) | `int64 result()` |
+| [std::gui::Widget::saturation](std-gui.md#api-98) | `float64 saturation()` |
+| [std::gui::Widget::scrollIndex](std-gui.md#api-89) | `int64 scrollIndex()` |
+| [std::gui::Widget::scrollOffset](std-gui.md#api-103) | `Point scrollOffset()` |
+| [std::gui::Widget::secret](std-gui.md#api-78) | `bool secret()` |
+| [std::gui::Widget::selected](std-gui.md#api-84) | `int64 selected()` |
+| [std::gui::Widget::setButtons](std-gui.md#api-70) | `bool setButtons(String text)` |
+| [std::gui::Widget::setChecked](std-gui.md#api-73) | `bool setChecked(bool value)` |
+| [std::gui::Widget::setColor](std-gui.md#api-94) | `bool setColor(uint32 rgba)` |
+| [std::gui::Widget::setContent](std-gui.md#api-101) | `bool setContent(Rect bounds)` |
+| [std::gui::Widget::setEditing](std-gui.md#api-75) | `bool setEditing(bool value)` |
+| [std::gui::Widget::setEnabled](std-gui.md#api-81) | `bool setEnabled(bool value)` |
+| [std::gui::Widget::setHsv](std-gui.md#api-96) | `bool setHsv(float64 hue, float64 saturation, float64 brightness)` |
+| [std::gui::Widget::setItems](std-gui.md#api-71) | `bool setItems(List<String> items)` |
+| [std::gui::Widget::setLeftText](std-gui.md#api-67) | `bool setLeftText(String text)` |
+| [std::gui::Widget::setMessage](std-gui.md#api-69) | `bool setMessage(String text)` |
+| [std::gui::Widget::setNumber](std-gui.md#api-85) | `bool setNumber(int64 value)` |
+| [std::gui::Widget::setRange](std-gui.md#api-91) | `bool setRange(float64 minimum, float64 maximum)` |
+| [std::gui::Widget::setRightText](std-gui.md#api-68) | `bool setRightText(String text)` |
+| [std::gui::Widget::setScrollIndex](std-gui.md#api-88) | `bool setScrollIndex(int64 value)` |
+| [std::gui::Widget::setScrollOffset](std-gui.md#api-104) | `bool setScrollOffset(float64 x, float64 y)` |
+| [std::gui::Widget::setSecret](std-gui.md#api-77) | `bool setSecret(bool value)` |
+| [std::gui::Widget::setSelected](std-gui.md#api-83) | `bool setSelected(int64 value)` |
+| [std::gui::Widget::setSpacing](std-gui.md#api-100) | `bool setSpacing(float64 spacing, int64 subdivisions)` |
+| [std::gui::Widget::setText](std-gui.md#api-65) | `bool setText(String text)` |
+| [std::gui::Widget::setTextCapacity](std-gui.md#api-72) | `bool setTextCapacity(int64 capacity)` |
+| [std::gui::Widget::setValue](std-gui.md#api-92) | `bool setValue(float64 value)` |
+| [std::gui::Widget::setVisible](std-gui.md#api-79) | `bool setVisible(bool value)` |
+| [std::gui::Widget::text](std-gui.md#api-66) | `String text()` |
+| [std::gui::Widget::value](std-gui.md#api-93) | `float64 value()` |
+| [std::gui::Widget::viewport](std-gui.md#api-102) | `Rect viewport()` |
+| [std::gui::Widget::visible](std-gui.md#api-80) | `bool visible()` |
+| [std::gui::beginClip](std-gui.md#api-44) | `bool beginClip(Rect bounds)` |
+| [std::gui::beginFrame](std-gui.md#api-1) | `bool beginFrame()` |
+| [std::gui::button](std-gui.md#api-115) | `Widget button(String text)` |
+| [std::gui::button](std-gui.md#api-6) | `bool button(int32 x, int32 y, int32 width, int32 height, String text)` |
+| [std::gui::checkBox](std-gui.md#api-120) | `Widget checkBox(String text)` |
+| [std::gui::clipBounds](std-gui.md#api-146) | `Rect clipBounds()` |
+| [std::gui::close](std-gui.md#api-3) | `void close()` |
+| [std::gui::colorBarAlpha](std-gui.md#api-138) | `Widget colorBarAlpha(String text)` |
+| [std::gui::colorBarHue](std-gui.md#api-139) | `Widget colorBarHue(String text)` |
+| [std::gui::colorPanel](std-gui.md#api-137) | `Widget colorPanel(String text)` |
+| [std::gui::colorPanelHsv](std-gui.md#api-141) | `Widget colorPanelHsv(String text)` |
+| [std::gui::colorPicker](std-gui.md#api-136) | `Widget colorPicker(String text)` |
+| [std::gui::colorPickerHsv](std-gui.md#api-140) | `Widget colorPickerHsv(String text)` |
+| [std::gui::comboBox](std-gui.md#api-121) | `Widget comboBox(String text)` |
+| [std::gui::controlCount](std-gui.md#api-107) | `int64 controlCount()` |
+| [std::gui::controlName](std-gui.md#api-142) | `String controlName(int64 index)` |
+| [std::gui::createControl](std-gui.md#api-106) | `Widget createControl(int64 kind, String text)` |
+| [std::gui::customEvent](std-gui.md#api-164) | `Event customEvent(String name, String text = "", int64 code = 0, float64 value = 0)` |
+| [std::gui::customWidget](std-gui.md#api-203) | `CustomWidget customWidget()` |
+| [std::gui::dpiScale](std-gui.md#api-41) | `Point dpiScale()` |
+| [std::gui::drawBezier](std-gui.md#api-154) | `bool drawBezier(Point start, Point first_control, Point second_control, Point end, float64 thickness, uint32 color)` |
+| [std::gui::drawCircle](std-gui.md#api-150) | `bool drawCircle(Point center, float64 radius, uint32 color, float64 thickness = 0)` |
+| [std::gui::drawEllipse](std-gui.md#api-151) | `bool drawEllipse(Point center, Point radius, uint32 color, bool outline = false)` |
+| [std::gui::drawLine](std-gui.md#api-148) | `bool drawLine(Point start, Point end, float64 thickness, uint32 color)` |
+| [std::gui::drawPixel](std-gui.md#api-147) | `bool drawPixel(Point point, uint32 color)` |
+| [std::gui::drawPolygon](std-gui.md#api-153) | `bool drawPolygon(Point center, int64 sides, float64 radius, float64 rotation, uint32 color, float64 thickness = 0)` |
+| [std::gui::drawRectangle](std-gui.md#api-149) | `bool drawRectangle(Rect bounds, uint32 color, float64 thickness = 0, float64 roundness = 0)` |
+| [std::gui::drawRing](std-gui.md#api-155) | `bool drawRing(Point center, float64 inner_radius, float64 outer_radius, float64 start_angle, float64 end_angle, uint32 color)` |
+| [std::gui::drawText](std-gui.md#api-156) | `bool drawText(String text, Point position, float64 size, uint32 color, float64 spacing = 1)` |
+| [std::gui::drawTriangle](std-gui.md#api-152) | `bool drawTriangle(Point a, Point b, Point c, uint32 color, bool outline = false)` |
+| [std::gui::dropdownBox](std-gui.md#api-122) | `Widget dropdownBox(String text)` |
+| [std::gui::dummyRec](std-gui.md#api-130) | `Widget dummyRec(String text)` |
+| [std::gui::enable](std-gui.md#api-45) | `bool enable(bool value)` |
+| [std::gui::enableTooltips](std-gui.md#api-49) | `bool enableTooltips(bool value)` |
+| [std::gui::endClip](std-gui.md#api-25) | `void endClip()` |
+| [std::gui::endFrame](std-gui.md#api-2) | `void endFrame()` |
+| [std::gui::focused](std-gui.md#api-42) | `bool focused()` |
+| [std::gui::frameActive](std-gui.md#api-143) | `bool frameActive()` |
+| [std::gui::frameCount](std-gui.md#api-145) | `uint64 frameCount()` |
+| [std::gui::frameTime](std-gui.md#api-38) | `float64 frameTime()` |
+| [std::gui::getStyle](std-gui.md#api-27) | `int32 getStyle(int32 control, int32 property)` |
+| [std::gui::grid](std-gui.md#api-131) | `Widget grid(String text)` |
+| [std::gui::groupBox](std-gui.md#api-109) | `Widget groupBox(String text)` |
+| [std::gui::height](std-gui.md#api-37) | `int64 height()` |
+| [std::gui::inputEnabled](std-gui.md#api-144) | `bool inputEnabled()` |
+| [std::gui::label](std-gui.md#api-114) | `Widget label(String text)` |
+| [std::gui::label](std-gui.md#api-5) | `void label(int32 x, int32 y, int32 width, int32 height, String text)` |
+| [std::gui::labelButton](std-gui.md#api-116) | `Widget labelButton(String text)` |
+| [std::gui::line](std-gui.md#api-110) | `Widget line(String text)` |
+| [std::gui::listView](std-gui.md#api-132) | `Widget listView(String text)` |
+| [std::gui::listViewEx](std-gui.md#api-133) | `Widget listViewEx(String text)` |
+| [std::gui::loadFont](std-gui.md#api-28) | `bool loadFont(String path, int32 size, String glyphs)` |
+| [std::gui::loadTexture](std-gui.md#api-163) | `Texture loadTexture(String path)` |
+| [std::gui::lock](std-gui.md#api-46) | `bool lock(bool value)` |
+| [std::gui::measureText](std-gui.md#api-157) | `Point measureText(String text, float64 size, float64 spacing = 1)` |
+| [std::gui::messageBox](std-gui.md#api-134) | `Widget messageBox(String text)` |
+| [std::gui::mousePosition](std-gui.md#api-39) | `Point mousePosition()` |
+| [std::gui::mouseWheel](std-gui.md#api-40) | `Point mouseWheel()` |
+| [std::gui::open](std-gui.md#api-4) | `bool open(int32 width, int32 height, String title)` |
+| [std::gui::open](std-gui.md#api-30) | `bool open(int64 width, int64 height, String title)` |
+| [std::gui::openWindow](std-gui.md#api-29) | `bool openWindow(int64 width, int64 height, String title, int64 options)` |
+| [std::gui::panel](std-gui.md#api-111) | `Widget panel(String text)` |
+| [std::gui::pollEvent](std-gui.md#api-54) | `Event pollEvent()` |
+| [std::gui::progressBar](std-gui.md#api-128) | `Widget progressBar(String text)` |
+| [std::gui::requestClose](std-gui.md#api-23) | `void requestClose()` |
+| [std::gui::resetStyle](std-gui.md#api-50) | `bool resetStyle()` |
+| [std::gui::rgba](std-gui.md#api-53) | `uint32 rgba(int64 red, int64 green, int64 blue, int64 alpha)` |
+| [std::gui::run](std-gui.md#api-205) | `void run(void fn() draw)` |
+| [std::gui::run](std-gui.md#api-204) | `void run(void fn() draw, void fn(Event) onEvent)` |
+| [std::gui::scrollPanel](std-gui.md#api-113) | `Widget scrollPanel(String text)` |
+| [std::gui::setAlpha](std-gui.md#api-47) | `bool setAlpha(float64 value)` |
+| [std::gui::setBackground](std-gui.md#api-24) | `void setBackground(uint32 rgba)` |
+| [std::gui::setExitKey](std-gui.md#api-33) | `bool setExitKey(int64 key)` |
+| [std::gui::setFontSize](std-gui.md#api-51) | `bool setFontSize(int64 value)` |
+| [std::gui::setMinSize](std-gui.md#api-34) | `bool setMinSize(int64 width, int64 height)` |
+| [std::gui::setOpacity](std-gui.md#api-35) | `bool setOpacity(float64 value)` |
+| [std::gui::setState](std-gui.md#api-48) | `bool setState(int64 value)` |
+| [std::gui::setStyle](std-gui.md#api-26) | `bool setStyle(int32 control, int32 property, int32 value)` |
+| [std::gui::setTargetFps](std-gui.md#api-32) | `bool setTargetFps(int64 fps)` |
+| [std::gui::setTitle](std-gui.md#api-31) | `bool setTitle(String text)` |
+| [std::gui::setTooltip](std-gui.md#api-52) | `bool setTooltip(String text)` |
+| [std::gui::shouldClose](std-gui.md#api-0) | `bool shouldClose()` |
+| [std::gui::slider](std-gui.md#api-126) | `Widget slider(String text)` |
+| [std::gui::sliderBar](std-gui.md#api-127) | `Widget sliderBar(String text)` |
+| [std::gui::spinner](std-gui.md#api-123) | `Widget spinner(String text)` |
+| [std::gui::statusBar](std-gui.md#api-129) | `Widget statusBar(String text)` |
+| [std::gui::tabBar](std-gui.md#api-112) | `Widget tabBar(String text)` |
+| [std::gui::textBox](std-gui.md#api-125) | `Widget textBox(String text)` |
+| [std::gui::textInputBox](std-gui.md#api-135) | `Widget textInputBox(String text)` |
+| [std::gui::time](std-gui.md#api-43) | `float64 time()` |
+| [std::gui::toggle](std-gui.md#api-117) | `Widget toggle(String text)` |
+| [std::gui::toggleGroup](std-gui.md#api-118) | `Widget toggleGroup(String text)` |
+| [std::gui::toggleSlider](std-gui.md#api-119) | `Widget toggleSlider(String text)` |
+| [std::gui::valueBox](std-gui.md#api-124) | `Widget valueBox(String text)` |
+| [std::gui::width](std-gui.md#api-36) | `int64 width()` |
+| [std::gui::windowBox](std-gui.md#api-108) | `Widget windowBox(String text)` |
 | [std::image::Image::binarize](std-image.md#api-23) | `static Result<List<uint8>, std::core::Error> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold)` |
 | [std::image::Image::convolve](std-image.md#api-14) | `Result<Image, std::core::Error> convolve(List<float64> kernel, int64 kw, int64 kh)` |
 | [std::image::Image::decode](std-image.md#api-4) | `static Result<Image, std::core::Error> decode(List<uint8> bytes)` |
@@ -641,9 +858,9 @@
 | [std::io::ToString::toString](std-io.md#api-5) | `std::core::String toString()` |
 | [std::io::Writer::flush](std-io.md#api-3) | `Result<int64, std::core::Error> flush()` |
 | [std::io::Writer::write](std-io.md#api-2) | `Result<int64, std::core::Error> write(std::core::String text)` |
-| [std::io::copy_to](std-io.md#api-38) | `Result<int64,Error> copy_to(FileStream mut& source, FileStream mut& destination)` |
+| [std::io::copyTo](std-io.md#api-38) | `Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination)` |
 | [std::io::createDirectories](std-io.md#api-36) | `Result<int64,std::core::Error> createDirectories(String path)` |
-| [std::io::create_temp_file](std-io.md#api-40) | `Result<String,Error> create_temp_file(String path)` |
+| [std::io::createTempFile](std-io.md#api-40) | `Result<String,Error> createTempFile(String path)` |
 | [std::io::fileClose](std-io.md#api-29) | `int64 fileClose(file const& handle)` |
 | [std::io::fileEof](std-io.md#api-28) | `int64 fileEof(file const& handle)` |
 | [std::io::fileInfo](std-io.md#api-35) | `Result<FileInfo,std::core::Error> fileInfo(String path)` |
@@ -659,8 +876,8 @@
 | [std::io::readAllBytes](std-io.md#api-30) | `Result<List<uint8>,std::core::Error> readAllBytes(String path, int64 maxBytes=16777216)` |
 | [std::io::readAllText](std-io.md#api-32) | `Result<String,std::core::Error> readAllText(String path, int64 maxBytes=16777216)` |
 | [std::io::renamePath](std-io.md#api-37) | `Result<int64,std::core::Error> renamePath(String from, String to)` |
-| [std::io::replace_file](std-io.md#api-41) | `Result<int64,Error> replace_file(String from, String to)` |
-| [std::io::walk_directory](std-io.md#api-39) | `Result<List<String>,Error> walk_directory(String path)` |
+| [std::io::replaceFile](std-io.md#api-41) | `Result<int64,Error> replaceFile(String from, String to)` |
+| [std::io::walkDirectory](std-io.md#api-39) | `Result<List<String>,Error> walkDirectory(String path)` |
 | [std::io::writeAllBytes](std-io.md#api-31) | `Result<int64,std::core::Error> writeAllBytes(String path, List<uint8> bytes)` |
 | [std::io::writeAllText](std-io.md#api-33) | `Result<int64,std::core::Error> writeAllText(String path, String text)` |
 | [std::iter::Iter::all](std-iter.md#api-9) | `bool all(bool fn(T) predicate)` |
@@ -747,7 +964,7 @@
 | [std::iter::fromSpan](std-iter.md#api-102) | `Iter<T const&> fromSpan<T>(T const& source, int64 length)` |
 | [std::iter::fromState](std-iter.md#api-13) | `Iter<T> fromState<T,S>(S state)` |
 | [std::iter::fuse](std-iter.md#api-62) | `Iter<T> fuse<T>(Iter<T> source)` |
-| [std::iter::group_by](std-iter.md#api-109) | `Map<K,List<T>> group_by<T,K>(Iter<T> source, K fn(T) key_of)` |
+| [std::iter::groupBy](std-iter.md#api-109) | `Map<K,List<T>> groupBy<T,K>(Iter<T> source, K fn(T) key_of)` |
 | [std::iter::inspect](std-iter.md#api-65) | `Iter<T> inspect<T>(Iter<T> source, void fn(T) action)` |
 | [std::iter::last](std-iter.md#api-83) | `Option<T> last<T>(Iter<T> mut& source)` |
 | [std::iter::listIntoIter](std-iter.md#api-88) | `Iter<T> listIntoIter<T>(std::core::List<T> mut& source)` |
@@ -856,10 +1073,10 @@
 | [std::linear_algebra::Vector::zeros](std-linear_algebra.md#api-9) | `static Vector<T> zeros(int64 n)` |
 | [std::linear_algebra::diagonalize2](std-linear_algebra.md#api-55) | `JordanDecomposition diagonalize2(Matrix<float64> input)` |
 | [std::linear_algebra::jordan2](std-linear_algebra.md#api-54) | `JordanDecomposition jordan2(Matrix<float64> input)` |
-| [std::linear_algebra::lu_decompose](std-linear_algebra.md#api-50) | `LuFactorization lu_decompose(Matrix<float64> input)` |
-| [std::linear_algebra::lur_decompose](std-linear_algebra.md#api-51) | `LuFactorization lur_decompose(Matrix<float64> input)` |
+| [std::linear_algebra::luDecompose](std-linear_algebra.md#api-50) | `LuFactorization luDecompose(Matrix<float64> input)` |
+| [std::linear_algebra::lurDecompose](std-linear_algebra.md#api-51) | `LuFactorization lurDecompose(Matrix<float64> input)` |
 | [std::linear_algebra::svd](std-linear_algebra.md#api-53) | `SingularValueDecomposition svd(Matrix<float64> input)` |
-| [std::linear_algebra::symmetric_eigen](std-linear_algebra.md#api-52) | `EigenDecomposition symmetric_eigen(Matrix<float64> input)` |
+| [std::linear_algebra::symmetricEigen](std-linear_algebra.md#api-52) | `EigenDecomposition symmetricEigen(Matrix<float64> input)` |
 | [std::linked_list::LinkedList::back](std-linked_list.md#api-15) | `Option<int64> back()` |
 | [std::linked_list::LinkedList::clear](std-linked_list.md#api-19) | `void clear()` |
 | [std::linked_list::LinkedList::contains](std-linked_list.md#api-13) | `bool contains(int64 value)` |
@@ -881,8 +1098,8 @@
 | [std::linked_list::LinkedList::reverse](std-linked_list.md#api-9) | `void reverse()` |
 | [std::linked_list::LinkedList::toArray](std-linked_list.md#api-10) | `List<int64> toArray()` |
 | [std::log::LogLevel::label](std-log.md#api-0) | `String label()` |
-| [std::log::format_record](std-log.md#api-1) | `String format_record(LogLevel level, String message, Map<String,String> fields)` |
-| [std::log::write_record](std-log.md#api-2) | `void write_record(LogLevel level, String message, Map<String,String> fields)` |
+| [std::log::formatRecord](std-log.md#api-1) | `String formatRecord(LogLevel level, String message, Map<String,String> fields)` |
+| [std::log::writeRecord](std-log.md#api-2) | `void writeRecord(LogLevel level, String message, Map<String,String> fields)` |
 | [std::math::abs](std-math.md#api-19) | `T abs<T>(T value)` |
 | [std::math::acos](std-math.md#api-5) | `let acos<T>(T value)` |
 | [std::math::asin](std-math.md#api-4) | `let asin<T>(T value)` |
@@ -922,10 +1139,10 @@
 | [std::net::HttpClient::connect](std-net.md#api-31) | `bool connect(std::core::String host, int32 port, int32 timeoutMs)` |
 | [std::net::HttpClient::exchange](std-net.md#api-33) | `HttpResponse exchange(std::core::String method, std::core::String url, std::core::String body, std::core::String contentType)` |
 | [std::net::HttpClient::fetch](std-net.md#api-35) | `static HttpResponse fetch(std::core::String url)` |
-| [std::net::HttpClient::fetch_with_timeout](std-net.md#api-36) | `static HttpResponse fetch_with_timeout(String url, int32 timeoutMs)` |
+| [std::net::HttpClient::fetchWithTimeout](std-net.md#api-36) | `static HttpResponse fetchWithTimeout(String url, int32 timeoutMs)` |
 | [std::net::HttpClient::readAll](std-net.md#api-32) | `std::core::String readAll()` |
 | [std::net::HttpClient::submit](std-net.md#api-37) | `static HttpResponse submit(std::core::String url, std::core::String body, std::core::String contentType)` |
-| [std::net::HttpClient::submit_with_timeout](std-net.md#api-38) | `static HttpResponse submit_with_timeout(String url, String body, String contentType, int32 timeoutMs)` |
+| [std::net::HttpClient::submitWithTimeout](std-net.md#api-38) | `static HttpResponse submitWithTimeout(String url, String body, String contentType, int32 timeoutMs)` |
 | [std::net::HttpResponse::header](std-net.md#api-26) | `std::core::String header(std::core::String name)` |
 | [std::net::HttpResponse::isSuccess](std-net.md#api-25) | `bool isSuccess()` |
 | [std::net::TcpListener::accept](std-net.md#api-22) | `TcpSocket accept()` |
@@ -957,13 +1174,13 @@
 | [std::net::httpScheme](std-net.md#api-27) | `std::core::String httpScheme()` |
 | [std::net::parseResponse](std-net.md#api-30) | `HttpResponse parseResponse(std::core::String raw)` |
 | [std::net::parseUrl](std-net.md#api-28) | `Url parseUrl(std::core::String url)` |
-| [std::number_theory::add_mod](std-number_theory.md#api-2) | `T add_mod<T>(T left, T right, T modulus)` |
+| [std::number_theory::addMod](std-number_theory.md#api-2) | `T addMod<T>(T left, T right, T modulus)` |
 | [std::number_theory::gcd](std-number_theory.md#api-0) | `T gcd<T>(T... values)` |
-| [std::number_theory::is_prime](std-number_theory.md#api-6) | `bool is_prime<T>(T value)` |
+| [std::number_theory::isPrime](std-number_theory.md#api-6) | `bool isPrime<T>(T value)` |
 | [std::number_theory::lcm](std-number_theory.md#api-1) | `T lcm<T>(T... values)` |
-| [std::number_theory::mod_inverse](std-number_theory.md#api-5) | `T mod_inverse<T>(T value, T modulus)` |
-| [std::number_theory::mul_mod](std-number_theory.md#api-3) | `T mul_mod<T>(T left, T right, T modulus)` |
-| [std::number_theory::pow_mod](std-number_theory.md#api-4) | `T pow_mod<T>(T base, T exponent, T modulus)` |
+| [std::number_theory::modInverse](std-number_theory.md#api-5) | `T modInverse<T>(T value, T modulus)` |
+| [std::number_theory::mulMod](std-number_theory.md#api-3) | `T mulMod<T>(T left, T right, T modulus)` |
+| [std::number_theory::powMod](std-number_theory.md#api-4) | `T powMod<T>(T base, T exponent, T modulus)` |
 | [std::numerics::Numerics::bisect](std-numerics.md#api-2) | `static float64 bisect(float64 fn(float64) function, float64 left, float64 right, float64 tolerance, int64 maxIterations)` |
 | [std::numerics::Numerics::derivative](std-numerics.md#api-0) | `static float64 derivative(float64 fn(float64) function, float64 x, float64 step)` |
 | [std::numerics::Numerics::integrateSimpson](std-numerics.md#api-1) | `static float64 integrateSimpson(float64 fn(float64) function, float64 begin, float64 end, int64 intervals)` |
@@ -1131,10 +1348,10 @@
 | [std::text::Text::charAt](std-text.md#api-19) | `static char charAt(std::core::String text, int64 index)` |
 | [std::text::Text::compare](std-text.md#api-9) | `static int64 compare(std::core::String left, std::core::String right)` |
 | [std::text::Text::contains](std-text.md#api-2) | `static bool contains(std::core::String text, std::core::String needle)` |
-| [std::text::Text::count_matches](std-text.md#api-8) | `static int64 count_matches(std::core::String text, std::core::String needle)` |
+| [std::text::Text::countMatches](std-text.md#api-8) | `static int64 countMatches(std::core::String text, std::core::String needle)` |
 | [std::text::Text::endsWith](std-text.md#api-4) | `static bool endsWith(std::core::String text, std::core::String suffix)` |
 | [std::text::Text::find](std-text.md#api-0) | `static int64 find(std::core::String text, std::core::String needle)` |
-| [std::text::Text::is_blank](std-text.md#api-7) | `static bool is_blank(std::core::String text)` |
+| [std::text::Text::isBlank](std-text.md#api-7) | `static bool isBlank(std::core::String text)` |
 | [std::text::Text::join](std-text.md#api-21) | `static std::core::String join(std::core::List<std::core::String> parts, std::core::String separator)` |
 | [std::text::Text::kmpFailureTable](std-text.md#api-24) | `static std::core::List<int64> kmpFailureTable(std::core::String needle)` |
 | [std::text::Text::kmpFind](std-text.md#api-22) | `static int64 kmpFind(std::core::String text, std::core::String needle)` |
@@ -1148,8 +1365,8 @@
 | [std::text::Text::rtrim](std-text.md#api-14) | `static std::core::String rtrim(std::core::String text)` |
 | [std::text::Text::split](std-text.md#api-20) | `static std::core::List<std::core::String> split(std::core::String text, std::core::String separator)` |
 | [std::text::Text::startsWith](std-text.md#api-3) | `static bool startsWith(std::core::String text, std::core::String prefix)` |
-| [std::text::Text::strip_prefix](std-text.md#api-5) | `static std::core::String strip_prefix(std::core::String text, std::core::String prefix)` |
-| [std::text::Text::strip_suffix](std-text.md#api-6) | `static std::core::String strip_suffix(std::core::String text, std::core::String suffix)` |
+| [std::text::Text::stripPrefix](std-text.md#api-5) | `static std::core::String stripPrefix(std::core::String text, std::core::String prefix)` |
+| [std::text::Text::stripSuffix](std-text.md#api-6) | `static std::core::String stripSuffix(std::core::String text, std::core::String suffix)` |
 | [std::text::Text::toLower](std-text.md#api-11) | `static std::core::String toLower(std::core::String text)` |
 | [std::text::Text::toUpper](std-text.md#api-10) | `static std::core::String toUpper(std::core::String text)` |
 | [std::text::Text::trim](std-text.md#api-12) | `static std::core::String trim(std::core::String text)` |
@@ -1220,16 +1437,16 @@
 | [std::tree::AvlTree::height](std-tree.md#api-32) | `int64 height()` |
 | [std::tree::AvlTree::inorder](std-tree.md#api-33) | `List<int64> inorder()` |
 | [std::tree::AvlTree::insert](std-tree.md#api-41) | `bool insert(int64 key)` |
-| [std::tree::AvlTree::is_empty](std-tree.md#api-29) | `bool is_empty()` |
+| [std::tree::AvlTree::isEmpty](std-tree.md#api-29) | `bool isEmpty()` |
 | [std::tree::AvlTree::len](std-tree.md#api-28) | `int64 len()` |
-| [std::tree::AvlTree::lower_bound](std-tree.md#api-37) | `Option<int64> lower_bound(int64 key)` |
+| [std::tree::AvlTree::lowerBound](std-tree.md#api-37) | `Option<int64> lowerBound(int64 key)` |
 | [std::tree::AvlTree::max](std-tree.md#api-36) | `Option<int64> max()` |
 | [std::tree::AvlTree::min](std-tree.md#api-35) | `Option<int64> min()` |
-| [std::tree::AvlTree::pop_max](std-tree.md#api-40) | `Option<int64> pop_max()` |
-| [std::tree::AvlTree::pop_min](std-tree.md#api-39) | `Option<int64> pop_min()` |
+| [std::tree::AvlTree::popMax](std-tree.md#api-40) | `Option<int64> popMax()` |
+| [std::tree::AvlTree::popMin](std-tree.md#api-39) | `Option<int64> popMin()` |
 | [std::tree::AvlTree::remove](std-tree.md#api-42) | `bool remove(int64 key)` |
 | [std::tree::AvlTree::snapshot](std-tree.md#api-34) | `TreeSnapshot snapshot()` |
-| [std::tree::AvlTree::upper_bound](std-tree.md#api-38) | `Option<int64> upper_bound(int64 key)` |
+| [std::tree::AvlTree::upperBound](std-tree.md#api-38) | `Option<int64> upperBound(int64 key)` |
 | [std::tree::BinarySearchTree::clear](std-tree.md#api-3) | `void clear()` |
 | [std::tree::BinarySearchTree::contains](std-tree.md#api-6) | `bool contains(int64 key)` |
 | [std::tree::BinarySearchTree::copy](std-tree.md#api-1) | `BinarySearchTree copy()` |
@@ -1288,3 +1505,11 @@
 | [std::utf8::encodeUtf8Bytes](std-utf8.md#api-4) | `Result<List<uint8>,std::core::Error> encodeUtf8Bytes(List<uint32> points)` |
 | [std::utf8::isValidUtf8](std-utf8.md#api-3) | `bool isValidUtf8(String text)` |
 | [std::utf8::sliceCodePoints](std-utf8.md#api-7) | `Result<String,std::core::Error> sliceCodePoints(String text, int64 start, int64 count)` |
+| [std::xml::XmlNode::attribute](std-xml.md#api-1) | `Option<String> attribute(String name)` |
+| [std::xml::XmlNode::child](std-xml.md#api-3) | `Option<XmlNode> child(int64 index)` |
+| [std::xml::XmlNode::childCount](std-xml.md#api-2) | `int64 childCount()` |
+| [std::xml::XmlNode::name](std-xml.md#api-0) | `String name()` |
+| [std::xml::XmlNode::text](std-xml.md#api-4) | `Option<String> text(int64 index)` |
+| [std::xml::escapeAttribute](std-xml.md#api-7) | `String escapeAttribute(String value)` |
+| [std::xml::escapeText](std-xml.md#api-6) | `String escapeText(String value)` |
+| [std::xml::parse](std-xml.md#api-5) | `Result<XmlNode,Error> parse(String text)` |

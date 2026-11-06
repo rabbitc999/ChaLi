@@ -34,8 +34,8 @@ import std::log;
 | 名称 | 声明 |
 | --- | --- |
 | [LogLevel::label](#api-0) | `String label()` |
-| [format_record](#api-1) | `String format_record(LogLevel level, String message, Map<String,String> fields)` |
-| [write_record](#api-2) | `void write_record(LogLevel level, String message, Map<String,String> fields)` |
+| [formatRecord](#api-1) | `String formatRecord(LogLevel level, String message, Map<String,String> fields)` |
+| [writeRecord](#api-2) | `void writeRecord(LogLevel level, String message, Map<String,String> fields)` |
 
 <a id="api-0"></a>
 
@@ -73,12 +73,12 @@ obj.label();
 
 <a id="api-1"></a>
 
-### format_record（2）
+### formatRecord（2）
 
 **声明**
 
 ```chali
-String format_record(LogLevel level, String message, Map<String,String> fields);
+String formatRecord(LogLevel level, String message, Map<String,String> fields);
 ```
 
 **行为**
@@ -104,19 +104,19 @@ String format_record(LogLevel level, String message, Map<String,String> fields);
 **调用形式**
 
 ```chali
-std::log::format_record(level, message, fields);
+std::log::formatRecord(level, message, fields);
 ```
 
 **源码**：[source/std/log.chl:37](../../source/std/log.chl#L37)。
 
 <a id="api-2"></a>
 
-### write_record（3）
+### writeRecord（3）
 
 **声明**
 
 ```chali
-void write_record(LogLevel level, String message, Map<String,String> fields);
+void writeRecord(LogLevel level, String message, Map<String,String> fields);
 ```
 
 **行为**
@@ -142,7 +142,7 @@ void write_record(LogLevel level, String message, Map<String,String> fields);
 **调用形式**
 
 ```chali
-std::log::write_record(level, message, fields);
+std::log::writeRecord(level, message, fields);
 ```
 
 **源码**：[source/std/log.chl:47](../../source/std/log.chl#L47)。

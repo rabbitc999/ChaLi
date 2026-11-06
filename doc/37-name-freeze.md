@@ -16,6 +16,9 @@ ChaLi 的 C、h、a、L、i 分别对应 Copy、Hygienic、Any、Lifetime 和 In
 | 源文件 | .chl |
 | 诊断码前缀 | CHL |
 | 项目配置 | chali.toml |
+| 标准库复合类型 | 大驼峰：`DateTime`、`XmlNode`、`EventBus` |
+| 标准库方法和模块级函数 | 小驼峰：`childCount`、`isPlaying`、`formatUtc` |
+| 标准库模块 | 小写下划线：`std::date_time`、`std::number_theory`；单词模块如 `std::gui`、`std::audio`、`std::xml` 保持小写 |
 | 编译器产物 | 版本、LLVM 链接方式、系统与架构组成文件名 |
 
 命令通常写 chali，实际源码构建文件名按 [安装说明](39-installation-packages.md) 使用。历史命名保留在 Git 与 CHANGELOG 中。

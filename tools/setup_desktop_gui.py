@@ -57,10 +57,12 @@ def render_gui_module(template, library):
     if not controls or len({name for name, _ in controls}) != len(controls):
         raise ValueError('GUI 控件清单为空或包含重复名称')
     factories = []
-    names = ['/** 查询清单中的控件名称，非法下标返回空串。 */', 'String control_name(int64 index) {']
+    names = ['/** 查询清单中的控件名称，非法下标返回空串。 */', 'String controlName(int64 index) {']
     for index, (name, upstream) in enumerate(controls):
+        parts = name.split('_')
+        name = parts[0] + ''.join(part[:1].upper() + part[1:] for part in parts[1:])
         factories += [f'/** 创建 {upstream} 对应的控件状态，绘制时同步派发变化。 */',
-                      f'Widget {name}(String text) {{ return create_control({index}, text); }}']
+                      f'Widget {name}(String text) {{ return createControl({index}, text); }}']
         names.append(f'    if (index == {index}) {{ return "{name}"; }}')
     names += ['    return "";', '}']
     return (template.replace('@LIBRARY@', library).replace('@CONTROL_COUNT@', str(len(controls)))

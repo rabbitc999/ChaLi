@@ -41,14 +41,14 @@ void main() {
 
     assert(std::number_theory::gcd((uint64)54,(uint64)24)==6);
     assert(std::number_theory::lcm((uint64)6,(uint64)8)==24);
-    assert(std::number_theory::mod_inverse((int64)3,(int64)11)==4);
-    assert(std::number_theory::mod_inverse((int64)-3,(int64)11)==7);
-    assert(std::number_theory::pow_mod((uint64)7,(uint64)128,(uint64)97)==35);
-    assert(std::number_theory::is_prime((uint64)97));
-    assert(!std::number_theory::is_prime((uint64)561));
+    assert(std::number_theory::modInverse((int64)3,(int64)11)==4);
+    assert(std::number_theory::modInverse((int64)-3,(int64)11)==7);
+    assert(std::number_theory::powMod((uint64)7,(uint64)128,(uint64)97)==35);
+    assert(std::number_theory::isPrime((uint64)97));
+    assert(!std::number_theory::isPrime((uint64)561));
     uint64 largePrime=(uint64)2305843009213693951;
     assert(largePrime==(((uint64)1<<61)-1));
-    assert(std::number_theory::mul_mod(largePrime-1,largePrime-1,largePrime)==1);
-    assert(std::number_theory::is_prime((uint64)65537));
+    assert(std::number_theory::mulMod(largePrime-1,largePrime-1,largePrime)==1);
+    assert(std::number_theory::isPrime((uint64)65537));
     println("generic matrix numerics number theory OK");
 }

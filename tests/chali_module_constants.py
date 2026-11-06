@@ -50,12 +50,12 @@ import std::io;
 import std::path;
 void main() {
     let input = std::io::FileStream::open("nested/input.bin", "rb").take();
-    let temporary = std::io::create_temp_file(".").unwrap();
+    let temporary = std::io::createTempFile(".").unwrap();
     let output = std::io::FileStream::open(temporary, "wb").take();
-    assert(std::io::copy_to(&input,&output).unwrap() == 90000);
+    assert(std::io::copyTo(&input,&output).unwrap() == 90000);
     assert(input.close() == 0 && output.close() == 0);
-    assert(std::io::replace_file(temporary, "destination.bin").isOk());
-    assert(std::io::walk_directory("nested").unwrap().len() == 1);
+    assert(std::io::replaceFile(temporary, "destination.bin").isOk());
+    assert(std::io::walkDirectory("nested").unwrap().len() == 1);
     println("streams OK");
 }
 ''','run')

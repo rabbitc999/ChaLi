@@ -502,7 +502,7 @@ int M_Cast(int typeId, int value);
 int M_Index(int base, int position);
 int M_Member(int base, int fieldName);
 /**
- * `value.0` / `value.1`：元组按编译期常量位置读取。
+ * `value[0]` / `value[1]`：元组按编译期常量位置读取。
  */
 int M_TupleMember(int base, int numberNode);
 /**
@@ -755,6 +755,20 @@ int M_ReadOnlyReferenceDecl(int typeExpr, int nameId, int value, int rest = -1);
  * @return 规范只读引用类型编号。
  */
 int M_ReadOnlyReferenceType(int typeExpr);
+/**
+ * @brief 从与下标表达式共享的前缀构造运行时数组类型。
+ * @param typeExpr 类型名称、限定类型名称或元组类型表达式。
+ * @return 供声明、形参及引用共同使用的运行时数组类型编号。
+ */
+int M_RuntimeArrayType(int typeExpr);
+/**
+ * @brief 构造共享下标前缀的具名局部数组或数组引用声明。
+ * @param typeExpr 元素类型语法节点。
+ * @param declarations 声明项列表。
+ * @param referenceKind 零为拥有数组，一为只读引用，二为可写引用。
+ * @return 使用既有数组类型、借用和清理规则的局部声明节点。
+ */
+int M_RuntimeArrayDecl(int typeExpr, int declarations, int referenceKind);
 int M_Decl(int nameId, int arrayDims, int init);
 int M_Decl2(int nameId, int dims, int init);
 /**

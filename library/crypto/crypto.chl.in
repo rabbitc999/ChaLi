@@ -10,7 +10,7 @@ String __hmac(String input, int64 length, String key, int64 key_length) ["chali_
 bool __verify(String input, int64 length, String public_key, String signature);
 
 /** 生成 count 个安全随机字节，以小写十六进制返回。 */
-Result<String,Error> random_hex(int64 count) {
+Result<String,Error> randomHex(int64 count) {
     String value = __random_hex(count);
     if (len(value) == 0) { return Result<String,Error>::Err(MessageError::from("invalid count or random backend unavailable")); }
     return Result<String,Error>::Ok(value);
@@ -24,14 +24,14 @@ Result<String,Error> sha256(String input) {
 }
 
 /** 计算 HMAC-SHA-256，结果采用小写十六进制。 */
-Result<String,Error> hmac_sha256(String input, String key) {
+Result<String,Error> hmacSha256(String input, String key) {
     String value = __hmac(input, len(input), key, len(key));
     if (len(value) == 0) { return Result<String,Error>::Err(MessageError::from("HMAC-SHA-256 backend unavailable")); }
     return Result<String,Error>::Ok(value);
 }
 
 /** 验证十六进制 Ed25519 公钥和分离签名。 */
-bool verify_ed25519(String input, String public_key, String signature) {
+bool verifyEd25519(String input, String public_key, String signature) {
     if (len(public_key) != 64 || len(signature) != 128) { return false; }
     return __verify(input, len(input), public_key, signature);
 }

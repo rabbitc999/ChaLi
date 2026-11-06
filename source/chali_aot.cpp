@@ -62,11 +62,11 @@ bool isDirectLinkLibrary(const Memory::String &library)
 /**
  * @brief 检查编译器内置的静态 C 服务标识。
  * @param library 原始库标识。
- * @return 三个内置服务标识之一为真。
+ * @return 内置原生服务标识之一为真。
  */
 bool isBuiltinNativeLibrary(const Memory::String &library)
 {
-    return library == "@chali/desktop" || library == "@chali/audio" || library == "@chali/xml";
+    return library == "@chali/desktop" || library == "@chali/audio" || library == "@chali/xml" || library == "@chali/crypto";
 }
 namespace
 {
@@ -3090,7 +3090,8 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
                 for (const char *name : { "gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a" }) command += quote((runtimeDirectory / name).generic_u8string()) + " ";
         }
         else command += " -pthread -lm -ldl ";
-        for (const auto &library : request.options.linkLibraries)
+        // linked 包含按实际使用恢复的原生归档；原始 request 不含这些链接输入。
+        for (const auto &library : linked.options.linkLibraries)
         {
             const Text argument = quote(textOf(library));
             if (argument.empty())
