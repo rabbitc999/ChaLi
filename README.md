@@ -10,6 +10,8 @@ The ChaLi compiler's front end is generated from this repository's `source/chali
 [ParseEngine](https://github.com/rabbitc999/ParseEngine). It generates LLVM IR directly from the semantically checked AST and compiles native code through LLVM AOT. run uses checked compilation and execution; build defaults to unchecked export.
 
 
+The latest [ParseEngine repository](https://github.com/rabbitc999/ParseEngine) supports generating parsers written in ChaLi (`--lang chali`) in five modes: **LL(1), SLR(1), LALR(1), LR(1), and IELR(1)**, selected with `--mode ll1`, `slr`, `lalr`, `lr1`, or `ielr`, respectively. The generated `parser.chl` can be run or built with ChaLi. This repository's compiler front end uses the C++17 output target with IELR(1), as configured in `gen.sh`.
+
 See [current capabilities](doc/en/17-capabilities.md) for implemented features, defaults and platform limits; read the current version from [`VERSION`](VERSION).
 
 ## Name and capability references
