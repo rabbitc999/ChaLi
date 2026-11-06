@@ -66,9 +66,9 @@ def compilation(english=False):
     nodes = [
         (40, 145, "1  Source" if english else "1  源码与模块", [".chl + imports", "Embedded standard library"] if english else [".chl 与模块依赖", "内嵌标准库"]),
         (560, 145, "2  Preprocessing" if english else "2  条件预处理", ["%define / %if / %ifdef", "Source locations retained"] if english else ["%define / %if / %ifdef", "保留源文件与行号"]),
-        (1080, 145, "3  Lexing and parsing" if english else "3  词法与语法解析", ["Generated from chali.gram", "Build AST, including macro templates"] if english else ["由 chali.gram 生成的前端", "构建 AST 与宏模板"]),
-        (1080, 315, "4  Semantic analysis" if english else "4  语义分析与宏展开", ["Hygienic expansion + type inference", "Overloads and monomorphisation"] if english else ["卫生 AST 宏展开与类型推导", "名称、重载与泛型单态化"]),
-        (560, 315, "5  Borrow checking" if english else "5  独立借用检查", ["Control flow and reference origins", "Ownership and lifetime diagnostics"] if english else ["控制流与引用来源", "拥有关系及生命周期诊断"]),
+        (1080, 145, "3  Lexing And Parsing" if english else "3  词法与语法解析", ["Generated from chali.gram", "Build AST, including macro templates"] if english else ["由 chali.gram 生成的前端", "构建 AST 与宏模板"]),
+        (1080, 315, "4  Semantic Analysis" if english else "4  语义分析与宏展开", ["Hygienic expansion + type inference", "Overloads and monomorphisation"] if english else ["卫生 AST 宏展开与类型推导", "名称、重载与泛型单态化"]),
+        (560, 315, "5  Borrow Checking" if english else "5  独立借用检查", ["Control flow and reference origins", "Ownership and lifetime diagnostics"] if english else ["控制流与引用来源", "拥有关系及生命周期诊断"]),
         (40, 315, "6  Checked AST" if english else "6  已检查 AST", ["Typed functions and static data", "Source locations retained"] if english else ["已定型函数与静态数据", "保留诊断来源"]),
     ]
     for x, y, heading, lines in nodes:
@@ -77,17 +77,17 @@ def compilation(english=False):
                    ((1300, 265), (1300, 315)), ((1080, 375), (1000, 375)),
                    ((560, 375), (480, 375)), ((260, 435), (260, 485))]:
         arrow(c, points)
-    box(c, 40, 485, 720, "7  Lower to LLVM" if english else "7  降低为 LLVM",
+    box(c, 40, 485, 720, "7  Lower To LLVM" if english else "7  降低为 LLVM",
         ["Types, labels, integer and comparison lowering" if english else "类型与标签、整数及比较跳转降低",
          "Reachable functions, sparse initial data" if english else "可达函数、稀疏初值"], green=True)
     arrow(c, ((760, 545), (800, 545)))
-    box(c, 800, 485, 720, "8  Optimize in LLVM" if english else "8  LLVM 优化",
+    box(c, 800, 485, 720, "8  Optimize In LLVM" if english else "8  LLVM 优化",
         ["LLVM O3 runs the full optimization pipeline" if english else "LLVM O3 完成全部优化",
          "Code generation and link-time optimization" if english else "机器码生成与链接时优化"], green=True)
     outputs = [
-        (40, "LLVM IR / object" if english else "LLVM IR／目标文件", ["--emit-llvm / --emit-obj", "--target selects platform and CPU"] if english else ["--emit-llvm / --emit-obj", "--target 选择目标平台与架构"]),
-        (560, "Run · checked Build", ["Compile native code and execute", "Checks enabled"] if english else ["编译原生机器码并执行", "开启数组与指针检查"]),
-        (1080, "Build · native export" if english else "Build · 原生导出", ["Unchecked export by default", "Executable or shared library"] if english else ["缺省 unchecked 导出", "可执行文件或动态库"]),
+        (40, "LLVM IR / Object" if english else "LLVM IR／目标文件", ["--emit-llvm / --emit-obj", "--target selects platform and CPU"] if english else ["--emit-llvm / --emit-obj", "--target 选择目标平台与架构"]),
+        (560, "Run · Checked Build", ["Compile native code and execute", "Checks enabled"] if english else ["编译原生机器码并执行", "开启数组与指针检查"]),
+        (1080, "Build · Native Export" if english else "Build · 原生导出", ["Unchecked export by default", "Executable or shared library"] if english else ["缺省 unchecked 导出", "可执行文件或动态库"]),
     ]
     arrow(c, ((40, 375), (20, 375), (20, 675), (260, 675), (260, 720)))
     arrow(c, ((1100, 605), (1100, 665), (780, 665), (780, 720)))
@@ -100,17 +100,17 @@ def compilation(english=False):
 def aot(english=False):
     """绘制已检查 AST 经 LLVM 生成原生产物的两种编译器配置。"""
     c = Canvas()
-    title(c, "ChaLi · Release build" if english else "ChaLi · 发布构建流程",
+    title(c, "ChaLi · Release Build" if english else "ChaLi · 发布构建流程",
           "Checked AST → LLVM → target code → native artifact" if english else
           "已检查 AST → LLVM IR → 目标机器码 → 链接原生产物")
     rows = [
-        (40, "1  Source and checks" if english else "1  源码与前端检查",
+        (40, "1  Source And Checks" if english else "1  源码与前端检查",
          [".chl / imports / AST macros", "Types, ownership and lifetimes"] if english else
          [".chl、模块与 AST 宏", "类型、拥有关系及生命周期"]),
         (560, "2  Checked AST" if english else "2  已检查 AST",
          ["Generate LLVM IR directly in C++", "No quadruple serialization"] if english else
          ["C++ 后端直接生成 LLVM IR", "跳过四元式生成、写盘与重读"]),
-        (1080, "3  LLVM module" if english else "3  LLVM 中间表示",
+        (1080, "3  LLVM Module" if english else "3  LLVM 中间表示",
          [".ll + embedded native runtime", "--emit-llvm stops here"] if english else
          [".ll 与内嵌原生运行时", "--emit-llvm 在此停止"]),
     ]
@@ -120,7 +120,7 @@ def aot(english=False):
     arrow(c, ((1000, 210), (1080, 210)))
     arrow(c, ((1300, 270), (1300, 310), (400, 310), (400, 355)))
     arrow(c, ((1300, 310), (1160, 310), (1160, 355)))
-    box(c, 40, 355, 720, "4a  Built-in LLVM" if english else "4a  静态内置 LLVM",
+    box(c, 40, 355, 720, "4a  Built-In LLVM" if english else "4a  静态内置 LLVM",
         ["LLVM optimization + x64 object code" if english else "LLVM 优化与 x64 目标代码生成",
          "In-process LLD + embedded CRT assets" if english else "进程内 LLD 与内嵌 CRT 链接资产"], green=True)
     box(c, 800, 355, 720, "4b  External LLVM" if english else "4b  外置 LLVM 工具链",
@@ -128,13 +128,13 @@ def aot(english=False):
          "library/llvm or explicit --llvm path" if english else "library/llvm 或 --llvm 指定路径"], green=True)
     arrow(c, ((400, 475), (400, 520), (1160, 520), (1160, 475)), head=False)
     arrow(c, ((780, 520), (780, 565)))
-    box(c, 40, 565, 1480, "5  Link native artifact" if english else "5  链接原生产物",
+    box(c, 40, 565, 1480, "5  Link Native Artifact" if english else "5  链接原生产物",
         ["Object code + native runtime + CRT + explicit C ABI libraries" if english else
          "目标代码 + 原生运行时 + CRT + 显式声明的 C ABI 库",
          "--shared / --export / --link select the output and integration" if english else
          "通过 --shared、--export、--link 配置动态库、导出函数与链接库"], green=True)
     arrow(c, ((780, 685), (780, 735)))
-    box(c, 40, 735, 1480, "6  Deliver and run" if english else "6  交付与运行",
+    box(c, 40, 735, 1480, "6  Deliver And Run" if english else "6  交付与运行",
         ["Executable or shared library; no LLVM DLL required by the artifact" if english else
          "可执行文件或动态库；产物无需 LLVM DLL",
          "Ship application C ABI dependencies when used" if english else
