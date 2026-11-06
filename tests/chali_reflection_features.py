@@ -40,7 +40,7 @@ def main():
         assert prefix.with_suffix('.ll').is_file()
         assert not prefix.with_suffix('.quad').exists()
         product = Path(str(work / 'annotated') + EXE)
-        run([chali, 'aot', annotated, '--out', work / 'annotated'])
+        run([chali, 'build', annotated, '--out', work / 'annotated'])
         assert run([product]).stdout == 'feature:42\n'
 
         # 显式关闭后注解不可用：文本诊断与 JSON 诊断都要说清楚是功能开关，而不是语法错误。
@@ -59,7 +59,7 @@ def main():
         source.write_text('import shared;\nvoid main() { println("{}", shared::seed()); }\n', encoding='utf-8')
         incremental = work / 'incremental'
         for active in (True, False, True):
-            command = [chali, 'aot', source, '--emit-llvm', '--reflection' if active else '--no-reflection',
+            command = [chali, 'build', source, '--emit-llvm', '--reflection' if active else '--no-reflection',
                        '--incremental', '-I', work, '--out', incremental]
             result = run(command, success=active)
             if active:

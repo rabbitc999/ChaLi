@@ -66,7 +66,7 @@ def main():
             if full:
                 env['CHALI_AOT_FULL_STDLIB'] = '1'
             prefix = work / (case + '-' + name)
-            result = subprocess.run([str(binary), 'aot', str(path), '--out', str(prefix)], cwd=ROOT,
+            result = subprocess.run([str(binary), 'build', str(path), '--out', str(prefix)], cwd=ROOT,
                                     env=env, capture_output=True, text=True, encoding='utf-8', timeout=1200)
             (work / (case + '-' + name + '-build.log')).write_text(result.stdout + result.stderr, encoding='utf-8')
             assert result.returncode == 0 and not result.stderr, (case, name, result)

@@ -39,7 +39,7 @@ Compile with `CHALI_BACKEND_PROFILE=1` to insert counters at ownership-related A
 
 ```powershell
 $env:CHALI_BACKEND_PROFILE='1'
-chali aot example/samples/backend_ownership.chl --out tmp/ownership-profile
+chali build example/samples/backend_ownership.chl --out tmp/ownership-profile
 Remove-Item Env:CHALI_BACKEND_PROFILE
 $env:CHALI_BACKEND_PROFILE_OUTPUT="$PWD/tmp/ownership-profile.json"
 & ./tmp/ownership-profile.exe

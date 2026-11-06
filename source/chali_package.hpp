@@ -38,15 +38,15 @@ struct Project
      *  程序从该文件的 `main` 开始执行。
      */
     Memory::String main;
-    /// [aot] 交叉编译选项；相对 SDK、运行时和 LLVM 路径以清单所在目录为基准。
+    /// [build] 交叉编译选项；相对 SDK、运行时和 LLVM 路径以清单所在目录为基准。
     Memory::String aotTarget, aotCpu, aotSysroot, aotRuntimeDirectory, aotCompiler, aotOutput, aotAllocator, aotSubsystem;
-    /// [aot] 最终链接输入由命令行同类项覆盖；搜索路径追加在命令行路径之后。
+    /// [build] 最终链接输入由命令行同类项覆盖；搜索路径追加在命令行路径之后。
     Memory::Vector<Memory::String> aotAssemblySources, aotAssemblyIncludes, aotLibraries, aotSearchPaths;
-    /// [aot] 参与最终链接的对象文件，相对路径以清单目录为基准。
+    /// [build] 参与最终链接的对象文件，相对路径以清单目录为基准。
     Memory::Vector<Memory::String> aotObjects;
-    /// [aot] 最终链接是否启用 LTO，默认开启，模式由 aotThinLto 区分。
+    /// [build] 最终链接是否启用 LTO，默认开启，模式由 aotThinLto 区分。
     bool aotLto = true;
-    /// [aot] lto = "thin" 时为真；布尔 true 仍表示完整 LTO。
+    /// [build] lto = "thin" 时为真；布尔 true 仍表示完整 LTO。
     bool aotThinLto = false;
     /**
      * @brief 清单内容 + 锁文件内容的签名（锁文件把依赖的签名也拼进来）。

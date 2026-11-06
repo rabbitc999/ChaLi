@@ -8,11 +8,11 @@
 
 ## Creation and isolation
 
-The module is `std::thread` and its public nominal handle type is `Thread`. Threads are enabled by default and `--no-threads` turns them off; embedded hosts call `Machine::setThreadsEnabled(true)` (already the default). Each worker has its own VM stack, heap and global snapshot. Equal variable names do not imply sharing. Thread creation consumes operating-system resources and is not an unbounded task scheduler.
+The module is `std::thread` and its public nominal handle type is `Thread`. Threads are enabled by default and `--no-threads` turns them off; embedded hosts call `Machine::setThreadsEnabled(true)` (already the default). Each worker has its own runtime stack, heap and global snapshot. Equal variable names do not imply sharing. Thread creation consumes operating-system resources and is not an unbounded task scheduler.
 
-`create(task)` accepts a static, noncapturing `void fn()`. `createWith<T>(task, value)` copies the initial argument for a static `void fn(T)`. Initial arguments, messages and channels share the same value-transfer checks: scalars, strings and recursively copyable aggregates are supported; references, noncopyable resources, borrowed aggregates and capturing closures cannot cross threads. Static function values remain VM identifiers and never become machine function pointers.
+`create(task)` accepts a static, noncapturing `void fn()`. `createWith<T>(task, value)` copies the initial argument for a static `void fn(T)`. Initial arguments, messages and channels share the same value-transfer checks: scalars, strings and recursively copyable aggregates are supported; references, noncopyable resources, borrowed aggregates and capturing closures cannot cross threads. Static function values remain runtime identifiers and never become machine function pointers.
 
-`Thread` remains distinct from integers and can be stored in lists and structs. Handles belong to one VM run and cannot be persisted across runs.
+`Thread` remains distinct from integers and can be stored in lists and structs. Handles belong to one runtime run and cannot be persisted across runs.
 
 ## Completion, cancellation and failure
 
@@ -20,9 +20,9 @@ The module is `std::thread` and its public nominal handle type is `Thread`. Thre
 
 `waitResult` and `waitResultFor` return `ThreadResult` with status, the original error and available source trace. `state` returns RUNNING, SUCCEEDED, FAILED or CANCELLED, including after joining. Symbol compression limits available source names.
 
-`requestStop` requests cooperative cancellation. Execution boundaries and VM waits, receives, sleep and channel operations observe it. `sleepFor` is cancellable; `stopRequested` queries the flag. Cancellation terminates execution with CANCELLED rather than entering an arbitrary user cleanup branch. Blocking host I/O can observe cancellation only after returning to the VM; use host timeouts or asynchronous polling for long I/O.
+`requestStop` requests cooperative cancellation. Execution boundaries and runtime waits, receives, sleep and channel operations observe it. `sleepFor` is cancellable; `stopRequested` queries the flag. Cancellation terminates execution with CANCELLED rather than entering an arbitrary user cleanup branch. Blocking host I/O can observe cancellation only after returning to the runtime; use host timeouts or asynchronous polling for long I/O.
 
-Ordinary failures stay in the target result; explicit waiting can propagate them, and groups cancel sibling tasks and gather results. Panic retains run-level propagation. Exiting releases VM storage and owned host resource records. Cancellation and failure do not execute arbitrary user Drop, defer or scope(exit) code. To run application cleanup, request normal shutdown through a business message and then join. Main execution requests stop and joins remaining children before finishing.
+Ordinary failures stay in the target result; explicit waiting can propagate them, and groups cancel sibling tasks and gather results. Panic retains run-level propagation. Exiting releases runtime storage and owned host resource records. Cancellation and failure do not execute arbitrary user Drop, defer or scope(exit) code. To run application cleanup, request normal shutdown through a business message and then join. Main execution requests stop and joins remaining children before finishing.
 
 ## Bounded communication
 
@@ -60,7 +60,7 @@ Use pools for short computation. Long blocking I/O occupies workers; prefer dedi
 
 std::event runs application handlers only after explicit receive/receiveFor/tryReceive. Event fields are timer, tag, source and missed; host events have timer 0. Each execution context has a bounded 256-event queue. Full delivery returns FULL so the host can drop, merge or retry deliberately.
 
-NativeCallContext.eventPoster() and Machine.eventPoster() return weak-reference posting functions. Posting never runs a user callback. Closed, finished or destroyed targets return CLOSED; a poster may safely outlive its host callback. Posting functions and bounded queue storage are owned by the host and do not retain the VM arena. Raw Machine pointers are not asynchronous cross-thread invocation handles.
+NativeCallContext.eventPoster() and Machine.eventPoster() return weak-reference posting functions. Posting never runs a user callback. Closed, finished or destroyed targets return CLOSED; a poster may safely outlive its host callback. Posting functions and bounded queue storage are owned by the host and do not retain the runtime arena. Raw Machine pointers are not asynchronous cross-thread invocation handles.
 
 Timer.afterMillis/afterNanos create one-shot timers; everyMillis/everyNanos create periodic timers. Timers start immediately. Durations must be positive; creation failure yields an invalid timer. A context allows at most 1024 timers. Explicit receive computes deadlines using a shared monotonic-clock service without one OS thread per timer. This is not hard real time. Overdue periods merge into one notification and missed counts additional elapsed periods. stop and scope exit remove the source and its queued notices. event.close disables timers while allowing queued events to drain.
 

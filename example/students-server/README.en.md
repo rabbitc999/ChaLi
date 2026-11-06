@@ -23,7 +23,7 @@ chali run example/students-server/src/main.chl -- 8787 example/students-server/w
 
 All three application arguments are required: port, web directory and database configuration file. Visit http://127.0.0.1:8787. An empty database gets one admin account with a randomly generated password printed once. Existing accounts are not reset, and no business demonstration records are inserted.
 
-Export with chali aot example/students-server/src/main.chl --out build/students-server. Pass the same arguments to the executable. Deliver web assets, configuration and database client dependencies separately. AOT defaults to unchecked; use --checked for development checks. The example listens on local HTTP; cross-machine deployments require an HTTPS entry. It is a single-process serial example without password recovery, distributed sessions or background tasks.
+Export with chali build example/students-server/src/main.chl --out build/students-server. Pass the same arguments to the executable. Deliver web assets, configuration and database client dependencies separately. AOT defaults to unchecked; use --checked for development checks. The example listens on local HTTP; cross-machine deployments require an HTTPS entry. It is a single-process serial example without password recovery, distributed sessions or background tasks.
 
 ## Data and permissions
 

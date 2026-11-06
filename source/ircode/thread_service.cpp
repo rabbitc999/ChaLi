@@ -80,7 +80,7 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
         {
             if (heapAllocator_ != nullptr && !threadHeapFactory_)
             {
-                fail("自定义 VM 字节堆需要为子线程设置独立堆工厂");
+                fail("自定义 运行时 字节堆需要为子线程设置独立堆工厂");
                 pending.clear();
                 return true;
             }

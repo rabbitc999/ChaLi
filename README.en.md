@@ -7,7 +7,7 @@
 ChaLi is a statically typed language with observable value semantics, explicit borrowing and moves, and scope-based resource cleanup. Its type, ownership and runtime rules are defined by the language. Supported hosts, export targets and external-library requirements are documented separately.
 
 The ChaLi compiler's front end is generated from this repository's `source/chali.gram` by
-[ParseEngine](https://github.com/rabbitc999/ParseEngine). It generates LLVM IR directly from the semantically checked AST and compiles native code through LLVM AOT. run uses checked compilation and execution; aot defaults to unchecked export.
+[ParseEngine](https://github.com/rabbitc999/ParseEngine). It generates LLVM IR directly from the semantically checked AST and compiles native code through LLVM AOT. run uses checked compilation and execution; build defaults to unchecked export.
 
 > This is the English edition. The Chinese edition is the default and is the one maintained first —
 > see [中文 README](README.cn.md). Where the two disagree, the Chinese one wins.
@@ -34,17 +34,17 @@ Conditional preprocessing precedes the generated parser. Hygienic AST macros exp
 
 ![ChaLi compilation: conditional preprocessing, parsing, semantic macro expansion, borrow checks, checked AST and LLVM AOT](doc/images/chali-compilation-en.png)
 
-## AOT export
+## Release build
 
-Run `./ChaLi.exe aot input.chl --out build/program --checked` to lower the semantically checked AST directly to LLVM code, generate machine code and link a native artifact. The static variant embeds LLVM and LLD; the external variant uses `library/llvm/` or the clang path passed through `--llvm`. Use `--emit-llvm` to export only the LLVM module.
+Run `./ChaLi.exe build input.chl --out build/program --checked` to lower the semantically checked AST directly to LLVM code, generate machine code and link a native artifact. The static variant embeds LLVM and LLD; the external variant uses `library/llvm/` or the clang path passed through `--llvm`. Use `--emit-llvm` to export only the LLVM module.
 
-![ChaLi AOT export: checked AST, LLVM IR, built-in or external LLVM, linking and delivery](doc/images/chali-aot-en.png)
+![ChaLi release build: checked AST, LLVM IR, built-in or external LLVM, linking and delivery](doc/images/chali-aot-en.png)
 
-The generated application needs no VM or LLVM DLL. Ship application-specific C ABI dynamic libraries when required. See [LLVM AOT compilation](doc/en/38-aot.md) and the Chinese book's [AOT export chapter](doc/book/en/27-aot-export.md) for the supported scope and steps.
+The generated application needs no LLVM DLL. Ship application-specific C ABI dynamic libraries when required. See [LLVM AOT compilation](doc/en/38-aot.md) and the Chinese book's [release build chapter](doc/book/en/27-aot-export.md) for the supported scope and steps.
 
 ## Execution
 
-`run` compiles and executes checked AOT machine code. `aot` exports unchecked native products by default. The native runtime provides shared memory, ownership, host callbacks, and thread services.
+`run` compiles and executes checked AOT machine code. `build` exports unchecked native products by default. The native runtime provides shared memory, ownership, host callbacks, and thread services.
 
 ## Documentation
 
@@ -55,7 +55,6 @@ The [library API reference](doc/library/README.md) (Chinese) covers the module l
 | Document | Audience | What it covers |
 | --- | --- | --- |
 | [Documentation index](doc/en/README.md) | Everyone | Jump to any of the documents below by "what do you want to do" |
-| [00 Vision](doc/en/00-vision.md) | Decision makers, prospective users | The three dilemmas of software delivery and ChaLi's answers, including "who should not use it" |
 | [01 Quickstart](doc/en/01-quickstart.md) | First-time users | Install, first program, command cheat-sheet |
 | [02 Language tour](doc/en/02-language-tour.md) | Experienced developers | 14 runnable snippets walking through what ChaLi looks like |
 | [03 Core concepts](doc/en/03-core-concepts.md) | Users going deeper | Value semantics, non-null references, resource management without a GC |
@@ -113,7 +112,7 @@ checkout (`gen.sh` looks for `../ParseEngine/build/bin/` automatically).
 ### Building with annotations and reflection
 
 The default toolchain build includes annotation and reflection support in both the front end
-and the VM runtime:
+and the native runtime:
 
 ```sh
 make                # defaults to CHALI_WITH_REFLECTION=1 STACKVM_WITH_REFLECTION=1
@@ -128,7 +127,7 @@ the full reflection pass.
 Source compilation emits reflection metadata and its artifact feature flag by default;
 `--no-reflection` omits that metadata and rejects annotations/reflection use in the program. It
 decides this artifact only and reduces no compiler workload (metadata and query-source generation
-still run). Use `--no-reflection` when targeting a board VM without reflection support.
+still run). Use `--no-reflection` when targeting a board runtime without reflection support.
 `make` pins both macros to 1; only a hand-written `-D` build can turn reflection off, and that path
 exists solely to validate the compiler itself — it is not a supported trim configuration.
 
@@ -145,7 +144,7 @@ subcommands and `--mode`.
 
 ### Debugging
 
-VS Code uses GDB/MI to debug an AOT program with DWARF source locations and variables. Source breakpoints, continue, step in/over/out, stack frames, parameters, locals and expressions are supported. Development debugging retains symbols at O0; `--debug-optimized` or VSCode `debugMode: "optimized"` retains DWARF with O3/LTO and inline frames. Normal release builds retain highest optimization. See [Native AOT debugging](doc/en/43-native-debugging.md).
+VS Code uses GDB/MI to debug an AOT program with DWARF source locations and variables. Source breakpoints, continue, step in/over/out, stack frames, parameters, locals and expressions are supported. Development debugging retains symbols at O0; `--debug-optimized` or VSCode `debugMode: "optimized"` retains DWARF with O3/LTO and inline frames. Normal release builds retain highest optimization. See [build debugging](doc/en/43-native-debugging.md).
 
 ### Diagnostics
 
@@ -217,9 +216,8 @@ default.
 
 ## Linux deployment
 
-Desktop and embedded Linux use ordinary operating-system hosts and the same VM core. Build the host
-and native dependencies for the target architecture; deploy bytecode, data and layout files together.
-Use `--memory-size` for the memory budget. Modules depend on the native glue registered by the host.
+Desktop and embedded Linux use ordinary operating-system hosts and the same runtime core. Build the compiler and native dependencies for the target architecture; deploy the generated native application, its dynamic dependencies and resource files.
+The runtime services required by standard modules are linked into the application.
 See [deployment](doc/en/06-deployment.md).
 
 ## Repository layout

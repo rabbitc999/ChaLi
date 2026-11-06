@@ -34,7 +34,7 @@ def main():
     output = work / '原生 参数'
     environment = dict(os.environ, CHALI_LLVM_CLANG=(str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang')))
     report = dict(compiler_sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(), commands=[])
-    assert invoke([compiler, 'aot', source, '--out', output], work, environment, report) == b''
+    assert invoke([compiler, 'build', source, '--out', output], work, environment, report) == b''
     cases = [[], ['', 'x y', 'a"b', 'C:\\trailing\\'], frozen['arguments']]
     for values in cases:
         expected = (str(len(values)) + '\n' + ''.join('[' + value + ']\n' for value in values)).encode('utf-8')

@@ -39,7 +39,7 @@ struct MacroExpansion
  */
 std::string jsonString(std::string_view text);
 /**
- * @brief 汇集编辑器请求的真实编译结果，独立于 VM 的执行内存和对象。
+ * @brief 汇集编辑器请求的真实编译结果，独立于 运行时 的执行内存和对象。
  */
 class CompilerAnalysis
 {

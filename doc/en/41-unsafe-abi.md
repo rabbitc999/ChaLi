@@ -95,7 +95,7 @@ int32 nativeCalc(int32 x);
 int32 calc(int32 x) { return (int32)(x + (int32)1); }
 ```
 
-Imports are declarations without bodies. The arguments specify calling convention, library path and native symbol; currently the convention is `"C"`. `#export("symbol")` selects the native symbol; `chali aot FILE --shared --out OUTPUT.dll` selects the output library. Export names must be valid, unique C identifiers outside runtime-reserved prefixes.
+Imports are declarations without bodies. The arguments specify calling convention, library path and native symbol; currently the convention is `"C"`. `#export("symbol")` selects the native symbol; `chali build FILE --shared --out OUTPUT.dll` selects the output library. Export names must be valid, unique C identifiers outside runtime-reserved prefixes.
 
 Imports retain synchronous callback and return-ownership adapters; release functions and array-length contracts are covered in [Host integration](08-host-integration.md). Imported function values use adapters with the language calling convention. The bridge performs the actual C call, without casting a runtime function value to a machine function pointer.
 

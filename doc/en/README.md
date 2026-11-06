@@ -25,13 +25,13 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 | Who you are | Start here |
 | --- | --- |
 | Learning step by step | [The ChaLi Programming Language](../book/en/README.md): 29 chapters with log search, HTTP file service and a student system |
-| New to ChaLi | [Vision](00-vision.md) → [5-minute quickstart](01-quickstart.md) |
-| Evaluating it for a project | [Vision](00-vision.md) (includes "who should not use it") → [Cross-platform deployment](06-deployment.md) |
+| New to ChaLi | [5-minute quickstart](01-quickstart.md) |
+| Evaluating deployment | [Current capabilities](17-capabilities.md) → [Cross-platform deployment](06-deployment.md) |
 | Ready to write code | [Language tour](02-language-tour.md) → [Language reference](04-language-reference.md) |
 | Want to understand value semantics and references | [Core concepts](03-core-concepts.md) |
 | Deploying the program to a target host | [Delivery security](05-delivery-security.md) → [Cross-platform deployment](06-deployment.md) |
 | Want to know what the standard library has | [Standard library overview](07-stdlib-overview.md) |
-| Looking for something to run right away | [Example projects](13-projects.md) (student records, graphics, host VM…) |
+| Looking for something to run right away | [Example projects](13-projects.md) (student records, graphics, host runtime…) |
 | Need to talk to a C/C++ host | [Host integration and C ABI](08-host-integration.md) |
 | Looking up commands, config, tests | [Toolchain](09-toolchain.md) |
 | Querying APIs in a terminal or checking editor caches | [Command line manual](../man/en/README.md) → [LSP incremental hints and caching](../man/en/lsp.md) |
@@ -46,7 +46,6 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 
 | No. | Document | Audience | What it covers |
 | --- | --- | --- | --- |
-| [00](00-vision.md) | Vision | Decision makers, prospective users | The three dilemmas of software delivery, ChaLi's answers, who it fits / who it does not |
 | [01](01-quickstart.md) | 5-minute quickstart | First-time users | Install, first program, command cheat-sheet |
 | [02](02-language-tour.md) | Language tour | Experienced developers | Walk through what ChaLi looks like with runnable snippets |
 | [03](03-core-concepts.md) | Core concepts | Users going deeper | Value semantics, non-null references, resource management without a GC |
@@ -61,7 +60,7 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 | [14](../14-grammar-ebnf.md) | EBNF grammar reference | Anyone checking grammar details | Every production and token declaration generated from `source/chali.gram`; the readable form of the authoritative grammar |
 | [15](../15-artifacts.md) | Build artifacts and intermediates | Anyone wondering where files land | `.chali/` layout, cleanup rules, what to ship |
 | [16](../16-compact-symbols.md) | Nameless compact symbols | Anyone tracking size and diagnostic privacy | `--compress-symbols` format, tooling and space comparison |
-| [17](17-capabilities.md) | Current capabilities | Evaluation and integration | Language, VM, borrowing, reflection, libraries, embedded Linux and tooling contracts |
+| [17](17-capabilities.md) | Current capabilities | Evaluation and integration | Language, runtime, borrowing, reflection, libraries, embedded Linux and tooling contracts |
 | [18](../18-panic-trace.md) | Panic and source lines | Anyone debugging crashes | Failure output, call stack, source location, compact symbol-hiding policy |
 | [19](../19-reflection.md) | Annotations and reflection | Anyone using annotations / dynamic calls | Declaration metadata, typed queries, closed-value dynamic invocation |
 | [20](../20-memory-allocator.md) | Memory allocator | Anyone wiring host memory | Pool and capacity stats, allocation range checks, external buffers |
@@ -94,7 +93,7 @@ Changes: [`CHANGELOG.md`](../../CHANGELOG.md).
 - [Matching, interpolation, generics and scope cleanup](28-match-interpolation-scope.md)
 
 - [Return expressions, named closures and field derivation](29-declaration-sugars.md)
-- Value breaks and loop traversal: [language reference](04-language-reference.md#block-expressions-and-interpolated-output), [complete sample](../../example/samples/break_values.chl), [VM regressions](../../tests/chali_block_expression.py).
+- Value breaks and loop traversal: [language reference](04-language-reference.md#block-expressions-and-interpolated-output), [complete sample](../../example/samples/break_values.chl), [runtime regressions](../../tests/chali_block_expression.py).
 
 - Implicit moves in value breaks: [semantics and cleanup order](04-language-reference.md#moving-and-cleaning-up-value-breaks), [resource identity and destructor sample](../../example/samples/break_move.chl).
 
@@ -118,7 +117,7 @@ The [30-chapter English book](../book/en/README.md) contains technical chapters 
 
 - [Downloaded build dependencies](42-build-dependencies.md): pinned SQLite/miniz downloads, checksums, caches, offline reuse and licensing.
 
-- [Native AOT debugging](43-native-debugging.md): GDB breakpoints, stepping and variables.
+- [build debugging](43-native-debugging.md): GDB breakpoints, stepping and variables.
 
 - [Library containers and asset inspection](44-library-packages.md): canonical manifests, independent ABIs, target assets, digests and budgets.
 

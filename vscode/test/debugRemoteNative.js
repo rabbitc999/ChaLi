@@ -47,7 +47,7 @@ async function main() {
     fs.mkdirSync(original, { recursive: true }); fs.mkdirSync(local);
     const source = path.join(original, 'main.chl'), executable = path.join(work, allocator, 'program');
     fs.writeFileSync(source, 'import std::thread;\nvoid main(){\n int64 running=1;int64 count=7;String owned="kept";\n while(running!=0){\n  count=count+1;\n  std::thread::sleepFor(10);\n }\n assert(owned=="kept");println("DONE");\n}\n');
-    const built = spawnSync(compiler, ['aot', source, '--debug', '--checked', '--allocator', allocator, '--out', executable], { cwd: root, encoding: 'utf8', timeout: 180000 });
+    const built = spawnSync(compiler, ['build', source, '--debug', '--checked', '--allocator', allocator, '--out', executable], { cwd: root, encoding: 'utf8', timeout: 180000 });
     assert.equal(built.status, 0, built.stdout + built.stderr);
     fs.renameSync(source, path.join(local, 'main.chl'));
     if (allocator === 'malloc') for (const wrong of ['image', 'pid', 'cancel']) {
@@ -110,7 +110,7 @@ async function main() {
   }
   const panicSource = path.join(work, 'panic.chl'), panicExecutable = path.join(work, 'panic');
   fs.writeFileSync(panicSource, 'void main(){\n assert(false,"remote-panic-marker");\n}\n');
-  const panicBuilt = spawnSync(compiler, ['aot', panicSource, '--debug', '--checked', '--out', panicExecutable], { cwd: root, encoding: 'utf8', timeout: 180000 });
+  const panicBuilt = spawnSync(compiler, ['build', panicSource, '--debug', '--checked', '--out', panicExecutable], { cwd: root, encoding: 'utf8', timeout: 180000 });
   assert.equal(panicBuilt.status, 0, panicBuilt.stdout + panicBuilt.stderr);
   const panicTarget = await server(panicExecutable), panicClient = new DebugClient(root, compiler);
   try {

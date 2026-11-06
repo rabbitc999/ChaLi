@@ -54,7 +54,7 @@ async function first(client, value) {
 async function main() {
   for (const allocator of ['malloc', 'pool']) {
     const prefix = path.join(work, allocator);
-    const built = spawnSync(compiler, ['aot', source, '--debug', '--checked', '--allocator', allocator, '--out', prefix],
+    const built = spawnSync(compiler, ['build', source, '--debug', '--checked', '--allocator', allocator, '--out', prefix],
       { cwd: root, env: { ...process.env, CHALI_ABI_CXX: process.env.CHALI_ABI_CXX || 'g++' }, encoding: 'utf8', windowsHide: true, timeout: 180000 });
     assert.equal(built.status, 0, built.stdout + built.stderr);
     const client = new DebugClient(root, compiler);

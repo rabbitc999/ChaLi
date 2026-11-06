@@ -73,7 +73,7 @@ async function main() {
     fs.mkdirSync(original, { recursive: true }); fs.mkdirSync(local);
     const input = path.join(original, 'main.chl'), executable = path.join(directory, 'program' + (process.platform === 'win32' ? '.exe' : ''));
     fs.writeFileSync(input, 'import std::thread;\nvoid main(){\n int64 running=1;int64 count=0;String owned="kept";\n eprintln("READY");\n while(running!=0){\n  count=count+1;\n  std::thread::sleepFor(10);\n }\n assert(owned=="kept");println("DONE");\n}\n');
-    const built = spawnSync(compiler, ['aot', input, '--debug', '--checked', '--allocator', allocator, '--out', executable.replace(/\.exe$/, '')],
+    const built = spawnSync(compiler, ['build', input, '--debug', '--checked', '--allocator', allocator, '--out', executable.replace(/\.exe$/, '')],
       { cwd: root, encoding: 'utf8', windowsHide: true, timeout: 180000 });
     assert.equal(built.status, 0, built.stdout + built.stderr); fs.renameSync(input, path.join(local, 'main.chl'));
     let child = await target(executable), client;

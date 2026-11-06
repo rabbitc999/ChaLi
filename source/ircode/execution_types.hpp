@@ -31,7 +31,7 @@ struct RuntimeEvent
     std::uint64_t missed = 0;
 };
 /**
- * @brief 宿主持有的投递函数；不使用 VM 内存池，允许在运行和内存池结束后释放。
+ * @brief 宿主持有的投递函数；不使用 运行时 内存池，允许在运行和内存池结束后释放。
  */
 using EventPoster = std::function<TransferStatus(RuntimeEvent)>;
 struct EventQueue;
@@ -41,11 +41,11 @@ struct SharedRuntime;
 class Machine;
 
 /**
- * @brief VM 内存的最小寻址/分配单元：1 字节。宽值连续占用多个单元。
+ * @brief 运行时 内存的最小寻址/分配单元：1 字节。宽值连续占用多个单元。
  */
 inline constexpr std::size_t kRuntimeCellBytes = 1u;
-static_assert(static_cast<unsigned char>(~0u) == 255u, "VM 要求宿主使用八位字节");
-static_assert(sizeof(std::uint8_t) == 1u && alignof(std::uint8_t) == 1u, "VM u8 必须占一个字节且按一字节对齐");
+static_assert(static_cast<unsigned char>(~0u) == 255u, "运行时 要求宿主使用八位字节");
+static_assert(sizeof(std::uint8_t) == 1u && alignof(std::uint8_t) == 1u, "运行时 u8 必须占一个字节且按一字节对齐");
 /**
  * @brief 当前整数、浮点、地址和对象句柄的存储宽度。
  */

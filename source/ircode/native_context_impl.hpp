@@ -1,6 +1,6 @@
 /**
  * @file native_context_impl.hpp
- * @brief VM 内部 native context impl 模块的类型与接口。
+ * @brief 运行时 内部 native context impl 模块的类型与接口。
  */
 #pragma once
 #include "native_functions.hpp"
@@ -16,7 +16,7 @@ public:
     using Invoker = NativeInvoker;
 
     /**
-     * @brief 为原生函数调用关联虚拟机与临时对象集合。
+     * @brief 为原生函数调用关联运行时与临时对象集合。
      * @param context 当前处理或执行上下文。
      * @param invoker 调用运行时函数的宿主回调。
      * @param invocationError 运行时回调失败的原始诊断，可为空。
@@ -82,7 +82,7 @@ public:
     Memory::Vector<Memory::String> programArguments() const override;
     /**
      * @brief 按胶水约定的身份借用不透明宿主服务。
-     * @param name 服务身份，VM 不解释其含义。
+     * @param name 服务身份，运行时 不解释其含义。
      * @return 宿主服务指针；未注入时为空。
      */
     void *hostService(const Memory::String &name) const override;
@@ -132,7 +132,7 @@ public:
     bool readString(std::int64_t address, Memory::String &out) const override;
 
     /**
-     * @brief 通过当前虚拟机调用指定函数。
+     * @brief 通过当前运行时调用指定函数。
      * @param functionPointer 被调用函数的运行时地址。
      * @param arguments 按调用顺序保存的实参列表。
      * @param result 接收处理结果的对象。
@@ -156,7 +156,7 @@ public:
     EventPoster eventPoster() override;
 
     /**
-     * @brief 为 VM 安装执行钩子。
+     * @brief 为 运行时 安装执行钩子。
      * @param interval 间隔。
      * @param hook 钩子。
      * @return 是否支持。
@@ -164,13 +164,13 @@ public:
     bool setInstructionHook(std::size_t interval, InstructionHook hook) override;
 
     /**
-     * @brief 当前正在执行 `run()` 的虚拟机；宿主回调之外（指令钩子 / Qt 事件循环）也能用。
+     * @brief 当前正在执行 `run()` 的运行时；宿主回调之外（指令钩子 / Qt 事件循环）也能用。
      *
      * 胶水拿到它以后可以在**宿主回调返回之后**继续工作：投递显式事件
      * （`eventPoster()`）或挂每 N 条指令一次的钩子
-     * （`Machine::setInstructionHook`）。只在 VM 执行线程上使用；指针在 `Machine`
+     * （`Machine::setInstructionHook`）。只在 运行时 执行线程上使用；指针在 `Machine`
      * 生命周期内有效，`run()` 结束后不要再碰。
-     * @return 正在运行的虚拟机；没有（例如离线编解码）返回 nullptr。
+     * @return 正在运行的运行时；没有（例如离线编解码）返回 nullptr。
      */
     Machine *machine() override;
 

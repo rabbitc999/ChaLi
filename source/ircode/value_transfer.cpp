@@ -87,7 +87,7 @@ bool captureTransferObject(NativeContext &ctx, std::int64_t handle, TransferPack
 /**
  * @brief 将原生参数捕获为可传输的值。
  * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param slot 待转换或传递的虚拟机值槽。
+ * @param slot 待转换或传递的运行时值槽。
  * @param kind 待处理对象的类别。
  * @param layout 传输值的布局描述。
  * @param type 类型描述。

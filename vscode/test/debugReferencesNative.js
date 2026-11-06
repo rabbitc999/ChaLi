@@ -47,7 +47,7 @@ async function locals(client, thread) {
 async function main() {
   for (const allocator of ['malloc', 'pool']) {
     const prefix = path.join(work, allocator);
-    const built = spawnSync(compiler, ['aot',source,'--debug','--checked','--allocator',allocator,'--out',prefix,...(external?['--llvm',external]:[])],
+    const built = spawnSync(compiler, ['build',source,'--debug','--checked','--allocator',allocator,'--out',prefix,...(external?['--llvm',external]:[])],
       {cwd:root,env:process.env,encoding:'utf8',windowsHide:true,timeout:240000});
     assert.equal(built.status,0,built.stdout+built.stderr);
     const client = new DebugClient(root,compiler);

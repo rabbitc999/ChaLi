@@ -41,7 +41,7 @@ def main():
             prefix = work / label
             run = execute([compiler, 'run', fixture, '--allocator', allocator, '--out', str(prefix) + '-run'], 'run')
             assert run.stdout == 'String byte unwrap OK\n' and not run.stderr, (run, work)
-            execute([compiler, 'aot', fixture, '--allocator', allocator, '--out', prefix], 'build')
+            execute([compiler, 'build', fixture, '--allocator', allocator, '--out', prefix], 'build')
             native = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], 'aot')
             assert native.stdout == run.stdout and not native.stderr, (native, work)
             llvm = prefix.with_suffix('.ll').read_text(encoding='utf-8')
@@ -57,7 +57,7 @@ def main():
                 assert 'called Option.unwrap() on None' in failure.stderr, (failure, work)
                 assert failure.stdout == '', (failure, work)
                 error_prefix = work / (label + '-' + name + '-aot')
-                execute([compiler, 'aot', source, '--allocator', allocator, '--out', error_prefix], name + '-build')
+                execute([compiler, 'build', source, '--allocator', allocator, '--out', error_prefix], name + '-build')
                 native_failure = execute([error_prefix.with_suffix('.exe' if os.name == 'nt' else '')],
                                          name + '-aot', success=False)
                 assert 'called Option.unwrap() on None' in native_failure.stderr, (native_failure, work)

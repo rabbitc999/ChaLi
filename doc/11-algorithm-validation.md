@@ -4,7 +4,7 @@
 [English](en/11-algorithm-validation.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-本文保留历史测试配置及原始数据；执行方式为 VM。
+本文保留历史测试配置及原始数据；执行方式为旧解释后端。
 
 借用检查分为两部分：`source/chali_borrow_checker.hpp` 检查引用逃逸，
 `source/chali_borrow_flow.hpp` 检查函数内的释放后访问和移动后访问。
@@ -81,12 +81,12 @@ python tools/run_module_gates.py memory
 python tools/run_module_gates.py generics tools docs
 ```
 
-先用 `make` 构建当前编译器。模块门禁只运行所选范围，不代替发布时各模块及底层 C/C++、VM、目标宿主检查的完整覆盖。
+先用 `make` 构建当前编译器。模块门禁只运行所选范围，不代替发布时各模块及底层 C/C++、原生运行时、目标宿主检查的完整覆盖。
 
 门禁默认使用最多四个工作线程。`sh ci.sh --jobs 4` 和
 `python tools/run_module_gates.py generics docs --jobs 4` 可指定并行数；
 `--jobs 1` 恢复串行，也可以通过 `CHALI_GATE_JOBS` 设置默认并行数。
-只有明确登记的独立 Python 与 VM 检查并行运行，生成、构建、样例、网络与未知检查形成串行屏障。
+只有明确登记的独立 Python 与原生运行时检查并行运行，生成、构建、样例、网络与未知检查形成串行屏障。
 主编译器生成或构建失败时跳过后续检查，避免使用旧可执行文件。普通回归失败不阻断其余检查。
 CI 的逐项日志和有序结果位于 `tmp/ci/logs/`；模块门禁保留独立运行目录及 `results.json`。
 随机复测在首轮结束后按登记顺序和固定种子抽样，串行执行，避免同名测试争用工作目录。

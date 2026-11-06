@@ -1,6 +1,6 @@
 /**
  * @file chali_tool.cpp
- * @brief 统一 VM 前端、工程生成器和原生开发命令的入口。
+ * @brief 统一 运行时 前端、工程生成器和原生开发命令的入口。
  */
 #include "chali_runtime_allocator.hpp"
 #include "lsp/language_server.hpp"
@@ -57,7 +57,7 @@ fs::path DevelopmentCompilerPath(const char *name)
 }
 
 /**
- * @brief 派发 VM 编译执行、工程生成及开发工具命令。
+ * @brief 派发 运行时 编译执行、工程生成及开发工具命令。
  * @param argc 命令行参数数量。
  * @param argv 命令行参数数组。
  * @return 子命令的退出状态，未知文件或选项返回非零。

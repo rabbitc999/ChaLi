@@ -83,7 +83,7 @@ def run_case(case, compiler, root, timeout):
         prefix = cwd / 'program'
         # 先做只编译检查，再从同一源码执行，分清编译拒绝与运行期失败。
         # checked 与 unchecked 均先导出原生程序，之后执行以区分编译期和运行期错误。
-        command = [compiler, 'aot', original, '--out', prefix, *flags]
+        command = [compiler, 'build', original, '--out', prefix, *flags]
         if backend == 'checked':
             command += ['--checked']
         built = execute(command, cwd, timeout)

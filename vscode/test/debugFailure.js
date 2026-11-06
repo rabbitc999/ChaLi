@@ -25,7 +25,7 @@ function build(name, lines, assembly) {
     assert.equal(assembled.status, 0, assembled.stdout + assembled.stderr);
     extra.push('--link', object);
   }
-  const built = spawnSync(compiler, ['aot', source, '--debug', '--checked', '--allocator', 'malloc', '--out', path.join(directory, 'program'), ...extra], { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
+  const built = spawnSync(compiler, ['build', source, '--debug', '--checked', '--allocator', 'malloc', '--out', path.join(directory, 'program'), ...extra], { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
   assert.equal(built.status, 0, built.stdout + built.stderr);
   return { source, executable: path.join(directory, 'program' + (process.platform === 'win32' ? '.exe' : '')) };
 }

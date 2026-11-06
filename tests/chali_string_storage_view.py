@@ -48,7 +48,7 @@ def main():
                 expected = checked.stdout
             assert checked.stdout == expected and checked.stdout.endswith('string storage views OK\n'), (checked, work)
             assert not checked.stderr, (checked, work)
-            execute([compiler, 'aot', source, '--allocator', allocator, '--out', prefix], 'build')
+            execute([compiler, 'build', source, '--allocator', allocator, '--out', prefix], 'build')
             native = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], 'aot')
             assert native.stdout == expected and not native.stderr, (native, work)
             llvm = prefix.with_suffix('.ll').read_text(encoding='utf-8')

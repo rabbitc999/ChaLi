@@ -35,7 +35,7 @@ CentOS Stream 使用该发行版环境生成的 RPM：
 sudo dnf install ./chali-1.0.0-llvm-external-centos-9-x64.rpm
 ```
 
-`llvm-external` 版本在执行 `run` / `aot` 时需要匹配的 Clang 和 LLD。CentOS Stream 9 可使用 `sudo dnf install clang lld`；仅安装 Clang 而缺少 `ld.lld` 时，`-fuse-ld=lld` 会报告链接器不可用。编译器内嵌 GUI、音频、XML、密码学的原生归档，生成程序无需额外部署 ChaLi、raylib、Expat 或 libsodium 共享库。
+`llvm-external` 版本在执行 `run` / `build` 时需要匹配的 Clang 和 LLD。CentOS Stream 9 可使用 `sudo dnf install clang lld`；仅安装 Clang 而缺少 `ld.lld` 时，`-fuse-ld=lld` 会报告链接器不可用。编译器内嵌 GUI、音频、XML、密码学的原生归档，生成程序无需额外部署 ChaLi、raylib、Expat 或 libsodium 共享库。
 
 无包管理器时可解压对应发行版的 tar.gz，再将其中的 `usr/bin/chali` 放入自己的 PATH。安装包安装的是编译器，不会替应用启动数据库、复制应用的静态页面或安装其自定义 C ABI 动态库。
 
@@ -102,4 +102,4 @@ python tools/export_library_html.py --output tmp/ChaLi-1.0.0-reference.html --zi
 
 CHM 工程的中间 HTML、目录和索引只放在仓库 `tmp/` 中。`--prepare-only` 可在任意平台准备工程，实际 CHM 编译需要 Windows；单独下载任一脚本时用 `--repo 仓库路径` 指定完整源码目录。两种格式共享同一套原文，默认都包括书稿与示例；HTML 脚本的 `--api-only` 选项可仅导出 API。
 
-版本、反射默认配置和平台能力见[当前能力](17-capabilities.md)，内置与外置 LLVM 的区别见 [AOT 导出](38-aot.md)。
+版本、反射默认配置和平台能力见[当前能力](17-capabilities.md)，内置与外置 LLVM 的区别见 [发布构建](38-aot.md)。

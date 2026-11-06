@@ -1,4 +1,4 @@
-# VM and language baselines: 30 complete test sources
+# historical interpreter and language baselines: 30 complete test sources
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文入口](../../../README.cn.md)
@@ -6,7 +6,7 @@
 
 ## integer_loop
 
-### ChaLi VM
+### ChaLi historical interpreter
 
 ```cpp
 int64 mix(int64 x){return x*17;}
@@ -112,7 +112,7 @@ int main() {
 
 ## branches
 
-### ChaLi VM
+### ChaLi historical interpreter
 
 ```cpp
 int64 mix(int64 x){return x*17;}
@@ -218,7 +218,7 @@ int main() {
 
 ## float64_loop
 
-### ChaLi VM
+### ChaLi historical interpreter
 
 ```cpp
 int64 mix(int64 x){return x*17;}
@@ -324,7 +324,7 @@ int main() {
 
 ## calls
 
-### ChaLi VM
+### ChaLi historical interpreter
 
 ```cpp
 int64 mix(int64 x){return x*17;}
@@ -430,7 +430,7 @@ int main() {
 
 ## array_reads
 
-### ChaLi VM
+### ChaLi historical interpreter
 
 ```cpp
 int64 mix(int64 x){return x*17;}

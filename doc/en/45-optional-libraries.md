@@ -20,7 +20,7 @@ For external builds and testing, run `tools/setup_desktop_gui.py` or `tools/setu
 ## Desktop windows and audio
 
 ```powershell
-chali aot example/desktop-gui/demo.chl --out build/gui-demo
+chali build example/desktop-gui/demo.chl --out build/gui-demo
 ```
 raylib supplies the window, events and drawing. raygui supplies the widgets. The default build disables audio, 3D models and icons. The demo prints `clicks=N` after the window closes. Call the frame and close operations on the thread that created the window.
 

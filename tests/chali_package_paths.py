@@ -39,7 +39,7 @@ commands = ['import extra;']
         manifest.write_text(config, encoding="utf-8")
         args = [COMPILER, 'run', source, "--out", work / "program"]
         assert run(args).stdout == "20 2\n"
-        emitted = [args[0], "aot", *args[2:], "--emit-llvm", "--incremental"]
+        emitted = [args[0], "build", *args[2:], "--emit-llvm", "--incremental"]
         run(emitted)
         # AOT 重用模块预处理；原生输出不采用已删除的四元式产物缓存。
         repeated = run(emitted).stderr

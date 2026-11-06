@@ -51,7 +51,7 @@ async function view(client,thread,level=0) {
 async function main() {
   for(const allocator of ['malloc','pool']) {
     const prefix=path.join(work,allocator);
-    const built=spawnSync(compiler,['aot',source,'--debug','--checked','--allocator',allocator,'--out',prefix,...(external?['--llvm',external]:[])],
+    const built=spawnSync(compiler,['build',source,'--debug','--checked','--allocator',allocator,'--out',prefix,...(external?['--llvm',external]:[])],
       {cwd:root,env:process.env,encoding:'utf8',windowsHide:true,timeout:240000});
     assert.equal(built.status,0,built.stdout+built.stderr);
     const client=new DebugClient(root,compiler);
@@ -102,7 +102,7 @@ async function main() {
     } finally {fs.writeFileSync(prefix+'-messages.json',JSON.stringify(client.messages,null,2));await client.close();}
   }
   const prefix=path.join(work,'optimized');
-  const built=spawnSync(compiler,['aot',source,'--debug-optimized','--checked','--out',prefix,...(external?['--llvm',external]:[])],
+  const built=spawnSync(compiler,['build',source,'--debug-optimized','--checked','--out',prefix,...(external?['--llvm',external]:[])],
     {cwd:root,env:process.env,encoding:'utf8',windowsHide:true,timeout:240000});
   assert.equal(built.status,0,built.stdout+built.stderr);
   const client=new DebugClient(root,compiler);

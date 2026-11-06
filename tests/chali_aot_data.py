@@ -62,7 +62,7 @@ def main():
             variants.insert(0, ('baseline', args.baseline.resolve(), env))
         for label, binary, execution_env in variants:
             prefix = work / (name + '-' + label)
-            invoke([binary, 'aot', path, '--checked', '--out', prefix], label + '-build', execution_env)
+            invoke([binary, 'build', path, '--checked', '--out', prefix], label + '-build', execution_env)
             product = Path(str(prefix) + ('.exe' if os.name == 'nt' else ''))
             output = invoke([product], label + '-run', execution_env)
             assert output.stdout == expected and not output.stderr, (name, label, output)

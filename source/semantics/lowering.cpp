@@ -1356,7 +1356,7 @@ ast::NodePtr LowerBinary(const Memory::String &op, int leftId, int rightId,
         Memory::Vector<ast::NodePtr> arguments{ left, right };
         if (!receiverFirst)
         {
-            /* 换边会把实参顺序变成 {right, left}，而 VM 从左到右求值 —— 副作用顺序跟着
+            /* 换边会把实参顺序变成 {right, left}，而 运行时 从左到右求值 —— 副作用顺序跟着
              * 反过来（`bump() + makeA()` 变成先求 `makeA()`）。把左操作数先钳进临时量、
              * 求值前缀挂在接收者实参上，位置就仍在右操作数之前，与源码一致。
              * 落地不了（对象类类型 / 没有语句槽）时保持原顺序。 */
@@ -5214,7 +5214,7 @@ ast::NodePtr LowerFor(int id)
  * @brief 解析旧式百分号格式串，供返回字符串的 `format` 使用。
  *
  * 只支持 `%d`（int64）与 `%f`（float64，三位小数）与 `%%`；输出**全部落在文本流**上：
- * 排版交给虚拟机里的 C++ 运行时（`__std_print`），语言侧只检查格式串与实参类型。
+ * 排版交给运行时里的 C++ 运行时（`__std_print`），语言侧只检查格式串与实参类型。
  * 这么绕是因为 stackvm 把 `write` 的数值与 `print` / `putc` 的文本分成两个桶，
  * 混着用会让标准输出顺序乱掉。
  */

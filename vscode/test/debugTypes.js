@@ -48,7 +48,7 @@ async function view(client, stop) {
 
 async function main() {
   const irPrefix = path.join(work, 'types');
-  const emitted = spawnSync(compiler, ['aot', source, '--checked', '--debug', '--emit-llvm', '--out', irPrefix], { cwd: root, env: process.env, encoding: 'utf8', timeout: 180000, windowsHide: true });
+  const emitted = spawnSync(compiler, ['build', source, '--checked', '--debug', '--emit-llvm', '--out', irPrefix], { cwd: root, env: process.env, encoding: 'utf8', timeout: 180000, windowsHide: true });
   assert.equal(emitted.status, 0, emitted.stdout + emitted.stderr);
   const ir = fs.readFileSync(irPrefix + '.ll', 'utf8');
   assert.match(ir, /DILexicalBlock\(/); assert.match(ir, /DILocation\(line: 14, column: [1-9][0-9]*/);

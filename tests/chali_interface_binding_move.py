@@ -46,7 +46,7 @@ def main():
             checked = execute([compiler, 'run', fixture, '--allocator', allocator,
                                '--out', str(prefix) + '-run'], 'checked')
             assert checked.stdout == 'interface snapshots and scalar object copy OK\n', (checked, work)
-            execute([compiler, 'aot', fixture, '--allocator', allocator, '--out', prefix], 'build')
+            execute([compiler, 'build', fixture, '--allocator', allocator, '--out', prefix], 'build')
             native = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], 'unchecked')
             assert native.stdout == checked.stdout, (native, work)
             optimized = work / (label + '-o3.ll')

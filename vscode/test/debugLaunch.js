@@ -25,7 +25,7 @@ async function main() {
   const source = path.join(work, 'input.chl');
   fs.writeFileSync(source, 'void main(List<String> args) {\nfor(String item in args){println("ARG [{}]",item);}\nprintln("READY {}",len(args));\nString value=std::core::readLine();\nprintln("INPUT [{}]",value);\nassert(std::core::readLine()=="");\nprintln("INPUT EOF");\n}\n');
   const prefix = path.join(work, 'input');
-  const build = spawnSync(compiler, ['aot', source, '--checked', '--debug', '--out', prefix], { cwd: root, env: process.env, encoding: 'utf8', timeout: 180000, windowsHide: true });
+  const build = spawnSync(compiler, ['build', source, '--checked', '--debug', '--out', prefix], { cwd: root, env: process.env, encoding: 'utf8', timeout: 180000, windowsHide: true });
   assert.equal(build.status, 0, build.stdout + build.stderr);
   const executable = prefix + (process.platform === 'win32' ? '.exe' : '');
   const client = new DebugClient(root, path.join(work, 'compiler-must-not-be-called'));

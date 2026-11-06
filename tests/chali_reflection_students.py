@@ -1,6 +1,6 @@
 """反射版学生信息管理系统的端到端回归。
 
-先 `chali aot` 构建一次原生产物，再逐条跑命令：每条命令都是一个独立进程，
+先 `chali build` 构建一次原生产物，再逐条跑命令：每条命令都是一个独立进程，
 所以这套用例顺带验证了跨进程持久化和停机零资源残留。
 
 用法：python tests/chali_reflection_students.py [--compiler 路径]
@@ -71,7 +71,7 @@ def main():
     with tempfile.TemporaryDirectory() as temporary:
         work = Path(temporary)
         prefix = work / 'students'
-        command = [options.compiler, 'aot', str(SOURCE), '--out', str(prefix)]
+        command = [options.compiler, 'build', str(SOURCE), '--out', str(prefix)]
         environment = dict(os.environ, CHALI_LLVM_CLANG=(str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe')
                                                           if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang')))
         compiled = subprocess.run(command, cwd=work, env=environment, capture_output=True, text=True,

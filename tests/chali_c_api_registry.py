@@ -86,7 +86,7 @@ def main():
             for allocator in ('malloc', 'pool'):
                 for checks in ('checked', 'unchecked'):
                     prefix = work / ('language-' + allocator + '-' + checks)
-                    run(args.chali.resolve(), 'aot', source, '--shared', '--allocator', allocator, '--' + checks, '--out', prefix)
+                    run(args.chali.resolve(), 'build', source, '--shared', '--allocator', allocator, '--' + checks, '--out', prefix)
                     library = prefix.with_suffix('.dll' if os.name == 'nt' else '.so')
                     output = run(executable, library, provider)
                     assert output == 'C registry -> native language -> captured C callback: 42, owned result released once\n', output

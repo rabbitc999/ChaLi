@@ -137,8 +137,8 @@ void PrintUsage(std::FILE *out)
              "  lib            库包工具：template、pack、inspect、lock\n"
              "  link           链接原生对象与归档\n"
              "  ar             创建确定性静态归档\n"
-             "  asm            将目标 .s 汇编为对象文件，不执行链接\n"
-             "  aot            unchecked LLVM 产物（--target、--emit-llvm、--emit-obj、--emit-asm、--shared、--export）\n",
+             "  asm            将目标 .s 汇编为对象文件，不执行链接\n",
+             "  build          发布构建，默认 unchecked（--target、--emit-llvm、--emit-obj、--emit-asm、--shared、--export）\n",
              "  new DIR [name NAME]  新建 ChaLi 应用工程（目标目录必须不存在）\n",
              "  gen            生成独立编译器工程（转发 chali-generator compiler）\n",
              "  clear out DIR  清理登记过的中间产物（不重新编译）\n",
@@ -169,7 +169,7 @@ void PrintUsage(std::FILE *out)
              "  --sysroot 目录         目标 SDK 的系统根目录\n",
              "  --runtime-dir 目录     目标 libchali_aot_host.a 所在目录\n"
              "  --subsystem 值        Windows 可执行文件子系统：console 或 windows\n",
-             "  --cpu 名称             目标 CPU；也可在 chali.toml 的 [aot] 表配置\n",
+             "  --cpu 名称             目标 CPU；也可在 chali.toml 的 [build] 表配置\n",
              "  --allocator malloc|pool  选择系统 malloc 或内存池；缺省 malloc\n",
              "  --hard-realtime        禁止整个编译单元使用反射\n",
              "  --import-dir 目录      追加 import 搜索目录\n",
@@ -327,7 +327,7 @@ try
 #endif
     if (argc == 2 && std::strcmp(argv[1], "--build-info") == 0)
     {
-        std::printf("{\"version\":\"%s\",\"llvm\":\"%s\",\"execution\":\"aot\",\"vm\":false,\"svmb\":false}\n",
+        std::printf("{\"version\":\"%s\",\"llvm\":\"%s\",\"execution\":\"aot\"}\n",
                     chali_package::compilerVersion, chali_aot::builtin::available() ? "static" : "external");
         return 0;
     }
@@ -388,7 +388,7 @@ try
     }
     Memory::Vector<Memory::String> defineItems;
     Memory::Vector<Memory::String> programArguments;
-    /* 统一入口支持 VM 执行、中间产物导出及显式 AOT 编译。 */
+    /* 统一入口支持原生编译执行和发布构建。 */
     int firstArgument = 1;
     if (argc > 1)
     {
@@ -398,7 +398,7 @@ try
             firstArgument = 2;
 
         }
-        else if (first == "aot")
+        else if (first == "build")
         {
             aot = true;
             aotOptions.checked = false;
@@ -408,12 +408,7 @@ try
         }
         else if (first == "emit")
         {
-            std::fprintf(stderr, CHALI_TEXT("chali: --emit 已删除，请直接使用 run 或 aot。\n"));
-            return 2;
-        }
-        else if (first == "svmb" || first == "smvb")
-        {
-            std::fputs("chali: .svmb 导出已删除，请使用 aot 导出原生产物。\n", stderr);
+            std::fprintf(stderr, CHALI_TEXT("chali: --emit 已删除，请直接使用 run 或 build。\n"));
             return 2;
         }
     }
@@ -488,7 +483,7 @@ try
             }
             continue;
         }
-        /* `--mode`：与统一入口一致的运行方式；interpret / run / aot 折到 run，svmb 已删除。 */
+        /* `--mode`：运行方式与统一入口一致，build 选择发布构建。 */
         if (argument == "--mode" || argument == "--run-mode" || argument.rfind("--mode=", 0) == 0 || argument.rfind("--run-mode=", 0) == 0)
         {
             const auto separator = argument.find('=');
@@ -500,7 +495,7 @@ try
             const Memory::String mode = separator == Memory::String::npos ? Memory::String(argv[++index]) : argument.substr(separator + 1);
 
             if (mode == "interpret") { /* 缺省 */ }
-            else if (mode == "aot")
+            else if (mode == "build")
             {
                 aot = true;
                 aotOptions.checked = false;
@@ -508,7 +503,7 @@ try
             }
             else if (mode == "emit")
             {
-                std::fprintf(stderr, CHALI_TEXT("chali: --emit 已删除，请直接使用 run 或 aot。\n"));
+                std::fprintf(stderr, CHALI_TEXT("chali: --emit 已删除，请直接使用 run 或 build。\n"));
                 return 2;
             }
             else
@@ -576,7 +571,7 @@ try
         if (argument == "--abi-cache" || argument == "--abi-bridge" || argument == "--abi-write-bridge" ||
             argument == "--abi-no-cache" || argument == "--abi-prepare")
         {
-            std::fprintf(stderr, "chali: 旧解释执行 ABI 选项 %s 已删除，请直接使用 run 或 aot。\n", argument.c_str());
+            std::fprintf(stderr, "chali: 旧解释执行 ABI 选项 %s 已删除，请直接使用 run 或 build。\n", argument.c_str());
             return 2;
         }
         if (argument == "--check")
@@ -708,7 +703,7 @@ try
         }
         if (argument == "--emit") /* 已删除 */
         {
-            std::fprintf(stderr, CHALI_TEXT("chali: --emit 已删除，请直接使用 run 或 aot。\n"));
+            std::fprintf(stderr, CHALI_TEXT("chali: --emit 已删除，请直接使用 run 或 build。\n"));
             return 2;
         }
         if (argument == "--no-threads")
@@ -936,7 +931,7 @@ try
     }
     if (run && !selectedTarget.native)
     {
-        std::fputs("chali: run 只能执行宿主目标；请使用 aot 导出交叉编译产物。\n", stderr);
+        std::fputs("chali: run 只能执行宿主目标；请使用 build 发布构建交叉编译产物。\n", stderr);
         return 2;
     }
     /* 构建**项目**时入口是 `[chali] main` 指定的主文件（命令行没给源文件才用它）；

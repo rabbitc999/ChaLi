@@ -82,7 +82,7 @@ def draw() -> Canvas:
             "③ 运行时与标准库", "source/ircode · source/abi/",
             (
                 ("共享原生运行时", (
-                    ("原生执行", "run checked / aot unchecked"),
+                    ("原生执行", "run checked / build unchecked"),
                     ("运行时对象", "堆、对象表、字符串与大数"),
                     ("地址检查", "checked 核对边界与存活"),
                 )),

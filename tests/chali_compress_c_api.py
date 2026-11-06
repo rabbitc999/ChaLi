@@ -23,7 +23,7 @@ def main():
         expected=json.loads(BASELINE.read_text(encoding='utf-8'))['output']
         for allocator in ('malloc','pool'):
             for checks in ('checked','unchecked'):
-                target=work/f'{allocator}-{checks}.exe';run([compiler,'aot',SOURCE,'--allocator',allocator,'--'+checks,'--out',target]);result=run([target]);assert result.stdout==expected and not result.stderr,(allocator,checks,result.stdout,result.stderr);print(f'{allocator}/{checks}: seven frozen compression streams and owned raw contents match')
+                target=work/f'{allocator}-{checks}.exe';run([compiler,'build',SOURCE,'--allocator',allocator,'--'+checks,'--out',target]);result=run([target]);assert result.stdout==expected and not result.stderr,(allocator,checks,result.stdout,result.stderr);print(f'{allocator}/{checks}: seven frozen compression streams and owned raw contents match')
         accepted=work/'empty-prefix.chl'
         accepted.write_text('import std::compress;\nvoid main(){List<uint8> bytes;bytes.push((uint8)77);bytes.push((uint8)76);bytes.push((uint8)90);bytes.push((uint8)49);bytes.push((uint8)0);assert(std::compress::decompress(bytes)=="");}',encoding='utf-8')
         run([compiler,'run',accepted,'--out',work/'empty-prefix'])

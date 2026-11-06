@@ -39,7 +39,7 @@ def main():
 
     info = json.loads(execute([compiler, '--build-info']).stdout)
     assert info['version'] == (ROOT / 'VERSION').read_text().strip() and info['execution'] == 'aot'
-    assert info['vm'] is False and info['svmb'] is False
+    assert 'vm' not in info and 'svmb' not in info
     report['build_info'] = info
     source = work / 'native 中文 & space.chl'
     source.write_text('''int64 globals[16];
@@ -62,7 +62,7 @@ void main(List<String> args) {
     checked = run_prefix.with_suffix('.ll').read_text(encoding='utf-8')
     assert 'checks: on' in checked
     prefix = work / 'unchecked'
-    execute([compiler, 'aot', source, '--out', prefix])
+    execute([compiler, 'build', source, '--out', prefix])
     llvm = prefix.with_suffix('.ll').read_text(encoding='utf-8')
     assert 'checks: off' in llvm
     product = Path(str(prefix) + ('.exe' if os.name == 'nt' else ''))
@@ -82,12 +82,18 @@ void main(List<String> args) {
         assert execute([old_product, '中文 & space']).stdout == expected
         report['baseline_bytes'] = old_product.stat().st_size
         report['baseline_llvm_bytes'] = old.with_suffix('.ll').stat().st_size
-    for command in ([compiler, 'svmb', source], [compiler, 'run', source, '--svmb'], [compiler, '--mode', 'svmb', source]):
+    execute([compiler, 'svmb', source], expected=2)
+    execute([compiler, 'aot', source], expected=2)
+    for command in ([compiler, 'run', source, '--svmb'], [compiler, '--mode', 'svmb', source], [compiler, '--mode', 'aot', source]):
         execute(command, expected=2)
     raw = work / 'quad'
-    execute([compiler, 'aot', source, '--emit-llvm', '--out', raw])
+    execute([compiler, 'build', source, '--emit-llvm', '--out', raw])
     assert raw.with_suffix('.ll').exists() and not raw.with_suffix('.quad').exists() and not raw.with_suffix('.svmb').exists()
-    symbols = subprocess.check_output(['ar', 't', ROOT / 'build/chali-ircode-aot-core/libstackvm.a'], text=True)
+    build_root = 'llvm-static-gcc16' if info['llvm'] == 'static' else 'llvm-external-gcc11'
+    archive = ROOT / 'build' / build_root / 'chali-ircode-aot-core/libstackvm.a'
+    if not archive.exists():
+        archive = ROOT / 'build/chali-ircode-aot-core/libstackvm.a'
+    symbols = subprocess.check_output(['ar', 't', archive], text=True)
     assert not any(name in symbols for name in ['vm_execution.o', 'register_core.o', 'program_binary.o'])
     report['interpreter_and_bytecode_objects_absent'] = True
     report['passed'] = True

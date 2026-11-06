@@ -149,7 +149,7 @@ def main():
                     else:
                         path = ROOT / ('benchmarks/features/' + case + '.chl' if case in FEATURES else 'benchmarks/strings/cases.chl')
                     if case not in STRINGS or common_string is None:
-                        build([compiler, 'aot', path, '--shared', '--unchecked', '--llvm', clang, *allocator_flags, '--out', prefix])
+                        build([compiler, 'build', path, '--shared', '--unchecked', '--llvm', clang, *allocator_flags, '--out', prefix])
                         if case in STRINGS:
                             common_string = prefix.with_suffix('.dll')
                     library = common_string if case in STRINGS else prefix.with_suffix('.dll')

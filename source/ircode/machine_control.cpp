@@ -1,6 +1,6 @@
 /**
  * @file machine_control.cpp
- * @brief 原生宿主与独立 VM 共用的停止、事件及机器配置。
+ * @brief 原生宿主与独立 运行时 共用的停止、事件及机器配置。
  */
 #include "runtime_internal.hpp"
 #include "thread_runtime.hpp"
@@ -9,7 +9,7 @@ namespace stackvm
 {
 using namespace runtimeDetail;
 /**
- * @brief 建立虚拟机独立的协作停止标志。
+ * @brief 建立运行时独立的协作停止标志。
  * @param trace 是否记录逐指令执行轨迹。
  */
 Machine::Machine(bool trace) : control_(Memory::makeShared<ExecutionControl>()), trace_(trace) {}

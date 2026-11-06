@@ -604,7 +604,7 @@ class StaticRuntimeArena final : public RuntimeAllocator
     alignas(std::max_align_t) unsigned char storage_[Capacity];
     McPool pool_{};
     SlabPool slabs_{};     ///< 小对象按组分配，剩下的才逐块进池。
-    mutable std::mutex mutex_; /* 静态 arena 可能被并发的 VM 线程共用，和 BufferRuntimeArena 一样加锁 */
+    mutable std::mutex mutex_; /* 静态 arena 可能被并发的 运行时 线程共用，和 BufferRuntimeArena 一样加锁 */
 public:
     StaticRuntimeArena() { reset(); }
     void reset()

@@ -102,7 +102,7 @@ printf("rep %lld\n", (long long)elapsed);
 | --- | --- | --- |
 | C++ | MinGW g++ 11.2.0、C++17、`-O2`；作为附加参考，ChaLi 使用 O3 | [C++ O2](../benchmarks/results/1.0.11-final/references/cpp-o2.json)、[字符串](../benchmarks/results/1.0.11-final/references/strings.json) |
 | Rust | rustc 1.98.1、`-O`；载荷枚举、结构和数组保留对应原生实现 | [基础](../benchmarks/results/1.0.11-final/references/basic.json)、[特征](../benchmarks/results/1.0.11-final/references/features.json)、[字符串](../benchmarks/results/1.0.11-final/references/strings.json) |
-| Lua | Lua 5.5.1 官方 VM、默认 GC；拼接同时保留逐次拼接和 table.concat，验收取后者 | [基础](../benchmarks/results/1.0.11-final/references/basic.json)、[字符串](../benchmarks/results/1.0.11-final/references/strings.json) |
+| Lua | Lua 5.5.1 官方运行时、默认 GC；拼接同时保留逐次拼接和 table.concat，验收取后者 | [基础](../benchmarks/results/1.0.11-final/references/basic.json)、[字符串](../benchmarks/results/1.0.11-final/references/strings.json) |
 | Java | HotSpot 22.0.1、`-Xbatch`；接口为 JIT 热身后稳态测量 | [特征与热身记录](../benchmarks/results/1.0.11-final/references/features.json) |
 
 Java 每个 JVM 至少预热 256 次计算函数且不少于 1 秒，并核对 `work` 的 C2 level 4 编译发生在采样前；5 个 JVM 分别保留证据。[JIT 日志](../benchmarks/results/1.0.11-final/references/java-jit)对应这两项接口参考。该表不混入 Java 解释模式或启动耗时。

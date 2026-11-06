@@ -13,7 +13,7 @@ const original = path.join(work, 'original source'), local = path.join(work, 'lo
 fs.mkdirSync(original); fs.mkdirSync(local);
 const input = path.join(original, 'main.chl'), source = path.join(local, 'main.chl'), prefix = path.join(work, 'program');
 fs.writeFileSync(input, 'struct Row{int64 value;};\nvoid main(){\n Row row;row.value=7;\n int64 count=41;\n println("READY");\n assert(count==42);\n int64 observed=increment(&count);\n assert(observed==43);\n assert(count==43);\n}\nint64 increment(int64 mut& value){*value=*value+1;return *value;}\n');
-const built = spawnSync(compiler, ['aot', input, '--debug', '--checked', '--out', prefix], { cwd: root, encoding: 'utf8', windowsHide: true, timeout: 180000 });
+const built = spawnSync(compiler, ['build', input, '--debug', '--checked', '--out', prefix], { cwd: root, encoding: 'utf8', windowsHide: true, timeout: 180000 });
 assert.equal(built.status, 0, built.stdout + built.stderr); fs.renameSync(input, source);
 
 async function main() {

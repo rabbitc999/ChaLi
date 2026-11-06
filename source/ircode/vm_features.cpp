@@ -1,6 +1,6 @@
 /**
  * @file vm_features.cpp
- * @brief VM 功能位与程序元数据契约检查。
+ * @brief 运行时 功能位与程序元数据契约检查。
  */
 #include "runtime_internal.hpp"
 

@@ -96,7 +96,7 @@ def main():
             prefix = work / label
             checked = execute([compiler, 'run', fixture, '--allocator', allocator, '--out', str(prefix) + '-run'], 'run')
             assert checked.stdout == 'multiple address views OK\n' and not checked.stderr, (checked, work)
-            execute([compiler, 'aot', fixture, '--shared', '--allocator', allocator, '--out', prefix], 'shared')
+            execute([compiler, 'build', fixture, '--shared', '--allocator', allocator, '--out', prefix], 'shared')
             llvm = prefix.with_suffix('.ll').read_text(encoding='utf-8')
             primitive = re.search(r'^define internal ptr @chali_primitive_address\(.*?^\}', llvm, re.M | re.S)
             assert primitive is not None, work

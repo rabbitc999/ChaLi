@@ -24,6 +24,6 @@ target_compile_definitions(chali_stackvm PUBLIC STACKVM_WITH_REFLECTION=$<BOOL:$
 target_compile_definitions(chali_stackvm PUBLIC STACKVM_WITH_PANIC_TRACE=$<BOOL:${STACKVM_WITH_PANIC_TRACE}>)
 add_subdirectory(../../source/abi ${CMAKE_CURRENT_BINARY_DIR}/standard-records)
 
-# AOT 共享服务，不再生成 VM、字节码工具及解释器测试。
+# 只构建原生 AOT 共享运行时服务。
 target_compile_definitions(chali_stackvm PUBLIC CHALI_CUSTOM_ALLOCATOR=1 STACKVM_AOT_ONLY=1)
 add_library(chali_native_core ALIAS chali_stackvm)

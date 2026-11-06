@@ -21,13 +21,13 @@ def main():
         for allocator in ('malloc','pool'):
             for checks in ('checked','unchecked'):
                 prefix=work/f'{allocator}-{checks}'
-                run([compiler,'aot',ROOT/'example/samples/std_image.chl','--allocator',allocator,'--'+checks,'--out',prefix])
+                run([compiler,'build',ROOT/'example/samples/std_image.chl','--allocator',allocator,'--'+checks,'--out',prefix])
                 result=run([prefix.with_suffix('.exe' if os.name=='nt' else '')])
                 expected=(ROOT/'example/expected/std_image.txt').read_text(encoding='utf-8')
                 assert result.stdout==expected and not result.stderr,result
                 print(f'{allocator}/{checks}: pixels, convolution, pooling, colors, Otsu, BMP/PPM/PGM roundtrip passed',flush=True)
                 extended=work/f'{allocator}-{checks}-extended'
-                run([compiler,'aot',ROOT/'tests/fixtures/image_compatibility.chl','--allocator',allocator,'--'+checks,'--out',extended])
+                run([compiler,'build',ROOT/'tests/fixtures/image_compatibility.chl','--allocator',allocator,'--'+checks,'--out',extended])
                 result=run([extended.with_suffix('.exe' if os.name=='nt' else '')])
                 frozen=json.loads((ROOT/'tests/fixtures/image_compatibility.json').read_text(encoding='utf-8'))['stdout']
                 assert result.stdout==frozen and not result.stderr,result

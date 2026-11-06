@@ -28,7 +28,7 @@ const lines = [
 ];
 fs.writeFileSync(source, lines.join('\n') + '\n');
 const stopLine = lines.indexOf('    println("INSIDE {}", marker);') + 1;
-const built = spawnSync(compiler, ['aot', source, '--debug', '--checked', '--allocator', 'malloc', '--out', path.join(work, 'program')], { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
+const built = spawnSync(compiler, ['build', source, '--debug', '--checked', '--allocator', 'malloc', '--out', path.join(work, 'program')], { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
 assert.equal(built.status, 0, built.stdout + built.stderr);
 
 /** 按帧序号取可见变量，保留展开引用。 */

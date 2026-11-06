@@ -1,6 +1,6 @@
 /**
  * @file native_raw_storage.cpp
- * @brief VM 与 AOT 共用的原始存储状态，不改变普通引用的存活验证。
+ * @brief 运行时 与 AOT 共用的原始存储状态，不改变普通引用的存活验证。
  */
 #include "runtime_internal.hpp"
 
@@ -196,7 +196,7 @@ Slot rawStorageOperation(NativeContext &ctx, std::int64_t op, std::int64_t handl
 }
 
 /**
- * @brief 将 VM 原生调用的六个槽转发到标量内核，不复制元素。
+ * @brief 将 运行时 原生调用的六个槽转发到标量内核，不复制元素。
  * @param ctx 活跃执行上下文。
  * @param args 操作及五个操作参数。
  * @return 操作结果；错误保存在上下文中。

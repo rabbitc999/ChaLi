@@ -37,7 +37,7 @@ def main():
                     env['CHALI_NO_AOT_RAW_INTRINSICS'] = '1'
                 label = allocator + mode + ('-fallback' if fallback else '-direct')
                 prefix = work / label
-                built = execute([compiler, 'aot', ROOT / 'tests/fixtures/aot_buffer_growth.chl',
+                built = execute([compiler, 'build', ROOT / 'tests/fixtures/aot_buffer_growth.chl',
                                  '--allocator', allocator, mode, '--out', prefix], label + '-build', env)
                 assert built.returncode == 0, (label, built.stdout, built.stderr, work)
                 ran = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], label, env)
@@ -52,7 +52,7 @@ def main():
         source = work / (name + '.chl')
         source.write_text('void main(){std::core::__bootBufferCapacity(' + arguments + ');}\n', encoding='utf-8')
         prefix = work / name
-        built = execute([compiler, 'aot', source, '--out', prefix], name + '-build', environment)
+        built = execute([compiler, 'build', source, '--out', prefix], name + '-build', environment)
         assert built.returncode == 0, (name, built.stdout, built.stderr, work)
         ran = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], name, environment)
         assert ran.returncode != 0 and diagnostic in ran.stdout + ran.stderr, (name, ran, work)
@@ -64,7 +64,7 @@ def main():
                           + str(query) + ',0,0);std::core::__mapStorageState(handle,'
                           + str(operation) + ',0,maximum+1);}}\n', encoding='utf-8')
         prefix = work / name
-        built = execute([compiler, 'aot', source, '--out', prefix], name + '-build', environment)
+        built = execute([compiler, 'build', source, '--out', prefix], name + '-build', environment)
         assert built.returncode == 0, (name, built.stdout, built.stderr, work)
         ran = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], name, environment)
         assert ran.returncode != 0 and 'Map/Set 存储槽或操作编号越界' in ran.stdout + ran.stderr, (name, ran, work)

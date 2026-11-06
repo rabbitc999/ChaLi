@@ -25,7 +25,7 @@ def command(arguments, cwd, expected=0):
 def build(compiler, project, work):
     """每个工程导出一次原生程序，业务案例复用同一被测字节。"""
     prefix = work / project
-    command([compiler, 'aot', ROOT / 'example' / project / 'src/main.chl', '--out', prefix], ROOT)
+    command([compiler, 'build', ROOT / 'example' / project / 'src/main.chl', '--out', prefix], ROOT)
     executable = prefix.with_suffix('.exe' if os.name == 'nt' else '')
     assert executable.exists(), executable
     return executable

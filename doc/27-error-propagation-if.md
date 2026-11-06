@@ -63,7 +63,7 @@ let value = operation().mapErr<AppError>(toAppError)?;
 let user = findUser(id).okOr<AppError>(AppError::UserMissing)?;
 ```
 
-`?` 可以写在 if 分支及条件中，其失败出口仍然是当前函数，不是 if 表达式。完整回归见 [条件表达式](../example/samples/if_expression.chl) 与 [错误适配](../example/samples/error_adapters.chl) 两个样例（由 `sh check.sh` 跑 VM 双后端）。
+`?` 可以写在 if 分支及条件中，其失败出口仍然是当前函数，不是 if 表达式。完整回归见 [条件表达式](../example/samples/if_expression.chl) 与 [错误适配](../example/samples/error_adapters.chl) 两个样例（由 `sh check.sh` 跑运行时双后端）。
 
 ## 取值与工具
 

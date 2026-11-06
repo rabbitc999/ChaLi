@@ -2187,7 +2187,7 @@ struct Builder
             else if (base == "load" || base == "store")
             {
                 const Width width = widthOf(suffix);
-                // 与四元式 VM 及聚合封送共用物理槽：只有 u8 连续按字节保存，
+                // 与四元式 运行时 及聚合封送共用物理槽：只有 u8 连续按字节保存，
                 // 其他整数使用 i64、所有浮点使用 double；位宽归一属于值运算。
                 const bool byteStorage = suffix == "u8";
                 const Text storageType = width.float_ ? "double" : byteStorage ? "i8" :

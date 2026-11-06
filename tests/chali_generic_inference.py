@@ -11,6 +11,6 @@ def main():
         prefix = work / name
         result = run(CHALI, 'run', source, '--out', prefix)
         assert result.stdout == expected and (not result.stderr), (name, result.stdout, result.stderr)
-        run(CHALI, 'aot', source, '--emit-llvm', '--out', prefix)
+        run(CHALI, 'build', source, '--emit-llvm', '--out', prefix)
 if __name__ == '__main__':
     main()

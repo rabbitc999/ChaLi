@@ -488,7 +488,7 @@ int M_Char(int textId);
  * @brief `s[起:止]`：字符串切片（半开区间，越界自动夹到范围内；止 < 0 = 到末尾）。
  *
  * 值是**新造出来的字符串**（堆上），所以语言侧不用写逐字节的循环 —— 拼接 / 切片 /
- * 格式化都交给虚拟机里那份 C++ 运行时（`__std_str_*`）。
+ * 格式化都交给运行时里那份 C++ 运行时（`__std_str_*`）。
  * @param base 被切的字符串。
  * @param begin 起始下标表达式。
  * @param end 结束下标表达式；-1 = 到末尾。
@@ -944,7 +944,7 @@ int M_AbiOwned(int function, int release);
 int M_AbiBufferFunc(int resultType, int nameId, int params, int symbolId, int lengthId);
 int M_AbiBlock(int libraryId, int functionsId);
 /**
- * `type Name = ABI类型;`：声明宿主类型的 VM 表示。
+ * `type Name = ABI类型;`：声明宿主类型的 运行时 表示。
  */
 int M_HostType(int nameId, int abiTypeId);
 /**

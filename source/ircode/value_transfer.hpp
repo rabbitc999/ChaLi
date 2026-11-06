@@ -1,6 +1,6 @@
 /**
  * @file value_transfer.hpp
- * @brief VM 内部 value transfer 模块的类型与接口。
+ * @brief 运行时 内部 value transfer 模块的类型与接口。
  */
 #pragma once
 #include "runtime_objects.hpp"

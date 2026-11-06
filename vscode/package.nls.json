@@ -10,15 +10,15 @@
   "chali.previewMacroExpansionOnce.title": "ChaLi: Expand Current Macro Once",
   "chali.previewMacroExpansionAtCursor.title": "ChaLi: Fully Expand Current Macro",
   "chali.build.title": "ChaLi: Build Current File",
-  "chali.buildExe.title": "ChaLi: Build Executable (LLVM AOT)",
+  "chali.buildExe.title": "ChaLi: Release Build Executable",
   "chali.path.description": "ChaLi compiler path. Empty selects the bundled compiler, then the workspace and PATH.",
   "chali.traceServer.description": "Write language server protocol messages to the output channel for troubleshooting.",
   "chali.inlayHints.enabled.description": "Show inferred types for let, for-in elements and contextually typed fn parameters.",
   "chali.build.outputDirectory.description": "Leave empty to publish beside the source and automatically clean the hidden .chali workspace. A configured relative directory is resolved from the nearest project or source directory.",
   "chali.build.llvmPath.description": "Required LLVM clang path for the external variant; used for both building and running. This setting is absent from the static variant.",
-  "chali.build.checked.description": "Enable array and pointer checks for AOT exports; off by default. run is always checked.",
+  "chali.build.checked.description": "Enable array and pointer checks for release builds; off by default. run is always checked.",
   "chali.configureTarget.title": "ChaLi: Select Project Target",
-  "chali.configureOutput.title": "ChaLi: Select AOT Output",
+  "chali.configureOutput.title": "ChaLi: Select Build Output",
   "chali.openProjectConfig.title": "ChaLi: Open Project Configuration",
   "chali.checkDebugEnvironment.title": "ChaLi: Check Debug Environment"
 }

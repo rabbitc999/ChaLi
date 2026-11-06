@@ -43,7 +43,7 @@ def main():
         compact_source.write_text('void main() { println("Hello World"); }\n', encoding='utf-8')
         for mode in ('off', 'full', 'thin'):
             compact = root / ('compact-' + mode + '.exe')
-            result = subprocess.run([str(compiler), 'aot', str(compact_source),
+            result = subprocess.run([str(compiler), 'build', str(compact_source),
                                      '--out', str(compact.with_suffix('')), '--lto-mode', mode],
                                     cwd=root, env=env, capture_output=True, text=True, encoding='utf-8', timeout=180)
             assert result.returncode == 0, result
@@ -52,7 +52,7 @@ def main():
                                     capture_output=True, text=True, encoding='utf-8', timeout=30)
             assert (result.returncode, result.stdout, result.stderr) == (0, 'Hello World\n', ''), result
         prefix = root / 'program'
-        result = subprocess.run([str(compiler), 'aot', str(source), '--out', str(prefix)], cwd=root,
+        result = subprocess.run([str(compiler), 'build', str(source), '--out', str(prefix)], cwd=root,
                                 env=env, capture_output=True, text=True, encoding='utf-8', timeout=180)
         assert result.returncode == 0, result
         result = subprocess.run([str(prefix.with_suffix('.exe'))], cwd=root, env=env,
@@ -60,7 +60,7 @@ def main():
         assert (result.returncode, result.stdout) == (0, 'static LLVM 45\n'), result
         source.write_text(SOURCE.split('void main()', 1)[0].replace('int64 sum(', 'export int64 sum('), encoding='utf-8')
         library = root / 'shared'
-        result = subprocess.run([str(compiler), 'aot', str(source), '--shared', '--out', str(library)],
+        result = subprocess.run([str(compiler), 'build', str(source), '--shared', '--out', str(library)],
                                 cwd=root, env=env, capture_output=True, text=True, encoding='utf-8', timeout=180)
         assert result.returncode == 0, result
         native = ctypes.CDLL(str(library.with_suffix('.dll')))

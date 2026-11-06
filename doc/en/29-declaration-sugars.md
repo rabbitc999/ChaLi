@@ -71,7 +71,7 @@ lowerReturnControl(E):
     return the ordinary slot
 ```
 
-Transfer/copy are compiler pseudocode, not new VM opcodes. Existing `LowerLanguageMove` performs live-memory checks, storage reads, source clearing and aggregate move marking. Existing string, object and aggregate paths perform copies. Cleanup remains on its control-flow edges and is protected by move state; consuming on one branch must not globally erase another branch's cleanup. Deferred callbacks cannot access an already consumed source through a dangling alias.
+Transfer/copy are compiler pseudocode, not new runtime opcodes. Existing `LowerLanguageMove` performs live-memory checks, storage reads, source clearing and aggregate move marking. Existing string, object and aggregate paths perform copies. Cleanup remains on its control-flow edges and is protected by move state; consuming on one branch must not globally erase another branch's cleanup. Deferred callbacks cannot access an already consumed source through a dangling alias.
 
 See [`M_ReturnValue`](../../source/semantics/return_expression_ast.cpp), [`PrepareBreakValue` and `LowerLanguageMove`](../../source/semantics/boxing.cpp), [`LowerLoop`](../../source/semantics/lowering.cpp), and [borrow dataflow](../../source/chali_borrow_flow.hpp).
 

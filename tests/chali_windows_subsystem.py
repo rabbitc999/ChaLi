@@ -54,7 +54,7 @@ def main():
         chali('aot', source, '--subsystem', 'bad', error='--subsystem')
         chali('aot', source, '--subsystem', 'windows', '--shared', error='--subsystem')
         chali('aot', source, '--subsystem', 'windows', '--target', 'linux-x64', error='--subsystem')
-        (work / 'chali.toml').write_text('[chali]\nmain = "app.chl"\n[aot]\nsubsystem = "windows"\n', encoding='utf-8')
+        (work / 'chali.toml').write_text('[chali]\nmain = "app.chl"\n[build]\nsubsystem = "windows"\n', encoding='utf-8')
         chali('aot', source, '--out', work / 'project')
         assert subsystem(work / 'project.exe') == 2
         chali('aot', source, '--subsystem', 'console', '--out', work / 'override')

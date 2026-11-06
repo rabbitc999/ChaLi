@@ -1,4 +1,4 @@
-# 标准库的实现只编入宿主胶水库；VM 核心继续使用通用原生记录协议。
+# 标准库的实现只编入宿主胶水库；运行时 核心继续使用通用原生记录协议。
 file(GLOB CHALI_STANDARD_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 file(GLOB CHALI_BIGNUM_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../../source/bignum/bigint*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/../../source/bignum/chali_big*.c" "${CMAKE_CURRENT_SOURCE_DIR}/../../source/runtime_c/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/../../source/bignum/bigfloat*.cpp")
@@ -32,6 +32,6 @@ target_compile_definitions(chali_standard_records PUBLIC CHALI_CUSTOM_ALLOCATOR=
     CHALI_WITH_REFLECTION=$<BOOL:${STACKVM_WITH_REFLECTION}>
     STACKVM_WITH_REFLECTION=$<BOOL:${STACKVM_WITH_REFLECTION}>)
 
-# 与使用这些记录的 VM 保持相同的预算与功能宏。
+# 与使用这些记录的 运行时 保持相同的预算与功能宏。
 target_compile_definitions(chali_standard_records PUBLIC
     $<TARGET_PROPERTY:chali_stackvm,INTERFACE_COMPILE_DEFINITIONS>)

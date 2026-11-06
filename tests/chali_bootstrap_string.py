@@ -44,7 +44,7 @@ def main():
     for name, source, diagnostic in cases:
         virtual = execute([compiler, 'run', source, '--out', work / (name + '-vm')], name + '-vm')
         prefix = work / (name + '-aot')
-        built = execute([compiler, 'aot', source, '--out', prefix], name + '-build')
+        built = execute([compiler, 'build', source, '--out', prefix], name + '-build')
         assert built.returncode == 0, (name, built.stdout, built.stderr, work)
         native = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], name + '-aot')
         if diagnostic:

@@ -60,7 +60,7 @@ def main():
         source = work / 'collections.chl'
         source.write_text(SOURCE, encoding='utf-8')
         product = Path(str(work / 'program') + ('.exe' if os.name == 'nt' else ''))
-        run(compiler, 'aot', source, '--out', work / 'program')
+        run(compiler, 'build', source, '--out', work / 'program')
         result = run(product)
         assert result.stdout == EXPECTED, result.stdout
         assert not result.stderr, result.stderr

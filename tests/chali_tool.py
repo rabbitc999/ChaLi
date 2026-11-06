@@ -63,7 +63,7 @@ def main():
         assert 'Unknown file' in result.stderr, result.stderr
         help_text = run('--help').stdout
         assert re.search(r'\baot\b', help_text), help_text
-        for options in [('aot', source), ('--mode', 'aot', source)]:
+        for options in [('aot', source), ('--mode', 'build', source)]:
             prefix = work / 'aot'
             result = run(*options, '--emit-llvm', '--out', prefix)
             assert not result.stdout and not result.stderr, result

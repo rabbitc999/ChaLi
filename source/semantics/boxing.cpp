@@ -483,7 +483,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
 /**
  * @brief 这个声明落在**编译器内嵌的标准库**里吗（`std::core` / `std::*` / 文法登记的标准模块）？
  *
- * 标准库里那些"只有签名"的宿主函数由 VM 内建提供（`std::thread::wait`、
+ * 标准库里那些"只有签名"的宿主函数由 运行时 内建提供（`std::thread::wait`、
  * `std::io::__fileTryRead`、`std::memory::__memoryLiveBytes`…），不一定挂在
  * `NativeRegistry` 上，所以不做"注册表里必须有"的校验。用户 / 胶水层声明落在入口模块，
  * 照常校验，宿主追加的普通语言声明也属于入口模块。
@@ -1366,7 +1366,7 @@ ast::NodePtr LowerCall(int id)
 
         /*
          * `std::core::pause()`：调试用"临时停一下"，等到一行输入再继续。
-         * 非交互式输入（管道 / CI / 嵌入式宿主）时 VM 直接返回，所以批量跑样例不会挂住。
+         * 非交互式输入（管道 / CI / 嵌入式宿主）时 运行时 直接返回，所以批量跑样例不会挂住。
          * 没参数，返回 0（和 `println` 一样，可以当表达式语句写）。
          */
         if (callee.s == "pause")
@@ -1820,7 +1820,7 @@ ast::NodePtr LowerCall(int id)
                                                                                           "__std_shared_swap";
         return ast::Node::call(native, intrinsicNames, intrinsicValues);
     }
-    // 引用迭代租约携带元素布局，绑定到统一 VM 原生操作。
+    // 引用迭代租约携带元素布局，绑定到统一 运行时 原生操作。
     const auto &sourceName = label;
     if (sourceName.rfind("std::core::__algorithmLease__", 0) == 0)
         return ast::Node::call("__std_iter_lease", { "source" }, { LowerExpr(args[0]) });
@@ -1972,7 +1972,7 @@ int ElementBytes(const std::shared_ptr<MType> &type)
 }
 
 /**
- * @brief `new` / `new [n]`：在**虚拟机的堆**上要一块内存。
+ * @brief `new` / `new [n]`：在**运行时的堆**上要一块内存。
  *
  * **元素类型不写在 `new` 后面**（声明里已经有了），所以先看上下文
  * (`g_expectedNewType` = 声明 / 赋值的目标类型)：

@@ -162,7 +162,7 @@ struct FileStream : Reader, Writer, Seek {
 };
 
 /* 文件包装（从编译器注入正文里搬出来）：`std::core::fileOpen` 这些名字现在住在这里，
- * 用户要 `import std::io;` 才能用。底层 `__file*` 由 VM 原生表提供。 */
+ * 用户要 `import std::io;` 才能用。底层 `__file*` 由 运行时 原生表提供。 */
 Result<std::core::File, std::core::Error> fileOpen(std::core::String path, std::core::String mode) {
     file opened = __fileTryOpen(path, mode);
     if (__fileValid(opened)) {

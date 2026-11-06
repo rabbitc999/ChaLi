@@ -1,6 +1,6 @@
 /**
  * @file binary_stream.hpp
- * @brief VM 内部 binary stream 模块的类型与接口。
+ * @brief 运行时 内部 binary stream 模块的类型与接口。
  */
 #pragma once
 #include "stackvm.hpp"

@@ -1,6 +1,6 @@
 /**
  * @file runtime_objects.hpp
- * @brief VM 内部 runtime objects 模块的类型与接口。
+ * @brief 运行时 内部 runtime objects 模块的类型与接口。
  */
 #pragma once
 #include "runtime_context.hpp"
@@ -40,7 +40,7 @@ using ObjectValue = NativeStoredValue;
  */
 struct RuntimeObject
 {
-    const NativeRecordType *nativeType = nullptr;               ///< 宿主描述符，VM 不根据名称分派。
+    const NativeRecordType *nativeType = nullptr;               ///< 宿主描述符，运行时 不根据名称分派。
     std::shared_ptr<void> nativeRecord;                         ///< 不透明记录，仅由宿主回调访问及销毁。
     std::int64_t closureTarget = 0;                             ///< 数据区函数标签地址，不保存宿主函数地址。
     bool closureEnvironment = false;                            ///< 调用时是否附加环境句柄。

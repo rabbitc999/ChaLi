@@ -22,7 +22,7 @@ void main() {
 build/work/chali/chali run chali/example/samples-error/assert_failure.chl --debug --out build/doc-example/assert-failure
 ```
 
-[正式错误期望](../example/expected-error/assert_failure.txt) 的消息为 `chali aot: panic：assert(x) 的 x 为假`。`--debug` 还会输出执行轨迹与失败位置，所以不能把完整 stderr 与这一行做严格相等比较；专项测试分别检查消息、位置与帧顺序。
+[正式错误期望](../example/expected-error/assert_failure.txt) 的消息为 `chali build: panic：assert(x) 的 x 为假`。`--debug` 还会输出执行轨迹与失败位置，所以不能把完整 stderr 与这一行做严格相等比较；专项测试分别检查消息、位置与帧顺序。
 
 ## 消息、出错位置、调用栈是三件事
 
@@ -30,14 +30,14 @@ build/work/chali/chali run chali/example/samples-error/assert_failure.chl --debu
 
 | 部分 | 来源 | 缺什么时候没有 |
 | --- | --- | --- |
-| `chali aot: panic：<消息>` | 用户 `std::core::panic` 的文本或运行期检查生成的文本 | 永远有 |
+| `chali build: panic：<消息>` | 用户 `std::core::panic` 的文本或运行期检查生成的文本 | 永远有 |
 | `出错位置：文件:行（函数）` | 前端写进 `.quad` 的 `# chali-source` 元数据，随产物一起编入 | 四元式没有来源元数据时退化为四元式行号 |
 | `调用栈（内 → 外）` | 运行期帧采集，受 `STACKVM_WITH_PANIC_TRACE` 控制 | 关闭该宏时只剩前两行 |
 
 一次真实的默认构建输出：
 
 ```
-chali aot: panic：nested failure
+chali build: panic：nested failure
 出错位置：nested.chl:1（program::inner）
 调用栈（内 → 外）：
   program::inner
@@ -46,7 +46,7 @@ chali aot: panic：nested failure
 同一个程序加 `--debug` 重新导出，调用栈补全为 `program::inner` / `program::outer` / `main`：
 
 ```
-chali aot: panic：nested failure
+chali build: panic：nested failure
 出错位置：nested.chl:1（program::inner）
 调用栈（内 → 外）：
   program::inner
@@ -86,13 +86,13 @@ make CXXFLAGS="-DNO_CHALI_PANIC_TRACE"
 
 `import` 引入的模块使用各自文件中的原始行号。宏正文指向定义文件的正文行，并显示 `[宏 名称]`；嵌套宏指向实际执行的内层宏。退出展开后恢复调用文件行号，`$line` / `$file` 等宏元变量在调用处的语义保持不变。
 
-需要按机器指令定位、看变量或单步时，用 `--debug` 加 GDB，见[原生 AOT 调试](43-native-debugging.md)。
+需要按机器指令定位、看变量或单步时，用 `--debug` 加 GDB，见[构建调试](43-native-debugging.md)。
 
 ## 回归
 
 | 用例 | 自动验证 |
 | --- | --- |
-| 嵌套函数 panic（默认构建） | 首行 `chali aot: panic：`，含 `调用栈` 与 `inner` |
+| 嵌套函数 panic（默认构建） | 首行 `chali build: panic：`，含 `调用栈` 与 `inner` |
 | 嵌套函数 panic（`--debug`） | 三层帧按内到外排列 |
 | 多线程全局停止 | 主线程 panic、忙循环兄弟、消息等待、显式等待及自动回收均停止 |
 | 行级来源 | 宏、`import`、嵌套调用的行号与文件正确 |

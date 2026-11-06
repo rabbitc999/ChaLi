@@ -1,6 +1,6 @@
 /**
  * @file concurrent_call_state.hpp
- * @brief 并发原生服务借用的执行状态和同步操作，不持有跨运行的 VM 地址。
+ * @brief 并发原生服务借用的执行状态和同步操作，不持有跨运行的 运行时 地址。
  */
 #pragma once
 #include "runtime_internal.hpp"

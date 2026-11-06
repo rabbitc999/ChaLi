@@ -28,7 +28,7 @@ def main():
 
         result, stderr = command([compiler, 'run', source, '--out', directory / 'plain'])
         assert result.returncode != 0 and 'nested failure' in stderr
-        assert stderr.splitlines()[0].startswith('chali aot: panic：'), stderr
+        assert stderr.splitlines()[0].startswith('chali build: panic：'), stderr
         # 追踪始终带源码位置与调用栈：崩溃诊断不再受产物打包方式影响。
         assert '调用栈' in stderr and 'inner' in stderr, stderr
 

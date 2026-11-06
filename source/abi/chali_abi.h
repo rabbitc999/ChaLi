@@ -450,9 +450,9 @@ int CHALI_ABI_CALL chali_abi_argument_real(const ChaliAbiFrame *frame, int64_t i
 double CHALI_ABI_CALL chali_abi_real(const ChaliAbiFrame *frame, int64_t index);
 
 /**
- * @brief 取得 VM 字符串或字节块的零拷贝视图。
+ * @brief 取得 运行时 字符串或字节块的零拷贝视图。
  * @param frame 当前调用帧。
- * @param address 字符串或字节块的 VM 地址，零地址得到空视图。
+ * @param address 字符串或字节块的 运行时 地址，零地址得到空视图。
  * @param data 接收首字节地址，可为空。
  * @param length 接收字节长度，可为空。
  * @return 地址可读且长度有效时为 true，否则为 false 并记录运行时诊断。
@@ -461,7 +461,7 @@ double CHALI_ABI_CALL chali_abi_real(const ChaliAbiFrame *frame, int64_t index);
 int CHALI_ABI_CALL chali_abi_bytes(const ChaliAbiFrame *frame, int64_t address, const unsigned char **data, size_t *length);
 
 /**
- * @brief 在当前运行时分配一个 VM 字符串并返回其地址。
+ * @brief 在当前运行时分配一个 运行时 字符串并返回其地址。
  * @param frame 当前调用帧。
  * @param data UTF-8 字节，不接受内嵌零字节；空文本允许空指针。
  * @param length 字节长度。
@@ -621,7 +621,7 @@ void CHALI_ABI_CALL chali_abi_emit_error(const ChaliAbiFrame *frame, const char 
 /**
  * @brief 报告本次直通调用失败。
  * @param frame 当前调用帧。
- * @param message 需要传播给 VM 的错误文本，空指针按空串处理。
+ * @param message 需要传播给 运行时 的错误文本，空指针按空串处理。
  * @note 只记录诊断，不展开栈；入口随后应尽快返回。
  */
 void CHALI_ABI_CALL chali_abi_fail(const ChaliAbiFrame *frame, const char *message);
@@ -657,7 +657,7 @@ int CHALI_ABI_CALL chali_abi_invoke(const ChaliAbiFrame *frame, int64_t function
 /* ---------------------------------------------------------------------------
  *  宿主记录服务
  *
- * 有状态的 C 胶水（随机数生成器、文件句柄等）用它把宿主对象交给 VM 对象表
+ * 有状态的 C 胶水（随机数生成器、文件句柄等）用它把宿主对象交给 运行时 对象表
  * 托管，复制与释放语义由 C 侧回调提供。
  * ------------------------------------------------------------------------- */
 

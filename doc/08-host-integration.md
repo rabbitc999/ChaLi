@@ -59,7 +59,7 @@ C 侧看到的只有签名，所以声明必须和真实的 C 函数逐项对上
 用 `--shared --export` 把选定的函数导出成动态库，并生成配套头文件：
 
 ```sh
-chali aot app.chl --out build/app --shared --export add
+chali build app.chl --out build/app --shared --export add
 ```
 
 `build/app.h` 里给出 C 声明：
@@ -79,7 +79,7 @@ int64_t f_add(int64_t p0, int64_t p1);
 `chali_finish()` 之后原有句柄一律失效。导出函数只接收和返回 C 标量；需要传结构体时按值传，
 需要原地修改时用 `T *` 对应的引用形参。不给 `--export` 时只有 `chali_init` / `chali_finish`。
 
-`--shared` 的产物是动态库，宿主负责加载和生命周期；普通的 `chali aot app.chl` 则是自包含的可执行
+`--shared` 的产物是动态库，宿主负责加载和生命周期；普通的 `chali build app.chl` 则是自包含的可执行
 文件，属于交付给最终用户的形态，见[构建产物](15-artifacts.md)。
 
 ## 同步回调
@@ -99,7 +99,7 @@ ChaLi 函数值的捕获环境和错误通道。C API 模块调用运行时函�
 - 反射默认编入；`--no-reflection` 可关掉，关闭后 `@Reflect` 会报「功能未开启」。
 - 调试构建用 `--debug` 保留原生符号与源码行、降低优化级别，配合 GDB 使用，见[原生调试](43-native-debugging.md)。
 - `--memory-size` 决定运行时堆容量；子进程边界与线程见[运行边界](17-capabilities.md)。
-- 这里没有 VM 沙箱：`#abi` 调进来的 C 代码与宿主同权限运行，边界安全由接口设计负责。
+- 原生产物与宿主共享进程权限：`#abi` 调进来的 C 代码与宿主同权限运行，边界安全由接口设计负责。
 
 参见[工具链](09-toolchain.md)、[AOT 编译](38-aot.md)与[同步回调示例](../example/native-callbacks/README.md)。
 

@@ -102,7 +102,7 @@ No other language was remeasured in this run.
 | --- | --- | --- |
 | C++ | MinGW g++ 11.2.0, C++17, `-O2`; supplementary reference while ChaLi uses O3 | [C++ O2](../../benchmarks/results/1.0.11-final/references/cpp-o2.json), [String](../../benchmarks/results/1.0.11-final/references/strings.json) |
 | Rust | rustc 1.98.1, `-O` | [Basic](../../benchmarks/results/1.0.11-final/references/basic.json), [features](../../benchmarks/results/1.0.11-final/references/features.json), [String](../../benchmarks/results/1.0.11-final/references/strings.json) |
-| Lua | Official Lua 5.5.1 VM, default GC; faster table.concat reference for concatenation | [Basic](../../benchmarks/results/1.0.11-final/references/basic.json), [String](../../benchmarks/results/1.0.11-final/references/strings.json) |
+| Lua | Official Lua 5.5.1 runtime, default GC; faster table.concat reference for concatenation | [Basic](../../benchmarks/results/1.0.11-final/references/basic.json), [String](../../benchmarks/results/1.0.11-final/references/strings.json) |
 | Java | HotSpot 22.0.1, `-Xbatch`, warmed steady-state interfaces | [Feature and warmup records](../../benchmarks/results/1.0.11-final/references/features.json) |
 
 Each Java JVM performs at least 256 warmup calls and at least one second of warmup. Evidence verifies C2 level 4 compilation of work before sampling. Five JVMs per interface case retain separate [JIT logs](../../benchmarks/results/1.0.11-final/references/java-jit). Startup and interpreted execution are outside this comparison.

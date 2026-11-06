@@ -4,7 +4,9 @@
 **English** · [简体中文](../09-toolchain.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-`run` compiles and executes checked AOT code. `aot` defaults to unchecked native export. See [Native AOT debugging](43-native-debugging.md).
+GitHub runs the [command and documentation gates](../../.github/workflows/cli-contract.yml) on each push and pull request. They check `build`, `[build]`, build debugging, obsolete wording, argument normalization and editor project configuration. Run `python tests/chali_cli_contract.py` and `python tests/chali_doc_history.py` locally. Validate native outputs with `python tests/chali_build_command.py --chali PATH_TO_COMPILER`.
+
+`run` compiles and executes checked AOT code. `build` performs a release build with checks disabled by default. See [build debugging](43-native-debugging.md).
 
 ChaLi executes programs through checked AOT by default. The front end preprocesses, parses and checks source, then generates LLVM code directly from the checked AST. The explicit [AOT entry](38-aot.md) can generate LLVM modules and native products.
 
@@ -12,11 +14,11 @@ ChaLi executes programs through checked AOT by default. The front end preprocess
 chali run app.chl
 chali check app.chl
 chali check app.chl json
-chali aot app.chl --emit-llvm out build/app
-chali aot app.chl --out build/app
+chali build app.chl --emit-llvm out build/app
+chali build app.chl --out build/app
 ```
 
-A direct source file also runs; following arguments are passed to the program. `aot --emit-llvm --out PREFIX` generates `.ll` directly from the AST. The compiler embeds the standard library and its required assets.
+A direct source file also runs; following arguments are passed to the program. `build --emit-llvm --out PREFIX` generates `.ll` directly from the AST. The compiler embeds the standard library and its required assets.
 
 ## Module function diagnostics
 
@@ -178,10 +180,10 @@ Warning lightbulbs use the compiler's current report. The current safe fix inser
 
 Go to Definition opens a `chali-stdlib:` read-only document for standard declarations that have embedded language source. Locations come from actual declaration indexes. Source and indexes are loaded on demand into memory, without source copies or standard-library disk indexes. Standard declarations cannot be renamed. Backend intrinsics without a language declaration do not receive invented bodies. Open standard views refresh after server restart.
 
-Select Project Target, Select AOT Output, and Open Project Configuration use the compiler's TOML parser and source-preserving serializer. Other fields, comments, and multiline strings remain intact. Changes stay in an undoable buffer, and the status bar marks unsaved configuration. Builds save the source and an open dirty manifest before querying the actual target:
+Select Project Target, Select Build Output, and Open Project Configuration use the compiler's TOML parser and source-preserving serializer. Other fields, comments, and multiline strings remain intact. Changes stay in an undoable buffer, and the status bar marks unsaved configuration. Builds save the source and an open dirty manifest before querying the actual target:
 
 ```toml
-[aot]
+[build]
 target = "linux-arm64"
 output = "object"
 allocator = "malloc"
@@ -201,9 +203,9 @@ The LSP performance comparison records the hashes of the compilers that were mea
 
 ## Target machine assembly
 
-`chali aot app.chl --emit-asm --out build/app` exports `build/app.s` using the current target, CPU, check mode and optimization/debug settings. This is machine assembly, distinct from LLVM IR text `.ll`. It stops before object generation and linking, so cross-target assembly does not require target runtime link assets. The static variant uses its built-in LLVM backend; the external variant uses clang. Output uses the selected backend's default syntax (x86 AT&T, AArch64 target syntax); no NASM/MASM compatibility is implied.
+`chali build app.chl --emit-asm --out build/app` exports `build/app.s` using the current target, CPU, check mode and optimization/debug settings. This is machine assembly, distinct from LLVM IR text `.ll`. It stops before object generation and linking, so cross-target assembly does not require target runtime link assets. The static variant uses its built-in LLVM backend; the external variant uses clang. Output uses the selected backend's default syntax (x86 AT&T, AArch64 target syntax); no NASM/MASM compatibility is implied.
 
-The project setting `[aot] output = "assembly"` selects the same output for AOT builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked AOT execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.
+The project setting `[build] output = "assembly"` selects the same output for AOT builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked AOT execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.
 
 The `.ll` and any C ABI header remain available alongside `.s`. Complex C ABI signatures can also produce a `.abi.cpp` marshalling sidecar; assembly alone is not a complete linkable application. Reassembly and final linking require a matching target toolchain, runtime and dependencies. See the standalone assembler, linker and archiver below.
 
@@ -212,7 +214,7 @@ The `.ll` and any C ABI header remain available alongside `.s`. Complex C ABI si
 ```sh
 chali asm native/add.s --target windows-x64 --out build/add.obj -I native/include
 chali asm native/add.s --target linux-x64 --out build/add.o
-chali aot main.chl --asm native/add.s --asm-include native/include --out build/app
+chali build main.chl --asm native/add.s --asm-include native/include --out build/app
 ```
 
 `asm` accepts one `.s` file and an exact output path. Without `--out`, it replaces the input suffix with `.obj` for Windows and `.o` for Linux. `--target`, `--cpu`, `--debug`, `-I DIR` / `-IDIR`, `--include-path DIR` and `--llvm CLANG` are supported. Target and CPU must match the source instructions. GAS-compatible LLVM syntax is used; `.S` preprocessing and NASM/MASM are not supported. Include search adds the source directory before the explicitly listed directories. Input files are limited to 64 MiB; this is a compiler tool, not an untrusted-code sandbox.

@@ -57,7 +57,7 @@ def main():
         checked = execute([compiler, 'run', fixture, '--allocator', allocator,
                            '--out', str(prefix) + '-run'], label + '-run', env)
         assert checked.stdout == 'interface pointer snapshots OK\n' and not checked.stderr, (checked, work)
-        execute([compiler, 'aot', fixture, '--allocator', allocator, '--out', prefix], label + '-build', env)
+        execute([compiler, 'build', fixture, '--allocator', allocator, '--out', prefix], label + '-build', env)
         native = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], label + '-aot', env)
         assert native.stdout == checked.stdout and not native.stderr, (native, work)
     (work / 'results.json').write_text(json.dumps(dict(

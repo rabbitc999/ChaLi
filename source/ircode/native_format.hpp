@@ -1,6 +1,6 @@
 /**
  * @file native_format.hpp
- * @brief VM 内部 native format 模块的类型与接口。
+ * @brief 运行时 内部 native format 模块的类型与接口。
  */
 #pragma once
 #include "runtime_objects.hpp"
@@ -10,7 +10,7 @@ namespace stackvm::runtimeDetail
 {
 /**
  * @brief 取一个实参的整数值（整数槽直接取，浮点槽取整）。
- * @param slot 待转换或传递的虚拟机值槽。
+ * @param slot 待转换或传递的运行时值槽。
  * @retval 取一个实参的整数值（整数槽直接取，浮点槽取整）。
  */
 std::int64_t nativeInt(const Slot &slot);

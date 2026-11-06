@@ -92,7 +92,7 @@ async function externalAttachTarget(source, work) {
     const host = spawnSync(process.env.CC || 'cc', ['-shared', '-fPIC', input, '-o', library], { encoding: 'utf8', timeout: 30000 });
     assert.equal(host.status, 0, host.stdout + host.stderr); env.LD_PRELOAD = library;
   }
-  const compiled = spawnSync(compiler, ['aot', source, '--checked', '--debug', '--out', prefix], { env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
+  const compiled = spawnSync(compiler, ['build', source, '--checked', '--debug', '--out', prefix], { env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
   assert.equal(compiled.status, 0, compiled.stdout + compiled.stderr);
   const child = spawn(prefix + (process.platform === 'win32' ? '.exe' : ''), [], { env, windowsHide: true, detached: process.platform !== 'win32' });
   try {

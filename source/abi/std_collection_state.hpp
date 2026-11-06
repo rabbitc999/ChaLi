@@ -100,7 +100,7 @@ private:
 };
 
 /**
- * @brief 仅供标准集合胶水内部区分记录布局，VM 不解释此枚举。
+ * @brief 仅供标准集合胶水内部区分记录布局，运行时 不解释此枚举。
  */
 enum class StorageKind
 {
@@ -344,7 +344,7 @@ struct State
     Heap *heap = &memory;
     Store *objects = &storage;
     /**
-     * @brief 将同步回调接到当前 VM 调用帧。
+     * @brief 将同步回调接到当前 运行时 调用帧。
      * @param context 仅本次胶水调用有效的公开上下文。
      */
     explicit State(stackvm::NativeCallContext &context) : host(context) {}

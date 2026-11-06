@@ -10,7 +10,7 @@
 namespace stackvm
 {
 /**
- * @brief C++ 胶水函数与虚拟机交换的单槽值。字符串、指针和宿主句柄使用整数地址/句柄。
+ * @brief C++ 胶水函数与运行时交换的单槽值。字符串、指针和宿主句柄使用整数地址/句柄。
  */
 struct NativeValue
 {
@@ -101,14 +101,14 @@ enum class NativeRecordRelease
 };
 
 /**
- * @brief 不透明宿主记录的生命周期协议，VM 不解释记录布局。
+ * @brief 不透明宿主记录的生命周期协议，运行时 不解释记录布局。
  * @note 描述符须比关联运行时活得更久；回调不得抛出异常。
  */
 struct NativeRecordType
 {
     const char *name = nullptr;                                                             ///< 诊断名称，不参与语义分派。
     void *(*clone)(const void *, Memory::String &) = nullptr;                               ///< 复制不访问运行时的记录快照；与 copy 均为空时不可复制。
-    void (*destroy)(void *) = nullptr;                                                      ///< 销毁一条记录，不负责 VM 壳。
+    void (*destroy)(void *) = nullptr;                                                      ///< 销毁一条记录，不负责 运行时 壳。
     Memory::String (*toString)(const void *) = nullptr;                                     ///< 可选的宿主值文本，不解释记录布局。
     void *(*copy)(NativeCallContext &, const void *) = nullptr;                             ///< 使用目标运行时深复制拥有值。
     void (*dispose)(NativeCallContext &, void *) = nullptr;                                 ///< 壳释放前清理运行时资源，不销毁记录本身。
@@ -122,11 +122,11 @@ struct NativeRecordType
 };
 
 /**
- * @brief 宿主服务身份到不透明适配器的映射；VM 不解释服务名称与对象布局。
+ * @brief 宿主服务身份到不透明适配器的映射；运行时 不解释服务名称与对象布局。
  */
 using NativeServices = Memory::Map<Memory::String, void *>;
 /**
- * @brief 一次 C++ 胶水调用可访问的 VM 上下文，仅在回调期间有效。
+ * @brief 一次 C++ 胶水调用可访问的 运行时 上下文，仅在回调期间有效。
  */
 class NativeCallContext
 {
@@ -148,7 +148,7 @@ public:
      * @param handle 同一运行时的对象句柄。
      * @param type 创建记录时的描述符，或具有相同非空 identityKey 与记录布局的描述符。
      * @return 匹配的记录指针；已释放或类型不同返回空。
-     * @note 返回值只供胶水使用，VM 不解引用其内容。
+     * @note 返回值只供胶水使用，运行时 不解引用其内容。
      */
     [[nodiscard]] virtual void *nativeRecord(std::int64_t handle, const NativeRecordType &type) const;
     /**
@@ -211,7 +211,7 @@ public:
     virtual Memory::Vector<Memory::String> programArguments() const { return {}; }
     /**
      * @brief 查询宿主注入的通用不透明服务。
-     * @param name 胶水约定的服务身份，VM 不解释该名称。
+     * @param name 胶水约定的服务身份，运行时 不解释该名称。
      * @return 注入的指针；服务不存在时返回空指针。
      */
     [[nodiscard]] virtual void *hostService(const Memory::String &name) const;
@@ -227,8 +227,8 @@ public:
      */
     [[nodiscard]] virtual std::size_t inputPosition() const;
     /**
-     * @brief 从当前 VM 的存活地址读取原始字节。
-     * @param address VM 逻辑地址。
+     * @brief 从当前 运行时 的存活地址读取原始字节。
+     * @param address 运行时 逻辑地址。
      * @param out 宿主接收缓冲区。
      * @param count 读取字节数。
      * @return 完整区间读取成功时为真。
@@ -236,22 +236,22 @@ public:
     [[nodiscard]] virtual bool readBytes(std::int64_t address, char *out,
                                          std::size_t count) const = 0;
     /**
-     * @brief 向当前 VM 的存活地址写入原始字节。
-     * @param address VM 逻辑地址。
+     * @brief 向当前 运行时 的存活地址写入原始字节。
+     * @param address 运行时 逻辑地址。
      * @param data 宿主源缓冲区。
      * @param count 写入字节数。
      * @return 完整区间写入成功时为真。
      */
     virtual bool writeBytes(std::int64_t address, const char *data, std::size_t count) = 0;
     /**
-     * @brief 读取以零结尾的 VM 字节文本。
-     * @param address 首字节的 VM 逻辑地址。
+     * @brief 读取以零结尾的 运行时 字节文本。
+     * @param address 首字节的 运行时 逻辑地址。
      * @param out 接收 UTF-8 字节文本。
      * @return 完整字符串可读时为真。
      */
     [[nodiscard]] virtual bool readString(std::int64_t address, Memory::String &out) const = 0;
     /**
-     * @brief 在当前 VM 运行时中同步调用 ChaLi 函数或捕获闭包。
+     * @brief 在当前 运行时 运行时中同步调用 ChaLi 函数或捕获闭包。
      * @param functionPointer 同一运行时的函数地址或闭包句柄。
      * @param arguments 按声明顺序编码的参数槽，字符串等对象须使用其运行时地址。
      * @param result 成功时接收返回槽；void 函数的返回槽应忽略。
@@ -262,9 +262,9 @@ public:
                         const Memory::Vector<NativeValue> &arguments,
                         NativeValue &result) = 0;
     /**
-     * @brief 在当前 VM 分配以零结尾的文本。
+     * @brief 在当前 运行时 分配以零结尾的文本。
      * @param text 待复制的 UTF-8 文本。
-     * @return VM 字符串地址；失败返回零并保留诊断。
+     * @return 运行时 字符串地址；失败返回零并保留诊断。
      */
     [[nodiscard]] virtual std::int64_t makeString(const Memory::String &text) = 0;
     /**
@@ -273,7 +273,7 @@ public:
      */
     virtual EventPoster eventPoster() { return {}; }
     /**
-     * @brief 安装执行边界钩子；按 VM 指令边界计数。
+     * @brief 安装执行边界钩子；按 运行时 指令边界计数。
      * @param interval 调用间隔，零表示取消。
      * @param hook 同步执行的钩子，不得递归执行运行时。
      * @return 当前运行时支持钩子时返回 true。
@@ -285,13 +285,13 @@ public:
         return false;
     }
     /**
-     * @brief 当前正在执行 `run()` 的虚拟机；宿主回调之外（指令钩子 / Qt 事件循环）也能用。
+     * @brief 当前正在执行 `run()` 的运行时；宿主回调之外（指令钩子 / Qt 事件循环）也能用。
      *
      * 胶水拿到它以后可以在**宿主回调返回之后**继续工作：投递显式事件
      * （`eventPoster()`）或挂每 N 条指令一次的钩子
-     * （`Machine::setInstructionHook`）。只在 VM 执行线程上使用；指针在 `Machine`
+     * （`Machine::setInstructionHook`）。只在 运行时 执行线程上使用；指针在 `Machine`
      * 生命周期内有效，`run()` 结束后不要再碰。
-     * @return 正在运行的虚拟机；没有（例如离线编解码）返回 nullptr。
+     * @return 正在运行的运行时；没有（例如离线编解码）返回 nullptr。
      */
     virtual Machine *machine() { return nullptr; }
     /**
@@ -307,7 +307,7 @@ public:
     }
     /**
      * @brief 设置宿主调用的原始失败诊断。
-     * @param message 需要传播给 VM 的错误文本。
+     * @param message 需要传播给 运行时 的错误文本。
      */
     virtual void fail(const Memory::String &message) = 0;
 };

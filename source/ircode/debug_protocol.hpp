@@ -32,7 +32,7 @@ using InstructionHook = Memory::Function<void(const InstructionHookInfo &)>;
 using OutputSink = void (*)(void *user, const char *bytes, std::size_t count);
 
 /**
- * @brief 调试回调请 VM 接下来怎么做。
+ * @brief 调试回调请 运行时 接下来怎么做。
  */
 enum class DebugAction
 {
@@ -48,7 +48,7 @@ struct DebugFrame
 {
     Memory::String function;      ///< 函数 / 标签名；空表示根。
     std::size_t threadId = 0;     ///< 发生调用的隔离线程编号；0 为主线程。
-    std::size_t instruction = 0;  ///< VM 调用点/当前指令；没有源码表也有效。
+    std::size_t instruction = 0;  ///< 运行时 调用点/当前指令；没有源码表也有效。
     SourceLocation location;      ///< 该帧的位置：被调函数是"当前指令"，调用者记"调用点"。
 };
 
@@ -75,7 +75,7 @@ struct RunResult
     bool ok = false;         ///< 是否正常停机。
     bool cancelled = false;  ///< 是否响应协作停止而结束。
     /**
-     * @brief 是不是"可恢复终止"（分配失败等来自 VM 外部的停止原因）。
+     * @brief 是不是"可恢复终止"（分配失败等来自 运行时 外部的停止原因）。
      *
      * 分配失败在失败点记录快照（`Memory::allocationFailureSignal()`），宿主在
      * 下一条指令边界（安全点）看到它就停在这里并把本轮标成可恢复。宿主据此清标志、

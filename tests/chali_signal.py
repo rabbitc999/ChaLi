@@ -60,18 +60,18 @@ def main():
         for allocator in ('malloc','pool'):
             for checks in ('checked','unchecked'):
                 target=work/f'{allocator}-{checks}.exe'
-                run([compiler,'aot',source,'--allocator',allocator,'--'+checks,'--out',target])
+                run([compiler,'build',source,'--allocator',allocator,'--'+checks,'--out',target])
                 actual=values(run([target]).stdout);assert len(actual)==len(expected)
                 for pair,wanted in zip(actual,expected):
                     assert all((math.isnan(x) and math.isnan(y)) or math.isclose(x,y,rel_tol=1e-12,abs_tol=1e-12) for x,y in zip(pair,wanted)),(pair,wanted)
                 print(f'{allocator}/{checks}: {len(actual)} complex results match baseline')
-        prefix=work/'sample';run([compiler,'aot',ROOT/'example/samples/std_complex_fft.chl','--emit-llvm','--out',prefix])
+        prefix=work/'sample';run([compiler,'build',ROOT/'example/samples/std_complex_fft.chl','--emit-llvm','--out',prefix])
         llvm=prefix.with_suffix('.ll').read_text(encoding='utf-8');assert 'chali_std_bind_signal' not in llvm
         for method in ('fft','ifft'):
             for size in (0,3):
                 bad=work/'bad.chl';bad.write_text('import std::complex;\nimport std::signal;\nvoid main(){List<std::complex::Complex<float64>> input;'+''.join('input.push(std::complex::Complex<float64>::of(1.0,0.0));' for _ in range(size))+f'std::signal::{method}(input);'+'}',encoding='utf-8')
                 result=run([compiler,'run',bad,'--out',work/f'bad-{method}-{size}'],False)
-                assert f'chali aot: {method} 长度必须是正的 2 的幂' in result.stderr,result.stderr
+                assert f'chali build: {method} 长度必须是正的 2 的幂' in result.stderr,result.stderr
         print('four invalid lengths preserve diagnostics; no old signal binder')
 
 if __name__=='__main__':main()

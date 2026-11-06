@@ -10,7 +10,7 @@ async function main() {
   const sourceUri = uri('file:///project/main.chl'), configUri = uri('file:///project/chali.toml');
   const document = { uri: sourceUri, languageId: 'chali', version: 4, isDirty: false };
   const manifest = { uri: configUri, languageId: 'toml', version: 7, isDirty: true,
-    text: '# unsaved comment\n[aot]\ntarget="windows-x64"\n', getText() { return this.text; } };
+    text: '# unsaved comment\n[build]\ntarget="windows-x64"\n', getText() { return this.text; } };
   const commands = new Map(), errors = [], statusItems = [];
   let codeActions, standardProvider, applyCount = 0, race = false;
   const disposable = { dispose() {} };
@@ -74,7 +74,7 @@ async function main() {
       };
       assert.equal(method, 'chali/projectEdit');
       assert.equal(params.text, manifest.getText()); assert.equal(params.version, manifest.version);
-      const result = editFor(configUri, params.version, `# unsaved comment\n[aot]\ntarget="${params.value}"\n`);
+      const result = editFor(configUri, params.version, `# unsaved comment\n[build]\ntarget="${params.value}"\n`);
       if (race) ++manifest.version;
       return result;
     },

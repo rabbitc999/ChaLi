@@ -1,6 +1,6 @@
 /**
  * @file vm_machine.hpp
- * @brief 虚拟机宿主配置与执行入口。
+ * @brief 运行时宿主配置与执行入口。
  */
 #pragma once
 #include "native_protocol.hpp"
@@ -58,13 +58,13 @@ public:
      */
     void finishNativeServices(runtimeDetail::NativeContext &context);
     /**
-     * @brief 从任意宿主线程请求本虚拟机协作停止，在下一安全点生效。
+     * @brief 从任意宿主线程请求本运行时协作停止，在下一安全点生效。
      */
     void requestStop();
 #if STACKVM_WITH_THREADS
     /**
      * @brief 取得当前运行的有界宿主事件投递器，运行结束后返回关闭状态。
-     * @return 不捕获虚拟机裸地址的线程安全投递器。
+     * @return 不捕获运行时裸地址的线程安全投递器。
      */
     EventPoster eventPoster();
 #endif
@@ -159,7 +159,7 @@ public:
     void setHostServices(const NativeServices *services) { hostServices_ = services; }
 
     /**
-     * @brief 设置入口参数，运行期间复制进 VM。
+     * @brief 设置入口参数，运行期间复制进 运行时。
      * @param arguments 按原顺序传递给程序的文本参数。
      */
     void setProgramArguments(Memory::Vector<Memory::String> arguments)
@@ -186,14 +186,14 @@ public:
 
 #if STACKVM_WITH_THREADS
     /**
-     * @brief 允许程序创建独立 VM 线程。
+     * @brief 允许程序创建独立 运行时 线程。
      * @param enabled 是否允许创建线程。
      */
     void setThreadsEnabled(bool enabled) { threadsEnabled_ = enabled; }
 #endif
 
     /**
-     * @brief 注入单调纳秒时钟，供 VM 精确计时。
+     * @brief 注入单调纳秒时钟，供 运行时 精确计时。
      * @param callback 时钟回调；空回调禁用精确计时。
      */
     void setTimeCallback(TimeCallback callback) { timeCallback_ = std::move(callback); }
@@ -321,7 +321,7 @@ private:
     bool outputKeepText_ = true;                      ///< 有下沉时是否仍累积进 `RunResult::text`。
     DataArea *data_ = nullptr;                        ///< 可选的数据区。
     const NativeRegistry *nativeRegistry_ = nullptr;  ///< 可选的 C++ 胶水函数表。
-    HeapAllocator *heapAllocator_ = nullptr;          ///< 可选的自定义 VM 字节堆。
+    HeapAllocator *heapAllocator_ = nullptr;          ///< 可选的自定义 运行时 字节堆。
 #if STACKVM_WITH_THREADS
     Memory::Function<Memory::UniquePtr<HeapAllocator>()> threadHeapFactory_;
 #endif

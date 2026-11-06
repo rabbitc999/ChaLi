@@ -17,19 +17,19 @@ chali run app.chl
 ## Ship an executable
 
 ```sh
-chali aot app.chl --out build/app
+chali build app.chl --out build/app
 ```
 
-`aot` is unchecked AOT: same `default<O3>`, runtime checks removed, and the output is a self-contained executable (`.exe` on Windows). Copy it to the target machine together with any dynamic libraries and data files the program uses. `--debug` switches to `default<O0>,globaldce` and keeps debug information for troubleshooting. `--debug-optimized` retains DWARF while keeping O3; see [native debugging](43-native-debugging.md).
+`build` is unchecked AOT: same `default<O3>`, runtime checks removed, and the output is a self-contained executable (`.exe` on Windows). Copy it to the target machine together with any dynamic libraries and data files the program uses. `--debug` switches to `default<O0>,globaldce` and keeps debug information for troubleshooting. `--debug-optimized` retains DWARF while keeping O3; see [native debugging](43-native-debugging.md).
 
-Startup no longer needs a host to register glue, reserve the data area or set an instruction budget — those were VM-era interfaces. To call an external C function, declare it with `#abi("C", "library path", "symbol")`; the path resolves relative to the declaring source file, and the library must sit next to the artifact.
+Startup no longer needs a host to register glue, reserve the data area or set an instruction budget — those were runtime-era interfaces. To call an external C function, declare it with `#abi("C", "library path", "symbol")`; the path resolves relative to the declaring source file, and the library must sit next to the artifact.
 
 ## Embed in an existing host
 
 To be called from C/C++, export a library plus header:
 
 ```sh
-chali aot lib.chl --shared --export add --out build/lib
+chali build lib.chl --shared --export add --out build/lib
 ```
 
 The host calls `chali_init()`, then `f_add(...)`, then `chali_finish()`; exceptions surface as `panic` crossing the C frame. See [host integration and the C ABI](08-host-integration.md).
@@ -37,14 +37,14 @@ The host calls `chali_init()`, then `f_add(...)`, then `chali_finish()`; excepti
 ## Intermediates only
 
 ```sh
-chali aot app.chl --emit-llvm --out build/app
+chali build app.chl --emit-llvm --out build/app
 ```
 
 Writes `.quad`, `.data.bin` and `.layout` without linking or executing — useful for inspecting quadruples or assembling them yourself. `.quad` is not machine code.
 
 ## Resources and boundaries
 
-The compiler embeds its standard library; operating-system interfaces, dynamic libraries, networks, databases and peripherals remain provided by the target environment. Default run/aot builds publish final files beside the source and clean their hidden `.chali/` workspace on success or failure. Explicit `--keep-artifacts`, `--incremental` or `--out` retains the corresponding intermediate content; selecting LLVM IR, object or assembly output alone does not retain the workspace. See [build artifacts and intermediates](../15-artifacts.md).
+The compiler embeds its standard library; operating-system interfaces, dynamic libraries, networks, databases and peripherals remain provided by the target environment. Default run/build builds publish final files beside the source and clean their hidden `.chali/` workspace on success or failure. Explicit `--keep-artifacts`, `--incremental` or `--out` retains the corresponding intermediate content; selecting LLVM IR, object or assembly output alone does not retain the workspace. See [build artifacts and intermediates](../15-artifacts.md).
 
 Embedded Linux uses the same back end, but artifacts must be rebuilt for the target architecture: LLVM triple, C++17 runtime and system services all need checking. "Runs on embedded Linux" is not "build once, deliver anywhere".
 

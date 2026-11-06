@@ -24,7 +24,7 @@ def execute(compiler, source, output, succeeds=True, env=None, aot=False):
     environment = {**(os.environ if env is None else env)}
     environment['PATH'] = str(WORK) + os.pathsep + environment.get('PATH', '')
     environment['CHALI_LLVM_CLANG'] = (str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else os.environ.get('CHALI_LLVM_CLANG', 'clang'))
-    command = [compiler, 'aot', source, '--out', output]
+    command = [compiler, 'build', source, '--out', output]
     result = subprocess.run(list(map(str, command)), cwd=ROOT, text=True, encoding='utf-8', capture_output=True, env=environment, timeout=180)
     if result.returncode != 0:
         assert not succeeds, result.stdout + result.stderr
@@ -72,7 +72,7 @@ def main():
     for declaration in ('struct Bad { String text; }; #abi("C", LIBRARY, "f") void f(Bad p);', 'struct Bad unknown { int32 value; }; #abi("C", LIBRARY, "f") void f(Bad p);', '#abi("C", LIBRARY, "f") int32[] f(int32 count) [missing];', '#abi("C", LIBRARY, "f") void f(int32 mut& mut& p);'):
         bad = WORK / 'bad.chl'
         bad.write_text(declaration.replace('LIBRARY', json.dumps(library.as_posix())) + '\nvoid main() { return; }\n', encoding='utf-8')
-        result = run([compiler, 'aot', bad, '--emit-llvm', '--out', WORK / 'bad'], succeeds=False)
+        result = run([compiler, 'build', bad, '--emit-llvm', '--out', WORK / 'bad'], succeeds=False)
         assert 'abi' in result.stderr.lower() or '语法错误' in result.stderr, result.stderr
     print(('unchecked AOT' if options.aot else 'checked AOT') + ' ABI 值、引用和非空返回检查通过')
 if __name__ == '__main__':

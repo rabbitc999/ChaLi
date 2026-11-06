@@ -83,7 +83,7 @@ def main():
                 env=dict(envbase,**flags)
                 if profile:env['CHALI_BACKEND_PROFILE']='1'
                 target=work/(name+'-'+key)
-                entry['builds'][key]=execute([compiler,'aot',path,'--out',target],env)
+                entry['builds'][key]=execute([compiler,'build',path,'--out',target],env)
                 entry['commands'][key]=[str(target)+('.exe' if os.name=='nt' else '')]
                 if not profile:
                     entry['measurements'][variant]=[]

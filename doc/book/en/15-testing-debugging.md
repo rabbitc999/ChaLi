@@ -96,5 +96,5 @@ void main() {
 ```
 
 ```text
-chali aot: panic：assert(x) 的 x 为假
+chali build: panic：assert(x) 的 x 为假
 ```

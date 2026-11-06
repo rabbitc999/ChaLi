@@ -131,7 +131,7 @@ def main():
                 selected_compiler = baseline if implementation == 'baseline' else compiler
                 target = work / f'{case}-{key}'
                 if backend == 'aot':
-                    execute([selected_compiler, 'aot', source, '--out', target], work / f'{case}-{key}-build.log')
+                    execute([selected_compiler, 'build', source, '--out', target], work / f'{case}-{key}-build.log')
                     command = [str(target) + '.exe']
                 else:
                     command = [selected_compiler, 'run', source, '--out', target]

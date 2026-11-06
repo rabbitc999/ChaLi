@@ -1256,7 +1256,7 @@ int64_t bfloatPi(ChaliAbiFrame *ctx)
  */
 inline int64_t bigFloatDisabled(ChaliAbiFrame *ctx)
 {
-    chali_abi_fail(ctx, (Memory::String("这个构建没有把大浮点数编进来：用 STACKVM_WITH_BIGFLOAT=1 重建虚拟机")).c_str());
+    chali_abi_fail(ctx, (Memory::String("这个构建没有把大浮点数编进来：用 STACKVM_WITH_BIGFLOAT=1 重建运行时")).c_str());
     return (0);
 }
 #define STACKVM_BFLOAT_STUB(name) \

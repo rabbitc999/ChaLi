@@ -1,6 +1,6 @@
 /**
  * @file quad_assembly.cpp
- * @brief 四元式到 VM 指令的组装与重定位。
+ * @brief 四元式到 运行时 指令的组装与重定位。
  */
 #include "runtime_internal.hpp"
 
@@ -564,7 +564,7 @@ bool assemble(const QuadFile &source, Program &out)
         }
 
         // 12. 其它：明确报出来，而不是悄悄跳过。
-        out.diagnostics.push_back("第 " + Memory::toString(index + 1u) + " 条四元式：本虚拟机不支持操作 '" + quad.op + "'");
+        out.diagnostics.push_back("第 " + Memory::toString(index + 1u) + " 条四元式：本运行时不支持操作 '" + quad.op + "'");
     }
 
     // 13. 收尾：没有 Halt 就补一条，避免"掉出程序尾"。

@@ -10,7 +10,7 @@ namespace stackvm
 using runtimeDetail::TransferPacket;
 #if STACKVM_WITH_THREADS
 /**
- * @brief 线程运行时：每个隔离宿主线程一个 VM，消息在它们之间复制传递。
+ * @brief 线程运行时：每个隔离宿主线程一个 运行时，消息在它们之间复制传递。
  *
  * 裁剪配置（`STACKVM_WITH_THREADS=0`）整段裁掉：不编 C 线程服务 /
  * `std::mutex` / `std::condition_variable`，`std::thread::*` 与
@@ -51,7 +51,7 @@ struct ThreadRuntime
     Memory::Map<std::int64_t, std::shared_ptr<Channel>> channels;
     std::int64_t nextChannel = 1;
     std::atomic<bool> closing{ false };
-    std::atomic<bool> panicked{ false };  ///< 发布快照后置位，所有 VM 安全点检查。
+    std::atomic<bool> panicked{ false };  ///< 发布快照后置位，所有 运行时 安全点检查。
     Memory::String panicError;
     std::size_t panicThread = 0;
 #if STACKVM_WITH_PANIC_TRACE

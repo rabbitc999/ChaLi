@@ -17,7 +17,7 @@ const { llvmOptions } = require('./llvmConfiguration');
  */
 function buildArguments(format, source, prefix, options = {}) {
   if (!['exe', 'object', 'assembly', 'llvm'].includes(format)) throw new Error('未知构建格式');
-  const args = ['aot', source];
+  const args = ['build', source];
   if (prefix) args.push('--out', prefix);
   if (options.llvmPath) args.push('--llvm', options.llvmPath);
   if (options.checked) args.push('--checked');
@@ -107,7 +107,7 @@ function registerBuild(vscode, context, deps) {
       output.show(true);
       output.appendLine(text(`编译器：${compiler}\n源文件：${selected.fsPath}\n产物：${product}`, `Compiler: ${compiler}\nSource: ${selected.fsPath}\nOutput: ${product}`));
       await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification,
-        title: text('ChaLi：构建 AOT 产物', 'ChaLi: Build AOT output'), cancellable: false },
+        title: text('ChaLi：发布构建', 'ChaLi: Release build'), cancellable: false },
       () => runBuild(compiler, args, cwd, (chunk) => output.append(chunk), language));
       if (!fs.existsSync(product) || !fs.statSync(product).size) throw new Error(text('编译器未生成目标产物', 'The compiler did not produce the requested output'));
       output.appendLine(text(`构建完成：${product}`, `Build completed: ${product}`));

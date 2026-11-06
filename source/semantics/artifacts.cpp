@@ -257,7 +257,7 @@ static Memory::String AotCType(const Memory::String &abiType)
 /**
  * @brief 收集外部函数的符号、ABI 签名及链接库，供 LLVM 降低器生成声明和调用。
  *
- * 这是"AOT 支持外部 C 调用"的源头：VM 那条路在运行期 `dlopen` 这些符号，
+ * 这是"AOT 支持外部 C 调用"的源头：运行时 那条路在运行期 `dlopen` 这些符号，
  * AOT 将它们转换为 LLVM 函数声明与链接参数，产物直接调用外部符号。
  * @return 按声明顺序排列的外部函数清单。
  */
@@ -321,7 +321,7 @@ bool WriteArtifacts(const Memory::String &prefix, const ast::CodegenResult &resu
     *layoutPath = prefix + ".layout";
     Memory::String layout;
     for (const Memory::String &line : result.exportDataLayout()) layout += line + "\n";
-    /* 仅在程序导入 C ABI 符号时生成可供 VM 宿主编入的绑定胶水；
+    /* 仅在程序导入 C ABI 符号时生成可供 运行时 宿主编入的绑定胶水；
      * 没有绑定时删除同前缀旧文件，避免误用其他程序的符号声明。 */
     const Memory::String abiGlue = AbiGlueSource();
     if (abiGlue.empty())

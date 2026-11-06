@@ -211,7 +211,7 @@ TypeInfo typeOf(std::string_view name)
         type.isUnsigned = true;
     }
     /* CHALI 语言只写 float32 / float64；`f32` / `f64` 是**四元式层面**的旧名字，
-     * 仓库里手写的 .quad 还在用，所以 VM 两个都认（VM 不是语言表面）。 */
+     * 仓库里手写的 .quad 还在用，所以 运行时 两个都认（运行时 不是语言表面）。 */
     else if (name == "float32" || name == "f32")
     {
         type.bits = 32;
@@ -229,7 +229,7 @@ TypeInfo typeOf(std::string_view name)
 }
 
 /**
- * @brief 将虚拟机指令编码为可读文本。
+ * @brief 将运行时指令编码为可读文本。
  * @retval 生成或读取的结果文本。
  */
 Memory::String Instruction::toString() const

@@ -39,7 +39,7 @@ async function stack(client, threadId) {
 async function pauseStep(allocator) {
   const file = path.join(work, 'pause.chl'), prefix = path.join(work, 'pause-' + allocator);
   fs.writeFileSync(file, 'import std::thread;\nvoid main(){\n std::thread::sleepFor(5000);\n println("AFTER PAUSE");\n}\n');
-  const built = spawnSync(compiler, ['aot', file, '--debug', '--checked', '--allocator', allocator, '--out', prefix],
+  const built = spawnSync(compiler, ['build', file, '--debug', '--checked', '--allocator', allocator, '--out', prefix],
     { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
   assert.equal(built.status, 0, built.stdout + built.stderr);
   const client = new DebugClient(root, compiler);
@@ -74,7 +74,7 @@ async function main() {
   }
   for (const allocator of ['malloc', 'pool']) {
     const prefix = path.join(work, allocator);
-    const built = spawnSync(compiler, ['aot', source, '--debug', '--checked', '--allocator', allocator, '--out', prefix],
+    const built = spawnSync(compiler, ['build', source, '--debug', '--checked', '--allocator', allocator, '--out', prefix],
       { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
     assert.equal(built.status, 0, built.stdout + built.stderr);
     const client = new DebugClient(root, compiler);

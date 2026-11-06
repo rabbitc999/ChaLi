@@ -84,7 +84,7 @@ def main():
             source.write_text(text, encoding='utf-8')
             assert invoke([compiler, 'run', source, '--out', work / (name + '-vm')], name + '-vm') == 'memory intrinsics OK\n'
             target = work / (name + '-aot')
-            invoke([compiler, 'aot', source, '--out', target], name + '-aot-build')
+            invoke([compiler, 'build', source, '--out', target], name + '-aot-build')
             assert invoke([str(target) + ('.exe' if os.name == 'nt' else '')], name + '-aot-run') == 'memory intrinsics OK\n'
             llvm = target.with_suffix('.ll').read_text(encoding='utf-8')
             body = re.search(r'^define[^\n]*@f_main\([^\n]*\).*?^}', llvm, re.M | re.S)

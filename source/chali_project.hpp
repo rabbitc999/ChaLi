@@ -102,7 +102,7 @@ inline int runCli(int argc, char **argv)
         write("src/main.chl", "void main() {\n    std::core::println(\"Hello, ChaLi!\");\n    return;\n}\n");
         write("tests/test_main.chl", "void main() {\n    std::core::assert(1 + 1 == 2);\n    return;\n}\n");
         write(".gitignore", "/build/\n/.chali/\n/chali_out*\n*.exe\n");
-        write("README.md", "# " + name + CHALI_TEXT("\n\nChaLi 应用工程。以下命令在工程根目录执行：\n\n") + "```sh\nchali run src/main.chl\nchali check src/main.chl\nchali test tests\nchali svmb src/main.chl out build/main\n```\n\n" + CHALI_TEXT("运行示例输出 `Hello, ChaLi!`。开发命令原生内建，无需 Python；程序通过 VM 执行。\n") + CHALI_TEXT("`chali.toml` 配置项目包；`src/` 放应用源码，`tests/` 放普通 main 测试。\n"));
+        write("README.md", "# " + name + CHALI_TEXT("\n\nChaLi 应用工程。以下命令在工程根目录执行：\n\n") + "```sh\nchali run src/main.chl\nchali check src/main.chl\nchali test tests\nchali build src/main.chl out build/main\n```\n\n" + CHALI_TEXT("运行示例输出 `Hello, ChaLi!`。开发命令原生内建，无需 Python；程序通过原生编译执行。\n") + CHALI_TEXT("`chali.toml` 配置项目包；`src/` 放应用源码，`tests/` 放普通 main 测试。\n"));
         /* 系统里装了 git 就顺手 `git init`，方便后续版本管理。
          * 没有 git、或初始化失败都不算创建失败（工程本身已经写好了）。 */
         const auto hasGit = []() {

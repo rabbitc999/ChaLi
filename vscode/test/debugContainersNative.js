@@ -44,7 +44,7 @@ async function main() {
     ];
     fs.writeFileSync(source, lines.join('\n'));
     const prefix = path.join(directory, 'program');
-    const built = spawnSync(compiler, ['aot', source, '--debug', '--checked', '--allocator', allocator, '--out', prefix],
+    const built = spawnSync(compiler, ['build', source, '--debug', '--checked', '--allocator', allocator, '--out', prefix],
       { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
     assert.equal(built.status, 0, built.stdout + built.stderr);
     const client = new DebugClient(root, compiler);

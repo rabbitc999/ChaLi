@@ -134,7 +134,7 @@ int64 add(int64 left, int64 right)
 }
 ```
 
-执行 `ChaLi aot library.chl --shared --out build/library` 生成动态库和 C ABI 头文件，
+执行 `ChaLi build library.chl --shared --out build/library` 生成动态库和 C ABI 头文件，
 导出函数名以生成的头文件为准（上例为 `f_add`）。动态库源码可以没有 `main`；
 可执行程序仍需要 `main`。调用方先调用 `chali_init()`，再使用导出函数，最后调用
 `chali_finish()`；全局初始化与清理分别在这两个入口执行。`--export` 可以额外指定导出函数。
@@ -787,7 +787,7 @@ int64 health() { return 200; }
   不减少编译期工作量。
 - 两项宏置 0 的构建只用于验证编译器自身，不是受支持的裁剪配置。
 
-反射产物要求目标 VM 编入反射；目标 VM 没有反射支持时，编译源程序须使用 `--no-reflection`。反射当前的签名及动态调用边界见[反射说明](19-reflection.md)。
+反射产物要求目标运行时编入反射；目标运行时没有反射支持时，编译源程序须使用 `--no-reflection`。反射当前的签名及动态调用边界见[反射说明](19-reflection.md)。
 
 完整例子见 [`example/reflection/`](../example/reflection/)（`annotations.chl`、`calls.chl`、`dispatch.chl`、`queries.chl`）。
 
@@ -834,7 +834,7 @@ int64 c_function(int64 x);
 
 `#abi("C", "库路径", "原生符号")` 指令附着于单个函数声明，按 C ABI 调用外部库函数。路径相对声明所在源文件解析，动态库须与产物同目录。类型映射、可空引用、胶水绑定详见[宿主集成与 C ABI](08-host-integration.md)。
 
-`#export("原生符号")` 附着于有函数体的实现，生成按目标平台 C ABI 传递的标量或无资源纯值结构体接口。输出库由 `aot --shared --out` 指定。内部函数标签与原生符号分离，生成的 C 头文件提供准确类型。
+`#export("原生符号")` 附着于有函数体的实现，生成按目标平台 C ABI 传递的标量或无资源纯值结构体接口。输出库由 `build --shared --out` 指定。内部函数标签与原生符号分离，生成的 C 头文件提供准确类型。
 
 `unsafe { ... }` 为当前块授予原始操作权限；`unsafe T f(...)` 声明调用前置条件，安全上下文不能直接调用，也不能把它转换成安全函数值。闭包的函数体不继承创建位置的权限。普通数组、引用和算术检查继续生效。
 
@@ -999,7 +999,7 @@ done
 
 `eprint`、`eprintln` 将文本写入宿主标准错误流；格式规则与 `print`、`println` 一致，
 支持 `{}`、从 1 开始的位置索引、数值格式和插值字符串。`eprintln` 追加一个 LF 换行，
-两者成功返回 `0`，不会把文本加入 VM 的标准输出结果。空参数 `eprintln()` 只输出换行。
+两者成功返回 `0`，不会把文本加入运行时的标准输出结果。空参数 `eprintln()` 只输出换行。
 单个 `String` 表达式按原文写入，不再解析其中的花括号或百分号。
 
 文件使用 `File.print` / `File.println`、`FileStream.print` / `FileStream.println`，

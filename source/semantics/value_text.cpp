@@ -133,7 +133,7 @@ stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
  * @brief 编码具体类型的默认字符串表示布局。
  * @param type 需要编码的类型。
  * @param customRoot 是否保留根值的用户覆盖。
- * @retval 供 VM 值文本原语读取的布局。
+ * @retval 供 运行时 值文本原语读取的布局。
  */
 Memory::String ValueTextLayout(const std::shared_ptr<MType> &type, bool customRoot)
 {

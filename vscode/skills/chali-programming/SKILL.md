@@ -1,6 +1,6 @@
 ---
 name: chali-programming
-description: 编写、修改与调试 ChaLi (.chl) 程序，依据实际文法和标准库选择语法、宏、值语义、借用与错误处理方式，并使用 ChaLi 工具链验证。用于 ChaLi 应用代码和示例，不替代编译器或 VM 内部实现的仓库规范。
+description: 编写、修改与调试 ChaLi (.chl) 程序，依据实际文法和标准库选择语法、宏、值语义、借用与错误处理方式，并使用 ChaLi 工具链验证。用于 ChaLi 应用代码和示例，不替代编译器或运行时内部实现的仓库规范。
 ---
 
 # 编写 ChaLi 程序
@@ -178,7 +178,7 @@ count=3
 
 对新增或修改的程序执行 `chali check path/to/program.chl`，再 `chali run path/to/program.chl`，比较输出并检查断言。命令以安装工具链的实际 `--help` 为准；Windows 仓库可用 `./ChaLi.exe`。无法执行时说明未验证，不能把推测写成实测结果。
 
-在 ChaLi 仓库内，默认编入前端与运行时反射。普通 run／aot 从检查后的 AST 直接生成 LLVM IR；IR（四元式）保留独立导出与兼容输入，不做内部优化。优化由 LLVM 执行，原生发布默认 O3 与完整 LTO；`--debug` 使用 O0，`--debug-optimized` 保留调试信息并使用 O3。编写文档时使用功能说明，发布变更放根目录 `CHANGELOG.md`，`doc/` 不新增版本发布页。
+在 ChaLi 仓库内，默认编入前端与运行时反射。普通 run／build 从检查后的 AST 直接生成 LLVM IR；IR（四元式）保留独立导出与兼容输入，不做内部优化。优化由 LLVM 执行，原生发布默认 O3 与完整 LTO；`--debug` 使用 O0，`--debug-optimized` 保留调试信息并使用 O3。编写文档时使用功能说明，发布变更放根目录 `CHANGELOG.md`，`doc/` 不新增版本发布页。
 
 单独执行 `chali man` 与 `chali man help` 均显示用法；`chali man api` 显示 API 分类，`chali man api XXX` 查询内嵌 `doc/library/` 的 API。
 

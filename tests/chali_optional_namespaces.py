@@ -116,7 +116,7 @@ def embedded(args):
             modes = args.lto_modes or (('off', 'full', 'thin') if name in ('hello', 'unused', 'combined', 'crypto') else ('thin',))
             for lto in modes:
                 target = work / (name + '-' + lto)
-                command = [str(args.chali.resolve()), 'aot', str(source), '--out', str(target), '--lto-mode', lto]
+                command = [str(args.chali.resolve()), 'build', str(source), '--out', str(target), '--lto-mode', lto]
                 compile_env = dict(env, CHALI_ABI_CXX='not-a-cxx-compiler') if name == 'scalar' else env
                 result = subprocess.run(command, cwd=work, env=compile_env, capture_output=True, text=True, encoding='utf-8', timeout=240)
                 assert result.returncode == 0, (command, result.stdout, result.stderr)

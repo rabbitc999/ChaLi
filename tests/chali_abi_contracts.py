@@ -71,7 +71,7 @@ def main():
                           .replace('./native.dll', library.as_posix()), encoding='utf-8')
         if args.aot:
             output = work / 'contracts'
-            invoke([compiler, 'aot', source, '--out', output])
+            invoke([compiler, 'build', source, '--out', output])
             assert invoke([str(output) + ('.exe' if os.name == 'nt' else '')]).strip() == b'ABI contracts OK'
             print('AOT C ABI 返回所有权、闭包与嵌套同步回调通过')
         else:
@@ -100,7 +100,7 @@ def main():
             env['CHALI_ABI_FREE_MARKER'] = str(marker)
             if args.aot:
                 prefix = work / ('failure-' + label)
-                invoke([compiler, 'aot', failure, '--checked', '--out', prefix])
+                invoke([compiler, 'build', failure, '--checked', '--out', prefix])
                 command = [str(prefix) + ('.exe' if os.name == 'nt' else '')]
             else:
                 command = [str(compiler), 'run', str(failure), '--out', str(work / ('run-failure-' + label))]

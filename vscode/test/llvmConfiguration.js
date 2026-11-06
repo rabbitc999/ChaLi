@@ -32,7 +32,7 @@ try {
       assert.equal(options.llvmPath, 'clang with space');
       assert.equal(buildRunCommand('chali', 'source.chl', options), 'chali run source.chl --llvm "clang with space"');
       assert.deepEqual(buildArguments('exe', 'source.chl', undefined, options),
-        ['aot', 'source.chl', '--llvm', 'clang with space']);
+        ['build', 'source.chl', '--llvm', 'clang with space']);
     }
     fs.writeFileSync(path.join(directory, 'bin/chali-build-info.json'), JSON.stringify({ llvm: variant === 'static' ? 'external' : 'static' }));
     assert.throws(() => llvmOptions(directory, config('clang')), /不一致/);

@@ -1,7 +1,7 @@
 {
   "name": "chali-editor",
   "displayName": "ChaLi",
-  "description": "ChaLi（.chl）语言支持：用编译器自带的 `chali lsp` 提供诊断、悬停、补全、跳转定义、文档大纲、格式化与宏块折叠。 支持在线模块依赖下载、共享缓存与离线校验。 支持 LLVM AOT 可执行文件构建。",
+  "description": "ChaLi（.chl）语言支持：用编译器自带的 `chali lsp` 提供诊断、悬停、补全、跳转定义、文档大纲、格式化与宏块折叠。 支持在线模块依赖下载、共享缓存与离线校验。 支持原生可执行文件发布构建。",
   "version": "1.0.0",
   "publisher": "rabbitc999",
   "devDependencies": {
@@ -261,7 +261,7 @@
         "configurationSnippets": [
           {
             "label": "ChaLi：调试当前文件",
-            "description": "使用带源码行和变量信息的 AOT 程序进行原生 GDB 调试。",
+            "description": "使用带源码行和变量信息的构建产物进行 GDB 构建调试。",
             "body": {
               "type": "chali",
               "request": "launch",

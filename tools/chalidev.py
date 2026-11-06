@@ -730,8 +730,8 @@ _MESSAGES = {
   "用法：chali test [路径...] [--filter 文本] [--backend interpret] [--timeout 秒] [--json|--list]\n": [
     "Usage: chali test [paths...] [--filter TEXT] [--backend interpret] [--timeout SECONDS] [--json|--list]\n"
   ],
-  "运行示例输出 `Hello, ChaLi!`。开发命令原生内建，无需 Python；程序通过 VM 执行。\n": [
-    "The example prints `Hello, ChaLi!`. Development commands are built in and need no Python; programs execute in the VM.\n"
+  "运行示例输出 `Hello, ChaLi!`。开发命令原生内建，无需 Python；程序通过原生编译执行。\n": [
+    "The example prints `Hello, ChaLi!`. Development commands are built in and need no Python; programs compile and run natively.\n"
   ],
   "执行已取消": [
     "Execution cancelled"
@@ -832,8 +832,11 @@ _MESSAGES = {
   "  --keep-artifacts       保留源码旁隐藏 .chali 下的中间产物（缺省自动清理）\n": [
     "  --keep-artifacts       Retain intermediates in the source-adjacent hidden .chali workspace\n"
   ],
-  "多线程已关闭；run／aot 构建时去掉 --no-threads": [
-    "Multithreading is disabled; remove --no-threads when building with run/aot"
+  "多线程已关闭；run／build 构建时去掉 --no-threads": [
+    "Multithreading is disabled; remove --no-threads when building with run/build"
+  ],
+  "  build          发布构建，默认 unchecked（--target、--emit-llvm、--emit-obj、--emit-asm、--shared、--export）\n": [
+    "  build          Release build, unchecked by default (--target, --emit-llvm, --emit-obj, --emit-asm, --shared, --export)\n"
   ]
 }
 # CHALI_CATALOG_END

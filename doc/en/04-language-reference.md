@@ -135,7 +135,7 @@ int64 add(int64 left, int64 right)
 }
 ```
 
-`ChaLi aot library.chl --shared --out build/library` generates a shared library and its C ABI
+`ChaLi build library.chl --shared --out build/library` generates a shared library and its C ABI
 header. Use the symbols declared in that header (`f_add` in this example). Shared-library
 sources may omit `main`; executable sources still require it. Call `chali_init()` before
 exported functions and `chali_finish()` afterwards. These entries run global initialization
@@ -591,7 +591,7 @@ This is template composition; parameter-pattern partial specialisation with sepa
 has no syntax at present. Recursive value fields are rejected, while references to the same instance are allowed.
 Expanding recursion is diagnosed: a compilation allows at most 1024 generic instances and rejects type-expression
 nesting at 128 levels. The regression suite, [`tests/chali_generic_monomorphization.py`](../../tests/chali_generic_monomorphization.py),
-covers VM execution, instance reuse and invalid programs.
+covers runtime execution, instance reuse and invalid programs.
 
 ---
 
@@ -790,8 +790,8 @@ no compiler workload. Builds that set both macros to 0 exist only to validate th
 are not a supported trim configuration. Generated compiler projects and embedded Linux hosts pin
 reflection the same way.
 
-Reflection artifacts require a capable target VM. Compile explicitly with `--no-reflection` for
-a VM built without reflection. Dynamic-call and signature limits are specified in the [reflection document](../19-reflection.md).
+Reflection artifacts require a capable target runtime. Compile explicitly with `--no-reflection` for
+a runtime built without reflection. Dynamic-call and signature limits are specified in the [reflection document](../19-reflection.md).
 
 Full examples: [`example/reflection/`](../../example/reflection/) (`annotations.chl`, `calls.chl`,
 `dispatch.chl`, `queries.chl`).
@@ -851,7 +851,7 @@ An `#abi` directive imports C ABI functions from a library. The path resolves re
 Type mapping, nullable references and glue bindings: see
 [Host integration and C ABI](08-host-integration.md).
 
-`#abi("C", "library", "native_symbol")` applies to one imported function declaration. `#export("native_symbol")` applies to a function implementation; `aot --shared --out` selects the output library. Exports marshal scalars and resource-free value structures using the target C ABI and emit accurate C declarations.
+`#abi("C", "library", "native_symbol")` applies to one imported function declaration. `#export("native_symbol")` applies to a function implementation; `build --shared --out` selects the output library. Exports marshal scalars and resource-free value structures using the target C ABI and emit accurate C declarations.
 
 `unsafe { ... }` grants raw-operation permission to the current block. An `unsafe T f(...)` declaration requires an unsafe caller and cannot become a safe function value. Closure bodies do not inherit permission from their creation site. Ordinary array, reference and arithmetic checks remain active.
 
@@ -1021,7 +1021,7 @@ done
 
 `eprint` and `eprintln` write to the host standard error stream using the same formatting rules as
 `print` and `println`: `{}`, one-based argument indexes, numeric styles and interpolated strings.
-`eprintln` appends one LF. Both return `0` on success and do not append to the VM standard-output
+`eprintln` appends one LF. Both return `0` on success and do not append to the runtime standard-output
 result. `eprintln()` writes only a newline. A single `String` expression is written verbatim without
 interpreting its braces or percent signs again.
 

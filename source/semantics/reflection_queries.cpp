@@ -1,6 +1,6 @@
 /**
  * @file reflection_queries.cpp
- * @brief 将只读元数据生成为普通 CHALI 值函数，复用 VM 执行与确定性清理。
+ * @brief 将只读元数据生成为普通 CHALI 值函数，复用 运行时 执行与确定性清理。
  */
 /**
  * @brief 判断本次输入是否加载 std::reflect 模块。

@@ -21,7 +21,7 @@ def main():
                         result=subprocess.run(list(map(str,command)),cwd=ROOT,env=dict(os.environ,CHALI_LANG='zh'),capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=300)
                         assert result.returncode==0,(command,result.returncode,result.stdout,result.stderr)
                         return result
-                    run([compiler,'aot',ROOT/'example/samples'/f'{name}.chl','--allocator',allocator,'--'+checks,'--out',prefix])
+                    run([compiler,'build',ROOT/'example/samples'/f'{name}.chl','--allocator',allocator,'--'+checks,'--out',prefix])
                     result=run([prefix.with_suffix('.exe' if os.name=='nt' else '')])
                     expected=(ROOT/'example/expected'/f'{name}.txt').read_text(encoding='utf-8')
                     assert result.stdout==expected and not result.stderr,result

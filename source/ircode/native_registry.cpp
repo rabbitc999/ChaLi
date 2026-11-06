@@ -1,6 +1,6 @@
 /**
  * @file native_registry.cpp
- * @brief VM 内建服务的名称、实参数量和入口注册。
+ * @brief 运行时 内建服务的名称、实参数量和入口注册。
  */
 #include "runtime_internal.hpp"
 

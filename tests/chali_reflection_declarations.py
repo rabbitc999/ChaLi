@@ -30,7 +30,7 @@ def main():
         work = Path(temporary)
         sample = ROOT / 'example/reflection/declarations.chl'
         # 直接构建 LLVM 原生产物，通过实际查询检查元数据。
-        run([args.chali, 'aot', '--reflection', sample, '--out', work / 'program'])
+        run([args.chali, 'build', '--reflection', sample, '--out', work / 'program'])
         assert run([str(work / 'program') + ('.exe' if os.name == 'nt' else '')]).stdout == '42\n'
         source = work / 'case.chl'
 
@@ -56,7 +56,7 @@ def main():
                           'let one=std::reflect::getStructInfo<one::Same>().unwrap();\n'
                           'let two=std::reflect::getStructInfo<two::Same>().unwrap();\n'
                           'println("{}|{}",one.name,one.typeId);println("{}|{}",two.name,two.typeId);}', encoding='utf-8')
-        run([args.chali, 'aot', '--reflection', source, '--out', work / 'names'], cwd=work)
+        run([args.chali, 'build', '--reflection', source, '--out', work / 'names'], cwd=work)
 
         def identities(prefix):
             """读取原生产物实际报告的稳定身份，不依赖已经删除的导出格式。"""
@@ -81,7 +81,7 @@ def main():
                               'println("function|{}",info.typeId);println("box|{}",info.params[0].typeId);\n'
                               'println("string|{}",info.returnTypeId);}', encoding='utf-8')
             prefix = work / ('identity' + str(index))
-            run([args.chali, 'aot', '--reflection', source, '--out', prefix])
+            run([args.chali, 'build', '--reflection', source, '--out', prefix])
             snapshots.append(identities(prefix))
         assert snapshots[0] == snapshots[1], snapshots
         assert all(value != 0 for value in snapshots[0].values()), snapshots

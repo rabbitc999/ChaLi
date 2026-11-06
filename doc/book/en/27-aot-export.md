@@ -1,4 +1,4 @@
-# Chapter 27 AOT export: delivering native artifacts
+# Chapter 27 release build: delivering native artifacts
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../27-AOT导出.md)
@@ -6,7 +6,7 @@
 
 Running a development example and delivering a deployable application require different evidence. AOT generates target machine code, while target libraries, loaders, dynamic dependencies and resources still need to match. File creation alone is insufficient acceptance.
 
-Begin with run/aot defaults, follow the frontend and backend representations, then distinguish toolchain and application dependencies. Cross compilation, native debugging and staged deployment complete the workflow. State host, target and completed steps for each configuration.
+Begin with run/build defaults, follow the frontend and backend representations, then distinguish toolchain and application dependencies. Cross compilation, native debugging and staged deployment complete the workflow. State host, target and completed steps for each configuration.
 
 ## 27.1 Run and export settings
 
@@ -16,13 +16,13 @@ The relevant unchecked defaults mainly affect runtime array and pointer checking
 
 Use chali help and the [LLVM AOT reference](../../en/38-aot.md) for exact options.
 
-Default run/aot publishes final artifacts beside the source and uses the adjacent `.chali` directory for intermediates; Windows marks it hidden. Success or failure cleans the session workspace while preserving existing user files. Successful compilation and publication reports completion on standard error, then run launches the native program. `--quiet` or `CHALI_QUIET=1` suppresses only that notice. Explicit output, retention and incremental settings follow the [artifact reference](../../en/38-aot.md).
+Default run/build publishes final artifacts beside the source and uses the adjacent `.chali` directory for intermediates; Windows marks it hidden. Success or failure cleans the session workspace while preserving existing user files. Successful compilation and publication reports completion on standard error, then run launches the native program. `--quiet` or `CHALI_QUIET=1` suppresses only that notice. Explicit output, retention and incremental settings follow the [artifact reference](../../en/38-aot.md).
 
-![AOT export and toolchain boundaries](../images/chali-aot-en.png)
+![release build and toolchain boundaries](../images/chali-aot-en.png)
 
 ### From source to native execution
 
-Normal run and aot execution generates LLVM IR directly from the semantically checked AST. The frontend parses declarations and expressions, expands macros and checks names, types, ownership and borrowing. The backend reads the checked tree and emits LLVM instructions and required runtime calls. LLVM performs optimization and target code generation. Linking combines objects with runtime components, system libraries and application dependencies.
+Normal run and build execution generates LLVM IR directly from the semantically checked AST. The frontend parses declarations and expressions, expands macros and checks names, types, ownership and borrowing. The backend reads the checked tree and emits LLVM instructions and required runtime calls. LLVM performs optimization and target code generation. Linking combines objects with runtime components, system libraries and application dependencies.
 
 Unqualified IR in this book means ChaLi quadruple IR; LLVM IR is named explicitly. Quadruple export and compatibility entry points for independent callers remain, but normal AOT does not require generating quadruples, writing them to disk and reading them back. LLVM performs optimization through O3/LTO. Results depend on the program and configuration.
 
@@ -98,7 +98,7 @@ void main() {
 ```sh
 mkdir -p build
 chali run main.chl
-chali aot main.chl --lto-mode thin --checked --out build/counter
+chali build main.chl --lto-mode thin --checked --out build/counter
 ```
 
 Running the source and launching the exported application give the same stdout.
@@ -114,7 +114,7 @@ The exported program is `build/counter.exe` on Windows and `build/counter` on Li
 Cross compilation needs a target triple, CPU/features, ABI, sysroot, linker, runtime libraries and startup assets. Store supported settings in toml using the exact keys and override rules in the [AOT reference](../../en/38-aot.md). Do not link host libraries into the target.
 
 ```toml
-[aot]
+[build]
 target = "aarch64-unknown-linux-gnu"
 cpu = "generic"
 sysroot = "build/cross-sdk/linux-arm64/sysroot"
@@ -122,13 +122,13 @@ runtime_dir = "build/cross-sdk/linux-arm64/lib"
 output = "executable"
 ```
 
-The [aot] table groups export settings. Target selects ARM64 Linux GNU, and generic avoids tuning for a particular CPU. Sysroot identifies the target-system root, while runtime_dir identifies its runtime link assets; host Windows libraries cannot substitute for target libraries.
+The [build] table groups export settings. Target selects ARM64 Linux GNU, and generic avoids tuning for a particular CPU. Sysroot identifies the target-system root, while runtime_dir identifies its runtime link assets; host Windows libraries cannot substitute for target libraries.
 
 Output=executable records a desired artifact but does not download an SDK or supply missing libraries. Paths are relative to chali.toml, making that file's location part of reproducibility. An explicit object-output command overrides the corresponding setting, so inspect both configuration intent and actual invocation.
 
 
 ```sh
-chali aot app.chl --target linux-arm64 --emit-obj --out build/arm64/app
+chali build app.chl --target linux-arm64 --emit-obj --out build/arm64/app
 ```
 
 Aot reads app.chl, --target selects linux-arm64 and --out chooses the output location. Crucially, --emit-obj stops after object generation, before linking target runtime and startup assets into an executable.
@@ -148,7 +148,7 @@ In a clean directory verify configuration, web assets, dynamic libraries, data-d
 
 Parsing or type-checking failures occur before a target program exists; follow source diagnostics first. If objects exist but linking fails, inspect ABI, library architecture, symbols and search paths. If linking succeeds but startup fails, inspect the operating-system loader, dynamic libraries, resource paths and permissions. Incorrect business results after startup require inputs, logs and native debugging. A file's existence only establishes that a step wrote it, not that later stages passed.
 
-Native debugging uses DWARF information and GDB/MI. Source mappings help explain machine instructions, but optimization may inline functions, combine operations or make locals difficult to inspect. Keep the tested binary, matching source, build settings and symbols together. Do not apply another build's line mappings to the current artifact. See [native AOT debugging](../../en/43-native-debugging.md) for entry points and platform requirements.
+Native debugging uses DWARF information and GDB/MI. Source mappings help explain machine instructions, but optimization may inline functions, combine operations or make locals difficult to inspect. Keep the tested binary, matching source, build settings and symbols together. Do not apply another build's line mappings to the current artifact. See [build debugging](../../en/43-native-debugging.md) for entry points and platform requirements.
 
 Make acceptance reproducible: prepare dependencies on the target, enter the documented working directory, start the release artifact, perform a read, then an authorized write and verify its result. Database applications should also verify connection-failure and insufficient-permission diagnostics. Record host, target, compiler variant and completed steps. Generating a Linux object on Windows establishes object generation, not successful Linux deployment.
 
@@ -174,7 +174,7 @@ artifact=42
 
 ### Summary
 
-Use run to observe checked native execution, then validate the actual aot release configuration. Compiler LLVM components, application library dependencies and target startup are separate questions.
+Use run to observe checked native execution, then validate the actual build release configuration. Compiler LLVM components, application library dependencies and target startup are separate questions.
 
 Retain commands, source/binary identities, target conditions and business outcomes. Report object generation, linking and execution with their respective evidence. Chapter 25 applies these requirements to a complete web/database application.
 

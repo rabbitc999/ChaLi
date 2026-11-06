@@ -34,7 +34,7 @@ def main():
             prefix = work / f'path-{index}'
             result = run([compiler, 'run', source, '--out', prefix])
             assert result.stdout == '7\n' and (not result.stderr), result.stdout + result.stderr
-            run([compiler, 'aot', source, '--emit-llvm', '--out', prefix])
+            run([compiler, 'build', source, '--emit-llvm', '--out', prefix])
             llvm = prefix.with_suffix('.ll').read_text(encoding='utf-8')
             encoded = ''.join(f'\\{byte:02X}' for byte in library.as_posix().encode('utf-8'))
             assert encoded in llvm and 'chali_host_abi_symbol' in llvm, llvm[-2000:]
@@ -51,7 +51,7 @@ def main():
             prefix = work / source.stem
             result = run([compiler, 'run', source, '--out', prefix])
             assert result.stdout == '8\n', result.stdout + result.stderr
-            run([compiler, 'aot', source, '--emit-llvm', '--out', prefix])
+            run([compiler, 'build', source, '--emit-llvm', '--out', prefix])
             assert ''.join(f'\\{byte:02X}' for byte in library.as_posix().encode('utf-8')) in prefix.with_suffix('.ll').read_text(encoding='utf-8')
         # 同文模块移到另一目录后必须绑定新目录的库；旧库仍存在且返回不同值，避免仅靠缺失文件发现问题。
         relocated = work / 'relocated'

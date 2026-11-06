@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1560" height="900" viewBox="0 0 1560 900">
   <rect width="1560" height="900" fill="#f4f7fb"/>
-  <text x="40" y="58" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="33" font-weight="700" fill="#10233f">ChaLi · AOT export</text>
+  <text x="40" y="58" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="33" font-weight="700" fill="#10233f">ChaLi · Release build</text>
   <text x="40" y="95" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="19" fill="#4a5b73">Checked AST → LLVM → target code → native artifact</text>
   <rect x="40" y="150" width="440" height="120" rx="15" fill="#ffffff" stroke="#d8e1ee" stroke-width="1"/>
   <text x="260" y="180" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="23" font-weight="700" fill="#14507e" text-anchor="middle" dominant-baseline="central">1  Source and checks</text>
@@ -41,6 +41,6 @@
   <polygon points="780,735 775,724 785,724" fill="#8ea2bb"/>
   <rect x="40" y="735" width="1480" height="120" rx="15" fill="#ffffff" stroke="#d8e1ee" stroke-width="1"/>
   <text x="780" y="765" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="23" font-weight="700" fill="#14507e" text-anchor="middle" dominant-baseline="central">6  Deliver and run</text>
-  <text x="780" y="795" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="18" fill="#4a5b73" text-anchor="middle" dominant-baseline="central">Executable or shared library; no VM or LLVM DLL required by the artifact</text>
+  <text x="780" y="795" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="18" fill="#4a5b73" text-anchor="middle" dominant-baseline="central">Executable or shared library; no LLVM DLL required by the artifact</text>
   <text x="780" y="825" font-family="Microsoft YaHei, Segoe UI, Noto Sans SC, sans-serif" font-size="18" fill="#4a5b73" text-anchor="middle" dominant-baseline="central">Ship application C ABI dependencies when used</text>
 </svg>

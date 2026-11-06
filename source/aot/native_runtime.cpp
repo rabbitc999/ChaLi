@@ -157,7 +157,7 @@ struct Runtime
     ObjectStore objects;
 
     /**
-     * @brief 装入静态数据并注册 VM 同源的原生函数与同步回调。
+     * @brief 装入静态数据并注册 运行时 同源的原生函数与同步回调。
      */
     Runtime() : arena(createRuntimeArena()), session(arena.get())
     {
@@ -202,7 +202,7 @@ struct Runtime
             struct DepthGuard
             {
                 /**
-                 * @brief 标记同步胶水回调，保持 VM 的线程与消息操作限制。
+                 * @brief 标记同步胶水回调，保持 运行时 的线程与消息操作限制。
                  */
                 DepthGuard() { ++nativeThreadState.callbackDepth; }
                 /**
@@ -774,7 +774,7 @@ void chali_host_init()
 }
 
 /**
- * @brief 输出错误位置与实际原生调用链，不执行虚拟机指令或分配语言堆内存。
+ * @brief 输出错误位置与实际原生调用链，不分配语言堆内存。
  * @note 内联和尾调用之后的调用链按实际机器栈展示，当前位置保留四元式源码身份。
  */
 void chali_host_trace()
@@ -922,7 +922,7 @@ void chali_host_process_arguments(int argc, char **argv)
  * @brief 使用共享堆和静态符号布局检查完整数组元素是否可访问。
  * @param index 元素下标。
  * @param address 数组逻辑基址。
- * @param stride 元素步长；非正值沿用 VM 的八字节默认步长。
+ * @param stride 元素步长；非正值沿用 运行时 的八字节默认步长。
  */
 void chali_host_check_pointer(std::int64_t index, std::int64_t address, std::int64_t stride)
 {
@@ -1110,7 +1110,7 @@ std::int64_t chali_host_copy_words(std::int64_t destination, std::int64_t source
 }
 
 /**
- * @brief 使用与 VM 相同的逻辑分配身份创建清零内存。
+ * @brief 使用与 运行时 相同的逻辑分配身份创建清零内存。
  * @param bytes 需要分配的字节数。
  * @return 新的活跃逻辑地址。
  */
@@ -1141,7 +1141,7 @@ void chali_host_drop(std::int64_t address)
 }
 
 /**
- * @brief 按 VM 闭包协议解析函数标签或隐藏环境。
+ * @brief 按 运行时 闭包协议解析函数标签或隐藏环境。
  * @param function 函数值或闭包句柄。
  * @param environment 非零时返回环境，零时返回标签地址。
  * @return 解析后的环境句柄或函数标签地址。

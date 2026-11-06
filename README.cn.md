@@ -6,7 +6,7 @@
 
 ChaLi 是一门静态类型语言，提供可观察的值语义、显式借用与移动，以及按作用域清理资源的机制。类型、所有权和运行期规则由语言定义；宿主平台、导出目标与外部库要求分别核对。
 
-ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，从已检查的 AST 直接生成 LLVM IR，再通过 LLVM AOT 生成原生程序。run 使用 checked 编译执行，aot 默认 unchecked 导出。
+ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，从已检查的 AST 直接生成 LLVM IR，再通过 LLVM AOT 生成原生程序。run 使用 checked 编译执行，build 默认 unchecked 导出。
 
 当前已实现能力、默认配置与平台边界统一见[能力说明](doc/17-capabilities.md)，版本以 [`VERSION`](VERSION) 为准。
 
@@ -31,24 +31,23 @@ ChaLi 的五个字母分别代表以下语言特性。语言名中 C 与 L 大�
 
 ![ChaLi 编译流程：源码、条件预处理、解析、语义期宏展开、借用检查、已检查 AST 与 LLVM AOT](doc/images/chali-compilation.png)
 
-## AOT 导出
+## 发布构建
 
-使用 `./ChaLi.exe aot input.chl --out build/program --checked`，从完成语义检查的 AST 直接生成 LLVM 代码，再生成并链接原生产物。内置 LLVM 变体在进程内完成优化、机器码生成和 LLD 链接；外置变体使用 `library/llvm/` 工具链或 `--llvm` 指定的 clang。`--emit-llvm` 可以只导出 `.ll` 模块。
+使用 `./ChaLi.exe build input.chl --out build/program --checked`，从完成语义检查的 AST 直接生成 LLVM 代码，再生成并链接原生产物。内置 LLVM 变体在进程内完成优化、机器码生成和 LLD 链接；外置变体使用 `library/llvm/` 工具链或 `--llvm` 指定的 clang。`--emit-llvm` 可以只导出 `.ll` 模块。
 
-![ChaLi AOT 导出流程：已检查 AST、LLVM IR、内置或外置 LLVM、目标链接与交付](doc/images/chali-aot.png)
+![ChaLi 发布构建流程：已检查 AST、LLVM IR、内置或外置 LLVM、目标链接与交付](doc/images/chali-aot.png)
 
-生成的应用无需 VM 或 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。当前支持范围和完整选项见 [LLVM AOT 编译](doc/38-aot.md)，逐步操作见书稿[第 27 章 AOT 导出](doc/book/27-AOT导出.md)。
+生成的应用无需 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。当前支持范围和完整选项见 [LLVM AOT 编译](doc/38-aot.md)，逐步操作见书稿[第 27 章 发布构建](doc/book/27-AOT导出.md)。
 
 ## 运行过程
 
-`run` 编译并执行 checked AOT 机器码；`aot` 默认导出 unchecked 原生产物。原生运行时提供共享内存、所有权、宿主回调与线程服务。
+`run` 编译并执行 checked AOT 机器码；`build` 默认导出 unchecked 原生产物。原生运行时提供共享内存、所有权、宿主回调与线程服务。
 
 ## 文档
 
 | 文档 | 面向 | 内容 |
 | --- | --- | --- |
 | [文档入口](doc/README.md) | 所有人 | 按「你想做什么」跳转到下面任意一篇 |
-| [00 使命宣言](doc/00-vision.md) | 决策者、潜在用户 | 软件交付的三重困境与 ChaLi 的回答，含「不适合谁」 |
 | [01 快速开始](doc/01-quickstart.md) | 第一次用的人 | 安装、第一个程序、常用命令速查 |
 | [02 语言速览](doc/02-language-tour.md) | 有经验的开发者 | 14 段可运行片段走一遍 ChaLi 长什么样 |
 | [03 核心概念](doc/03-core-concepts.md) | 准备深入使用的人 | 值语义、非空引用、无 GC 的资源管理 |
@@ -108,7 +107,7 @@ sh gen.sh          # 用 IELR 从 chali.gram 重新生成前端（需要 [ParseE
 
 ### 编入注解与反射
 
-默认构建同时编入注解与反射前端、VM 运行时支持：
+默认构建同时编入注解与反射前端、原生运行时支持：
 
 ```sh
 make                # 默认 CHALI_WITH_REFLECTION=1 STACKVM_WITH_REFLECTION=1
@@ -121,7 +120,7 @@ make reflection     # 保留的显式启用入口
 
 单次源码编译默认生成反射元数据及对应产物特征位；`--no-reflection` 不写这份元数据并拒绝程序里的
 注解与反射使用 —— 它只决定这次的产物，**不减少编译期工作量**（元数据与查询源码那一轮照跑）。
-部署到未编入反射的目标宿主 VM 时，必须使用 `--no-reflection`。
+部署到未编入反射的目标宿主运行时时，必须使用 `--no-reflection`。
 `make` 已把两项钉死为 1；只有直接 `-D` 手编才能关掉反射，那条路只用于验证编译器自身，不是受支持的裁剪配置。
 
 ## 快速使用
@@ -135,7 +134,7 @@ make reflection     # 保留的显式启用入口
 
 ### 调试
 
-VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的 AOT 程序，支持源码断点、继续、单步进入／越过／跳出、调用栈、参数、局部变量和表达式。开发调试保留符号并使用 O0；`--debug-optimized` 或 VSCode 的 `debugMode: "optimized"` 保留 DWARF 并使用 O3／LTO，支持内联调用帧。普通发布构建仍使用最高优化。见[原生 AOT 调试](doc/43-native-debugging.md)。
+VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的 AOT 程序，支持源码断点、继续、单步进入／越过／跳出、调用栈、参数、局部变量和表达式。开发调试保留符号并使用 O0；`--debug-optimized` 或 VSCode 的 `debugMode: "optimized"` 保留 DWARF 并使用 O3／LTO，支持内联调用帧。普通发布构建仍使用最高优化。见[构建调试](doc/43-native-debugging.md)。
 
 ### 报错
 
@@ -193,8 +192,8 @@ main = "src/main.chl"
 
 ## Linux 部署
 
-桌面和嵌入式 Linux 共用普通操作系统宿主与 VM 核心。宿主及原生依赖按目标架构构建，
-部署字节码、数据和布局文件。通用 `--memory-size` 设置内存预算，模块能力由宿主注册的胶水决定。
+桌面和嵌入式 Linux 共用普通操作系统宿主与运行时核心。编译器及原生依赖按目标架构构建，
+部署生成的原生应用及其动态依赖、资源文件。标准模块需要的运行时服务链接到应用中。
 详细流程见[部署说明](doc/06-deployment.md)。
 
 ## 目录结构

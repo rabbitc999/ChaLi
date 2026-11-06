@@ -121,7 +121,7 @@ def main():
         demo = work / 'demo.chl'
         demo.write_text(DEMO.format(library=library.name, expected=EXPECTED.strip()), encoding='utf-8')
         exe = work / 'demo'
-        result = invoke([compiler, 'aot', demo, '--out', exe, '--llvm', cc])
+        result = invoke([compiler, 'build', demo, '--out', exe, '--llvm', cc])
         assert result.returncode == 0, result.stdout + result.stderr
         result = invoke([exe.with_suffix('.exe' if os.name == 'nt' else '')], cwd=work)
         assert result.returncode == 0 and result.stdout == EXPECTED and not result.stderr, result
@@ -129,7 +129,7 @@ def main():
         panic = work / 'panic.chl'
         panic.write_text(PANIC.format(library=library.name), encoding='utf-8')
         panicExe = work / 'panic'
-        result = invoke([compiler, 'aot', panic, '--out', panicExe, '--llvm', cc])
+        result = invoke([compiler, 'build', panic, '--out', panicExe, '--llvm', cc])
         assert result.returncode == 0, result.stdout + result.stderr
         result = invoke([panicExe.with_suffix('.exe' if os.name == 'nt' else '')], cwd=work)
         assert result.returncode != 0, result

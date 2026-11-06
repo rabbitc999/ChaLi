@@ -34,7 +34,7 @@ def main():
     source = ROOT / 'tests/fixtures/bootstrap_numeric_default.chl'
     virtual = execute([compiler, 'run', source, '--out', work / 'vm'], 'vm')
     prefix = work / 'aot'
-    execute([compiler, 'aot', source, '--out', prefix], 'build')
+    execute([compiler, 'build', source, '--out', prefix], 'build')
     native = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], 'aot')
     assert virtual.stdout == native.stdout == 'bootstrap-numeric-default-ok\n', work
     assert virtual.stderr == native.stderr == '', work

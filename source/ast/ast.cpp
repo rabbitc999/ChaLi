@@ -1110,7 +1110,7 @@ CodegenResult generate(const Program &input, const Memory::String &moduleName)
 
     // 2. 函数与方法：方法标签是 `Type.method`，隐式形参 `self` 由调用方 param 进来。
     //
-    // 顺序很关键：虚拟机从第 0 条指令开始执行，所以先把入口 `main` 调到最前面——
+    // 顺序很关键：运行时从第 0 条指令开始执行，所以先把入口 `main` 调到最前面——
     // 先发 `(call, main, _, _)` 引导，再排 main 的函数体，其余函数 / 方法跟在后面。
     // （否则方法体排在前面会被当成程序起点，读没绑定的 `self` 直接报错。）
     Memory::Vector<const Function *> ordered;

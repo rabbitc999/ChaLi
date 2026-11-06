@@ -29,7 +29,7 @@ def main():
         for allocator in ('malloc', 'pool'):
             for checks in ('checked', 'unchecked'):
                 target = work / f'{allocator}-{checks}.exe'
-                run([compiler, 'aot', ROOT / 'tests/fixtures/regex_compatibility.chl',
+                run([compiler, 'build', ROOT / 'tests/fixtures/regex_compatibility.chl',
                      '--allocator', allocator, '--' + checks, '--out', target])
                 result = run([target])
                 assert result.stdout == expected and not result.stderr, (allocator, checks, result)

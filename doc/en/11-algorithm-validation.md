@@ -4,7 +4,7 @@
 **English** · [简体中文](../11-algorithm-validation.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Historical configurations and measurements are preserved below. Programs execute through the VM.
+Historical configurations and measurements are preserved below. Programs execute through the historical interpreter.
 
 `source/chali_borrow_checker.hpp` checks reference escapes; `source/chali_borrow_flow.hpp` checks
 intraprocedural use after free and use after move. The adapter in
@@ -80,7 +80,7 @@ sh ci.sh --jobs 4
 
 Gates default to at most four worker threads. Set `--jobs 1` for serial execution,
 or configure the default with `CHALI_GATE_JOBS`. Only explicitly registered independent
-Python and VM checks run concurrently. Generation, builds, samples, networking and unknown checks
+Python and historical interpreter checks run concurrently. Generation, builds, samples, networking and unknown checks
 form serial barriers. Failed parser generation or compiler builds skip subsequent checks,
 preventing tests from using stale executables. Ordinary test failures do not stop other checks.
 CI writes individual logs and ordered JSON results to `tmp/ci/logs/`; module gates use a

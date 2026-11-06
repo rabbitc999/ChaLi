@@ -32,7 +32,7 @@ void main()
 ```
 
 ```text
-chali aot: 整数除零
+chali build: 整数除零
 出错位置：hello.chl:5（main）
 调用栈（内 → 外）：
   main
@@ -157,7 +157,7 @@ void main()
 ```
 
 ```text
-chali aot: panic：called Option.unwrap() on None
+chali build: panic：called Option.unwrap() on None
 ```
 
 ### 代码详解

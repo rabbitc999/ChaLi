@@ -35,7 +35,7 @@ def main():
                 source = work / f'{allocator}-{checks}.chl'
                 source.write_text(template.replace('__ROOT__', json.dumps(tree.as_posix())), encoding='utf-8')
                 target = work / f'{allocator}-{checks}.exe'
-                run([compiler, 'aot', source, '--allocator', allocator, '--' + checks, '--out', target])
+                run([compiler, 'build', source, '--allocator', allocator, '--' + checks, '--out', target])
                 result = run([target])
                 assert result.stdout == 'file legacy lines, CRLF, bytes, modes, seek and cleanup OK\n' and not result.stderr, result
                 print(f'{allocator}/{checks}: legacy lines, raw bytes, modes, seek, errors and ownership passed', flush=True)
@@ -52,7 +52,7 @@ def main():
                 code += '}\n'
                 source.write_text(code, encoding='utf-8')
                 target = work / f'{allocator}-{checks}-unicode.exe'
-                run([compiler, 'aot', source, '--allocator', allocator, '--' + checks, '--out', target])
+                run([compiler, 'build', source, '--allocator', allocator, '--' + checks, '--out', target])
                 result = run([target])
                 assert not result.stdout and not result.stderr, result
                 for path in paths:

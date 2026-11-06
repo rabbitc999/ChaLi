@@ -68,7 +68,7 @@ def main():
         target = 'x86_64-w64-windows-gnu' if os.name == 'nt' else ('aarch64-unknown-linux-gnu' if platform.machine().lower() in ('aarch64','arm64') else 'x86_64-unknown-linux-gnu')
         for index, flags in enumerate([['--checked'], ['--unchecked'], ['--checked', '--debug']]):
             prefix = work / f'case{index}'
-            command([compiler, 'aot', source, '--emit-asm', '--out', prefix, *flags, *backend], work)
+            command([compiler, 'build', source, '--emit-asm', '--out', prefix, *flags, *backend], work)
             assembly = prefix.with_suffix('.s')
             content = assembly.read_text(encoding='utf-8')
             assert '.text' in content and 'target triple =' not in content and content.strip()
@@ -88,18 +88,18 @@ def main():
             command([*linking, '-Wl,--end-group'], work)
             actual = command([program], work).stdout
             direct = work / f'direct{index}'
-            command([compiler, 'aot', source, '--out', direct, *flags, *backend], work)
+            command([compiler, 'build', source, '--out', direct, *flags, *backend], work)
             direct_program = direct.with_suffix('.exe') if os.name == 'nt' else direct
             assert actual == command([direct_program], work).stdout == 'assembly 48\n'
         for name, triple, machine in [('arm64', 'aarch64-unknown-linux-gnu', 183), ('x64','x86_64-unknown-linux-gnu',62)]:
             prefix = work / name
-            command([compiler, 'aot', source, '--emit-asm', '--target', triple, '--out', prefix, *backend], work)
+            command([compiler, 'build', source, '--emit-asm', '--target', triple, '--out', prefix, *backend], work)
             obj = prefix.with_suffix('.o')
             command([clang, '--target='+triple, '-c', prefix.with_suffix('.s'), '-o', obj], work)
             raw = obj.read_bytes()
             assert raw[:4] == b'\x7fELF' and struct.unpack_from('<H', raw, 18)[0] == machine
             debug_prefix = work / (name + '-debug')
-            command([compiler, 'aot', source, '--emit-asm', '--debug', '--checked', '--target', triple, '--out', debug_prefix, *backend], work)
+            command([compiler, 'build', source, '--emit-asm', '--debug', '--checked', '--target', triple, '--out', debug_prefix, *backend], work)
             debug_assembly = debug_prefix.with_suffix('.s').read_text(encoding='utf-8')
             assert '.debug_info' in debug_assembly and 'chali_debug_catalog' in debug_assembly and 'chali_debug_positions' in debug_assembly
             debug_object = debug_prefix.with_suffix('.o')
@@ -107,21 +107,21 @@ def main():
             debug_bytes = debug_object.read_bytes()
             assert debug_bytes[:4] == b'\x7fELF' and struct.unpack_from('<H', debug_bytes, 18)[0] == machine
         for left, right in itertools.combinations(['--emit-asm','--emit-obj','--emit-llvm'], 2):
-            result = command([compiler,'aot',source,left,right,'--out',work/'invalid'],work,expected=2)
+            result = command([compiler,'build',source,left,right,'--out',work/'invalid'],work,expected=2)
             assert '只能选择一种' in result.stderr
         abi_source = work / 'abi.chl'
         abi_source.write_text('struct Packet{int64 value;};\n#abi("C","missing_native.dll","transform") Packet transform(Packet value);\nvoid main(){Packet p;p.value=7;let result=transform(p);println("{}",result.value);}',encoding='utf-8')
-        command([compiler,'aot',abi_source,'--emit-asm','--out',work/'abi',*backend],work,
+        command([compiler,'build',abi_source,'--emit-asm','--out',work/'abi',*backend],work,
                 environment={'CHALI_ABI_CXX':str(work/'missing-cxx'), 'CHALI_ABI_NO_CACHE':'1'})
         assert (work/'abi.s').is_file() and (work/'abi.abi.cpp').stat().st_size > 0
         assert not (work/'abi.o').exists() and not (work/'abi.exe').exists()
         manifest = work / 'chali.toml'
         native = 'windows-x64' if os.name == 'nt' else ('linux-arm64' if platform.machine().lower() in ('aarch64','arm64') else 'linux-x64')
-        manifest.write_text('[aot]\noutput="assembly"\ntarget="'+native+'"\n',encoding='utf-8')
+        manifest.write_text('[build]\noutput="assembly"\ntarget="'+native+'"\n',encoding='utf-8')
         prefix = work/'configured'
-        command([compiler,'aot',source,'--out',prefix,*backend],work)
+        command([compiler,'build',source,'--out',prefix,*backend],work)
         assert prefix.with_suffix('.s').is_file()
-        command([compiler,'aot',source,'--emit-obj','--out',work/'override',*backend],work)
+        command([compiler,'build',source,'--emit-obj','--out',work/'override',*backend],work)
         assert (work/'override.o').is_file() and not (work/'override.s').exists()
         assert command([compiler,'run',source,'--out',work/'run',*backend],work).stdout == 'assembly 48\n'
     print('assembly: checked/unchecked/debug native roundtrips, two ELF targets including debug source maps, exclusive flags, TOML override, ABI sidecar without a C++ compiler and run default passed')

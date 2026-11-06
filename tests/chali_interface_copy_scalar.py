@@ -44,7 +44,7 @@ def main():
             prefix = work / label
             checked = execute([compiler, 'run', fixture, '--allocator', allocator, '--out', str(prefix) + '-run'], 'run')
             assert checked.stdout == 'interface snapshots and scalar object copy OK\n' and not checked.stderr, (checked, work)
-            execute([compiler, 'aot', fixture, '--allocator', allocator, '--out', prefix], 'build')
+            execute([compiler, 'build', fixture, '--allocator', allocator, '--out', prefix], 'build')
             native = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], 'aot')
             assert native.stdout == checked.stdout and not native.stderr, (native, work)
             if allocator == 'malloc':

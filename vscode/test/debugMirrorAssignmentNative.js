@@ -51,7 +51,7 @@ async function view(client, thread, name) {
 async function main() {
   for (const allocator of ['malloc', 'pool']) {
     const prefix = path.join(work, allocator);
-    const built = spawnSync(compiler, ['aot', source, '--debug', '--checked', '--allocator', allocator, '--out', prefix,
+    const built = spawnSync(compiler, ['build', source, '--debug', '--checked', '--allocator', allocator, '--out', prefix,
       ...(external ? ['--llvm', external] : [])],
       { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
     assert.equal(built.status, 0, built.stdout + built.stderr);

@@ -65,7 +65,7 @@ async function unavailable(client,current,name) {
 async function main() {
   for(const allocator of ['malloc','pool']) {
     const prefix=path.join(work,allocator);
-    const build=spawnSync(compiler,['aot',source,'--debug','--checked','--allocator',allocator,'--out',prefix],{cwd:root,env:process.env,encoding:'utf8',windowsHide:true,timeout:240000});
+    const build=spawnSync(compiler,['build',source,'--debug','--checked','--allocator',allocator,'--out',prefix],{cwd:root,env:process.env,encoding:'utf8',windowsHide:true,timeout:240000});
     assert.equal(build.status,0,build.stdout+build.stderr);
     const client=new DebugClient(root,compiler);
     try {
@@ -105,7 +105,7 @@ async function main() {
   }
   for(const allocator of ['malloc','pool']) {
     const prefix=path.join(work,allocator+'-optimized');
-    const build=spawnSync(compiler,['aot',source,'--debug-optimized','--checked','--allocator',allocator,'--out',prefix],{cwd:root,env:process.env,encoding:'utf8',windowsHide:true,timeout:240000});
+    const build=spawnSync(compiler,['build',source,'--debug-optimized','--checked','--allocator',allocator,'--out',prefix],{cwd:root,env:process.env,encoding:'utf8',windowsHide:true,timeout:240000});
     assert.equal(build.status,0,build.stdout+build.stderr);
     const client=new DebugClient(root,compiler);
     try {

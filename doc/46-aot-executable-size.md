@@ -8,7 +8,7 @@
 
 2026-11-05 在 Windows x64 上使用 ChaLi 1.0.0 静态内置 LLVM 编译器测量。原始发行版对应提交 `76c0c5b`，首次裁剪从提交 `3d9fb60` 重建；后续 C 服务重构继续保留 1.0.0 版本，使用仓库锁定的 LLVM 23.1.4 与 GCC 16.2.0。所有大小均为实际 EXE 文件字节数。
 
-新编译器在正常 `chali aot` 入口完成编译、优化和链接。可执行文件在 Windows 本机运行，使用系统 C 运行库。
+新编译器在正常 `chali build` 入口完成编译、优化和链接。可执行文件在 Windows 本机运行，使用系统 C 运行库。
 
 ## Hello World 基线
 
@@ -97,12 +97,12 @@ Windows x64 实测仅复制 EXE 到新目录运行。只导入三个模块、没
 在仓库根目录运行，`chali.exe` 指向本次重建的静态 LLVM 编译器。
 
 ```powershell
-chali.exe aot tt.chl --lto-mode off --out tmp/tt-off
-chali.exe aot tt.chl --lto-mode full --out tmp/tt-full
-chali.exe aot tt.chl --lto-mode thin --out tmp/tt-thin
+chali.exe build tt.chl --lto-mode off --out tmp/tt-off
+chali.exe build tt.chl --lto-mode full --out tmp/tt-full
+chali.exe build tt.chl --lto-mode thin --out tmp/tt-thin
 Get-Item tmp/tt-off.exe,tmp/tt-full.exe,tmp/tt-thin.exe |
     Select-Object Name,Length
-chali.exe aot example/samples/dynamic_array.chl --lto-mode full --out tmp/dynamic-array
+chali.exe build example/samples/dynamic_array.chl --lto-mode full --out tmp/dynamic-array
 ./tmp/dynamic-array.exe
 ```
 

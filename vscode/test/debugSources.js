@@ -23,7 +23,7 @@ async function view(client, thread) {
 async function scenario(name, lines, points, inspect, allocator = 'malloc') {
   const source = path.join(work, name + '.chl'); fs.writeFileSync(source, lines.join('\n') + '\n');
   const prefix = path.join(work, name);
-  const build = spawnSync(compiler, ['aot', source, '--debug', '--checked', '--allocator', allocator, '--out', prefix], { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
+  const build = spawnSync(compiler, ['build', source, '--debug', '--checked', '--allocator', allocator, '--out', prefix], { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
   assert.equal(build.status, 0, build.stdout + build.stderr);
   if (name === 'macro-private') {
     const executable = fs.readFileSync(prefix + (process.platform === 'win32' ? '.exe' : ''));
@@ -42,7 +42,7 @@ async function scenario(name, lines, points, inspect, allocator = 'malloc') {
     const outputs = [];
     for (const [label, executable] of [['before', process.env.CHALI_RELEASE_COMPARE], ['after', compiler]]) {
       const irPrefix = path.join(work, 'release-' + label);
-      const emitted = spawnSync(executable, ['aot', source, '--unchecked', '--emit-llvm', '--allocator', allocator, '--out', irPrefix], { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
+      const emitted = spawnSync(executable, ['build', source, '--unchecked', '--emit-llvm', '--allocator', allocator, '--out', irPrefix], { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
       assert.equal(emitted.status, 0, emitted.stdout + emitted.stderr);
       outputs.push(fs.readFileSync(irPrefix + '.ll', 'utf8').replace(/\r\n/g, '\n'));
     }

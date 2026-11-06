@@ -37,7 +37,7 @@ def main():
                 source = work / f'{allocator}-{checks}.chl'
                 source.write_text(template.replace('__ROOT__', json.dumps(tree.as_posix(), ensure_ascii=False)), encoding='utf-8')
                 target = work / f'{allocator}-{checks}.exe'
-                run([compiler, 'aot', source, '--allocator', allocator, '--' + checks, '--out', target])
+                run([compiler, 'build', source, '--allocator', allocator, '--' + checks, '--out', target])
                 result = run([target])
                 assert result.stdout == 'filesystem paths, metadata, copies and errors OK\n' and not result.stderr, result
                 print(f'{allocator}/{checks}: sorted Unicode paths, owned copies, UTC and all error classes passed', flush=True)

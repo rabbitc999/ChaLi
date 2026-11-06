@@ -128,7 +128,7 @@ inline bool &apiReady()
 /*
  * 常驻的错误文本一律放在**定长 C 缓冲**里，不用 Memory::String：宿主侧的内存
  * 分配器在进程退出时会核对活动块，长期挂着的 Memory::String 会被算成泄漏。
- * 只有返回值（VM 会立刻复制走）才临时构造 Memory::String。
+ * 只有返回值（运行时 会立刻复制走）才临时构造 Memory::String。
  */
 constexpr std::size_t kErrorTextSize = 512;
 

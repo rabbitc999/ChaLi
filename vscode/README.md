@@ -2,7 +2,7 @@
 
 **English** · [简体中文](README.cn.md)
 
-Default `run` and `aot` publish final outputs beside the `.chl` source, including executables produced by run. Intermediate files use a unique workspace under the source-adjacent `.chali` directory, hidden on Windows and removed when empty after success or failure. Existing user files are preserved. Explicit output/retention settings remain available. VS Code defaults to source-adjacent output; static VSIX packages omit `Chali › Build: Llvm Path`, while external packages require it and pass `--llvm` for both build and run.
+Default `run` and `build` publish final outputs beside the `.chl` source, including executables produced by run. Intermediate files use a unique workspace under the source-adjacent `.chali` directory, hidden on Windows and removed when empty after success or failure. Existing user files are preserved. Explicit output/retention settings remain available. VS Code defaults to source-adjacent output; static VSIX packages omit `Chali › Build: Llvm Path`, while external packages require it and pass `--llvm` for both build and run.
 
 The extension runs the compiler's native language server (`chali lsp`). The VSIX includes a compiler; Python is needed for repository build and verification tools, not for editor language services. The compiler and extension versions are 1.0.0.
 
@@ -17,7 +17,7 @@ The extension runs the compiler's native language server (`chali lsp`). The VSIX
 
 ## Build and debug
 
-Use **ChaLi: Select Project Target**, **ChaLi: Select AOT Output**, or **ChaLi: Open Project Configuration**. Changes remain undoable edits in the TOML buffer and preserve comments and multiline strings. Build saves the source and dirty manifest before reading them. The status bar shows the actual compiler variant, saved configuration and pending configuration edits.
+Use **ChaLi: Select Project Target**, **ChaLi: Select Build Output**, or **ChaLi: Open Project Configuration**. Changes remain undoable edits in the TOML buffer and preserve comments and multiline strings. Build saves the source and dirty manifest before reading them. The status bar shows the actual compiler variant, saved configuration and pending configuration edits.
 
 Registered targets are Windows x64, Linux x64 and Linux ARM64. Output can be an executable, object file or LLVM IR. A cross-target object does not establish that its target runtime or executable deployment has been tested. See the [toolchain reference](../doc/en/09-toolchain.md).
 

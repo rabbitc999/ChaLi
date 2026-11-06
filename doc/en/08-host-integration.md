@@ -61,7 +61,7 @@ argument widths, calling convention and struct field order.
 Build a shared library with `--shared --export` and use the generated header:
 
 ```sh
-chali aot app.chl --out build/app --shared --export add
+chali build app.chl --out build/app --shared --export add
 ```
 
 `build/app.h` contains the C declarations:
@@ -83,7 +83,7 @@ return C scalars; pass structs by value and use the reference form (`T *`) when 
 in place. Without `--export` the header only exposes `chali_init` and `chali_finish`.
 
 The `--shared` product is a shared library whose loading and lifetime belong to the host. A plain
-`chali aot app.chl` is a self-contained executable — the form you ship to end users; see
+`chali build app.chl` is a self-contained executable — the form you ship to end users; see
 [build artifacts](../15-artifacts.md).
 
 ## Synchronous callbacks
@@ -110,7 +110,7 @@ Design the interface explicitly with scalars, references or a buffer you manage 
   attach GDB — see [native debugging](43-native-debugging.md).
 - `--memory-size` sets the runtime heap budget; process boundaries and threads are in
   [capabilities](17-capabilities.md).
-- There is no VM sandbox here: C code reached through `#abi` runs with the host's privileges, so the
+- There is no runtime sandbox here: C code reached through `#abi` runs with the host's privileges, so the
   interface design is the security boundary.
 
 See [toolchain](09-toolchain.md), [AOT compilation](38-aot.md) and the

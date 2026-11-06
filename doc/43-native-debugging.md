@@ -1,4 +1,4 @@
-# 原生 AOT 调试
+# 构建调试
 
 <!-- LANGUAGE NAVIGATION -->
 [English](en/43-native-debugging.md) · **简体中文**
@@ -6,7 +6,7 @@
 
 Windows 的线程调试观察缓冲使用 FLS 管理的独立宿主状态；线程退出时撤销目录项并释放快照缓冲，模块卸载前释放槽及剩余状态，避免旧 MinGW 仿真 TLS 先释放存储、后调用 C++ 析构造成失效访问。其他平台继续使用原生 TLS 路径。
 
-`run` 使用 checked AOT 编译执行，`aot` 默认生成 unchecked 原生产物。原生调试使用真实机器码、DWARF 源码行和帧槽。
+`run` 使用 checked AOT 编译执行，`build` 默认生成 unchecked 原生产物。原生调试使用真实机器码、DWARF 源码行和帧槽。
 
 ## VS Code
 
@@ -27,7 +27,7 @@ Linux 的编辑器宿主使用 Node.js 20.8 或更高版本时，终端采用会
 }
 ```
 
-`debuggerPath` 指定 GDB 路径；未设置时依次使用 `CHALI_GDB` 和 PATH 中的 `gdb`。调试器架构应与产物匹配。编译器、原生适配器和 GDB 子进程继承同一工程 `tmp/`；临时原生产物保留在该目录便于复核。断点解析失败会显示未验证及诊断，不回退到 VM。
+`debuggerPath` 指定 GDB 路径；未设置时依次使用 `CHALI_GDB` 和 PATH 中的 `gdb`。调试器架构应与产物匹配。编译器、原生适配器和 GDB 子进程继承同一工程 `tmp/`；临时原生产物保留在该目录便于复核。断点解析失败会显示未验证及诊断，不回退到运行时。
 
 命令“ChaLi：检查调试环境”核对实际编译器构建信息及 GDB 版本；`chali.debuggerPath` 可设置默认 GDB，单次配置的 `debuggerPath` 优先。Windows GDB 的启动参数编码可能依赖系统代码页，当前 ChaLi 调试产物额外读取带长度的 UTF-8 参数文件，保留空串、中文及非 BMP 字符；正常发布程序仍从进程入口取得参数。
 
@@ -38,8 +38,8 @@ Linux 的编辑器宿主使用 Node.js 20.8 或更高版本时，终端采用会
 `--debug` 使用 O0 开发调试；`--debug-optimized` 同时保留 DWARF／原生符号并使用 LLVM O3 及所选 LTO 模式。三种命令行选项 `--debug`、`--debug-optimized`、`--no-debug` 之间按出现顺序选择，后者覆盖前者。工程 `debug = true` 沿用项目调试开启规则，不会把已经明确选择的 O3 模式降为 O0。
 
 ```sh
-chali aot main.chl --debug --out build/development
-chali aot main.chl --debug-optimized --out build/optimized
+chali build main.chl --debug --out build/development
+chali build main.chl --debug-optimized --out build/optimized
 ```
 
 VSCode 源码构建配置使用 `"debugMode": "development"`（缺省）或 `"debugMode": "optimized"`。已有产物启动和附加以产物自身的调试目录为准，配置不会重新优化已有二进制。加载 O3 目录后输出明确提示，变量作用域标注 O3。
@@ -113,7 +113,7 @@ python tools/run_module_gates.py debug --chali PATH --random-recheck 1
 ## 命令行
 
 ```text
-chali aot app.chl --checked --debug --out build/app-debug
+chali build app.chl --checked --debug --out build/app-debug
 gdb build/app-debug.exe
 ```
 
@@ -147,7 +147,7 @@ VSCode 的悬停、监视及调试控制台查看要求当前暂停的有效源�
 
 单条表达式限 4096 个字符、512 个词法项、64 层括号／运算递归；字段查询每次最多 1000 项，数组和 List 按所求索引直接取一项，仍受共享内存预算约束。基础变量修改见下文；断点条件和日志插值继续使用前文说明的 GDB 原生语法。
 
-源码级调试需要源码文件仍在记录的位置。调试适配器使用现有编译器与工具链生成机器码；不需要安装单独的 VM，也不把运行时函数值强转成机器函数指针。
+源码级调试需要源码文件仍在记录的位置。调试适配器使用现有编译器与工具链生成机器码；不需要安装单独的运行时，也不把运行时函数值强转成机器函数指针。
 
 ## 基础变量修改
 

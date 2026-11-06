@@ -35,7 +35,7 @@ On CentOS Stream 9:
 sudo dnf install ./chali-1.0.0-llvm-external-centos-9-x64.rpm
 ```
 
-The `llvm-external` variant needs compatible Clang and LLD for `run` and `aot`. On CentOS Stream 9, install both with `sudo dnf install clang lld`. Clang alone cannot use `-fuse-ld=lld` when `ld.lld` is missing. Native GUI, audio, XML and cryptography archives are embedded in the compiler; generated programs do not require separately deployed ChaLi, raylib, Expat or libsodium shared libraries.
+The `llvm-external` variant needs compatible Clang and LLD for `run` and `build`. On CentOS Stream 9, install both with `sudo dnf install clang lld`. Clang alone cannot use `-fuse-ld=lld` when `ld.lld` is missing. Native GUI, audio, XML and cryptography archives are embedded in the compiler; generated programs do not require separately deployed ChaLi, raylib, Expat or libsodium shared libraries.
 
 A matching tar.gz is also available from the packager; extract it and place `usr/bin/chali` on your PATH. Compiler installation does not provision application databases, static web pages or application-specific C ABI libraries.
 
@@ -100,4 +100,4 @@ See [Microsoft HTML Help](https://learn.microsoft.com/en-us/previous-versions/wi
 
 Intermediate CHM HTML and project files stay under the repository's `tmp/`. Use `--prepare-only` on any platform to generate the project; CHM compilation requires Windows. Use `--repo PATH` when running separately downloaded scripts. Both formats share the same sources and include the book and examples by default. The HTML script also provides `--api-only`.
 
-See [current capabilities](17-capabilities.md) and [LLVM AOT export](38-aot.md) for supported platform behavior and compiler-side LLVM variants.
+See [current capabilities](17-capabilities.md) and [LLVM release build](38-aot.md) for supported platform behavior and compiler-side LLVM variants.

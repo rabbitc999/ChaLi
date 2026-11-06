@@ -28,7 +28,7 @@ def main():
                 text=original if options.legacy_only else original.replace('void main() {','void main() {\ncheckStorage<bool>(true,false);checkStorage<char>(\'A\',\'z\');')
                 source.write_text(text,encoding='utf-8')
                 target=work/f'{allocator}-{checks}.exe'
-                run([compiler,'aot',source,'--allocator',allocator,'--'+checks,'--out',target]);result=run([target])
+                run([compiler,'build',source,'--allocator',allocator,'--'+checks,'--out',target]);result=run([target])
                 assert result.stdout=='ten scalar buffers, boundaries, copies and iteration OK\n' and not result.stderr,result
                 print(f'{allocator}/{checks}: {10 if options.legacy_only else 12} scalar buffers, extrema, copies, clear and iteration passed',flush=True)
         if not options.legacy_only:

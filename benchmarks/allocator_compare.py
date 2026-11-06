@@ -90,7 +90,7 @@ def main():
                     shutil.copy2(library, target_library)
                 else:
                     prefix = folder / 'kernel'
-                    report['builds'].append(execute([compiler, 'aot', ROOT / 'benchmarks/strings/cases.chl', '--shared', '--unchecked', '--allocator', allocator, '--out', prefix]))
+                    report['builds'].append(execute([compiler, 'build', ROOT / 'benchmarks/strings/cases.chl', '--shared', '--unchecked', '--allocator', allocator, '--out', prefix]))
                     target_library = prefix.with_suffix('.dll' if os.name == 'nt' else '.so')
                     report['builds'].append(execute([llvm_compiler(), '-O3', '-DNDEBUG', '-DCHALI_FEATURE_AOT=1', '-Dfeature_work=string_concat', ROOT / 'benchmarks/features/timing.c', target_library, '-o', product]))
                     check = execute([product, '--verify'])

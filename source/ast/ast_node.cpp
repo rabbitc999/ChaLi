@@ -313,7 +313,7 @@ NodePtr Node::enumNew(Memory::String typeName, Memory::String variant, Memory::V
  * @brief 堆分配：`(alloc, 字节数, _, t)`，表达式的值是拿到的地址（`i64`）。
  *
  * 与 `arrayNew` / `structNew` 的区别：那两个把对象放进**数据区**（每个声明点一块、
- * 静态布局），这里要的是**运行期才知道大小**的对象，走虚拟机的堆；什么时候还回去
+ * 静态布局），这里要的是**运行期才知道大小**的对象，走运行时的堆；什么时候还回去
  * 由程序自己 `freeMemory`（栈机那边是 `(free, 地址, _, _)`）。返回 0 表示没分配到。
  * @param bytes 内存区域或数据的字节数。
  * @retval 生成的低层语法节点。

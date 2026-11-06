@@ -92,7 +92,7 @@ def build(case, config, compiler, scratch):
 
     if config == 'chali-aot':
         prefix = folder / 'kernel'
-        command([compiler, 'aot', HERE / (case + '.chl'), '--shared', '--unchecked',
+        command([compiler, 'build', HERE / (case + '.chl'), '--shared', '--unchecked',
                  '--allocator', 'malloc', '--out', prefix])
         library = prefix.with_suffix('.dll' if os.name == 'nt' else '.so')
         command([llvm_compiler(), '-O3', '-DNDEBUG', '-DCHALI_FEATURE_AOT=1',

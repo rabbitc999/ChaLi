@@ -1,6 +1,6 @@
 /**
  * @file runtime_slot.hpp
- * @brief VM 内部 runtime slot 模块的类型与接口。
+ * @brief 运行时 内部 runtime slot 模块的类型与接口。
  */
 #pragma once
 #include "stackvm.hpp"

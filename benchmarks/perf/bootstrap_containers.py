@@ -173,7 +173,7 @@ def main():
                 selected_compiler = baseline if variant == 'baseline' else compiler
                 target = work / (case + '-' + name + ('.exe' if os.name == 'nt' else ''))
                 if backend == 'aot':
-                    entry['builds'][name] = execute([selected_compiler, 'aot', path, '--out', target])
+                    entry['builds'][name] = execute([selected_compiler, 'build', path, '--out', target])
                     if not target.is_file() and Path(str(target) + '.exe').is_file():
                         target = Path(str(target) + '.exe')
                     entry['commands'][name] = [str(target)]

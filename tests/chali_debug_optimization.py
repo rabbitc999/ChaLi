@@ -22,7 +22,7 @@ def main():
                  (['--debug-optimized', '--no-debug'], None), (['--no-debug', '--debug-optimized'], True)]
         for index, (flags, optimized) in enumerate(cases):
             prefix = work / str(index)
-            result = subprocess.run([str(compiler), 'aot', str(source), '--emit-llvm', *flags, '--out', str(prefix)],
+            result = subprocess.run([str(compiler), 'build', str(source), '--emit-llvm', *flags, '--out', str(prefix)],
                                     cwd=work, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=180)
             assert result.returncode == 0, (flags, result.stdout, result.stderr)
             llvm = prefix.with_suffix('.ll').read_text(encoding='utf-8')
@@ -33,7 +33,7 @@ def main():
                 assert ('ptr blockaddress(' in llvm) == (not optimized)
                 assert ('DISPFlagOptimized' in llvm) == optimized
         (work / 'chali.toml').write_text('[chali]\nmain="main.chl"\ndebug=true\n', encoding='utf-8')
-        result = subprocess.run([str(compiler), 'aot', str(source), '--debug-optimized', '--emit-llvm', '--out', 'project'],
+        result = subprocess.run([str(compiler), 'build', str(source), '--debug-optimized', '--emit-llvm', '--out', 'project'],
                                 cwd=work, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=180)
         assert result.returncode == 0, (result.stdout, result.stderr)
         assert 'producer: "ChaLi", isOptimized: true' in (work / 'project.ll').read_text(encoding='utf-8')

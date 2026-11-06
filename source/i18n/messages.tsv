@@ -229,7 +229,7 @@ ChaLi 标准库手册|ChaLi standard library manual
   -I, --include-dir 目录 追加模块搜索目录（也可写 -I目录）\n|  -I, --include-dir DIR  Add a module search directory; -IDIR is also accepted\n
   --include-path 目录    追加模块搜索目录\n|  --include-path DIR    Add a module search directory\n
 用法：chali test [路径...] [--filter 文本] [--backend interpret] [--timeout 秒] [--json\p--list]\n|Usage: chali test [paths...] [--filter TEXT] [--backend interpret] [--timeout SECONDS] [--json\p--list]\n
-运行示例输出 `Hello, ChaLi!`。开发命令原生内建，无需 Python；程序通过 VM 执行。\n|The example prints `Hello, ChaLi!`. Development commands are built in and need no Python; programs execute in the VM.\n
+运行示例输出 `Hello, ChaLi!`。开发命令原生内建，无需 Python；程序通过原生编译执行。\n|The example prints `Hello, ChaLi!`. Development commands are built in and need no Python; programs compile and run natively.\n
 执行已取消|Execution cancelled
 跨线程传值不支持带捕获的函数值|Capturing function values cannot be transferred across threads
 通道消息类型不匹配|Channel message type mismatch
@@ -266,4 +266,5 @@ chali: 无法生成标准库二进制预编译资产\n|chali: cannot generate th
   --quiet                不输出编译完成提示（不隐藏错误或程序输出）\n|  --quiet                Suppress compilation completion notices; keep errors and program output\n
   --out 前缀             生成产物的文件名前缀（缺省与源码同级）\n|  --out PREFIX           Output file prefix (default: beside the source)\n
   --keep-artifacts       保留源码旁隐藏 .chali 下的中间产物（缺省自动清理）\n|  --keep-artifacts       Retain intermediates in the source-adjacent hidden .chali workspace\n
-多线程已关闭；run／aot 构建时去掉 --no-threads|Multithreading is disabled; remove --no-threads when building with run/aot
+多线程已关闭；run／build 构建时去掉 --no-threads|Multithreading is disabled; remove --no-threads when building with run/build
+  build          发布构建，默认 unchecked（--target、--emit-llvm、--emit-obj、--emit-asm、--shared、--export）\n|  build          Release build, unchecked by default (--target, --emit-llvm, --emit-obj, --emit-asm, --shared, --export)\n

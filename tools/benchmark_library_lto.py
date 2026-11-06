@@ -145,7 +145,7 @@ def main():
             else:
                 report['processor'] = Path('/proc/cpuinfo').read_text() if Path('/proc/cpuinfo').is_file() else platform.processor()
             manifest = work / 'chali.toml'
-            manifest.write_text('[aot]\nallocator = "malloc"\nlto = "full"\nlibrary_implementation = "native"\n', encoding='utf-8')
+            manifest.write_text('[build]\nallocator = "malloc"\nlto = "full"\nlibrary_implementation = "native"\n', encoding='utf-8')
             shutil.copy2(manifest, frozen / 'chali.toml')
             report['projectSha256'] = digest(manifest)
             for name in ['base', 'bridge', *CASES]:
@@ -193,14 +193,14 @@ def main():
 
             for case in CASES:
                 native = work / (case + '-native')
-                object_command = [compiler, 'aot', work / (case + '.chl'), '--shared', '--export', 'work', '--emit-obj',
+                object_command = [compiler, 'build', work / (case + '.chl'), '--shared', '--export', 'work', '--emit-obj',
                                   '--lto-mode', 'off', *common, '--out', native]
                 execute(object_command, work)
                 for name, implementation, mode in VARIANTS:
                     directory = work / case / name
                     directory.mkdir(parents=True)
                     prefix = directory / 'kernel'
-                    aot = [compiler, 'aot', work / (case + '.chl'), '--shared', '--export', 'work', *common,
+                    aot = [compiler, 'build', work / (case + '.chl'), '--shared', '--export', 'work', *common,
                            '--library-implementation', implementation, '--lto-mode', mode, '--out', prefix]
                     execute(aot, work)
                     driver = driver_for(prefix.with_suffix(extension), 'driver')

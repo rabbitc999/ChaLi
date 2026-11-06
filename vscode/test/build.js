@@ -42,8 +42,8 @@ async function main() {
     assert.equal(commands.size, 2);
     assert.equal(commands.has('chali.buildSvmb'), false);
     assert.throws(() => buildArguments('svmb', source, 'prefix'), /未知构建格式/);
-    assert.deepEqual(buildArguments('exe', source, 'prefix', { llvmPath: 'clang space', checked: true }), ['aot', source, '--out', 'prefix', '--llvm', 'clang space', '--checked']);
-    assert.deepEqual(buildArguments('exe', source, 'prefix', { checked: false }), ['aot', source, '--out', 'prefix', '--unchecked']);
+    assert.deepEqual(buildArguments('exe', source, 'prefix', { llvmPath: 'clang space', checked: true }), ['build', source, '--out', 'prefix', '--llvm', 'clang space', '--checked']);
+    assert.deepEqual(buildArguments('exe', source, 'prefix', { checked: false }), ['build', source, '--out', 'prefix', '--unchecked']);
     await commands.get('chali.build')();
     assert.deepEqual(errors, [], logs.join('')); assert.equal(saved, 1);
     const prefix = path.join(directory, settings['build.outputDirectory'], 'hello & 中文');
@@ -95,7 +95,7 @@ async function main() {
     const manifestPath = path.join(directory, 'chali.toml');
     let configSaved = 0;
     const manifest = { uri: uri(manifestPath), isDirty: true,
-      text: '[aot]\ntarget="linux-arm64"\noutput="object"\n',
+      text: '[build]\ntarget="linux-arm64"\noutput="object"\n',
       async save() { ++configSaved; fs.writeFileSync(manifestPath, this.text); this.isDirty = false; return true; } };
     fs.writeFileSync(manifestPath, '');
     vscode.workspace.textDocuments.push(manifest);
@@ -111,11 +111,11 @@ async function main() {
       assert.equal(object.subarray(0, 4).toString('hex'), '7f454c46'); assert.equal(object.readUInt16LE(18), 183);
       await commands.get('chali.buildExe')(uri(source));
       assert.equal(errors.length, 3); assert.match(errors[2], /object, assembly or LLVM IR/);
-      manifest.text = '[aot]\ntarget="linux-arm64"\noutput="llvm"\n'; manifest.isDirty = true;
+      manifest.text = '[build]\ntarget="linux-arm64"\noutput="llvm"\n'; manifest.isDirty = true;
       await commands.get('chali.build')(uri(source));
       assert.equal(errors.length, 3, errors.join('\n')); assert.equal(configSaved, 2);
       assert.ok(fs.readFileSync(prefix + '.ll', 'utf8').includes('aarch64-unknown-linux-gnu'));
-      manifest.text = '[aot]\ntarget="linux-arm64"\noutput="assembly"\n'; manifest.isDirty = true;
+      manifest.text = '[build]\ntarget="linux-arm64"\noutput="assembly"\n'; manifest.isDirty = true;
       await commands.get('chali.build')(uri(source));
       assert.equal(errors.length, 3, errors.join('\n')); assert.equal(configSaved, 3);
       const assembly = fs.readFileSync(prefix + '.s', 'utf8');

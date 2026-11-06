@@ -1,6 +1,6 @@
 /**
  * @file value_literals.hpp
- * @brief VM 内部 value literals 模块的类型与接口。
+ * @brief 运行时 内部 value literals 模块的类型与接口。
  */
 #pragma once
 #include "runtime_objects.hpp"
@@ -82,7 +82,7 @@ bool floatFitsInteger(double value, const TypeInfo &type);
 double normalizeFloat(double value, int bits);
 
 /**
- * @brief 虚拟机自己的堆：一块连续的字节区 + 空闲块表。
+ * @brief 运行时自己的堆：一块连续的字节区 + 空闲块表。
  *
  * **为什么不放在数据区里**：数据区（`.data.bin`）是编译期定好符号与槽位的静态内存，
  * 程序跑起来只有那一片；而 `new` / `malloc` 要多少字节是运行期才知道的，也不该跟

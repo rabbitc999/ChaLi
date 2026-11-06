@@ -20,7 +20,7 @@
 /**
  * @brief 把双精度值按 `%.*f` 格式化成固定小数位文本。
  * @param frame 帧：0 = 值，1 = 小数位数（负数按 3 位）。
- * @return 新 VM 字符串；不含去尾零处理。
+ * @return 新 运行时 字符串；不含去尾零处理。
  */
 static void abiStrFixed(ChaliAbiFrame *frame)
 {

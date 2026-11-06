@@ -1,6 +1,6 @@
 /**
  * @file object_values.hpp
- * @brief VM 内部 object values 模块的类型与接口。
+ * @brief 运行时 内部 object values 模块的类型与接口。
  */
 #pragma once
 #include "runtime_objects.hpp"

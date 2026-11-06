@@ -2172,7 +2172,7 @@ void disposeRecord(stackvm::NativeCallContext &host, void *record)
     }
 }
 /**
- * @brief 暴露拥有型子值供 VM 的通用消息快照协议遍历。
+ * @brief 暴露拥有型子值供 运行时 的通用消息快照协议遍历。
  * @param record 宿主记录。
  * @param visitor 处理并可重写子值句柄的访问器。
  * @return 所有字段处理成功时返回 true。
@@ -2241,7 +2241,7 @@ inline bool textRecord(stackvm::NativeCallContext &host, const void *record, sta
     return true;
 }
 /**
- * @brief 返回胶水独占的描述符身份，VM 不根据名称选择存储实现。
+ * @brief 返回胶水独占的描述符身份，运行时 不根据名称选择存储实现。
  * @param kind 胶水存储类别。
  * @return 静态生命周期的通用记录描述符。
  */

@@ -32,10 +32,10 @@ def main():
         plain.write_text('void main(){}\n', encoding='utf-8')
         for enabled in (False, True):
             prefix = work / ('plain-on' if enabled else 'plain-off')
-            run([chali, 'aot', plain, '--emit-llvm', '--reflection' if enabled else '--no-reflection', '--out', prefix])
+            run([chali, 'build', plain, '--emit-llvm', '--reflection' if enabled else '--no-reflection', '--out', prefix])
             assert prefix.with_suffix('.ll').is_file()
             assert not prefix.with_suffix('.quad').exists()
-            run([chali, 'aot', plain, '--reflection' if enabled else '--no-reflection', '--out', prefix])
+            run([chali, 'build', plain, '--reflection' if enabled else '--no-reflection', '--out', prefix])
             assert run([str(prefix) + EXE]).stdout == ''
         annotated = work / 'annotated.chl'
         annotated.write_text('''import std::reflect;
@@ -66,11 +66,11 @@ void main(){
 }
 ''', encoding='utf-8')
         prefix = work / 'annotated'
-        run([chali, 'aot', annotated, '--reflection', '--out', prefix])
+        run([chali, 'build', annotated, '--reflection', '--out', prefix])
         assert run([str(prefix) + EXE]).stdout == 'reflection metadata OK\n'
         bad = work / 'bad.chl'
         bad.write_text('@annotation Label(text:int32)\n@Label("wrong")\nvoid main(){}\n', encoding='utf-8')
-        run([chali, 'aot', bad, '--emit-llvm', '--reflection', '--out', work / 'bad'], success=False)
+        run([chali, 'build', bad, '--emit-llvm', '--reflection', '--out', work / 'bad'], success=False)
     print(f'反射原生元数据：{checks} 项集成检查通过')
 
 

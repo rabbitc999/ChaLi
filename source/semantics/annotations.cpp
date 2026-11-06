@@ -277,7 +277,7 @@ bool ValidateAnnotations()
             // 标准库的预定义注解不妨碍关闭反射时使用基础数据库与 JSON 入口。
             if (node.kind == MNode::AnnotationDecl && (node.module == "std::sql" || node.module == "std::json")) return true;
 #if !CHALI_WITH_REFLECTION || !STACKVM_WITH_REFLECTION
-            // 裁剪构建不生成元数据；高级入口保留到 VM 执行时统一报告 panic。
+            // 裁剪构建不生成元数据；高级入口保留到 运行时 执行时统一报告 panic。
             if (node.kind == MNode::AnnotationDecl || !node.annotations.empty()) return true;
 #endif
             if (node.kind == MNode::AnnotationDecl || !node.annotations.empty())

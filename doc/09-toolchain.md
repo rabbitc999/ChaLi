@@ -4,7 +4,9 @@
 [English](en/09-toolchain.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-`run` 使用 checked AOT 编译执行，`aot` 默认 unchecked 导出。原生调试见[原生 AOT 调试](43-native-debugging.md)。
+GitHub 在每次 push 和 pull request 时运行[命令与文档门禁](../.github/workflows/cli-contract.yml)，核对 `build`、`[build]`、构建调试入口、旧文案、参数归一化及编辑器项目配置。可在本地执行 `python tests/chali_cli_contract.py` 和 `python tests/chali_doc_history.py`。实际原生产物验收使用 `python tests/chali_build_command.py --chali 编译器路径`。
+
+`run` 使用 checked AOT 编译执行，`build` 默认 unchecked 导出。原生调试见[构建调试](43-native-debugging.md)。
 
 ChaLi 默认通过 checked AOT 执行程序。源码经过前处理、语法与语义检查，直接从已检查的 AST 生成 LLVM IR；正常路径绕过四元式生成及组装，可显式使用 [AOT 编译入口](38-aot.md)生成 LLVM 模块与原生产物。
 
@@ -14,12 +16,12 @@ ChaLi 默认通过 checked AOT 执行程序。源码经过前处理、语法与�
 chali run app.chl
 chali check app.chl
 chali check app.chl json
-chali aot app.chl --emit-llvm out build/app
-chali aot app.chl --out build/app
+chali build app.chl --emit-llvm out build/app
+chali build app.chl --out build/app
 ```
 
 直接传入 `.chl` 文件也会运行，文件后的参数传给程序；显式 `run` 可配置产物前缀。
-`aot --emit-llvm --out 前缀` 直接生成 `.ll`，不生成四元式中间文件；运行时资产与标准库内嵌在编译器中。
+`build --emit-llvm --out 前缀` 直接生成 `.ll`，不生成四元式中间文件；运行时资产与标准库内嵌在编译器中。
 
 ## 模块函数调用诊断
 
@@ -52,7 +54,7 @@ chali clear out build/compiler
 ## 默认构建与优化
 
 反射是语言的固定组成、不可裁剪：前端及运行时始终编入，编译流程始终执行完整的反射处理；`--no-reflection` 只决定这次产物写不写反射元数据，不减少工作量。四元式不做内部优化，优化全部交给 LLVM；原生发布构建默认 O3、LTO 与死代码消除。
-`--memory-size` 与 `--step-limit` 设置 VM 资源预算；宿主线程默认启用，`--no-threads` 关闭隔离线程。编译器帮助列出当前支持的选项。
+`--memory-size` 与 `--step-limit` 设置运行时资源预算；宿主线程默认启用，`--no-threads` 关闭隔离线程。编译器帮助列出当前支持的选项。
 
 后端调试开关只影响诊断输出与执行路径，不改变程序语义：
 
@@ -191,10 +193,10 @@ LSP 计时前后检查 CPU，占用达到 40% 或读不到可靠计数时只验�
 
 在具有内嵌语言源码的标准库声明上使用“转到定义”，会打开 `chali-stdlib:` 只读文档。位置来自实际声明索引，源码和索引按需保存在内存；扩展不生成源码副本，也不允许重命名标准库声明。没有语言源码声明的后端内建入口不会伪造函数体。重启服务后，已打开的标准库视图会刷新。
 
-命令面板提供“选择项目目标”“选择 AOT 输出”和“打开项目配置”。配置编辑使用编译器的 TOML 解析／保留来源序列化，保留其他字段、注释和多行字符串；变更先留在可撤销的编辑缓冲区，状态栏显示未保存状态。构建时先保存源文件和已打开的脏清单，再读取实际目标。例如：
+命令面板提供“选择项目目标”“选择构建输出”和“打开项目配置”。配置编辑使用编译器的 TOML 解析／保留来源序列化，保留其他字段、注释和多行字符串；变更先留在可撤销的编辑缓冲区，状态栏显示未保存状态。构建时先保存源文件和已打开的脏清单，再读取实际目标。例如：
 
 ```toml
-[aot]
+[build]
 target = "linux-arm64"
 output = "object"
 allocator = "malloc"
@@ -214,9 +216,9 @@ allocator = "malloc"
 
 ## 目标机器汇编
 
-`chali aot app.chl --emit-asm --out build/app` 按实际目标、CPU、检查及优化／调试设置导出 `build/app.s`。这是机器汇编，与 LLVM IR 文本 `.ll` 不同。输出在对象生成和链接之前停止，跨目标导出不要求准备目标运行时链接资产。静态变体使用内置 LLVM，外置变体使用 clang；采用相应后端默认语法（x86 为 AT&T，AArch64 为目标语法），不表示兼容 NASM／MASM。
+`chali build app.chl --emit-asm --out build/app` 按实际目标、CPU、检查及优化／调试设置导出 `build/app.s`。这是机器汇编，与 LLVM IR 文本 `.ll` 不同。输出在对象生成和链接之前停止，跨目标导出不要求准备目标运行时链接资产。静态变体使用内置 LLVM，外置变体使用 clang；采用相应后端默认语法（x86 为 AT&T，AArch64 为目标语法），不表示兼容 NASM／MASM。
 
-项目可设置 `[aot] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked AOT。VSCode 输出选择和构建支持汇编及 `.s` 后缀。
+项目可设置 `[build] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked AOT。VSCode 输出选择和构建支持汇编及 `.s` 后缀。
 
 同时保留 `.ll` 和适用的 C ABI 头文件；复杂 C ABI 还可能生成 `.abi.cpp` 封送侧文件，单独的汇编文件不等于已链接应用。重新汇编和最终链接需要匹配的目标工具链、运行时及依赖。独立汇编、链接与归档入口见下文。
 
@@ -225,7 +227,7 @@ allocator = "malloc"
 ```sh
 chali asm native/add.s --target windows-x64 --out build/add.obj -I native/include
 chali asm native/add.s --target linux-x64 --out build/add.o
-chali aot main.chl --asm native/add.s --asm-include native/include --out build/app
+chali build main.chl --asm native/add.s --asm-include native/include --out build/app
 ```
 
 `asm` 每次接受一个 `.s` 和完整输出路径。不写 `--out` 时，Windows 默认 `.obj`，Linux 默认 `.o`。支持 `--target`、`--cpu`、`--debug`、`-I DIR`／`-IDIR`、`--include-path DIR` 和 `--llvm CLANG`。源指令必须匹配目标和 CPU；采用 LLVM 的 GAS 兼容语法，不处理 `.S` 预处理、NASM 或 MASM。包含目录先加入源文件所在目录，再按显式目录顺序搜索。主输入最多 64 MiB；该入口是编译工具，不是面向不可信代码的沙箱。

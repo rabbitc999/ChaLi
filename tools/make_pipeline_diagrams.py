@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""绘制中英文编译与 AOT 导出流程图；沿用总览图主题，三倍绘制后降采样。"""
+"""绘制中英文编译与发布构建流程图；沿用总览图主题，三倍绘制后降采样。"""
 from pathlib import Path
 import math
 import os
@@ -100,7 +100,7 @@ def compilation(english=False):
 def aot(english=False):
     """绘制已检查 AST 经 LLVM 生成原生产物的两种编译器配置。"""
     c = Canvas()
-    title(c, "ChaLi · AOT export" if english else "ChaLi · AOT 导出流程",
+    title(c, "ChaLi · Release build" if english else "ChaLi · 发布构建流程",
           "Checked AST → LLVM → target code → native artifact" if english else
           "已检查 AST → LLVM IR → 目标机器码 → 链接原生产物")
     rows = [
@@ -135,8 +135,8 @@ def aot(english=False):
          "通过 --shared、--export、--link 配置动态库、导出函数与链接库"], green=True)
     arrow(c, ((780, 685), (780, 735)))
     box(c, 40, 735, 1480, "6  Deliver and run" if english else "6  交付与运行",
-        ["Executable or shared library; no VM or LLVM DLL required by the artifact" if english else
-         "可执行文件或动态库；产物无需 VM 或 LLVM DLL",
+        ["Executable or shared library; no LLVM DLL required by the artifact" if english else
+         "可执行文件或动态库；产物无需 LLVM DLL",
          "Ship application C ABI dependencies when used" if english else
          "使用应用自身的 C ABI 动态库时，一并交付对应依赖"], height=120)
     return c

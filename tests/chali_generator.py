@@ -192,7 +192,7 @@ def main():
         aot_probe = WORK / "aot_probe.chl"
         aot_probe.write_text('void main()\n{\n    println("exported AOT entry OK");\n}\n', encoding="utf-8")
         aot_prefix = WORK / "aot_probe"
-        result = subprocess.run([str(build / exported_compiler), "aot", str(aot_probe), "--quiet", "--emit-llvm", "--out", str(aot_prefix)],
+        result = subprocess.run([str(build / exported_compiler), "build", str(aot_probe), "--quiet", "--emit-llvm", "--out", str(aot_prefix)],
                                 cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
         assert result.returncode == 0 and aot_prefix.with_suffix(".ll").is_file(), result
 
@@ -200,7 +200,7 @@ def main():
             # 全量红黑树混合负载以 AOT 验证导出编译器；VM 全量另由运行时回归执行。
             native = sample == "std_red_black_delete"
             target = WORK / (sample + "-aot")
-            arguments = [str(build / exported_compiler), "aot" if native else "run",
+            arguments = [str(build / exported_compiler), "build" if native else "run",
                          str(ROOT / "example/samples" / (sample + ".chl"))]
             arguments += ["--out", str(target)]
             environment = dict(os.environ)

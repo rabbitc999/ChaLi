@@ -38,7 +38,7 @@ def main():
                     env['CHALI_NO_AOT_RAW_INTRINSICS'] = '1'
                 label = allocator + checked + ('-fallback' if fallback else '-direct')
                 prefix = work / label
-                built = execute([compiler, 'aot', ROOT / 'tests/fixtures/aot_string_buffer.chl',
+                built = execute([compiler, 'build', ROOT / 'tests/fixtures/aot_string_buffer.chl',
                                  '--allocator', allocator, checked, '--out', prefix], label + '-build', env)
                 assert built.returncode == 0, (label, built.stdout, built.stderr, work)
                 ran = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], label, env)
@@ -52,7 +52,7 @@ def main():
         source = work / (name + '.chl')
         source.write_text('void main(){' + body + '}\n', encoding='utf-8')
         prefix = work / name
-        built = execute([compiler, 'aot', source, '--out', prefix], name + '-build', environment)
+        built = execute([compiler, 'build', source, '--out', prefix], name + '-build', environment)
         assert built.returncode == 0, (name, built.stdout, built.stderr, work)
         ran = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], name, environment)
         assert ran.returncode != 0 and diagnostic in ran.stdout + ran.stderr, (name, ran, work)
@@ -63,7 +63,7 @@ def main():
                           'int64 old=std::core::__bootStringOwnedData(*slot);value.reserve(100);'
                           'int64 byte=std::core::__bootStringByte(old,0);println("{}",byte);}}\n', encoding='utf-8')
         prefix = work / ('stale-' + allocator)
-        built = execute([compiler, 'aot', source, '--allocator', allocator, '--out', prefix], allocator + '-stale-build', environment)
+        built = execute([compiler, 'build', source, '--allocator', allocator, '--out', prefix], allocator + '-stale-build', environment)
         assert built.returncode == 0, (built.stdout, built.stderr, work)
         ran = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], allocator + '-stale', environment)
         assert ran.returncode != 0 and any(message in ran.stdout + ran.stderr for message in ('未分配或已释放', 'unallocated memory')), (ran, work)

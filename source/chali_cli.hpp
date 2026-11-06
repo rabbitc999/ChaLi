@@ -35,12 +35,7 @@ inline std::vector<std::string> normalize(int argc, char **argv)
         return result;
     }
     std::string command = argv[1];
-    if (command == "svmb" || command == "smvb")
-    {
-        for (int i = 1; i < argc; ++i) result.emplace_back(argv[i]);
-        return result;
-    }
-    const bool sourceCommand = command == "run" || command == "interpret" || command == "emit" || command == "check" || command == "new" || command == "gen" || command == "aot";
+    const bool sourceCommand = command == "run" || command == "interpret" || command == "emit" || command == "check" || command == "new" || command == "gen" || command == "build";
     const bool scenario = sourceCommand || command == "lib" || command == "link" || command == "ar" || command == "asm" || command == "help" || command == "clear" || command == "test" || command == "fmt" || command == "deps" || command == "lsp" || command == "man";
     if (!scenario && !command.empty() && command[0] != '-')
     {

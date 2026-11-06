@@ -54,7 +54,7 @@ AOT 动态库通过 `export` 标记普通函数，源码可省略 `main`，全�
 
 ## 执行、优化与部署
 
-`run` 使用 checked AOT 编译执行，`aot` 默认 unchecked 导出，并支持显式 `--checked`。四元式可单独导出用于分析。
+`run` 使用 checked AOT 编译执行，`build` 默认 unchecked 导出，并支持显式 `--checked`。四元式可单独导出用于分析。
 
 IR 指四元式，四元式不做内部优化，优化全部交给 LLVM；发布构建执行 LLVM O3、全局死代码消除、完整 LTO 和节区回收。可达常量采用稀疏初始化，数组复用运行时清零。AOT 动态库通过生成的 C ABI 头文件嵌入宿主。
 
@@ -88,7 +88,7 @@ TCP/基础 HTTP、SQL 驱动、隔离线程、有界通道、消息、显式共�
 HTTP 接口不包含 TLS；外部数据库需要相应客户端和服务。线程使用 `std::thread::Thread`，支持复制初始参数、取消、状态、完成结果、线程组和固定线程池；跨线程通信有容量与等待预算，事件仅显式接收。
 宿主事件投递器使用弱引用；阻塞宿主调用的取消受其超时约束。详见[并发模型](30-thread-concurrency.md)。
 
-桌面与嵌入式 Linux 共用 `source/ircode/` VM 核心。目标需具备 C++17 工具链、足够的内存和
+桌面与嵌入式 Linux 共用 `source/ircode/` 运行时核心。目标需具备 C++17 工具链、足够的内存和
 所需系统服务；原生胶水与依赖库必须按目标架构构建。Linux 设备使用普通宿主，
 没有单独的嵌入式部署模式或前端模块禁用配置。内存与指令限制通过通用运行选项设置。
 支持范围见[部署说明](06-deployment.md)。不提供单片机、裸机固件或板级 SDK。
@@ -112,15 +112,15 @@ BigInteger 乘法在 Karatsuba 与双素数 NTT 之间按补齐成本选择，�
 除法使用 Knuth 分块长除法与 Burnikel–Ziegler 分治，保持向零截断及余数跟随被除数符号。
 算法界限、可调接口及可复现的测试入口见[大数库说明](../source/bignum/README.md)。历史测量可从 Git 历史追溯；当前版本性能对比不包含大数负载。
 struct 可以拥有多个 opcode 字段。BigInteger、BigDecimal、File、Process 的记录及操作位于
-标准库胶水，VM 核心只管理通用 NativeRecord 壳及宿主服务表。File、Process 不可复制；
+标准库胶水，运行时核心只管理通用 NativeRecord 壳及宿主服务表。File、Process 不可复制；
 公开进程类型名为 Process。List、Map、Set 使用参数化 opcode 类型和标准库不透明记录，
-前端不再声明 Container Kind，VM 不再声明集合专用 Kind 或实现集合方法。List 使用 ArrayList；
+前端不再声明 Container Kind，运行时不再声明集合专用 Kind 或实现集合方法。List 使用 ArrayList；
 内建标量键与实现 Hash<T> 的自定义键使用 HashMap / HashSet，只有 Equal<bool,T> 而没有 Hash<T>
 的自定义键退化为线性查找的 ArrayMap / ArraySet。哈希碰撞通过 Equal 区分。
 Map、Set 的 keyAt、valAt、at、遍历及默认文本均不承诺排序或插入顺序。String 的完整隔离仍在推进。
 
 
-Image 使用可深复制的 opcode，宽高与连续 RGBA 像素由胶水拥有；width()/height() 查询尺寸，pixels() 导出独立列表快照。TcpSocket、TcpListener 使用不可复制的 opcode，作用域退出自动关闭，显式 move 转移所有权，各连接独立保存读状态与错误。线性代数 Vector<T>、Matrix<T> 保留泛型聚合外观，ScalarArray<T> 的 ScalarStorage opcode 保存内建整数与浮点数值，复制缓冲互不影响。字符串拼接、切片、比较、查找及数值转文本由标准胶水实现；内部入口统一使用 __std_ 前缀，VM 保留执行控制、内存安全与闭包等核心机制。
+Image 使用可深复制的 opcode，宽高与连续 RGBA 像素由胶水拥有；width()/height() 查询尺寸，pixels() 导出独立列表快照。TcpSocket、TcpListener 使用不可复制的 opcode，作用域退出自动关闭，显式 move 转移所有权，各连接独立保存读状态与错误。线性代数 Vector<T>、Matrix<T> 保留泛型聚合外观，ScalarArray<T> 的 ScalarStorage opcode 保存内建整数与浮点数值，复制缓冲互不影响。字符串拼接、切片、比较、查找及数值转文本由标准胶水实现；内部入口统一使用 __std_ 前缀，运行时保留执行控制、内存安全与闭包等核心机制。
 
 网络异步入口使用非阻塞轮询和 NET_PENDING，未就绪时采用可取消线程睡眠或在专用线程使用同步 I/O，避免忙轮询；connectAsync 首批仅接受数值 IPv4，域名解析保留在同步 connect。sendAsync 返回部分发送字节数并接受 offset；receiveLineAsync 保留未完成行，缓冲上限为 1 MiB。
 
@@ -128,7 +128,7 @@ Image 使用可深复制的 opcode，宽高与连续 RGBA 像素由胶水拥有�
 
 ## 后端组织与 TOML 保存
 
-正常 run／aot 把语义检查后的 AST 直接交给 LLVM 代码生成，不经过 ChaLi 四元式。四元式导出与兼容输入仍可用于分析和原生生成。LLVM 执行 O3／LTO 优化；静态内置与外置 LLVM 变体共享后端源码。
+正常 run／build 把语义检查后的 AST 直接交给 LLVM 代码生成，不经过 ChaLi 四元式。四元式导出与兼容输入仍可用于分析和原生生成。LLVM 执行 O3／LTO 优化；静态内置与外置 LLVM 变体共享后端源码。
 
 std::toml 文档根节点保存时保留原文注释。底层 C++ 值模型的等形编辑保留布局；结构编辑保留注释内容并可调整位置。重复解析保存不丢失或重复注释，详见 [TOML 接口](library/std-toml.md)。
 

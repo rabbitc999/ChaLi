@@ -539,7 +539,7 @@ class Adapter {
     };
     this.event('chali/buildDiagnostics', { diagnostics: [] });
     if (!executable) try { await new Promise((resolve, reject) => {
-      const args = ['aot', config.program, '--checked', config.debugMode === 'optimized' ? '--debug-optimized' : '--debug', '--out', prefix];
+      const args = ['build', config.program, '--checked', config.debugMode === 'optimized' ? '--debug-optimized' : '--debug', '--out', prefix];
       if (config.llvmPath) args.push('--llvm', config.llvmPath);
       this.compilerProcess = spawn(this.compiler, args, { cwd, env, windowsHide: true, detached: process.platform !== 'win32' });
       this.compilerProcess.stdout.on('data', (chunk) => collect(chunk, 'console'));
@@ -551,7 +551,7 @@ class Adapter {
       };
       signal.addEventListener('abort', abort, { once: true });
       buildChild.on('error', (error) => { signal.removeEventListener('abort', abort); reject(error); });
-      buildChild.on('close', (code) => { signal.removeEventListener('abort', abort); code === 0 ? resolve() : reject(new Error(`AOT 调试构建失败，退出码 ${code}`)); });
+      buildChild.on('close', (code) => { signal.removeEventListener('abort', abort); code === 0 ? resolve() : reject(new Error(`构建调试失败，退出码 ${code}`)); });
       if (this.progressReporting) {
         this.progressRequests.set(progressId, requestId);
         this.event('progressStart', { progressId, title: '构建 ChaLi 调试程序', requestId, cancellable: true });

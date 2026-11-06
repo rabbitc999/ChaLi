@@ -46,7 +46,7 @@ def main():
             for allocator in ('malloc', 'pool'):
                 for checks in ('checked', 'unchecked'):
                     target = work / f'{allocator}-{checks}.exe'
-                    run([compiler, 'aot', ROOT / 'tests/fixtures/linalg_column_compatibility.chl',
+                    run([compiler, 'build', ROOT / 'tests/fixtures/linalg_column_compatibility.chl',
                          '--allocator', allocator, '--' + checks, '--out', target])
                     result = run([target])
                     assert result.stdout == 'ten scalar columns, iteration and independent storage OK\n' and not result.stderr, result

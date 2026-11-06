@@ -31,7 +31,7 @@ ChaLi 通过 Memory 命名空间管理容器和对象，0.32.10 缺省使用系�
 
 ```sh
 chali run app.chl --memory-size 16777216 --allocator malloc
-chali aot app.chl --memory-size 16777216 --allocator pool --out tmp/app
+chali build app.chl --memory-size 16777216 --allocator pool --out tmp/app
 ```
 
 ## 外部缓冲区
@@ -60,7 +60,7 @@ chali aot app.chl --memory-size 16777216 --allocator pool --out tmp/app
 
 两种实现共用 `McPool` 句柄与 `chali_pool_*` 接口，上层 arena 与容器无需改动。
 `chali_pool` 本身不带锁：它是**单线程/调用方串行化**的；缺省 C++ 侧由
-`BufferRuntimeArena` 与 `StaticRuntimeArena` 各自持 `std::mutex` 加锁（VM 线程共享同一个
+`BufferRuntimeArena` 与 `StaticRuntimeArena` 各自持 `std::mutex` 加锁（运行时线程共享同一个
 `currentRuntimeAllocator()`，所以锁是必须的）。`CHALI_ALLOCATOR_TYPE` 当前编译进来的名字由
 `Memory::allocatorTypeName` 暴露，便于诊断。
 
@@ -120,7 +120,7 @@ ChaLi 翻译单元及其依赖库必须一致定义 `CHALI_CUSTOM_ALLOCATOR=1`�
 
 ## 选择 malloc 或 pool
 
-使用 `--allocator malloc|pool` 选择本模块的分配器，TOML 的 `[aot]` 同样支持 `allocator`。malloc 直接管理宿主块，pool 保留原内存池；两者保持预算、对齐、逻辑分配身份与释放后失效检查。不要用旧 `CHALI_USE_MALLOC` 开关替代当前配置。
+使用 `--allocator malloc|pool` 选择本模块的分配器，TOML 的 `[build]` 同样支持 `allocator`。malloc 直接管理宿主块，pool 保留原内存池；两者保持预算、对齐、逻辑分配身份与释放后失效检查。不要用旧 `CHALI_USE_MALLOC` 开关替代当前配置。
 
 完整的版本与两种分配器对照见[性能文章](12-performance.md)。同一组数据中各负载的优劣不同，应保留实际配置，不能把不同分配器的单项最佳值拼成一个结果。
 

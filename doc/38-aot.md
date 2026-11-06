@@ -4,28 +4,30 @@
 [English](en/38-aot.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-`run`／`aot` 成功编译并发布最终产物后，会在标准错误输出“编译完成：产物路径”。run 先提示再执行程序，后续运行失败仍返回失败；程序标准输出不混入提示。`--quiet` 或 `CHALI_QUIET=1` 仅关闭完成提示，不隐藏错误、统计或程序输出。仅检查及 JSON 诊断不发送完成提示。
+`build` 是发布构建命令；原 `aot` 命令已移除。项目配置使用 `[build]`，不再接受 `[aot]`。LLVM AOT 是编译技术名称。
 
-默认 `run` 与 `aot` 的最终产物位于 `.chl` 同级，run 生成的可执行文件也会保留。中间文件使用源码旁 `.chali` 中的独占工作区，Windows 下隐藏，成功或失败结束后清理并删除空目录；既有用户文件保留。显式输出与保留选项继续可用。VSCode 默认同样输出到源码旁；static VSIX 不提供 `Chali › Build: Llvm Path`，external 必须配置，构建和运行均传递 `--llvm`。
+`run`／`build` 成功编译并发布最终产物后，会在标准错误输出“编译完成：产物路径”。run 先提示再执行程序，后续运行失败仍返回失败；程序标准输出不混入提示。`--quiet` 或 `CHALI_QUIET=1` 仅关闭完成提示，不隐藏错误、统计或程序输出。仅检查及 JSON 诊断不发送完成提示。
 
-`run` 使用 checked AOT 编译执行，`aot` 默认 unchecked 导出。原生调试见[原生 AOT 调试](43-native-debugging.md)。
+默认 `run` 与 `build` 的最终产物位于 `.chl` 同级，run 生成的可执行文件也会保留。中间文件使用源码旁 `.chali` 中的独占工作区，Windows 下隐藏，成功或失败结束后清理并删除空目录；既有用户文件保留。显式输出与保留选项继续可用。VSCode 默认同样输出到源码旁；static VSIX 不提供 `Chali › Build: Llvm Path`，external 必须配置，构建和运行均传递 `--llvm`。
+
+`run` 使用 checked AOT 编译执行，`build` 默认 unchecked 导出。原生调试见[构建调试](43-native-debugging.md)。
 
 ### Windows 应用的控制台
 
 Windows 可执行文件默认使用控制台子系统。GUI 应用可用 `--subsystem windows`，从资源管理器启动时不会为它创建控制台窗口。该选项只选择 PE 子系统，应用窗口由程序自己创建。
 
 ```powershell
-chali aot app.chl --subsystem console --out app-console
-chali aot app.chl --subsystem windows --out app-gui
+chali build app.chl --subsystem console --out app-console
+chali build app.chl --subsystem windows --out app-gui
 ```
 
-在 `chali.toml` 的 `[aot]` 中设置 `subsystem = "windows"` 可用于项目构建，`run` 和编辑器构建也会读取该设置。命令行选项优先。分步构建时把选项传给 `chali link`；导出的 LLVM IR、汇编或对象尚未设置 PE 子系统。
+在 `chali.toml` 的 `[build]` 中设置 `subsystem = "windows"` 可用于项目构建，`run` 和编辑器构建也会读取该设置。命令行选项优先。分步构建时把选项传给 `chali link`；导出的 LLVM IR、汇编或对象尚未设置 PE 子系统。
 
-`chali aot input.chl --out build/program` 从语义检查后的 AST 直接生成 LLVM 代码，不经过四元式生成或组装，由 LLVM 优化、生成机器码并链接原生产物。也可使用 `chali --mode aot input.chl`。默认源码运行同样使用 AOT，且开启检查。
+`chali build input.chl --out build/program` 从语义检查后的 AST 直接生成 LLVM 代码，不经过四元式生成或组装，由 LLVM 优化、生成机器码并链接原生产物。也可使用 `chali --mode build input.chl`。默认源码运行同样使用 AOT，且开启检查。
 
 Windows x64 依赖通过 [在线下载脚本](../library/llvm/README.md) 准备。外置后端运行 `python tools/fetch_llvm_toolchain.py`；静态后端运行 `python tools/fetch_llvm_sdk.py`，下载预编译 LLVM/LLD 和匹配 GCC，全部缓存位于 `build/`。仓库不保存 SDK 或离线分片；归档按固定 SHA-256 校验。只导出 LLVM IR 不需要代码生成工具链。
 
-AOT 的 LLVM 优化始终全开：外置 LLVM 使用 `-O3`，静态 LLVM 使用 `default<O3>` 与激进代码生成等级，保留正常浮点语义与存活检查；run 开启数组和指针检查，aot 导出缺省关闭这些检查。四元式不做内部优化。批量复制、直接调用和可选计数的适用条件与对照开关见[AOT 降低开关与计数](40-backend-ownership.md)。
+AOT 的 LLVM 优化始终全开：外置 LLVM 使用 `-O3`，静态 LLVM 使用 `default<O3>` 与激进代码生成等级，保留正常浮点语义与存活检查；run 开启数组和指针检查，发布构建缺省关闭这些检查。四元式不做内部优化。批量复制、直接调用和可选计数的适用条件与对照开关见[AOT 降低开关与计数](40-backend-ownership.md)。
 
 | 参数 | 行为 |
 | --- | --- |
@@ -33,7 +35,7 @@ AOT 的 LLVM 优化始终全开：外置 LLVM 使用 `-O3`，静态 LLVM 使用 
 | `--llvm 路径` | 指定外置 LLVM clang 驱动；静态变体缺省使用内置后端，外置变体也可用 `CHALI_LLVM_CLANG` 选择工具 |
 | `--emit-llvm` | 只生成 LLVM 模块与 C ABI 头文件，不执行目标代码生成或链接 |
 | `--allocator malloc\|pool` | 0.32.10 起缺省使用系统 malloc；pool 保留连续 arena 与原有字节堆分配策略 |
-| `--checked` | 生成 AST 中已检查的数组边界与指针检查；run 默认启用，aot 导出默认关闭 |
+| `--checked` | 生成 AST 中已检查的数组边界与指针检查；run 默认启用，发布构建默认关闭 |
 | `--unchecked` | 显式关闭这些检查，仅用于调试或性能对照；仍检查对象存活与实际内存访问 |
 | `--shared` | 生成动态库 |
 | `--export 名称` | 指定对外导出的函数，可重复使用 |
@@ -50,11 +52,11 @@ AOT 的 LLVM 优化始终全开：外置 LLVM 使用 `-O3`，静态 LLVM 使用 
 0.32.10 起，原生程序默认使用系统 `malloc`，可通过 `--allocator pool` 选择原有内存池。系统模式同时作用于宿主对象与语言字节堆：每块语言存储独立分配，不再从连续字节缓冲区细分。逻辑引用身份、释放撤销、范围验证、零初始化和内存预算继续保留；`--unchecked` 不关闭这些保护。
 
 ```sh
-chali aot app.chl --allocator malloc --out build/app-malloc
-chali aot app.chl --allocator pool --out build/app-pool
+chali build app.chl --allocator malloc --out build/app-malloc
+chali build app.chl --allocator pool --out build/app-pool
 ```
 
-项目可在 `[aot]` 设置 `allocator = "malloc"` 或 `allocator = "pool"`，显式命令行覆盖清单。此选项选择导出程序的分配后端，不改变编译器自身的容器 ABI。性能比较以系统 malloc 为正式基准，记录 checked/unchecked、LLVM 与分配器配置；不同配置分别保存原始数据。
+项目可在 `[build]` 设置 `allocator = "malloc"` 或 `allocator = "pool"`，显式命令行覆盖清单。此选项选择导出程序的分配后端，不改变编译器自身的容器 ABI。性能比较以系统 malloc 为正式基准，记录 checked/unchecked、LLVM 与分配器配置；不同配置分别保存原始数据。
 
 ## 编译器的 LLVM 链接方式
 
@@ -83,7 +85,7 @@ int64 add(int64 left, int64 right)
 }
 ```
 
-执行 `ChaLi aot library.chl --shared --out build/library` 生成动态库和 C ABI 头文件，
+执行 `ChaLi build library.chl --shared --out build/library` 生成动态库和 C ABI 头文件，
 导出函数名以生成的头文件为准（上例为 `f_add`）。动态库源码可以没有 `main`；
 可执行程序仍需要 `main`。调用方先调用 `chali_init()`，再使用导出函数，最后调用
 `chali_finish()`；全局初始化与清理分别在这两个入口执行。`--export` 可以额外指定导出函数。
@@ -100,8 +102,8 @@ Windows 原生进程入口从 CRT 宽字符参数转换到 UTF-8，再交给 mai
 先导出目标 LLVM IR 或目标文件，不必准备目标链接库：
 
 ```sh
-chali aot aot_demo.chl --target linux-arm64 --emit-llvm --out build/arm64/demo
-chali aot aot_demo.chl --target linux-arm64 --emit-obj --out build/arm64/demo
+chali build aot_demo.chl --target linux-arm64 --emit-llvm --out build/arm64/demo
+chali build aot_demo.chl --target linux-arm64 --emit-obj --out build/arm64/demo
 ```
 
 `--emit-llvm` 生成目标对应的 `.ll`；`--emit-obj` 继续生成 `.o`，跳过链接。Windows 目标的 `.o` 内容为 COFF，Linux 目标为 ELF，文件格式由目标决定。两种选项不能同时使用。静态 LLVM 变体可通过内置后端生成目标文件；外置变体需要包含对应目标后端的 clang。
@@ -117,7 +119,7 @@ sh tools/build_cross_runtime.sh linux-arm64 2
 在 `chali.toml` 中集中保存配置：
 
 ```toml
-[aot]
+[build]
 target = "aarch64-unknown-linux-gnu"
 cpu = "generic"
 sysroot = "build/cross-sdk/linux-arm64/sysroot"
@@ -125,18 +127,18 @@ runtime_dir = "build/cross-sdk/linux-arm64/lib"
 output = "executable"
 ```
 
-路径相对于 `chali.toml` 所在目录解析。`output` 可选 `llvm`、`object` 或 `executable`；`llvm` 配置项可指定外置 clang 路径。执行 `chali aot` 会读取项目配置，显式命令行参数覆盖对应设置：
+路径相对于 `chali.toml` 所在目录解析。`output` 可选 `llvm`、`object` 或 `executable`；`llvm` 配置项可指定外置 clang 路径。执行 `chali build` 会读取项目配置，显式命令行参数覆盖对应设置：
 
 ```sh
-chali aot --out build/arm64/app
-chali aot --target linux-x64 --emit-obj --out build/x64/app
+chali build --out build/arm64/app
+chali build --target linux-x64 --emit-obj --out build/x64/app
 ```
 
 生成成功后应在目标机器或相应模拟器中验证参数、标准输入输出、文件、资源清理和错误路径。`run` 不会自动启动模拟器，目标与宿主不同时会拒绝直接运行。导出目标文件成功仅证明代码生成完成，不能据此声称目标链接或实际运行已验证。复杂 C ABI 的跨目标完整链接需要兼容的目标适配器；当前可先导出目标文件，并在目标工具链中完成适配器编译与链接。
 
 ## 目标机器汇编
 
-项目 `[aot]` 支持 `assembly_sources`（汇编源）、`assembly_includes`（汇编包含目录）、`objects`（对象文件）、`libraries`（链接库）、`search_paths`（模块及包含搜索目录）数组。路径以 `chali.toml` 所在目录为基准；`libraries` 中不含点或路径分隔符的裸库名交给链接器解析。
+项目 `[build]` 支持 `assembly_sources`（汇编源）、`assembly_includes`（汇编包含目录）、`objects`（对象文件）、`libraries`（链接库）、`search_paths`（模块及包含搜索目录）数组。路径以 `chali.toml` 所在目录为基准；`libraries` 中不含点或路径分隔符的裸库名交给链接器解析。
 
 显式 `--asm`、`--asm-include`、`--link` 分别覆盖清单中的同类列表。清单搜索目录追加在命令行搜索目录之后。对象及汇编输入用于最终链接。
 
@@ -144,9 +146,9 @@ chali aot --target linux-x64 --emit-obj --out build/x64/app
 
 独立 `chali link --shared --out FILE` 在私有临时目录中使用最终文件名完成链接，成功后再发布。因此 Windows DLL 的导出表与宿主导入表记录实际交付名称，C 宿主可直接链接并加载该文件；失败仍保留原产物。
 
-`chali aot app.chl --emit-asm --out build/app` 按实际目标、CPU、检查及优化／调试设置导出 `build/app.s`。这是机器汇编，与 LLVM IR 文本 `.ll` 不同。输出在对象生成和链接之前停止，跨目标导出不要求准备目标运行时链接资产。静态变体使用内置 LLVM，外置变体使用 clang；采用相应后端默认语法（x86 为 AT&T，AArch64 为目标语法），不表示兼容 NASM／MASM。
+`chali build app.chl --emit-asm --out build/app` 按实际目标、CPU、检查及优化／调试设置导出 `build/app.s`。这是机器汇编，与 LLVM IR 文本 `.ll` 不同。输出在对象生成和链接之前停止，跨目标导出不要求准备目标运行时链接资产。静态变体使用内置 LLVM，外置变体使用 clang；采用相应后端默认语法（x86 为 AT&T，AArch64 为目标语法），不表示兼容 NASM／MASM。
 
-项目可设置 `[aot] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked AOT。VSCode 输出选择和构建支持汇编及 `.s` 后缀。
+项目可设置 `[build] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked AOT。VSCode 输出选择和构建支持汇编及 `.s` 后缀。
 
 同时保留 `.ll` 和适用的 C ABI 头文件；复杂 C ABI 还可能生成 `.abi.cpp` 封送侧文件，单独的汇编文件不等于已链接应用。重新汇编和最终链接需要匹配的目标工具链、运行时及依赖。独立汇编、链接与归档入口见下文。
 
@@ -155,7 +157,7 @@ chali aot --target linux-x64 --emit-obj --out build/x64/app
 ```sh
 chali asm native/add.s --target windows-x64 --out build/add.obj -I native/include
 chali asm native/add.s --target linux-x64 --out build/add.o
-chali aot main.chl --asm native/add.s --asm-include native/include --out build/app
+chali build main.chl --asm native/add.s --asm-include native/include --out build/app
 ```
 
 `asm` 每次接受一个 `.s` 和完整输出路径。不写 `--out` 时，Windows 默认 `.obj`，Linux 默认 `.o`。支持 `--target`、`--cpu`、`--debug`、`-I DIR`／`-IDIR`、`--include-path DIR` 和 `--llvm CLANG`。源指令必须匹配目标和 CPU；采用 LLVM 的 GAS 兼容语法，不处理 `.S` 预处理、NASM 或 MASM。包含目录先加入源文件所在目录，再按显式目录顺序搜索。主输入最多 64 MiB；该入口是编译工具，不是面向不可信代码的沙箱。

@@ -25,8 +25,8 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 | 你是谁 | 从哪开始 |
 | --- | --- |
 | 按顺序学习 ChaLi 并完成综合项目 | 入门书[《ChaLi 程序设计语言》](book/README.md)（30 章，从第一个程序到日志检索、HTTP 文件服务与学生系统） |
-| 第一次听说 ChaLi | [使命宣言](00-vision.md) → [5 分钟快速开始](01-quickstart.md) |
-| 评估它能不能用在我的项目上 | [使命宣言](00-vision.md)（含"不适合谁"）→ [跨平台部署](06-deployment.md) |
+| 第一次听说 ChaLi | [5 分钟快速开始](01-quickstart.md) |
+| 评估部署方式 | [当前能力](17-capabilities.md) → [跨平台部署](06-deployment.md) |
 | 开始写代码 | [语言速览](02-language-tour.md) → [语言参考](04-language-reference.md) |
 | 想弄明白值语义和引用 | [核心概念](03-core-concepts.md)，显式转移所有权见语言参考的 `move` |
 | 要把程序部署到目标宿主 | [交付安全](05-delivery-security.md) → [跨平台部署](06-deployment.md) |
@@ -52,7 +52,6 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 
 | 编号 | 文档 | 面向 | 讲什么 |
 | --- | --- | --- | --- |
-| [00](00-vision.md) | 使命宣言 | 决策者、潜在用户 | 软件交付的三重困境，ChaLi 的回答，适合谁 / 不适合谁 |
 | [01](01-quickstart.md) | 5 分钟快速开始 | 第一次用 ChaLi 的人 | 安装、第一个程序、常用命令速查 |
 | [02](02-language-tour.md) | 语言速览 | 有经验的开发者 | 用可运行的小片段走一遍 ChaLi 长什么样 |
 | [03](03-core-concepts.md) | 核心概念 | 准备深入使用的人 | 值语义、非空引用、无 GC 的资源管理，为什么这样设计 |
@@ -67,7 +66,7 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 | [14](14-grammar-ebnf.md) | EBNF 语法参考 | 查文法细节的人 | 从 `source/chali.gram` 生成的全部产生式与词法登记，权威语法的可读形式 |
 | [15](15-artifacts.md) | 构建产物与中间文件 | 想知道文件落在哪、交付带什么的人 | `.chali/` 目录、中间产物清理规则、交付清单 |
 | [16](16-compact-symbols.md) | 原生产物符号 | 部署和调试 | 发布构建的符号保留、裁剪和 DWARF |
-| [17](17-capabilities.md) | 当前能力与实现边界 | 评估与集成人员 | 语言、VM、借用、反射、标准库及目标宿主的统一说明 |
+| [17](17-capabilities.md) | 当前能力与实现边界 | 评估与集成人员 | 语言、runtime、借用、反射、标准库及目标宿主的统一说明 |
 | [18](18-panic-trace.md) | panic 与源码行号 | 排查崩溃的人 | 失败输出、函数栈、源码位置与压缩隐藏策略 |
 | [19](19-reflection.md) | 注解与反射 | 用注解 / 动态调用的人 | 声明元数据、类型化查询与封闭值动态调用 |
 | [20](20-memory-allocator.md) | 内存分配器 | 接宿主内存的人 | 池与容量统计、分配范围检查、外部缓冲区接入 |
@@ -95,7 +94,6 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 | --- | --- |
 | [../README.en.md](../README.cn.md) | [项目 README](../README.cn.md)（构建、快速使用、调试、配置） |
 | [en/README.md](README.md) | [文档入口](README.md) |
-| [en/00-vision.md](00-vision.md) | [00 使命宣言](00-vision.md) |
 | [en/01-quickstart.md](01-quickstart.md) | [01 快速开始](01-quickstart.md) |
 | [en/02-language-tour.md](02-language-tour.md) | [02 语言速览](02-language-tour.md) |
 | [en/03-core-concepts.md](03-core-concepts.md) | [03 核心概念](03-core-concepts.md) |
@@ -156,7 +154,7 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 
 - [在线构建依赖](42-build-dependencies.md)：SQLite／miniz 固定版本下载、摘要校验、缓存、离线复用与许可证。
 
-- [原生 AOT 调试](43-native-debugging.md)：GDB 断点、单步、变量与 `--debug` 构建。
+- [构建调试](43-native-debugging.md)：GDB 断点、单步、变量与 `--debug` 构建。
 
 - [库包格式与资产检查](44-library-packages.md)：规范清单、独立 ABI、目标实现、摘要与预算。
 

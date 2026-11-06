@@ -40,5 +40,8 @@ int main()
     check({ "chali", "gen", "compiler", "out", "tmp" }, { "chali", "gen", "compiler", "--out-dir", "tmp" });
     check({ "chali", "clear", "out", "tmp" }, { "chali", "clear", "--out-dir", "tmp" });
     check({ "chali", "help" }, { "chali", "--help" });
+    check({ "chali", "build", "demo.chl", "out", "help", "--emit-obj" }, { "chali", "build", "demo.chl", "--out", "help", "--emit-obj" });
+    check({ "chali", "build", "--target", "linux-arm64", "demo.chl", "out", "native" }, { "chali", "build", "--target", "linux-arm64", "demo.chl", "--out", "native" });
+    check({ "chali", "build", "demo.chl", "--", "out", "help" }, { "chali", "build", "demo.chl", "--", "out", "help" });
     check({ "chali", "--check", "demo.chl", "--out", "help" }, { "chali", "--check", "demo.chl", "--out", "help" });
 }

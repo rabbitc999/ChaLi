@@ -123,7 +123,7 @@ def verify(invoke, compiler, cc, work):
         expected = invoke([compiler, 'run', source])
         assert expected.returncode == 0, expected
         prefix = work / ('list_checked' if checked else 'list_values')
-        result = invoke([compiler, 'aot', source, '--out', prefix, *(['--checked'] if checked else [])])
+        result = invoke([compiler, 'build', source, '--out', prefix, *(['--checked'] if checked else [])])
         assert result.returncode == 0, result
         result = invoke([prefix.with_suffix(suffix)])
         assert (result.returncode, result.stdout) == (0, expected.stdout), (result, expected)
@@ -141,7 +141,7 @@ void main()
 ''', encoding='utf-8')
     for checked in (False, True):
         prefix = work / ('list_bounds_checked' if checked else 'list_bounds')
-        result = invoke([compiler, 'aot', invalid, '--out', prefix, '--checked' if checked else '--unchecked'])
+        result = invoke([compiler, 'build', invalid, '--out', prefix, '--checked' if checked else '--unchecked'])
         assert result.returncode == 0, result
         result = invoke([prefix.with_suffix(suffix)])
         assert result.returncode != 0 and result.stdout == 'before list access\n' and '下标越界' in result.stderr, result
@@ -157,7 +157,7 @@ void main()
     expected = invoke([compiler, 'run', source], cwd=work)
     assert expected.returncode == 0, expected
     prefix = work / 'opcode_values'
-    result = invoke([compiler, 'aot', source, '--out', prefix])
+    result = invoke([compiler, 'build', source, '--out', prefix])
     assert result.returncode == 0, result
     result = invoke([prefix.with_suffix(suffix)])
     assert (result.returncode, result.stdout) == (0, expected.stdout), (result, expected)
@@ -180,7 +180,7 @@ export int64 nextScalar()
 }
 """, encoding='utf-8')
     prefix = work / 'opcode_library'
-    result = invoke([compiler, 'aot', source, '--shared', '--out', prefix])
+    result = invoke([compiler, 'build', source, '--shared', '--out', prefix])
     assert result.returncode == 0, result
     counters = ctypes.CDLL(str(library))
     exported = ctypes.CDLL(str(prefix.with_suffix('.dll' if os.name == 'nt' else '.so')))

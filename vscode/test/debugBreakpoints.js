@@ -26,7 +26,7 @@ const lines = [
 fs.writeFileSync(source, lines.join('\n') + '\n');
 const body = lines.indexOf('    int64 sum = a + b;') + 1;
 const call = lines.indexOf('        total = add(total, i);') + 1;
-const built = spawnSync(compiler, ['aot', source, '--debug', '--checked', '--allocator', 'malloc', '--out', path.join(work, 'program')], { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
+const built = spawnSync(compiler, ['build', source, '--debug', '--checked', '--allocator', 'malloc', '--out', path.join(work, 'program')], { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
 assert.equal(built.status, 0, built.stdout + built.stderr);
 const executable = path.join(work, 'program' + (process.platform === 'win32' ? '.exe' : ''));
 

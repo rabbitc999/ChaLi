@@ -36,7 +36,7 @@ def run_snapshot(compiler, work, env):
     count = 2000
     source.write_text('void main(){\n' + 'println("snapshot-safe");\n' * count + '}\n', encoding='utf-8')
     prefix = work / 'snapshot'
-    built = subprocess.run([str(compiler), 'aot', str(source), '--out', str(prefix)],
+    built = subprocess.run([str(compiler), 'build', str(source), '--out', str(prefix)],
                            cwd=work, capture_output=True, text=True, encoding='utf-8', env=env, timeout=300)
     assert built.returncode == 0, built
     for suffix in ('.data.bin', '.layout', '.quad'):

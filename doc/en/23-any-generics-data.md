@@ -164,7 +164,7 @@ Custom hosts register file services through the C function table, using public C
 
 Normal compilation generates LLVM code directly from the AST without quadruple files. The following `.quad` (MGQI v1), `.layout` (CHLY v1), and `.data.bin` formats apply to the standalone AST library compatibility export and historical measurements. Quads share a string table and encode counts, positions and references with unsigned LEB128. Layout records retain names, offsets, sizes and strides. Raw `.data.bin` bytes remain unchanged. Duplicate `.data` text and `.data.h` arrays are no longer emitted; rebuilding the same prefix removes old copies.
 
-The VM exporter detect binary formats automatically and still accept legacy text. Decoders check versions, overflow, truncation, string references and trailing data. This is serialization without encryption.
+The runtime exporter detect binary formats automatically and still accept legacy text. Decoders check versions, overflow, truncation, string references and trailing data. This is serialization without encryption.
 
 Measured on Windows / MinGW `-O2`, 2026-10-13, comparing identical content (bytes):
 

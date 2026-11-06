@@ -147,13 +147,13 @@ struct Storage
         if constexpr (std::is_same_v<T, std::uint8_t>)
         {
             T value{};
-            if (!chali_abi_read(frame.raw, address, &value, sizeof(value))) throw std::runtime_error("ABI read outside VM storage");
+            if (!chali_abi_read(frame.raw, address, &value, sizeof(value))) throw std::runtime_error("ABI read outside runtime storage");
             return value;
         }
         else
         {
             std::int64_t bits = 0;
-            if (!chali_abi_read(frame.raw, address, &bits, sizeof(bits))) throw std::runtime_error("ABI read outside VM storage");
+            if (!chali_abi_read(frame.raw, address, &bits, sizeof(bits))) throw std::runtime_error("ABI read outside runtime storage");
             return scalarValue<T>(bits);
         }
     }
@@ -194,7 +194,7 @@ std::int64_t encode(Frame frame, const T &value)
         if (!Storage<T>::write(frame, address, value))
         {
             chali_abi_temporary_release(frame.raw, address);
-            throw std::runtime_error("ABI write outside VM storage");
+            throw std::runtime_error("ABI write outside runtime storage");
         }
         return address;
     }
@@ -587,10 +587,10 @@ std::int64_t copyPointer(Frame frame, const T *value, std::size_t length, bool a
     if (!array && !value) throw std::runtime_error("ABI returned null for nonnull reference");
     if (!value && count) throw std::runtime_error("ABI returned null for nonempty buffer");
     const auto base = frame.temporary(count * Storage<T>::slots * 8 + (array ? 8 : 0));
-    if (array && !Storage<std::int64_t>::write(frame, base, count)) throw std::runtime_error("ABI write outside VM storage");
+    if (array && !Storage<std::int64_t>::write(frame, base, count)) throw std::runtime_error("ABI write outside runtime storage");
     const auto address = base + (array ? 8 : 0);
     for (std::size_t i = 0; i < count; ++i)
-        if (!Storage<T>::write(frame, address + i * Storage<T>::slots * 8, value[i])) throw std::runtime_error("ABI write outside VM storage");
+        if (!Storage<T>::write(frame, address + i * Storage<T>::slots * 8, value[i])) throw std::runtime_error("ABI write outside runtime storage");
     return address;
 }
 
@@ -702,7 +702,7 @@ struct Result<OptionalReference<T>>
         const auto address = value ? copyPointer<std::remove_const_t<T>>(frame, value, 1, false) : 0;
         const auto base = frame.temporary(16);
         if (!Storage<std::int64_t>::write(frame, base, value ? 0 : 1) || !Storage<std::int64_t>::write(frame, base + 8, address))
-            throw std::runtime_error("ABI write outside VM storage");
+            throw std::runtime_error("ABI write outside runtime storage");
         chali_abi_return_integer(frame.raw, base);
     }
 };

@@ -99,7 +99,7 @@ struct ValueTextRenderer
     bool failed = false;
 
     /**
-     * @brief 绑定当前 VM 的共同原生上下文。
+     * @brief 绑定当前 运行时 的共同原生上下文。
      * @param ctx 用于读取存储及报告错误的上下文。
      */
     explicit ValueTextRenderer(NativeContext &ctx) : context(ctx) {}
@@ -485,7 +485,7 @@ struct ValueTextRenderer
 
 /**
  * @brief 将任意受支持值的默认文本表示分配为拥有型字符串。
- * @param ctx VM 共用的原生上下文。
+ * @param ctx 运行时 共用的原生上下文。
  * @param args 源值及静态布局字符串地址。
  * @retval 新字符串地址；失败时写入诊断并返回零。
  */

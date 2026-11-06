@@ -44,7 +44,7 @@ This complete runnable example contains no module or import. It illustrates a fu
 
 ## 11.3 Project configuration and commands
 
-chali.toml records the entry and project options. When opening an existing project, compare its settings with the options listed by chali help. The run command uses checked AOT, and aot exports native artifacts. Chapter 27 covers targets and linker configuration.
+chali.toml records the entry and project options. When opening an existing project, compare its settings with the options listed by chali help. The run command uses checked AOT, and release builds native artifacts. Chapter 27 covers targets and linker configuration.
 
 ### Why the standard library can travel with the compiler
 

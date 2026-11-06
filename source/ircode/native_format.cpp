@@ -11,7 +11,7 @@ namespace runtimeDetail
 {
 /**
  * @brief 取一个实参的整数值（整数槽直接取，浮点槽取整）。
- * @param slot 待转换或传递的虚拟机值槽。
+ * @param slot 待转换或传递的运行时值槽。
  * @retval 取一个实参的整数值（整数槽直接取，浮点槽取整）。
  */
 std::int64_t nativeInt(const Slot &slot)

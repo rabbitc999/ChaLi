@@ -58,7 +58,7 @@ def prepare(before, after):
         entry['commands'].update(cpp=[str(cpp)], python=[sys.executable, str(paths['python'])], lua=[str(LUA_HOST), str(paths['lua'])])
         for label, compiler in [('before', before), ('after', after)]:
             prefix = folder / label
-            report['builds'][case + '-' + label] = execute([compiler, 'aot', paths['chali'], '--out', prefix], folder)
+            report['builds'][case + '-' + label] = execute([compiler, 'build', paths['chali'], '--out', prefix], folder)
             entry['commands'][label + '_vm'] = [str(compiler), 'run', str(paths['chali']), '--out', str(folder / (label + '-vm'))]
             entry['commands'][label + '_aot'] = [str(prefix.with_suffix('.exe' if os.name == 'nt' else ''))]
         report['cases'][case] = entry

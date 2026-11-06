@@ -368,7 +368,7 @@ void MarkInterfaceMethodUsed(const Memory::String &iface, const Memory::String &
  */
 void AddDiagnostic(const Memory::String &message, std::size_t line, std::size_t column = 0)
 {
-    // 诊断在 VM 内存池销毁后仍需输出，字符串副本必须归宿主长期分配器所有。
+    // 诊断在 运行时 内存池销毁后仍需输出，字符串副本必须归宿主长期分配器所有。
     Memory::AllocationScope persistent(Memory::defaultRuntimeAllocator());
     Memory::String detailed = message;
     int frame = g_macroDiagnosticFrame;

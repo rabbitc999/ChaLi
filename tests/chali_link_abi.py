@@ -42,7 +42,7 @@ def main():
         native = work/'scalars.o'; invoke(['gcc','-O2','-c',provider,'-o',native])
         source = work/'scalars.chl'; source.write_text(declarations+'void main(){'+assertions+'println("scalars OK");}', encoding='utf-8')
         output = work/'scalars'
-        invoke([compiler,'aot',source,'--link',native,'--out',output], extra={'CHALI_ABI_CXX':str(work/'missing-cxx')})
+        invoke([compiler,'build',source,'--link',native,'--out',output], extra={'CHALI_ABI_CXX':str(work/'missing-cxx')})
         assert not output.with_suffix('.abi.cpp').exists()
         assert invoke([output.with_suffix('.exe') if os.name=='nt' else output]).stdout == 'scalars OK\n'
         for target, small_extension, bool_extension in [
@@ -50,7 +50,7 @@ def main():
             ('linux-arm64', '', ''),
             ('windows-x64', '', 'zeroext ')]:
             prefix = work/target
-            invoke([compiler,'aot',source,'--emit-llvm','--target',target,'--out',prefix])
+            invoke([compiler,'build',source,'--emit-llvm','--target',target,'--out',prefix])
             ir = prefix.with_suffix('.ll').read_text(encoding='utf-8')
             assert 'declare '+small_extension+'i8 @"identity_0"(i8'+(' '+small_extension.strip() if small_extension else '')+')' in ir
             assert 'declare '+bool_extension+'i1 @"identity_10"(i1'+(' '+bool_extension.strip() if bool_extension else '')+')' in ir
@@ -80,7 +80,7 @@ def main():
                             '#export("transform") Packet transform(Packet value){value.count+=1;value.value+=0.5;return value;}\n'
                             'void main(){}', encoding='utf-8')
         prefix = work/'exported'
-        invoke([compiler,'aot',exported,'--shared','--out',prefix])
+        invoke([compiler,'build',exported,'--shared','--out',prefix])
         header = prefix.with_suffix('.h')
         struct_name = re.search(r'typedef struct (\w+)',header.read_text(encoding='utf-8')).group(1)
         consumer = work/'consumer.c'

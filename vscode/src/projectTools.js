@@ -76,7 +76,7 @@ function registerProjectTools(vscode, context, deps) {
         { label: text('机器汇编', 'Assembly'), target: 'assembly' },
         { label: 'LLVM IR', target: 'llvm' },
       ];
-      const selected = await vscode.window.showQuickPick(choices, { placeHolder: text('选择项目 AOT 配置', 'Select project AOT configuration') });
+      const selected = await vscode.window.showQuickPick(choices, { placeHolder: text('选择项目构建配置', 'Select project build configuration') });
       if (!selected) return;
       const manifest = vscode.Uri.parse(project.manifestUri);
       const document = project.exists ? await vscode.workspace.openTextDocument(manifest) : null;

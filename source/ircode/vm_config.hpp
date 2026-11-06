@@ -1,6 +1,6 @@
 /**
  * @file vm_config.hpp
- * @brief VM 功能裁剪、分配器和宿主基础类型配置。
+ * @brief 运行时 功能裁剪、分配器和宿主基础类型配置。
  */
 #pragma once
 #include "../../source/chali_i18n.hpp"

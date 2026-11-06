@@ -8,7 +8,7 @@ namespace stackvm
 {
 using namespace runtimeDetail;
 /**
- * @brief 将创建线程时捕获的参数还原到本线程堆，沿用 VM 传值规则。
+ * @brief 将创建线程时捕获的参数还原到本线程堆，沿用 运行时 传值规则。
  * @param context 本线程隔离的堆、对象表和诊断上下文。
  * @return 初始参数值；无参数或还原失败时返回空值。
  */
@@ -45,7 +45,7 @@ void Machine::checkNativeExecution(NativeContext &context)
 }
 
 /**
- * @brief 将原生槽实参交给与 VM 一致的并发服务并返回单槽结果。
+ * @brief 将原生槽实参交给与 运行时 一致的并发服务并返回单槽结果。
  * @param program 函数标签和参数元数据。
  * @param context 当前线程的共享堆、对象表和诊断。
  * @param name 目标服务全名。

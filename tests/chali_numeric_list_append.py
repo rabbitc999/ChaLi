@@ -113,7 +113,7 @@ def main():
         prefix = work / label
         checked = execute([compiler, 'run', source, '--allocator', allocator, '--out', str(prefix) + '-run'], 'checked')
         assert checked.stdout == 'numeric List append primitives OK\n' and not checked.stderr, (checked, work)
-        execute([compiler, 'aot', source, '--allocator', allocator, '--out', prefix], 'build')
+        execute([compiler, 'build', source, '--allocator', allocator, '--out', prefix], 'build')
         native = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')], 'unchecked')
         assert native.stdout == checked.stdout and not native.stderr, (native, work)
         llvm = prefix.with_suffix('.ll').read_text(encoding='utf-8')

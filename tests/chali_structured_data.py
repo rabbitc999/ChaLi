@@ -30,7 +30,7 @@ def main():
         for allocator in ('malloc','pool'):
             for checks in ('checked','unchecked'):
                 target=work/(allocator+'-'+checks+'.exe')
-                run([compiler,'aot',source,'--allocator',allocator,'--'+checks,'--out',target]);result=run([target])
+                run([compiler,'build',source,'--allocator',allocator,'--'+checks,'--out',target]);result=run([target])
                 assert result.stdout==expected and not result.stderr,(allocator,checks,result.stdout,result.stderr)
         result=run([compiler,'run',ROOT/'example/samples-error/structured_closed.chl','--out',work/'closed'],False)
         expected_error=(ROOT/'example/expected-error/structured_closed.txt').read_text(encoding='utf-8').splitlines()[0]

@@ -87,21 +87,21 @@ def main():
         assert old.read_bytes()!=b'original object'
         consumer=work/'main.chl';consumer.write_text('#abi("C","@link","asm_add") int64 asm_add(int64 a,int64 b);\n#abi("C","@link","asm_scale") float64 asm_scale(float64 value);\nvoid main(){assert(asm_scale(2.5)==5.0);println("asm {}",asm_add(20,22));}\n',encoding='utf-8')
         output=work/'final & 中文'
-        invoke([compiler,'aot',consumer,'--asm',assembly,'--asm',data,'--asm-include',include,'--out',output,*backend],work)
+        invoke([compiler,'build',consumer,'--asm',assembly,'--asm',data,'--asm-include',include,'--out',output,*backend],work)
         assert invoke([output.with_suffix('.exe') if os.name=='nt' else output],work).stdout=='asm 52\n'
         native=work/'native.c';library=work/('native.dll' if os.name=='nt' else 'native.so')
         native.write_text('struct Packet{long long value;};\n#if defined(_WIN32)\n__declspec(dllexport)\n#endif\nstruct Packet transform(struct Packet p){p.value+=1;return p;}\n',encoding='utf-8')
         invoke(['gcc','-shared',*(['-fPIC'] if os.name!='nt' else []),native,'-o',library],work)
         mixed=work/'mixed.chl'
         mixed.write_text('#abi("C","@link","asm_add") int64 asm_add(int64 a,int64 b);\n#abi("C","@link","asm_scale") float64 asm_scale(float64 value);\nstruct Packet{int64 value;};\n#abi("C",'+json.dumps(library.as_posix())+',"transform") Packet transform(Packet value);\nvoid main(){assert(asm_scale(2.5)==5.0);Packet p;p.value=asm_add(20,22);let result=transform(p);println("mixed {}",result.value);}\n',encoding='utf-8')
-        invoke([compiler,'aot',mixed,'--asm',assembly,'--asm',data,'--asm-include',include,'--out',work/'mixed',*backend],work)
+        invoke([compiler,'build',mixed,'--asm',assembly,'--asm',data,'--asm-include',include,'--out',work/'mixed',*backend],work)
         assert invoke([work/('mixed.exe' if os.name=='nt' else 'mixed')],work).stdout=='mixed 53\n'
         unsupported=work/'unsupported.chl'
         unsupported.write_text('struct Packet{String value;};#abi("C","@link","transform") Packet transform(Packet value);void main(){}',encoding='utf-8')
         failure=invoke([compiler,'--check',unsupported],work,False)
         assert 'abi' in failure.stderr.lower()
         for flag in ['--emit-asm','--emit-obj','--emit-llvm']:
-            invoke([compiler,'aot',consumer,'--asm',assembly,flag,'--out',work/'invalid',*backend],work,False)
+            invoke([compiler,'build',consumer,'--asm',assembly,flag,'--out',work/'invalid',*backend],work,False)
         if info['llvm']=='static':
             environment={'PATH':str(Path(os.environ['SystemRoot'])/'System32'),'CHALI_LLVM_CLANG':str(work/'missing-clang.exe')}
             invoke([compiler,'asm',assembly,'--out',work/'isolated.o','-I',include],work,environment=environment)

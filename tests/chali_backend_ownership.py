@@ -99,7 +99,7 @@ def main():
                 print(name+' '+backend+' 语义通过', flush=True)
             env['CHALI_BACKEND_PROFILE'] = '1'
             target = work / (name+'-profile')
-            result = subprocess.run([str(compiler), 'aot', str(ROOT/'example/samples/backend_ownership.chl'), '--out', str(target)],
+            result = subprocess.run([str(compiler), 'build', str(ROOT/'example/samples/backend_ownership.chl'), '--out', str(target)],
                                     cwd=ROOT, env=env, capture_output=True, text=True, encoding='utf-8', timeout=300)
             assert result.returncode == 0, result.stdout + result.stderr
             env['CHALI_BACKEND_PROFILE_OUTPUT'] = str(work/(name+'.json'))

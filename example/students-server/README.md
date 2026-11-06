@@ -32,7 +32,7 @@ chali run example/students-server/src/main.chl -- 8787 example/students-server/w
 原生导出：
 
 ```sh
-chali aot example/students-server/src/main.chl --out build/students-server
+chali build example/students-server/src/main.chl --out build/students-server
 ```
 
 运行导出的程序时传入相同三个参数。网页、配置及数据库客户端依赖仍需准备；aot 默认 unchecked，开发核查可以显式 --checked。连接默认只监听 127.0.0.1，不提供 TLS；跨机器部署需由 HTTPS 入口保护传输。本例为单进程串行服务，没有密码找回、分布式会话或后台任务。

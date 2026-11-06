@@ -4,9 +4,7 @@
 **English** · [简体中文](../13-projects.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-The earlier documents explain *how to write* ChaLi. This one lists **what already runs in the
-repository** — for each example: where it lives, which capability it shows off, how to run it, how
-it is verified, and what it needs beforehand.
+Examples list source locations, run commands, validation scripts and prerequisites.
 
 Every command is run **from the repository root** (on Windows the compiler is `ChaLi.exe`; below it
 is written `chali`).
@@ -27,18 +25,9 @@ is written `chali`).
 
 ---
 
-## 2. How to read this document
+## 2. Example organization
 
-Every example uses the same four headings:
-
-- **What it demonstrates** — which side of the language it is meant to prove;
-- **How to run it** — the shortest command that works;
-- **How it is verified** — the dedicated regression script (an example only earns the name if it passes);
-- **Boundaries** — prerequisites, and what it deliberately does *not* do.
-
-The examples fall into two groups; do not confuse them. **Application** examples (student records and graphics) show *what you can build*. **Capability** examples (calculator,
-reflection, module compilation, standard-library companions) show *what a language or library
-feature looks like*.
+Application examples demonstrate complete programs. Capability examples demonstrate individual language or standard-library features. Each section lists commands, validation scripts and dependencies.
 
 ---
 
@@ -162,7 +151,7 @@ Type mapping and `abi` block syntax are in [Host integration and C ABI](08-host-
 
 ### 6.1 Embedded Linux hosting
 
-Run `chali aot` on the target machine: the output is a statically linked native executable, so the
+Run `chali build` on the target machine: the output is a statically linked native executable, so the
 binary itself is the deliverable (add the shared library when the program uses `#abi`). Cross
 compilation, resource budgets and execution boundaries are in the [deployment guide](06-deployment.md).
 

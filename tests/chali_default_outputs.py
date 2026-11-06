@@ -47,7 +47,7 @@ def main():
             assert not list(source_directory.glob('*.quad'))
             assert not list(source_directory.glob('*.llvm.log'))
 
-        invoke([compiler, 'aot', source, *backend])
+        invoke([compiler, 'build', source, *backend])
         assert executable.is_file()
         assert invoke([executable]).stdout == 'default output OK\n'
         cleaned()
@@ -55,16 +55,16 @@ def main():
         assert executable.is_file()
         cleaned()
         for flag, suffix in [('--emit-obj', '.o'), ('--emit-asm', '.s'), ('--emit-llvm', '.ll')]:
-            invoke([compiler, 'aot', source, flag, *backend])
+            invoke([compiler, 'build', source, flag, *backend])
             assert source.with_suffix(suffix).stat().st_size > 0
             cleaned()
         saved = executable.read_bytes()
         source.write_text('void main(){missingName();}\n', encoding='utf-8')
-        invoke([compiler, 'aot', source, *backend], False)
+        invoke([compiler, 'build', source, *backend], False)
         assert executable.read_bytes() == saved
         cleaned()
         source.write_text(valid, encoding='utf-8')
-        invoke([compiler, 'aot', source, '--llvm', work / 'missing-clang'], False)
+        invoke([compiler, 'build', source, '--llvm', work / 'missing-clang'], False)
         assert executable.read_bytes() == saved
         cleaned()
         source.write_text('void main(){assert(false);}\n', encoding='utf-8')
@@ -80,15 +80,15 @@ def main():
         marker.unlink()
         workspace.rmdir()
         workspace.write_text('not a directory', encoding='utf-8')
-        invoke([compiler, 'aot', source, *backend], False)
+        invoke([compiler, 'build', source, *backend], False)
         assert workspace.read_text(encoding='utf-8') == 'not a directory'
         workspace.unlink()
         api = source_directory / 'api.chl'
         api.write_text('export int64 add(int64 value){return value+1;}\n', encoding='utf-8')
-        invoke([compiler, 'aot', api, '--shared', '--emit-llvm', *backend])
+        invoke([compiler, 'build', api, '--shared', '--emit-llvm', *backend])
         assert 'f_add(' in api.with_suffix('.h').read_text(encoding='utf-8')
         cleaned()
-        invoke([compiler, 'aot', api, '--shared', *backend])
+        invoke([compiler, 'build', api, '--shared', *backend])
         library = api.with_suffix('.dll' if os.name == 'nt' else '.so')
         driver = source_directory / 'driver.c'
         driver.write_text('#include "api.h"\nint main(void){chali_init();int ok=f_add(41)==42;chali_finish();return !ok;}\n', encoding='utf-8')
@@ -96,7 +96,7 @@ def main():
         invoke(['gcc', driver, library, *([] if os.name == 'nt' else ['-Wl,-rpath,$ORIGIN']), '-o', host])
         invoke([host])
         cleaned()
-        invoke([compiler, 'aot', source, '--keep-artifacts', *backend])
+        invoke([compiler, 'build', source, '--keep-artifacts', *backend])
         assert list(workspace.glob('build-*/*.ll'))
         if os.name == 'nt':
             kernel = ctypes.WinDLL('kernel32', use_last_error=True)

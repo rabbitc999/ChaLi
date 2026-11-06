@@ -92,7 +92,7 @@ def main():
         for allocator in ('malloc', 'pool'):
             for mode in ('checked', 'unchecked'):
                 target = work / (allocator + '-' + mode + ('.exe' if os.name == 'nt' else ''))
-                invoke(compiler, 'aot', source, '--allocator', allocator, '--' + mode, '--out', target)
+                invoke(compiler, 'build', source, '--allocator', allocator, '--' + mode, '--out', target)
                 output = invoke(target)
                 assert output == baseline['output'], (allocator, mode, output, baseline['output'])
                 print(f'{allocator}/{mode}: {len(CASES)*4} parse compatibility results passed', flush=True)

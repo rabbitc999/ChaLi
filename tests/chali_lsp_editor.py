@@ -29,7 +29,7 @@ def main():
         text = 'import std::parse;\nvoid main(){\n int64 ignored=1;\n assert(std::parse::Parse::parseInt64("3").unwrap()==3);\n}\n'
         source.write_text(text, encoding='utf-8')
         config = project / 'chali.toml'
-        original = '[package]\nname="editor"\ndescription="""\n[aot]\ntarget="literal, not a setting"\n"""\n# preserve this comment\n[aot] # table comment\ntarget="windows-x64" # target comment\noutput="object"\n[warnings]\nunused-local="warn"\n'
+        original = '[package]\nname="editor"\ndescription="""\n[build]\ntarget="literal, not a setting"\n"""\n# preserve this comment\n[build] # table comment\ntarget="windows-x64" # target comment\noutput="object"\n[warnings]\nunused-local="warn"\n'
         config.write_text(original, encoding='utf-8')
         server = Transport(compiler, project)
         uri = source.as_uri()
@@ -99,7 +99,7 @@ def main():
         finally:
             server.close()
         # 项目清单由编辑结果决定目标与输出；只验证 Linux ARM64 对象，不执行目标机器码。
-        command = [str(compiler), 'aot', str(source), '--out', str(root / 'cross')]
+        command = [str(compiler), 'build', str(source), '--out', str(root / 'cross')]
         if info['llvm'] == 'external':
             clang = os.environ.get('CHALI_LLVM_CLANG')
             if not clang and os.name == 'nt':

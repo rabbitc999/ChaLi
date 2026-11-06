@@ -844,7 +844,7 @@ bool float64ToBytes(float64 value, uint8[] mut& bytes, bool bigEndian) {
 /** 默认小端运行时数组编码；调用时传入 &array。 */
 bool float64ToBytes(float64 value, uint8[] mut& bytes) { return float64ToBytes(value, bytes, false); }
 
-/* ChaLi 标准库前导模块。这里放可由 ChaLi 自身表达的类型；算法由编译器签名接入 VM 胶水。 */
+/* ChaLi 标准库前导模块。这里放可由 ChaLi 自身表达的类型；算法由编译器签名接入 运行时 胶水。 */
 
 /*
  * 中止统一使用 std::core::panic，编译器与运行时通过 `__std_panic` 执行停机。

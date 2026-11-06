@@ -171,7 +171,7 @@ def main():
             ['lib', 'build', consumer, '--module', 'example::math', '--package-version', '1.2.3', '--out', retired_output],
             ['lib', 'lock', placed, '--out', retired_output],
             ['link', obj, '--package', placed, '--out', retired_output],
-            ['aot', consumer, '--library-implementation', 'bitcode', '--out', retired_output],
+            ['build', consumer, '--library-implementation', 'bitcode', '--out', retired_output],
             ['check', consumer, '--library-lock', retired_output],
         ):
             rejected = invoke([compiler, *args], work, False)

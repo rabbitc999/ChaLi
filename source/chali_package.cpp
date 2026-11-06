@@ -30,13 +30,13 @@ Memory::String trim(const Memory::String &s)
 }
 
 /**
- * @brief 归一化运行方式：`interpret` / `run` / `aot` 一律折到 `run`。
+ * @brief 归一化运行方式：`interpret` / `run` 一律折到 `run`。
  * @param mode 配置里写的运行方式。
  * @return 归一化后的名字；不认识时返回空串（调用方据此报错）。
  */
 Memory::String normalizeRunMode(const Memory::String &mode)
 {
-    if (mode == "interpret" || mode == "run" || mode == "aot") return "run";
+    if (mode == "interpret" || mode == "run") return "run";
     return Memory::String();
 }
 
@@ -292,13 +292,13 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                 }
                 continue;
             }
-            if (name != "package" && name != "chali" && name != "aot")
+            if (name != "package" && name != "chali" && name != "build")
                 throw std::runtime_error("unknown or repeated table: " + name);
             for (const toml::Member &entry : table.value.asTable()->members())
             {
                 const Memory::String key = entry.key;
                 const Memory::String where = name + "." + key;
-                if (name == "aot")
+                if (name == "build")
                 {
                     if (key == "lto")
                     {
@@ -307,7 +307,7 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                         else
                         {
                             const auto mode = tomlText(entry.value, where);
-                            if (mode != "off" && mode != "full" && mode != "thin") throw std::runtime_error("aot.lto expects bool or off/full/thin");
+                            if (mode != "off" && mode != "full" && mode != "thin") throw std::runtime_error("build.lto expects bool or off/full/thin");
                             project.aotLto = mode != "off";
                             project.aotThinLto = mode == "thin";
                         }
@@ -322,7 +322,7 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                         for (const auto &item : tomlArray(entry.value, where))
                         {
                             const auto text = trim(item);
-                            if (text.empty()) throw std::runtime_error("aot list value cannot be empty: " + key);
+                            if (text.empty()) throw std::runtime_error("build list value cannot be empty: " + key);
                             // 裸库名交给链接器解析，带路径或以点开头的项相对清单解析。
                             const bool bare = key == "libraries" && text.find('/') == Memory::String::npos
                                               && text.find('\\') == Memory::String::npos && text.find('.') == Memory::String::npos;
@@ -331,26 +331,26 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                         continue;
                     }
                     const auto value = tomlText(entry.value, where);
-                    if (value.empty()) throw std::runtime_error("aot value cannot be empty: " + key);
+                    if (value.empty()) throw std::runtime_error("build value cannot be empty: " + key);
                     if (key == "target") project.aotTarget = value;
                     else if (key == "cpu") project.aotCpu = value;
                     else if (key == "subsystem")
                     {
-                        if (value != "console" && value != "windows") throw std::runtime_error("aot.subsystem expects console or windows");
+                        if (value != "console" && value != "windows") throw std::runtime_error("build.subsystem expects console or windows");
                         project.aotSubsystem = value;
                     }
                     else if (key == "sysroot") project.aotSysroot = path(value, base);
                     else if (key == "runtime_dir") project.aotRuntimeDirectory = path(value, base);
                     else if (key == "allocator")
                     {
-                        if (value != "malloc" && value != "pool") throw std::runtime_error("aot.allocator expects malloc or pool");
+                        if (value != "malloc" && value != "pool") throw std::runtime_error("build.allocator expects malloc or pool");
                         project.aotAllocator = value;
                     }
                     else if (key == "llvm") project.aotCompiler = path(value, base);
                     else if (key == "output")
                     {
                         if (value != "llvm" && value != "object" && value != "assembly" && value != "executable")
-                            throw std::runtime_error("aot.output expects llvm, object, assembly or executable");
+                            throw std::runtime_error("build.output expects llvm, object, assembly or executable");
                         project.aotOutput = value;
                     }
                     else throw std::runtime_error("unknown aot key: " + key);
@@ -385,7 +385,7 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                 if (key == "run")
                 {
                     const auto mode = normalizeRunMode(tomlText(entry.value, where));
-                    if (mode.empty()) throw std::runtime_error("invalid run mode (expect run; .svmb was removed)");
+                    if (mode.empty()) throw std::runtime_error("invalid run mode (expect run)");
                     project.run = mode;
                 }
                 else if (key == "debug")

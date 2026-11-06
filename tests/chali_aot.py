@@ -2,7 +2,7 @@
 
 覆盖五件事：
 
-1. `chali aot` 编出的 exe 与 `chali run` 的 stdout 一致；
+1. `chali build` 编出的 exe 与 `chali run` 的 stdout 一致；
 2. 显式 `--checked` 保留越界及指针检查，并核对 unchecked 导出路径；
 3. `--emit-llvm` 只出 LLVM 模块，不调编译器；
 4. **AOT 调外部 C**：`abi` 块声明的函数在产物里变成 extern 调用并链接动态库；
@@ -110,7 +110,7 @@ def main():
             print('[跳过] 没有 C 编译器，AOT 产物相关检查不跑', flush=True)
             return
         exe = work / 'aot_basic'
-        result = invoke([compiler, 'aot', sample, '--out', exe, '--llvm', cc])
+        result = invoke([compiler, 'build', sample, '--out', exe, '--llvm', cc])
         assert result.returncode == 0, (result.stdout, result.stderr)
         product = exe.with_suffix('.exe' if os.name == 'nt' else '')
         assert product.exists(), 'AOT 没产出可执行文件'
@@ -137,7 +137,7 @@ def main():
         print('[通过] Linux x64 LLVM 模块生成 ELF 目标文件', flush=True)
         assert 'checks: off' in opened
         unchecked_prefix = work / 'aot_checked'
-        result = invoke([compiler, 'aot', sample, '--out', unchecked_prefix, '--llvm', cc, '--checked'])
+        result = invoke([compiler, 'build', sample, '--out', unchecked_prefix, '--llvm', cc, '--checked'])
         assert result.returncode == 0, (result.stdout, result.stderr)
         unchecked = unchecked_prefix.with_suffix('.ll').read_text(encoding='utf-8')
         assert 'checks: on' in unchecked
@@ -147,23 +147,23 @@ def main():
 
         # 3) `--emit-llvm` 只出 LLVM 模块
         emit_only = work / 'aot_emit'
-        result = invoke([compiler, 'aot', sample, '--out', emit_only, '--llvm', cc, '--emit-llvm'])
+        result = invoke([compiler, 'build', sample, '--out', emit_only, '--llvm', cc, '--emit-llvm'])
         assert result.returncode == 0, (result.stdout, result.stderr)
         assert (emit_only.with_suffix('.ll')).exists()
         assert not (emit_only.with_suffix('.exe' if os.name == 'nt' else '')).exists(), '--emit-llvm 不该出可执行文件'
         print('[通过] --emit-llvm 只出 LLVM 模块', flush=True)
         mode_only = work / 'mode_emit'
-        result = invoke([compiler, '--mode', 'aot', sample, '--out', mode_only, '--emit-llvm'])
+        result = invoke([compiler, '--mode', 'build', sample, '--out', mode_only, '--emit-llvm'])
         assert result.returncode == 0, (result.stdout, result.stderr)
         assert mode_only.with_suffix('.ll').read_bytes() == emit_only.with_suffix('.ll').read_bytes()
         # 模块导出完全由编译器完成，不依赖本机 LLVM 工具可执行。
-        result = invoke([compiler, 'aot', sample, '--out', work / 'without_tool', '--emit-llvm',
+        result = invoke([compiler, 'build', sample, '--out', work / 'without_tool', '--emit-llvm',
                          '--llvm', work / 'missing-clang'])
         assert result.returncode == 0, result
-        result = invoke([compiler, 'aot', sample, '--llvm'])
+        result = invoke([compiler, 'build', sample, '--llvm'])
         assert result.returncode == 2 and '缺少取值' in result.stderr, result
-        print('[通过] --mode aot 与缺少参数诊断', flush=True)
-        result = invoke([compiler, 'aot', sample, '--emit-llvm', '--shared', '--export', 'missing_function',
+        print('[通过] --mode build 与缺少参数诊断', flush=True)
+        result = invoke([compiler, 'build', sample, '--emit-llvm', '--shared', '--export', 'missing_function',
                          '--out', work / 'missing_export'])
         assert result.returncode != 0 and '找不到要导出的函数' in result.stderr, result
 
@@ -183,7 +183,7 @@ def main():
         expected_abi = result.stdout
         assert result.returncode == 0 and expected_abi == 'aot -> c: 42\nabi values: 3.75 4294967295\nalias: 42\n', result
         abi_exe = work / 'abi_use'
-        result = invoke([compiler, 'aot', abi, '--out', abi_exe, '--llvm', cc])
+        result = invoke([compiler, 'build', abi, '--out', abi_exe, '--llvm', cc])
         assert result.returncode == 0, (result.stdout, result.stderr)
         abi_llvm = abi_exe.with_suffix('.ll').read_text(encoding='utf-8')
         encoded_symbol = ''.join(f'\\{byte:02X}' for byte in b'aot_add')
@@ -197,17 +197,17 @@ def main():
         exported = work / 'exported.chl'
         exported.write_text(EXPORT_SOURCE, encoding='utf-8')
         shared = work / 'exported'
-        result = invoke([compiler, 'aot', exported, '--out', shared, '--llvm', cc, '--shared'])
+        result = invoke([compiler, 'build', exported, '--out', shared, '--llvm', cc, '--shared'])
         assert result.returncode == 0, (result.stdout, result.stderr)
         header = (shared.with_suffix('.h')).read_text(encoding='utf-8')
         assert 'int64_t f_add(int64_t' in header, header
         assert 'void chali_init(void);' in header
         assert 'f_hidden(' not in header, header
-        missing_main = invoke([compiler, 'aot', exported, '--emit-llvm', '--out', work / 'needs-main'])
+        missing_main = invoke([compiler, 'build', exported, '--emit-llvm', '--out', work / 'needs-main'])
         assert missing_main.returncode != 0 and 'main' in missing_main.stderr, missing_main
         ordinary = work / 'explicit.chl'
         ordinary.write_text('int64 plain(int64 x) { return x + 1; }\nvoid main() {}\n', encoding='utf-8')
-        explicit = invoke([compiler, 'aot', ordinary, '--shared', '--emit-llvm', '--export', 'plain', '--out', work / 'explicit'])
+        explicit = invoke([compiler, 'build', ordinary, '--shared', '--emit-llvm', '--export', 'plain', '--out', work / 'explicit'])
         assert explicit.returncode == 0, explicit
         assert 'int64_t f_plain(' in (work / 'explicit.h').read_text(encoding='utf-8')
         driver = work / 'driver.c'
@@ -229,7 +229,7 @@ int64 addNumbers(int64 left, int64 right) { return left + right; }
 float64 scaleNumber(float64 value) { return value * 1.5; }
 ''', encoding='utf-8')
         named_prefix = work / 'named'
-        built = invoke([compiler, 'aot', named, '--shared', '--out', named_prefix])
+        built = invoke([compiler, 'build', named, '--shared', '--out', named_prefix])
         assert built.returncode == 0, built
         named_driver = work / 'named_driver.c'
         named_driver.write_text('''#include "named.h"
@@ -279,7 +279,7 @@ void main()
         spaced = work / 'LLVM space path'
         spaced.mkdir()
         numeric_prefix = spaced / 'numeric'
-        result = invoke([compiler, 'aot', numeric, '--out', numeric_prefix])
+        result = invoke([compiler, 'build', numeric, '--out', numeric_prefix])
         assert result.returncode == 0, result
         result = invoke([numeric_prefix.with_suffix('.exe' if os.name == 'nt' else '')])
         assert (result.returncode, result.stdout) == (0, expected_numeric.stdout), (result, expected_numeric)
@@ -295,7 +295,7 @@ void main()
 }
 ''', encoding='utf-8')
         bounds_prefix = work / 'bounds'
-        result = invoke([compiler, 'aot', bounds, '--checked', '--out', bounds_prefix])
+        result = invoke([compiler, 'build', bounds, '--checked', '--out', bounds_prefix])
         assert result.returncode == 0, result
         result = invoke([bounds_prefix.with_suffix('.exe' if os.name == 'nt' else '')])
         assert result.returncode != 0 and '越界' in result.stderr, result

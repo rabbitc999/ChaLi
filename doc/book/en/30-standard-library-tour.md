@@ -30,7 +30,7 @@ Use a compiler built with the `std::gui` native archive. See [Optional host libr
 
 ```sh
 chali run example/desktop-gui/life.chl
-chali aot example/desktop-gui/life.chl --out build/life
+chali build example/desktop-gui/life.chl --out build/life
 ```
 
 On Windows, `build/life.exe` includes the native GUI code it uses. Copy that file to another directory and run it. The application uses Win32 for its window and needs no accompanying GUI DLL.

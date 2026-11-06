@@ -43,7 +43,7 @@ def main():
             return run([*args, *extra], success=success, cwd=project, env=env)
         source.write_text('/*\nmodule hidden;\nimport absent;\n*/\n' + source.read_text(encoding='utf-8').replace('    std::core::println("chali-ok");', '    std::core::assert(nativeapi::nativeIdentity((int32)7) == 7);\n    std::core::println("chali-ok");'), encoding='utf-8')
         assert execute().stdout == 'chali-ok\n'
-        emitted = [args[0], 'aot', *args[2:], '--emit-llvm', '--incremental']
+        emitted = [args[0], 'build', *args[2:], '--emit-llvm', '--incremental']
         first = run(emitted)
         llvm = prefix.with_suffix('.ll')
         text = llvm.read_text(encoding='utf-8')
@@ -86,15 +86,15 @@ def main():
             return Path(str(prefix) + ('.exe' if os.name == 'nt' else ''))
 
         # 项目 `debug = true` 等价于命令行 `--debug`：不裁剪符号、降低优化级别，产物更大。
-        run([COMPILER, 'aot', source, '--out', binary], cwd=project)
+        run([COMPILER, 'build', source, '--out', binary], cwd=project)
         released = product(binary).stat().st_size
         manifest.write_text(original.replace('[chali]', '[chali]\ndebug = true'), encoding='utf-8')
-        run([COMPILER, 'aot', source, '--out', binary], cwd=project)
+        run([COMPILER, 'build', source, '--out', binary], cwd=project)
         assert product(binary).stat().st_size > released
         manifest.write_text(original, encoding='utf-8')
-        run([COMPILER, 'aot', source, '--out', binary, '--debug'], cwd=project)
+        run([COMPILER, 'build', source, '--out', binary, '--debug'], cwd=project)
         assert product(binary).stat().st_size > released
-        run([COMPILER, 'aot', source, '--out', binary, '--no-debug'], cwd=project)
+        run([COMPILER, 'build', source, '--out', binary, '--no-debug'], cwd=project)
         assert product(binary).stat().st_size == released
         manifest.write_text(original.replace('[chali]', '[chali]\nencrypt = true'), encoding='utf-8')
         rejected = run([COMPILER, 'run', source, '--out', binary], success=False, cwd=project)

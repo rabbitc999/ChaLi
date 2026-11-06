@@ -22,7 +22,7 @@ Linux 源码构建使用 `make native-extensions` 后再运行 `make`，需准�
 raylib 提供窗口、事件和绘制，raygui 提供控件。默认构建关闭音频、三维模型和内置图标。`--audio` 启用独立 `std::audio` 模块，`--icons` 加入图标。脚本校验归档摘要，`--offline` 只读已下载的有效归档。
 
 ```powershell
-chali aot example/desktop-gui/demo.chl --out build/gui-demo
+chali build example/desktop-gui/demo.chl --out build/gui-demo
 ```
 运行 `gui-demo.exe` 后，`Count` 按钮累加计数，关闭窗体时输出 `clicks=N`，未点击时为 `clicks=0`。在创建窗口的线程上完成绘制与事件循环，退出时调用 `close()`。音频代码独立按需链接。
 

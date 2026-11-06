@@ -39,7 +39,7 @@ ChaLi 前端完成类型、借用和确定性清理的降低后，正常路径�
 
 ```powershell
 $env:CHALI_BACKEND_PROFILE='1'
-chali aot example/samples/backend_ownership.chl --out tmp/ownership-profile
+chali build example/samples/backend_ownership.chl --out tmp/ownership-profile
 Remove-Item Env:CHALI_BACKEND_PROFILE
 $env:CHALI_BACKEND_PROFILE_OUTPUT="$PWD/tmp/ownership-profile.json"
 & ./tmp/ownership-profile.exe

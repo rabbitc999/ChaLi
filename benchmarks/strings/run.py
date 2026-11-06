@@ -160,7 +160,7 @@ def main():
         work = Path(folder)
         products = {}
         common = work / 'chali-kernel'
-        report['builds']['chali-module'] = [execute([compiler, 'aot', HERE / 'cases.chl', '--shared', '--unchecked',
+        report['builds']['chali-module'] = [execute([compiler, 'build', HERE / 'cases.chl', '--shared', '--unchecked',
                                                     '--allocator', 'malloc', '--out', common], build=True)]
         library = Path(str(common) + ('.dll' if os.name == 'nt' else '.so'))
         report['chali_kernel_sha256'] = digest(library)

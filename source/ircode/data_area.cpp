@@ -1,6 +1,6 @@
 /**
  * @file data_area.cpp
- * @brief VM 数据区初始化、地址转换与边界检查。
+ * @brief 运行时 数据区初始化、地址转换与边界检查。
  */
 #include "runtime_internal.hpp"
 

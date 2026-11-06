@@ -32,7 +32,7 @@ struct EventTimer
     bool active = true;
 };
 /**
- * @brief 宿主持有的有界事件队列，独立于 VM 内存池，投递器通过弱引用访问。
+ * @brief 宿主持有的有界事件队列，独立于 运行时 内存池，投递器通过弱引用访问。
  */
 struct EventQueue
 {

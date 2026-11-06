@@ -8,7 +8,7 @@
 
 Measurements were performed on Windows x64 on 2026-11-05 with ChaLi 1.0.0 and statically embedded LLVM. The original release corresponds to commit `76c0c5b`. The first size reduction was rebuilt from commit `3d9fb60`; the subsequent C service reconstruction retains version 1.0.0 and uses the repository-pinned LLVM 23.1.4 and GCC 16.2.0. All sizes are actual EXE file sizes in bytes.
 
-Compilation, optimization and linking used the new compiler's normal `chali aot` entry point. Executables ran locally on Windows and use the system C runtime.
+Compilation, optimization and linking used the new compiler's normal `chali build` entry point. Executables ran locally on Windows and use the system C runtime.
 
 ## Hello World baseline
 
@@ -97,12 +97,12 @@ The Windows x64 tests relocated each EXE by itself to a new directory. Importing
 Run from the repository root, with `chali.exe` pointing to the rebuilt static LLVM compiler.
 
 ```powershell
-chali.exe aot tt.chl --lto-mode off --out tmp/tt-off
-chali.exe aot tt.chl --lto-mode full --out tmp/tt-full
-chali.exe aot tt.chl --lto-mode thin --out tmp/tt-thin
+chali.exe build tt.chl --lto-mode off --out tmp/tt-off
+chali.exe build tt.chl --lto-mode full --out tmp/tt-full
+chali.exe build tt.chl --lto-mode thin --out tmp/tt-thin
 Get-Item tmp/tt-off.exe,tmp/tt-full.exe,tmp/tt-thin.exe |
     Select-Object Name,Length
-chali.exe aot example/samples/dynamic_array.chl --lto-mode full --out tmp/dynamic-array
+chali.exe build example/samples/dynamic_array.chl --lto-mode full --out tmp/dynamic-array
 ./tmp/dynamic-array.exe
 ```
 

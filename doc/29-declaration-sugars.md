@@ -79,7 +79,7 @@ lowerReturnControl(E):
     return ordinary return slot
 ```
 
-这里的 transfer/copy 是编译器伪操作，不新增 VM 操作码。已有 `LowerLanguageMove` 使用存活内存检查、地址读取、源槽清零及聚合移动标记；复制仍使用现有字符串、对象与结构体复制路径。Drop 保留在相应控制流上，由移动状态保护，不能在遇到一条移动分支时全局删除另一条分支的清理。清理回调若仍访问已消费的来源，必须由借用检查拒绝，不能靠悬垂别名访问搬走的资源。
+这里的 transfer/copy 是编译器伪操作，不新增运行时操作码。已有 `LowerLanguageMove` 使用存活内存检查、地址读取、源槽清零及聚合移动标记；复制仍使用现有字符串、对象与结构体复制路径。Drop 保留在相应控制流上，由移动状态保护，不能在遇到一条移动分支时全局删除另一条分支的清理。清理回调若仍访问已消费的来源，必须由借用检查拒绝，不能靠悬垂别名访问搬走的资源。
 
 核心代码见 [`M_ReturnValue`](../source/semantics/return_expression_ast.cpp)、[`PrepareBreakValue` 与 `LowerLanguageMove`](../source/semantics/boxing.cpp)、[`LowerLoop`](../source/semantics/lowering.cpp) 和[借用控制流](../source/chali_borrow_flow.hpp)。
 

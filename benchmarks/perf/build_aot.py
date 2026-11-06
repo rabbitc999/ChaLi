@@ -41,7 +41,7 @@ def main():
     path = work / 'work.chl'
     path.write_text(source, encoding='utf-8')
     prefix = work / (case + '-kernel')
-    result = subprocess.run([str(options.compiler.resolve()), 'aot', str(path),
+    result = subprocess.run([str(options.compiler.resolve()), 'build', str(path),
                              '--shared', '--allocator', options.allocator, '--out', str(prefix)],
                             capture_output=True, text=True, encoding='utf-8', errors='replace',
                             env=dict(os.environ, CHALI_LANG='zh'))

@@ -5,7 +5,7 @@
  * eprint / eprintln 的包装逻辑已上移到 std/core.chl（ChaLi 实现），本模块只保留
  * 唯一的流原语 `__std_stderr_write`，供 显式步数检查等未启用直连降级的路径回退使用。
  *
- * 参数文本按零拷贝视图读取：`chali_abi_bytes` 直接返回 VM 数据区或堆上的
+ * 参数文本按零拷贝视图读取：`chali_abi_bytes` 直接返回 运行时 数据区或堆上的
  * 物理字节，不复制成任何宿主字符串对象。
  */
 #include "chali_abi_internal.h"

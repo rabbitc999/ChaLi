@@ -337,7 +337,7 @@ struct Text {
         if (left > right) { return 1; }
         return 0;
     }
-    /** ASCII 大小写（VM 里不认区域设置，结果可复现）。 */
+    /** ASCII 大小写（运行时 里不认区域设置，结果可复现）。 */
     static std::core::String toUpper(std::core::String text) { return __textUpper(text); }
     static std::core::String toLower(std::core::String text) { return __textLower(text); }
     /** 去掉两端 / 左端 / 右端的空白（空格 \t \n \r \v \f）。 */

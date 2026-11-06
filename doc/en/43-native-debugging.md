@@ -1,4 +1,4 @@
-# Native AOT debugging
+# build debugging
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../43-native-debugging.md)
@@ -6,7 +6,7 @@
 
 On Windows, per-thread debug observation buffers use FLS-managed heap state. Thread exit retires the directory entry and releases its snapshot buffers; module unload releases the FLS slot and remaining states. This avoids accessing emulated TLS storage after older MinGW runtimes have freed it. Non-Windows builds retain their native TLS path.
 
-`run` compiles and executes checked AOT code. `aot` defaults to unchecked native export. Native debugging uses machine code, DWARF source locations, and actual frame slots.
+`run` compiles and executes checked AOT code. `build` performs a release build with checks disabled by default. Native debugging uses machine code, DWARF source locations, and actual frame slots.
 
 ## VS Code
 
@@ -27,7 +27,7 @@ On Linux editor hosts using Node.js 20.8 or later, session-specific abstract soc
 }
 ```
 
-`debuggerPath` selects GDB; otherwise the adapter uses `CHALI_GDB`, then `gdb` on PATH. Its architecture must match the generated program. Compiler, adapter and GDB subprocesses inherit the same project `tmp/` directory, where native debug artifacts remain available for inspection. Failed breakpoints are reported as unverified with diagnostics, with no VM fallback.
+`debuggerPath` selects GDB; otherwise the adapter uses `CHALI_GDB`, then `gdb` on PATH. Its architecture must match the generated program. Compiler, adapter and GDB subprocesses inherit the same project `tmp/` directory, where native debug artifacts remain available for inspection. Failed breakpoints are reported as unverified with diagnostics, without a fallback execution path.
 
 The Check Debug Environment command probes the selected compiler and GDB. `chali.debuggerPath` sets the default GDB; the launch configuration overrides it. Windows GDB may encode launch arguments through a system code page. Current ChaLi debug artifacts also read length-prefixed UTF-8 arguments, preserving empty strings, Unicode and non-BMP characters. Release programs continue to obtain arguments from the native process entry.
 
@@ -38,8 +38,8 @@ Debug builds default to `-O0` and retain native symbols and source locations. Us
 `--debug` selects O0 development debugging. `--debug-optimized` retains DWARF/native symbols while using LLVM O3 and the selected LTO mode. Between the command-line options `--debug`, `--debug-optimized` and `--no-debug`, the last option wins. The project's `debug = true` retains its existing enable-debug behavior without downgrading an explicitly selected O3 mode to O0.
 
 ```sh
-chali aot main.chl --debug --out build/development
-chali aot main.chl --debug-optimized --out build/optimized
+chali build main.chl --debug --out build/development
+chali build main.chl --debug-optimized --out build/optimized
 ```
 
 For VSCode source builds, use `"debugMode": "development"` (the default) or `"debugMode": "optimized"`. Launching or attaching to an existing executable uses its own debug catalog; configuration does not re-optimize an existing binary. Loading an O3 catalog reports its mode, and variable scopes are labelled O3.
@@ -113,7 +113,7 @@ Address-taken locals and value parameters may use separate logical storage. Debu
 ## Command line
 
 ```text
-chali aot app.chl --checked --debug --out build/app-debug
+chali build app.chl --checked --debug --out build/app-debug
 gdb build/app-debug.exe
 ```
 
@@ -147,7 +147,7 @@ Integer arithmetic is exact, division truncates toward zero, and results range f
 
 Each expression allows 4096 characters, 512 tokens and 64 levels of parser recursion. Field lookup reads at most 1000 children per operation; array and List indexing reads one requested element and still shares the memory budget. Basic variable modification is described below. Breakpoint conditions and log interpolation retain the native GDB syntax described above.
 
-Source debugging requires source files to remain at their recorded locations. The adapter uses the existing compiler and toolchain to generate machine code; it needs no VM installation and does not cast runtime function values into machine function pointers.
+Source debugging requires source files to remain at their recorded locations. The adapter uses the existing compiler and toolchain to generate machine code; it does not cast runtime function values into machine function pointers.
 
 ## Basic variable modification
 

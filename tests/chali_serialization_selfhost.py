@@ -32,11 +32,11 @@ def main():
         for allocator in ('malloc','pool'):
             for checks in ('checked','unchecked'):
                 target=work/f'{allocator}-{checks}.exe'
-                run([compiler,'aot',SOURCE,'--allocator',allocator,'--'+checks,'--out',target]);actual=run([target])
+                run([compiler,'build',SOURCE,'--allocator',allocator,'--'+checks,'--out',target]);actual=run([target])
                 assert actual.stdout==expected,(allocator,checks,actual.stdout,expected)
                 assert not actual.stderr,actual.stderr
                 print(f'{allocator}/{checks}: versioned bytes, diagnostics and TOML match baseline')
-        prefix=work/'serde';run([compiler,'aot',SOURCE,'--emit-llvm','--out',prefix])
+        prefix=work/'serde';run([compiler,'build',SOURCE,'--emit-llvm','--out',prefix])
         llvm=prefix.with_suffix('.ll').read_text(encoding='utf-8')
         assert 'c"std::serialization::__pack\\00"' not in llvm and 'c"std::serialization::__unpack\\00"' not in llvm,'selfhost functions must not use named host dispatch'
         print('selfhost byte helpers do not call old named host entries')

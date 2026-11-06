@@ -57,7 +57,7 @@ Every non-void value has default `toString()` and String conversion: structs `{.
 
 ## Execution, optimization and deployment
 
-`run` compiles and executes checked AOT code. `aot` defaults to unchecked export and accepts an explicit `--checked` flag. Quadruple export is available for analysis.
+`run` compiles and executes checked AOT code. `build` defaults to unchecked export and accepts an explicit `--checked` flag. Quadruple export is available for analysis.
 
 Release builds run LLVM O3, global DCE, full LTO and section GC; quadruples are not optimized internally — LLVM does all optimization. Reachable data uses sparse initialization, and arrays reuse runtime zeroing. Hosts embed native shared libraries through generated C ABI headers.
 
@@ -125,17 +125,17 @@ BigInteger multiplication selects Karatsuba or dual-prime NTT by padded operatio
 Division combines Knuth limb division with Burnikel–Ziegler recursion, truncating toward zero with the dividend's remainder sign.
 Algorithm boundaries, tuning interfaces and reproducible test entry points are described in the [big-number library guide](../../source/bignum/README.md). Historical measurements remain in Git history; the current version comparison does not include big-number workloads.
 A struct may declare multiple opcode fields. BigInteger, BigDecimal, File and Process
-records and operations reside in standard library glue; the VM core manages generic NativeRecord
+records and operations reside in standard library glue; the runtime core manages generic NativeRecord
 shells and a host service table. File and Process are noncopyable. Process is the public type name.
 List, Map and Set use parameterized opcode types and opaque standard library records; there is no
-frontend Container Kind or dedicated VM collection Kind or method implementation. List uses ArrayList
+frontend Container Kind or dedicated runtime collection Kind or method implementation. List uses ArrayList
 storage. Map/Set use HashMap/HashSet storage for intrinsic scalar keys and custom keys implementing
 Hash<T>; custom keys with Equal<bool,T> but no Hash<T> use ArrayMap/ArraySet with linear lookup.
 Hash collisions are resolved with Equal. Map and Set promise neither sorted nor insertion order,
 including keyAt, valAt, at, iteration and default text. String isolation remains unfinished.
 
 
-Image is a deeply copied opcode whose dimensions and contiguous RGBA pixels belong to glue. width()/height() query dimensions; pixels() returns an independent list snapshot. TcpSocket and TcpListener are noncopyable opcodes that close automatically at scope exit; explicit move transfers ownership, and each connection retains its own read status and error. Generic Vector<T> and Matrix<T> retain their aggregate API; ScalarArray<T> stores built-in integer and floating-point values in a ScalarStorage opcode with independent copies. Standard glue implements string concatenation, slicing, comparison, search and numeric-to-text conversion. Internal entry points use the __std_ prefix; the VM retains execution control, memory safety and closures.
+Image is a deeply copied opcode whose dimensions and contiguous RGBA pixels belong to glue. width()/height() query dimensions; pixels() returns an independent list snapshot. TcpSocket and TcpListener are noncopyable opcodes that close automatically at scope exit; explicit move transfers ownership, and each connection retains its own read status and error. Generic Vector<T> and Matrix<T> retain their aggregate API; ScalarArray<T> stores built-in integer and floating-point values in a ScalarStorage opcode with independent copies. Standard glue implements string concatenation, slicing, comparison, search and numeric-to-text conversion. Internal entry points use the __std_ prefix; the runtime retains execution control, memory safety and closures.
 
 Network async methods use nonblocking polling and NET_PENDING, with cancellable thread sleeps between polls; dedicated threads may use synchronous I/O. connectAsync currently accepts numeric IPv4 addresses only; synchronous connect retains hostname resolution. sendAsync returns a partial byte count and accepts an offset; receiveLineAsync preserves incomplete lines with a 1 MiB buffer limit.
 
@@ -145,7 +145,7 @@ Threads use `std::thread::Thread` with copied initial arguments, cancellation, c
 
 ## Backend layout and TOML saving
 
-Normal run/aot sends the semantically checked AST directly to LLVM code generation. Quadruple export and compatibility input remain available for analysis and native generation. LLVM performs O3/LTO optimization; static and external LLVM variants share the backend sources.
+Normal run/build sends the semantically checked AST directly to LLVM code generation. Quadruple export and compatibility input remain available for analysis and native generation. LLVM performs O3/LTO optimization; static and external LLVM variants share the backend sources.
 
 Saving a parsed std::toml document root retains its original comments and layout. In the underlying C++ value model, edits with the same container shape preserve layout. Structural edits retain all comment content, but may move comments to the beginning of the document. Parsing and saving repeatedly neither loses nor duplicates comments. See the [TOML API](../library/std-toml.md).
 

@@ -27,7 +27,7 @@ def main():
             if backend == 'run':
                 result = run(CHALI, 'run', source, '--out', prefix, '--', database)
             else:
-                run(CHALI, 'aot', source, '--out', prefix)
+                run(CHALI, 'build', source, '--out', prefix)
                 result = run(str(prefix) + EXE, database)
             assert result.stdout == expected and (not result.stderr), (backend, result.stdout, result.stderr)
         for path in directory.glob('*.db'):

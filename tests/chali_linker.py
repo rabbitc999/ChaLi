@@ -117,7 +117,7 @@ def main():
         run([product], work)
         consumer = work/'consumer.chl'
         consumer.write_text('#abi("C","@link","first") int32 first();\nvoid main(){println("linked {}",first());}\n', encoding='utf-8')
-        run([compiler, 'aot', consumer, '--emit-obj', '--out', work/'consumer', *backend], work)
+        run([compiler, 'build', consumer, '--emit-obj', '--out', work/'consumer', *backend], work)
         language_object = work/'consumer.o'
         language_output = work/('language.exe' if os.name == 'nt' else 'language')
         run([compiler, 'link', language_object, liba, libb, '--out', language_output, *backend], work)

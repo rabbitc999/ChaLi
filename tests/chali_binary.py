@@ -86,13 +86,13 @@ def main():
                 for name in samples + ['bits', 'edges']:
                     source = bits if name == 'bits' else ROOT / 'tests/fixtures/binary_edge_cases.chl' if name == 'edges' else ROOT / 'example/samples' / (name + '.chl')
                     target = work / f'{name}-{allocator}-{checks}.exe'
-                    run([compiler, 'aot', source, '--allocator', allocator, '--' + checks, '--out', target])
+                    run([compiler, 'build', source, '--allocator', allocator, '--' + checks, '--out', target])
                     result = run([target])
                     expected = baseline['output'] if name == 'bits' else 'binary edge cases OK\n' if name == 'edges' else (ROOT / 'example/expected' / (name + '.txt')).read_text(encoding='utf-8')
                     assert (result.stdout, result.stderr) == (expected, ''), (name, allocator, checks, result)
                 print(f'{allocator}/{checks}: binary scalars, arrays, strings and 96 float bit-pattern results passed', flush=True)
         prefix = work / 'binary-ir'
-        run([compiler, 'aot', ROOT / 'example/samples/std_binary.chl', '--emit-llvm', '--out', prefix])
+        run([compiler, 'build', ROOT / 'example/samples/std_binary.chl', '--emit-llvm', '--out', prefix])
         assert 'chali_std_bind_binary' not in prefix.with_suffix('.ll').read_text(encoding='utf-8')
         errors = sorted((ROOT / 'example/samples-error').glob('binary_*.chl')) + sorted((ROOT / 'example/samples-error').glob('float_int*.chl'))
         for source in errors:

@@ -11,7 +11,7 @@ ChaLi → C → ChaLi 多层重入，并用断言检查结果。
 
 ```sh
 gcc -shared -O2 -o example/native-callbacks/host.dll example/native-callbacks/host.c
-./chali aot example/native-callbacks/demo.chl --out example/native-callbacks/demo
+./chali build example/native-callbacks/demo.chl --out example/native-callbacks/demo
 ./example/native-callbacks/demo.exe
 ```
 

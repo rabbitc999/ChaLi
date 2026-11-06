@@ -53,7 +53,7 @@ def main():
             reference = execute([compiler, 'run', sample, '--out', str(prefix) + '-vm', *flags, '--', *arguments],
                                 input_text, cwd=virtual, timeout=1800 if name == 'std_red_black_delete' else 300)
             assert reference.returncode == 0, (name, 'VM', reference)
-            built = execute([compiler, 'aot', sample, '--out', prefix, *flags], cwd=native)
+            built = execute([compiler, 'build', sample, '--out', prefix, *flags], cwd=native)
             assert built.returncode == 0, (name, 'AOT 编译', built)
             product = prefix.with_suffix('.exe' if os.name == 'nt' else '')
             result = execute([product, *arguments], input_text, cwd=native)
@@ -74,7 +74,7 @@ def main():
             prefix = work / name
             reference = execute([compiler, 'run', source, '--out', str(prefix) + '-vm'])
             assert reference.returncode != 0 and reference.stdout == 'before trap\n' and diagnostic in reference.stderr, reference
-            built = execute([compiler, 'aot', source, '--out', prefix])
+            built = execute([compiler, 'build', source, '--out', prefix])
             assert built.returncode == 0, built
             result = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')])
             assert result.returncode != 0 and result.stdout == reference.stdout and diagnostic in result.stderr, result
@@ -88,7 +88,7 @@ def main():
             flags = ['--step-limit', '1000']
             reference = execute([compiler, 'run', source, '--out', str(prefix) + '-vm', *flags])
             assert reference.stdout == expected and diagnostic in reference.stderr, reference
-            built = execute([compiler, 'aot', source, '--out', prefix, *flags])
+            built = execute([compiler, 'build', source, '--out', prefix, *flags])
             assert built.returncode == 0, built
             result = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')])
             assert result.returncode == reference.returncode and result.stdout == reference.stdout and diagnostic in result.stderr, (result, reference)

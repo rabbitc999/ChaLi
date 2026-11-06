@@ -1,6 +1,6 @@
 /**
  * @file native_control.hpp
- * @brief VM 内部 native control 模块的类型与接口。
+ * @brief 运行时 内部 native control 模块的类型与接口。
  */
 #pragma once
 #include "runtime_objects.hpp"

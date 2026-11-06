@@ -1,5 +1,5 @@
 
-/* ---- ChaLi AOT 运行时（产物自带，不依赖虚拟机） ---- */
+/* ---- ChaLi AOT 运行时（产物自带，可独立运行） ---- */
 #ifdef _WIN32
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,13 +57,13 @@ void chali_panic(const char *message)
 {
     chali_host_raise_callback_error(message);
     fflush(stdout);
-    fprintf(stderr, "chali aot: %s\n", message);
+    fprintf(stderr, "chali build: %s\n", message);
     chali_host_trace();
     exit(1);
 }
 
 /**
- * @brief 按 VM 的六十四位槽规则拒绝越界移位。
+ * @brief 按 运行时 的六十四位槽规则拒绝越界移位。
  * @param count 移位位数。
  */
 void chali_check_shift(chali_i64 count)
@@ -72,7 +72,7 @@ void chali_check_shift(chali_i64 count)
 }
 
 /**
- * @brief 在执行浮点除法或取余前保留 VM 的除零陷阱。
+ * @brief 在执行浮点除法或取余前保留 运行时 的除零陷阱。
  * @param divisor 浮点除数。
  */
 void chali_check_real_divisor(double divisor)
@@ -81,7 +81,7 @@ void chali_check_real_divisor(double divisor)
 }
 
 /**
- * @brief 使用 VM 同源的整数除零、溢出和最小负数取余规则。
+ * @brief 使用 运行时 同源的整数除零、溢出和最小负数取余规则。
  * @param left 被除数。
  * @param right 除数。
  * @param unsignedValue 非零时执行无符号除法。
@@ -364,7 +364,7 @@ void chali_null(chali_i64 address, const char *what)
 }
 
 /* 输出：格式串一个个替换。println 的换行已经由前端写进格式串字面量，
- * 所以这里不需要区分 print 与 println（VM 那一侧也是这么做的）。
+ * 所以这里不需要区分 print 与 println（运行时 那一侧也是这么做的）。
  * 前端既可能留 `{}`，也可能已经翻成 printf 的 `%d` / `%g` / `%s`，两种都认。 */
 static chali_i64 chali_fmt_at = 0;
 static size_t chali_fmt_pos = 0u;
@@ -552,7 +552,7 @@ void chali_fmt_finish(void)
 {
     const char *text = chali_string_bytes(chali_fmt_at);
     size_t at = chali_fmt_pos;
-    /* 没有占位符的格式串也可能带 `%%`，照样要还原成一个 `%`（VM 那侧也是这个语义）。 */
+    /* 没有占位符的格式串也可能带 `%%`，照样要还原成一个 `%`（运行时 那侧也是这个语义）。 */
     while (text[at] != '\0')
     {
         if (text[at] == '%' && text[at + 1u] == '%')
@@ -567,7 +567,7 @@ void chali_fmt_finish(void)
     chali_fmt_pos = at;
 }
 
-/* 字符串比较 / 子串 / 查找：与 VM 那侧一样按字节做，串是「8 字节长度 + 字节」。 */
+/* 字符串比较 / 子串 / 查找：与 运行时 那侧一样按字节做，串是「8 字节长度 + 字节」。 */
 /**
  * @brief 按字节序比较字符串，再比较公共前缀后的长度。
  * @param left 左侧源字符串句柄。

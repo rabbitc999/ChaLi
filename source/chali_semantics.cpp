@@ -919,7 +919,7 @@ int M_Char(int textId)
  * @brief `s[起:止]`：字符串切片（半开区间，越界自动夹到范围内；止 < 0 = 到末尾）。
  *
  * 值是**新造出来的字符串**（堆上），所以语言侧不用写逐字节的循环 —— 拼接 / 切片 /
- * 格式化都交给虚拟机里那份 C++ 运行时（`__std_str_*`）。
+ * 格式化都交给运行时里那份 C++ 运行时（`__std_str_*`）。
  * @param base 被切的字符串。
  * @param begin 起始下标表达式。
  * @param end 结束下标表达式；-1 = 到末尾。
@@ -2907,7 +2907,7 @@ void M_SetCheckOnly(bool enabled) { g_checkOnly = enabled; }
  */
 void M_SetSharedLibrary(bool enabled) { g_sharedLibrary = enabled; }
 /**
- * @brief 设置单次编译开关，检查实际链接的 VM 能力。
+ * @brief 设置单次编译开关，检查实际链接的 运行时 能力。
  * @param enabled 是否开启。
  * @return 配置有效时返回 true。
  */
@@ -3524,7 +3524,7 @@ void M_SetThreadsEnabled(int enabled) { g_threadsEnabled = enabled != 0; }
 void M_SetDebugEnabled(int enabled) { g_debugEnabled = enabled != 0; }
 
 /**
- * @brief 设置虚拟机允许执行的最大指令步数。
+ * @brief 设置运行时允许执行的最大指令步数。
  * @param limit 索引、步数或资源使用的上限。
  */
 void M_SetStepLimit(std::size_t limit) { g_stepLimit = limit; }

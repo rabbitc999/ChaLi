@@ -11,7 +11,7 @@ This page records protection for confirmed defects. It does not claim that the c
 ## Representative inputs and measured boundaries
 
 The [case catalog](../../tests/compiler_limits_cases.py) selects 25 cases each for everyday application components, advanced compositions and bounded stress inputs.
-The [driver](../../tests/chali_compiler_limits.py) checks compilation, execution and an independent expected result for VM and LLVM AOT, retaining exit codes, diagnostics, timeouts and output bytes.
+The [driver](../../tests/chali_compiler_limits.py) checks compilation, execution and an independent expected result for historical interpreter and LLVM AOT, retaining exit codes, diagnostics, timeouts and output bytes.
 Discovery finishes with a frozen inventory before implementation fixes begin. Use `--verify` for regression checks that fail on unexpected outcomes.
 
 The [0.31.0 discovery snapshot](../../tests/fixtures/compiler_limits/discovery_0_31_0.json) records sources, host, LLVM, build options and compiler SHA256.
@@ -24,7 +24,7 @@ The selected signature remains attached to the expression through type checking 
 
 Stress runs use a separate 64 MiB execution budget and the default compiler pool. Recorded points include:
 
-| Input | VM | LLVM AOT |
+| Input | historical interpreter | LLVM AOT |
 | --- | --- | --- |
 | A plain addition expression with 512 terms | Fragment depth or size budget diagnostic | Same diagnostic |
 | A dynamic array requesting approximately 128 MiB | Heap capacity diagnostic | Heap capacity diagnostic |
@@ -51,7 +51,7 @@ These observations apply to the recorded host, implementation and budgets. Re-me
 | `INT64_MIN / -1` | Runtime overflow diagnostic (previously returned `-9223372036854775808`) |
 | Shift amount beyond width | Runtime diagnostic; the valid range is 0..63 (previously masked with `& 63`, so `1 << 64` yielded `1`) |
 
-Platform fixes avoid duplicate long/int64 constructors on LP64, delay JSON/TOML member template definitions until value types are complete, and avoid a glibc htons macro collision. The standalone VM CMake target declares its CAS, SQL generation, SQLite, compression, include and host dependencies.
+Platform fixes avoid duplicate long/int64 constructors on LP64, delay JSON/TOML member template definitions until value types are complete, and avoid a glibc htons macro collision. The standalone historical interpreter CMake target declares its CAS, SQL generation, SQLite, compression, include and host dependencies.
 
 Run `python tests/chali_compiler_safety.py`. On Linux, `--cxx clang++ --sanitize-native` enables ASan, UBSan and float-to-integer checks for native boundaries; `--native-only` runs only that portion. Reflection remains enabled in both frontend and runtime; checked and unchecked paths retain their respective default optimization levels.
 
@@ -59,4 +59,4 @@ Penetration testing: `python tests/chali_penetration.py` (`--only SUBSTRING` nar
 
 The tests cover repeated success/error/container propagation and overwrite disk data while optimization output is blocked. See [the native boundary test](../../tests/chali_native_safety.cpp). Large-number operations remain subject to host memory and time budgets. Delivery reports distinguish completed checks from deferred platform and long-running validation.
 
-Compilation and program execution use separate memory budgets. The default frontend pool is 512 MiB; --memory-size changes the execution heap, not the frontend pool. Frontend allocation failures report capacity, live bytes at failure and the requested allocation, then return a nonzero status instead of propagating std::bad_alloc. Parsed replay snapshots are released before quadruple generation once monomorphization finishes. The combined standard-error fixture still reaches a large contiguous-allocation boundary in this pool. Live bytes do not describe the largest free contiguous block, and this observation is not a universal limit on library combinations. Run python tests/chali_compiler_budget.py for Chinese VM and English AOT budget diagnostics.
+Compilation and program execution use separate memory budgets. The default frontend pool is 512 MiB; --memory-size changes the execution heap, not the frontend pool. Frontend allocation failures report capacity, live bytes at failure and the requested allocation, then return a nonzero status instead of propagating std::bad_alloc. Parsed replay snapshots are released before quadruple generation once monomorphization finishes. The combined standard-error fixture still reaches a large contiguous-allocation boundary in this pool. Live bytes do not describe the largest free contiguous block, and this observation is not a universal limit on library combinations. Run python tests/chali_compiler_budget.py for Chinese historical interpreter and English AOT budget diagnostics.

@@ -4,35 +4,37 @@
 **English** · [简体中文](../38-aot.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Successful `run` and `aot` compilation reports `Compilation completed: OUTPUT` on standard error after publishing the final artifact. Run reports completion before executing the program, so a later runtime failure remains a failure. Standard output contains only program output. `--quiet` or `CHALI_QUIET=1` suppresses this notice without hiding diagnostics, statistics or program output. Check-only and JSON-diagnostic requests do not emit completion notices.
+`build` is the release-build command; the former `aot` command has been removed. Project configuration uses `[build]`; `[aot]` is rejected. LLVM AOT remains the compilation technology.
 
-Default `run` and `aot` publish final outputs beside the `.chl` source, including executables produced by run. Intermediate files use a unique workspace under the source-adjacent `.chali` directory, hidden on Windows and removed when empty after success or failure. Existing user files are preserved. Explicit output/retention settings remain available. VS Code defaults to source-adjacent output; static VSIX packages omit `Chali › Build: Llvm Path`, while external packages require it and pass `--llvm` for both build and run.
+Successful `run` and `build` compilation reports `Compilation completed: OUTPUT` on standard error after publishing the final artifact. Run reports completion before executing the program, so a later runtime failure remains a failure. Standard output contains only program output. `--quiet` or `CHALI_QUIET=1` suppresses this notice without hiding diagnostics, statistics or program output. Check-only and JSON-diagnostic requests do not emit completion notices.
 
-`run` compiles and executes checked AOT code. `aot` defaults to unchecked native export. See [Native AOT debugging](43-native-debugging.md).
+Default `run` and `build` publish final outputs beside the `.chl` source, including executables produced by run. Intermediate files use a unique workspace under the source-adjacent `.chali` directory, hidden on Windows and removed when empty after success or failure. Existing user files are preserved. Explicit output/retention settings remain available. VS Code defaults to source-adjacent output; static VSIX packages omit `Chali › Build: Llvm Path`, while external packages require it and pass `--llvm` for both build and run.
+
+`run` compiles and executes checked AOT code. `build` performs a release build with checks disabled by default. See [build debugging](43-native-debugging.md).
 
 ### Windows application consoles
 
 Windows executables use the console subsystem by default. Use `--subsystem windows` for GUI applications to launch from File Explorer without a console window. The option selects the PE subsystem. The program creates its own application windows.
 
 ```powershell
-chali aot app.chl --subsystem console --out app-console
-chali aot app.chl --subsystem windows --out app-gui
+chali build app.chl --subsystem console --out app-console
+chali build app.chl --subsystem windows --out app-gui
 ```
 
-Set `subsystem = "windows"` under `[aot]` in `chali.toml` to apply it to project builds, `run`, and editor builds. Command-line options take precedence. When building in stages, pass the option to `chali link`. Exported LLVM IR, assembly, and object files acquire a PE subsystem at final link time.
+Set `subsystem = "windows"` under `[build]` in `chali.toml` to apply it to project builds, `run`, and editor builds. Command-line options take precedence. When building in stages, pass the option to `chali link`. Exported LLVM IR, assembly, and object files acquire a PE subsystem at final link time.
 
-`chali aot input.chl --out build/program` generates LLVM code directly from the semantically checked AST without generating or assembling quadruples. LLVM optimizes the module, emits machine code and links the native product. `chali --mode aot input.chl` selects the same path. Ordinary source execution uses checked AOT.
+`chali build input.chl --out build/program` generates LLVM code directly from the semantically checked AST without generating or assembling quadruples. LLVM optimizes the module, emits machine code and links the native product. `chali --mode build input.chl` selects the same path. Ordinary source execution uses checked AOT.
 
 Windows x64 dependencies use [online setup scripts](../../library/llvm/README.md). Run `python tools/fetch_llvm_toolchain.py` for external LLVM, or `python tools/fetch_llvm_sdk.py` for the prebuilt static LLVM/LLD SDK and matching GCC. Downloads and installations stay under ignored `build/` directories; SDK binaries and offline archive parts are not committed. Archives have pinned SHA-256 checksums. LLVM IR export alone does not require the code-generation toolchain.
 
-All applicable AOT optimizations are enabled by default. External LLVM uses `-O3`; static LLVM uses `default<O3>` and aggressive code generation. Normal floating-point semantics and liveness checks remain; run enables array/pointer checks while aot exports default to omitting them. See [backend ownership optimization](40-backend-ownership.md) for destination storage, temporary transfers, bulk copies, direct calls, optional counters and comparison switches.
+All applicable AOT optimizations are enabled by default. External LLVM uses `-O3`; static LLVM uses `default<O3>` and aggressive code generation. Normal floating-point semantics and liveness checks remain; run enables array/pointer checks while release builds default to omitting them. See [backend ownership optimization](40-backend-ownership.md) for destination storage, temporary transfers, bulk copies, direct calls, optional counters and comparison switches.
 
 | Option | Behavior |
 | --- | --- |
 | `--out prefix` | Prefix for the `.ll` module, C ABI header and native output; Windows uses .exe/.dll, Linux uses no executable suffix or .so |
 | `--llvm path` | Explicit external LLVM clang driver; the static variant defaults to its built-in backend; the external variant also accepts `CHALI_LLVM_CLANG` |
 | `--emit-llvm` | Write the LLVM module and C ABI header without code generation or linking |
-| `--checked` | Emit array bounds and pointer checks; on for run and off by default for aot exports |
+| `--checked` | Emit array bounds and pointer checks; on for run and off by default for release builds |
 | `--unchecked` | Explicitly omit these checks for debugging or performance comparisons; object lifetime and actual memory accesses remain checked |
 | `--shared` | Build a shared library |
 | `--export name` | Export a function; repeatable |
@@ -49,11 +51,11 @@ Exporting complex C ABI signatures also requires a GNU C++17 compiler compatible
 Since 0.32.10, native applications default to system `malloc`. Select `--allocator pool` to retain the previous arena and byte-heap allocation strategy. The malloc backend covers both host objects and individual language allocations, rather than subdividing a continuous byte buffer. Logical reference identities, invalidation on release, range checks, zero initialization and memory budgets remain active, including unchecked exports.
 
 ```sh
-chali aot app.chl --allocator malloc --out build/app-malloc
-chali aot app.chl --allocator pool --out build/app-pool
+chali build app.chl --allocator malloc --out build/app-malloc
+chali build app.chl --allocator pool --out build/app-pool
 ```
 
-The `[aot]` table accepts `allocator = "malloc"` or `allocator = "pool"`; explicit CLI options override it. The option selects the generated program's allocator without changing the compiler's container ABI. Formal performance baselines use system malloc and record the actual allocator, check mode and LLVM configuration separately.
+The `[build]` table accepts `allocator = "malloc"` or `allocator = "pool"`; explicit CLI options override it. The option selects the generated program's allocator without changing the compiler's container ABI. Formal performance baselines use system malloc and record the actual allocator, check mode and LLVM configuration separately.
 
 ## LLVM linkage in the compiler
 
@@ -82,7 +84,7 @@ int64 add(int64 left, int64 right)
 }
 ```
 
-`ChaLi aot library.chl --shared --out build/library` generates a shared library and its C ABI
+`ChaLi build library.chl --shared --out build/library` generates a shared library and its C ABI
 header. Use the symbols declared in that header (`f_add` in this example). Shared-library
 sources may omit `main`; executable sources still require it. Call `chali_init()` before
 exported functions and `chali_finish()` afterwards. These entries run global initialization
@@ -101,8 +103,8 @@ Online toolchain setup also covers Linux x64, Linux ARM64 and macOS ARM64. Use `
 The compiler host and the application target may differ. Supported target selections are `windows-x64` (`x86_64-w64-windows-gnu`), `linux-x64` (`x86_64-unknown-linux-gnu`) and `linux-arm64` (`aarch64-unknown-linux-gnu`).
 
 ```sh
-chali aot hello.chl --target linux-arm64 --emit-llvm --out build/arm64/hello
-chali aot hello.chl --target linux-arm64 --emit-obj --out build/arm64/hello
+chali build hello.chl --target linux-arm64 --emit-llvm --out build/arm64/hello
+chali build hello.chl --target linux-arm64 --emit-obj --out build/arm64/hello
 ```
 
 `--emit-llvm` exports target LLVM IR; `--emit-obj` generates a target `.o` without linking. These options are mutually exclusive. Windows objects use COFF, Linux objects use ELF. Static LLVM can generate objects using its embedded target backends; external LLVM requires clang with the selected backend.
@@ -110,7 +112,7 @@ chali aot hello.chl --target linux-arm64 --emit-obj --out build/arm64/hello
 Full cross-linking additionally requires matching target startup objects, C/C++ libraries, a linker and `libchali_aot_host.a`. Use `--sysroot` for the target system root, `--runtime-dir` for the ChaLi runtime library directory and `--cpu` to select a CPU. On Linux or WSL, `sh tools/build_cross_runtime.sh linux-arm64 2` prepares an isolated SDK with the installed GNU target toolchain under `build/cross-sdk/linux-arm64/`, including library licenses and hashes.
 
 ```toml
-[aot]
+[build]
 target = "aarch64-unknown-linux-gnu"
 cpu = "generic"
 sysroot = "build/cross-sdk/linux-arm64/sysroot"
@@ -121,15 +123,15 @@ output = "executable"
 Paths resolve relative to `chali.toml`. `output` accepts `llvm`, `object` or `executable`; the optional `llvm` key selects an external clang path. Explicit command-line options override project settings:
 
 ```sh
-chali aot --out build/arm64/app
-chali aot --target linux-x64 --emit-obj --out build/x64/app
+chali build --out build/arm64/app
+chali build --target linux-x64 --emit-obj --out build/x64/app
 ```
 
 `run` rejects a foreign target instead of starting an emulator. Object generation, full linking and execution are separate validation steps. Test the resulting application on its target or an appropriate emulator. Complex imported C ABI adapters currently require target-toolchain compilation and linking after object export.
 
 ## Target machine assembly
 
-The project `[aot]` table accepts arrays named `assembly_sources`, `assembly_includes`, `objects`, `libraries`, and `search_paths`. Paths are relative to the directory containing `chali.toml`. Bare library names containing neither a dot nor a path separator are resolved by the linker.
+The project `[build]` table accepts arrays named `assembly_sources`, `assembly_includes`, `objects`, `libraries`, and `search_paths`. Paths are relative to the directory containing `chali.toml`. Bare library names containing neither a dot nor a path separator are resolved by the linker.
 
 Explicit `--asm`, `--asm-include`, and `--link` options replace their corresponding manifest lists. Manifest search paths follow command-line search paths. Object and assembly inputs participate in final linking.
 
@@ -137,9 +139,9 @@ Explicit `--asm`, `--asm-include`, and `--link` options replace their correspond
 
 Standalone `chali link --shared --out FILE` links under the final basename inside a private temporary directory before publishing. Windows DLL export tables and host import tables therefore record the delivered name, allowing C hosts to link and load the actual file. Failures still preserve the previous product.
 
-`chali aot app.chl --emit-asm --out build/app` exports `build/app.s` using the current target, CPU, check mode and optimization/debug settings. This is machine assembly, distinct from LLVM IR text `.ll`. It stops before object generation and linking, so cross-target assembly does not require target runtime link assets. The static variant uses its built-in LLVM backend; the external variant uses clang. Output uses the selected backend's default syntax (x86 AT&T, AArch64 target syntax); no NASM/MASM compatibility is implied.
+`chali build app.chl --emit-asm --out build/app` exports `build/app.s` using the current target, CPU, check mode and optimization/debug settings. This is machine assembly, distinct from LLVM IR text `.ll`. It stops before object generation and linking, so cross-target assembly does not require target runtime link assets. The static variant uses its built-in LLVM backend; the external variant uses clang. Output uses the selected backend's default syntax (x86 AT&T, AArch64 target syntax); no NASM/MASM compatibility is implied.
 
-The project setting `[aot] output = "assembly"` selects the same output for AOT builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked AOT execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.
+The project setting `[build] output = "assembly"` selects the same output for AOT builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked AOT execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.
 
 The `.ll` and any C ABI header remain available alongside `.s`. Complex C ABI signatures can also produce a `.abi.cpp` marshalling sidecar; assembly alone is not a complete linkable application. Reassembly and final linking require a matching target toolchain, runtime and dependencies. See the standalone assembler, linker and archiver below.
 
@@ -148,7 +150,7 @@ The `.ll` and any C ABI header remain available alongside `.s`. Complex C ABI si
 ```sh
 chali asm native/add.s --target windows-x64 --out build/add.obj -I native/include
 chali asm native/add.s --target linux-x64 --out build/add.o
-chali aot main.chl --asm native/add.s --asm-include native/include --out build/app
+chali build main.chl --asm native/add.s --asm-include native/include --out build/app
 ```
 
 `asm` accepts one `.s` file and an exact output path. Without `--out`, it replaces the input suffix with `.obj` for Windows and `.o` for Linux. `--target`, `--cpu`, `--debug`, `-I DIR` / `-IDIR`, `--include-path DIR` and `--llvm CLANG` are supported. Target and CPU must match the source instructions. GAS-compatible LLVM syntax is used; `.S` preprocessing and NASM/MASM are not supported. Include search adds the source directory before the explicitly listed directories. Input files are limited to 64 MiB; this is a compiler tool, not an untrusted-code sandbox.

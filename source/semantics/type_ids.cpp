@@ -39,7 +39,7 @@ bool IsBarePointerType(const std::shared_ptr<MType> &type)
 /**
  * @brief 单次编译的内部标签，只供 Any 校验、接口分派与反射桥接使用。
  *
- * 内建标签与匹配的 VM 保持一致；用户类型和复合类型在编译期登记。
+ * 内建标签与匹配的 运行时 保持一致；用户类型和复合类型在编译期登记。
  * 不保证跨程序、版本或增删声明后的编号稳定；持久化身份使用 std::reflect 的元数据 ID。
  */
 Memory::Map<Memory::String, std::int64_t> g_typeIdIndex;
@@ -50,7 +50,7 @@ Memory::Map<std::int64_t, std::shared_ptr<MType>> g_debugTypeIds;  ///< 本次�
 std::int64_t g_nextTypeId = 1;
 /**
  * 内建固定占 `1..9`，`10..32` 预留给**以后新增的内建** —— 新内建只能往这段空号里加，
- *  保持编译器与匹配 VM 的内建标签一致。
+ *  保持编译器与匹配 运行时 的内建标签一致。
  */
 constexpr std::int64_t kFirstUserTypeId = 33;
 /**
@@ -211,7 +211,7 @@ Memory::Vector<MFunctionDecl> g_functionDecls;                               /* 
 Memory::Map<Memory::String, Memory::Vector<MParam>> g_lambdaCaptures;        ///< 词法作用域确定的只读、可写、拷贝或移动捕获。
 Memory::Set<Memory::String> g_lambdaAutoReturns;                             ///< 等捕获类型确定后推导返回值。
 Memory::Set<Memory::String> g_lambdaPrepared;                                ///< 已绑定环境的具体 lambda。
-Memory::Map<Memory::String, std::shared_ptr<MType>> g_hostTypes;             /* 宿主类型名 → VM ABI 类型 */
+Memory::Map<Memory::String, std::shared_ptr<MType>> g_hostTypes;             /* 宿主类型名 → 运行时 ABI 类型 */
 /**
  * @brief 不透明胶水类型的创建、销毁和复制协议。
  */

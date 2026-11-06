@@ -82,7 +82,7 @@ API int32_t callback(int32_t (*f)(int32_t), int32_t x) { return f(x); }
 ''', encoding='utf-8')
     prefix = work / 'export'
     target = Path(str(prefix) + ('.dll' if os.name == 'nt' else '.so'))
-    invoke([compiler, 'aot', exported, '--shared', '--out', prefix], 'export-build')
+    invoke([compiler, 'build', exported, '--shared', '--out', prefix], 'export-build')
 
     class Packet(ctypes.Structure):
         """平台 C ABI 中的聚合布局。"""

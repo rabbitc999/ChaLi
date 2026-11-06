@@ -1263,7 +1263,7 @@ std::shared_ptr<MType> RawExprType(int id)
                 return T(M_TypeInt());
             if (name == "print" || name == "println" || name == "putChar")
                 return T(M_TypeInt());
-            /* `std::core::pause()`：调试暂停，降成 VM 内建 `__std_pause`，返回 0。 */
+            /* `std::core::pause()`：调试暂停，降成 运行时 内建 `__std_pause`，返回 0。 */
             if (name == "pause") return T(M_TypeInt());
             /* `std::core::format("…", …)`：按 `{}` 占位符拼出的**新串**（和 `std::core::print` 同规则）。 */
             if (name == "format") return T(M_TypeString());

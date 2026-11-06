@@ -90,4 +90,4 @@ for package in gcc-11-base libc6 libstdc++6; do
 done
 "$cxx" --version > "$output/compiler.txt"
 (cd "$output" && sha256sum lib/*.a > SHA256SUMS)
-printf '目标 SDK 已准备：%s\n[aot]\ntarget = "%s"\nsysroot = "%s/sysroot"\nruntime_dir = "%s/lib"\n' "$output" "$llvm_target" "$output" "$output"
+printf '目标 SDK 已准备：%s\n[build]\ntarget = "%s"\nsysroot = "%s/sysroot"\nruntime_dir = "%s/lib"\n' "$output" "$llvm_target" "$output" "$output"

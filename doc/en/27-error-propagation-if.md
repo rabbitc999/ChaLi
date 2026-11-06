@@ -45,7 +45,7 @@ Result<T,E> uses ErrorResidual<E>; Option<T> uses NoneResidual. Different succes
 - `option.okOrElse<E>(factory)` calls the error factory only for None.
 - `result.ok()` explicitly discards error information.
 
-The propagation operator works in conditional branches and still exits the enclosing function. See the [conditional expressions](../../example/samples/if_expression.chl) and [error adapters](../../example/samples/error_adapters.chl) samples, which `sh check.sh` runs on both VM.
+The propagation operator works in conditional branches and still exits the enclosing function. See the [conditional expressions](../../example/samples/if_expression.chl) and [error adapters](../../example/samples/error_adapters.chl) samples, which `sh check.sh` runs on both runtime.
 
 ## Migration and tooling
 

@@ -2053,7 +2053,7 @@ std::core::List<(T, U)> zipValue<T, U>(std::core::List<T> left, std::core::List<
  *
  * 上面这批（`sortValue` / `findValue` / `binarySearchValue` / `foldValue` …）都收 `std::core::List<T>`，
  * `sortValue` 还要复制一份；这里给对照：统一收 `T mut& data, int64 count`，直接在调用者的
- * 缓冲区上读写，不造列表副本、不经过 VM 容器对象。`&raw[0]` / `raw`（运行时数组会
+ * 缓冲区上读写，不造列表副本、不经过 运行时 容器对象。`&raw[0]` / `raw`（运行时数组会
  * 自动退化）/ `std::memory::Span<T>.data` 都能直接喂进来。
  *
  * 约定和 `std::core::List` 版一致：
@@ -2188,7 +2188,7 @@ interface Closeable { void close(); };
 )CHALI";
     /* `SIMPLE_SORT` 是**构建编译器时**的 C++ 宏（和功能裁剪宏一类，整个构建
      * 必须一致定义）：定义了就让排序改用希尔排序，否则用各自的默认实现。两套算法都是纯
-     * 文本，这里挑一份塞进引用排序的宏体；VM 侧 `vecStableSort` 走同一个宏。 */
+     * 文本，这里挑一份塞进引用排序的宏体；运行时 侧 `vecStableSort` 走同一个宏。 */
 #ifdef SIMPLE_SORT
     const Memory::String sortReferenceImpl = R"CHALI(    int64 gap = count / 2;
     while (gap > 0) {

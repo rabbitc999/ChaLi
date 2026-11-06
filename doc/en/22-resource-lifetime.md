@@ -24,7 +24,7 @@ Explicit close on a named aggregate uses a compiler-local closed flag, updated o
 
 Fresh string arguments borrowed by printing, formatting and file writes are first evaluated into internal owning temporaries. Calls run before reverse-order cleanup at the full-expression boundary. Transferring a result to a named owner, return value or another temporary clears the source slot. Loop iterations cannot release a previous iteration's object again. Literals and empty slots need no extra owner; concatenation chains retain the single-join allocation path.
 
-## VM and restart
+## runtime and restart
 
 The runtime heap in `source/ircode/runtime_heap.cpp` uses direct payload allocations with system malloc or split and merged free intervals with pool mode. Ordinary scopes manage values created with `new`, and release immediately invalidates their allocation identities. There is no implicit garbage collection.
 

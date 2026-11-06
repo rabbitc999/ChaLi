@@ -408,7 +408,7 @@ bool CheckContainerElement(const std::shared_ptr<MType> &type, const Memory::Str
 /**
  * @brief 生成容器元素存储标志，结构体携带展平字段布局。
  *
- * A struct flag carries the flattened field layout to the VM.
+ * A struct flag carries the flattened field layout to the runtime.
  * @param type 类型描述。
  * @param allowResources 是否允许容器存放需要清理的资源。
  * @retval 生成的低层语法节点。
@@ -776,7 +776,7 @@ bool SameStruct(const std::shared_ptr<MType> &left, const std::shared_ptr<MType>
 /**
  * @brief 字符串字面量当"**变量的值**"时，先复制成一份堆串。
  *
- * 字符串的值一律是**堆地址**（8 字节长度 + UTF-8 字节数据，由虚拟机运行时管理）：
+ * 字符串的值一律是**堆地址**（8 字节长度 + UTF-8 字节数据，由运行时运行时管理）：
  * 数据区里只留只读的字面量字节当复制源（`std::core::__bootStringCopy` 把它们拷到堆上）。于是：
  *
  * - 变量手里那块是**自己能写**的（`s[i] = 'x'` 不会改到别人共享的字面量）；

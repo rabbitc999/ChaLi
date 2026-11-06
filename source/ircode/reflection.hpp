@@ -53,7 +53,7 @@ struct Identity
     CHALI_REFLECTION_FIELDS(id, key)
 };
 /**
- * @brief 编译期常量，不含 VM 句柄；数字保存原始位模式。
+ * @brief 编译期常量，不含 运行时 句柄；数字保存原始位模式。
  */
 struct Constant
 {

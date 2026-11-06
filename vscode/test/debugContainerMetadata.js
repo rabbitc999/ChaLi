@@ -21,7 +21,7 @@ fs.writeFileSync(source, [
   '}',
 ].join('\n'));
 const prefix = path.join(work, 'program');
-const built = spawnSync(compiler, ['aot', source, '--debug', '--emit-llvm', '--out', prefix],
+const built = spawnSync(compiler, ['build', source, '--debug', '--emit-llvm', '--out', prefix],
   { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
 assert.equal(built.status, 0, built.stdout + built.stderr);
 const llvm = fs.readFileSync(prefix + '.ll', 'utf8');

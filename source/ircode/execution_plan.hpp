@@ -44,7 +44,7 @@ struct PreparedSymbol
 { const TypeInfo *type = nullptr; };
 /**
  * @brief 仅降低内部指令，不分配运行期符号及帧布局。
- * @param program 基础 VM 程序。
+ * @param program 基础 运行时 程序。
  * @return 内部执行序列。
  * @note 交给指令选择模块：模式表只融合能证明等价的窗口。
  */

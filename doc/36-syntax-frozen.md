@@ -143,4 +143,4 @@ sh check.sh                                 # 样例输出与错误位置
 - 诊断码的含义与归类见[错误速查](book/A-常见错误速查.md)与[编译器安全](34-compiler-safety.md)；
   文案措辞不冻结。
 - 标准库 API、模块划分与重载集合见 [API 索引](library/README.md)，属于库契约，不是语法契约。
-- 普通 run／aot 从检查后的 AST 直接生成 LLVM 代码，优化由 LLVM 执行；四元式保留独立导出与兼容输入。执行路径见[执行方式与部署边界](26-execution-delivery.md)，内部指令数量与临时名不属于源码语法契约。
+- 普通 run／build 从检查后的 AST 直接生成 LLVM 代码，优化由 LLVM 执行；四元式保留独立导出与兼容输入。执行路径见[执行方式与部署边界](26-execution-delivery.md)，内部指令数量与临时名不属于源码语法契约。

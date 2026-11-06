@@ -616,7 +616,7 @@ inline bool wouldBlock()
 }
 
 /**
- * @brief 保存异步操作错误，不将可恢复网络错误升级为 VM panic。
+ * @brief 保存异步操作错误，不将可恢复网络错误升级为 运行时 panic。
  * @param resource 操作所属连接。
  * @param message 错误说明。
  * @return 通用失败数值 -1。

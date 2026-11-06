@@ -11,7 +11,7 @@ const compiler = process.env.CHALI_BIN || path.join(root, 'chali.exe');
 const work = fs.mkdtempSync(path.join(root, 'tmp/debug-disassemble-'));
 const source = path.join(work, 'main.chl');
 fs.writeFileSync(source, 'int64 add(int64 a, int64 b) { int64 sum = a + b; return sum; }\nvoid main() { int64 v = add(2, 3); println("{}", v); }\n');
-const built = spawnSync(compiler, ['aot', source, '--debug', '--checked', '--allocator', 'malloc', '--out', path.join(work, 'program')], { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
+const built = spawnSync(compiler, ['build', source, '--debug', '--checked', '--allocator', 'malloc', '--out', path.join(work, 'program')], { cwd: root, env: process.env, encoding: 'utf8', windowsHide: true, timeout: 180000 });
 assert.equal(built.status, 0, built.stdout + built.stderr);
 
 /** 反汇编返回的地址按数值比较。 */

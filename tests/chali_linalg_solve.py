@@ -38,7 +38,7 @@ def main():
         for allocator in ('malloc', 'pool'):
             for checks in ('checked', 'unchecked'):
                 target = work / f'{allocator}-{checks}.exe'
-                run([compiler, 'aot', ROOT / 'example/samples/std_linalg_solve_glue.chl',
+                run([compiler, 'build', ROOT / 'example/samples/std_linalg_solve_glue.chl',
                      '--allocator', allocator, '--' + checks, '--out', target])
                 result = run([target])
                 assert result.stdout == expected and not result.stderr, result

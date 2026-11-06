@@ -32,7 +32,7 @@ def main():
         combinations=[('malloc','checked')] if args.record_baseline else [(a,c) for a in ('malloc','pool') for c in ('checked','unchecked')]
         for allocator,checks in combinations:
             target=work/f'{allocator}-{checks}.exe'
-            run([compiler,'aot',ROOT/'tests/fixtures/linalg_decomposition_compatibility.chl','--allocator',allocator,'--'+checks,'--out',target])
+            run([compiler,'build',ROOT/'tests/fixtures/linalg_decomposition_compatibility.chl','--allocator',allocator,'--'+checks,'--out',target])
             result=run([target]);assert result.stdout=='six decompositions, reconstruction, solve and independent ownership OK\n' and not result.stderr,result
             print(f'{allocator}/{checks}: LU, LUR, eigen, SVD, Jordan, diagonalization, solve and independent copies passed',flush=True)
         expected=[] if args.record_baseline else json.loads(baseline.read_text(encoding='utf-8'))['diagnostics']

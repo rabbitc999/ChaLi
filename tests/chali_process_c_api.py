@@ -37,7 +37,7 @@ def main():
         expected=json.loads(BASELINE.read_text(encoding='utf-8'));assert errors==expected['errors'],(errors,expected['errors'])
         for allocator in ('malloc','pool'):
             for checks in ('checked','unchecked'):
-                target=work/f'{allocator}-{checks}.exe';run([compiler,'aot',SOURCE,'--allocator',allocator,'--'+checks,'--out',target]);result=run([target])
+                target=work/f'{allocator}-{checks}.exe';run([compiler,'build',SOURCE,'--allocator',allocator,'--'+checks,'--out',target]);result=run([target])
                 assert result.stdout==expected['output'] and not result.stderr,(allocator,checks,result.stdout,result.stderr)
                 print(f'{allocator}/{checks}: process behavior and ownership match baseline')
         print('closed-pipe errors preserve original first lines')

@@ -1,6 +1,6 @@
 /**
  * @file runtime_context.hpp
- * @brief VM 内部 runtime context 模块的类型与接口。
+ * @brief 运行时 内部 runtime context 模块的类型与接口。
  */
 #pragma once
 #include "runtime_slot.hpp"
@@ -76,7 +76,7 @@ struct NativeContext
     const Memory::Vector<Memory::String> *programArguments = nullptr;  ///< 程序入口参数。
     NativeInvoker *invoker = nullptr;                                  ///< 同步调用 CHALI 函数指针。
     struct ObjectStore *objects = nullptr;                             ///< 运行期通用对象表。
-    Machine *machine = nullptr;                                        ///< 正在执行 run() 的虚拟机。
+    Machine *machine = nullptr;                                        ///< 正在执行 run() 的运行时。
     std::size_t threadId = 0u;                                         ///< 当前线程 id（定时器归属线程）。
     bool *exitRequested = nullptr;                                     ///< `exit(n)` 请求提前正常停机。
     int *exitCode = nullptr;                                           ///< `exit(n)` 提供的宿主状态码。

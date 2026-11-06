@@ -33,7 +33,7 @@ def main():
         write(project / "native" / "broken.s", '.text\n.include "missing.inc"\n')
         config = (
             '[chali]\nmain = "src/main.chl"\n\n'
-            '[aot]\nassembly_sources = ["native/extra.s"]\n'
+            '[build]\nassembly_sources = ["native/extra.s"]\n'
             'assembly_includes = ["native/include"]\nsearch_paths = ["extra"]\n'
         )
         write(project / "chali.toml", config)
