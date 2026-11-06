@@ -84,4 +84,20 @@ docker run --rm -v "$PWD:/workspace" chali-centos-stream9-builder
 
 Its default command builds available architectures and emits RPM and tar.gz outputs. RPM derives system dependencies from the binary; DEB's minimum glibc requirement comes from ELF symbol versions. Ubuntu 22.04 builds do not imply compatibility with all older distributions, and CentOS Stream 9 does not imply CentOS 7 compatibility.
 
+## Offline reference manual (CHM)
+
+`ChaLi-1.0.0-reference.chm` includes the language reference, common syntax and usage, the complete Chinese book and appendices, standard library APIs, linked ChaLi example sources, and illustrations. It provides a contents tree, keyword index, and full-text search. The standalone HTML manual is distributed as `ChaLi-1.0.0-reference-html.zip`; images are embedded, so extraction produces a single self-contained HTML file.
+
+The generator is [`tools/build_reference_chm.py`](../../tools/build_reference_chm.py). On Windows, obtain Microsoft HTML Help Workshop and run:
+
+```powershell
+python -m pip install -r tools/requirements_chm.txt
+python tools/build_reference_chm.py --compiler "C:\Program Files (x86)\HTML Help Workshop\hhc.exe" --output dist/release/ChaLi-1.0.0-reference.chm
+python tools/export_library_html.py --output tmp/ChaLi-1.0.0-reference.html --zip-output dist/release/ChaLi-1.0.0-reference-html.zip
+```
+
+See [Microsoft HTML Help](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/htmlhelp/microsoft-html-help-downloads) and the [original Workshop download hosted by Help+Manual](https://www.helpandmanual.com/downloads_mscomp.html). The script also checks PATH, common installation locations, and `build/dependencies/html-help-workshop/`. A portable compiler directory containing `hhc.exe`, `hha.dll`, and `itcc.dll` uses a generated registration-free COM manifest without changing the system registry.
+
+Intermediate CHM HTML and project files stay under the repository's `tmp/`. Use `--prepare-only` on any platform to generate the project; CHM compilation requires Windows. Use `--repo PATH` when running separately downloaded scripts. Both formats share the same sources and include the book and examples by default. The HTML script also provides `--api-only`.
+
 See [current capabilities](17-capabilities.md) and [LLVM AOT export](38-aot.md) for supported platform behavior and compiler-side LLVM variants.

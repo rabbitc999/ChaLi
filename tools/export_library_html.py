@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-"""导出离线 API 手册；依赖 markdown-it-py 与 beautifulsoup4。
+"""导出完整离线参考手册；依赖 tools/requirements_chm.txt。
 
 用法：python tools/export_library_html.py --output dist/ChaLi-1.0.0-api-reference.html
-只转换已有参考文档，不修改编译器内嵌的 Markdown 或 API 清单。
+默认含语法、书稿、示例与 API；--api-only 可只导出 API。与 CHM 脚本共享原文，
+图片内嵌在单个 HTML 中；发行时使用 --zip-output 压缩，不提供独立 HTML 附件。
 """
 from pathlib import Path
 import argparse
+import base64
+import collections
 import html
 import json
 import re
+import tempfile
+import zipfile
 from urllib.parse import unquote, urljoin
 
 from bs4 import BeautifulSoup
@@ -42,6 +47,62 @@ input.addEventListener('input',()=>{const value=input.value.toLocaleLowerCase().
 document.addEventListener('click',event=>{const anchor=event.target.closest('a[href^="#"]');if(!anchor)return;event.preventDefault();history.pushState(null,'',anchor.getAttribute('href'));route()});
 toggle.addEventListener('click',()=>{const open=document.body.classList.toggle('nav-open');toggle.setAttribute('aria-expanded',String(open));if(open)input.focus()});document.querySelector('.backdrop').addEventListener('click',closeMenu);document.addEventListener('keydown',event=>{if(event.key==='Escape')closeMenu()});window.addEventListener('hashchange',route);window.addEventListener('popstate',route);route();
 """
+
+SCRIPT = SCRIPT.replace("'50 个模块 · 支持函数名与说明搜索'", 'document.body.dataset.searchHint')
+SCRIPT = SCRIPT.replace("function closeMenu()", "function syncGroups(){const searching=!!input.value.trim();for(const group of document.querySelectorAll('.nav-group')){const visible=[...group.querySelectorAll('.module-link')].some(link=>!link.hidden);group.hidden=!visible;group.open=searching||!!group.querySelector('[aria-current=page]')}}\nfunction closeMenu()")
+SCRIPT = SCRIPT.replace("document.querySelector('#current-module').textContent=article?article.dataset.module:'搜索结果';", "document.querySelector('#current-module').textContent=article?article.dataset.module:'搜索结果';syncGroups();")
+SCRIPT = SCRIPT.replace("if(!matches.some(a=>!a.hidden)){showArticle(matches[0]||null);main.scrollTop=0}", "if(!matches.some(a=>!a.hidden)){showArticle(matches[0]||null);main.scrollTop=0}syncGroups();")
+STYLE += '\n.module-list .nav-group{border:0;padding:0;margin:4px 0}.module-list .nav-group>summary{font-size:13px;padding:8px;color:#35536a}.module-list .nav-group .module-link{margin-left:9px}.module-list .nav-group[open]>summary{margin-bottom:0}\n'
+STYLE += 'article img{display:block;max-width:100%;height:auto;margin:18px 0}.example{border:1px solid #dce4ec;padding:12px 16px;margin:16px 0}.example-title{font-weight:600;color:#166585}\n'
+
+
+def render_reference(work, manifest):
+    """将共享章节合并到一个 HTML，重写跨页锚点并将插图内嵌为数据地址。"""
+    keys = {}
+    for topic in manifest['topics']:
+        key = Path(topic['file']).stem
+        if topic['file'] == 'index.html': key = 'catalog'
+        elif topic['category'] == '库函数 API':
+            name = topic['title'].split(' — ')[0]
+            key = name.replace('::', '-') if name.startswith('std') else ('api-catalog' if topic['file']=='api-00.html' else 'symbols')
+        keys[topic['file']] = key
+    sections = []
+    groups = collections.OrderedDict()
+    for topic in manifest['topics']:
+        key = keys[topic['file']]
+        soup = BeautifulSoup((work / topic['file']).read_text(encoding='utf-8'), 'html.parser').body
+        breadcrumb = soup.find(class_='breadcrumb')
+        if breadcrumb: breadcrumb.decompose()
+        for node in soup.find_all(id=True): node['id'] = key + '--' + node['id']
+        for node in soup.find_all('a', attrs={'name': True}):
+            node['name'] = key + '--' + node['name']
+            if not node.get('id'): node['id'] = node['name']
+        for anchor in soup.find_all('a', href=True):
+            target = anchor['href']
+            if re.match(r'[a-zA-Z][a-zA-Z0-9+.-]*:', target): continue
+            filename, separator, fragment = target.partition('#')
+            filename = filename or topic['file']
+            if filename in keys: anchor['href'] = '#' + keys[filename] + ('--' + fragment if separator and fragment else '')
+        for image in soup.find_all('img', src=True):
+            source = work / image['src']
+            if source.is_file():
+                subtype = {'.png':'png','.jpg':'jpeg','.jpeg':'jpeg','.svg':'svg+xml','.gif':'gif'}.get(source.suffix,'png')
+                image['src'] = 'data:image/' + subtype + ';base64,' + base64.b64encode(source.read_bytes()).decode('ascii')
+        for table in soup.find_all('table'):
+            labels = [node.get_text(strip=True) for node in table.select('thead th')]
+            for row in table.select('tbody tr'):
+                for index, cell in enumerate(row.find_all('td', recursive=False)):
+                    cell['data-label'] = labels[index] if index < len(labels) else '内容'
+            wrapper = BeautifulSoup('<div class="table-wrap"></div>', 'html.parser').div
+            table.wrap(wrapper)
+        content = ''.join(str(node) for node in soup.contents)
+        sections.append('<article id="' + key + '" data-module="' + html.escape(topic['title'],quote=True) + '" hidden>' + content + '</article>')
+        name, _, description = topic['title'].partition(' — ')
+        link = '<a class="module-link" data-target="' + key + '" href="#' + key + '"><span class="module-name">' + html.escape(name) + '</span>'
+        if description: link += '<span class="module-description">' + html.escape(description) + '</span>'
+        groups.setdefault(topic['category'], []).append(link + '</a>')
+    navigation = ['<details class="nav-group"><summary>' + html.escape(name) + '</summary>' + ''.join(links) + '</details>' for name, links in groups.items()]
+    return sections, navigation
 
 
 def render_page(path, renderer):
@@ -105,22 +166,42 @@ def render_page(path, renderer):
 
 def main():
     """按现有 API 清单生成可离线使用的自适应 HTML 手册。"""
+    global ROOT
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--repo', type=Path, default=ROOT, help='ChaLi 仓库根目录；脚本单独下载时指定')
+    parser.add_argument('--api-only', action='store_true', help='仅导出 API，默认包含语法、书稿和示例')
+    parser.add_argument('--zip-output', type=Path, help='同时生成只含该 HTML 的压缩附件')
     args = parser.parse_args()
+    ROOT = args.repo.resolve()
+    if not (ROOT / 'doc/library/README.md').is_file(): parser.error('--repo 必须指向完整 ChaLi 仓库')
     version = (ROOT / 'VERSION').read_text(encoding='utf-8').strip()
     inventory = json.loads((ROOT / 'tools/chali_stdlib_api.json').read_text(encoding='utf-8'))
     module_count, function_count = len(inventory['modules']), len(inventory['functions'])
     renderer = MarkdownIt('commonmark', {'html': True}).enable('table')
-    pages = [ROOT / 'doc/library/README.md', *sorted((ROOT / 'doc/library').glob('std*.md')), ROOT / 'doc/library/symbols.md']
-    sections, navigation = zip(*(render_page(path, renderer) for path in pages))
+    if args.api_only:
+        pages = [ROOT / 'doc/library/README.md', *sorted((ROOT / 'doc/library').glob('std*.md')), ROOT / 'doc/library/symbols.md']
+        sections, navigation = zip(*(render_page(path, renderer) for path in pages))
+        hint = str(module_count) + ' 个模块 · 搜索 API 全文'
+    else:
+        import build_reference_chm as reference
+        reference.ROOT = ROOT
+        (ROOT / 'tmp').mkdir(exist_ok=True)
+        work = Path(tempfile.mkdtemp(prefix='reference-html-', dir=ROOT / 'tmp'))
+        manifest = reference.prepare(work)
+        sections, navigation = render_reference(work, manifest)
+        hint = str(len(sections)) + ' 页 · 搜索语法、书稿、示例与 API'
     document = '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-    document += '<title>ChaLi ' + version + ' 库函数 API 参考手册</title><style>' + STYLE + '</style></head><body>'
-    document += '<header class="site-header"><button class="menu-toggle" id="menu-toggle" aria-controls="module-navigation" aria-expanded="false" type="button">目录</button><div><h1>ChaLi ' + version + ' · 库函数 API 参考手册</h1><p>' + str(module_count) + ' 个模块 · ' + str(function_count) + ' 个函数重载 · 离线阅读 · 源码链接指向项目仓库</p></div></header>'
-    document += '<div class="workspace"><button class="backdrop" aria-label="关闭目录" type="button"></button><nav class="sidebar" id="module-navigation" aria-label="模块目录"><div class="search-box"><label for="search">搜索模块、函数或说明</label><input id="search" type="search" placeholder="例如 verifyEd25519" autocomplete="off"><p class="search-status" id="search-status" role="status"></p></div><div class="module-list">' + ''.join(navigation) + '</div></nav>'
-    document += '<main id="content"><div class="page-location">库函数 API / <span id="current-module"></span></div><div id="empty-state" class="empty-state" hidden>没有找到匹配的模块。请尝试其他函数名或关键词。</div>' + ''.join(sections) + '</main></div><noscript><style>body{height:auto;overflow:auto;display:block}.workspace{display:block}.sidebar{display:none}main{overflow:visible}article[hidden]{display:block!important;margin-bottom:24px}</style></noscript><script>' + SCRIPT.replace('50 个模块', str(module_count) + ' 个模块') + '</script></body></html>'
+    document += '<title>ChaLi ' + version + ' 语言与标准库参考手册</title><style>' + STYLE + '</style></head><body data-search-hint="' + html.escape(hint,quote=True) + '">'
+    document += '<header class="site-header"><button class="menu-toggle" id="menu-toggle" aria-controls="module-navigation" aria-expanded="false" type="button">目录</button><div><h1>ChaLi ' + version + ' · 语言与标准库参考手册</h1><p>' + str(module_count) + ' 个模块 · ' + str(function_count) + ' 个函数重载 · 离线阅读 · 源码链接指向项目仓库</p></div></header>'
+    document += '<div class="workspace"><button class="backdrop" aria-label="关闭目录" type="button"></button><nav class="sidebar" id="module-navigation" aria-label="参考目录"><div class="search-box"><label for="search">搜索语法、书稿、示例或 API</label><input id="search" type="search" placeholder="例如 verifyEd25519" autocomplete="off"><p class="search-status" id="search-status" role="status"></p></div><div class="module-list">' + ''.join(navigation) + '</div></nav>'
+    document += '<main id="content"><div class="page-location">参考手册 / <span id="current-module"></span></div><div id="empty-state" class="empty-state" hidden>没有找到匹配的内容。请尝试其他函数名或关键词。</div>' + ''.join(sections) + '</main></div><noscript><style>body{height:auto;overflow:auto;display:block}.workspace{display:block}.sidebar{display:none}main{overflow:visible}article[hidden]{display:block!important;margin-bottom:24px}</style></noscript><script>' + SCRIPT.replace('50 个模块', str(module_count) + ' 个模块') + '</script></body></html>'
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(document, encoding='utf-8')
+    if args.zip_output:
+        args.zip_output.parent.mkdir(parents=True,exist_ok=True)
+        with zipfile.ZipFile(args.zip_output,'w',zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
+            archive.write(args.output,arcname=args.output.name)
     print(f'已导出 {module_count} 个模块、{function_count} 个重载：{args.output}')
 
 

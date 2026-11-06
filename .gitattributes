@@ -1,14 +1,11 @@
-# chali 独立仓库的属性：与 ParseEngine 仓库根的那份同规矩，但这份跟着 chali 走
-# （chali 剥离出去、单独克隆时，仓库根的那份就管不到这里了）。
-#
-# 语言统计：这几个后缀是**本项目自己的语言名**，GitHub 的 Linguist 只认它自带
-# `languages.yml` 里的名字，自造名会被静默忽略（那时这些文件不计入任何语言）。
-# 要让它们成为正式语言名得给 Linguist 提 PR；在那之前，认这份声明的平台 / 工具
-# （以及本地统计）会按下面的名字显示。
-linguist-detectable=false
-*.chl linguist-language=Rust
-*.gram linguist-language=Yacc
-*.tmpl linguist-language=Template
+# 使用文件的真实语言名称，不映射成语法相似的 Rust、Yacc 等语言。
+# GitHub Linguist 目前未收录 ChaLi、Gram、Template；language 声明保留真实名称，
+# 但不能据此在 GitHub 新增语言。未知语言即使 detectable=true 也不会进入占比统计。
+# 明确声明这些文件应参与统计，上游收录后即可生效；其余源码按实际语言自动识别。
+*.chl linguist-language=ChaLi linguist-detectable=true
+*.chl.in linguist-language=ChaLi linguist-detectable=true
+*.gram linguist-language=Gram linguist-detectable=true
+*.tmpl linguist-language=Template linguist-detectable=true
 
 # 行尾：源码在 git 里存 LF，Windows 工作区按 core.autocrlf 转 CRLF；
 # 例外是 shell 脚本，必须钉死 LF —— 工作区一旦转成 CRLF，非 Git-Bash 的 sh

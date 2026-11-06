@@ -86,4 +86,20 @@ docker run --rm -v "$PWD:/workspace" chali-centos-stream9-builder
 
 容器默认构建其中可用的架构，输出 RPM 和 tar.gz。CentOS RPM 的系统依赖由 RPM 工具提取；DEB 的最低 glibc 要求读取 ELF 符号版本。Ubuntu 22.04 构建不承诺兼容所有更旧发行版，CentOS Stream 9 构建也不等于 CentOS 7 兼容。
 
+## 离线参考手册（CHM）
+
+`ChaLi-1.0.0-reference.chm` 整合语言参考、常见语法与用法、完整中文书稿（含附录）、标准库 API、引用的 ChaLi 示例源码和插图，提供目录、关键字索引和全文搜索。独立 HTML 使用 `ChaLi-1.0.0-reference-html.zip` 压缩后作为发行附件；插图已内嵌，解压后只需一个 HTML 文件。
+
+生成脚本为 [`tools/build_reference_chm.py`](../tools/build_reference_chm.py)。在 Windows 上准备 Microsoft HTML Help Workshop 的 `hhc.exe`，然后运行：
+
+```powershell
+python -m pip install -r tools/requirements_chm.txt
+python tools/build_reference_chm.py --compiler "C:\Program Files (x86)\HTML Help Workshop\hhc.exe" --output dist/release/ChaLi-1.0.0-reference.chm
+python tools/export_library_html.py --output tmp/ChaLi-1.0.0-reference.html --zip-output dist/release/ChaLi-1.0.0-reference-html.zip
+```
+
+编译器信息见 [Microsoft HTML Help](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/htmlhelp/microsoft-html-help-downloads)；[Help+Manual 提供原版 Workshop 下载入口](https://www.helpandmanual.com/downloads_mscomp.html)。脚本也会检测 PATH、常见安装目录和 `build/dependencies/html-help-workshop/`。便携编译器目录包含 `hhc.exe`、`hha.dll`、`itcc.dll` 时，脚本自动准备免注册 COM 清单，无需修改系统注册表。
+
+CHM 工程的中间 HTML、目录和索引只放在仓库 `tmp/` 中。`--prepare-only` 可在任意平台准备工程，实际 CHM 编译需要 Windows；单独下载任一脚本时用 `--repo 仓库路径` 指定完整源码目录。两种格式共享同一套原文，默认都包括书稿与示例；HTML 脚本的 `--api-only` 选项可仅导出 API。
+
 版本、反射默认配置和平台能力见[当前能力](17-capabilities.md)，内置与外置 LLVM 的区别见 [AOT 导出](38-aot.md)。

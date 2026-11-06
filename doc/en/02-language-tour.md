@@ -38,7 +38,7 @@ void main() {
 Integers carry their width explicitly: `int8` / `int16` / `int32` / `int64`; unsigned is `uint8` …
 `uint64`; floating point is `float32` / `float64`. There is no implicit narrowing — cast explicitly with `(int32)x`.
 
-Floating literals without a suffix have type `float64`. Since v0[18].1, the lowercase
+Floating literals without a suffix have type `float64`. Since v0.18.1, the lowercase
 `f` suffix fixes the type to `float32`: `1f`, `1.25f`, and `1e2f` are examples.
 `let value = 1.25f;` infers `float32` and can be passed directly to a `float32`
 parameter. The literal is rounded to 32-bit precision before any widening:
