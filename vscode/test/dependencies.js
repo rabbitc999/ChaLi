@@ -81,7 +81,8 @@ async function main() {
     let output = '';
     const report = spawnSync(compiler, ['--build-info'], { encoding: 'utf8' });
     assert.equal(report.status, 0, report.stderr);
-    const args = ['run', mainFile, 'out', path.join(directory, 'output')];
+    // 依赖回归只比较程序输出；编译完成提示另由命令行回归验证。
+    const args = ['run', mainFile, '--quiet', 'out', path.join(directory, 'output')];
     if (JSON.parse(report.stdout).llvm === 'external') {
       const bundled = path.join(root, 'build/dependencies/llvm/toolchain/bin/clang.exe');
       args.push('--llvm', process.env.CHALI_LLVM_CLANG || (process.platform === 'win32' && fs.existsSync(bundled) ? bundled : 'clang'));
