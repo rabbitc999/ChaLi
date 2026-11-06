@@ -1,0 +1,7 @@
+camera:
+  background_color: "#FFF8EF"
+  fps: 30
+file_writer:
+  ffmpeg_bin: "ffmpeg"
+  video_codec: "libx264"
+  pixel_format: "yuv420p"
