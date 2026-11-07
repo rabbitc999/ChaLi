@@ -17,14 +17,25 @@ namespace runtimeDetail
  */
 Slot nativeNewObject(NativeContext &ctx, ObjectKind kind)
 {
+    return Slot::fromInt(nativeNewObjectHandle(ctx, kind));
+}
+
+/**
+ * @brief 通过对象表登记全新对象并直接返回整数句柄。
+ * @param ctx 提供对象表及错误状态的运行上下文。
+ * @param kind 新对象的类别。
+ * @return 新对象句柄；缺少对象表时返回零并记录原有诊断。
+ */
+std::int64_t nativeNewObjectHandle(NativeContext &ctx, ObjectKind kind)
+{
     if (ctx.objects == nullptr)
     {
         ctx.error = Memory::String("没有接上对象表，建不了 ") + objectKindName(kind);
-        return Slot::fromInt(0);
+        return 0;
     }
     auto object = Memory::makeShared<RuntimeObject>();
     object->kind = kind;
-    return Slot::fromInt(ctx.objects->add(std::move(object)));
+    return ctx.objects->add(std::move(object));
 }
 
 /* ---- 容器（vec / set / map）---- */

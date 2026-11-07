@@ -312,6 +312,7 @@ struct Translator
     bool numericListViews = true;                                 ///< 以失效代次保护数值 List 的 LLVM 直接读写。
     bool referencePrimitives = true;                              ///< 引用非空检查直接进入 LLVM，保留失败诊断。
     bool objectScalars = true;                                    ///< 对象描述符查询使用直接标量入口。
+    bool objectConstructionScalars = true;                        ///< 空对象建立及无回调整数设置直接传递标量。
     bool objectCopyScalars = true;                                ///< 对象复制复用标量入口，不构造通用实参向量。
     bool dataSnapshots = true;                                    ///< 无不透明调用的循环在函数帧内保存数据区基址。
     bool stringStorageViews = true;                               ///< 通过已验证堆视图读取拥有型字符串描述符。
@@ -354,6 +355,8 @@ struct Translator
         referencePrimitives = !(references && *references);
         const auto *objects = std::getenv("CHALI_NO_AOT_OBJECT_SCALARS");
         objectScalars = !(objects && *objects);
+        const auto *construction = std::getenv("CHALI_NO_AOT_OBJECT_CONSTRUCTION_SCALARS");
+        objectConstructionScalars = !(construction && *construction);
         const auto *objectCopies = std::getenv("CHALI_NO_AOT_OBJECT_COPY_SCALAR");
         objectCopyScalars = !(objectCopies && *objectCopies);
         const auto *data = std::getenv("CHALI_NO_AOT_DATA_SNAPSHOT");
@@ -1338,11 +1341,23 @@ struct Builder
         // 普通双精度数学操作直接进入 LLVM；不使用 fast-math，保留 NaN、无穷及负零。
         if (state.rawIntrinsics && !state.stepChecks)
         {
-            if (state.objectScalars && arguments.size() == 1u &&
-                (callee == "__std_obj_name" || callee == "__std_obj_addr"))
+            if (state.objectConstructionScalars && callee == "__std_obj_new" && arguments.empty())
             {
-                write(destination, call("chali_host_object_scalar", "i64", {
-                    { "i64", callee == "__std_obj_name" ? "0" : "1" }, convert(argument(0), "i64") }));
+                write(destination, call("chali_host_object_new", "i64", {}));
+                return true;
+            }
+            if (state.objectConstructionScalars && callee == "__std_obj_set" && arguments.size() == 7u && argument(0).type == "i64" && argument(3).text == "0" && argument(4).text == "0" && std::all_of(arguments.begin() + 1, arguments.end(), [](const auto &entry) {
+                    return entry.second.type == "i64" && entry.second.floating.empty();
+                }))
+            {
+                const auto handle = argument(0);
+                const auto floating = handle.floating.empty() ? Value{ "i64", "0" } : convert({ "i8", handle.floating }, "i64", true);
+                write(destination, call("chali_host_object_integer_set", "i64", { handle, argument(1), argument(2), argument(5), argument(6), floating }));
+                return true;
+            }
+            if (state.objectScalars && arguments.size() == 1u && (callee == "__std_obj_name" || callee == "__std_obj_addr"))
+            {
+                write(destination, call("chali_host_object_scalar", "i64", { { "i64", callee == "__std_obj_name" ? "0" : "1" }, convert(argument(0), "i64") }));
                 return true;
             }
             if (state.objectCopyScalars && callee == "__std_object_copy" && arguments.size() == 1u)
@@ -2521,6 +2536,8 @@ static Memory::String generateLinkedLLVM(Request &request, Memory::Vector<Memory
     out += "declare i64 @chali_host_string_storage(i64, i64)\n";
     out += "declare i64 @chali_host_string_storage_view(i64, i64, ptr nocapture)\n";
     out += "declare i64 @chali_host_object_scalar(i64, i64)\n";
+    out += "declare i64 @chali_host_object_new()\n";
+    out += "declare i64 @chali_host_object_integer_set(i64, i64, i64, i64, i64, i64)\n";
     out += "declare ptr @chali_host_data_snapshot(ptr nocapture writeonly)\n";
     out += "declare void @chali_host_memory_prepare(i64, i64, i64, i64, ptr, ptr)\n";
     out += "declare i64 @chali_host_list_storage_scalar(i64, i64, i64, i64, i64, i64, i64, ptr nocapture writeonly)\n";

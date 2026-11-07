@@ -16,6 +16,19 @@ namespace stackvm::runtimeDetail
 Slot objNew(NativeContext &ctx, const Memory::Vector<Slot> &);
 
 /**
+ * @brief 以整数载荷设置无文本回调的对象，沿用通用设置的检查及快照分离。
+ * @param ctx 当前原生上下文。
+ * @param handle 目标对象句柄。
+ * @param value 不拥有其他对象或字符串的整数载荷。
+ * @param tag 具体类型编号。
+ * @param typeName 类型名的逻辑字符串地址。
+ * @param textShape 文本布局的逻辑字符串地址，零表示空布局。
+ * @return 设置成功为真；失败保留原有诊断及目标更新顺序。
+ */
+bool setObjectInteger(NativeContext &ctx, std::int64_t handle, std::int64_t value,
+                      std::int64_t tag, std::int64_t typeName, std::int64_t textShape);
+
+/**
  * @brief 接管具体聚合地址并建立拥有型接口值。
  * @param ctx 提供对象表及同步调用器的运行上下文。
  * @param args 聚合地址、具体类型号、复制助手和销毁助手。

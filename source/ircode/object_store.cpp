@@ -410,7 +410,18 @@ std::shared_ptr<RuntimeObject> ObjectStore::copyObject(const RuntimeObject &obje
  * @retval 复制运行时句柄并维护其对象引用。
  */
 std::int64_t ObjectStore::copyHandle(std::int64_t handle, Memory::String *error)
+{
+    return copyHandle(handle, error, nullptr);
+}
 
+/**
+ * @brief 共用已验证的存储槽，刷新可能重入的视图后重新核对身份。
+ * @param handle 原对象的完整句柄。
+ * @param error 接收失效、刷新或复制失败的诊断。
+ * @param refreshContext 原生调用者上下文；为空时不额外刷新调用者视图。
+ * @return 独立的新句柄；失败返回零。
+ */
+std::int64_t ObjectStore::copyHandle(std::int64_t handle, Memory::String *error, NativeContext *refreshContext)
 {
     if (handle < kObjectHandleBase)
     {
@@ -419,6 +430,17 @@ std::int64_t ObjectStore::copyHandle(std::int64_t handle, Memory::String *error)
     }
     auto *storage = handleStorage(handle);
     RuntimeObject *object = storage == nullptr ? nullptr : storage->get();
+    if (object != nullptr && refreshContext != nullptr && !object->elementViews.empty())
+    {
+        if (!nativeRefreshViews(*refreshContext, *object))
+        {
+            if (error) *error = refreshContext->error;
+            return 0;
+        }
+        // 刷新可能释放旧值并进入用户清理，不能跨重入保存存储槽或对象指针。
+        storage = handleStorage(handle);
+        object = storage == nullptr ? nullptr : storage->get();
+    }
     if (object == nullptr)
     {
         if (error != nullptr) *error = "这个对象已经释放过了（句柄 " + Memory::toString(handle) + "）";

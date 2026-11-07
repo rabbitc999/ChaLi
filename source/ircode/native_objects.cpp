@@ -55,12 +55,58 @@ Slot interfaceBorrow(NativeContext &ctx, const Memory::Vector<Slot> &args)
 }
 
 /**
- * @brief `__std_obj_set(obj, 值, 类型号, 值是不是字符串, 值是不是对象句柄, 类型名地址) -> 0`：把值装进去。
- *
- * 原来的值直接丢掉（格子只有一个），类型号与类型名一起换成新的。
- * @param ctx 原生调用上下文，提供内存访问与错误报告。
- * @param args 按接口约定顺序传入的实参列表。
- * @retval 封装为原生值的运行时结果。
+ * @brief 读取元数据、分离共享快照并替换已验证对象的载荷。
+ * @param ctx 当前原生上下文。
+ * @param handle 已通过类别、存活和视图刷新检查的目标句柄。
+ * @param value 已完成通用值转换的载荷。
+ * @param tag 新的具体类型编号。
+ * @param ownsObject 是否接管载荷中的对象句柄。
+ * @param typeName 类型名的逻辑字符串地址。
+ * @param shape 文本布局的逻辑字符串地址。
+ * @param callbacks 可选的原实参列表，第七项之后按原协议读取文本回调。
+ * @return 完成设置时为真；失败时保留原有错误及更新顺序。
+ */
+static bool assignObjectValue(NativeContext &ctx, std::int64_t handle, ObjectValue &&value,
+                              std::int64_t tag, bool ownsObject, std::int64_t typeName,
+                              std::int64_t shape, const Memory::Vector<Slot> *callbacks)
+{
+    Memory::String name;
+    if (!nativeReadCString(ctx, static_cast<std::size_t>(typeName), &name))
+    {
+        ctx.error = "obj.set 读不到类型名（地址 " + Memory::toString(typeName) + "）";
+        return false;
+    }
+    Memory::String textShape;
+    if (!nativeReadCString(ctx, static_cast<std::size_t>(shape), &textShape))
+    {
+        ctx.error = "obj.set 读不到文本布局";
+        return false;
+    }
+    auto *object = ctx.objects->detachPointerSnapshot(handle);
+    if (object == nullptr)
+    {
+        nativeObject(ctx, handle, ObjectKind::Obj, "obj.set");
+        return false;
+    }
+    ctx.objects->invalidateNativeRecordViews();
+    object->objTextShape = std::move(textShape);
+    object->objTextCallbacks.clear();
+    if (callbacks)
+        for (std::size_t index = 7; index < callbacks->size(); ++index) object->objTextCallbacks.push_back(nativeInt((*callbacks)[index]));
+    if (object->objOwnsObject) ctx.objects->release(object->objValue.integer);
+    object->objTag = tag;
+    object->objTypeName = std::move(name);
+    object->objValue = std::move(value);
+    object->objOwnsObject = ownsObject;
+    object->objValue.ownsObject = object->objOwnsObject;
+    return true;
+}
+
+/**
+ * @brief 把通用值装入对象，保持旧值释放、元数据与回调的原有协议。
+ * @param ctx 当前原生上下文。
+ * @param args 对象、载荷、类型号、字符串及对象标志、类型名和可选布局与回调。
+ * @return 原有整数零结果；失败通过上下文报告。
  */
 Slot objSet(NativeContext &ctx, const Memory::Vector<Slot> &args)
 {
@@ -69,40 +115,33 @@ Slot objSet(NativeContext &ctx, const Memory::Vector<Slot> &args)
         ctx.error = "obj.set 的内部文本回调参数不完整";
         return Slot::fromInt(0);
     }
-    RuntimeObject *object = nativeObject(ctx, args[0], ObjectKind::Obj, "obj.set");
-    if (object == nullptr) return Slot::fromInt(0);
+    if (nativeObject(ctx, args[0], ObjectKind::Obj, "obj.set") == nullptr) return Slot::fromInt(0);
     ObjectValue value;
     if (!nativeValue(ctx, args[1], nativeInt(args[3]) != 0, nativeInt(args[4]), false,
                      &value)) return Slot::fromInt(0);
-    Memory::String name;
-    if (!nativeReadCString(ctx, static_cast<std::size_t>(nativeInt(args[5])), &name))
-    {
-        ctx.error = "obj.set 读不到类型名（地址 " + Memory::toString(nativeInt(args[5])) + "）";
-        return Slot::fromInt(0);
-    }
-    Memory::String textShape;
-    if (args.size() >= 7u && !nativeReadCString(ctx, static_cast<std::size_t>(nativeInt(args[6])), &textShape))
-    {
-        ctx.error = "obj.set 读不到文本布局";
-        return Slot::fromInt(0);
-    }
-    object = ctx.objects->detachPointerSnapshot(nativeInt(args[0]));
-    if (object == nullptr)
-    {
-        nativeObject(ctx, args[0], ObjectKind::Obj, "obj.set");
-        return Slot::fromInt(0);
-    }
-    ctx.objects->invalidateNativeRecordViews();
-    object->objTextShape = std::move(textShape);
-    object->objTextCallbacks.clear();
-    for (std::size_t index = 7; index < args.size(); ++index) object->objTextCallbacks.push_back(nativeInt(args[index]));
-    if (object->objOwnsObject) ctx.objects->release(object->objValue.integer);
-    object->objTag = nativeInt(args[2]);
-    object->objTypeName = std::move(name);
-    object->objValue = std::move(value);
-    object->objOwnsObject = nativeInt(args[4]) == 1 || (nativeInt(args[4]) == -1 && isObjectHandle(value.integer));
-    object->objValue.ownsObject = object->objOwnsObject;
+    const bool ownsObject = nativeInt(args[4]) == 1 || (nativeInt(args[4]) == -1 && isObjectHandle(value.integer));
+    assignObjectValue(ctx, nativeInt(args[0]), std::move(value), nativeInt(args[2]), ownsObject,
+                      nativeInt(args[5]), args.size() >= 7u ? nativeInt(args[6]) : 0, &args);
     return Slot::fromInt(0);
+}
+
+/**
+ * @brief 直接设置整数载荷，省去通用参数向量及值槽转换。
+ * @param ctx 当前原生上下文。
+ * @param handle 目标对象的完整句柄。
+ * @param value 非拥有整数载荷。
+ * @param tag 具体类型编号。
+ * @param typeName 类型名的逻辑字符串地址。
+ * @param textShape 文本布局的逻辑字符串地址。
+ * @return 设置成功时为真；失败保留与通用入口相同的诊断。
+ */
+bool setObjectInteger(NativeContext &ctx, std::int64_t handle, std::int64_t value,
+                      std::int64_t tag, std::int64_t typeName, std::int64_t textShape)
+{
+    if (nativeObject(ctx, handle, ObjectKind::Obj, "obj.set") == nullptr) return false;
+    ObjectValue payload;
+    payload.integer = value;
+    return assignObjectValue(ctx, handle, std::move(payload), tag, false, typeName, textShape, nullptr);
 }
 
 /**

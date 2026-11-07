@@ -213,9 +213,7 @@ std::int64_t copyObjectHandle(NativeContext &ctx, std::int64_t handle)
         return 0;
     }
     Memory::String error;
-    RuntimeObject *source = ctx.objects->find(handle);
-    if (source != nullptr && !nativeRefreshViews(ctx, *source)) return 0;
-    const std::int64_t copy = ctx.objects->copyHandle(handle, &error);
+    const std::int64_t copy = ctx.objects->copyHandle(handle, &error, &ctx);
     if (copy == 0)
     {
         ctx.error = error;

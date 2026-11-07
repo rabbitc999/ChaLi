@@ -16,6 +16,14 @@ namespace stackvm::runtimeDetail
  */
 Slot nativeNewObject(NativeContext &ctx, ObjectKind kind);
 
+/**
+ * @brief 直接建立运行时对象，不构造通用返回值槽。
+ * @param ctx 提供对象表及错误状态的运行上下文。
+ * @param kind 新对象的类别。
+ * @return 新对象句柄；缺少对象表时记录错误并返回零。
+ */
+std::int64_t nativeNewObjectHandle(NativeContext &ctx, ObjectKind kind);
+
 /* ---- 容器（vec / set / map）---- */
 
 /**

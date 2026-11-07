@@ -57,3 +57,15 @@ python benchmarks/interface_cost/run.py --chali ./chali-1.0.0-llvm-static-window
 - 不按速度剔除样本，不复用旧性能数据；结果仅描述记录的机器、工具链、分配器和负载。此入口不测量编译器构建时间，也不代替完整语义回归。
 
 需要调整规模时使用 `--iterations`；报告会记录实际值。完成测量后，入口会把所需构件复制到输出目录并结束所有子进程。按仓库约定再运行 `pwsh -File tools/clean_tmp.ps1` 清空根目录临时文件。
+
+## 两个编译器构件的对照
+
+`compare.py` 使用相同的前 14 项内核对两个编译器构件交错采样。先完成全部构建和五组输入校验，再按固定随机种子打乱用例及相邻构件的运行顺序；每项每个构件默认保留 25 个正式样本。它不运行独立的原多态模块或所有权插桩，相关分析使用上面的 `run.py`。
+
+```powershell
+python benchmarks/interface_cost/compare.py --before build/validation/before.exe --after ./chali-1.0.0-llvm-static-windows-x64.exe --before-source-commit <旧构件对应的提交> --out build/validation/interface-compare --with-generic-construction
+```
+
+`--with-generic-construction` 增加第三组：同一个新编译器在构建内核时设置 `CHALI_NO_AOT_OBJECT_CONSTRUCTION_SCALARS=1`，关闭空对象建立及整数设置的标量入口，保留其他改动。此组用于区分构造封送与复制查找的影响。该开关只影响内核生成，运行时仍保留通用入口；启用步数限制时也沿用通用路径。整数设置的标量入口只覆盖无文本回调、非字符串、非拥有对象的整数载荷，其他情况继续使用通用设置。
+
+输出保留两个编译器的实际字节摘要和构建信息、当前源码差异、输入校验、每轮顺序、全部耗时及校验值、LLVM IR 与实际计时构件。复测时须结束其他构建及回归进程；不要并行运行计时程序。

@@ -221,6 +221,15 @@ struct ObjectStore
     std::int64_t copyHandle(std::int64_t handle, Memory::String *error);
 
     /**
+     * @brief 在调用者上下文中刷新视图后复制句柄，共用对象查找并保留独立身份。
+     * @param handle 原对象的完整句柄。
+     * @param error 接收原有复制或刷新诊断。
+     * @param refreshContext 可选的调用者上下文；空指针沿用对象表自身的复制协议。
+     * @return 独立的新句柄；失效对象或刷新、复制失败时返回零。
+     */
+    std::int64_t copyHandle(std::int64_t handle, Memory::String *error, NativeContext *refreshContext);
+
+    /**
      * @brief 释放指定地址对应的运行时资源。
      *
      * 释放一个对象；确实释放了返回 true。

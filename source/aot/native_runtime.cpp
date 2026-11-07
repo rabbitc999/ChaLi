@@ -1289,7 +1289,8 @@ std::int64_t chali_host_object_scalar(std::int64_t operation, std::int64_t handl
 {
     NativeContext &context = currentContext();
     const bool copying = operation == 2 || operation == 3;
-    const char *name = operation == 0 ? "__std_obj_name" : copying ? "__std_object_copy" : "__std_obj_addr";
+    const char *name = operation == 0 ? "__std_obj_name" : copying ? "__std_object_copy" :
+                                                                     "__std_obj_addr";
     std::int64_t result = 0;
     try
     {
@@ -1327,6 +1328,70 @@ std::int64_t chali_host_object_scalar(std::int64_t operation, std::int64_t handl
 }
 
 /**
+ * @brief 直接建立空对象，省去通用参数及返回值槽，保留原生错误和退出检查。
+ * @return 全新的对象句柄；失败时按通用原生入口的错误优先级终止。
+ */
+std::int64_t chali_host_object_new()
+{
+    NativeContext &context = currentContext();
+    std::int64_t result = 0;
+    try
+    {
+        result = nativeNewObjectHandle(context, ObjectKind::Obj);
+    } catch (const std::exception &error)
+    {
+        context.error = Memory::String("宿主函数 __std_obj_new 抛出异常：") + error.what();
+    }
+    if (!context.memoryFault.empty()) context.error = context.memoryFault;
+    if (!context.error.empty()) chali_panic(context.error.c_str());
+    chali_host_tick(0);
+    if (context.exitRequested && *context.exitRequested)
+    {
+        const auto code = context.exitCode ? *context.exitCode : 0;
+        if (context.threadId != 0) throw NativeExit{ code };
+        std::exit(code);
+    }
+    nativeThreadState.nativeResultFloat = 0;
+    return result;
+}
+
+/**
+ * @brief 直接设置无回调整数对象，沿用通用原生入口的错误和退出检查。
+ * @param handle 已建立的对象句柄。
+ * @param value 非拥有整数载荷。
+ * @param tag 具体类型编号。
+ * @param typeName 类型名的逻辑字符串地址。
+ * @param textShape 文本布局的逻辑字符串地址。
+ * @param handleFloating 句柄槽的动态浮点标记，非零时沿用通用槽的无效句柄诊断。
+ * @return 原有整数零结果；失败时按原生入口错误优先级终止。
+ */
+std::int64_t chali_host_object_integer_set(std::int64_t handle, std::int64_t value,
+                                           std::int64_t tag, std::int64_t typeName, std::int64_t textShape,
+                                           std::int64_t handleFloating)
+{
+    NativeContext &context = currentContext();
+    try
+    {
+        // Slot::fromDouble 的 integer 为零；不能把浮点槽的位模式当作有效对象句柄。
+        setObjectInteger(context, handleFloating ? 0 : handle, value, tag, typeName, textShape);
+    } catch (const std::exception &error)
+    {
+        context.error = Memory::String("宿主函数 __std_obj_set 抛出异常：") + error.what();
+    }
+    if (!context.memoryFault.empty()) context.error = context.memoryFault;
+    if (!context.error.empty()) chali_panic(context.error.c_str());
+    chali_host_tick(0);
+    if (context.exitRequested && *context.exitRequested)
+    {
+        const auto code = context.exitCode ? *context.exitCode : 0;
+        if (context.threadId != 0) throw NativeExit{ code };
+        std::exit(code);
+    }
+    nativeThreadState.nativeResultFloat = 0;
+    return 0;
+}
+
+/**
  * @brief 取得当前上下文的数据区视图；供无不透明调用的函数在当前帧内使用。
  * @param size 接收当前数据区的实际字节数；缺少上下文时写零。
  * @return 当前数据区首地址；模块尚未初始化时返回空，不提前改变错误行为。
@@ -1336,7 +1401,8 @@ unsigned char *chali_host_data_snapshot(std::size_t *size)
 {
     *size = 0;
     NativeContext *context = nativeThreadState.activeContext ? nativeThreadState.activeContext :
-                             runtime ? &runtime->context : nullptr;
+                             runtime                         ? &runtime->context :
+                                                               nullptr;
     if (!context || !context->data) return nullptr;
     *size = context->data->binary.size();
     return const_cast<unsigned char *>(context->data->binary.data());

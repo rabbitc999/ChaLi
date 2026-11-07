@@ -1,0 +1,29 @@
+/** 参数及重入必须保留独立的接口绑定快照。 */
+interface Operation { int64 apply(int64 value); };
+struct First: Operation {
+    int64 apply(int64 value) {
+        if (value == 1) { current = &second; }
+        return value + 10;
+    }
+};
+struct Second: Operation {
+    int64 apply(int64 value) { return value + 20; }
+};
+First first;
+Second second;
+Operation const& current = &first;
+int64 rebindParameter(Operation const& operation) {
+    operation = &second;
+    return operation.apply(2);
+}
+int64 readTwice(Operation const& operation) {
+    int64 before = operation.apply(1);
+    return before * 100 + operation.apply(2);
+}
+void main() {
+    assert(rebindParameter(&current) == 22);
+    assert(current.apply(2) == 12);
+    assert(readTwice(&current) == 1112);
+    assert(current.apply(2) == 22);
+    println("interface binding reentry OK");
+}
