@@ -378,23 +378,9 @@ public:
            const chali_package::Project *project = nullptr) : options_(std::move(options)), includeDirs_(std::move(includeDirs)), cache_(cache), project_(project)
     {
         options_.allowIncludes = false;
-#if defined(_WIN32)
-        const char *os = "windows";
-#elif defined(__APPLE__) && defined(__MACH__)
-        const char *os = "macos";
-#elif defined(__linux__)
-        const char *os = "linux";
-#else
-        const char *os = "other";
-#endif
-        // Explicit -D definitions can select a deployment target when emitting.
-        const auto addDefault = [&](const char *name, const Memory::String &value) {
-            for (const auto &define : options_.defines)
-                if (define.name == name) return;
-            options_.defines.push_back({ name, value });
-        };
-        addDefault("CHALI_OS", os);
-        addDefault("CHALI_BITS", Memory::toString(sizeof(void *) * 8));
+        options_.syntax = preprocess::Options::Syntax::Custom;
+        options_.directivePrefixes.clear();
+        options_.defines.clear();
     }
 
     bool rootFile(const Memory::String &path, preprocess::Result &output, Memory::String &error)
@@ -433,8 +419,7 @@ public:
     /**
      * @brief 源文件 → 模块名（`$module` 的取值来源）。
      *
-     * 一个文件里 `%include` 进来的文件算在**宿主文件所在的那个模块**里，所以这里按
-     * 「这个单元的行号映射里出现过的每个源文件」登记，而不只登记主文件。
+     * 按单元的来源映射登记模块身份，供导入模块中的宏正确取得定义位置。
      */
     const Memory::Map<Memory::String, Memory::String> &moduleByFile() const { return moduleByFile_; }
 

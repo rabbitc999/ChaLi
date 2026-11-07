@@ -186,7 +186,7 @@ $macro ... $end_macro 与 $replace 定义宏；调用带 $ 前缀。value、expr
 
 $for、$if、$match、$regex 选择或重复模板；$elif 与 $else_if 是 $if 条件链中等价的后续分支命令，一条链由一个 $end_if 收束。$fields 与 $member 静态生成字段操作，$compile_assert 与 $compile_error 报告编译时条件。完整例程及逐段解释见第 22 章。
 
-%define、%symbol 及 %if、%ifdef、%ifndef、%elif、%else、%endif 在预处理阶段决定保留哪些源码；%undefine、%unsymbol 撤销定义，%warning、%error 给出消息。它们不等于运行期 if，也不等于类型检查后的宏字段选择。
+编译期条件选择使用宏中的 $if、$elif、$else 与 $end_if；普通源码中的 if 在运行期选择分支。模块使用 import 导入。
 
 @annotation 声明注解，@Name 标注声明；@Reflect 选择运行期反射信息。#borrow、#static、#abi、#export、#NonCopyable 等编译器指令各有具体约束，不以 # 前缀自动成为用户宏。
 

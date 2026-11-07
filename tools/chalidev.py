@@ -172,8 +172,8 @@ _MESSAGES = {
   "  --emit                 只生成 .quad / .data，不执行\n": [
     "  --emit                 Export .quad / .data without executing\n"
   ],
-  "  --raw                  跳过前处理：源文件原样喂给解析器\n": [
-    "  --raw                  Skip preprocessing and parse the source directly\n"
+  "  --raw                  跳过模块加载与文本展开，直接解析源码\n": [
+    "  --raw                  Skip module loading and text expansion; parse source directly\n"
   ],
   "  --deps                 只列出 `%include` 拉进来的文件（构建脚本用）\n": [
     "  --deps                 List files loaded by %include (for build scripts)\n"
@@ -204,9 +204,6 @@ _MESSAGES = {
   ],
   "  --import-dir 目录      追加 import 搜索目录\n": [
     "  --import-dir DIR       Add an import search directory\n"
-  ],
-  "  -D, --define 符号[=值] 定义预处理符号（也可写 -D符号=值）\n": [
-    "  -D, --define NAME[=VALUE] Define a preprocessing symbol (also -DNAME=VALUE)\n"
   ],
   "  --                     后面全部作为程序的命令行参数\n": [
     "  --                     Pass all remaining arguments to the program\n"
@@ -1080,7 +1077,7 @@ def formatted(text):
         stripped = code.lstrip()
         closing = len(stripped) - len(stripped.lstrip('}'))
         indent = max(0, depth - closing)
-        if number in protected or line.lstrip().startswith(('$', '%')):
+        if number in protected or line.lstrip().startswith('$'):
             result.append(line)
         else:
             result.append('    ' * indent + line.strip() if line.strip() else '')

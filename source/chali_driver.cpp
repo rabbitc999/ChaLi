@@ -1,10 +1,9 @@
 /* ============================================================
  * 入口：chali <源文件.chl> [--out 前缀] [--debug]
- *                           [-I 目录] [-D 符号[=值]] [--raw] [--deps]
+ *                           [-I 目录] [--raw] [--deps]
  *
  *   ① 读源文件（不给文件也不给 `--stdin` 时显示帮助）；
- *   ② **前处理**：`%if` / `%define` 等指令（source/preprocess，
- *      语言无关的那一份），默认用空行占位，所以行号与源文件一一对应；
+ *   ② 加载 import 模块，映射源文件位置，展开插值与卫生宏；
  *   ③ 解析：文法动作在归约的那一刻就把自己的 C 语法树建好；
  *   ④ M_Compile：完成语义检查与 AST 降级，再由 LLVM 生成原生产物或执行。
  *
@@ -150,7 +149,6 @@ void PrintUsage(std::FILE *out)
              "直接文件调用始终运行；文件后的所有内容传给程序。显式场景的高级选项：\n",
              "不给源文件时显示本帮助；要从标准输入读源码，显式给 --stdin。选项：\n",
              "  -h, --help             显示本帮助并退出\n",
-             "  -D, --define 符号[=值] 定义预处理符号（也可写 -D符号=值）\n",
              "  -I, --include-dir 目录 追加模块搜索目录（也可写 -I目录）\n",
              "  --check                仅检查，不执行、不生成产物\n",
              "  --debug                保留原生符号、源码行和变量信息，使用 O0\n",
@@ -183,7 +181,7 @@ void PrintUsage(std::FILE *out)
              "  --out 前缀             生成产物的文件名前缀（缺省与源码同级）\n",
              "  --keep-artifacts       保留源码旁隐藏 .chali 下的中间产物（缺省自动清理）\n",
              "  --quiet                不输出编译完成提示（不隐藏错误或程序输出）\n",
-             "  --raw                  跳过前处理：源文件原样喂给解析器\n",
+             "  --raw                  跳过模块加载与文本展开，直接解析源码\n",
              "  --reflection           写入反射元数据（缺省已写入；反射不可裁剪）\n",
              "  --stdin                从标准输入读源码（不给文件时缺省改为显示本帮助）\n",
              "  --stats                打印运行时、增量校验与后端两层（指令选择 / 帧槽）统计\n",
@@ -386,7 +384,6 @@ try
         if (!ec && executable.has_parent_path())
             moduleRuntimeDirs.push_back(executable.parent_path().u8string());
     }
-    Memory::Vector<Memory::String> defineItems;
     Memory::Vector<Memory::String> programArguments;
     /* 统一入口支持原生编译执行和发布构建。 */
     int firstArgument = 1;
@@ -768,17 +765,6 @@ try
             if (argument == "--include-path") importDirs.push_back(directories.back());
             continue;
         }
-        if (argument == "-D" || argument == "--define")
-        {
-            if (!NeedValue(index, argc, argument.c_str())) return 2;
-            defineItems.push_back(argv[++index]);
-            continue;
-        }
-        if (argument.compare(0u, 2u, "-D") == 0 && argument.size() > 2u) /* -D符号=值 */
-        {
-            defineItems.push_back(argument.substr(2u));
-            continue;
-        }
         if (!argument.empty() && argument[0] == '-')
         {
             std::fprintf(stderr, CHALI_TEXT("不认识的选项：%s\n"), argument.c_str());
@@ -971,7 +957,7 @@ try
         const Memory::String defaultCache = defaultArtifacts ? Memory::String((defaultArtifacts->root / "cache").u8string().c_str())
                                                              : prefix + ".chali-cache";
         cache = Memory::makeUnique<chali_incremental::Cache>(cacheDirectory.empty() ? defaultCache : cacheDirectory, argv[0],
-                                                             searchDirs, defineItems,
+                                                             searchDirs,
                                                              pathSignature,
                                                              Memory::String(reflectionEnabled ? "reflection\n" : "no reflection\n") + (stripDebug ? "strip debug\n" : "keep debug\n")
                                                                  + (debugOptimized ? "optimized debug\n" : "development debug\n") + "\n");
@@ -996,19 +982,17 @@ try
     }
 
     const Memory::String originalRootSource = text;
-    /* ---- 前处理：`%if` / `%define` / `%error` … ----
-     *
-     * 用 `forMetro()` 这套：只认 `%` 前缀，`%define` / `%undefine` 也算符号定义。
-     * `preserveLines` 默认开着 —— 指令行与"条件为假"的行都输出成空行，所以
-     * 预处理之后的**行号与源文件一一对应**（通过 lineMap 保留源位置）。
-     * 模块通过 import 独立加载，命令行 -I 提供模块搜索目录。 */
+    /* 模块通过 import 独立加载，命令行 -I 提供搜索目录。
+     * 行号映射和 #NoNamingCheck 仍由通用文本读取器维护，不启用条件预处理。 */
     preprocess::Result processed;
     chali_macro::sourceFragments.clear();
     Memory::Vector<preprocess::LineOrigin> originalMacroOrigins;
     std::uint64_t incrementalInput = 0;
     if (!raw)
     {
-        preprocess::Options options = preprocess::Preprocessor::forMetro();
+        preprocess::Options options;
+        options.syntax = preprocess::Options::Syntax::Custom;
+        options.directivePrefixes.clear();
         options.allowIncludes = false;
         options.allowNamingDirective = true;
         options.includeDirs = includeDirs;
@@ -1017,17 +1001,6 @@ try
             return found == sourceOverlays.end() ? preprocess::IncludeResult::useDefault() :
                                                    preprocess::IncludeResult::inlineText(found->second, request.resolvedPath);
         };
-        for (const Memory::String &item : defineItems)
-        {
-            preprocess::Define define;
-            if (!preprocess::Preprocessor::parseDefine(item, define))
-            {
-                std::fprintf(stderr, "chali: -D 的写法不对（要 NAME 或 NAME=值）：%s\n",
-                             item.c_str());
-                return 2;
-            }
-            options.defines.push_back(define);
-        }
         Memory::Vector<Memory::String> moduleDirs = importDirs;
         chali_module::Loader loader(options, moduleDirs, cache.get(), &project);
         Memory::String moduleError;

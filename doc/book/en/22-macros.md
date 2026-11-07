@@ -1,4 +1,4 @@
-# Chapter 22 Preprocessing and Macros
+# Chapter 22 Macros
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../22-预处理与宏.md)

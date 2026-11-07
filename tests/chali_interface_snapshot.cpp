@@ -15,6 +15,42 @@ int main()
     using namespace stackvm::runtimeDetail;
     Memory::SystemRuntimeArena arena(4 * 1024 * 1024);
     Memory::AllocationScope allocation(&arena);
+    {
+        ObjectStore store;
+        NativeContext context;
+        assert(nativeObject(context, kObjectHandleBase, ObjectKind::Obj, "查询") == nullptr);
+        const auto missingStoreError = context.error;
+        context.error.clear();
+        assert(nativeObject(context, Slot::fromInt(kObjectHandleBase), ObjectKind::Obj, "查询") == nullptr);
+        assert(!missingStoreError.empty() && context.error == missingStoreError);
+        context.error.clear();
+        context.objects = &store;
+        auto object = Memory::makeShared<RuntimeObject>();
+        object->kind = ObjectKind::Obj;
+        const auto handle = store.add(std::move(object));
+        assert(nativeObject(context, handle, ObjectKind::Obj, "查询") == store.find(handle));
+        assert(nativeObject(context, Slot::fromInt(handle), ObjectKind::Obj, "查询") == store.find(handle));
+        for (const auto value : { std::int64_t(0), std::int64_t(-1), handle + 32, handle })
+        {
+            const auto kind = value == handle ? ObjectKind::Closure : ObjectKind::Obj;
+            context.error.clear();
+            assert(nativeObject(context, value, kind, "查询") == nullptr);
+            const auto scalarError = context.error;
+            context.error.clear();
+            assert(nativeObject(context, Slot::fromInt(value), kind, "查询") == nullptr);
+            assert(!scalarError.empty() && context.error == scalarError);
+        }
+        // 无效元素视图必须继续刷新并报错，不能因标量入口跳过。
+        store.find(handle)->elementViews[0] = {};
+        context.error.clear();
+        assert(nativeObject(context, handle, ObjectKind::Obj, "查询") == nullptr);
+        assert(context.error == "迭代期间列表结构已改变");
+        store.find(handle)->elementViews.clear();
+        assert(store.release(handle));
+        context.error.clear();
+        assert(nativeObject(context, handle, ObjectKind::Obj, "查询") == nullptr);
+        assert(!context.error.empty());
+    }
     std::size_t counts[2]{};
     for (unsigned mode = 0; mode < 2; ++mode)
     {

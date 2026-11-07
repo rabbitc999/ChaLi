@@ -1305,7 +1305,7 @@ std::int64_t chali_host_object_scalar(std::int64_t operation, std::int64_t handl
         }
         else
         {
-            RuntimeObject *object = nativeObject(context, Slot::fromInt(handle), ObjectKind::Obj,
+            RuntimeObject *object = nativeObject(context, handle, ObjectKind::Obj,
                                                  operation == 0 ? "obj.name" : "接口指针");
             if (object) result = operation == 0 ? object->objTag : object->objValue.integer;
         }

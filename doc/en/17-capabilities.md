@@ -34,7 +34,7 @@ AOT shared libraries expose functions using `export` and may omit `main`. `chali
 | Types | Fixed-width integers, float32/float64, bool, char, String, big numbers; arrays, tuples, structs, payload enums, containers and function types |
 | Abstraction | Overloads, generic monomorphization, interface constraints, associated types, constant generics, default type parameters, default interface methods and runtime interface dispatch |
 | Function values | Anonymous functions use `fn`; inline arguments, nested higher-order functions and const/mut/copy/move captures are supported |
-| Control flow | Match, guards, integer singleton/range overlap warnings, destructuring, ranges, if expressions, block expressions with `yield value;`, tuple exits with `yield (a, b);`, nested-loop exits with `break label;`, implicit moves of direct variables and value breaks across non-value loops, macros and conditional compilation |
+| Control flow | Match, guards, integer singleton/range overlap warnings, destructuring, ranges, if expressions, block expressions with `yield value;`, tuple exits with `yield (a, b);`, nested-loop exits with `break label;`, implicit moves of direct variables and value breaks across non-value loops, hygienic macros and compile-time template selection |
 | Errors and cleanup | Option, Result, custom error propagation, `?`, panic, defer, scope(exit), Drop and Closeable |
 | Ownership | Ordinary owned-value assignment and value arguments copy; move transfers resources. The old binding cannot be read, written or rebound; a complete move permits a new declaration using that name |
 | References | Non-null read-only/mutable references; `Option<T const&>` and `Option<T mut&>` represent an optional reference, with None constructing no reference |
@@ -123,7 +123,7 @@ API manuals require `chali man api`; omitting `api` produces a usage error. `cha
 Copies call the declared glue function. `#NonCopyable` disables copying and omits copy.
 BigInteger multiplication selects Karatsuba or dual-prime NTT by padded operation cost, reuses forward transforms for squares, and has no schoolbook kernel.
 Division combines Knuth limb division with Burnikel–Ziegler recursion, truncating toward zero with the dividend's remainder sign.
-Algorithm boundaries, tuning interfaces and reproducible test entry points are described in the [big-number library guide](../../source/bignum/README.md). Historical measurements remain in Git history; the current version comparison does not include big-number workloads.
+Historical measurements remain in Git history; the current version comparison does not include big-number workloads.
 A struct may declare multiple opcode fields. BigInteger, BigDecimal, File and Process
 records and operations reside in standard library glue; the runtime core manages generic NativeRecord
 shells and a host service table. File and Process are noncopyable. Process is the public type name.

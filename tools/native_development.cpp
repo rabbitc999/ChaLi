@@ -944,29 +944,7 @@ std::vector<Record> scan(const std::string &source, const std::string &s)
                                          }),
                           records.end());
         }
-        if (t[i].word == "%" && t[i + 1].word == "undefine" && i + 2 < t.size())
-        {
-            records.erase(std::remove_if(records.begin(), records.end(),
-                                         [&](const Record &r) {
-                                             return r.kind == "macro" && r.name == t[i + 2].word && starts(r.signature, "%define") && r.offset < t[i].a;
-                                         }),
-                          records.end());
-        }
-        if (t[i].word == "%" && t[i + 1].word == "define" && i + 2 < t.size())
-        {
-            Record r;
-            r.name = t[i + 2].word;
-            r.module = module;
-            r.kind = "macro";
-            r.source = source;
-            r.offset = t[i + 2].a;
-            const auto end = s.find('\n', t[i].a);
-            r.signature = s.substr(t[i].a, (end == s.npos ? s.size() : end) - t[i].a);
-            r.documentation = precedingDoc(s, t[i].a, &raw);
-            r.qualified = qualified(r);
-            records.push_back(r);
-        }
-        if (starts(t[i].word, "$") || t[i].word == "%")
+        if (starts(t[i].word, "$"))
         {
             const auto end = s.find('\n', t[i].a);
             for (size_t j = i; j < t.size() && (end == s.npos || t[j].a < end); ++j)
@@ -2388,7 +2366,7 @@ std::string format(const std::string &s)
         while (size_t(closing) < v.size() && v[closing] == '}')
             ++closing;
         auto content = trim(line);
-        if (protectedLines.count(n) || starts(content, "$") || starts(content, "%"))
+        if (protectedLines.count(n) || starts(content, "$"))
             out += line;
         else if (!content.empty())
             out +=
@@ -4527,7 +4505,7 @@ class Server
                 // 同一标准宏可能同时来自公开索引与已载入的模块。
                 if (standardMacro && !standardMacros.emplace(r.qualified, r.signature).second) continue;
                 // 宏在源码里写成 `$名字`：跨模块同名时和普通标识符一样用限定名，
-                // 唯一时用短名；`%define` 那类是文本替换，只能按短名插入。
+                // 唯一时用短名，其余使用模块限定名。
                 const bool dollarMacro = r.kind == "macro" && (starts(r.signature, "$macro") || starts(r.signature, "$replace"));
                 const bool shorthand = member || qualifiedName || r.source == u || shortCompletion(r) || (r.kind == "macro" && !dollarMacro);
                 const auto plain = shorthand ? r.name : r.qualified;

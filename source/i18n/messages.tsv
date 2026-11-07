@@ -42,7 +42,7 @@ I -- Interface（接口 / 运行期多态）：定义一组共同的“契约”
   --macro-backtrace short\pfull  宏诊断展开栈显示；缺省 full\n|  --macro-backtrace short\pfull  Macro diagnostic frames; default full\n
   test\pfmt\plsp\pdeps      测试、格式化、语言服务与依赖锁定（原生内建）\n|  test\pfmt\plsp\pdeps      Tests, formatting, language service, dependency locks (native)\n
   --emit                 只生成 .quad / .data，不执行\n|  --emit                 Export .quad / .data without executing\n
-  --raw                  跳过前处理：源文件原样喂给解析器\n|  --raw                  Skip preprocessing and parse the source directly\n
+  --raw                  跳过模块加载与文本展开，直接解析源码\n|  --raw                  Skip module loading and text expansion; parse source directly\n
   --deps                 只列出 `%include` 拉进来的文件（构建脚本用）\n|  --deps                 List files loaded by %include (for build scripts)\n
   --incremental          跨次复用模块预处理与完整编译产物\n|  --incremental          Reuse module preprocessing and compiled artifacts\n
   --no-threads           关闭隔离的宿主线程执行（缺省启用）\n|  --no-threads           Disable isolated host-thread execution (enabled by default)\n
@@ -53,7 +53,6 @@ I -- Interface（接口 / 运行期多态）：定义一组共同的“契约”
   -I, --include-dir 目录 追加 include 搜索目录（也可写 -I目录）\n|  -I, --include-dir DIR  Add an include search directory (also -IDIR)\n
   --include-path 目录    追加 include 搜索目录\n|  --include-path DIR     Add an include search directory\n
   --import-dir 目录      追加 import 搜索目录\n|  --import-dir DIR       Add an import search directory\n
-  -D, --define 符号[=值] 定义预处理符号（也可写 -D符号=值）\n|  -D, --define NAME[=VALUE] Define a preprocessing symbol (also -DNAME=VALUE)\n
   --                     后面全部作为程序的命令行参数\n|  --                     Pass all remaining arguments to the program\n
   lang zh\pen\pauto     选择显示语言；默认自动检测系统语言\n|  lang zh\pen\pauto     Select display language (default: system detection)\n
 选项 %s 后面要跟一个值\n|Option %s requires a value\n

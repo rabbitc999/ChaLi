@@ -37,7 +37,7 @@ Complete examples have a main function and expected output. Interactive examples
 | [19](19-closures.md) | Function Values and Closures |
 | [20](20-iterators.md) | Iterators |
 | [21](21-concurrency.md) | Concurrency and Threads |
-| [22](22-macros.md) | Preprocessing and Macros |
+| [22](22-macros.md) | Macros |
 | [23](23-annotations-reflection.md) | Annotations and Reflection |
 | [24](24-compiler-directives.md) | Compiler Directives |
 | [25](25-unsafe.md) | Unsafe Code |

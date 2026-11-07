@@ -65,7 +65,7 @@ def compilation(english=False):
           "文法生成前端 → 语义与借用检查 → 已检查 AST → LLVM Build")
     nodes = [
         (40, 145, "1  Source" if english else "1  源码与模块", [".chl + imports", "Embedded standard library"] if english else [".chl 与模块依赖", "内嵌标准库"]),
-        (560, 145, "2  Preprocessing" if english else "2  条件预处理", ["%define / %if / %ifdef", "Source locations retained"] if english else ["%define / %if / %ifdef", "保留源文件与行号"]),
+        (560, 145, "2  Source Loading" if english else "2  源码加载", ["Import modules and map locations", "Expand string interpolation"] if english else ["加载模块并映射来源", "展开字符串插值"]),
         (1080, 145, "3  Lexing And Parsing" if english else "3  词法与语法解析", ["Generated from chali.gram", "Build AST, including macro templates"] if english else ["由 chali.gram 生成的前端", "构建 AST 与宏模板"]),
         (1080, 315, "4  Semantic Analysis" if english else "4  语义分析与宏展开", ["Hygienic expansion + type inference", "Overloads and monomorphisation"] if english else ["卫生 AST 宏展开与类型推导", "名称、重载与泛型单态化"]),
         (560, 315, "5  Borrow Checking" if english else "5  独立借用检查", ["Control flow and reference origins", "Ownership and lifetime diagnostics"] if english else ["控制流与引用来源", "拥有关系及生命周期诊断"]),

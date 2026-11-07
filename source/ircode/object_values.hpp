@@ -20,6 +20,17 @@ RuntimeObject *nativeObject(NativeContext &ctx, const Slot &handle, ObjectKind k
                             const char *who);
 
 /**
+ * @brief 直接按整数句柄查询对象，保留类别、存活及元素视图刷新检查。
+ * @param ctx 原生调用上下文。
+ * @param handle 完整对象句柄，不构造通用值槽。
+ * @param kind 期望的对象类别。
+ * @param who 诊断信息中的操作名称。
+ * @return 有效对象；检查失败时记录错误并返回空指针。
+ */
+RuntimeObject *nativeObject(NativeContext &ctx, std::int64_t handle, ObjectKind kind,
+                            const char *who);
+
+/**
  * @brief 一条实参 → 容器里的值 / 键。
  * @param ctx 环境。
  * @param value 值（数值就是 Slot 本身；字符串是它的地址）。

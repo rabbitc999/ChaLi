@@ -7,6 +7,8 @@
 当前版本由 [`VERSION`](../VERSION) 定义，历史变更与编号调整只在 [`CHANGELOG.md`](../CHANGELOG.md)
 维护。本页描述持续有效的语义；已实现能力与部署限制见[当前能力](17-capabilities.md)。
 
+ChaLi 源码不支持百分号预处理指令，也不接受 `-D` / `--define`。模块使用 `import`，编译期模板选择使用卫生宏中的 `$if` 等命令；`%` 仍是整数取余运算符。
+
 ## 核心契约
 
 可执行程序的入口 `main` 只返回 `void`；正常完成的进程退出码为 0，panic 失败，要带退出码就调 `std::process::exit`。带花括号的类型声明在 `}` 结束，尾分号可选。AOT 动态库可省略 `main`；普通函数前的 `export` 标记原生导出入口，全局初始化与清理由 `chali_init` / `chali_finish` 承接。

@@ -52,7 +52,7 @@ MODULES = {
                "chali_derive_contracts", "chali_macro_type_metadata", "chali_macro_member_contract", "chali_macro_provenance", "chali_macro_controls", "chali_macro_control_flow", "chali_loop_labels", "chali_macro_else_if", "chali_macro_type_patterns",
                "chali_macro_diagnostics", "chali_macro_preview", "chali_macro_control_preview", "chali_macro_effects_preview", "chali_macro_editor",
                "chali_lsp_macro_completion", "chali_lsp_macro_highlighting", "chali_lsp_generated_symbols"],
-    "language": ["chali_entry_signature", "chali_function_types", "chali_lambdas", "chali_ast_macros", "chali_macro_branches", "chali_macro_groups", "chali_macro_generics"],
+    "language": ["chali_percent_preprocessing_removed", "chali_entry_signature", "chali_function_types", "chali_lambdas", "chali_ast_macros", "chali_macro_branches", "chali_macro_groups", "chali_macro_generics"],
     "borrow": ["chali_borrow_flow", "chali_analysis_diagnostics", "chali_reference_values"],
     "memory": ["chali_type_memory", "chali_resource_lifetime"],
     "generics": ["chali_generic_monomorphization", "chali_generic_scope", "chali_language_move", "chali_tuple_returns"],

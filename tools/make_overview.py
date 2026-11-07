@@ -68,7 +68,7 @@ def draw() -> Canvas:
                     ("生成与构建", "gen.sh → chali / libparser.a"),
                 )),
                 ("编译源码", (
-                    ("预处理与展开", "%if / 宏 / lambda / 泛型"),
+                    ("加载与展开", "模块 / 宏 / lambda / 泛型"),
                     ("解析与降级", "语义检查 → AST → LLVM IR"),
                 )),
                 ("编译产物", (

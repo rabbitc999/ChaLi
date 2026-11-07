@@ -33,7 +33,7 @@ AOT 动态库通过 `export` 标记普通函数，源码可省略 `main`，全�
 | 类型 | 定宽整数、float32/float64、bool、char、String、大数；数组、元组、结构体、带载荷枚举、容器及函数类型 |
 | 抽象 | 重载、泛型单态化、接口约束、关联类型、常量泛型、默认类型参数、接口默认方法和运行期接口分派 |
 | 函数值 | 匿名函数只使用 `fn`；支持内联实参、嵌套高阶函数、const/mut/copy/move 捕获 |
-| 控制流 | match 与守卫、整数单值／区间重叠警告、解构、区间迭代、if 表达式、`yield value;` 块表达式、`yield (a, b);` 元组退出、`break 标签;` 层级循环退出、直接变量默认移动与带值退出穿透无值循环、宏与条件编译 |
+| 控制流 | match 与守卫、整数单值／区间重叠警告、解构、区间迭代、if 表达式、`yield value;` 块表达式、`yield (a, b);` 元组退出、`break 标签;` 层级循环退出、直接变量默认移动与带值退出穿透无值循环、卫生宏与编译期模板选择 |
 | 错误与清理 | Option、Result、自定义错误传播、`?`、panic、defer、scope(exit)、Drop 与 Closeable；实现 Closeable 的结构体自动不可复制 |
 | 编译器指令 | `#NonCopyable`（opcode 不复制）、`#No<接口>Replace`（关闭该接口全部自动推导）、`#NoRight<接口>`（只关右向）；写在声明前，泛型模板实例化时随之下发 |
 | 所有权 | 普通拥有值赋值和按值传参复制；`move` 转移资源。移动后的原绑定禁止读写或重绑，完整移动后可重新声明同名变量 |
@@ -110,7 +110,7 @@ API 手册通过 `chali man api` 查询，省略 `api` 会给出用法错误；`
 复制经声明的胶水函数完成；`#NonCopyable` 类型禁止复制，并省略 copy。
 BigInteger 乘法在 Karatsuba 与双素数 NTT 之间按补齐成本选择，平方复用正变换，不保留学校乘法内核。
 除法使用 Knuth 分块长除法与 Burnikel–Ziegler 分治，保持向零截断及余数跟随被除数符号。
-算法界限、可调接口及可复现的测试入口见[大数库说明](../source/bignum/README.md)。历史测量可从 Git 历史追溯；当前版本性能对比不包含大数负载。
+历史测量可从 Git 历史追溯；当前版本性能对比不包含大数负载。
 struct 可以拥有多个 opcode 字段。BigInteger、BigDecimal、File、Process 的记录及操作位于
 标准库胶水，运行时核心只管理通用 NativeRecord 壳及宿主服务表。File、Process 不可复制；
 公开进程类型名为 Process。List、Map、Set 使用参数化 opcode 类型和标准库不透明记录，

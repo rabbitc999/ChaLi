@@ -73,6 +73,11 @@ def main():
             assert 'pattern' in str(item), item
             inserted = item.get('insertText', item.get('textEdit', {}).get('newText', ''))
             assert ':pattern' not in inserted and ': pattern' not in inserted, item
+            text = '%define REMOVED_SYMBOL 1\n$macro alive\n2\n$end_macro\nvoid main(){}\n'
+            uri = (folder / 'removed-percent.chl').as_uri()
+            server.send({"method": "textDocument/didOpen", "params": {"textDocument": {"uri": uri, "text": text, "version": 1}}})
+            symbols = server.query("textDocument/documentSymbol", {"textDocument": {"uri": uri}})
+            assert 'alive' in str(symbols) and 'REMOVED_SYMBOL' not in str(symbols), symbols
         finally:
             server.close()
     print("LSP 宏补全：外部模块、$ 前缀与限定名称通过")

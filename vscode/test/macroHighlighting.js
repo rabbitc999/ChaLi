@@ -18,6 +18,10 @@ async function main() {
     loadGrammar: async (scope) => scope === 'source.chali' ? textmate.parseRawGrammar(fs.readFileSync(file, 'utf8'), file) : null,
   });
   const grammar = await registry.loadGrammar('source.chali');
+  for (const directive of ['define', 'undefine', 'if', 'elif', 'else', 'endif', 'error', 'warning']) {
+    const result = grammar.tokenizeLine('%' + directive + ' VALUE', textmate.INITIAL);
+    assert(!result.tokens.some((token) => token.scopes.includes('keyword.control.preprocessor.chali')));
+  }
   /** 按真实的逐行状态进行词法着色。 */
   const tokenize = (lines) => {
     let state = textmate.INITIAL;

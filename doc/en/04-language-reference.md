@@ -28,7 +28,7 @@ about how to use it.
 | String literal | `"hello"` | type `std::core::String` |
 | Boolean | `true` / `false` | |
 
-Statements end with `;`, blocks use `{ }`. Preprocessor directives start with `%` and macros with `$`;
+Statements end with `;`, blocks use `{ }`. Macros start with `$`;
 see §14.
 
 Ordinary string literals with identical byte contents share one generated data item within a program,
@@ -743,9 +743,9 @@ Rules and restrictions (escape checking, `CHL1204`): see
 
 ---
 
-## 14. Preprocessing and macros
+## 14. Macros
 
-`%if`, `%elif`, `%else` and `%endif` control conditional source inclusion. Use `import` for modules.
+Use `$if`, `$elif`, `$else` and `$end_if` inside macros for compile-time template selection. Use `import` for modules.
 
 `$macro A` requires `$A`; `$macro A()` requires `$A()`. Parameter groups are explicit and match the definition. The generated parser builds macro ASTs; semantic analysis performs hygienic substitution and type inference before quadruple generation. Template locals are hygienic, arguments keep caller bindings, and helpers resolve at the definition. No automatic parentheses or numbered temporary names are used.
 

@@ -163,7 +163,7 @@ class Cache
 {
 public:
     Cache(Memory::String directory, const Memory::String &executable,
-          const Memory::Vector<Memory::String> &includes, const Memory::Vector<Memory::String> &defines,
+          const Memory::Vector<Memory::String> &includes,
           const Memory::String &projectSignature = Memory::String(),
           const Memory::String &outputOptions = Memory::String()) : directory_(std::move(directory)), includeDirs_(includes)
     {
@@ -172,7 +172,6 @@ public:
         // The compile stamp also invalidates caches when argv[0] was resolved via PATH.
         signature_ = hashBytes(Memory::toString(binary) + __DATE__ + __TIME__);
         for (const auto &item : includes) signature_ = hashBytes(canonical(item), signature_);
-        for (const auto &item : defines) signature_ = hashBytes(item, signature_);
         if (!projectSignature.empty()) signature_ = hashBytes(projectSignature, signature_);
         outputSignature_ = hashBytes(outputOptions, signature_);
     }

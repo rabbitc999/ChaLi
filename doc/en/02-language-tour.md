@@ -390,19 +390,14 @@ conversion and trimming live in `std::text::Text` (`find` / `split` / `join` / `
 
 ---
 
-## 11. Preprocessing and macros
+## 11. Macros
 
 ```chali
-%define DETAIL 1
 $macro SQUARE(x)
 ((x) * (x))
 $end_macro
 void main() {
-%if DETAIL
     println("detail square5={}", $SQUARE(5));
-%else
-    println("brief");
-%endif
 }
 ```
 
@@ -410,16 +405,11 @@ void main() {
 detail square5=25
 ```
 
-Directives starting with `%` run before parsing: `%if` / `%elif` / `%else`
-/ `%endif` do conditional compilation, `%define` defines a symbol (equivalent to the command-line
-`-D NAME`).
-
 Things starting with `$` are macros: `$macro NAME(x) … $end_macro` defines one, called as
 `$NAME(…)`; a parameterless object macro is written `$macro NAME` and called `$NAME`. Inside a macro
 body you can also use `$stringify(...)`, `$concat(a, b)` and `$line`.
 
-> Symbols from `%define` are for conditional compilation only; they are not constants usable in
-> expressions.
+Use `$if` / `$elif` / `$else` / `$end_if` inside macros to select templates at compile time. Import modules with `import`.
 
 ---
 

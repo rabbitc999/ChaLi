@@ -182,7 +182,7 @@ $macro and $replace define hygienic macros. Parameter categories constrain input
 
 $for, $if, $match and $regex repeat or select templates. $elif and $else_if are equivalent additional branches of one $if chain, closed by a single $end_if. $fields and $member generate static field operations; $compile_assert and $compile_error report compile-time conditions. Chapter 22 includes a complete JSON_FIELDS example using both branch spellings.
 
-Percent-prefixed definitions, symbols and conditional directives select source during preprocessing, distinct from runtime conditions and typed field selection. @annotation declares annotations and @Reflect selects runtime metadata. Hash-prefixed compiler directives such as #borrow, #abi and #NonCopyable have specific compiler-defined contracts.
+Use $if, $elif, $else and $end_if inside macros for compile-time template selection, and ordinary if for runtime conditions. Import modules with import. @annotation declares annotations and @Reflect selects runtime metadata. Hash-prefixed compiler directives such as #borrow, #abi and #NonCopyable have specific compiler-defined contracts.
 
 ## C.8 Unsafe Operations and Host Boundaries
 

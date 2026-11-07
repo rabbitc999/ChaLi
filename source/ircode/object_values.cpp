@@ -29,15 +29,29 @@ bool nativeRefreshViews(NativeContext &ctx, RuntimeObject &object);
 RuntimeObject *nativeObject(NativeContext &ctx, const Slot &handle, ObjectKind kind,
                             const char *who)
 {
-    if (ctx.objects == nullptr || !isObjectHandle(handle.integer))
+    return nativeObject(ctx, handle.integer, kind, who);
+}
+
+/**
+ * @brief 按整数句柄验证对象身份、类别并刷新活跃视图。
+ * @param ctx 原生调用上下文。
+ * @param handle 完整对象句柄。
+ * @param kind 期望的对象类别。
+ * @param who 诊断信息中的操作名称。
+ * @return 有效对象；失败时记录错误并返回空指针。
+ */
+RuntimeObject *nativeObject(NativeContext &ctx, std::int64_t handle, ObjectKind kind,
+                            const char *who)
+{
+    if (ctx.objects == nullptr || !isObjectHandle(handle))
     {
-        ctx.error = Memory::String(who) + " 需要一个 " + objectKindName(kind) + " 值，拿到的是 " + Memory::toString(handle.integer) + "（不是对象句柄）";
+        ctx.error = Memory::String(who) + " 需要一个 " + objectKindName(kind) + " 值，拿到的是 " + Memory::toString(handle) + "（不是对象句柄）";
         return nullptr;
     }
-    RuntimeObject *object = ctx.objects->find(handle.integer);
+    RuntimeObject *object = ctx.objects->find(handle);
     if (object == nullptr)
     {
-        ctx.error = Memory::String(who) + " 用的 " + objectKindName(kind) + " 已经释放过了（句柄 " + Memory::toString(handle.integer) + "）";
+        ctx.error = Memory::String(who) + " 用的 " + objectKindName(kind) + " 已经释放过了（句柄 " + Memory::toString(handle) + "）";
         return nullptr;
     }
     if (object->kind != kind)

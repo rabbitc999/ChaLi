@@ -17,7 +17,6 @@ def render():
     controls = {word for word in words-types-categories-{'true','false'} if not word.startswith('__chali_')}
     directives = {word for word in literals if word.startswith(('$','#')) or word == '@annotation'}
     directives |= {'$fields','$variants','$methods','$interfaces','$member','$compile_assert','$compile_error','$stringify','$concat','$line','$file','$module','$count','$argc','$typecheck'}
-    directives |= {'%if','%ifdef','%ifndef','%elif','%else','%endif','%define','%undefine','%symbol','%unsymbol','%warning','%error'}
     library = {'String','List','Map','Set','Option','Result','Value','None','Ok','Err','Any','Drop','Closeable','Copy','Error','self'}
     def group(index,values):
         escaped = [word.replace('%', r'\%').replace('#', r'\#') for word in sorted(values)]

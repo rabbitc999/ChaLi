@@ -93,7 +93,7 @@ void main(List<String> arguments) {
 
 `chali run` performs these four steps and launches the generated native program after successful compilation:
 
-1. **Preprocess** — handles `%define`, `%if` and friends;
+1. **Load source** — load `import` modules, retain source locations, and expand interpolation and macros;
 2. **Parse and type-check** — syntax, types and reference lifetimes are checked here; nothing runs if
    this fails;
 3. **Generate LLVM IR** — the normal execution path lowers the checked AST directly to LLVM IR;

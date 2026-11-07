@@ -108,10 +108,6 @@
           "match": "\\$(?:line|file|module|concat|stringify|fields|variants|methods|interfaces|member|compile_assert|compile_error|argc|count|typecheck)\\b"
         },
         {
-          "name": "keyword.control.preprocessor.chali",
-          "match": "^\\s*%(?:if|ifdef|ifndef|elif|else|endif|define|undefine|symbol|unsymbol|warning|error)\\b"
-        },
-        {
           "name": "keyword.control.chali",
           "match": "\\b(fn)(?:\\s*<[^>]*>)?\\s+(copy)\\b"
         },

@@ -1,0 +1,10 @@
+/* 模块复用使用 import，-I 指定模块搜索目录，--deps 列出依赖。 */
+import include::shapes;
+
+void main() {
+    include::shapes::Rect rect;
+    rect.width = 3;
+    rect.height = 4;
+    println("矩形 {} x {}，面积 = {}", rect.width, rect.height, rect.area());
+    println("边长 5 的正方形面积 = {}", include::shapes::square_area(5));
+}

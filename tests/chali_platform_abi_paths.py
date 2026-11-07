@@ -1,4 +1,4 @@
-"""CHALI platform defaults, user conditions and ABI separator normalization."""
+"""ABI 路径分隔符、导入模块、迁移目录与 raw 输入回归。"""
 from compiler_path import compiler_path
 from pathlib import Path
 import argparse
@@ -69,21 +69,6 @@ def main():
         raw = work / 'raw.chl'
         raw.write_text('#abi("C", "./native paths/' + library.name + '", "identity") int32 identity(int32 n);\nvoid main() { std::core::println("{}", identity((int32)8)); return; }\n', encoding='utf-8')
         assert run([compiler, 'run', raw, '--raw', '--out', work / 'raw']).stdout == '8\n'
-        module = work / 'probe.chl'
-        module.write_text('module probe;\n%if CHALI_OS == other && CHALI_BITS == 32 && CUSTOM == 9\nint64 value() { return 9; }\n%else\nint64 value() { return 1; }\n%endif\n', encoding='utf-8')
-        source = work / 'platform.chl'
-        source.write_text('module app;\nimport probe;\nvoid main() {\n%if CHALI_OS == windows\nstd::core::println("windows");\n%elif CHALI_OS == linux\nstd::core::println("linux");\n%elif CHALI_OS == macos\nstd::core::println("macos");\n%else\nstd::core::println("other");\n%endif\n%if CHALI_BITS == 64\nstd::core::println("64");\n%elif CHALI_BITS == 32\nstd::core::println("32");\n%else\n%error unexpected bits\n%endif\nstd::core::println("{}", probe::value()); return; }\n', encoding='utf-8')
-        default = run([compiler, 'run', source, '--out', work / 'platform-default'])
-        expected_os = 'windows' if os.name == 'nt' else 'macos' if __import__('sys').platform == 'darwin' else 'linux'
-        lines = default.stdout.splitlines()
-        assert lines[0] == expected_os and lines[1] in ('32', '64') and (lines[2] == '1'), default.stdout
-        override = run([compiler, 'run', source, '-DCHALI_OS=other', '-DCHALI_BITS=32', '-DCUSTOM=9', '--out', work / 'override'])
-        assert override.stdout == 'other\n32\n9\n', override.stdout
-        include = work / 'conditions.inc'
-        include.write_text('%if USER_VALUE == 42 && CHALI_OS == other && CHALI_BITS == 32\nint64 selected() { return 42; }\n%else\n%error user definitions missing\n%endif\n', encoding='utf-8')
-        source.write_text('%define CHALI_OS other\n%define CHALI_BITS 32\n%define USER_VALUE 42\n' + include.read_text(encoding='utf-8') + 'void main() { std::core::println("{}", selected()); }\n', encoding='utf-8')
-        user = run([compiler, 'run', source, '--out', work / 'user'])
-        assert user.stdout == '42\n', user.stdout
-    print('CHALI platform and ABI path checks passed')
+    print('ChaLi ABI path checks passed')
 if __name__ == '__main__':
     main()
