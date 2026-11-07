@@ -2,31 +2,31 @@
 struct Payload { String text; int64 serial; };
 
 void main() {
-    std::core::RawStorage<Payload> slots = std::core::RawStorage<Payload>::allocate(4);
+    RawStorage<Payload> slots = RawStorage<Payload>::allocate(4);
     assert(slots.capacity() == 4 && !slots.isInitialized(0));
     Payload source;
     source.text = "owned";
     source.serial = 42;
-    unsafe { std::core::initAt<Payload>(slots.pointer(0), move(source)); }
+    unsafe { initAt<Payload>(slots.pointer(0), move(source)); }
     Payload copied;
-    unsafe { copied = std::core::readAt<Payload>(slots.pointer(0)); }
+    unsafe { copied = readAt<Payload>(slots.pointer(0)); }
     copied.text = "copy";
     unsafe {
-        Payload mut& original = std::core::borrowAt<Payload>(slots.pointer(0));
+        Payload mut& original = borrowAt<Payload>(slots.pointer(0));
         assert(original.text == "owned" && original.serial == 42);
-        std::core::relocateNonOverlapping<Payload>(slots.pointer(2), slots.pointer(0), 1);
+        relocateNonOverlapping<Payload>(slots.pointer(2), slots.pointer(0), 1);
     }
     assert(!slots.isInitialized(0) && slots.isInitialized(2));
     Payload moved;
-    unsafe { moved = std::core::takeAt<Payload>(slots.pointer(2)); }
+    unsafe { moved = takeAt<Payload>(slots.pointer(2)); }
     assert(moved.text == "owned" && moved.serial == 42 && !slots.isInitialized(2));
-    unsafe { std::core::initAt<Payload>(slots.pointer(2), move(moved)); std::core::dropAt<Payload>(slots.pointer(2)); }
+    unsafe { initAt<Payload>(slots.pointer(2), move(moved)); dropAt<Payload>(slots.pointer(2)); }
     assert(!slots.isInitialized(2));
     slots.close();
-    std::core::RawStorage<uint8> bytes = std::core::RawStorage<uint8>::allocate(1);
+    RawStorage<uint8> bytes = RawStorage<uint8>::allocate(1);
     unsafe {
-        std::core::initAt<uint8>(bytes.pointer(0), (uint8)255);
-        uint8 value = std::core::takeAt<uint8>(bytes.pointer(0));
+        initAt<uint8>(bytes.pointer(0), (uint8)255);
+        uint8 value = takeAt<uint8>(bytes.pointer(0));
         assert(value == (uint8)255);
     }
     bytes.close();

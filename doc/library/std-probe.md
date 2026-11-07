@@ -32,13 +32,13 @@ import std::process;
 import std::probe;
 
 void main() {
-    Process process = std::process::processRun("echo chali-process-ok");
-    String output = std::process::processRead(&process);
-    int64 status = std::process::processClose(&process);
+    Process process = processRun("echo chali-process-ok");
+    String output = processRead(&process);
+    int64 status = processClose(&process);
     assert(status == 0);
     assert(output == "chali-process-ok");
-    std::probe::Probe value;
-    value.value = std::probe::twice(21);
+    Probe value;
+    value.value = twice(21);
     println("process={} probe={}", status, value.value);
 }
 ```
@@ -102,7 +102,7 @@ int64 twice(int64 x);
 **调用形式**
 
 ```chali
-std::probe::twice(x);
+twice(x);
 ```
 
 **源码**：[source/std/probe.chl:5](../../source/std/probe.chl#L5)。

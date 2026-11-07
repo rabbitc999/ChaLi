@@ -1789,15 +1789,7 @@ void InferExpression(int id, const std::shared_ptr<MType> &expected)
             if (!chali_generic::session.made.count(specialized)) throw MInstantiationRequest{ name, args };
             auto &target = g_nodes[static_cast<std::size_t>(calleeId)];
             if (target.kind == MNode::Var)
-            {
                 target.s = specialized;
-                /* 标准 intrinsic 泛型（如 std::algorithms::foldValue）在
-                 * 省略 `<T>` 时仍需保留其所属模块，供后续 intrinsic 降低和
-                 * 冲突检查识别；显式泛型路径已经在 ResolveExplicitAstGenericCall
-                 * 中写入了同样的模块信息。 */
-                if (target.module.empty() && !generic->second.requiredQualifier.empty())
-                    target.module = generic->second.requiredQualifier.substr(0, generic->second.requiredQualifier.size() - 2u);
-            }
             else
                 target.s2 = specialized;
             return;

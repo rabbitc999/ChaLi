@@ -101,11 +101,12 @@ static UnionFind create(int64 n);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`n>=0 && n<=16777216,"并查集容量必须在 0..16777216 之间"`。
 
 **调用形式**
 
 ```chali
-std::graph::UnionFind::create(n);
+UnionFind::create(n);
 ```
 
 **源码**：[source/std/graph.chl:12](../../source/std/graph.chl#L12)。
@@ -175,6 +176,7 @@ int64 find(int64 x);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`x>=0 && x<self.__parents.len(),"并查集元素下标越界"`。
 
 **调用形式**
 
@@ -464,11 +466,12 @@ static Graph create(int64 vertexCount,bool directed);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`vertexCount>=0 && vertexCount<=16777216,"图顶点数必须在 0..16777216 之间"`。
 
 **调用形式**
 
 ```chali
-std::graph::Graph::create(vertexCount, directed);
+Graph::create(vertexCount, directed);
 ```
 
 **源码**：[source/std/graph.chl:60](../../source/std/graph.chl#L60)。
@@ -642,6 +645,7 @@ void addEdge(int64 from,int64 to,int64 weight);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`from>=0 && from<self.__head.len() && to>=0 && to<self.__head.len(),"图顶点下标越界"`。
 
 **调用形式**
 
@@ -818,6 +822,7 @@ O(V²+E) Dijkstra；先拒绝所有负权边，不可达距离为 -1。
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`self.__weight[edge]>=0,"图论：Dijkstra 不支持负边权"`。
 
 **调用形式**
 

@@ -7,7 +7,7 @@ import school_auth;
 import api;
 
 /** 建立独立的 school_ 表，保留旧 students 表及其数据。 */
-Result<bool, Error> ensureSchema(std::sql::Database mut& database)
+Result<bool, Error> ensureSchema(Database mut& database)
 {
     List<String> statements;
     statements.push("CREATE TABLE IF NOT EXISTS school_classes (id BIGINT PRIMARY KEY AUTO_INCREMENT, code VARCHAR(32) NOT NULL UNIQUE, name VARCHAR(80) NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
@@ -47,7 +47,7 @@ List<String> fields(String entity)
 }
 
 /** 按账号角色计算表内数据范围；所有返回表达式只组合固定 SQL 与服务端账号编号。 */
-String rowFilter(String entity, school_auth::User user)
+String rowFilter(String entity, User user)
 {
     if (user.role == "admin") { return "1=1"; }
     String id = user.id.toString();
@@ -80,7 +80,7 @@ String rowFilter(String entity, school_auth::User user)
 }
 
 /** 编码已明确选列的结果；保留 NULL、数字和字符串的 JSON 类型。 */
-String rowsJson(std::sql::ResultSet const& rows)
+String rowsJson(ResultSet const& rows)
 {
     String result = "[";
     for (int64 row in range(0, rows.rowCount()))
@@ -102,14 +102,14 @@ String rowsJson(std::sql::ResultSet const& rows)
 }
 
 /** 读取当前角色允许的记录；客户端不能提供任意排序列或 SQL 条件。 */
-api::Reply list(std::sql::Database mut& database, String entity, school_auth::User user)
+Reply list(Database mut& database, String entity, User user)
 {
     String source = table(entity);
-    if (source.isEmpty()) { return api::errorReply(404, "板块不存在"); }
+    if (source.isEmpty()) { return errorReply(404, "板块不存在"); }
     let rows = database.exec("SELECT * FROM " + source + " WHERE " + rowFilter(entity, user) + " ORDER BY id DESC LIMIT 10001");
-    if (!rows.ok) { return api::errorReply(503, "读取教务数据失败"); }
-    if (rows.rowCount() > 10000) { return api::errorReply(400, "记录超过单次查询上限，请缩小数据范围"); }
-    return api::jsonReply(200, rowsJson(&rows));
+    if (!rows.ok) { return errorReply(503, "读取教务数据失败"); }
+    if (rows.rowCount() > 10000) { return errorReply(400, "记录超过单次查询上限，请缩小数据范围"); }
+    return jsonReply(200, rowsJson(&rows));
 }
 
 /** 判断字段是不是文本字段，其他允许字段按其数值规则验证。 */
@@ -119,7 +119,7 @@ bool textColumn(String name)
 }
 
 /** 将字段值校验为 SQL 字面量；空账号关联写入 NULL。 */
-Result<String, Error> literal(std::sql::Database mut& database, std::json::JsonValue const& body, String name)
+Result<String, Error> literal(Database mut& database, JsonValue const& body, String name)
 {
     let found = body.find(name);
     if (found.isNone())
@@ -132,7 +132,7 @@ Result<String, Error> literal(std::sql::Database mut& database, std::json::JsonV
     {
         let text = value.asString();
         if (text.isNone()) { return Result<String, Error>::Err(MessageError::from("字段需要文本：" + name)); }
-        String item = std::text::Text::trim(text.unwrap());
+        String item = Text::trim(text.unwrap());
         int64 maximum = 80;
         if (name == "code" || name == "teacher_no" || name == "student_no") { maximum = 32; }
         if (name == "term") { maximum = 40; }
@@ -155,7 +155,7 @@ Result<String, Error> literal(std::sql::Database mut& database, std::json::JsonV
 }
 
 /** 读取已验证 JSON 整数字段；缺失时返回零供后续关系检查拒绝。 */
-int64 integer(std::json::JsonValue const& body, String name)
+int64 integer(JsonValue const& body, String name)
 {
     let found = body.find(name);
     if (found.isNone()) { return 0; }
@@ -165,7 +165,7 @@ int64 integer(std::json::JsonValue const& body, String name)
 }
 
 /** 验证账号角色关联与教师授课范围，避免只有外键存在性而没有业务权限。 */
-bool relations(std::sql::Database mut& database, String entity, std::json::JsonValue const& body, school_auth::User user)
+bool relations(Database mut& database, String entity, JsonValue const& body, User user)
 {
     if (entity == "students" || entity == "teachers")
     {
@@ -190,25 +190,25 @@ bool relations(std::sql::Database mut& database, String entity, std::json::JsonV
 }
 
 /** 在服务端权限和关系校验后新增、修改或删除业务记录。 */
-api::Reply write(std::sql::Database mut& database, String entity, school_auth::User user, String method, int64 id, String text)
+Reply write(Database mut& database, String entity, User user, String method, int64 id, String text)
 {
     String source = table(entity);
-    if (source.isEmpty()) { return api::errorReply(404, "板块不存在"); }
-    if (user.role != "admin" && !(user.role == "teacher" && entity == "grades")) { return api::errorReply(403, "没有此操作权限"); }
-    if (method != "POST" && method != "PUT" && method != "DELETE") { return api::errorReply(405, "请求方法不支持"); }
-    if ((method == "POST" && id != 0) || (method != "POST" && id <= 0)) { return api::errorReply(400, "记录编号无效"); }
+    if (source.isEmpty()) { return errorReply(404, "板块不存在"); }
+    if (user.role != "admin" && !(user.role == "teacher" && entity == "grades")) { return errorReply(403, "没有此操作权限"); }
+    if (method != "POST" && method != "PUT" && method != "DELETE") { return errorReply(405, "请求方法不支持"); }
+    if ((method == "POST" && id != 0) || (method != "POST" && id <= 0)) { return errorReply(400, "记录编号无效"); }
     String condition = "id=" + id.toString() + " AND (" + rowFilter(entity,user) + ")";
     if (id > 0)
     {
         let existing = database.exec("SELECT id FROM " + source + " WHERE " + condition);
-        if (!existing.ok) { return api::errorReply(503, "读取记录失败"); }
-        if (existing.rowCount() != 1) { return api::errorReply(404, "记录不存在或无权访问"); }
+        if (!existing.ok) { return errorReply(503, "读取记录失败"); }
+        if (existing.rowCount() != 1) { return errorReply(404, "记录不存在或无权访问"); }
     }
     String sql = "DELETE FROM " + source + " WHERE " + condition;
     if (method != "DELETE")
     {
-        let parsed = std::json::parse(text);
-        if (parsed.isErr() || !parsed.unwrap().isObject()) { return api::errorReply(400, "记录必须是 JSON 对象"); }
+        let parsed = parse(text);
+        if (parsed.isErr() || !parsed.unwrap().isObject()) { return errorReply(400, "记录必须是 JSON 对象"); }
         let body = parsed.unwrap();
         List<String> names = fields(entity);
         String columns = "";
@@ -217,15 +217,15 @@ api::Reply write(std::sql::Database mut& database, String entity, school_auth::U
         for (String name in names)
         {
             let item = literal(&database, &body, name);
-            if (item.isErr()) { return api::errorReply(400, item.error().toString()); }
+            if (item.isErr()) { return errorReply(400, item.error().toString()); }
             if (!columns.isEmpty()) { columns += ","; values += ","; updates += ","; }
             columns += name; values += item.unwrap(); updates += name + "=" + item.unwrap();
         }
-        if (!relations(&database, entity, &body, user)) { return api::errorReply(403, "账号角色不匹配，或教师未获该班级与科目授权"); }
+        if (!relations(&database, entity, &body, user)) { return errorReply(403, "账号角色不匹配，或教师未获该班级与科目授权"); }
         sql = "INSERT INTO " + source + "(" + columns + ") VALUES (" + values + ")";
         if (method == "PUT") { sql = "UPDATE " + source + " SET " + updates + " WHERE " + condition; }
     }
     let result = database.exec(sql);
-    if (!result.ok) { return api::errorReply(400, "保存失败：编号重复、关联不存在，或记录仍被其他数据使用"); }
-    return api::jsonReply(200, "{\"ok\":true}");
+    if (!result.ok) { return errorReply(400, "保存失败：编号重复、关联不存在，或记录仍被其他数据使用"); }
+    return jsonReply(200, "{\"ok\":true}");
 }

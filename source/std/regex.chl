@@ -13,13 +13,13 @@ enum RegexError : Error {
     }
 };
 
-Regex __regexCompileHandle(std::core::String pattern);
-bool __regexFullMatch(int64 handle, std::core::String text);
-bool __regexContains(int64 handle, std::core::String text);
-int64 __regexFindByteIndex(int64 handle, std::core::String text);
-std::core::String __regexCapture(int64 handle, std::core::String text, int64 group);
-std::core::String __regexReplaceFirst(int64 handle, std::core::String text, std::core::String replacement);
-std::core::String __regexReplaceAll(int64 handle, std::core::String text, std::core::String replacement);
+Regex __regexCompileHandle(String pattern);
+bool __regexFullMatch(int64 handle, String text);
+bool __regexContains(int64 handle, String text);
+int64 __regexFindByteIndex(int64 handle, String text);
+String __regexCapture(int64 handle, String text, int64 group);
+String __regexReplaceFirst(int64 handle, String text, String replacement);
+String __regexReplaceAll(int64 handle, String text, String replacement);
 
 int64 __regexNew();
 int64 __regexCopy(int64 handle);
@@ -31,26 +31,26 @@ opcode Regex {
     copy = std::regex::__regexCopy;
     drop = std::regex::__regexDrop;
 
-    static Result<Regex, std::core::Error> compile(std::core::String pattern) {
+    static Result<Regex, Error> compile(String pattern) {
         Regex value = __regexCompileHandle(pattern);
-        if (!__regexValid(value.opcode)) { return Result<Regex, std::core::Error>::Err(RegexError::Invalid); }
-        return Result<Regex, std::core::Error>::Ok(move value);
+        if (!__regexValid(value.opcode)) { return Result<Regex, Error>::Err(RegexError::Invalid); }
+        return Result<Regex, Error>::Ok(move value);
     }
 
-    bool fullMatch(std::core::String text) { return __regexFullMatch(self.opcode, text); }
-    bool contains(std::core::String text) { return __regexContains(self.opcode, text); }
-    Option<int64> find(std::core::String text) {
+    bool fullMatch(String text) { return __regexFullMatch(self.opcode, text); }
+    bool contains(String text) { return __regexContains(self.opcode, text); }
+    Option<int64> find(String text) {
         int64 index = __regexFindByteIndex(self.opcode, text);
         if (index < 0) { return Option<int64>::None; }
         return Option<int64>::Value(index);
     }
-    std::core::String capture(std::core::String text, int64 group) {
+    String capture(String text, int64 group) {
         return __regexCapture(self.opcode, text, group);
     }
-    std::core::String replaceFirst(std::core::String text, std::core::String replacement) {
+    String replaceFirst(String text, String replacement) {
         return __regexReplaceFirst(self.opcode, text, replacement);
     }
-    std::core::String replaceAll(std::core::String text, std::core::String replacement) {
+    String replaceAll(String text, String replacement) {
         return __regexReplaceAll(self.opcode, text, replacement);
     }
 };

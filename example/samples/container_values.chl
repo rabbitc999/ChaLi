@@ -53,7 +53,7 @@ void main() {
     metrics.add(high);
     metrics.add(low);
     Metric first = metrics.at(0);
-    for (int64 index in std::core::range(0, metrics.len())) {
+    for (int64 index in range(0, metrics.len())) {
         Metric item = metrics.at(index);
         if (item.amount < first.amount) { first = item; }
     }
@@ -61,9 +61,9 @@ void main() {
     List<Metric> measured;
     measured.push(low);
     measured.push(high);
-    List<Metric> positive = std::algorithms::filterValue<Metric>(measured, positiveMetric);
-    println("{} {} {}", std::algorithms::findValue<Metric>(measured, high),
-    std::algorithms::countValue<Metric>(measured, low), positive.len());
+    List<Metric> positive = filterValue<Metric>(measured, positiveMetric);
+    println("{} {} {}", findValue<Metric>(measured, high),
+    countValue<Metric>(measured, low), positive.len());
     float64 total = 0.0;
     for (Metric item in measured) { total = total + item.amount; }
     println("{}", total);

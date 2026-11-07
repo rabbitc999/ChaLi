@@ -44,7 +44,7 @@ void main() {
     assert(mask == 3);
     match (mask) {
         1 | 2 => { assert(false); }
-        std::core::rangeEq(3,4) | 8 => { int64 result = 3; assert(result == mask); }
+        rangeEq(3,4) | 8 => { int64 result = 3; assert(result == mask); }
         _ => { assert(false); }
     }
     match (2.5) { 1.5 | 2.5 => { } _ => { assert(false); } }

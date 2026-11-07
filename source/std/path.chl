@@ -23,12 +23,12 @@ inline bool __pathIsAlpha(uint8 byte)
 }
 
 /** 归一化路径文本：反斜杠转正斜杠、消掉 `.` 与可回退的 `..`；空结果给 `.`。 */
-inline std::core::String __pathNormalize(std::core::String path)
+inline String __pathNormalize(String path)
 {
-    std::core::List<uint8> bytes = std::core::stringBytes(path);
+    List<uint8> bytes = stringBytes(path);
     int64 size = bytes.len();
 
-    std::core::String prefix = "";
+    String prefix = "";
     int64 begin = 0;
     bool absolute = false;
     if (size >= 2 && __pathIsAlpha(bytes[0]) && bytes[1] == (uint8)58) {
@@ -43,12 +43,12 @@ inline std::core::String __pathNormalize(std::core::String path)
         begin = 1;
     }
 
-    std::core::List<std::core::String> parts;
+    List<String> parts;
     while (begin <= size) {
         int64 end = begin;
         while (end < size && !__pathIsSeparator(bytes[end])) { end = end + 1; }
         if (end > begin) {
-            std::core::String part = path[begin:end];
+            String part = path[begin:end];
             if (part != ".") {
                 if (part == ".." && parts.len() > 0 && parts[parts.len() - 1] != "..") {
                     parts.pop();
@@ -62,7 +62,7 @@ inline std::core::String __pathNormalize(std::core::String path)
     }
 
     /* 拼接时用状态位代替「看 result 的最后一个字节」——末字节可能落在多字节字符中间。 */
-    std::core::String result = prefix;
+    String result = prefix;
     if (absolute) { result = result + "/"; }
     bool needsSlash = len(prefix) > 0 && !absolute;
     {
@@ -81,10 +81,10 @@ inline std::core::String __pathNormalize(std::core::String path)
 }
 
 /** 归一化后的最后一段（文件名）；没有分隔符就是整串。 */
-inline std::core::String __pathFileName(std::core::String path)
+inline String __pathFileName(String path)
 {
-    std::core::String normalized = __pathNormalize(path);
-    std::core::List<uint8> bytes = std::core::stringBytes(normalized);
+    String normalized = __pathNormalize(path);
+    List<uint8> bytes = stringBytes(normalized);
     int64 slash = 0 - 1;
     int64 index = 0;
     while (index < bytes.len()) {
@@ -96,10 +96,10 @@ inline std::core::String __pathFileName(std::core::String path)
 }
 
 /** 扩展名（含点）；没有点或点在开头给空串。 */
-inline std::core::String __pathExtension(std::core::String path)
+inline String __pathExtension(String path)
 {
-    std::core::String name = __pathFileName(path);
-    std::core::List<uint8> bytes = std::core::stringBytes(name);
+    String name = __pathFileName(path);
+    List<uint8> bytes = stringBytes(name);
     int64 dot = 0 - 1;
     int64 index = 0;
     while (index < bytes.len()) {
@@ -111,15 +111,15 @@ inline std::core::String __pathExtension(std::core::String path)
 }
 
 /** 拼两段路径；`right` 是绝对路径时直接取代 `left`，结果一律归一化。 */
-inline std::core::String __pathJoin(std::core::String left, std::core::String right)
+inline String __pathJoin(String left, String right)
 {
-    std::core::List<uint8> bytes = std::core::stringBytes(right);
+    List<uint8> bytes = stringBytes(right);
     bool rightAbsolute = false;
     if (bytes.len() > 0) {
         if (__pathIsSeparator(bytes[0])) { rightAbsolute = true; }
         elif (bytes.len() >= 2 && __pathIsAlpha(bytes[0]) && bytes[1] == (uint8)58) { rightAbsolute = true; }
     }
-    std::core::String joined;
+    String joined;
     if (rightAbsolute) {
         joined = right;
     } else {
@@ -131,10 +131,10 @@ inline std::core::String __pathJoin(std::core::String left, std::core::String ri
 }
 
 struct PathString {
-    static std::core::String join(std::core::String left, std::core::String right) { return __pathJoin(left, right); }
-    static std::core::String fileName(std::core::String path) { return __pathFileName(path); }
-    static std::core::String extension(std::core::String path) { return __pathExtension(path); }
-    static std::core::String normalize(std::core::String path) { return __pathNormalize(path); }
+    static String join(String left, String right) { return __pathJoin(left, right); }
+    static String fileName(String path) { return __pathFileName(path); }
+    static String extension(String path) { return __pathExtension(path); }
+    static String normalize(String path) { return __pathNormalize(path); }
 
     /** 返回归一化后的父路径；单段相对路径的父路径为点。 */
     static String parent(String path) {

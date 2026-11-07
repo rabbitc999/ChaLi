@@ -40,41 +40,41 @@ bool lessFloat(float64 left, float64 right) { return left < right; }
 void main() {
     bool fn(float64, float64) compare = lessFloat;
     assert(compare(1.25, 1.75) && !compare(2.0, 1.0));
-    std::complex::Complex<float64> a=std::complex::Complex<float64>::of(3.0,4.0);
-    std::complex::Complex<float64> b=std::complex::Complex<float64>::of(1.0,-2.0);
-    std::complex::Complex<float64> sum=a+b, product=a*b, quotient=a/b;
-    std::complex::Complex<float64> difference=a-b, conjugate=a.conjugate();
+    Complex<float64> a=Complex<float64>::of(3.0,4.0);
+    Complex<float64> b=Complex<float64>::of(1.0,-2.0);
+    Complex<float64> sum=a+b, product=a*b, quotient=a/b;
+    Complex<float64> difference=a-b, conjugate=a.conjugate();
     assert(difference.re==2.0 && difference.im==6.0);
     assert(conjugate.re==3.0 && conjugate.im==-4.0 && a.normSquared()==25.0);
-    std::complex::Complex<float32> small=std::complex::Complex<float32>::of((float32)1.0,(float32)2.0);
-    std::complex::Complex<float32> doubled=small+small;
+    Complex<float32> small=Complex<float32>::of((float32)1.0,(float32)2.0);
+    Complex<float32> doubled=small+small;
     assert(doubled.re==(float32)2.0 && doubled.im==(float32)4.0);
     println("complex {} {} {} {} {} {}",sum.re,sum.im,product.re,product.im,
     quotient.re,quotient.im);
-    List<std::complex::Complex<float64>> input;
-    input.push(std::complex::Complex<float64>::of(1.0,0.0));
-    input.push(std::complex::Complex<float64>::of(2.0,0.0));
-    input.push(std::complex::Complex<float64>::of(3.0,0.0));
-    input.push(std::complex::Complex<float64>::of(4.0,0.0));
-    List<std::complex::Complex<float64>> spectrum=std::signal::fft(input);
-    List<std::complex::Complex<float64>> restored=std::signal::ifft(spectrum);
-    List<std::complex::Complex<float64>> slow=std::signal::dft(input);
+    List<Complex<float64>> input;
+    input.push(Complex<float64>::of(1.0,0.0));
+    input.push(Complex<float64>::of(2.0,0.0));
+    input.push(Complex<float64>::of(3.0,0.0));
+    input.push(Complex<float64>::of(4.0,0.0));
+    List<Complex<float64>> spectrum=fft(input);
+    List<Complex<float64>> restored=ifft(spectrum);
+    List<Complex<float64>> slow=dft(input);
     int64 i=0;
     while (i<4) {
-        std::complex::Complex<float64> fastValue=spectrum.at(i), slowValue=slow.at(i);
-        std::complex::Complex<float64> back=restored.at(i), original=input.at(i);
-        assert(std::math::abs(fastValue.re-slowValue.re)<0.00000001 &&
-        std::math::abs(fastValue.im-slowValue.im)<0.00000001);
-        assert(std::math::abs(back.re-original.re)<0.00000001 &&
-        std::math::abs(back.im-original.im)<0.00000001);
+        Complex<float64> fastValue=spectrum.at(i), slowValue=slow.at(i);
+        Complex<float64> back=restored.at(i), original=input.at(i);
+        assert(abs(fastValue.re-slowValue.re)<0.00000001 &&
+        abs(fastValue.im-slowValue.im)<0.00000001);
+        assert(abs(back.re-original.re)<0.00000001 &&
+        abs(back.im-original.im)<0.00000001);
         i=i+1;
     }
-    List<std::complex::Complex<float64>> oddLength;
+    List<Complex<float64>> oddLength;
     oddLength.push(a); oddLength.push(b); oddLength.push(sum);
-    List<std::complex::Complex<float64>> oddSpectrum=std::signal::dft(oddLength);
-    List<std::complex::Complex<float64>> oddBack=std::signal::idft(oddSpectrum);
-    assert(std::math::abs(oddBack.at(0).re-a.re)<0.00000001 &&
-    std::math::abs(oddBack.at(2).im-sum.im)<0.00000001);
+    List<Complex<float64>> oddSpectrum=dft(oddLength);
+    List<Complex<float64>> oddBack=idft(oddSpectrum);
+    assert(abs(oddBack.at(0).re-a.re)<0.00000001 &&
+    abs(oddBack.at(2).im-sum.im)<0.00000001);
     println("fft {} {} {} {}",spectrum.at(0).re,spectrum.at(1).re,
     spectrum.at(2).re,spectrum.at(3).re);
     println("inverse {} {} {} {}",restored.at(0).re,restored.at(1).re,
@@ -146,7 +146,7 @@ List<Complex<float64>> signalDft(List<Complex<float64>> input);
 **调用形式**
 
 ```chali
-std::signal::signalDft(input);
+signalDft(input);
 ```
 
 **源码**：[source/std/signal.chl:120](../../source/std/signal.chl#L120)。
@@ -184,7 +184,7 @@ List<Complex<float64>> signalIdft(List<Complex<float64>> input);
 **调用形式**
 
 ```chali
-std::signal::signalIdft(input);
+signalIdft(input);
 ```
 
 **源码**：[source/std/signal.chl:121](../../source/std/signal.chl#L121)。
@@ -222,7 +222,7 @@ List<Complex<float64>> signalFft(List<Complex<float64>> input);
 **调用形式**
 
 ```chali
-std::signal::signalFft(input);
+signalFft(input);
 ```
 
 **源码**：[source/std/signal.chl:122](../../source/std/signal.chl#L122)。
@@ -260,7 +260,7 @@ List<Complex<float64>> signalIfft(List<Complex<float64>> input);
 **调用形式**
 
 ```chali
-std::signal::signalIfft(input);
+signalIfft(input);
 ```
 
 **源码**：[source/std/signal.chl:123](../../source/std/signal.chl#L123)。
@@ -298,7 +298,7 @@ List<Complex<float64>> dft(List<Complex<float64>> input);
 **调用形式**
 
 ```chali
-std::signal::dft(input);
+dft(input);
 ```
 
 **源码**：[source/std/signal.chl:124](../../source/std/signal.chl#L124)。
@@ -336,7 +336,7 @@ List<Complex<float64>> idft(List<Complex<float64>> input);
 **调用形式**
 
 ```chali
-std::signal::idft(input);
+idft(input);
 ```
 
 **源码**：[source/std/signal.chl:125](../../source/std/signal.chl#L125)。
@@ -374,7 +374,7 @@ List<Complex<float64>> fft(List<Complex<float64>> input);
 **调用形式**
 
 ```chali
-std::signal::fft(input);
+fft(input);
 ```
 
 **源码**：[source/std/signal.chl:126](../../source/std/signal.chl#L126)。
@@ -412,7 +412,7 @@ List<Complex<float64>> ifft(List<Complex<float64>> input);
 **调用形式**
 
 ```chali
-std::signal::ifft(input);
+ifft(input);
 ```
 
 **源码**：[source/std/signal.chl:127](../../source/std/signal.chl#L127)。

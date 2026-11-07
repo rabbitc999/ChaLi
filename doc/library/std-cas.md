@@ -184,7 +184,7 @@ static Expr parse(String text);
 **调用形式**
 
 ```chali
-std::cas::Expr::parse(text);
+Expr::parse(text);
 ```
 
 **源码**：[source/std/cas.chl:47](../../source/std/cas.chl#L47)。
@@ -222,7 +222,7 @@ static Expr fromInteger(BigInteger number);
 **调用形式**
 
 ```chali
-std::cas::Expr::fromInteger(number);
+Expr::fromInteger(number);
 ```
 
 **源码**：[source/std/cas.chl:53](../../source/std/cas.chl#L53)。
@@ -260,7 +260,7 @@ static Expr fromDecimal(BigDecimal number);
 **调用形式**
 
 ```chali
-std::cas::Expr::fromDecimal(number);
+Expr::fromDecimal(number);
 ```
 
 **源码**：[source/std/cas.chl:55](../../source/std/cas.chl#L55)。
@@ -294,11 +294,12 @@ static Expr symbol(String name);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`result.kind() == NodeKind::Symbol, "CAS 符号名称必须是单个自变量"`。
 
 **调用形式**
 
 ```chali
-std::cas::Expr::symbol(name);
+Expr::symbol(name);
 ```
 
 **源码**：[source/std/cas.chl:57](../../source/std/cas.chl#L57)。
@@ -1997,7 +1998,7 @@ Expr parse(String text);
 **调用形式**
 
 ```chali
-std::cas::parse(text);
+parse(text);
 ```
 
 **源码**：[source/std/cas.chl:175](../../source/std/cas.chl#L175)。

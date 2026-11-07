@@ -2,7 +2,7 @@ module std::process;
 
 /* 命令管道通过 C 帧和不透明记录服务接入宿主。显式关闭返回平台退出状态；
  * 离开作用域仍会释放记录并关闭尚未关闭的管道。每次读取最多 511 字节并移除尾部 CR／LF。 */
-Process processRun(std::core::String command) { return __processRun(command); }
-std::core::String processRead(Process const& process) { return __processRead(process); }
+Process processRun(String command) { return __processRun(command); }
+String processRead(Process const& process) { return __processRead(process); }
 int64 processClose(Process const& process) { return __processClose(process); }
-int64 system(std::core::String command) { return __system(command); }
+int64 system(String command) { return __system(command); }

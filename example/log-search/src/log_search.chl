@@ -42,7 +42,7 @@ Result<Options, Error> parseOptions(List<String> arguments)
         {
             options.help = true;
         }
-        else if (flags && std::text::Text::startsWith(argument, "--"))
+        else if (flags && Text::startsWith(argument, "--"))
         {
             return Result<Options, Error>::Err(MessageError::from("unknown option: " + argument));
         }
@@ -71,7 +71,7 @@ Result<Options, Error> parseOptions(List<String> arguments)
 /** 读取至多四 MiB 文本；资源在作用域退出时清理。 */
 Result<String, Error> readText(String path)
 {
-    std::io::FileStream stream = std::io::FileStream::open(path, "r")?;
+    FileStream stream = FileStream::open(path, "r")?;
     return stream.readAllString(4194304);
 }
 
@@ -79,11 +79,11 @@ Result<String, Error> readText(String path)
 List<Hit> search(String text, String query, bool ignoreCase)
 {
     List<Hit> hits;
-    List<String> lines = std::text::Text::split(text, "\n");
+    List<String> lines = Text::split(text, "\n");
     String needle = query;
     if (ignoreCase)
     {
-        needle = std::text::Text::toLower(needle);
+        needle = Text::toLower(needle);
     }
     for (int64 index in range(0, lines.len()))
     {
@@ -92,16 +92,16 @@ List<Hit> search(String text, String query, bool ignoreCase)
         {
             break;
         }
-        if (std::text::Text::endsWith(line, "\r"))
+        if (Text::endsWith(line, "\r"))
         {
             line = line.substring(0, line.length() - 1);
         }
         String candidate = line;
         if (ignoreCase)
         {
-            candidate = std::text::Text::toLower(candidate);
+            candidate = Text::toLower(candidate);
         }
-        if (std::text::Text::contains(candidate, needle))
+        if (Text::contains(candidate, needle))
         {
             Hit hit;
             hit.lineNumber = index + 1;

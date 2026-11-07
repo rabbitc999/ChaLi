@@ -12,9 +12,9 @@ uint64 __randomCopy(uint64 handle);
 
 /** 拥有当前随机序列位置；普通复制获得相同位置的独立序列。 */
 opcode Random {
-    new = std::random::randomFromEntropy;
+    new = randomFromEntropy;
     copy = std::random::__randomCopy;
-    drop = std::random::randomDrop;
+    drop = randomDrop;
 
     /** 使用可复现的种子建立独立生成器。 */
     static Random withSeed(uint64 seed) { return randomWithSeed(seed); }

@@ -30,14 +30,14 @@ chali run example/xml/demo.chl
 ```chali
 import std::xml;
 void main() {
-    let document = std::xml::parse("<message from='ChaLi'>Hi<em>there</em></message>").unwrap();
+    let document = parse("<message from='ChaLi'>Hi<em>there</em></message>").unwrap();
     assert(document.name() == "message");
     assert(document.attribute("from").unwrap() == "ChaLi");
     assert(document.text(0).unwrap() == "Hi");
     assert(document.child(1).unwrap().name() == "em");
-    assert(std::xml::escapeAttribute("<&\"") == "&lt;&amp;&quot;");
-    assert(std::xml::parse("<bad></wrong>").isErr());
-    assert(std::xml::parse("<!DOCTYPE a SYSTEM 'file:///missing'><a/>").isErr());
+    assert(escapeAttribute("<&\"") == "&lt;&amp;&quot;");
+    assert(parse("<bad></wrong>").isErr());
+    assert(parse("<!DOCTYPE a SYSTEM 'file:///missing'><a/>").isErr());
     println("XML OK");
 }
 ```
@@ -336,7 +336,7 @@ Escape text content for an XML element.
 **调用形式**
 
 ```chali
-std::xml::escapeText(value);
+escapeText(value);
 ```
 
 **源码**：[library/xml/xml.chl.in:57](../../library/xml/xml.chl.in#L57)。
@@ -376,7 +376,7 @@ Escape a value for a quoted XML attribute.
 **调用形式**
 
 ```chali
-std::xml::escapeAttribute(value);
+escapeAttribute(value);
 ```
 
 **源码**：[library/xml/xml.chl.in:62](../../library/xml/xml.chl.in#L62)。

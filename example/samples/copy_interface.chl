@@ -2,7 +2,7 @@ import std::array;
 
 struct Packet: Copy<Packet> {
     String label;
-    std::array::DynamicArray<int64> values;
+    DynamicArray<int64> values;
     Packet copy() { return self; }
 };
 
@@ -24,7 +24,7 @@ void main() {
     Packet interfaceCopy = view.copy();
     interfaceCopy.values.set(0, 17);
     assert(original.values[0] == 7 && interfaceCopy.values[0] == 17);
-    std::array::DynamicArray<int64> arrayCopy = original.values.copy();
+    DynamicArray<int64> arrayCopy = original.values.copy();
     arrayCopy.set(0, 19);
     assert(original.values[0] == 7 && arrayCopy[0] == 19);
     println("Copy interface OK");

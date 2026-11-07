@@ -91,11 +91,11 @@ encoding RFC vectors OK
 | [EncodingError::toString](#api-0) | `String toString()` |
 | [encodeHex](#api-1) | `String encodeHex(List<uint8> bytes, bool uppercase=false)` |
 | [hexDigit](#api-2) | `int64 hexDigit(char value)` |
-| [decodeHex](#api-3) | `Result<List<uint8>,std::core::Error> decodeHex(String text)` |
+| [decodeHex](#api-3) | `Result<List<uint8>,Error> decodeHex(String text)` |
 | [encodeBase64](#api-4) | `String encodeBase64(List<uint8> bytes, bool url=false, bool padding=true)` |
 | [encodeBase64Url](#api-5) | `String encodeBase64Url(List<uint8> bytes, bool padding=false)` |
-| [decodeBase64](#api-6) | `Result<List<uint8>,std::core::Error> decodeBase64(String text, bool url=false)` |
-| [decodeBase64Url](#api-7) | `Result<List<uint8>,std::core::Error> decodeBase64Url(String text)` |
+| [decodeBase64](#api-6) | `Result<List<uint8>,Error> decodeBase64(String text, bool url=false)` |
+| [decodeBase64Url](#api-7) | `Result<List<uint8>,Error> decodeBase64Url(String text)` |
 
 <a id="api-0"></a>
 
@@ -167,7 +167,7 @@ String encodeHex(List<uint8> bytes, bool uppercase=false);
 **调用形式**
 
 ```chali
-std::encoding::encodeHex(bytes, uppercase);
+encodeHex(bytes, uppercase);
 ```
 
 **源码**：[source/std/encoding.chl:19](../../source/std/encoding.chl#L19)。
@@ -205,7 +205,7 @@ int64 hexDigit(char value);
 **调用形式**
 
 ```chali
-std::encoding::hexDigit(value);
+hexDigit(value);
 ```
 
 **源码**：[source/std/encoding.chl:29](../../source/std/encoding.chl#L29)。
@@ -219,7 +219,7 @@ std::encoding::hexDigit(value);
 **声明**
 
 ```chali
-Result<List<uint8>,std::core::Error> decodeHex(String text);
+Result<List<uint8>,Error> decodeHex(String text);
 ```
 
 **行为**
@@ -234,7 +234,7 @@ Result<List<uint8>,std::core::Error> decodeHex(String text);
 
 **返回值**
 
-`Result<List<uint8>,std::core::Error>`。严格解码偶数长度的十六进制文本，不忽略空白。
+`Result<List<uint8>,Error>`。严格解码偶数长度的十六进制文本，不忽略空白。
 
 **错误与边界**
 
@@ -243,7 +243,7 @@ Result<List<uint8>,std::core::Error> decodeHex(String text);
 **调用形式**
 
 ```chali
-std::encoding::decodeHex(text);
+decodeHex(text);
 ```
 
 **源码**：[source/std/encoding.chl:36](../../source/std/encoding.chl#L36)。
@@ -283,7 +283,7 @@ Base64 编码；URL 字母表可选，padding 控制尾部等号。
 **调用形式**
 
 ```chali
-std::encoding::encodeBase64(bytes, url, padding);
+encodeBase64(bytes, url, padding);
 ```
 
 **源码**：[source/std/encoding.chl:55](../../source/std/encoding.chl#L55)。
@@ -322,7 +322,7 @@ URL 安全 Base64，默认省略填充。
 **调用形式**
 
 ```chali
-std::encoding::encodeBase64Url(bytes, padding);
+encodeBase64Url(bytes, padding);
 ```
 
 **源码**：[source/std/encoding.chl:78](../../source/std/encoding.chl#L78)。
@@ -336,7 +336,7 @@ std::encoding::encodeBase64Url(bytes, padding);
 **声明**
 
 ```chali
-Result<List<uint8>,std::core::Error> decodeBase64(String text, bool url=false);
+Result<List<uint8>,Error> decodeBase64(String text, bool url=false);
 ```
 
 **行为**
@@ -352,7 +352,7 @@ Result<List<uint8>,std::core::Error> decodeBase64(String text, bool url=false);
 
 **返回值**
 
-`Result<List<uint8>,std::core::Error>`。严格 Base64 解码；接受正确填充或无填充形式，拒绝非零尾部位。
+`Result<List<uint8>,Error>`。严格 Base64 解码；接受正确填充或无填充形式，拒绝非零尾部位。
 
 **错误与边界**
 
@@ -361,7 +361,7 @@ Result<List<uint8>,std::core::Error> decodeBase64(String text, bool url=false);
 **调用形式**
 
 ```chali
-std::encoding::decodeBase64(text, url);
+decodeBase64(text, url);
 ```
 
 **源码**：[source/std/encoding.chl:80](../../source/std/encoding.chl#L80)。
@@ -375,7 +375,7 @@ std::encoding::decodeBase64(text, url);
 **声明**
 
 ```chali
-Result<List<uint8>,std::core::Error> decodeBase64Url(String text);
+Result<List<uint8>,Error> decodeBase64Url(String text);
 ```
 
 **行为**
@@ -390,7 +390,7 @@ Result<List<uint8>,std::core::Error> decodeBase64Url(String text);
 
 **返回值**
 
-`Result<List<uint8>,std::core::Error>`。解码 URL 字母表，不接受标准字母表的加号与斜杠。
+`Result<List<uint8>,Error>`。解码 URL 字母表，不接受标准字母表的加号与斜杠。
 
 **错误与边界**
 
@@ -399,7 +399,7 @@ Result<List<uint8>,std::core::Error> decodeBase64Url(String text);
 **调用形式**
 
 ```chali
-std::encoding::decodeBase64Url(text);
+decodeBase64Url(text);
 ```
 
 **源码**：[source/std/encoding.chl:115](../../source/std/encoding.chl#L115)。

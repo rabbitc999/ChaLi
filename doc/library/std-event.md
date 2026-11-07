@@ -30,15 +30,15 @@ chali run example/samples/event_timer.chl
 ```chali
 import std::event;
 void main() {
-    assert(std::event::post(7, 19) == 0);
-    let posted = std::event::tryReceive();
+    assert(post(7, 19) == 0);
+    let posted = tryReceive();
     assert(posted.isReady() && posted.value.tag == 7 && posted.value.source == 19);
     Timer timer = Timer::afterMillis(2);
     assert(timer.isValid());
-    let tick = std::event::receiveFor(1000);
+    let tick = receiveFor(1000);
     assert(tick.isReady() && tick.value.timer == timer.id());
     timer.stop();
-    assert(std::event::tryReceive().status == 1);
+    assert(tryReceive().status == 1);
     println("events ok");
 }
 ```
@@ -73,9 +73,9 @@ events ok
 
 | 名称 | 声明 |
 | --- | --- |
-| [receiveFor](#api-0) | `std::concurrency::Receive<Event> receiveFor(int64 millis)` |
-| [receive](#api-1) | `std::concurrency::Receive<Event> receive()` |
-| [tryReceive](#api-2) | `std::concurrency::Receive<Event> tryReceive()` |
+| [receiveFor](#api-0) | `Receive<Event> receiveFor(int64 millis)` |
+| [receive](#api-1) | `Receive<Event> receive()` |
+| [tryReceive](#api-2) | `Receive<Event> tryReceive()` |
 | [post](#api-3) | `int64 post(int64 tag, int64 source)` |
 | [close](#api-4) | `void close()` |
 | [Timer::everyNanos](#api-5) | `static Timer everyNanos(int64 nanos)` |
@@ -93,7 +93,7 @@ events ok
 **声明**
 
 ```chali
-std::concurrency::Receive<Event> receiveFor(int64 millis);
+Receive<Event> receiveFor(int64 millis);
 ```
 
 **行为**
@@ -108,7 +108,7 @@ std::concurrency::Receive<Event> receiveFor(int64 millis);
 
 **返回值**
 
-`std::concurrency::Receive<Event>`。显式限时接收，只有 READY 时 value 有效；-1 无限、0 非阻塞。
+`Receive<Event>`。显式限时接收，只有 READY 时 value 有效；-1 无限、0 非阻塞。
 
 **错误与边界**
 
@@ -117,7 +117,7 @@ std::concurrency::Receive<Event> receiveFor(int64 millis);
 **调用形式**
 
 ```chali
-std::event::receiveFor(millis);
+receiveFor(millis);
 ```
 
 **源码**：[source/std/event.chl:20](../../source/std/event.chl#L20)。
@@ -131,7 +131,7 @@ std::event::receiveFor(millis);
 **声明**
 
 ```chali
-std::concurrency::Receive<Event> receive();
+Receive<Event> receive();
 ```
 
 **行为**
@@ -144,7 +144,7 @@ std::concurrency::Receive<Event> receive();
 
 **返回值**
 
-`std::concurrency::Receive<Event>`。显式等待并消费事件，不执行隐式用户回调。
+`Receive<Event>`。显式等待并消费事件，不执行隐式用户回调。
 
 **错误与边界**
 
@@ -153,7 +153,7 @@ std::concurrency::Receive<Event> receive();
 **调用形式**
 
 ```chali
-std::event::receive();
+receive();
 ```
 
 **源码**：[source/std/event.chl:31](../../source/std/event.chl#L31)。
@@ -167,7 +167,7 @@ std::event::receive();
 **声明**
 
 ```chali
-std::concurrency::Receive<Event> tryReceive();
+Receive<Event> tryReceive();
 ```
 
 **行为**
@@ -180,7 +180,7 @@ std::concurrency::Receive<Event> tryReceive();
 
 **返回值**
 
-`std::concurrency::Receive<Event>`。立即尝试接收，未就绪返回 TIMEOUT，只有 READY 时读取 value。
+`Receive<Event>`。立即尝试接收，未就绪返回 TIMEOUT，只有 READY 时读取 value。
 
 **错误与边界**
 
@@ -189,7 +189,7 @@ std::concurrency::Receive<Event> tryReceive();
 **调用形式**
 
 ```chali
-std::event::tryReceive();
+tryReceive();
 ```
 
 **源码**：[source/std/event.chl:32](../../source/std/event.chl#L32)。
@@ -228,7 +228,7 @@ int64 post(int64 tag, int64 source);
 **调用形式**
 
 ```chali
-std::event::post(tag, source);
+post(tag, source);
 ```
 
 **源码**：[source/std/event.chl:33](../../source/std/event.chl#L33)。
@@ -264,7 +264,7 @@ void close();
 **调用形式**
 
 ```chali
-std::event::close();
+close();
 ```
 
 **源码**：[source/std/event.chl:34](../../source/std/event.chl#L34)。
@@ -302,7 +302,7 @@ static Timer everyNanos(int64 nanos);
 **调用形式**
 
 ```chali
-std::event::Timer::everyNanos(nanos);
+Timer::everyNanos(nanos);
 ```
 
 **源码**：[source/std/event.chl:45](../../source/std/event.chl#L45)。
@@ -340,7 +340,7 @@ static Timer afterNanos(int64 nanos);
 **调用形式**
 
 ```chali
-std::event::Timer::afterNanos(nanos);
+Timer::afterNanos(nanos);
 ```
 
 **源码**：[source/std/event.chl:49](../../source/std/event.chl#L49)。
@@ -378,7 +378,7 @@ static Timer everyMillis(int64 millis);
 **调用形式**
 
 ```chali
-std::event::Timer::everyMillis(millis);
+Timer::everyMillis(millis);
 ```
 
 **源码**：[source/std/event.chl:53](../../source/std/event.chl#L53)。
@@ -416,7 +416,7 @@ static Timer afterMillis(int64 millis);
 **调用形式**
 
 ```chali
-std::event::Timer::afterMillis(millis);
+Timer::afterMillis(millis);
 ```
 
 **源码**：[source/std/event.chl:58](../../source/std/event.chl#L58)。

@@ -8,6 +8,8 @@ An algorithm depending on a small set of operations can parameterize the varying
 
 Distinguish type parameters, integer constants, associated types and generic interfaces, then place control expressions inside generic functions. Explain each parameter's role and its effect on instantiated fields, methods and results.
 
+Prefer omitting function type arguments when the arguments determine them. After importing `std::algorithms`, write `foldValue(items, 0, add)`; the list element type, initial value, and callback must be compatible. Type declarations still use `List<int64>`. Add explicit type arguments or a module qualifier when inference cannot determine a unique meaning.
+
 ## 18.1 Parameterize a repeated calculation
 
 <!-- verify-book -->

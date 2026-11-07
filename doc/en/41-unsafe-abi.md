@@ -14,10 +14,10 @@
 import std::memory;
 
 void main() {
-    std::core::RawStorage<String> slots = std::core::RawStorage<String>::allocate(8);
+    RawStorage<String> slots = RawStorage<String>::allocate(8);
     unsafe {
-        std::core::initAt<String>(slots.pointer(0), "hello");
-        String value = std::core::takeAt<String>(slots.pointer(0));
+        initAt<String>(slots.pointer(0), "hello");
+        String value = takeAt<String>(slots.pointer(0));
         assert(value == "hello");
     }
     slots.close();
@@ -46,11 +46,11 @@ Type identity, capacity overflow, alignment, initialization state and allocation
 
 ```chali
 unsafe {
-    std::core::BarePtr<int64> p = std::core::barePointer<int64>(slots.pointer(0));
-    std::core::BarePtr<int64> q = p + 1;
+    BarePtr<int64> p = barePointer<int64>(slots.pointer(0));
+    BarePtr<int64> q = p + 1;
     assert(q - p == 1);
-    std::core::memset<int64>(p, (uint8)0, 8);
-    int64 mut& value = std::core::dereference<int64>(p);
+    memset<int64>(p, (uint8)0, 8);
+    int64 mut& value = dereference<int64>(p);
     *value = 42;
 }
 ```

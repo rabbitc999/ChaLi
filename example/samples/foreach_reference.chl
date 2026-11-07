@@ -36,7 +36,7 @@ void main() {
     assert(values[0] == 11 && values[2] == 13);
     int64 data[] = new[3];
     data[0] = 1; data[1] = 2; data[2] = 3;
-    std::memory::Span<int64> span = std::memory::Span<int64>::from(data, 3);
+    Span<int64> span = Span<int64>::from(data, 3);
     for (int64 a in span) { a = a * 2; }
     assert(data[0] == 2 && data[2] == 6);
     List<int64> list;

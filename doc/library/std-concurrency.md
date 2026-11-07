@@ -39,16 +39,16 @@ struct Parcel { int64 id; String name; List<int64> readings; };
 int64 isolatedCounter;
 
 void typedWorker() {
-    std::concurrency::Shared<int64> sharedCounter = std::message::receiveThread<std::concurrency::Shared<int64>>();
-    Parcel received = std::message::receiveThread<Parcel>();
+    Shared<int64> sharedCounter = receiveThread<Shared<int64>>();
+    Parcel received = receiveThread<Parcel>();
     int64 old = sharedCounter.swap(20);
     isolatedCounter = 99;
-    std::message::sendThread<Parcel>(std::thread::parent(), received);
-    std::message::sendThread<int64>(std::thread::parent(), old);
+    sendThread<Parcel>(parent(), received);
+    sendThread<int64>(parent(), old);
 }
 
 void main() {
-    std::concurrency::Shared<int64> sharedCounter = std::concurrency::Shared<int64>::create(10);
+    Shared<int64> sharedCounter = Shared<int64>::create(10);
     isolatedCounter = 3;
     Parcel original;
     original.id = 7;
@@ -56,14 +56,14 @@ void main() {
     List<int64> readings;
     readings.push(4);
     original.readings = readings;
-    Thread task = std::thread::create(typedWorker);
-    std::message::sendThread<std::concurrency::Shared<int64>>(task, sharedCounter);
-    std::message::sendThread<Parcel>(task, original);
+    Thread task = create(typedWorker);
+    sendThread<Shared<int64>>(task, sharedCounter);
+    sendThread<Parcel>(task, original);
     original.id = 8;
     original.readings.push(6);
-    Parcel reply = std::message::receiveThread<Parcel>();
-    int64 previous = std::message::receiveThread<int64>();
-    std::thread::wait(task);
+    Parcel reply = receiveThread<Parcel>();
+    int64 previous = receiveThread<int64>();
+    wait(task);
     println("{} {} {} {} {} {}", reply.id, reply.name, reply.readings.len(),
     previous, sharedCounter.get(), isolatedCounter);
 }
@@ -194,7 +194,7 @@ static Shared<T> create(T value);
 **调用形式**
 
 ```chali
-std::concurrency::Shared<T>::create(value);
+Shared<T>::create(value);
 ```
 
 **源码**：[source/std/concurrency.chl:29](../../source/std/concurrency.chl#L29)。
@@ -380,7 +380,7 @@ static AtomicInt64 create(int64 value);
 **调用形式**
 
 ```chali
-std::concurrency::AtomicInt64::create(value);
+AtomicInt64::create(value);
 ```
 
 **源码**：[source/std/concurrency.chl:40](../../source/std/concurrency.chl#L40)。
@@ -530,7 +530,7 @@ static Channel<T> create(int64 capacity);
 **调用形式**
 
 ```chali
-std::concurrency::Channel<T>::create(capacity);
+Channel<T>::create(capacity);
 ```
 
 **源码**：[source/std/concurrency.chl:49](../../source/std/concurrency.chl#L49)。
@@ -805,17 +805,17 @@ obj.close();
 ```chali
 import std::thread;
 import std::concurrency;
-void worker(std::concurrency::Channel<int64> values) {
+void worker(Channel<int64> values) {
     values.send(42);
     values.close();
 }
 void main() {
-    let values = std::concurrency::Channel<int64>::create(2);
-    Thread task = std::thread::createWith<std::concurrency::Channel<int64>>(worker, values);
+    let values = Channel<int64>::create(2);
+    Thread task = createWith<Channel<int64>>(worker, values);
     let next = values.receive();
     assert(next.isReady() && next.value == 42);
     assert(values.receive().status == std::concurrency::CLOSED);
-    let completed = std::thread::waitResult(task);
+    let completed = waitResult(task);
     assert(completed.isReady());
     println("channel {}", next.value);
 }

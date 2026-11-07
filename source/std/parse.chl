@@ -14,13 +14,13 @@ enum ParseError : Error {
     }
 };
 
-int64 __parseFloat64Error(std::core::String text);
-float64 __parseFloat64Value(std::core::String text);
+int64 __parseFloat64Error(String text);
+float64 __parseFloat64Value(String text);
 
 /** 完整解析十进制幅值；溢出的数字前缀优先报告 Overflow。 */
-inline Result<uint64, std::core::Error> __parseMagnitude(std::core::String text, int64 start, uint64 limit) {
+inline Result<uint64, Error> __parseMagnitude(String text, int64 start, uint64 limit) {
     int64 length = text.length();
-    if (start == length) { return Result<uint64, std::core::Error>::Err(ParseError::Invalid); }
+    if (start == length) { return Result<uint64, Error>::Err(ParseError::Invalid); }
     uint64 value = 0;
     bool overflow = false;
     uint64 quotient = limit / 10;
@@ -29,8 +29,8 @@ inline Result<uint64, std::core::Error> __parseMagnitude(std::core::String text,
     while (index < length) {
         uint8 byte = text.byteAt(index).unwrap();
         if (byte < 48 || byte > 57) {
-            if (overflow) { return Result<uint64, std::core::Error>::Err(ParseError::Overflow); }
-            return Result<uint64, std::core::Error>::Err(ParseError::Invalid);
+            if (overflow) { return Result<uint64, Error>::Err(ParseError::Overflow); }
+            return Result<uint64, Error>::Err(ParseError::Invalid);
         }
         uint64 digit = (uint64)(byte - 48);
         if (!overflow) {
@@ -40,41 +40,41 @@ inline Result<uint64, std::core::Error> __parseMagnitude(std::core::String text,
         }
         index = index + 1;
     }
-    if (overflow) { return Result<uint64, std::core::Error>::Err(ParseError::Overflow); }
-    return Result<uint64, std::core::Error>::Ok(value);
+    if (overflow) { return Result<uint64, Error>::Err(ParseError::Overflow); }
+    return Result<uint64, Error>::Ok(value);
 }
 
 struct Parse {
-    static Result<int64, std::core::Error> parseInt64(std::core::String text) {
-        if (text.length() == 0) { return Result<int64, std::core::Error>::Err(ParseError::Empty); }
+    static Result<int64, Error> parseInt64(String text) {
+        if (text.length() == 0) { return Result<int64, Error>::Err(ParseError::Empty); }
         bool negative = text.byteAt(0).unwrap() == 45;
         int64 start = 0;
         uint64 limit = 9223372036854775807;
         if (negative) { start = 1; limit = limit + 1; }
         uint64 value = __parseMagnitude(text, start, limit)?;
-        if (negative) { return Result<int64, std::core::Error>::Ok((int64)((uint64)0 - value)); }
-        return Result<int64, std::core::Error>::Ok((int64)value);
+        if (negative) { return Result<int64, Error>::Ok((int64)((uint64)0 - value)); }
+        return Result<int64, Error>::Ok((int64)value);
     }
 
-    static Result<uint64, std::core::Error> parseUInt64(std::core::String text) {
-        if (text.length() == 0) { return Result<uint64, std::core::Error>::Err(ParseError::Empty); }
+    static Result<uint64, Error> parseUInt64(String text) {
+        if (text.length() == 0) { return Result<uint64, Error>::Err(ParseError::Empty); }
         return __parseMagnitude(text, 0, (uint64)0 - (uint64)1);
     }
 
-    static Result<float64, std::core::Error> parseFloat64(std::core::String text) {
+    static Result<float64, Error> parseFloat64(String text) {
         int64 error = __parseFloat64Error(text);
         if (error == 0) {
-            return Result<float64, std::core::Error>::Ok(__parseFloat64Value(text));
+            return Result<float64, Error>::Ok(__parseFloat64Value(text));
         }
-        if (error == 1) { return Result<float64, std::core::Error>::Err(ParseError::Empty); }
-        if (error == 2) { return Result<float64, std::core::Error>::Err(ParseError::Overflow); }
-        return Result<float64, std::core::Error>::Err(ParseError::Invalid);
+        if (error == 1) { return Result<float64, Error>::Err(ParseError::Empty); }
+        if (error == 2) { return Result<float64, Error>::Err(ParseError::Overflow); }
+        return Result<float64, Error>::Err(ParseError::Invalid);
     }
 
-    static Result<bool, std::core::Error> parseBool(std::core::String text) {
-        if (text == "true") { return Result<bool, std::core::Error>::Ok(true); }
-        if (text == "false") { return Result<bool, std::core::Error>::Ok(false); }
-        if (text.length() == 0) { return Result<bool, std::core::Error>::Err(ParseError::Empty); }
-        return Result<bool, std::core::Error>::Err(ParseError::Invalid);
+    static Result<bool, Error> parseBool(String text) {
+        if (text == "true") { return Result<bool, Error>::Ok(true); }
+        if (text == "false") { return Result<bool, Error>::Ok(false); }
+        if (text.length() == 0) { return Result<bool, Error>::Err(ParseError::Empty); }
+        return Result<bool, Error>::Err(ParseError::Invalid);
     }
 };

@@ -43,7 +43,7 @@ struct Vector<T>: Add<Vector<T>, Vector<T>>,
     void drop() { self.values.drop(); }
 
     static Vector<T> zeros(int64 n) {
-        std::core::assert(n >= 0, "Vector 长度必须非负");
+        assert(n >= 0, "Vector 长度必须非负");
         Vector<T> result;
         ScalarArray<T> values;
         result.values = values.copy();
@@ -54,13 +54,13 @@ struct Vector<T>: Add<Vector<T>, Vector<T>>,
     }
     /** 从数组复制数据；指针形式同时接受固定数组与运行时数组。 */
     static Vector<T> fromArray(T const& data, int64 count) {
-        std::core::assert(count >= 0, "Vector.fromArray 长度必须非负");
+        assert(count >= 0, "Vector.fromArray 长度必须非负");
         Vector<T> result = Vector<T>::zeros(count);
         int64 i = 0;
         while (i < count) { result.set(i, std::core::index(data, i)); i = i + 1; }
         return result;
     }
-    static Vector<T> fromArray(T data[]) { return Vector<T>::fromArray(data, std::core::len(data)); }
+    static Vector<T> fromArray(T data[]) { return Vector<T>::fromArray(data, len(data)); }
     /** 返回独立的运行时数组，由调用者作用域管理。 */
     T[] toArray() {
         T result[] = new[self.len()];
@@ -77,27 +77,27 @@ struct Vector<T>: Add<Vector<T>, Vector<T>>,
     T at(int64 i) { return self.values.at(i); }
     void set(int64 i, T value) { self.values.set(i, value); }
     T dot(Vector<T> other) {
-        std::core::assert(self.len() == other.len(), "Vector.dot 维度不匹配");
+        assert(self.len() == other.len(), "Vector.dot 维度不匹配");
         T sum;
         int64 i = 0;
         while (i < self.len()) { sum = sum + self.at(i) * other.at(i); i = i + 1; }
         return sum;
     }
-    float64 norm() { return std::math::sqrt((float64)self.dot(self)); }
+    float64 norm() { return sqrt((float64)self.dot(self)); }
     Vector<T> normalized() {
         float64 length = self.norm();
-        std::core::assert(length > 0.000000000001, "零向量不能归一化");
+        assert(length > 0.000000000001, "零向量不能归一化");
         return self.scale((T)(1.0/length));
     }
     Vector<T> add(Vector<T> other) {
-        std::core::assert(self.len() == other.len(), "Vector.add 维度不匹配");
+        assert(self.len() == other.len(), "Vector.add 维度不匹配");
         Vector<T> result = Vector<T>::zeros(self.len());
         int64 i = 0;
         while (i < self.len()) { result.set(i, self.at(i) + other.at(i)); i = i + 1; }
         return result;
     }
     Vector<T> subtract(Vector<T> other) {
-        std::core::assert(self.len() == other.len(), "Vector.subtract 维度不匹配");
+        assert(self.len() == other.len(), "Vector.subtract 维度不匹配");
         Vector<T> result = Vector<T>::zeros(self.len());
         int64 i=0;
         while (i<self.len()) { result.set(i,self.at(i)-other.at(i)); i=i+1; }
@@ -126,7 +126,7 @@ struct Matrix<T>: Add<Matrix<T>, Matrix<T>>,
     void drop() { self.values.drop(); }
 
     static Matrix<T> zeros(int64 rows, int64 cols) {
-        std::core::assert(rows >= 0 && cols >= 0, "Matrix 维度必须非负");
+        assert(rows >= 0 && cols >= 0, "Matrix 维度必须非负");
         Matrix<T> result;
         result.rows = rows; result.cols = cols;
         ScalarArray<T> values;
@@ -138,16 +138,16 @@ struct Matrix<T>: Add<Matrix<T>, Matrix<T>>,
     }
     /** 按行优先顺序从一维数组复制，元素数必须等于 rows * cols。 */
     static Matrix<T> fromArray(T const& data, int64 count, int64 rows, int64 cols) {
-        std::core::assert(rows >= 0 && cols >= 0 && count >= 0, "Matrix.fromArray 维度不匹配");
-        if (rows == 0 || cols == 0) { std::core::assert(count == 0, "Matrix.fromArray 维度不匹配"); }
-        else { std::core::assert(count / rows == cols && count % rows == 0, "Matrix.fromArray 维度不匹配"); }
+        assert(rows >= 0 && cols >= 0 && count >= 0, "Matrix.fromArray 维度不匹配");
+        if (rows == 0 || cols == 0) { assert(count == 0, "Matrix.fromArray 维度不匹配"); }
+        else { assert(count / rows == cols && count % rows == 0, "Matrix.fromArray 维度不匹配"); }
         Matrix<T> result = Matrix<T>::zeros(rows, cols);
         int64 i = 0;
         while (i < count) { result.values.set(i, std::core::index(data, i)); i = i + 1; }
         return result;
     }
     static Matrix<T> fromArray(T data[], int64 rows, int64 cols) {
-        return Matrix<T>::fromArray(data, std::core::len(data), rows, cols);
+        return Matrix<T>::fromArray(data, len(data), rows, cols);
     }
     /** 返回独立的行优先运行时数组。 */
     T[] toArray() {
@@ -172,11 +172,11 @@ struct Matrix<T>: Add<Matrix<T>, Matrix<T>>,
         return result;
     }
     T at(int64 row, int64 col) {
-        std::core::assert(row >= 0 && row < self.rows && col >= 0 && col < self.cols, "Matrix.at 越界");
+        assert(row >= 0 && row < self.rows && col >= 0 && col < self.cols, "Matrix.at 越界");
         return self.values.at(row * self.cols + col);
     }
     void set(int64 row, int64 col, T value) {
-        std::core::assert(row >= 0 && row < self.rows && col >= 0 && col < self.cols, "Matrix.set 越界");
+        assert(row >= 0 && row < self.rows && col >= 0 && col < self.cols, "Matrix.set 越界");
         self.values.set(row * self.cols + col, value);
     }
     Matrix<T> transpose() {
@@ -190,7 +190,7 @@ struct Matrix<T>: Add<Matrix<T>, Matrix<T>>,
         return result;
     }
     Matrix<T> add(Matrix<T> other) {
-        std::core::assert(self.rows == other.rows && self.cols == other.cols, "Matrix.add 维度不匹配");
+        assert(self.rows == other.rows && self.cols == other.cols, "Matrix.add 维度不匹配");
         Matrix<T> result = Matrix<T>::zeros(self.rows,self.cols);
         int64 i = 0;
         while (i < self.rows) {
@@ -201,7 +201,7 @@ struct Matrix<T>: Add<Matrix<T>, Matrix<T>>,
         return result;
     }
     Matrix<T> subtract(Matrix<T> other) {
-        std::core::assert(self.rows == other.rows && self.cols == other.cols, "Matrix.subtract 维度不匹配");
+        assert(self.rows == other.rows && self.cols == other.cols, "Matrix.subtract 维度不匹配");
         Matrix<T> result=Matrix<T>::zeros(self.rows,self.cols);
         int64 i=0;
         while (i<self.rows) {
@@ -222,7 +222,7 @@ struct Matrix<T>: Add<Matrix<T>, Matrix<T>>,
         return result;
     }
     Matrix<T> multiply(Matrix<T> other) {
-        std::core::assert(self.cols == other.rows, "Matrix.multiply 维度不匹配");
+        assert(self.cols == other.rows, "Matrix.multiply 维度不匹配");
         Matrix<T> result = Matrix<T>::zeros(self.rows,other.cols);
         int64 i = 0;
         while (i < self.rows) {
@@ -238,7 +238,7 @@ struct Matrix<T>: Add<Matrix<T>, Matrix<T>>,
         return result;
     }
     Vector<T> apply(Vector<T> vector) {
-        std::core::assert(self.cols == vector.len(), "Matrix.apply 维度不匹配");
+        assert(self.cols == vector.len(), "Matrix.apply 维度不匹配");
         Vector<T> result = Vector<T>::zeros(self.rows);
         int64 i = 0;
         while (i < self.rows) {

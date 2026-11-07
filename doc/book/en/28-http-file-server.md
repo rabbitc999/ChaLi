@@ -143,7 +143,7 @@ void advance(Connection mut& connection, List<Asset> const& assets)
             connection.socket.close();
             return;
         }
-        if (std::clock::nowMs() >= connection.deadline)
+        if (nowMs() >= connection.deadline)
         {
             startReply(connection, response(408, "text/plain", "Request timed out\n", false));
         }
@@ -154,7 +154,7 @@ void advance(Connection mut& connection, List<Asset> const& assets)
     {
         connection.sent += count;
     }
-    if (connection.sent >= connection.output.length() || count < 0 || std::clock::nowMs() >= connection.deadline)
+    if (connection.sent >= connection.output.length() || count < 0 || nowMs() >= connection.deadline)
     {
         connection.socket.close();
         connection.input = "";

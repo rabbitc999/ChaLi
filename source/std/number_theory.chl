@@ -86,7 +86,7 @@ inline T __numtheoryLcm2<T>(T left, T right)
     T quotient = left / __numtheoryGcd2(left, right);
     T product = quotient * right;
     if (product / right != quotient) {
-        std::core::panic("lcm 超出整数类型范围");
+        panic("lcm 超出整数类型范围");
         return (T)0;
     }
     return product;
@@ -120,7 +120,7 @@ T lcm<T>(T... values)
 T addMod<T>(T left, T right, T modulus)
 {
     if (!(modulus > (T)0)) {
-        std::core::panic("模数必须为正");
+        panic("模数必须为正");
         return (T)0;
     }
     return __numtheoryAddMod(left, right, modulus);
@@ -130,7 +130,7 @@ T addMod<T>(T left, T right, T modulus)
 T mulMod<T>(T left, T right, T modulus)
 {
     if (!(modulus > (T)0)) {
-        std::core::panic("模数必须为正");
+        panic("模数必须为正");
         return (T)0;
     }
     return __numtheoryMulMod(left, right, modulus);
@@ -140,7 +140,7 @@ T mulMod<T>(T left, T right, T modulus)
 T powMod<T>(T base, T exponent, T modulus)
 {
     if (!(modulus > (T)0)) {
-        std::core::panic("模数必须为正");
+        panic("模数必须为正");
         return (T)0;
     }
     return __numtheoryPowMod(base, exponent, modulus);
@@ -150,7 +150,7 @@ T powMod<T>(T base, T exponent, T modulus)
 T modInverse<T>(T value, T modulus)
 {
     if (!(modulus > (T)1)) {
-        std::core::panic("modInverse 模数必须大于 1");
+        panic("modInverse 模数必须大于 1");
         return (T)0;
     }
     T oldR = modulus;
@@ -169,7 +169,7 @@ T modInverse<T>(T value, T modulus)
         t = nextT;
     }
     if (!(oldR == (T)1)) {
-        std::core::panic("modInverse 仅适用于互素整数");
+        panic("modInverse 仅适用于互素整数");
         return (T)0;
     }
     return oldT;

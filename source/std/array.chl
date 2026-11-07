@@ -8,9 +8,9 @@ enum __ArraySlot<T> {
     T read() {
         match (self) {
             __ArraySlot<T>::Full(value) => { return value; }
-            __ArraySlot<T>::Empty => { std::core::panic("DynamicArray 容量槽未激活"); }
+            __ArraySlot<T>::Empty => { panic("DynamicArray 容量槽未激活"); }
         }
-        loop { std::core::panic("DynamicArray 容量槽未激活"); };
+        loop { panic("DynamicArray 容量槽未激活"); };
     }
 };
 

@@ -13,7 +13,7 @@ void main() {
     Metric source;
     source.amount = -2.5;
     measured.push(source);
-    List<Metric> negated = std::algorithms::mapValue<Metric>(measured, negateMetric);
+    List<Metric> negated = mapValue<Metric>(measured, negateMetric);
     Metric first = negated[0];
     println("{}", first.amount);
 }

@@ -33,7 +33,7 @@ void main(){
     throughAlias();assert(amount==102);
     Resource resource;let useResource=void fn mut(){resource.value=9;};
     useResource();assert(resource.value==9);
-    let mapped=std::iter::range(1,4).map(fn(value){value+amount}).collect();
+    let mapped=intIter(1,4).map(fn(value){value+amount}).collect();
     assert(mapped[0]==103 && mapped[2]==105);
     {
         int64 i=0;

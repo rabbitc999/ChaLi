@@ -23,9 +23,9 @@ struct Point
 
 void main()
 {
-    Option<std::reflect::StructInfo> info = std::reflect::getStructInfo<Point>();
+    Option<StructInfo> info = getStructInfo<Point>();
     println("{}", info.isValue());
-    std::reflect::StructInfo s = info.unwrap();
+    StructInfo s = info.unwrap();
     println("{} {}", s.name, s.fields.len());
 }
 ```
@@ -88,10 +88,10 @@ void main()
     Profile profile;
     profile.name = "原名";
     profile.score = 80;
-    assert(std::reflect::setField<Profile, String>(&profile, "name", "新名").unwrap());
-    assert(std::reflect::getField<Profile, String>(&profile, "score").isErr());
-    assert(std::reflect::getField<Profile, int64>(&profile, "missing").isErr());
-    int64 score = std::reflect::getField<Profile, int64>(&profile, "score").unwrap();
+    assert(setField<Profile, String>(&profile, "name", "新名").unwrap());
+    assert(getField<Profile, String>(&profile, "score").isErr());
+    assert(getField<Profile, int64>(&profile, "missing").isErr());
+    int64 score = getField<Profile, int64>(&profile, "score").unwrap();
     println("{} {}", profile.name, score);
 }
 ```
@@ -138,7 +138,7 @@ struct Entry {
     int64 count;
 }
 void main() {
-    println("{}", std::reflect::getStructInfo<Entry>().isValue());
+    println("{}", getStructInfo<Entry>().isValue());
 }
 ```
 

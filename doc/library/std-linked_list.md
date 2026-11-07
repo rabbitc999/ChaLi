@@ -84,7 +84,7 @@ static LinkedList create();
 **调用形式**
 
 ```chali
-std::linked_list::LinkedList::create();
+LinkedList::create();
 ```
 
 **源码**：[source/std/linked_list.chl:17](../../source/std/linked_list.chl#L17)。
@@ -486,7 +486,7 @@ static LinkedList fromArray(List<int64> items);
 **调用形式**
 
 ```chali
-std::linked_list::LinkedList::fromArray(items);
+LinkedList::fromArray(items);
 ```
 
 **源码**：[source/std/linked_list.chl:99](../../source/std/linked_list.chl#L99)。

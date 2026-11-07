@@ -316,3 +316,17 @@ Memory::String DeclareVar(const Memory::String &name, const std::shared_ptr<MTyp
     LifetimeNoteLocalName(name);
     return var.emitted;
 }
+
+/**
+ * @brief 按当前模块的导入及词法绑定判断算法短名是否可见。
+ * @param callee 未限定调用的目标节点。
+ * @return 已导入算法模块且无普通绑定遮蔽时返回真。
+ */
+bool CanUseImportedAlgorithm(const MNode &callee)
+{
+    if (callee.kind != MNode::Var || FindNodeVar(callee)) return false;
+    const auto imported = g_moduleImports.find(callee.module);
+    if (callee.module != "std::algorithms"
+        && (imported == g_moduleImports.end() || !imported->second.count("std::algorithms"))) return false;
+    return FindFunctionOverloads(callee.module, callee.s) == nullptr;
+}

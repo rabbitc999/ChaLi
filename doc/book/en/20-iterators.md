@@ -16,7 +16,7 @@ import std::iter;
 
 void main()
 {
-    let xs = std::iter::range(1, 6).collect();
+    let xs = intIter(1, 6).collect();
     println("{} {}", xs.len(), xs[4]);
 }
 ```
@@ -25,7 +25,7 @@ void main()
 5 5
 ```
 
-range(1,6) describes values one through five, excluding six. collect consumes them into a list. The result has five elements and its last element is 5. Distinguish describing a sequence from consuming it before adding filter or map.
+intIter(1,6) describes values one through five, excluding six. collect consumes them into a list. The result has five elements and its last element is 5. Distinguish describing a sequence from consuming it before adding filter or map.
 
 ## 20.2 Consumption and early termination
 
@@ -168,7 +168,7 @@ Counting consumes the elements produced by the range.
 import std::iter;
 
 void main() {
-    println("{}", std::iter::range(1, 4).count());
+    println("{}", intIter(1, 4).count());
 }
 ```
 

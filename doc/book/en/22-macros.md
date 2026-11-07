@@ -498,8 +498,8 @@ struct Middle<T> { T inner; }
 struct Root {
     Middle<Leaf> middle;
     List<int64> items;
-    Set<std::core::String> unique;
-    Map<std::core::String, List<Leaf>> byName;
+    Set<String> unique;
+    Map<String, List<Leaf>> byName;
     List<int64> emptyList;
     Set<int64> emptySet;
     Map<String, bool> emptyMap;
@@ -517,7 +517,7 @@ void main() {
     bucket.push(value.middle.inner);
     value.byName.put("b\"ox", bucket);
     String encoded = $JSON_VALUE(Root)[value];
-    let parsed = std::json::parse(encoded).unwrap();
+    let parsed = parse(encoded).unwrap();
     let parsedItems = parsed.find("items").unwrap();
     let parsedBucket = parsed.find("byName").unwrap().find("b\"ox").unwrap();
     assert(parsedItems.at(1).unwrap().asInt().unwrap() == 8);
@@ -932,7 +932,7 @@ $end_macro
 void main()
 {
     println("{}", $FORWARD(2, 3, 4));
-    $std::core::assert($FORWARD() == 0);
+    $assert($FORWARD() == 0);
 }
 ```
 
@@ -1191,7 +1191,7 @@ struct Profile
     String name;
     @std::json::Field(skip:true)
     String secret;
-    $std::json::Json<Profile>(toJson, fromJson);
+    $Json<Profile>(toJson, fromJson);
 }
 
 void main()

@@ -107,7 +107,7 @@ Valid and invalid inputs yield success and failure, respectively.
 import std::json;
 
 void main() {
-    println("{} {}", std::json::parse("42").isOk(), std::json::parse("{").isErr());
+    println("{} {}", parse("42").isOk(), parse("{").isErr());
 }
 ```
 

@@ -350,8 +350,8 @@ module qualified;
 
 void main() {
     int64 n = 3;
-    $std::core::assert(n > 0);              /* 限定名：直接点 std::core 的宏 */
-    $std::core::assert(n < 10, "n 得是个位数");
+    $assert(n > 0);              /* 限定名：直接点 std::core 的宏 */
+    $assert(n < 10, "n 得是个位数");
 }
 ```
 

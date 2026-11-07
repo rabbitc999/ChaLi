@@ -16,25 +16,25 @@ inline Complex<float64> __multiply(Complex<float64> left, Complex<float64> right
     float64 a=left.re; float64 b=left.im; float64 c=right.re; float64 d=right.im;
     float64 ac=a*c; float64 bd=b*d; float64 ad=a*d; float64 bc=b*c;
     float64 real=ac-bd; float64 imaginary=ad+bc;
-    if(std::math::isNaN(real) && std::math::isNaN(imaginary)) {
+    if(isNaN(real) && isNaN(imaginary)) {
         bool recover=false;
-        if(std::math::isInf(a) || std::math::isInf(b)) {
-            a=__signedUnit(a,std::math::isInf(a)); b=__signedUnit(b,std::math::isInf(b));
-            if(std::math::isNaN(c)) { c=__signedUnit(c,false); }
-            if(std::math::isNaN(d)) { d=__signedUnit(d,false); }
+        if(isInf(a) || isInf(b)) {
+            a=__signedUnit(a,isInf(a)); b=__signedUnit(b,isInf(b));
+            if(isNaN(c)) { c=__signedUnit(c,false); }
+            if(isNaN(d)) { d=__signedUnit(d,false); }
             recover=true;
         }
-        if(std::math::isInf(c) || std::math::isInf(d)) {
-            c=__signedUnit(c,std::math::isInf(c)); d=__signedUnit(d,std::math::isInf(d));
-            if(std::math::isNaN(a)) { a=__signedUnit(a,false); }
-            if(std::math::isNaN(b)) { b=__signedUnit(b,false); }
+        if(isInf(c) || isInf(d)) {
+            c=__signedUnit(c,isInf(c)); d=__signedUnit(d,isInf(d));
+            if(isNaN(a)) { a=__signedUnit(a,false); }
+            if(isNaN(b)) { b=__signedUnit(b,false); }
             recover=true;
         }
-        if(!recover && (std::math::isInf(ac) || std::math::isInf(bd) || std::math::isInf(ad) || std::math::isInf(bc))) {
-            if(std::math::isNaN(a)) { a=__signedUnit(a,false); }
-            if(std::math::isNaN(b)) { b=__signedUnit(b,false); }
-            if(std::math::isNaN(c)) { c=__signedUnit(c,false); }
-            if(std::math::isNaN(d)) { d=__signedUnit(d,false); }
+        if(!recover && (isInf(ac) || isInf(bd) || isInf(ad) || isInf(bc))) {
+            if(isNaN(a)) { a=__signedUnit(a,false); }
+            if(isNaN(b)) { b=__signedUnit(b,false); }
+            if(isNaN(c)) { c=__signedUnit(c,false); }
+            if(isNaN(d)) { d=__signedUnit(d,false); }
             recover=true;
         }
         if(recover) {
@@ -57,7 +57,7 @@ inline List<Complex<float64>> __transform(List<Complex<float64>> const& input, b
             float64 direction=-2.0;
             if(inverse) { direction=2.0; }
             float64 angle=direction*3.14159265358979323846*(float64)k*(float64)j/(float64)n;
-            Complex<float64> weight=Complex<float64>::of(std::math::cos(angle),std::math::sin(angle));
+            Complex<float64> weight=Complex<float64>::of(cos(angle),sin(angle));
             sum=sum+__multiply(input[j],weight);
             j++;
         }
@@ -91,7 +91,7 @@ inline List<Complex<float64>> __fast(List<Complex<float64>> input, bool inverse)
     int64 length=2;
     while(length<=n) {
         float64 angle=-2.0*3.14159265358979323846/(float64)length;
-        Complex<float64> step=Complex<float64>::of(std::math::cos(angle),std::math::sin(angle));
+        Complex<float64> step=Complex<float64>::of(cos(angle),sin(angle));
         int64 start=0;
         while(start<n) {
             Complex<float64> twiddle=Complex<float64>::of(1.0,0.0);

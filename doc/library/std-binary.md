@@ -130,7 +130,7 @@ void main() {
     data[94] = (uint8)228;
     data[95] = (uint8)184;
     data[96] = (uint8)173;
-    std::binary::BinaryReader reader = std::binary::BinaryReader::fromArray(data, 97);
+    BinaryReader reader = BinaryReader::fromArray(data, 97);
     assert(reader.size() == 97);
     reader.setBigEndian(false);
     assert(reader.readInt8() == (int8)-128);
@@ -188,7 +188,7 @@ void main() {
     List<bool> valuesBool = reader.readBoolArray(1);
     assert(valuesBool[0] == (bool)true);
     List<uint8> bytes = reader.readBytes(3);
-    std::binary::BinaryReader copied = std::binary::BinaryReader::fromBytes(bytes);
+    BinaryReader copied = BinaryReader::fromBytes(bytes);
     bytes.clear();
     assert(copied.remaining() == 3 && copied.readUint8() == (uint8)128);
     assert(copied.skip(2));
@@ -196,7 +196,7 @@ void main() {
     assert(empty.len() == 0);
     uint8 dynamic[] = new[2];
     dynamic[0] = (uint8)52; dynamic[1] = (uint8)18;
-    std::binary::BinaryReader dynamicReader = std::binary::BinaryReader::fromArray(dynamic);
+    BinaryReader dynamicReader = BinaryReader::fromArray(dynamic);
     assert(dynamicReader.readUint16() == (uint16)4660);
     assert(reader.seek(0));
     List<int16> pair = reader.readInt16Array(2);
@@ -225,7 +225,7 @@ binary reader OK
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
 | 模块 | <a id="symbol-3"></a>`struct BinaryReader : Drop` | 二进制流读取器：拥有输入字节的副本，默认小端。 |
-| BinaryReader | <a id="symbol-4"></a>`std::core::List<uint8> bytes` | 字节数据，保留零字节。 |
+| BinaryReader | <a id="symbol-4"></a>`List<uint8> bytes` | 字节数据，保留零字节。 |
 | BinaryReader | <a id="symbol-5"></a>`int64 offset` | 下一次读取在 bytes 中的字节位置。 |
 | BinaryReader | <a id="symbol-6"></a>`bool bigEndian` | 是否按大端序解析多字节数值。 |
 
@@ -234,7 +234,7 @@ binary reader OK
 | 名称 | 声明 |
 | --- | --- |
 | [BinaryReader::drop](#api-0) | `void drop()` |
-| [BinaryReader::fromBytes](#api-1) | `static BinaryReader fromBytes(std::core::List<uint8> bytes)` |
+| [BinaryReader::fromBytes](#api-1) | `static BinaryReader fromBytes(List<uint8> bytes)` |
 | [BinaryReader::fromArray](#api-2) | `static BinaryReader fromArray(uint8 const& bytes, int64 count)` |
 | [BinaryReader::fromArray](#api-3) | `static BinaryReader fromArray(uint8 bytes[])` |
 | [BinaryReader::position](#api-4) | `int64 position()` |
@@ -244,30 +244,30 @@ binary reader OK
 | [BinaryReader::seek](#api-8) | `bool seek(int64 position)` |
 | [BinaryReader::skip](#api-9) | `bool skip(int64 count)` |
 | [BinaryReader::readInt8](#api-10) | `int8 readInt8()` |
-| [BinaryReader::readInt8Array](#api-11) | `std::core::List<int8> readInt8Array(int64 count)` |
+| [BinaryReader::readInt8Array](#api-11) | `List<int8> readInt8Array(int64 count)` |
 | [BinaryReader::readUint8](#api-12) | `uint8 readUint8()` |
-| [BinaryReader::readUint8Array](#api-13) | `std::core::List<uint8> readUint8Array(int64 count)` |
+| [BinaryReader::readUint8Array](#api-13) | `List<uint8> readUint8Array(int64 count)` |
 | [BinaryReader::readInt16](#api-14) | `int16 readInt16()` |
-| [BinaryReader::readInt16Array](#api-15) | `std::core::List<int16> readInt16Array(int64 count)` |
+| [BinaryReader::readInt16Array](#api-15) | `List<int16> readInt16Array(int64 count)` |
 | [BinaryReader::readUint16](#api-16) | `uint16 readUint16()` |
-| [BinaryReader::readUint16Array](#api-17) | `std::core::List<uint16> readUint16Array(int64 count)` |
+| [BinaryReader::readUint16Array](#api-17) | `List<uint16> readUint16Array(int64 count)` |
 | [BinaryReader::readInt32](#api-18) | `int32 readInt32()` |
-| [BinaryReader::readInt32Array](#api-19) | `std::core::List<int32> readInt32Array(int64 count)` |
+| [BinaryReader::readInt32Array](#api-19) | `List<int32> readInt32Array(int64 count)` |
 | [BinaryReader::readUint32](#api-20) | `uint32 readUint32()` |
-| [BinaryReader::readUint32Array](#api-21) | `std::core::List<uint32> readUint32Array(int64 count)` |
+| [BinaryReader::readUint32Array](#api-21) | `List<uint32> readUint32Array(int64 count)` |
 | [BinaryReader::readInt64](#api-22) | `int64 readInt64()` |
-| [BinaryReader::readInt64Array](#api-23) | `std::core::List<int64> readInt64Array(int64 count)` |
+| [BinaryReader::readInt64Array](#api-23) | `List<int64> readInt64Array(int64 count)` |
 | [BinaryReader::readUint64](#api-24) | `uint64 readUint64()` |
-| [BinaryReader::readUint64Array](#api-25) | `std::core::List<uint64> readUint64Array(int64 count)` |
+| [BinaryReader::readUint64Array](#api-25) | `List<uint64> readUint64Array(int64 count)` |
 | [BinaryReader::readFloat32](#api-26) | `float32 readFloat32()` |
-| [BinaryReader::readFloat32Array](#api-27) | `std::core::List<float32> readFloat32Array(int64 count)` |
+| [BinaryReader::readFloat32Array](#api-27) | `List<float32> readFloat32Array(int64 count)` |
 | [BinaryReader::readFloat64](#api-28) | `float64 readFloat64()` |
-| [BinaryReader::readFloat64Array](#api-29) | `std::core::List<float64> readFloat64Array(int64 count)` |
+| [BinaryReader::readFloat64Array](#api-29) | `List<float64> readFloat64Array(int64 count)` |
 | [BinaryReader::readBool](#api-30) | `bool readBool()` |
-| [BinaryReader::readBoolArray](#api-31) | `std::core::List<bool> readBoolArray(int64 count)` |
-| [BinaryReader::readBytes](#api-32) | `std::core::List<uint8> readBytes(int64 count)` |
-| [BinaryReader::readString](#api-33) | `std::core::String readString(int64 length)` |
-| [BinaryReader::readStringArray](#api-34) | `std::core::List<std::core::String> readStringArray(int64 count, int64 width)` |
+| [BinaryReader::readBoolArray](#api-31) | `List<bool> readBoolArray(int64 count)` |
+| [BinaryReader::readBytes](#api-32) | `List<uint8> readBytes(int64 count)` |
+| [BinaryReader::readString](#api-33) | `String readString(int64 length)` |
+| [BinaryReader::readStringArray](#api-34) | `List<String> readStringArray(int64 count, int64 width)` |
 
 <a id="api-0"></a>
 
@@ -312,7 +312,7 @@ obj.drop();
 **声明**
 
 ```chali
-static BinaryReader fromBytes(std::core::List<uint8> bytes);
+static BinaryReader fromBytes(List<uint8> bytes);
 ```
 
 **行为**
@@ -325,7 +325,7 @@ static BinaryReader fromBytes(std::core::List<uint8> bytes);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `bytes` | `std::core::List<uint8> bytes` | 输入或输出字节存储 | 无 |
+| `bytes` | `List<uint8> bytes` | 输入或输出字节存储 | 无 |
 
 **返回值**
 
@@ -338,7 +338,7 @@ static BinaryReader fromBytes(std::core::List<uint8> bytes);
 **调用形式**
 
 ```chali
-std::binary::BinaryReader::fromBytes(bytes);
+BinaryReader::fromBytes(bytes);
 ```
 
 **源码**：[source/std/binary.chl:163](../../source/std/binary.chl#L163)。
@@ -379,7 +379,7 @@ static BinaryReader fromArray(uint8 const& bytes, int64 count);
 **调用形式**
 
 ```chali
-std::binary::BinaryReader::fromArray(bytes, count);
+BinaryReader::fromArray(bytes, count);
 ```
 
 **源码**：[source/std/binary.chl:171](../../source/std/binary.chl#L171)。
@@ -419,7 +419,7 @@ static BinaryReader fromArray(uint8 bytes[]);
 **调用形式**
 
 ```chali
-std::binary::BinaryReader::fromArray(bytes);
+BinaryReader::fromArray(bytes);
 ```
 
 **源码**：[source/std/binary.chl:179](../../source/std/binary.chl#L179)。
@@ -693,7 +693,7 @@ obj.readInt8();
 **声明**
 
 ```chali
-std::core::List<int8> readInt8Array(int64 count);
+List<int8> readInt8Array(int64 count);
 ```
 
 **行为**
@@ -708,7 +708,7 @@ std::core::List<int8> readInt8Array(int64 count);
 
 **返回值**
 
-`std::core::List<int8>`。读取 count 个 int8，返回独立列表。
+`List<int8>`。读取 count 个 int8，返回独立列表。
 
 **错误与边界**
 
@@ -767,7 +767,7 @@ obj.readUint8();
 **声明**
 
 ```chali
-std::core::List<uint8> readUint8Array(int64 count);
+List<uint8> readUint8Array(int64 count);
 ```
 
 **行为**
@@ -782,7 +782,7 @@ std::core::List<uint8> readUint8Array(int64 count);
 
 **返回值**
 
-`std::core::List<uint8>`。读取 count 个 uint8，返回独立列表。
+`List<uint8>`。读取 count 个 uint8，返回独立列表。
 
 **错误与边界**
 
@@ -841,7 +841,7 @@ obj.readInt16();
 **声明**
 
 ```chali
-std::core::List<int16> readInt16Array(int64 count);
+List<int16> readInt16Array(int64 count);
 ```
 
 **行为**
@@ -856,7 +856,7 @@ std::core::List<int16> readInt16Array(int64 count);
 
 **返回值**
 
-`std::core::List<int16>`。读取 count 个 int16，返回独立列表。
+`List<int16>`。读取 count 个 int16，返回独立列表。
 
 **错误与边界**
 
@@ -915,7 +915,7 @@ obj.readUint16();
 **声明**
 
 ```chali
-std::core::List<uint16> readUint16Array(int64 count);
+List<uint16> readUint16Array(int64 count);
 ```
 
 **行为**
@@ -930,7 +930,7 @@ std::core::List<uint16> readUint16Array(int64 count);
 
 **返回值**
 
-`std::core::List<uint16>`。读取 count 个 uint16，返回独立列表。
+`List<uint16>`。读取 count 个 uint16，返回独立列表。
 
 **错误与边界**
 
@@ -989,7 +989,7 @@ obj.readInt32();
 **声明**
 
 ```chali
-std::core::List<int32> readInt32Array(int64 count);
+List<int32> readInt32Array(int64 count);
 ```
 
 **行为**
@@ -1004,7 +1004,7 @@ std::core::List<int32> readInt32Array(int64 count);
 
 **返回值**
 
-`std::core::List<int32>`。读取 count 个 int32，返回独立列表。
+`List<int32>`。读取 count 个 int32，返回独立列表。
 
 **错误与边界**
 
@@ -1063,7 +1063,7 @@ obj.readUint32();
 **声明**
 
 ```chali
-std::core::List<uint32> readUint32Array(int64 count);
+List<uint32> readUint32Array(int64 count);
 ```
 
 **行为**
@@ -1078,7 +1078,7 @@ std::core::List<uint32> readUint32Array(int64 count);
 
 **返回值**
 
-`std::core::List<uint32>`。读取 count 个 uint32，返回独立列表。
+`List<uint32>`。读取 count 个 uint32，返回独立列表。
 
 **错误与边界**
 
@@ -1137,7 +1137,7 @@ obj.readInt64();
 **声明**
 
 ```chali
-std::core::List<int64> readInt64Array(int64 count);
+List<int64> readInt64Array(int64 count);
 ```
 
 **行为**
@@ -1152,7 +1152,7 @@ std::core::List<int64> readInt64Array(int64 count);
 
 **返回值**
 
-`std::core::List<int64>`。读取 count 个 int64，返回独立列表。
+`List<int64>`。读取 count 个 int64，返回独立列表。
 
 **错误与边界**
 
@@ -1211,7 +1211,7 @@ obj.readUint64();
 **声明**
 
 ```chali
-std::core::List<uint64> readUint64Array(int64 count);
+List<uint64> readUint64Array(int64 count);
 ```
 
 **行为**
@@ -1226,7 +1226,7 @@ std::core::List<uint64> readUint64Array(int64 count);
 
 **返回值**
 
-`std::core::List<uint64>`。读取 count 个 uint64，返回独立列表。
+`List<uint64>`。读取 count 个 uint64，返回独立列表。
 
 **错误与边界**
 
@@ -1285,7 +1285,7 @@ obj.readFloat32();
 **声明**
 
 ```chali
-std::core::List<float32> readFloat32Array(int64 count);
+List<float32> readFloat32Array(int64 count);
 ```
 
 **行为**
@@ -1300,7 +1300,7 @@ std::core::List<float32> readFloat32Array(int64 count);
 
 **返回值**
 
-`std::core::List<float32>`。读取 count 个 float32，返回独立列表。
+`List<float32>`。读取 count 个 float32，返回独立列表。
 
 **错误与边界**
 
@@ -1359,7 +1359,7 @@ obj.readFloat64();
 **声明**
 
 ```chali
-std::core::List<float64> readFloat64Array(int64 count);
+List<float64> readFloat64Array(int64 count);
 ```
 
 **行为**
@@ -1374,7 +1374,7 @@ std::core::List<float64> readFloat64Array(int64 count);
 
 **返回值**
 
-`std::core::List<float64>`。读取 count 个 float64，返回独立列表。
+`List<float64>`。读取 count 个 float64，返回独立列表。
 
 **错误与边界**
 
@@ -1433,7 +1433,7 @@ obj.readBool();
 **声明**
 
 ```chali
-std::core::List<bool> readBoolArray(int64 count);
+List<bool> readBoolArray(int64 count);
 ```
 
 **行为**
@@ -1448,7 +1448,7 @@ std::core::List<bool> readBoolArray(int64 count);
 
 **返回值**
 
-`std::core::List<bool>`。读取 count 个 bool，返回独立列表。
+`List<bool>`。读取 count 个 bool，返回独立列表。
 
 **错误与边界**
 
@@ -1471,7 +1471,7 @@ obj.readBoolArray(count);
 **声明**
 
 ```chali
-std::core::List<uint8> readBytes(int64 count);
+List<uint8> readBytes(int64 count);
 ```
 
 **行为**
@@ -1486,7 +1486,7 @@ std::core::List<uint8> readBytes(int64 count);
 
 **返回值**
 
-`std::core::List<uint8>`。读取原始字节，保留零字节。
+`List<uint8>`。读取原始字节，保留零字节。
 
 **错误与边界**
 
@@ -1509,7 +1509,7 @@ obj.readBytes(count);
 **声明**
 
 ```chali
-std::core::String readString(int64 length);
+String readString(int64 length);
 ```
 
 **行为**
@@ -1524,7 +1524,7 @@ std::core::String readString(int64 length);
 
 **返回值**
 
-`std::core::String`。读取 length 字节文本字段，首个零字节终止文本，仍消费整个字段。
+`String`。读取 length 字节文本字段，首个零字节终止文本，仍消费整个字段。
 
 **错误与边界**
 
@@ -1547,7 +1547,7 @@ obj.readString(length);
 **声明**
 
 ```chali
-std::core::List<std::core::String> readStringArray(int64 count, int64 width);
+List<String> readStringArray(int64 count, int64 width);
 ```
 
 **行为**
@@ -1563,7 +1563,7 @@ std::core::List<std::core::String> readStringArray(int64 count, int64 width);
 
 **返回值**
 
-`std::core::List<std::core::String>`。读取 count 个定宽字符串，每个字段占 width 字节。
+`List<String>`。读取 count 个定宽字符串，每个字段占 width 字节。
 
 **错误与边界**
 

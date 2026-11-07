@@ -453,8 +453,8 @@ void show(Message message) {
 int64 grade(int64 score) {
     match (score) {
         100 => { return 3; }
-        std::core::rangeEq(90, 99) => { return 2; }
-        std::core::rangeEq(60, 89) => { return 1; }
+        rangeEq(90, 99) => { return 2; }
+        rangeEq(60, 89) => { return 1; }
         _ => { return 0; }
     }
     return 0;
@@ -686,7 +686,7 @@ Local owning arrays accept both `T[] a = new[n];` and `T a[] = new[n];`. Both fo
 ```chali
 import std::array;
 void main() {
-    std::array::DynamicArray<int64> values;
+    DynamicArray<int64> values;
     values.reserve(8);
     values.push(7);
     values.resize(3);
@@ -714,7 +714,7 @@ import std::text;
 ```
 
 - A module is declared with `module name::subname;`, usually on the first line. A user file without this declaration belongs to `program`; its declarations can be referenced as `program::name`.
-- After `import`, use fully qualified names or uniquely visible short names; qualify a name explicitly when imports conflict.
+- Imported functions, constants, interfaces, enums, structs, and opcodes may use an unambiguous short name. Omit function type arguments when the arguments determine them: `foldValue(items, 0, add)`. Keep necessary type arguments in declarations, such as `List<int64>`, and use a qualified name to resolve conflicts.
 - The core module `std::core` (`println` / `format` / `assert` / `len` / `Any` …) is loaded
   automatically and needs no `import`.
 - Visibility, exports and cross-module generics: see
@@ -981,7 +981,7 @@ For-in and while can produce values in initializers, assignments, arguments and 
 ```chali
 void main()
 {
-    int64 first = for (let value in std::core::range(1, 8))
+    int64 first = for (let value in range(1, 8))
     {
         if (value % 2 == 0)
         {

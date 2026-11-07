@@ -34,10 +34,10 @@ import std::path;
 import std::random;
 
 void main() {
-    Result<int64, Error> integer = std::parse::Parse::parseInt64("-42");
-    Result<uint64, Error> natural = std::parse::Parse::parseUInt64("18446744073709551615");
-    Result<float64, Error> real = std::parse::Parse::parseFloat64("12.5");
-    Result<bool, Error> flag = std::parse::Parse::parseBool("true");
+    Result<int64, Error> integer = Parse::parseInt64("-42");
+    Result<uint64, Error> natural = Parse::parseUInt64("18446744073709551615");
+    Result<float64, Error> real = Parse::parseFloat64("12.5");
+    Result<bool, Error> flag = Parse::parseBool("true");
     match (integer) {
         Result<int64, Error>::Ok(value) => { println("int64={}", value); }
         Result<int64, Error>::Err(error) => { println("int64=error"); }
@@ -55,17 +55,17 @@ void main() {
         Result<bool, Error>::Err(error) => { println("bool=error"); }
     }
 
-    Result<int64, Error> empty = std::parse::Parse::parseInt64("");
-    Result<int64, Error> invalid = std::parse::Parse::parseInt64("4x");
+    Result<int64, Error> empty = Parse::parseInt64("");
+    Result<int64, Error> invalid = Parse::parseInt64("4x");
     Result<int64, Error> overflow =
-    std::parse::Parse::parseInt64("999999999999999999999999");
+    Parse::parseInt64("999999999999999999999999");
     match (empty) {
         Result<int64, Error>::Ok(value) => { println("empty=bad"); }
         Result<int64, Error>::Err(error) => {
             match (error) {
-                std::parse::ParseError(detail) => {
+                ParseError(detail) => {
                     match(detail) {
-                        std::parse::ParseError::Empty => { println("empty=ok"); }
+                        ParseError::Empty => { println("empty=ok"); }
                         _ => { println("empty=bad"); }
                     }
                 }
@@ -77,9 +77,9 @@ void main() {
         Result<int64, Error>::Ok(value) => { println("invalid=bad"); }
         Result<int64, Error>::Err(error) => {
             match (error) {
-                std::parse::ParseError(detail) => {
+                ParseError(detail) => {
                     match(detail) {
-                        std::parse::ParseError::Invalid => { println("invalid=ok"); }
+                        ParseError::Invalid => { println("invalid=ok"); }
                         _ => { println("invalid=bad"); }
                     }
                 }
@@ -91,9 +91,9 @@ void main() {
         Result<int64, Error>::Ok(value) => { println("overflow=bad"); }
         Result<int64, Error>::Err(error) => {
             match (error) {
-                std::parse::ParseError(detail) => {
+                ParseError(detail) => {
                     match(detail) {
-                        std::parse::ParseError::Overflow => { println("overflow=ok"); }
+                        ParseError::Overflow => { println("overflow=ok"); }
                         _ => { println("overflow=bad"); }
                     }
                 }
@@ -102,33 +102,33 @@ void main() {
         }
     }
 
-    std::random::Random first = std::random::Random::withSeed((uint64)7);
-    std::random::Random second = std::random::Random::withSeed((uint64)7);
+    Random first = Random::withSeed((uint64)7);
+    Random second = Random::withSeed((uint64)7);
     uint64 firstValue = first.nextUInt64();
     uint64 secondValue = second.nextUInt64();
     assert(firstValue == secondValue);
     println("random={},{}", firstValue, first.nextInt(-10, 10));
-    std::random::Random entropy = std::random::Random::fromEntropy();
+    Random entropy = Random::fromEntropy();
     entropy.nextUInt64();
 
-    String joined = std::path::PathString::join("alpha/beta", "../gamma.txt");
-    String name = std::path::PathString::fileName("alpha/gamma.txt");
-    String extension = std::path::PathString::extension("alpha/gamma.txt");
-    String normalized = std::path::PathString::normalize("a\\b/./c/../d");
+    String joined = PathString::join("alpha/beta", "../gamma.txt");
+    String name = PathString::fileName("alpha/gamma.txt");
+    String extension = PathString::extension("alpha/gamma.txt");
+    String normalized = PathString::normalize("a\\b/./c/../d");
     println("path={}", joined);
     println("name={} ext={}", name, extension);
     println("normalized={}", normalized);
 
-    int64 before = std::memory::Memory::stats().liveBytes;
+    int64 before = Memory::stats().liveBytes;
     int64 during = before;
     {
         char bytes[] = new[16];
-        std::memory::Span<char> view = std::memory::Span<char>::from(&bytes[0], 16);
+        Span<char> view = Span<char>::from(&bytes[0], 16);
         assert(view.len() == 16);
-        during = std::memory::Memory::stats().liveBytes;
+        during = Memory::stats().liveBytes;
         assert(during >= before + 16);
     }
-    int64 after = std::memory::Memory::stats().liveBytes;
+    int64 after = Memory::stats().liveBytes;
     assert(after <= during - 16);
     println("memory=ok");
 }
@@ -173,10 +173,10 @@ memory=ok
 | 名称 | 声明 |
 | --- | --- |
 | [ParseError::toString](#api-0) | `String toString()` |
-| [Parse::parseInt64](#api-1) | `static Result<int64, std::core::Error> parseInt64(std::core::String text)` |
-| [Parse::parseUInt64](#api-2) | `static Result<uint64, std::core::Error> parseUInt64(std::core::String text)` |
-| [Parse::parseFloat64](#api-3) | `static Result<float64, std::core::Error> parseFloat64(std::core::String text)` |
-| [Parse::parseBool](#api-4) | `static Result<bool, std::core::Error> parseBool(std::core::String text)` |
+| [Parse::parseInt64](#api-1) | `static Result<int64, Error> parseInt64(String text)` |
+| [Parse::parseUInt64](#api-2) | `static Result<uint64, Error> parseUInt64(String text)` |
+| [Parse::parseFloat64](#api-3) | `static Result<float64, Error> parseFloat64(String text)` |
+| [Parse::parseBool](#api-4) | `static Result<bool, Error> parseBool(String text)` |
 
 <a id="api-0"></a>
 
@@ -223,7 +223,7 @@ obj.toString();
 **声明**
 
 ```chali
-static Result<int64, std::core::Error> parseInt64(std::core::String text);
+static Result<int64, Error> parseInt64(String text);
 ```
 
 **行为**
@@ -234,11 +234,11 @@ static Result<int64, std::core::Error> parseInt64(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<int64, std::core::Error>`。严格解析有符号 64 位十进制整数。
+`Result<int64, Error>`。严格解析有符号 64 位十进制整数。
 
 **错误与边界**
 
@@ -247,7 +247,7 @@ static Result<int64, std::core::Error> parseInt64(std::core::String text);
 **调用形式**
 
 ```chali
-std::parse::Parse::parseInt64(text);
+Parse::parseInt64(text);
 ```
 
 **源码**：[source/std/parse.chl:48](../../source/std/parse.chl#L48)。
@@ -261,7 +261,7 @@ std::parse::Parse::parseInt64(text);
 **声明**
 
 ```chali
-static Result<uint64, std::core::Error> parseUInt64(std::core::String text);
+static Result<uint64, Error> parseUInt64(String text);
 ```
 
 **行为**
@@ -272,11 +272,11 @@ static Result<uint64, std::core::Error> parseUInt64(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<uint64, std::core::Error>`。严格解析无符号 64 位十进制整数。
+`Result<uint64, Error>`。严格解析无符号 64 位十进制整数。
 
 **错误与边界**
 
@@ -285,7 +285,7 @@ static Result<uint64, std::core::Error> parseUInt64(std::core::String text);
 **调用形式**
 
 ```chali
-std::parse::Parse::parseUInt64(text);
+Parse::parseUInt64(text);
 ```
 
 **源码**：[source/std/parse.chl:59](../../source/std/parse.chl#L59)。
@@ -299,7 +299,7 @@ std::parse::Parse::parseUInt64(text);
 **声明**
 
 ```chali
-static Result<float64, std::core::Error> parseFloat64(std::core::String text);
+static Result<float64, Error> parseFloat64(String text);
 ```
 
 **行为**
@@ -310,11 +310,11 @@ static Result<float64, std::core::Error> parseFloat64(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<float64, std::core::Error>`。解析 64 位浮点数并报告非法输入/溢出。
+`Result<float64, Error>`。解析 64 位浮点数并报告非法输入/溢出。
 
 **错误与边界**
 
@@ -323,7 +323,7 @@ static Result<float64, std::core::Error> parseFloat64(std::core::String text);
 **调用形式**
 
 ```chali
-std::parse::Parse::parseFloat64(text);
+Parse::parseFloat64(text);
 ```
 
 **源码**：[source/std/parse.chl:64](../../source/std/parse.chl#L64)。
@@ -337,7 +337,7 @@ std::parse::Parse::parseFloat64(text);
 **声明**
 
 ```chali
-static Result<bool, std::core::Error> parseBool(std::core::String text);
+static Result<bool, Error> parseBool(String text);
 ```
 
 **行为**
@@ -348,11 +348,11 @@ static Result<bool, std::core::Error> parseBool(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<bool, std::core::Error>`。解析布尔文本并报告非法输入。
+`Result<bool, Error>`。解析布尔文本并报告非法输入。
 
 **错误与边界**
 
@@ -361,7 +361,7 @@ static Result<bool, std::core::Error> parseBool(std::core::String text);
 **调用形式**
 
 ```chali
-std::parse::Parse::parseBool(text);
+Parse::parseBool(text);
 ```
 
 **源码**：[source/std/parse.chl:74](../../source/std/parse.chl#L74)。

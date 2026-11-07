@@ -29,7 +29,7 @@ struct Complex<T>: Add<Complex<T>, Complex<T>>,
     }
     Complex<T> leftDiv(Complex<T> right) {
         T denominator=right.normSquared();
-        std::core::assert(denominator != (T)0, "Complex 除数不能为零");
+        assert(denominator != (T)0, "Complex 除数不能为零");
         return Complex<T>::of((self.re*right.re+self.im*right.im)/denominator,
                               (self.im*right.re-self.re*right.im)/denominator);
     }

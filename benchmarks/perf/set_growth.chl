@@ -29,9 +29,9 @@ void main() {
     int64 times[REPS];
     int64 r = 0;
     while (r < REPS) {
-        int64 start = std::clock::nowNanos();
+        int64 start = nowNanos();
         sink = sink + work(r);
-        times[r] = std::clock::nowNanos() - start;
+        times[r] = nowNanos() - start;
         r = r + 1;
     }
     r = 0;

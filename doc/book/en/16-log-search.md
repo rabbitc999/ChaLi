@@ -38,11 +38,11 @@ lineNumber uses one-based human numbering. text preserves the original line. Kee
 List<Hit> search(String text, String query, bool ignoreCase)
 {
     List<Hit> hits;
-    List<String> lines = std::text::Text::split(text, "\n");
+    List<String> lines = Text::split(text, "\n");
     String needle = query;
     if (ignoreCase)
     {
-        needle = std::text::Text::toLower(needle);
+        needle = Text::toLower(needle);
     }
     for (int64 index in range(0, lines.len()))
     {
@@ -51,16 +51,16 @@ List<Hit> search(String text, String query, bool ignoreCase)
         {
             break;
         }
-        if (std::text::Text::endsWith(line, "\r"))
+        if (Text::endsWith(line, "\r"))
         {
             line = line.substring(0, line.length() - 1);
         }
         String candidate = line;
         if (ignoreCase)
         {
-            candidate = std::text::Text::toLower(candidate);
+            candidate = Text::toLower(candidate);
         }
-        if (std::text::Text::contains(candidate, needle))
+        if (Text::contains(candidate, needle))
         {
             Hit hit;
             hit.lineNumber = index + 1;
@@ -88,7 +88,7 @@ import log_search;
 
 void main()
 {
-    let hits = log_search::search("INFO ready\nERROR disk\n", "error", true);
+    let hits = search("INFO ready\nERROR disk\n", "error", true);
     assert(hits.len() == 1);
     assert(hits[0].lineNumber == 2);
     println("{}:{}", hits[0].lineNumber, hits[0].text);
@@ -106,7 +106,7 @@ The call supplies two lines, a query, and a case option. The assertions separate
 ```chali
 Result<String, Error> readText(String path)
 {
-    std::io::FileStream stream = std::io::FileStream::open(path, "r")?;
+    FileStream stream = FileStream::open(path, "r")?;
     return stream.readAllString(4194304);
 }
 ```
@@ -137,7 +137,7 @@ run parses arguments, handles help before file access, reads text, searches, and
 ```chali
 void main(List<String> arguments)
 {
-    let result = log_search::run(arguments);
+    let result = run(arguments);
     if (result.isErr())
     {
         panic("log-search: " + result.error().toString());

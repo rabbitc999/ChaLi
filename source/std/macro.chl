@@ -84,7 +84,7 @@ $end_macro
 
 /** 为类型 T 生成调用方命名的哈希方法，按声明顺序混合字段或枚举载荷。 */
 $macro Hash<T>(method:ident) -> member
-$implement std::core::Hash<T>;
+$implement Hash<T>;
 uint64 method(T value) {
     $if ($type<T>()).isEnum
     $for variant in $variants<T>()
@@ -92,7 +92,7 @@ uint64 method(T value) {
         $variant_pattern(variant, source) => {
             uint64 result = cast<uint64>(variant.index + 1);
             $for payload in variant.payloads
-            $if payload.type == std::core::String
+            $if payload.type == String
             result = (result ^ $__hash_text($variant_payload(payload, source))) * 1099511628211u;
             $else_if payload.type == float32
             result = (result ^ $__hash_float(cast<float64>($variant_payload(payload, source)))) * 1099511628211u;
@@ -113,7 +113,7 @@ uint64 method(T value) {
     $else
     uint64 result = 14695981039346656037u;
     $for field in $fields<T>()
-    $if field.type == std::core::String
+    $if field.type == String
     result = (result ^ $__hash_text($member(value, field))) * 1099511628211u;
     $else_if field.type == float32
     result = (result ^ $__hash_float(cast<float64>($member(value, field)))) * 1099511628211u;
@@ -132,7 +132,7 @@ $end_macro
 
 /** 为类型 T 生成调用方命名的克隆方法。嵌套拥有值沿用其克隆协议。 */
 $macro Clone<T>(method:ident) -> member
-$implement std::core::Clone<T>;
+$implement Clone<T>;
 T method() {
     $if ($type<T>()).isEnum
     $for variant in $variants<T>()
@@ -149,7 +149,7 @@ T method() {
     $for field in $fields<T>()
     $if field.type.isScalar
     $member(result, field) = $member(self, field);
-    $else_if field.type == std::core::String
+    $else_if field.type == String
     $member(result, field) = $member(self, field);
     $else
     $member(result, field) = $member(self, field).clone();
@@ -168,10 +168,10 @@ $macro __debug_bool(value:value) -> expr
 $end_macro
 $macro __debug_quote(value:value, character:value) -> expr
 {
-    std::core::String quote="\"";
+    String quote="\"";
     if(character){quote="'";}
-    std::core::String result=quote;
-    std::core::String hex="0123456789abcdef";
+    String result=quote;
+    String hex="0123456789abcdef";
     int64 begin=0;
     int64 index=0;
     while(index<value.length()){
@@ -201,22 +201,22 @@ $end_macro
 
 $macro __debug_value(value:expr) -> expr
 {
-    std::core::Debug const& nested = value;
+    Debug const& nested = value;
     yield nested.debug();
 }
 $end_macro
 
 /** 为类型 T 生成调用方命名的调试显示方法，保留字段和枚举载荷的声明顺序与文本转义。 */
 $macro Debug<T>(method:ident) -> member
-$implement std::core::Debug;
-std::core::String method() {
-    std::core::String type_name = ($type<T>()).qualifiedName;
+$implement Debug;
+String method() {
+    String type_name = ($type<T>()).qualifiedName;
     if (type_name.startsWith("program::")) { type_name = type_name.substring(9, type_name.length() - 9); }
     $if ($type<T>()).isEnum
     $for variant in $variants<T>()
     match (self) {
         $variant_pattern(variant, source) => {
-            std::core::String result = type_name + "::" + variant.name;
+            String result = type_name + "::" + variant.name;
             $if variant.payloads.count > 0
             result.append("(");
             $for payload in variant.payloads
@@ -224,14 +224,14 @@ std::core::String method() {
             result.append(", ");
             $end_if
             result.append(payload.name + ": ");
-            $if payload.type == std::core::String
+            $if payload.type == String
             result.append($__debug_quote($variant_payload(payload, source), false));
             $else_if payload.type == char
-            result.append($__debug_quote(std::core::format("{}", $variant_payload(payload, source)), true));
+            result.append($__debug_quote(format("{}", $variant_payload(payload, source)), true));
             $else_if payload.type == bool
             result.append($__debug_bool($variant_payload(payload, source)));
             $else_if payload.type.isScalar
-            result.append(std::core::format("{}", $variant_payload(payload, source)));
+            result.append(format("{}", $variant_payload(payload, source)));
             $else
             result.append($__debug_value(&$variant_payload(payload, source)));
             $end_if
@@ -245,7 +245,7 @@ std::core::String method() {
     $end_for
     panic("invalid enum tag");
     $else
-    std::core::String result = type_name + " {";
+    String result = type_name + " {";
     $for field in $fields<T>()
     $if field.index > 0
     result.append(", ");
@@ -253,14 +253,14 @@ std::core::String method() {
     result.append(" ");
     $end_if
     result.append(field.name + ": ");
-    $if field.type == std::core::String
+    $if field.type == String
     result.append($__debug_quote($member(self, field), false));
     $else_if field.type == char
-    result.append($__debug_quote(std::core::format("{}", $member(self, field)), true));
+    result.append($__debug_quote(format("{}", $member(self, field)), true));
     $else_if field.type == bool
     result.append($__debug_bool($member(self, field)));
     $else_if field.type.isScalar
-    result.append(std::core::format("{}", $member(self, field)));
+    result.append(format("{}", $member(self, field)));
     $else
     result.append($__debug_value(&$member(self, field)));
     $end_if

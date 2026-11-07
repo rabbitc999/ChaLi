@@ -37,12 +37,12 @@ struct Probe: Drop {
 };
 void main() {
     {
-        std::array::DynamicArray<Probe> reserved;
+        DynamicArray<Probe> reserved;
         reserved.reserve(16);
     }
     assert(probeDrops == 0);
     {
-        std::array::DynamicArray<Probe> probes;
+        DynamicArray<Probe> probes;
         Probe probe; probe.marker = 7;
         probes.push(probe);
         probes.reserve(8);
@@ -51,7 +51,7 @@ void main() {
         probes.clear();
     }
     assert(probeDrops > 0);
-    std::array::DynamicArray<int64> values;
+    DynamicArray<int64> values;
     assert(values.len() == 0 && values.capacity() == 0 && values.isEmpty());
     values.reserve(3);
     assert(values.capacity() == 3 && values.len() == 0);
@@ -59,7 +59,7 @@ void main() {
     while (i < 20) { values.push(i * 2); i = i + 1; }
     assert(values.len() == 20 && values.capacity() >= 20 && values[19] == 38);
     values.set(0, 7);
-    std::array::DynamicArray<int64> copied = values;
+    DynamicArray<int64> copied = values;
     copied.set(0, 9);
     assert(values[0] == 7 && copied[0] == 9);
     int64 capacity = values.capacity();
@@ -75,14 +75,14 @@ void main() {
     assert(sum == 9);
     values.clear();
     assert(values.isEmpty() && values.capacity() == capacity && values.pop().isNone());
-    std::array::DynamicArray<String> texts = std::array::DynamicArray<String>::withCapacity(1);
+    DynamicArray<String> texts = DynamicArray<String>::withCapacity(1);
     texts.push("first"); texts.push("second");
-    std::array::DynamicArray<String> textCopy = texts;
+    DynamicArray<String> textCopy = texts;
     textCopy.set(0, "changed");
     assert(texts[0] == "first" && textCopy[0] == "changed");
     texts.resize(1); texts.resize(2);
     assert(texts[1] == "");
-    std::array::DynamicArray<Cell> cells;
+    DynamicArray<Cell> cells;
     Cell cell; cell.text = "cell"; cell.values.push(3);
     cells.push(cell); cells.reserve(8);
     Cell retrieved = cells[0]; retrieved.values.push(5);
@@ -166,7 +166,7 @@ static DynamicArray<T> create();
 **调用形式**
 
 ```chali
-std::array::DynamicArray<T>::create();
+DynamicArray<T>::create();
 ```
 
 **源码**：[source/std/array.chl:27](../../source/std/array.chl#L27)。
@@ -206,7 +206,7 @@ static DynamicArray<T> withCapacity(int64 capacity);
 **调用形式**
 
 ```chali
-std::array::DynamicArray<T>::withCapacity(capacity);
+DynamicArray<T>::withCapacity(capacity);
 ```
 
 **源码**：[source/std/array.chl:32](../../source/std/array.chl#L32)。
@@ -390,6 +390,7 @@ void reserve(int64 minimumCapacity);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`minimumCapacity >= 0, "DynamicArray 容量必须非负"`。
 
 **调用形式**
 
@@ -430,6 +431,7 @@ void push(T value);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`self.__capacity <= 4611686018427387903, "DynamicArray 容量溢出"`。
 
 **调用形式**
 
@@ -468,6 +470,7 @@ void resize(int64 length);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`length >= 0, "DynamicArray 长度必须非负"`。
 
 **调用形式**
 
@@ -546,6 +549,7 @@ T at(int64 position);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`position >= 0 && position < self.__count, "DynamicArray 下标越界"`。
 
 **调用形式**
 
@@ -627,6 +631,7 @@ void set(int64 position, T value);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`position >= 0 && position < self.__count, "DynamicArray 下标越界"`。
 
 **调用形式**
 

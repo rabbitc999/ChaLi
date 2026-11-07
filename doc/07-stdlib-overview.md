@@ -14,12 +14,12 @@
 import std::math;
 import std::json;
 void main() {
-    println("sin0={} sqrt16={}", std::math::sin(0.0), std::math::sqrt(16.0));
-    match (std::json::parse("{\"a\": 1}")) {
-        Result<std::json::JsonValue, Error>::Ok(doc) => {
+    println("sin0={} sqrt16={}", sin(0.0), sqrt(16.0));
+    match (parse("{\"a\": 1}")) {
+        Result<JsonValue, Error>::Ok(doc) => {
             println("isObject={} len={}", doc.isObject(), doc.len());
         }
-        Result<std::json::JsonValue, Error>::Err(e) => { println("err={}", e); }
+        Result<JsonValue, Error>::Err(e) => { println("err={}", e); }
     }
 }
 ```

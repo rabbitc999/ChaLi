@@ -93,7 +93,7 @@ void main() {
     bool valid=$VALIDATE_FIELDS<Student>(student);
     println("valid = {}",boolText(valid));
     assert(valid);
-    let parsed=std::json::parse(text);
+    let parsed=parse(text);
     assert(parsed.isOk());
     let object=parsed.take();
     assert(object.find("name").unwrap().asString().unwrap()==student.name);
@@ -102,5 +102,5 @@ void main() {
     student.score=-1;assert(!$VALIDATE_FIELDS<Student>(student));
     student.score=0;student.name="";assert(!$VALIDATE_FIELDS<Student>(student));
     String controls="line\n\t\0中文";
-    assert(std::json::parse(quoteJson(controls)).unwrap().asString().unwrap()==controls);
+    assert(parse(quoteJson(controls)).unwrap().asString().unwrap()==controls);
 }

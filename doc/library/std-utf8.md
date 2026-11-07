@@ -75,13 +75,13 @@ UTF-8 validation and code points OK
 | 名称 | 声明 |
 | --- | --- |
 | [Utf8Error::toString](#api-0) | `String toString()` |
-| [decodeUtf8Bytes](#api-1) | `Result<List<uint32>,std::core::Error> decodeUtf8Bytes(List<uint8> text)` |
-| [decodeUtf8](#api-2) | `Result<List<uint32>,std::core::Error> decodeUtf8(String text)` |
+| [decodeUtf8Bytes](#api-1) | `Result<List<uint32>,Error> decodeUtf8Bytes(List<uint8> text)` |
+| [decodeUtf8](#api-2) | `Result<List<uint32>,Error> decodeUtf8(String text)` |
 | [isValidUtf8](#api-3) | `bool isValidUtf8(String text)` |
-| [encodeUtf8Bytes](#api-4) | `Result<List<uint8>,std::core::Error> encodeUtf8Bytes(List<uint32> points)` |
-| [encodeUtf8](#api-5) | `Result<String,std::core::Error> encodeUtf8(List<uint32> points)` |
-| [codePointCount](#api-6) | `Result<int64,std::core::Error> codePointCount(String text)` |
-| [sliceCodePoints](#api-7) | `Result<String,std::core::Error> sliceCodePoints(String text, int64 start, int64 count)` |
+| [encodeUtf8Bytes](#api-4) | `Result<List<uint8>,Error> encodeUtf8Bytes(List<uint32> points)` |
+| [encodeUtf8](#api-5) | `Result<String,Error> encodeUtf8(List<uint32> points)` |
+| [codePointCount](#api-6) | `Result<int64,Error> codePointCount(String text)` |
+| [sliceCodePoints](#api-7) | `Result<String,Error> sliceCodePoints(String text, int64 start, int64 count)` |
 
 <a id="api-0"></a>
 
@@ -128,7 +128,7 @@ obj.toString();
 **声明**
 
 ```chali
-Result<List<uint32>,std::core::Error> decodeUtf8Bytes(List<uint8> text);
+Result<List<uint32>,Error> decodeUtf8Bytes(List<uint8> text);
 ```
 
 **行为**
@@ -143,7 +143,7 @@ Result<List<uint32>,std::core::Error> decodeUtf8Bytes(List<uint8> text);
 
 **返回值**
 
-`Result<List<uint32>,std::core::Error>`。按 RFC 3629 严格解码；拒绝过长序列、代理项、截断和超范围码点。
+`Result<List<uint32>,Error>`。按 RFC 3629 严格解码；拒绝过长序列、代理项、截断和超范围码点。
 
 **错误与边界**
 
@@ -152,7 +152,7 @@ Result<List<uint32>,std::core::Error> decodeUtf8Bytes(List<uint8> text);
 **调用形式**
 
 ```chali
-std::utf8::decodeUtf8Bytes(text);
+decodeUtf8Bytes(text);
 ```
 
 **源码**：[source/std/utf8.chl:19](../../source/std/utf8.chl#L19)。
@@ -166,7 +166,7 @@ std::utf8::decodeUtf8Bytes(text);
 **声明**
 
 ```chali
-Result<List<uint32>,std::core::Error> decodeUtf8(String text);
+Result<List<uint32>,Error> decodeUtf8(String text);
 ```
 
 **行为**
@@ -181,7 +181,7 @@ Result<List<uint32>,std::core::Error> decodeUtf8(String text);
 
 **返回值**
 
-`Result<List<uint32>,std::core::Error>`。将字符串按字节复制后严格解码。
+`Result<List<uint32>,Error>`。将字符串按字节复制后严格解码。
 
 **错误与边界**
 
@@ -190,7 +190,7 @@ Result<List<uint32>,std::core::Error> decodeUtf8(String text);
 **调用形式**
 
 ```chali
-std::utf8::decodeUtf8(text);
+decodeUtf8(text);
 ```
 
 **源码**：[source/std/utf8.chl:52](../../source/std/utf8.chl#L52)。
@@ -228,7 +228,7 @@ bool isValidUtf8(String text);
 **调用形式**
 
 ```chali
-std::utf8::isValidUtf8(text);
+isValidUtf8(text);
 ```
 
 **源码**：[source/std/utf8.chl:57](../../source/std/utf8.chl#L57)。
@@ -242,7 +242,7 @@ std::utf8::isValidUtf8(text);
 **声明**
 
 ```chali
-Result<List<uint8>,std::core::Error> encodeUtf8Bytes(List<uint32> points);
+Result<List<uint8>,Error> encodeUtf8Bytes(List<uint32> points);
 ```
 
 **行为**
@@ -257,7 +257,7 @@ Result<List<uint8>,std::core::Error> encodeUtf8Bytes(List<uint32> points);
 
 **返回值**
 
-`Result<List<uint8>,std::core::Error>`。将 Unicode 标量值编码为 UTF-8；不接受 UTF-16 代理项。
+`Result<List<uint8>,Error>`。将 Unicode 标量值编码为 UTF-8；不接受 UTF-16 代理项。
 
 **错误与边界**
 
@@ -266,7 +266,7 @@ Result<List<uint8>,std::core::Error> encodeUtf8Bytes(List<uint32> points);
 **调用形式**
 
 ```chali
-std::utf8::encodeUtf8Bytes(points);
+encodeUtf8Bytes(points);
 ```
 
 **源码**：[source/std/utf8.chl:59](../../source/std/utf8.chl#L59)。
@@ -280,7 +280,7 @@ std::utf8::encodeUtf8Bytes(points);
 **声明**
 
 ```chali
-Result<String,std::core::Error> encodeUtf8(List<uint32> points);
+Result<String,Error> encodeUtf8(List<uint32> points);
 ```
 
 **行为**
@@ -295,7 +295,7 @@ Result<String,std::core::Error> encodeUtf8(List<uint32> points);
 
 **返回值**
 
-`Result<String,std::core::Error>`。编码为 String；U+0000 应使用 encodeUtf8Bytes，避免文本被零字节截断。
+`Result<String,Error>`。编码为 String；U+0000 应使用 encodeUtf8Bytes，避免文本被零字节截断。
 
 **错误与边界**
 
@@ -304,7 +304,7 @@ Result<String,std::core::Error> encodeUtf8(List<uint32> points);
 **调用形式**
 
 ```chali
-std::utf8::encodeUtf8(points);
+encodeUtf8(points);
 ```
 
 **源码**：[source/std/utf8.chl:78](../../source/std/utf8.chl#L78)。
@@ -318,7 +318,7 @@ std::utf8::encodeUtf8(points);
 **声明**
 
 ```chali
-Result<int64,std::core::Error> codePointCount(String text);
+Result<int64,Error> codePointCount(String text);
 ```
 
 **行为**
@@ -333,7 +333,7 @@ Result<int64,std::core::Error> codePointCount(String text);
 
 **返回值**
 
-`Result<int64,std::core::Error>`。返回码点数量；码点不是字素簇，组合字符可能占多个码点。
+`Result<int64,Error>`。返回码点数量；码点不是字素簇，组合字符可能占多个码点。
 
 **错误与边界**
 
@@ -342,7 +342,7 @@ Result<int64,std::core::Error> codePointCount(String text);
 **调用形式**
 
 ```chali
-std::utf8::codePointCount(text);
+codePointCount(text);
 ```
 
 **源码**：[source/std/utf8.chl:87](../../source/std/utf8.chl#L87)。
@@ -356,7 +356,7 @@ std::utf8::codePointCount(text);
 **声明**
 
 ```chali
-Result<String,std::core::Error> sliceCodePoints(String text, int64 start, int64 count);
+Result<String,Error> sliceCodePoints(String text, int64 start, int64 count);
 ```
 
 **行为**
@@ -373,7 +373,7 @@ Result<String,std::core::Error> sliceCodePoints(String text, int64 start, int64 
 
 **返回值**
 
-`Result<String,std::core::Error>`。按零基码点下标截取 count 个码点；先校验完整输入。
+`Result<String,Error>`。按零基码点下标截取 count 个码点；先校验完整输入。
 
 **错误与边界**
 
@@ -382,7 +382,7 @@ Result<String,std::core::Error> sliceCodePoints(String text, int64 start, int64 
 **调用形式**
 
 ```chali
-std::utf8::sliceCodePoints(text, start, count);
+sliceCodePoints(text, start, count);
 ```
 
 **源码**：[source/std/utf8.chl:92](../../source/std/utf8.chl#L92)。

@@ -41,7 +41,7 @@ Algorithms expressed in ChaLi are compiled with the importing program. For examp
 import std::parse;
 
 void main() {
-    match (std::parse::Parse::parseInt64("-42")) {
+    match (Parse::parseInt64("-42")) {
         Ok(value) => { println("{}", value); }
         Err(error) => { println("{}", error.toString()); }
     }

@@ -1,9 +1,9 @@
 import std::core;
 
 void main() {
-    std::core::List<std::core::String> words;
+    List<String> words;
     words.push("std::core");
-    std::core::Map<int64, std::core::String> names;
+    Map<int64, String> names;
     names.put(1, words[0]);
-    std::core::println("{} {}", names[1], (if (true) { 7 } else { 9 }));
+    println("{} {}", names[1], (if (true) { 7 } else { 9 }));
 }

@@ -9,19 +9,19 @@ import std::reflect;
     int64 positive(Scalar operand){return operand.value;}
 };
 void main(){
-    List<std::reflect::ReflectValue> empty;List<std::reflect::ReflectValue> operand;operand.push(std::reflect::ReflectValue::I64(2));
+    List<ReflectValue> empty;List<ReflectValue> operand;operand.push(ReflectValue::I64(2));
     Scalar mut& scalar=new Scalar(5);Any operatorBox;operatorBox.set(&scalar);
     Add<int64,int64> mut& add=operatorBox.getReference();
     RightAdd<int64,int64> mut& right=operatorBox.getReference();
     Negate<int64,Scalar> mut& negative=operatorBox.getReference();
     BitNot<int64,Scalar> mut& bit=operatorBox.getReference();
     Positive<int64,Scalar> mut& positive=operatorBox.getReference();
-    assert(std::reflect::callInterface<Add<int64,int64>>(add,"leftAdd",operand).unwrap().asI64().unwrap()==7);
-    assert(std::reflect::callInterface<RightAdd<int64,int64>>(right,"rightAdd",operand).unwrap().asI64().unwrap()==107);
-    assert(std::reflect::callInterface<Negate<int64,Scalar>>(negative,"negate",empty).unwrap().asI64().unwrap()==-5);
-    assert(std::reflect::callInterfaceConst<BitNot<int64,Scalar>>(bit,"bitNot",empty).unwrap().asI64().unwrap()==~5);
-    assert(std::reflect::callInterfaceConst<Positive<int64,Scalar>>(positive,"positive",empty).unwrap().asI64().unwrap()==5);
-    assert(std::reflect::callMethodConst<Scalar>(scalar,"negate",empty).unwrap().asI64().unwrap()==-5);
-    assert(std::reflect::getInterfaceInfo<Negate<int64,Scalar>>().unwrap().methods[0].function.params.len()==0);
+    assert(callInterface<Add<int64,int64>>(add,"leftAdd",operand).unwrap().asI64().unwrap()==7);
+    assert(callInterface<RightAdd<int64,int64>>(right,"rightAdd",operand).unwrap().asI64().unwrap()==107);
+    assert(callInterface<Negate<int64,Scalar>>(negative,"negate",empty).unwrap().asI64().unwrap()==-5);
+    assert(callInterfaceConst<BitNot<int64,Scalar>>(bit,"bitNot",empty).unwrap().asI64().unwrap()==~5);
+    assert(callInterfaceConst<Positive<int64,Scalar>>(positive,"positive",empty).unwrap().asI64().unwrap()==5);
+    assert(callMethodConst<Scalar>(scalar,"negate",empty).unwrap().asI64().unwrap()==-5);
+    assert(getInterfaceInfo<Negate<int64,Scalar>>().unwrap().methods[0].function.params.len()==0);
     scalar.drop();println("reflection operators OK");
 }

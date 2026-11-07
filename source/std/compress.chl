@@ -9,5 +9,5 @@ module std::compress;
  * 注意：不保证一定比原文短——随机数据、极短文本这类压不出收益时，
  * 底层会自动按原样存储，体积不变但解压照常正确。 */
 
-std::core::List<uint8> compress(std::core::String text);
-std::core::String decompress(std::core::List<uint8> bytes);
+List<uint8> compress(String text);
+String decompress(List<uint8> bytes);

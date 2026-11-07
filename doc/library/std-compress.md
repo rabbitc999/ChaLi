@@ -35,25 +35,25 @@ import std::text;
  * 压缩结果是二进制（含 NUL 字节），类型是 List<uint8>，不要当字符串拼接。 */
 void main() {
     /* 高重复度文本：应该明显变小 */
-    String text = std::text::Text::repeat("chali 文本压缩往返测试；", 40);
-    List<uint8> packed = std::compress::compress(text);
+    String text = Text::repeat("chali 文本压缩往返测试；", 40);
+    List<uint8> packed = compress(text);
     println("原文 {} 压缩后 {} 变小 {}", len(text), packed.len(),
     packed.len() < len(text));
-    String back = std::compress::decompress(packed);
+    String back = decompress(packed);
     assert(back == text);
     println("往返一致 {}", back == text);
 
     /* 空串与单字符：都要能原样解回来 */
-    List<uint8> empty = std::compress::compress("");
-    assert(std::compress::decompress(empty) == "");
-    List<uint8> one = std::compress::compress("a");
-    assert(std::compress::decompress(one) == "a");
+    List<uint8> empty = compress("");
+    assert(decompress(empty) == "");
+    List<uint8> one = compress("a");
+    assert(decompress(one) == "a");
     println("空串 {} 单字符 {}", empty.len(), one.len());
 
     /* 压不出收益时自动退回原样存储：体积不降，但解压照常正确 */
     String noise = "9f3a!Q7z@1mKp2Vb8Xc4Rt6Yh0Nj5Lw3Sg";
-    List<uint8> packedNoise = std::compress::compress(noise);
-    assert(std::compress::decompress(packedNoise) == noise);
+    List<uint8> packedNoise = compress(noise);
+    assert(decompress(packedNoise) == noise);
     println("噪声 原文 {} 压缩后 {}", len(noise), packedNoise.len());
 }
 ```
@@ -78,8 +78,8 @@ void main() {
 
 | 名称 | 声明 |
 | --- | --- |
-| [compress](#api-0) | `std::core::List<uint8> compress(std::core::String text)` |
-| [decompress](#api-1) | `std::core::String decompress(std::core::List<uint8> bytes)` |
+| [compress](#api-0) | `List<uint8> compress(String text)` |
+| [decompress](#api-1) | `String decompress(List<uint8> bytes)` |
 
 <a id="api-0"></a>
 
@@ -88,7 +88,7 @@ void main() {
 **声明**
 
 ```chali
-std::core::List<uint8> compress(std::core::String text);
+List<uint8> compress(String text);
 ```
 
 **行为**
@@ -99,11 +99,11 @@ std::core::List<uint8> compress(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::core::List<uint8>`。文本压缩与解压：要 `import std::compress;` 才可见。 lztext 内核通过 C 帧及公开的字符串／字节列表服务接入。 压缩结果是**二进制**（含 NUL 字节），所以类型是 std::core::List<uint8>， 不要当字符串打印或拼接。解压出来的才是 std::core::String。 注意：不保证一定比原文短——随机数据、极短文本这类压不出收益时， 底层会自动按原样存储，体积不变但解压照常正确。
+`List<uint8>`。文本压缩与解压：要 `import std::compress;` 才可见。 lztext 内核通过 C 帧及公开的字符串／字节列表服务接入。 压缩结果是**二进制**（含 NUL 字节），所以类型是 std::core::List<uint8>， 不要当字符串打印或拼接。解压出来的才是 std::core::String。 注意：不保证一定比原文短——随机数据、极短文本这类压不出收益时， 底层会自动按原样存储，体积不变但解压照常正确。
 
 **错误与边界**
 
@@ -112,7 +112,7 @@ std::core::List<uint8> compress(std::core::String text);
 **调用形式**
 
 ```chali
-std::compress::compress(text);
+compress(text);
 ```
 
 **源码**：[source/std/compress.chl:12](../../source/std/compress.chl#L12)。
@@ -126,7 +126,7 @@ std::compress::compress(text);
 **声明**
 
 ```chali
-std::core::String decompress(std::core::List<uint8> bytes);
+String decompress(List<uint8> bytes);
 ```
 
 **行为**
@@ -137,11 +137,11 @@ std::core::String decompress(std::core::List<uint8> bytes);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `bytes` | `std::core::List<uint8> bytes` | 输入或输出字节存储 | 无 |
+| `bytes` | `List<uint8> bytes` | 输入或输出字节存储 | 无 |
 
 **返回值**
 
-`std::core::String`。将有效 lztext 二进制数据还原为文本；损坏时报运行错误。
+`String`。将有效 lztext 二进制数据还原为文本；损坏时报运行错误。
 
 **错误与边界**
 
@@ -150,7 +150,7 @@ std::core::String decompress(std::core::List<uint8> bytes);
 **调用形式**
 
 ```chali
-std::compress::decompress(bytes);
+decompress(bytes);
 ```
 
 **源码**：[source/std/compress.chl:13](../../source/std/compress.chl#L13)。

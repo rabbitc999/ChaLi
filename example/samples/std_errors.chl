@@ -19,8 +19,8 @@ void main()
     assert(describe(message) == "原始诊断");
     assert(describeInterface(&message) == "原始诊断");
     assert(copy.toString() == "独立副本");
-    assert((std::parse::ParseError::Overflow).toString() != "");
-    assert((std::io::IoError::Closed).toString() != "");
+    assert((ParseError::Overflow).toString() != "");
+    assert((IoError::Closed).toString() != "");
     Result<File, Error> file = fileOpen("missing-error-protocol-file.chl", "r");
     assert(file.isErr());
     assert(file.error().toString().contains("fileOpen failed"));

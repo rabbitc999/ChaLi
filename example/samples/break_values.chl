@@ -84,7 +84,7 @@ void main() {
     };
     assert(once == 9);
     int64 element = {
-        for (int64 item in std::core::rangeEq<int64>(1,5)) {
+        for (int64 item in rangeEq<int64>(1,5)) {
             if (item == 4) { yield (item); }
         }
         yield (-1);

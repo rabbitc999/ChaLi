@@ -4,10 +4,10 @@ import std::io;
 
 void main() {
     Result<File, Error> opened =
-    std::io::fileOpen("missing-file-for-chali-tests.txt", "r");
+    fileOpen("missing-file-for-chali-tests.txt", "r");
     match (opened) {
         Result<File, Error>::Ok(handle) => {
-            std::io::fileClose(&handle);
+            fileClose(&handle);
             println("opened");
         }
         Result<File, Error>::Err(message) => {

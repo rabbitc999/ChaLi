@@ -88,14 +88,14 @@ UTC dates, epochs and arithmetic OK
 | [DateTimeError::toString](#api-0) | `String toString()` |
 | [isLeapYear](#api-1) | `bool isLeapYear(int64 year)` |
 | [daysInMonth](#api-2) | `int64 daysInMonth(int64 year, int64 month)` |
-| [toUnixSeconds](#api-3) | `Result<int64,std::core::Error> toUnixSeconds(DateTime value)` |
-| [fromUnixSeconds](#api-4) | `Result<DateTime,std::core::Error> fromUnixSeconds(int64 seconds)` |
+| [toUnixSeconds](#api-3) | `Result<int64,Error> toUnixSeconds(DateTime value)` |
+| [fromUnixSeconds](#api-4) | `Result<DateTime,Error> fromUnixSeconds(int64 seconds)` |
 | [dateDigits](#api-5) | `String dateDigits(int64 value, int64 width)` |
-| [formatUtc](#api-6) | `Result<String,std::core::Error> formatUtc(DateTime value)` |
-| [parseUtc](#api-7) | `Result<DateTime,std::core::Error> parseUtc(String text)` |
-| [addSeconds](#api-8) | `Result<DateTime,std::core::Error> addSeconds(DateTime value, int64 delta)` |
-| [addDays](#api-9) | `Result<DateTime,std::core::Error> addDays(DateTime value, int64 days)` |
-| [nowUtc](#api-10) | `Result<DateTime,std::core::Error> nowUtc()` |
+| [formatUtc](#api-6) | `Result<String,Error> formatUtc(DateTime value)` |
+| [parseUtc](#api-7) | `Result<DateTime,Error> parseUtc(String text)` |
+| [addSeconds](#api-8) | `Result<DateTime,Error> addSeconds(DateTime value, int64 delta)` |
+| [addDays](#api-9) | `Result<DateTime,Error> addDays(DateTime value, int64 days)` |
+| [nowUtc](#api-10) | `Result<DateTime,Error> nowUtc()` |
 | [DateTimeOffset::utc](#api-11) | `Result<DateTime,Error> utc()` |
 | [atOffset](#api-12) | `Result<DateTimeOffset,Error> atOffset(DateTime utc, int64 offset_minutes)` |
 | [formatOffset](#api-13) | `Result<String,Error> formatOffset(DateTimeOffset value)` |
@@ -170,7 +170,7 @@ bool isLeapYear(int64 year);
 **调用形式**
 
 ```chali
-std::date_time::isLeapYear(year);
+isLeapYear(year);
 ```
 
 **源码**：[source/std/date_time.chl:20](../../source/std/date_time.chl#L20)。
@@ -209,7 +209,7 @@ int64 daysInMonth(int64 year, int64 month);
 **调用形式**
 
 ```chali
-std::date_time::daysInMonth(year, month);
+daysInMonth(year, month);
 ```
 
 **源码**：[source/std/date_time.chl:22](../../source/std/date_time.chl#L22)。
@@ -223,7 +223,7 @@ std::date_time::daysInMonth(year, month);
 **声明**
 
 ```chali
-Result<int64,std::core::Error> toUnixSeconds(DateTime value);
+Result<int64,Error> toUnixSeconds(DateTime value);
 ```
 
 **行为**
@@ -238,7 +238,7 @@ Result<int64,std::core::Error> toUnixSeconds(DateTime value);
 
 **返回值**
 
-`Result<int64,std::core::Error>`。将 UTC 日期转换为 Unix 秒；不依赖宿主时区。
+`Result<int64,Error>`。将 UTC 日期转换为 Unix 秒；不依赖宿主时区。
 
 **错误与边界**
 
@@ -247,7 +247,7 @@ Result<int64,std::core::Error> toUnixSeconds(DateTime value);
 **调用形式**
 
 ```chali
-std::date_time::toUnixSeconds(value);
+toUnixSeconds(value);
 ```
 
 **源码**：[source/std/date_time.chl:29](../../source/std/date_time.chl#L29)。
@@ -261,7 +261,7 @@ std::date_time::toUnixSeconds(value);
 **声明**
 
 ```chali
-Result<DateTime,std::core::Error> fromUnixSeconds(int64 seconds);
+Result<DateTime,Error> fromUnixSeconds(int64 seconds);
 ```
 
 **行为**
@@ -276,7 +276,7 @@ Result<DateTime,std::core::Error> fromUnixSeconds(int64 seconds);
 
 **返回值**
 
-`Result<DateTime,std::core::Error>`。将 Unix 秒转换为 UTC 日期，负数表示 1970 年之前。
+`Result<DateTime,Error>`。将 Unix 秒转换为 UTC 日期，负数表示 1970 年之前。
 
 **错误与边界**
 
@@ -285,7 +285,7 @@ Result<DateTime,std::core::Error> fromUnixSeconds(int64 seconds);
 **调用形式**
 
 ```chali
-std::date_time::fromUnixSeconds(seconds);
+fromUnixSeconds(seconds);
 ```
 
 **源码**：[source/std/date_time.chl:44](../../source/std/date_time.chl#L44)。
@@ -324,7 +324,7 @@ String dateDigits(int64 value, int64 width);
 **调用形式**
 
 ```chali
-std::date_time::dateDigits(value, width);
+dateDigits(value, width);
 ```
 
 **源码**：[source/std/date_time.chl:58](../../source/std/date_time.chl#L58)。
@@ -338,7 +338,7 @@ std::date_time::dateDigits(value, width);
 **声明**
 
 ```chali
-Result<String,std::core::Error> formatUtc(DateTime value);
+Result<String,Error> formatUtc(DateTime value);
 ```
 
 **行为**
@@ -353,7 +353,7 @@ Result<String,std::core::Error> formatUtc(DateTime value);
 
 **返回值**
 
-`Result<String,std::core::Error>`。输出严格的 YYYY-MM-DDTHH:MM:SSZ 文本。
+`Result<String,Error>`。输出严格的 YYYY-MM-DDTHH:MM:SSZ 文本。
 
 **错误与边界**
 
@@ -362,7 +362,7 @@ Result<String,std::core::Error> formatUtc(DateTime value);
 **调用形式**
 
 ```chali
-std::date_time::formatUtc(value);
+formatUtc(value);
 ```
 
 **源码**：[source/std/date_time.chl:70](../../source/std/date_time.chl#L70)。
@@ -376,7 +376,7 @@ std::date_time::formatUtc(value);
 **声明**
 
 ```chali
-Result<DateTime,std::core::Error> parseUtc(String text);
+Result<DateTime,Error> parseUtc(String text);
 ```
 
 **行为**
@@ -391,7 +391,7 @@ Result<DateTime,std::core::Error> parseUtc(String text);
 
 **返回值**
 
-`Result<DateTime,std::core::Error>`。解析 UTC ISO 8601 秒精度文本，不接受时区偏移或隐式本地时区。
+`Result<DateTime,Error>`。解析 UTC ISO 8601 秒精度文本，不接受时区偏移或隐式本地时区。
 
 **错误与边界**
 
@@ -400,7 +400,7 @@ Result<DateTime,std::core::Error> parseUtc(String text);
 **调用形式**
 
 ```chali
-std::date_time::parseUtc(text);
+parseUtc(text);
 ```
 
 **源码**：[source/std/date_time.chl:76](../../source/std/date_time.chl#L76)。
@@ -414,7 +414,7 @@ std::date_time::parseUtc(text);
 **声明**
 
 ```chali
-Result<DateTime,std::core::Error> addSeconds(DateTime value, int64 delta);
+Result<DateTime,Error> addSeconds(DateTime value, int64 delta);
 ```
 
 **行为**
@@ -430,7 +430,7 @@ Result<DateTime,std::core::Error> addSeconds(DateTime value, int64 delta);
 
 **返回值**
 
-`Result<DateTime,std::core::Error>`。在 UTC 时间上增加秒数，越界返回错误，不发生整数回绕。
+`Result<DateTime,Error>`。在 UTC 时间上增加秒数，越界返回错误，不发生整数回绕。
 
 **错误与边界**
 
@@ -439,7 +439,7 @@ Result<DateTime,std::core::Error> addSeconds(DateTime value, int64 delta);
 **调用形式**
 
 ```chali
-std::date_time::addSeconds(value, delta);
+addSeconds(value, delta);
 ```
 
 **源码**：[source/std/date_time.chl:102](../../source/std/date_time.chl#L102)。
@@ -453,7 +453,7 @@ std::date_time::addSeconds(value, delta);
 **声明**
 
 ```chali
-Result<DateTime,std::core::Error> addDays(DateTime value, int64 days);
+Result<DateTime,Error> addDays(DateTime value, int64 days);
 ```
 
 **行为**
@@ -469,7 +469,7 @@ Result<DateTime,std::core::Error> addDays(DateTime value, int64 days);
 
 **返回值**
 
-`Result<DateTime,std::core::Error>`。增加固定 86400 秒的一天，适用于 UTC。
+`Result<DateTime,Error>`。增加固定 86400 秒的一天，适用于 UTC。
 
 **错误与边界**
 
@@ -478,7 +478,7 @@ Result<DateTime,std::core::Error> addDays(DateTime value, int64 days);
 **调用形式**
 
 ```chali
-std::date_time::addDays(value, days);
+addDays(value, days);
 ```
 
 **源码**：[source/std/date_time.chl:108](../../source/std/date_time.chl#L108)。
@@ -492,7 +492,7 @@ std::date_time::addDays(value, days);
 **声明**
 
 ```chali
-Result<DateTime,std::core::Error> nowUtc();
+Result<DateTime,Error> nowUtc();
 ```
 
 **行为**
@@ -505,7 +505,7 @@ Result<DateTime,std::core::Error> nowUtc();
 
 **返回值**
 
-`Result<DateTime,std::core::Error>`。读取宿主当前 UTC 时间；无时钟宿主应报告不可用。
+`Result<DateTime,Error>`。读取宿主当前 UTC 时间；无时钟宿主应报告不可用。
 
 **错误与边界**
 
@@ -514,7 +514,7 @@ Result<DateTime,std::core::Error> nowUtc();
 **调用形式**
 
 ```chali
-std::date_time::nowUtc();
+nowUtc();
 ```
 
 **源码**：[source/std/date_time.chl:115](../../source/std/date_time.chl#L115)。
@@ -589,7 +589,7 @@ Result<DateTimeOffset,Error> atOffset(DateTime utc, int64 offset_minutes);
 **调用形式**
 
 ```chali
-std::date_time::atOffset(utc, offset_minutes);
+atOffset(utc, offset_minutes);
 ```
 
 **源码**：[source/std/date_time.chl:139](../../source/std/date_time.chl#L139)。
@@ -627,7 +627,7 @@ Result<String,Error> formatOffset(DateTimeOffset value);
 **调用形式**
 
 ```chali
-std::date_time::formatOffset(value);
+formatOffset(value);
 ```
 
 **源码**：[source/std/date_time.chl:150](../../source/std/date_time.chl#L150)。
@@ -665,7 +665,7 @@ Result<DateTimeOffset,Error> parseOffset(String text);
 **调用形式**
 
 ```chali
-std::date_time::parseOffset(text);
+parseOffset(text);
 ```
 
 **源码**：[source/std/date_time.chl:161](../../source/std/date_time.chl#L161)。

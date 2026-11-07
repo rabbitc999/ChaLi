@@ -7,20 +7,20 @@ struct Headers {
     String headers;
     /** @brief 按忽略大小写的名字读取头部值。 */
     String header(String name) {
-        List<String> lines = std::text::Text::split(self.headers, "\r\n");
-        String wanted = std::text::Text::toLower(name);
+        List<String> lines = Text::split(self.headers, "\r\n");
+        String wanted = Text::toLower(name);
         {
             int64 i = 0;
             while (i < len(lines)) {
 
             String line = "";
             line = line + lines[i];
-            int64 colon = std::text::Text::find(line, ":");
+            int64 colon = Text::find(line, ":");
             if (colon < 0) { { i = i + 1; continue; } }
-            String key = std::text::Text::toLower(line[0:colon]);
+            String key = Text::toLower(line[0:colon]);
             if (key == wanted) {
                 String value = line[(colon + 1):];
-                return std::text::Text::trim(value);
+                return Text::trim(value);
             }
         
                 i = i + 1;
@@ -32,7 +32,7 @@ struct Headers {
 void main() {
     /* VM 必须注册网络与 SQL 宿主接口；关闭未打开的连接不需要外部服务。 */
     assert(std::sql::__sqlClose((int32)0) == (int32)-1);
-    std::net::TcpSocket unopened;
+    TcpSocket unopened;
     unopened.close();
     assert(!unopened.isOpen());
     Headers r;
@@ -40,7 +40,7 @@ void main() {
     println("{} {}", r.header("A"), r.header("B"));
     println("{} {}", r.header("C"), r.header("A"));
     assert(r.headers == "A: alpha\r\nB: beta\r\nC: gamma\r\n");
-    std::net::HttpResponse response;
+    HttpResponse response;
     response.headers = "Content-Length: 5\r\ninvalid\r\nContent-Type: text/plain\r\n";
     println("{} {}", response.header("Content-Length"), response.header("content-type"));
     {
@@ -62,7 +62,7 @@ void main() {
         String first = "";
         String guard = "";
         if (i > 0) { guard = "kept"; }
-        println("{}", std::text::Text::toLower("VALUE"));
+        println("{}", Text::toLower("VALUE"));
         if (i > 0) { assert(guard == "kept"); }
     
             i = i + 1;

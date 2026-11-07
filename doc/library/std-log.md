@@ -104,7 +104,7 @@ String formatRecord(LogLevel level, String message, Map<String,String> fields);
 **调用形式**
 
 ```chali
-std::log::formatRecord(level, message, fields);
+formatRecord(level, message, fields);
 ```
 
 **源码**：[source/std/log.chl:37](../../source/std/log.chl#L37)。
@@ -142,7 +142,7 @@ void writeRecord(LogLevel level, String message, Map<String,String> fields);
 **调用形式**
 
 ```chali
-std::log::writeRecord(level, message, fields);
+writeRecord(level, message, fields);
 ```
 
 **源码**：[source/std/log.chl:47](../../source/std/log.chl#L47)。

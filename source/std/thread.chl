@@ -43,13 +43,13 @@ void send(Thread thread, String message);
 String receive();
 Thread current();
 Thread parent();
-std::concurrency::Receive<String> receiveFor(int64 millis) {
-    std::concurrency::Receive<String> result;
+Receive<String> receiveFor(int64 millis) {
+    Receive<String> result;
     result.status = std::concurrency::__poll(0, millis);
     if (result.isReady()) { result.value = std::concurrency::__channelTake<String>(); }
     return result;
 }
-std::concurrency::Receive<String> tryReceive() { return receiveFor(0); }
+Receive<String> tryReceive() { return receiveFor(0); }
 void closeInbox() { std::concurrency::__channelClose(0); }
 
 /* 线程组拥有任务的等待责任；离开作用域请求取消并回收全部任务。 */
@@ -60,22 +60,22 @@ struct ThreadGroup : Drop {
     String error;
     static ThreadGroup create() { }
     Thread start(void fn() task) {
-        if (self.completed) { std::core::panic("线程组已结束"); }
-        Thread handle = std::thread::create(task);
+        if (self.completed) { panic("线程组已结束"); }
+        Thread handle = create(task);
         self.tasks.push(handle);
         return handle;
     }
     void add(Thread task) {
-        if (self.completed) { std::core::panic("线程组已结束"); }
+        if (self.completed) { panic("线程组已结束"); }
         Thread root;
-        if (task == root || task == current()) { std::core::panic("线程组不能接管自身或主线程"); }
-        for (int64 i in std::core::range(0, self.tasks.len())) {
-            if (self.tasks.at(i) == task) { std::core::panic("线程组不能重复登记任务"); }
+        if (task == root || task == current()) { panic("线程组不能接管自身或主线程"); }
+        for (int64 i in range(0, self.tasks.len())) {
+            if (self.tasks.at(i) == task) { panic("线程组不能重复登记任务"); }
         }
         self.tasks.push(task);
     }
     void cancelAll() {
-        for (int64 i in std::core::range(0, self.tasks.len())) { requestStop(self.tasks.at(i)); }
+        for (int64 i in range(0, self.tasks.len())) { requestStop(self.tasks.at(i)); }
     }
     bool waitAll() {
         if (self.completed) { return self.successful; }
@@ -83,7 +83,7 @@ struct ThreadGroup : Drop {
         bool failure = false;
         while (running) {
             running = false;
-            for (int64 i in std::core::range(0, self.tasks.len())) {
+            for (int64 i in range(0, self.tasks.len())) {
                 int64 value = state(self.tasks.at(i));
                 if (value == RUNNING) { running = true; }
                 if (value == FAILED && !failure) { failure = true; self.cancelAll(); }
@@ -91,7 +91,7 @@ struct ThreadGroup : Drop {
             if (running) { sleepFor(1); }
         }
         self.successful = true;
-        for (int64 i in std::core::range(0, self.tasks.len())) {
+        for (int64 i in range(0, self.tasks.len())) {
             ThreadResult result = waitResult(self.tasks.at(i));
             if (result.status != std::concurrency::READY) { self.successful = false; }
             if (result.status == std::concurrency::FAILED && self.error == "") { self.error = result.error; }
@@ -105,9 +105,9 @@ struct ThreadGroup : Drop {
 };
 
 /* 工作线程只接受静态任务，任务函数与参数都沿用统一传值协议。 */
-inline void __poolWorker(std::concurrency::Channel<void fn()> jobs) {
+inline void __poolWorker(Channel<void fn()> jobs) {
     while (true) {
-        std::concurrency::Receive<void fn()> next = jobs.receive();
+        Receive<void fn()> next = jobs.receive();
         if (!next.isReady()) { return; }
         next.value();
     }
@@ -115,27 +115,27 @@ inline void __poolWorker(std::concurrency::Channel<void fn()> jobs) {
 
 /* 固定工作线程池：有界队列；closeAndWait 先排空再回收，cancelAll 丢弃未开始任务。 */
 struct ThreadPool : Drop {
-    std::concurrency::Channel<void fn()> jobs;
+    Channel<void fn()> jobs;
     ThreadGroup group;
     bool closed;
     static ThreadPool create(int64 workers, int64 capacity) {
-        if (workers < 1 || workers > 1024) { std::core::panic("线程池工作线程数须为 1..1024"); }
-        self.jobs = std::concurrency::Channel<void fn()>::create(capacity);
-        for (int64 i in std::core::range(0, workers)) { self.group.add(std::thread::createWith<std::concurrency::Channel<void fn()>>(__poolWorker, self.jobs)); }
+        if (workers < 1 || workers > 1024) { panic("线程池工作线程数须为 1..1024"); }
+        self.jobs = Channel<void fn()>::create(capacity);
+        for (int64 i in range(0, workers)) { self.group.add(createWith<Channel<void fn()>>(__poolWorker, self.jobs)); }
     }
     int64 submitFor(void fn() task, int64 millis) {
         if (self.closed) { return std::concurrency::CLOSED; }
-        if (millis < -1) { std::core::panic("线程池提交超时不能小于 -1"); }
-        int64 started = std::clock::nowMs();
+        if (millis < -1) { panic("线程池提交超时不能小于 -1"); }
+        int64 started = nowMs();
         while (true) {
-            for (int64 i in std::core::range(0, self.group.tasks.len())) {
+            for (int64 i in range(0, self.group.tasks.len())) {
                 int64 status = state(self.group.tasks.at(i));
                 if (status != RUNNING) { self.cancelAll(); return std::concurrency::FAILED; }
             }
             int64 status = self.jobs.trySend(task);
             if (status != std::concurrency::FULL) { return status; }
             if (millis == 0) { return status; }
-            if (millis > 0 && std::clock::nowMs() - started >= millis) { return std::concurrency::TIMEOUT; }
+            if (millis > 0 && nowMs() - started >= millis) { return std::concurrency::TIMEOUT; }
             sleepFor(1);
         }
         return std::concurrency::CLOSED;

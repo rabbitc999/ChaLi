@@ -598,7 +598,7 @@ T max<T>(T... values)
 int64 clamp(int64 value, int64 low, int64 high)
 {
     if (!(low <= high)) {
-        std::core::panic("std::math::clamp 的 low 不能大于 high");
+        panic("std::math::clamp 的 low 不能大于 high");
         return value;
     }
     if (value < low) { return low; }
@@ -610,7 +610,7 @@ int64 clamp(int64 value, int64 low, int64 high)
 float64 clamp(float64 value, float64 low, float64 high)
 {
     if (!(low <= high)) {
-        std::core::panic("std::math::clamp 的 low 不能大于 high");
+        panic("std::math::clamp 的 low 不能大于 high");
         return value;
     }
     if (value < low) { return low; }

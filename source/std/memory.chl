@@ -9,7 +9,7 @@ struct Span<T>: Iterator<T mut&>, Index<T, int64> {
     int64 length;
 
     static Span<T> from(T mut& data, int64 length) {
-        std::core::assert(length >= 0);
+        assert(length >= 0);
         Span<T> result;
         result.data = &data;
         result.length = length;
@@ -17,7 +17,7 @@ struct Span<T>: Iterator<T mut&>, Index<T, int64> {
     }
 
     T index(int64 key) {
-        std::core::assert(key >= 0 && key < self.length);
+        assert(key >= 0 && key < self.length);
         return std::core::index(self.data, key);
     }
     Option<T mut&> iterator(int64 index) {

@@ -132,13 +132,13 @@ struct RingBuffer<T>: Iterator<T>, Drop {
 };
 
 struct FixedVector<T>: Iterator<T>, Index<T, int64>, Drop {
-    std::core::List<T> values;
+    List<T> values;
     int64 capacity;
 
     static FixedVector<T> withCapacity(int64 capacity) {
-        std::core::assert(capacity >= 0);
+        assert(capacity >= 0);
         FixedVector<T> result;
-        std::core::List<T> values;
+        List<T> values;
         result.values = values.copy();
         result.capacity = capacity;
         return result;

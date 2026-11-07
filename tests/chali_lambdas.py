@@ -54,7 +54,7 @@ def main():
         result = execute(args.vm.resolve(), 'run', prefix.with_suffix('.svmb'), '--data', prefix.with_suffix('.data.bin'), '--layout', prefix.with_suffix('.layout'))
         assert result.returncode == 0 and result.stdout.partition('\n\n;')[0] == (ROOT / 'example/expected/lambda_captures.txt').read_text(encoding='utf-8').rstrip('\n') and (not result.stderr), result
         assert '没释放' not in result.stdout, result
-    (WORK / 'callbacks_module.chl').write_text('module callbacks_module;\nimport std::iter;\nint64 offset=5; int64 adjust(int64 value){return value+offset;}\nint64 compute(){return std::iter::range(1,4).map(fn(value){adjust(value)}).fold(0,fn(acc,value){acc+value});}\n', encoding='utf-8')
+    (WORK / 'callbacks_module.chl').write_text('module callbacks_module;\nimport std::iter;\nint64 offset=5; int64 adjust(int64 value){return value+offset;}\nint64 compute(){return std::iter::intIter(1,4).map(fn(value){adjust(value)}).fold(0,fn(acc,value){acc+value});}\n', encoding='utf-8')
     source = WORK / 'module_main.chl'
     source.write_text('import callbacks_module;\nvoid main(){std::core::println("{}",callbacks_module::compute());return;}\n', encoding='utf-8')
     result = execute(compiler, 'run', source, '--out', WORK / 'module-interpret')

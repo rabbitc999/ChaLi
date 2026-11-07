@@ -144,6 +144,8 @@ Memory::String StandardCallName(const MNode &callee)
     return {};
 }
 
+bool CanUseImportedAlgorithm(const MNode &callee);
+
 /**
  * @brief `std::algorithms::name<T>` 经泛型预处理后会成为 `name__T`；这里还原公开名。
  * @param callee 被调用函数的名称或表达式。
@@ -151,8 +153,9 @@ Memory::String StandardCallName(const MNode &callee)
  */
 Memory::String AlgorithmCallName(const MNode &callee)
 {
-    if (callee.kind != MNode::EnumCtor || callee.s != "std::algorithms") return {};
-    Memory::String name = callee.s2;
+    const bool qualified = callee.kind == MNode::EnumCtor && callee.s == "std::algorithms";
+    if (!qualified && !CanUseImportedAlgorithm(callee)) return {};
+    Memory::String name = qualified ? callee.s2 : callee.s;
     const std::size_t specialization = name.find("__");
     if (specialization != Memory::String::npos) name.resize(specialization);
     static const Memory::Set<Memory::String> names{

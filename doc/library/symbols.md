@@ -89,33 +89,33 @@
 | [std::binary::BinaryReader::drop](std-binary.md#api-0) | `void drop()` |
 | [std::binary::BinaryReader::fromArray](std-binary.md#api-3) | `static BinaryReader fromArray(uint8 bytes[])` |
 | [std::binary::BinaryReader::fromArray](std-binary.md#api-2) | `static BinaryReader fromArray(uint8 const& bytes, int64 count)` |
-| [std::binary::BinaryReader::fromBytes](std-binary.md#api-1) | `static BinaryReader fromBytes(std::core::List<uint8> bytes)` |
+| [std::binary::BinaryReader::fromBytes](std-binary.md#api-1) | `static BinaryReader fromBytes(List<uint8> bytes)` |
 | [std::binary::BinaryReader::position](std-binary.md#api-4) | `int64 position()` |
 | [std::binary::BinaryReader::readBool](std-binary.md#api-30) | `bool readBool()` |
-| [std::binary::BinaryReader::readBoolArray](std-binary.md#api-31) | `std::core::List<bool> readBoolArray(int64 count)` |
-| [std::binary::BinaryReader::readBytes](std-binary.md#api-32) | `std::core::List<uint8> readBytes(int64 count)` |
+| [std::binary::BinaryReader::readBoolArray](std-binary.md#api-31) | `List<bool> readBoolArray(int64 count)` |
+| [std::binary::BinaryReader::readBytes](std-binary.md#api-32) | `List<uint8> readBytes(int64 count)` |
 | [std::binary::BinaryReader::readFloat32](std-binary.md#api-26) | `float32 readFloat32()` |
-| [std::binary::BinaryReader::readFloat32Array](std-binary.md#api-27) | `std::core::List<float32> readFloat32Array(int64 count)` |
+| [std::binary::BinaryReader::readFloat32Array](std-binary.md#api-27) | `List<float32> readFloat32Array(int64 count)` |
 | [std::binary::BinaryReader::readFloat64](std-binary.md#api-28) | `float64 readFloat64()` |
-| [std::binary::BinaryReader::readFloat64Array](std-binary.md#api-29) | `std::core::List<float64> readFloat64Array(int64 count)` |
+| [std::binary::BinaryReader::readFloat64Array](std-binary.md#api-29) | `List<float64> readFloat64Array(int64 count)` |
 | [std::binary::BinaryReader::readInt16](std-binary.md#api-14) | `int16 readInt16()` |
-| [std::binary::BinaryReader::readInt16Array](std-binary.md#api-15) | `std::core::List<int16> readInt16Array(int64 count)` |
+| [std::binary::BinaryReader::readInt16Array](std-binary.md#api-15) | `List<int16> readInt16Array(int64 count)` |
 | [std::binary::BinaryReader::readInt32](std-binary.md#api-18) | `int32 readInt32()` |
-| [std::binary::BinaryReader::readInt32Array](std-binary.md#api-19) | `std::core::List<int32> readInt32Array(int64 count)` |
+| [std::binary::BinaryReader::readInt32Array](std-binary.md#api-19) | `List<int32> readInt32Array(int64 count)` |
 | [std::binary::BinaryReader::readInt64](std-binary.md#api-22) | `int64 readInt64()` |
-| [std::binary::BinaryReader::readInt64Array](std-binary.md#api-23) | `std::core::List<int64> readInt64Array(int64 count)` |
+| [std::binary::BinaryReader::readInt64Array](std-binary.md#api-23) | `List<int64> readInt64Array(int64 count)` |
 | [std::binary::BinaryReader::readInt8](std-binary.md#api-10) | `int8 readInt8()` |
-| [std::binary::BinaryReader::readInt8Array](std-binary.md#api-11) | `std::core::List<int8> readInt8Array(int64 count)` |
-| [std::binary::BinaryReader::readString](std-binary.md#api-33) | `std::core::String readString(int64 length)` |
-| [std::binary::BinaryReader::readStringArray](std-binary.md#api-34) | `std::core::List<std::core::String> readStringArray(int64 count, int64 width)` |
+| [std::binary::BinaryReader::readInt8Array](std-binary.md#api-11) | `List<int8> readInt8Array(int64 count)` |
+| [std::binary::BinaryReader::readString](std-binary.md#api-33) | `String readString(int64 length)` |
+| [std::binary::BinaryReader::readStringArray](std-binary.md#api-34) | `List<String> readStringArray(int64 count, int64 width)` |
 | [std::binary::BinaryReader::readUint16](std-binary.md#api-16) | `uint16 readUint16()` |
-| [std::binary::BinaryReader::readUint16Array](std-binary.md#api-17) | `std::core::List<uint16> readUint16Array(int64 count)` |
+| [std::binary::BinaryReader::readUint16Array](std-binary.md#api-17) | `List<uint16> readUint16Array(int64 count)` |
 | [std::binary::BinaryReader::readUint32](std-binary.md#api-20) | `uint32 readUint32()` |
-| [std::binary::BinaryReader::readUint32Array](std-binary.md#api-21) | `std::core::List<uint32> readUint32Array(int64 count)` |
+| [std::binary::BinaryReader::readUint32Array](std-binary.md#api-21) | `List<uint32> readUint32Array(int64 count)` |
 | [std::binary::BinaryReader::readUint64](std-binary.md#api-24) | `uint64 readUint64()` |
-| [std::binary::BinaryReader::readUint64Array](std-binary.md#api-25) | `std::core::List<uint64> readUint64Array(int64 count)` |
+| [std::binary::BinaryReader::readUint64Array](std-binary.md#api-25) | `List<uint64> readUint64Array(int64 count)` |
 | [std::binary::BinaryReader::readUint8](std-binary.md#api-12) | `uint8 readUint8()` |
-| [std::binary::BinaryReader::readUint8Array](std-binary.md#api-13) | `std::core::List<uint8> readUint8Array(int64 count)` |
+| [std::binary::BinaryReader::readUint8Array](std-binary.md#api-13) | `List<uint8> readUint8Array(int64 count)` |
 | [std::binary::BinaryReader::remaining](std-binary.md#api-5) | `int64 remaining()` |
 | [std::binary::BinaryReader::seek](std-binary.md#api-8) | `bool seek(int64 position)` |
 | [std::binary::BinaryReader::setBigEndian](std-binary.md#api-7) | `void setBigEndian(bool enabled)` |
@@ -172,11 +172,11 @@
 | [std::cas::Expr::trunc](std-cas.md#api-47) | `Expr trunc()` |
 | [std::cas::parse](std-cas.md#api-49) | `Expr parse(String text)` |
 | [std::cli::CliArguments::get](std-cli.md#api-1) | `Option<String> get(String name)` |
-| [std::cli::CliArguments::getInt](std-cli.md#api-2) | `Result<int64,std::core::Error> getInt(String name)` |
+| [std::cli::CliArguments::getInt](std-cli.md#api-2) | `Result<int64,Error> getInt(String name)` |
 | [std::cli::CliError::toString](std-cli.md#api-0) | `String toString()` |
 | [std::cli::CliParser::add](std-cli.md#api-5) | `bool add(CliOption option)` |
 | [std::cli::CliParser::help](std-cli.md#api-6) | `String help()` |
-| [std::cli::CliParser::parse](std-cli.md#api-7) | `Result<CliArguments,std::core::Error> parse(List<String> arguments)` |
+| [std::cli::CliParser::parse](std-cli.md#api-7) | `Result<CliArguments,Error> parse(List<String> arguments)` |
 | [std::cli::cliError](std-cli.md#api-3) | `CliError cliError(String argument, String message)` |
 | [std::cli::cliTail](std-cli.md#api-4) | `String cliTail(String text,int64 start)` |
 | [std::clock::nowMs](std-clock.md#api-0) | `int64 nowMs()` |
@@ -249,8 +249,8 @@
 | [std::complex::Complex::normSquared](std-complex.md#api-2) | `T normSquared()` |
 | [std::complex::Complex::of](std-complex.md#api-0) | `static Complex<T> of(T real, T imaginary)` |
 | [std::complex::Complex::scale](std-complex.md#api-3) | `Complex<T> scale(T factor)` |
-| [std::compress::compress](std-compress.md#api-0) | `std::core::List<uint8> compress(std::core::String text)` |
-| [std::compress::decompress](std-compress.md#api-1) | `std::core::String decompress(std::core::List<uint8> bytes)` |
+| [std::compress::compress](std-compress.md#api-0) | `List<uint8> compress(String text)` |
+| [std::compress::decompress](std-compress.md#api-1) | `String decompress(List<uint8> bytes)` |
 | [std::concurrency::AtomicInt64::create](std-concurrency.md#api-6) | `static AtomicInt64 create(int64 value)` |
 | [std::concurrency::AtomicInt64::fetchAdd](std-concurrency.md#api-9) | `int64 fetchAdd(int64 delta)` |
 | [std::concurrency::AtomicInt64::get](std-concurrency.md#api-7) | `int64 get()` |
@@ -332,7 +332,7 @@
 | [std::core::NotEqual::leftNotEqual](std-core.md#api-238) | `R leftNotEqual(T value)` |
 | [std::core::Option::andThen](std-core.md#api-109) | `Option<T> andThen(Option<T> fn(T) mapper)` |
 | [std::core::Option::branch](std-core.md#api-99) | `TryBranch<T, NoneResidual> branch()` |
-| [std::core::Option::expect](std-core.md#api-107) | `T expect(std::core::String message)` |
+| [std::core::Option::expect](std-core.md#api-107) | `T expect(String message)` |
 | [std::core::Option::fromResidual](std-core.md#api-101) | `static Option<T> fromResidual(NoneResidual residual)` |
 | [std::core::Option::intoBranch](std-core.md#api-100) | `TryBranch<T, NoneResidual> intoBranch()` |
 | [std::core::Option::isNone](std-core.md#api-103) | `bool isNone()` |
@@ -356,7 +356,7 @@
 | [std::core::Result::andThen](std-core.md#api-123) | `Result<T, E> andThen(Result<T, E> fn(T) mapper)` |
 | [std::core::Result::branch](std-core.md#api-110) | `TryBranch<T, ErrorResidual<E>> branch()` |
 | [std::core::Result::error](std-core.md#api-121) | `E error()` |
-| [std::core::Result::expect](std-core.md#api-119) | `T expect(std::core::String message)` |
+| [std::core::Result::expect](std-core.md#api-119) | `T expect(String message)` |
 | [std::core::Result::fromResidual](std-core.md#api-112) | `static Result<T,E> fromResidual(ErrorResidual<E> residual)` |
 | [std::core::Result::intoBranch](std-core.md#api-111) | `TryBranch<T, ErrorResidual<E>> intoBranch()` |
 | [std::core::Result::isErr](std-core.md#api-115) | `bool isErr()` |
@@ -454,19 +454,19 @@
 | [std::core::Xor::leftBitXor](std-core.md#api-252) | `R leftBitXor(T value)` |
 | [std::core::add](std-core.md#api-220) | `R add(T left,U right)` |
 | [std::core::assert](std-core.md#api-92) | `void assert(bool condition)` |
+| [std::core::assert](std-core.md#api-93) | `void assert(bool condition, String message)` |
+| [std::core::assert](std-core.md#api-95) | `void assert(bool condition, String message, int64 line)` |
 | [std::core::assert](std-core.md#api-94) | `void assert(bool condition, int64 line)` |
-| [std::core::assert](std-core.md#api-93) | `void assert(bool condition, std::core::String message)` |
-| [std::core::assert](std-core.md#api-95) | `void assert(bool condition, std::core::String message, int64 line)` |
 | [std::core::barePointer](std-core.md#api-137) | `unsafe BarePtr<T> barePointer<T>(RawPtr<T> pointer)` |
 | [std::core::borrowAt](std-core.md#api-144) | `unsafe T mut& borrowAt<T>(RawPtr<T> pointer)` |
-| [std::core::bytesToFloat32](std-core.md#api-71) | `Option<float32> bytesToFloat32(std::core::List<uint8> bytes)` |
-| [std::core::bytesToFloat32](std-core.md#api-70) | `Option<float32> bytesToFloat32(std::core::List<uint8> bytes, bool bigEndian)` |
+| [std::core::bytesToFloat32](std-core.md#api-71) | `Option<float32> bytesToFloat32(List<uint8> bytes)` |
+| [std::core::bytesToFloat32](std-core.md#api-70) | `Option<float32> bytesToFloat32(List<uint8> bytes, bool bigEndian)` |
 | [std::core::bytesToFloat32](std-core.md#api-75) | `Option<float32> bytesToFloat32(uint8 bytes[])` |
 | [std::core::bytesToFloat32](std-core.md#api-74) | `Option<float32> bytesToFloat32(uint8 bytes[], bool bigEndian)` |
 | [std::core::bytesToFloat32](std-core.md#api-73) | `Option<float32> bytesToFloat32(uint8 const& bytes, int64 count)` |
 | [std::core::bytesToFloat32](std-core.md#api-72) | `Option<float32> bytesToFloat32(uint8 const& bytes, int64 count, bool bigEndian)` |
-| [std::core::bytesToFloat64](std-core.md#api-83) | `Option<float64> bytesToFloat64(std::core::List<uint8> bytes)` |
-| [std::core::bytesToFloat64](std-core.md#api-82) | `Option<float64> bytesToFloat64(std::core::List<uint8> bytes, bool bigEndian)` |
+| [std::core::bytesToFloat64](std-core.md#api-83) | `Option<float64> bytesToFloat64(List<uint8> bytes)` |
+| [std::core::bytesToFloat64](std-core.md#api-82) | `Option<float64> bytesToFloat64(List<uint8> bytes, bool bigEndian)` |
 | [std::core::bytesToFloat64](std-core.md#api-87) | `Option<float64> bytesToFloat64(uint8 bytes[])` |
 | [std::core::bytesToFloat64](std-core.md#api-86) | `Option<float64> bytesToFloat64(uint8 bytes[], bool bigEndian)` |
 | [std::core::bytesToFloat64](std-core.md#api-85) | `Option<float64> bytesToFloat64(uint8 const& bytes, int64 count)` |
@@ -477,18 +477,18 @@
 | [std::core::eprint](std-core.md#api-160) | `int64 eprint(String format, Any args...)` |
 | [std::core::eprintln](std-core.md#api-161) | `int64 eprintln(String format, Any args...)` |
 | [std::core::eq](std-core.md#api-214) | `bool eq(T left,T right)` |
+| [std::core::float32ToBytes](std-core.md#api-69) | `List<uint8> float32ToBytes(float32 value)` |
+| [std::core::float32ToBytes](std-core.md#api-68) | `List<uint8> float32ToBytes(float32 value, bool bigEndian)` |
 | [std::core::float32ToBytes](std-core.md#api-77) | `bool float32ToBytes(float32 value, uint8 mut& bytes, int64 count)` |
 | [std::core::float32ToBytes](std-core.md#api-76) | `bool float32ToBytes(float32 value, uint8 mut& bytes, int64 count, bool bigEndian)` |
 | [std::core::float32ToBytes](std-core.md#api-79) | `bool float32ToBytes(float32 value, uint8[] mut& bytes)` |
 | [std::core::float32ToBytes](std-core.md#api-78) | `bool float32ToBytes(float32 value, uint8[] mut& bytes, bool bigEndian)` |
-| [std::core::float32ToBytes](std-core.md#api-69) | `std::core::List<uint8> float32ToBytes(float32 value)` |
-| [std::core::float32ToBytes](std-core.md#api-68) | `std::core::List<uint8> float32ToBytes(float32 value, bool bigEndian)` |
+| [std::core::float64ToBytes](std-core.md#api-81) | `List<uint8> float64ToBytes(float64 value)` |
+| [std::core::float64ToBytes](std-core.md#api-80) | `List<uint8> float64ToBytes(float64 value, bool bigEndian)` |
 | [std::core::float64ToBytes](std-core.md#api-89) | `bool float64ToBytes(float64 value, uint8 mut& bytes, int64 count)` |
 | [std::core::float64ToBytes](std-core.md#api-88) | `bool float64ToBytes(float64 value, uint8 mut& bytes, int64 count, bool bigEndian)` |
 | [std::core::float64ToBytes](std-core.md#api-91) | `bool float64ToBytes(float64 value, uint8[] mut& bytes)` |
 | [std::core::float64ToBytes](std-core.md#api-90) | `bool float64ToBytes(float64 value, uint8[] mut& bytes, bool bigEndian)` |
-| [std::core::float64ToBytes](std-core.md#api-81) | `std::core::List<uint8> float64ToBytes(float64 value)` |
-| [std::core::float64ToBytes](std-core.md#api-80) | `std::core::List<uint8> float64ToBytes(float64 value, bool bigEndian)` |
 | [std::core::format](std-core.md#api-162) | `String format(String format, Any args...)` |
 | [std::core::ge](std-core.md#api-219) | `bool ge(T left,T right)` |
 | [std::core::gt](std-core.md#api-218) | `bool gt(T left,T right)` |
@@ -546,27 +546,27 @@
 | [std::crypto::verifyEd25519](std-crypto.md#api-3) | `bool verifyEd25519(String input, String public_key, String signature)` |
 | [std::csv::CsvError::toString](std-csv.md#api-0) | `String toString()` |
 | [std::csv::csvError](std-csv.md#api-1) | `CsvError csvError(int64 line, int64 column, String message)` |
-| [std::csv::parseCsv](std-csv.md#api-2) | `Result<List<List<String>>,std::core::Error> parseCsv(String text, char delimiter=',')` |
-| [std::csv::writeCsv](std-csv.md#api-3) | `Result<String,std::core::Error> writeCsv(List<List<String>> rows, char delimiter=',')` |
+| [std::csv::parseCsv](std-csv.md#api-2) | `Result<List<List<String>>,Error> parseCsv(String text, char delimiter=',')` |
+| [std::csv::writeCsv](std-csv.md#api-3) | `Result<String,Error> writeCsv(List<List<String>> rows, char delimiter=',')` |
 | [std::date_time::DateTimeError::toString](std-date_time.md#api-0) | `String toString()` |
 | [std::date_time::DateTimeOffset::utc](std-date_time.md#api-11) | `Result<DateTime,Error> utc()` |
-| [std::date_time::addDays](std-date_time.md#api-9) | `Result<DateTime,std::core::Error> addDays(DateTime value, int64 days)` |
-| [std::date_time::addSeconds](std-date_time.md#api-8) | `Result<DateTime,std::core::Error> addSeconds(DateTime value, int64 delta)` |
+| [std::date_time::addDays](std-date_time.md#api-9) | `Result<DateTime,Error> addDays(DateTime value, int64 days)` |
+| [std::date_time::addSeconds](std-date_time.md#api-8) | `Result<DateTime,Error> addSeconds(DateTime value, int64 delta)` |
 | [std::date_time::atOffset](std-date_time.md#api-12) | `Result<DateTimeOffset,Error> atOffset(DateTime utc, int64 offset_minutes)` |
 | [std::date_time::dateDigits](std-date_time.md#api-5) | `String dateDigits(int64 value, int64 width)` |
 | [std::date_time::daysInMonth](std-date_time.md#api-2) | `int64 daysInMonth(int64 year, int64 month)` |
 | [std::date_time::formatOffset](std-date_time.md#api-13) | `Result<String,Error> formatOffset(DateTimeOffset value)` |
-| [std::date_time::formatUtc](std-date_time.md#api-6) | `Result<String,std::core::Error> formatUtc(DateTime value)` |
-| [std::date_time::fromUnixSeconds](std-date_time.md#api-4) | `Result<DateTime,std::core::Error> fromUnixSeconds(int64 seconds)` |
+| [std::date_time::formatUtc](std-date_time.md#api-6) | `Result<String,Error> formatUtc(DateTime value)` |
+| [std::date_time::fromUnixSeconds](std-date_time.md#api-4) | `Result<DateTime,Error> fromUnixSeconds(int64 seconds)` |
 | [std::date_time::isLeapYear](std-date_time.md#api-1) | `bool isLeapYear(int64 year)` |
-| [std::date_time::nowUtc](std-date_time.md#api-10) | `Result<DateTime,std::core::Error> nowUtc()` |
+| [std::date_time::nowUtc](std-date_time.md#api-10) | `Result<DateTime,Error> nowUtc()` |
 | [std::date_time::parseOffset](std-date_time.md#api-14) | `Result<DateTimeOffset,Error> parseOffset(String text)` |
-| [std::date_time::parseUtc](std-date_time.md#api-7) | `Result<DateTime,std::core::Error> parseUtc(String text)` |
-| [std::date_time::toUnixSeconds](std-date_time.md#api-3) | `Result<int64,std::core::Error> toUnixSeconds(DateTime value)` |
+| [std::date_time::parseUtc](std-date_time.md#api-7) | `Result<DateTime,Error> parseUtc(String text)` |
+| [std::date_time::toUnixSeconds](std-date_time.md#api-3) | `Result<int64,Error> toUnixSeconds(DateTime value)` |
 | [std::encoding::EncodingError::toString](std-encoding.md#api-0) | `String toString()` |
-| [std::encoding::decodeBase64](std-encoding.md#api-6) | `Result<List<uint8>,std::core::Error> decodeBase64(String text, bool url=false)` |
-| [std::encoding::decodeBase64Url](std-encoding.md#api-7) | `Result<List<uint8>,std::core::Error> decodeBase64Url(String text)` |
-| [std::encoding::decodeHex](std-encoding.md#api-3) | `Result<List<uint8>,std::core::Error> decodeHex(String text)` |
+| [std::encoding::decodeBase64](std-encoding.md#api-6) | `Result<List<uint8>,Error> decodeBase64(String text, bool url=false)` |
+| [std::encoding::decodeBase64Url](std-encoding.md#api-7) | `Result<List<uint8>,Error> decodeBase64Url(String text)` |
+| [std::encoding::decodeHex](std-encoding.md#api-3) | `Result<List<uint8>,Error> decodeHex(String text)` |
 | [std::encoding::encodeBase64](std-encoding.md#api-4) | `String encodeBase64(List<uint8> bytes, bool url=false, bool padding=true)` |
 | [std::encoding::encodeBase64Url](std-encoding.md#api-5) | `String encodeBase64Url(List<uint8> bytes, bool padding=false)` |
 | [std::encoding::encodeHex](std-encoding.md#api-1) | `String encodeHex(List<uint8> bytes, bool uppercase=false)` |
@@ -580,9 +580,9 @@
 | [std::event::Timer::stop](std-event.md#api-11) | `void stop()` |
 | [std::event::close](std-event.md#api-4) | `void close()` |
 | [std::event::post](std-event.md#api-3) | `int64 post(int64 tag, int64 source)` |
-| [std::event::receive](std-event.md#api-1) | `std::concurrency::Receive<Event> receive()` |
-| [std::event::receiveFor](std-event.md#api-0) | `std::concurrency::Receive<Event> receiveFor(int64 millis)` |
-| [std::event::tryReceive](std-event.md#api-2) | `std::concurrency::Receive<Event> tryReceive()` |
+| [std::event::receive](std-event.md#api-1) | `Receive<Event> receive()` |
+| [std::event::receiveFor](std-event.md#api-0) | `Receive<Event> receiveFor(int64 millis)` |
+| [std::event::tryReceive](std-event.md#api-2) | `Receive<Event> tryReceive()` |
 | [std::graph::Graph::addEdge](std-graph.md#api-15) | `void addEdge(int64 from,int64 to,int64 weight)` |
 | [std::graph::Graph::bfs](std-graph.md#api-16) | `List<int64> bfs(int64 start)` |
 | [std::graph::Graph::connectedComponents](std-graph.md#api-18) | `int64 connectedComponents()` |
@@ -813,73 +813,73 @@
 | [std::gui::valueBox](std-gui.md#api-124) | `Widget valueBox(String text)` |
 | [std::gui::width](std-gui.md#api-36) | `int64 width()` |
 | [std::gui::windowBox](std-gui.md#api-108) | `Widget windowBox(String text)` |
-| [std::image::Image::binarize](std-image.md#api-23) | `static Result<List<uint8>, std::core::Error> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold)` |
-| [std::image::Image::convolve](std-image.md#api-14) | `Result<Image, std::core::Error> convolve(List<float64> kernel, int64 kw, int64 kh)` |
-| [std::image::Image::decode](std-image.md#api-4) | `static Result<Image, std::core::Error> decode(List<uint8> bytes)` |
-| [std::image::Image::encodeBmp](std-image.md#api-6) | `Result<List<uint8>, std::core::Error> encodeBmp()` |
-| [std::image::Image::encodePgm](std-image.md#api-8) | `Result<List<uint8>, std::core::Error> encodePgm()` |
-| [std::image::Image::encodePpm](std-image.md#api-7) | `Result<List<uint8>, std::core::Error> encodePpm()` |
-| [std::image::Image::fromARGB](std-image.md#api-19) | `static Result<Image, std::core::Error> fromARGB(int64 width, int64 height, List<uint32> argb)` |
-| [std::image::Image::fromGray](std-image.md#api-17) | `static Result<Image, std::core::Error> fromGray(int64 width, int64 height, List<uint8> gray)` |
-| [std::image::Image::fromRGB565](std-image.md#api-21) | `static Result<Image, std::core::Error> fromRGB565(int64 width, int64 height, List<uint16> rgb565)` |
-| [std::image::Image::getPixel](std-image.md#api-12) | `Result<Pixel, std::core::Error> getPixel(int64 x, int64 y)` |
+| [std::image::Image::binarize](std-image.md#api-23) | `static Result<List<uint8>, Error> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold)` |
+| [std::image::Image::convolve](std-image.md#api-14) | `Result<Image, Error> convolve(List<float64> kernel, int64 kw, int64 kh)` |
+| [std::image::Image::decode](std-image.md#api-4) | `static Result<Image, Error> decode(List<uint8> bytes)` |
+| [std::image::Image::encodeBmp](std-image.md#api-6) | `Result<List<uint8>, Error> encodeBmp()` |
+| [std::image::Image::encodePgm](std-image.md#api-8) | `Result<List<uint8>, Error> encodePgm()` |
+| [std::image::Image::encodePpm](std-image.md#api-7) | `Result<List<uint8>, Error> encodePpm()` |
+| [std::image::Image::fromARGB](std-image.md#api-19) | `static Result<Image, Error> fromARGB(int64 width, int64 height, List<uint32> argb)` |
+| [std::image::Image::fromGray](std-image.md#api-17) | `static Result<Image, Error> fromGray(int64 width, int64 height, List<uint8> gray)` |
+| [std::image::Image::fromRGB565](std-image.md#api-21) | `static Result<Image, Error> fromRGB565(int64 width, int64 height, List<uint16> rgb565)` |
+| [std::image::Image::getPixel](std-image.md#api-12) | `Result<Pixel, Error> getPixel(int64 x, int64 y)` |
 | [std::image::Image::height](std-image.md#api-1) | `int64 height()` |
-| [std::image::Image::make](std-image.md#api-3) | `static Result<Image, std::core::Error> make(int64 width, int64 height)` |
-| [std::image::Image::open](std-image.md#api-5) | `static Result<Image, std::core::Error> open(String path)` |
-| [std::image::Image::otsuBinarize](std-image.md#api-24) | `Result<List<uint8>, std::core::Error> otsuBinarize()` |
-| [std::image::Image::otsuThreshold](std-image.md#api-22) | `Result<int64, std::core::Error> otsuThreshold()` |
+| [std::image::Image::make](std-image.md#api-3) | `static Result<Image, Error> make(int64 width, int64 height)` |
+| [std::image::Image::open](std-image.md#api-5) | `static Result<Image, Error> open(String path)` |
+| [std::image::Image::otsuBinarize](std-image.md#api-24) | `Result<List<uint8>, Error> otsuBinarize()` |
+| [std::image::Image::otsuThreshold](std-image.md#api-22) | `Result<int64, Error> otsuThreshold()` |
 | [std::image::Image::pixels](std-image.md#api-2) | `List<uint8> pixels()` |
-| [std::image::Image::pool](std-image.md#api-15) | `Result<Image, std::core::Error> pool(int64 mode, int64 kw, int64 kh)` |
-| [std::image::Image::saveBmp](std-image.md#api-9) | `Result<int64, std::core::Error> saveBmp(String path)` |
-| [std::image::Image::savePgm](std-image.md#api-11) | `Result<int64, std::core::Error> savePgm(String path)` |
-| [std::image::Image::savePpm](std-image.md#api-10) | `Result<int64, std::core::Error> savePpm(String path)` |
-| [std::image::Image::setPixel](std-image.md#api-13) | `Result<int64, std::core::Error> setPixel(int64 x, int64 y, int64 r, int64 g, int64 b, int64 a)` |
-| [std::image::Image::toARGB](std-image.md#api-18) | `Result<List<uint32>, std::core::Error> toARGB()` |
-| [std::image::Image::toGray](std-image.md#api-16) | `Result<List<uint8>, std::core::Error> toGray()` |
-| [std::image::Image::toRGB565](std-image.md#api-20) | `Result<List<uint16>, std::core::Error> toRGB565()` |
+| [std::image::Image::pool](std-image.md#api-15) | `Result<Image, Error> pool(int64 mode, int64 kw, int64 kh)` |
+| [std::image::Image::saveBmp](std-image.md#api-9) | `Result<int64, Error> saveBmp(String path)` |
+| [std::image::Image::savePgm](std-image.md#api-11) | `Result<int64, Error> savePgm(String path)` |
+| [std::image::Image::savePpm](std-image.md#api-10) | `Result<int64, Error> savePpm(String path)` |
+| [std::image::Image::setPixel](std-image.md#api-13) | `Result<int64, Error> setPixel(int64 x, int64 y, int64 r, int64 g, int64 b, int64 a)` |
+| [std::image::Image::toARGB](std-image.md#api-18) | `Result<List<uint32>, Error> toARGB()` |
+| [std::image::Image::toGray](std-image.md#api-16) | `Result<List<uint8>, Error> toGray()` |
+| [std::image::Image::toRGB565](std-image.md#api-20) | `Result<List<uint16>, Error> toRGB565()` |
 | [std::image::Image::width](std-image.md#api-0) | `int64 width()` |
 | [std::io::FileStream::close](std-io.md#api-19) | `int64 close()` |
-| [std::io::FileStream::flush](std-io.md#api-17) | `Result<int64, std::core::Error> flush()` |
-| [std::io::FileStream::open](std-io.md#api-7) | `static Result<FileStream, std::core::Error> open(std::core::String path, std::core::String mode)` |
-| [std::io::FileStream::print](std-io.md#api-13) | `Result<int64, std::core::Error> print(String text)` |
-| [std::io::FileStream::println](std-io.md#api-14) | `Result<int64, std::core::Error> println(String text = "")` |
-| [std::io::FileStream::read](std-io.md#api-8) | `Result<std::core::String, std::core::Error> read()` |
-| [std::io::FileStream::readAllString](std-io.md#api-11) | `Result<String,std::core::Error> readAllString(int64 maxBytes=16777216)` |
-| [std::io::FileStream::readBytes](std-io.md#api-15) | `Result<List<uint8>,std::core::Error> readBytes(int64 count)` |
-| [std::io::FileStream::readLine](std-io.md#api-9) | `Result<String,std::core::Error> readLine()` |
-| [std::io::FileStream::readString](std-io.md#api-10) | `Result<String,std::core::Error> readString(int64 count)` |
-| [std::io::FileStream::seek](std-io.md#api-18) | `Result<int64, std::core::Error> seek(int64 offset, SeekOrigin origin)` |
-| [std::io::FileStream::write](std-io.md#api-12) | `Result<int64, std::core::Error> write(std::core::String text)` |
-| [std::io::FileStream::writeBytes](std-io.md#api-16) | `Result<int64,std::core::Error> writeBytes(List<uint8> bytes)` |
-| [std::io::Formattable::toString](std-io.md#api-6) | `std::core::String toString(std::core::String style)` |
+| [std::io::FileStream::flush](std-io.md#api-17) | `Result<int64, Error> flush()` |
+| [std::io::FileStream::open](std-io.md#api-7) | `static Result<FileStream, Error> open(String path, String mode)` |
+| [std::io::FileStream::print](std-io.md#api-13) | `Result<int64, Error> print(String text)` |
+| [std::io::FileStream::println](std-io.md#api-14) | `Result<int64, Error> println(String text = "")` |
+| [std::io::FileStream::read](std-io.md#api-8) | `Result<String, Error> read()` |
+| [std::io::FileStream::readAllString](std-io.md#api-11) | `Result<String,Error> readAllString(int64 maxBytes=16777216)` |
+| [std::io::FileStream::readBytes](std-io.md#api-15) | `Result<List<uint8>,Error> readBytes(int64 count)` |
+| [std::io::FileStream::readLine](std-io.md#api-9) | `Result<String,Error> readLine()` |
+| [std::io::FileStream::readString](std-io.md#api-10) | `Result<String,Error> readString(int64 count)` |
+| [std::io::FileStream::seek](std-io.md#api-18) | `Result<int64, Error> seek(int64 offset, SeekOrigin origin)` |
+| [std::io::FileStream::write](std-io.md#api-12) | `Result<int64, Error> write(String text)` |
+| [std::io::FileStream::writeBytes](std-io.md#api-16) | `Result<int64,Error> writeBytes(List<uint8> bytes)` |
+| [std::io::Formattable::toString](std-io.md#api-6) | `String toString(String style)` |
 | [std::io::IoError::toString](std-io.md#api-0) | `String toString()` |
-| [std::io::Reader::read](std-io.md#api-1) | `Result<std::core::String, std::core::Error> read()` |
-| [std::io::Seek::seek](std-io.md#api-4) | `Result<int64, std::core::Error> seek(int64 offset, SeekOrigin origin)` |
-| [std::io::ToString::toString](std-io.md#api-5) | `std::core::String toString()` |
-| [std::io::Writer::flush](std-io.md#api-3) | `Result<int64, std::core::Error> flush()` |
-| [std::io::Writer::write](std-io.md#api-2) | `Result<int64, std::core::Error> write(std::core::String text)` |
+| [std::io::Reader::read](std-io.md#api-1) | `Result<String, Error> read()` |
+| [std::io::Seek::seek](std-io.md#api-4) | `Result<int64, Error> seek(int64 offset, SeekOrigin origin)` |
+| [std::io::ToString::toString](std-io.md#api-5) | `String toString()` |
+| [std::io::Writer::flush](std-io.md#api-3) | `Result<int64, Error> flush()` |
+| [std::io::Writer::write](std-io.md#api-2) | `Result<int64, Error> write(String text)` |
 | [std::io::copyTo](std-io.md#api-38) | `Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination)` |
-| [std::io::createDirectories](std-io.md#api-36) | `Result<int64,std::core::Error> createDirectories(String path)` |
+| [std::io::createDirectories](std-io.md#api-36) | `Result<int64,Error> createDirectories(String path)` |
 | [std::io::createTempFile](std-io.md#api-40) | `Result<String,Error> createTempFile(String path)` |
 | [std::io::fileClose](std-io.md#api-29) | `int64 fileClose(file const& handle)` |
 | [std::io::fileEof](std-io.md#api-28) | `int64 fileEof(file const& handle)` |
-| [std::io::fileInfo](std-io.md#api-35) | `Result<FileInfo,std::core::Error> fileInfo(String path)` |
-| [std::io::fileOpen](std-io.md#api-20) | `Result<std::core::File, std::core::Error> fileOpen(std::core::String path, std::core::String mode)` |
+| [std::io::fileInfo](std-io.md#api-35) | `Result<FileInfo,Error> fileInfo(String path)` |
+| [std::io::fileOpen](std-io.md#api-20) | `Result<File, Error> fileOpen(String path, String mode)` |
 | [std::io::filePrint](std-io.md#api-26) | `int64 filePrint(file const& handle, String text)` |
 | [std::io::filePrintln](std-io.md#api-27) | `int64 filePrintln(file const& handle, String text = "")` |
-| [std::io::fileRead](std-io.md#api-21) | `std::core::String fileRead(file const& handle)` |
+| [std::io::fileRead](std-io.md#api-21) | `String fileRead(file const& handle)` |
 | [std::io::fileReadAllString](std-io.md#api-24) | `String fileReadAllString(File const& handle, int64 maxBytes = 16777216)` |
 | [std::io::fileReadLine](std-io.md#api-22) | `String fileReadLine(File const& handle)` |
 | [std::io::fileReadString](std-io.md#api-23) | `String fileReadString(File const& handle, int64 count)` |
-| [std::io::fileWrite](std-io.md#api-25) | `int64 fileWrite(file const& handle, std::core::String text)` |
-| [std::io::listDirectory](std-io.md#api-34) | `Result<List<String>,std::core::Error> listDirectory(String path)` |
-| [std::io::readAllBytes](std-io.md#api-30) | `Result<List<uint8>,std::core::Error> readAllBytes(String path, int64 maxBytes=16777216)` |
-| [std::io::readAllText](std-io.md#api-32) | `Result<String,std::core::Error> readAllText(String path, int64 maxBytes=16777216)` |
-| [std::io::renamePath](std-io.md#api-37) | `Result<int64,std::core::Error> renamePath(String from, String to)` |
+| [std::io::fileWrite](std-io.md#api-25) | `int64 fileWrite(file const& handle, String text)` |
+| [std::io::listDirectory](std-io.md#api-34) | `Result<List<String>,Error> listDirectory(String path)` |
+| [std::io::readAllBytes](std-io.md#api-30) | `Result<List<uint8>,Error> readAllBytes(String path, int64 maxBytes=16777216)` |
+| [std::io::readAllText](std-io.md#api-32) | `Result<String,Error> readAllText(String path, int64 maxBytes=16777216)` |
+| [std::io::renamePath](std-io.md#api-37) | `Result<int64,Error> renamePath(String from, String to)` |
 | [std::io::replaceFile](std-io.md#api-41) | `Result<int64,Error> replaceFile(String from, String to)` |
 | [std::io::walkDirectory](std-io.md#api-39) | `Result<List<String>,Error> walkDirectory(String path)` |
-| [std::io::writeAllBytes](std-io.md#api-31) | `Result<int64,std::core::Error> writeAllBytes(String path, List<uint8> bytes)` |
-| [std::io::writeAllText](std-io.md#api-33) | `Result<int64,std::core::Error> writeAllText(String path, String text)` |
+| [std::io::writeAllBytes](std-io.md#api-31) | `Result<int64,Error> writeAllBytes(String path, List<uint8> bytes)` |
+| [std::io::writeAllText](std-io.md#api-33) | `Result<int64,Error> writeAllText(String path, String text)` |
 | [std::iter::Iter::all](std-iter.md#api-9) | `bool all(bool fn(T) predicate)` |
 | [std::iter::Iter::any](std-iter.md#api-10) | `bool any(bool fn(T) predicate)` |
 | [std::iter::Iter::count](std-iter.md#api-6) | `int64 count()` |
@@ -946,9 +946,9 @@
 | [std::iter::all](std-iter.md#api-84) | `bool all<T>(Iter<T> mut& source, bool fn(T) predicate)` |
 | [std::iter::any](std-iter.md#api-85) | `bool any<T>(Iter<T> mut& source, bool fn(T) predicate)` |
 | [std::iter::chain](std-iter.md#api-50) | `Iter<T> chain<T>(Iter<T> left, Iter<T> right)` |
-| [std::iter::chars](std-iter.md#api-105) | `Iter<char> chars(std::core::String source)` |
+| [std::iter::chars](std-iter.md#api-105) | `Iter<char> chars(String source)` |
 | [std::iter::chunk](std-iter.md#api-110) | `Iter<List<T>> chunk<T>(Iter<T> source, int64 length)` |
-| [std::iter::collect](std-iter.md#api-72) | `std::core::List<T> collect<T>(Iter<T> source)` |
+| [std::iter::collect](std-iter.md#api-72) | `List<T> collect<T>(Iter<T> source)` |
 | [std::iter::countIter](std-iter.md#api-81) | `int64 countIter<T>(Iter<T> mut& source)` |
 | [std::iter::cycle](std-iter.md#api-68) | `Iter<T> cycle<T>(Iter<T> source)` |
 | [std::iter::enumerate](std-iter.md#api-56) | `Iter<(int64,T)> enumerate<T>(Iter<T> source)` |
@@ -959,31 +959,31 @@
 | [std::iter::fold](std-iter.md#api-73) | `A fold<T,A>(Iter<T> source, A initial, A fn(A, T) callback)` |
 | [std::iter::forEach](std-iter.md#api-87) | `void forEach<T>(Iter<T> mut& source, void fn(T) action)` |
 | [std::iter::fromIterator](std-iter.md#api-16) | `Iter<T> fromIterator<T,S : Iterator<T>>(S source)` |
-| [std::iter::fromList](std-iter.md#api-19) | `Iter<T> fromList<T>(std::core::List<T> values)` |
+| [std::iter::fromList](std-iter.md#api-19) | `Iter<T> fromList<T>(List<T> values)` |
 | [std::iter::fromRange](std-iter.md#api-89) | `Iter<int64> fromRange(std::core::__Range source)` |
 | [std::iter::fromSpan](std-iter.md#api-102) | `Iter<T const&> fromSpan<T>(T const& source, int64 length)` |
 | [std::iter::fromState](std-iter.md#api-13) | `Iter<T> fromState<T,S>(S state)` |
 | [std::iter::fuse](std-iter.md#api-62) | `Iter<T> fuse<T>(Iter<T> source)` |
 | [std::iter::groupBy](std-iter.md#api-109) | `Map<K,List<T>> groupBy<T,K>(Iter<T> source, K fn(T) key_of)` |
 | [std::iter::inspect](std-iter.md#api-65) | `Iter<T> inspect<T>(Iter<T> source, void fn(T) action)` |
+| [std::iter::intIter](std-iter.md#api-23) | `Iter<int64> intIter(int64 start, int64 stop)` |
+| [std::iter::intIter](std-iter.md#api-22) | `Iter<int64> intIter(int64 start, int64 stop, int64 step)` |
 | [std::iter::last](std-iter.md#api-83) | `Option<T> last<T>(Iter<T> mut& source)` |
-| [std::iter::listIntoIter](std-iter.md#api-88) | `Iter<T> listIntoIter<T>(std::core::List<T> mut& source)` |
-| [std::iter::listIter](std-iter.md#api-94) | `Iter<T const&> listIter<T>(std::core::List<T> const& source)` |
-| [std::iter::listIterMut](std-iter.md#api-95) | `Iter<T mut&> listIterMut<T>(std::core::List<T> mut& source)` |
+| [std::iter::listIntoIter](std-iter.md#api-88) | `Iter<T> listIntoIter<T>(List<T> mut& source)` |
+| [std::iter::listIter](std-iter.md#api-94) | `Iter<T const&> listIter<T>(List<T> const& source)` |
+| [std::iter::listIterMut](std-iter.md#api-95) | `Iter<T mut&> listIterMut<T>(List<T> mut& source)` |
 | [std::iter::map](std-iter.md#api-26) | `Iter<U> map<T,U>(Iter<T> source, U fn(T) callback)` |
-| [std::iter::mapIntoIter](std-iter.md#api-98) | `Iter<Pair<K,V>> mapIntoIter<K,V>(std::core::Map<K,V> mut& source)` |
-| [std::iter::mapIter](std-iter.md#api-99) | `Iter<Pair<K,V>> mapIter<K,V>(std::core::Map<K,V> const& source)` |
+| [std::iter::mapIntoIter](std-iter.md#api-98) | `Iter<Pair<K,V>> mapIntoIter<K,V>(Map<K,V> mut& source)` |
+| [std::iter::mapIter](std-iter.md#api-99) | `Iter<Pair<K,V>> mapIter<K,V>(Map<K,V> const& source)` |
 | [std::iter::mapWhile](std-iter.md#api-35) | `Iter<U> mapWhile<T,U>(Iter<T> source, Option<U> fn(T) callback)` |
 | [std::iter::nth](std-iter.md#api-82) | `Option<T> nth<T>(Iter<T> mut& source, int64 index)` |
 | [std::iter::peekingTakeWhile](std-iter.md#api-80) | `(Iter<T>,Iter<T>) peekingTakeWhile<T>(Iter<T> source, bool fn(T) predicate)` |
-| [std::iter::range](std-iter.md#api-23) | `Iter<int64> range(int64 start, int64 stop)` |
-| [std::iter::range](std-iter.md#api-22) | `Iter<int64> range(int64 start, int64 stop, int64 step)` |
 | [std::iter::repeat](std-iter.md#api-108) | `Iter<T> repeat<T>(T value)` |
 | [std::iter::rev](std-iter.md#api-79) | `Iter<T> rev<T>(Iter<T> source)` |
 | [std::iter::sameItems](std-iter.md#api-76) | `bool sameItems<T>(Iter<T> left, Iter<T> right)` |
 | [std::iter::scan](std-iter.md#api-71) | `Iter<U> scan<T,A,U>(Iter<T> source, A initial, Option<U> fn(A mut&, T) callback)` |
-| [std::iter::setIntoIter](std-iter.md#api-96) | `Iter<T> setIntoIter<T>(std::core::Set<T> mut& source)` |
-| [std::iter::setIter](std-iter.md#api-97) | `Iter<T> setIter<T>(std::core::Set<T> const& source)` |
+| [std::iter::setIntoIter](std-iter.md#api-96) | `Iter<T> setIntoIter<T>(Set<T> mut& source)` |
+| [std::iter::setIter](std-iter.md#api-97) | `Iter<T> setIter<T>(Set<T> const& source)` |
 | [std::iter::skip](std-iter.md#api-47) | `Iter<T> skip<T>(Iter<T> source, int64 amount)` |
 | [std::iter::skipWhile](std-iter.md#api-41) | `Iter<T> skipWhile<T>(Iter<T> source, bool fn(T) predicate)` |
 | [std::iter::stepBy](std-iter.md#api-59) | `Iter<T> stepBy<T>(Iter<T> source, int64 step)` |
@@ -991,18 +991,18 @@
 | [std::iter::takeWhile](std-iter.md#api-38) | `Iter<T> takeWhile<T>(Iter<T> source, bool fn(T) predicate)` |
 | [std::iter::tryFold](std-iter.md#api-74) | `Result<A,E> tryFold<T,A,E>(Iter<T> source, A initial, Result<A,E> fn(A, T) callback)` |
 | [std::iter::zip](std-iter.md#api-53) | `Iter<(T,U)> zip<T,U>(Iter<T> left, Iter<U> right)` |
-| [std::json::Json::toJson](std-json.md#api-0) | `Result<String,std::core::Error> toJson()` |
+| [std::json::Json::toJson](std-json.md#api-0) | `Result<String,Error> toJson()` |
 | [std::json::JsonValue::asBool](std-json.md#api-18) | `Option<bool> asBool()` |
-| [std::json::JsonValue::asBytes](std-json.md#api-20) | `Option<std::core::List<uint8>> asBytes()` |
-| [std::json::JsonValue::asDateTime](std-json.md#api-21) | `Option<std::core::String> asDateTime()` |
+| [std::json::JsonValue::asBytes](std-json.md#api-20) | `Option<List<uint8>> asBytes()` |
+| [std::json::JsonValue::asDateTime](std-json.md#api-21) | `Option<String> asDateTime()` |
 | [std::json::JsonValue::asFloat64](std-json.md#api-17) | `Option<float64> asFloat64()` |
 | [std::json::JsonValue::asInt](std-json.md#api-16) | `Option<int64> asInt()` |
-| [std::json::JsonValue::asString](std-json.md#api-19) | `Option<std::core::String> asString()` |
+| [std::json::JsonValue::asString](std-json.md#api-19) | `Option<String> asString()` |
 | [std::json::JsonValue::at](std-json.md#api-24) | `Option<JsonValue> at(int64 index)` |
 | [std::json::JsonValue::close](std-json.md#api-4) | `bool close()` |
-| [std::json::JsonValue::dump](std-json.md#api-28) | `std::core::String dump()` |
-| [std::json::JsonValue::find](std-json.md#api-22) | `Option<JsonValue> find(std::core::String key)` |
-| [std::json::JsonValue::findBytes](std-json.md#api-23) | `Option<JsonValue> findBytes(std::core::List<uint8> key)` |
+| [std::json::JsonValue::dump](std-json.md#api-28) | `String dump()` |
+| [std::json::JsonValue::find](std-json.md#api-22) | `Option<JsonValue> find(String key)` |
+| [std::json::JsonValue::findBytes](std-json.md#api-23) | `Option<JsonValue> findBytes(List<uint8> key)` |
 | [std::json::JsonValue::isArray](std-json.md#api-11) | `bool isArray()` |
 | [std::json::JsonValue::isBool](std-json.md#api-7) | `bool isBool()` |
 | [std::json::JsonValue::isDateTime](std-json.md#api-14) | `bool isDateTime()` |
@@ -1014,13 +1014,13 @@
 | [std::json::JsonValue::isTable](std-json.md#api-13) | `bool isTable()` |
 | [std::json::JsonValue::isValid](std-json.md#api-3) | `bool isValid()` |
 | [std::json::JsonValue::iterator](std-json.md#api-25) | `Option<JsonValue> iterator(int64 index)` |
-| [std::json::JsonValue::keyAt](std-json.md#api-26) | `Option<std::core::String> keyAt(int64 index)` |
-| [std::json::JsonValue::keyBytesAt](std-json.md#api-27) | `Option<std::core::List<uint8>> keyBytesAt(int64 index)` |
+| [std::json::JsonValue::keyAt](std-json.md#api-26) | `Option<String> keyAt(int64 index)` |
+| [std::json::JsonValue::keyBytesAt](std-json.md#api-27) | `Option<List<uint8>> keyBytesAt(int64 index)` |
 | [std::json::JsonValue::kind](std-json.md#api-5) | `int64 kind()` |
 | [std::json::JsonValue::len](std-json.md#api-15) | `int64 len()` |
-| [std::json::deserialize](std-json.md#api-2) | `Result<T,std::core::Error> deserialize<T>(String text)` |
-| [std::json::parse](std-json.md#api-29) | `Result<JsonValue, std::core::Error> parse(std::core::String text)` |
-| [std::json::serialize](std-json.md#api-1) | `Result<String,std::core::Error> serialize<T>(T const& value)` |
+| [std::json::deserialize](std-json.md#api-2) | `Result<T,Error> deserialize<T>(String text)` |
+| [std::json::parse](std-json.md#api-29) | `Result<JsonValue, Error> parse(String text)` |
+| [std::json::serialize](std-json.md#api-1) | `Result<String,Error> serialize<T>(T const& value)` |
 | [std::linear_algebra::Matrix::add](std-linear_algebra.md#api-39) | `Matrix<T> add(Matrix<T> other)` |
 | [std::linear_algebra::Matrix::apply](std-linear_algebra.md#api-43) | `Vector<T> apply(Vector<T> vector)` |
 | [std::linear_algebra::Matrix::at](std-linear_algebra.md#api-36) | `T at(int64 row, int64 col)` |
@@ -1129,21 +1129,21 @@
 | [std::memory::Span::index](std-memory.md#api-1) | `T index(int64 key)` |
 | [std::memory::Span::iterator](std-memory.md#api-2) | `Option<T mut&> iterator(int64 index)` |
 | [std::memory::Span::len](std-memory.md#api-3) | `int64 len()` |
-| [std::message::receiveFor](std-message.md#api-4) | `std::concurrency::Receive<T> receiveFor<T>(int64 millis)` |
+| [std::message::receiveFor](std-message.md#api-4) | `Receive<T> receiveFor<T>(int64 millis)` |
 | [std::message::receiveThread](std-message.md#api-1) | `T receiveThread<T>()` |
 | [std::message::sendFor](std-message.md#api-2) | `int64 sendFor<T>(Thread thread, T value, int64 millis)` |
 | [std::message::sendThread](std-message.md#api-0) | `void sendThread<T>(Thread thread, T value)` |
-| [std::message::tryReceive](std-message.md#api-5) | `std::concurrency::Receive<T> tryReceive<T>()` |
+| [std::message::tryReceive](std-message.md#api-5) | `Receive<T> tryReceive<T>()` |
 | [std::message::trySend](std-message.md#api-3) | `int64 trySend<T>(Thread thread, T value)` |
 | [std::net::HttpClient::close](std-net.md#api-34) | `void close()` |
-| [std::net::HttpClient::connect](std-net.md#api-31) | `bool connect(std::core::String host, int32 port, int32 timeoutMs)` |
-| [std::net::HttpClient::exchange](std-net.md#api-33) | `HttpResponse exchange(std::core::String method, std::core::String url, std::core::String body, std::core::String contentType)` |
-| [std::net::HttpClient::fetch](std-net.md#api-35) | `static HttpResponse fetch(std::core::String url)` |
+| [std::net::HttpClient::connect](std-net.md#api-31) | `bool connect(String host, int32 port, int32 timeoutMs)` |
+| [std::net::HttpClient::exchange](std-net.md#api-33) | `HttpResponse exchange(String method, String url, String body, String contentType)` |
+| [std::net::HttpClient::fetch](std-net.md#api-35) | `static HttpResponse fetch(String url)` |
 | [std::net::HttpClient::fetchWithTimeout](std-net.md#api-36) | `static HttpResponse fetchWithTimeout(String url, int32 timeoutMs)` |
-| [std::net::HttpClient::readAll](std-net.md#api-32) | `std::core::String readAll()` |
-| [std::net::HttpClient::submit](std-net.md#api-37) | `static HttpResponse submit(std::core::String url, std::core::String body, std::core::String contentType)` |
+| [std::net::HttpClient::readAll](std-net.md#api-32) | `String readAll()` |
+| [std::net::HttpClient::submit](std-net.md#api-37) | `static HttpResponse submit(String url, String body, String contentType)` |
 | [std::net::HttpClient::submitWithTimeout](std-net.md#api-38) | `static HttpResponse submitWithTimeout(String url, String body, String contentType, int32 timeoutMs)` |
-| [std::net::HttpResponse::header](std-net.md#api-26) | `std::core::String header(std::core::String name)` |
+| [std::net::HttpResponse::header](std-net.md#api-26) | `String header(String name)` |
 | [std::net::HttpResponse::isSuccess](std-net.md#api-25) | `bool isSuccess()` |
 | [std::net::TcpListener::accept](std-net.md#api-22) | `TcpSocket accept()` |
 | [std::net::TcpListener::accept](std-net.md#api-21) | `TcpSocket accept(int32 timeoutMs)` |
@@ -1170,10 +1170,10 @@
 | [std::net::TcpSocket::sendAsync](std-net.md#api-6) | `int64 sendAsync(String data)` |
 | [std::net::TcpSocket::sendAsync](std-net.md#api-5) | `int64 sendAsync(String data, int64 offset)` |
 | [std::net::TcpSocket::status](std-net.md#api-11) | `int64 status()` |
-| [std::net::buildRequest](std-net.md#api-29) | `std::core::String buildRequest(std::core::String method, std::core::String url, std::core::String body, std::core::String contentType)` |
-| [std::net::httpScheme](std-net.md#api-27) | `std::core::String httpScheme()` |
-| [std::net::parseResponse](std-net.md#api-30) | `HttpResponse parseResponse(std::core::String raw)` |
-| [std::net::parseUrl](std-net.md#api-28) | `Url parseUrl(std::core::String url)` |
+| [std::net::buildRequest](std-net.md#api-29) | `String buildRequest(String method, String url, String body, String contentType)` |
+| [std::net::httpScheme](std-net.md#api-27) | `String httpScheme()` |
+| [std::net::parseResponse](std-net.md#api-30) | `HttpResponse parseResponse(String raw)` |
+| [std::net::parseUrl](std-net.md#api-28) | `Url parseUrl(String url)` |
 | [std::number_theory::addMod](std-number_theory.md#api-2) | `T addMod<T>(T left, T right, T modulus)` |
 | [std::number_theory::gcd](std-number_theory.md#api-0) | `T gcd<T>(T... values)` |
 | [std::number_theory::isPrime](std-number_theory.md#api-6) | `bool isPrime<T>(T value)` |
@@ -1186,24 +1186,24 @@
 | [std::numerics::Numerics::integrateSimpson](std-numerics.md#api-1) | `static float64 integrateSimpson(float64 fn(float64) function, float64 begin, float64 end, int64 intervals)` |
 | [std::numerics::Numerics::newton](std-numerics.md#api-4) | `static float64 newton(float64 fn(float64) function, float64 initial, float64 tolerance, int64 maxIterations)` |
 | [std::numerics::Numerics::rk4Step](std-numerics.md#api-3) | `static float64 rk4Step(float64 fn(float64, float64) derivative, float64 time, float64 value, float64 step)` |
-| [std::numerics::Numerics::solveOdeEuler](std-numerics.md#api-5) | `static std::core::List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
-| [std::numerics::Numerics::solveOdeRK4](std-numerics.md#api-6) | `static std::core::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
-| [std::parse::Parse::parseBool](std-parse.md#api-4) | `static Result<bool, std::core::Error> parseBool(std::core::String text)` |
-| [std::parse::Parse::parseFloat64](std-parse.md#api-3) | `static Result<float64, std::core::Error> parseFloat64(std::core::String text)` |
-| [std::parse::Parse::parseInt64](std-parse.md#api-1) | `static Result<int64, std::core::Error> parseInt64(std::core::String text)` |
-| [std::parse::Parse::parseUInt64](std-parse.md#api-2) | `static Result<uint64, std::core::Error> parseUInt64(std::core::String text)` |
+| [std::numerics::Numerics::solveOdeEuler](std-numerics.md#api-5) | `static List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
+| [std::numerics::Numerics::solveOdeRK4](std-numerics.md#api-6) | `static List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
+| [std::parse::Parse::parseBool](std-parse.md#api-4) | `static Result<bool, Error> parseBool(String text)` |
+| [std::parse::Parse::parseFloat64](std-parse.md#api-3) | `static Result<float64, Error> parseFloat64(String text)` |
+| [std::parse::Parse::parseInt64](std-parse.md#api-1) | `static Result<int64, Error> parseInt64(String text)` |
+| [std::parse::Parse::parseUInt64](std-parse.md#api-2) | `static Result<uint64, Error> parseUInt64(String text)` |
 | [std::parse::ParseError::toString](std-parse.md#api-0) | `String toString()` |
-| [std::path::PathString::extension](std-path.md#api-2) | `static std::core::String extension(std::core::String path)` |
-| [std::path::PathString::fileName](std-path.md#api-1) | `static std::core::String fileName(std::core::String path)` |
-| [std::path::PathString::join](std-path.md#api-0) | `static std::core::String join(std::core::String left, std::core::String right)` |
-| [std::path::PathString::normalize](std-path.md#api-3) | `static std::core::String normalize(std::core::String path)` |
+| [std::path::PathString::extension](std-path.md#api-2) | `static String extension(String path)` |
+| [std::path::PathString::fileName](std-path.md#api-1) | `static String fileName(String path)` |
+| [std::path::PathString::join](std-path.md#api-0) | `static String join(String left, String right)` |
+| [std::path::PathString::normalize](std-path.md#api-3) | `static String normalize(String path)` |
 | [std::path::PathString::parent](std-path.md#api-4) | `static String parent(String path)` |
 | [std::path::PathString::stem](std-path.md#api-5) | `static String stem(String path)` |
 | [std::probe::twice](std-probe.md#api-0) | `int64 twice(int64 x)` |
 | [std::process::processClose](std-process.md#api-2) | `int64 processClose(Process const& process)` |
-| [std::process::processRead](std-process.md#api-1) | `std::core::String processRead(Process const& process)` |
-| [std::process::processRun](std-process.md#api-0) | `Process processRun(std::core::String command)` |
-| [std::process::system](std-process.md#api-3) | `int64 system(std::core::String command)` |
+| [std::process::processRead](std-process.md#api-1) | `String processRead(Process const& process)` |
+| [std::process::processRun](std-process.md#api-0) | `Process processRun(String command)` |
+| [std::process::system](std-process.md#api-3) | `int64 system(String command)` |
 | [std::random::Random::fromEntropy](std-random.md#api-9) | `static Random fromEntropy()` |
 | [std::random::Random::nextBool](std-random.md#api-14) | `bool nextBool()` |
 | [std::random::Random::nextFloat64](std-random.md#api-12) | `float64 nextFloat64()` |
@@ -1220,56 +1220,56 @@
 | [std::random::randomNextUInt64](std-random.md#api-2) | `uint64 randomNextUInt64(uint64 handle)` |
 | [std::random::randomWithSeed](std-random.md#api-0) | `Random randomWithSeed(uint64 seed)` |
 | [std::reflect::ReflectError::toString](std-reflect.md#api-1) | `String toString()` |
-| [std::reflect::ReflectValue::asBool](std-reflect.md#api-3) | `Result<bool,std::core::Error> asBool()` |
-| [std::reflect::ReflectValue::asChar](std-reflect.md#api-4) | `Result<char,std::core::Error> asChar()` |
-| [std::reflect::ReflectValue::asF32](std-reflect.md#api-13) | `Result<float32,std::core::Error> asF32()` |
-| [std::reflect::ReflectValue::asF64](std-reflect.md#api-14) | `Result<float64,std::core::Error> asF64()` |
-| [std::reflect::ReflectValue::asI16](std-reflect.md#api-6) | `Result<int16,std::core::Error> asI16()` |
-| [std::reflect::ReflectValue::asI32](std-reflect.md#api-7) | `Result<int32,std::core::Error> asI32()` |
-| [std::reflect::ReflectValue::asI64](std-reflect.md#api-8) | `Result<int64,std::core::Error> asI64()` |
-| [std::reflect::ReflectValue::asI8](std-reflect.md#api-5) | `Result<int8,std::core::Error> asI8()` |
-| [std::reflect::ReflectValue::asText](std-reflect.md#api-15) | `Result<std::core::String,std::core::Error> asText()` |
-| [std::reflect::ReflectValue::asU16](std-reflect.md#api-10) | `Result<uint16,std::core::Error> asU16()` |
-| [std::reflect::ReflectValue::asU32](std-reflect.md#api-11) | `Result<uint32,std::core::Error> asU32()` |
-| [std::reflect::ReflectValue::asU64](std-reflect.md#api-12) | `Result<uint64,std::core::Error> asU64()` |
-| [std::reflect::ReflectValue::asU8](std-reflect.md#api-9) | `Result<uint8,std::core::Error> asU8()` |
+| [std::reflect::ReflectValue::asBool](std-reflect.md#api-3) | `Result<bool,Error> asBool()` |
+| [std::reflect::ReflectValue::asChar](std-reflect.md#api-4) | `Result<char,Error> asChar()` |
+| [std::reflect::ReflectValue::asF32](std-reflect.md#api-13) | `Result<float32,Error> asF32()` |
+| [std::reflect::ReflectValue::asF64](std-reflect.md#api-14) | `Result<float64,Error> asF64()` |
+| [std::reflect::ReflectValue::asI16](std-reflect.md#api-6) | `Result<int16,Error> asI16()` |
+| [std::reflect::ReflectValue::asI32](std-reflect.md#api-7) | `Result<int32,Error> asI32()` |
+| [std::reflect::ReflectValue::asI64](std-reflect.md#api-8) | `Result<int64,Error> asI64()` |
+| [std::reflect::ReflectValue::asI8](std-reflect.md#api-5) | `Result<int8,Error> asI8()` |
+| [std::reflect::ReflectValue::asText](std-reflect.md#api-15) | `Result<String,Error> asText()` |
+| [std::reflect::ReflectValue::asU16](std-reflect.md#api-10) | `Result<uint16,Error> asU16()` |
+| [std::reflect::ReflectValue::asU32](std-reflect.md#api-11) | `Result<uint32,Error> asU32()` |
+| [std::reflect::ReflectValue::asU64](std-reflect.md#api-12) | `Result<uint64,Error> asU64()` |
+| [std::reflect::ReflectValue::asU8](std-reflect.md#api-9) | `Result<uint8,Error> asU8()` |
 | [std::reflect::ReflectValue::typeId](std-reflect.md#api-2) | `uint64 typeId()` |
-| [std::reflect::call](std-reflect.md#api-29) | `Result<std::reflect::ReflectValue,std::core::Error> call(std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callEnumMethod](std-reflect.md#api-33) | `Result<std::reflect::ReflectValue,std::core::Error> callEnumMethod<T>(T mut& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callEnumMethodConst](std-reflect.md#api-34) | `Result<std::reflect::ReflectValue,std::core::Error> callEnumMethodConst<T>(T const& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callEnumStatic](std-reflect.md#api-35) | `Result<std::reflect::ReflectValue,std::core::Error> callEnumStatic<T>(std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callInterface](std-reflect.md#api-39) | `Result<std::reflect::ReflectValue,std::core::Error> callInterface<I>(I mut& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callInterfaceConst](std-reflect.md#api-40) | `Result<std::reflect::ReflectValue,std::core::Error> callInterfaceConst<I>(I const& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callMethod](std-reflect.md#api-30) | `Result<std::reflect::ReflectValue,std::core::Error> callMethod<T>(T mut& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callMethodConst](std-reflect.md#api-31) | `Result<std::reflect::ReflectValue,std::core::Error> callMethodConst<T>(T const& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::callStatic](std-reflect.md#api-32) | `Result<std::reflect::ReflectValue,std::core::Error> callStatic<T>(std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [std::reflect::construct](std-reflect.md#api-36) | `Result<T,std::core::Error> construct<T>(List<std::reflect::ReflectValue> args)` |
-| [std::reflect::getAnnotationInfo](std-reflect.md#api-17) | `Option<std::reflect::AnnotationInfo> getAnnotationInfo(std::core::String name)` |
+| [std::reflect::call](std-reflect.md#api-29) | `Result<std::reflect::ReflectValue,Error> call(String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callEnumMethod](std-reflect.md#api-33) | `Result<std::reflect::ReflectValue,Error> callEnumMethod<T>(T mut& obj, String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callEnumMethodConst](std-reflect.md#api-34) | `Result<std::reflect::ReflectValue,Error> callEnumMethodConst<T>(T const& obj, String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callEnumStatic](std-reflect.md#api-35) | `Result<std::reflect::ReflectValue,Error> callEnumStatic<T>(String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callInterface](std-reflect.md#api-39) | `Result<std::reflect::ReflectValue,Error> callInterface<I>(I mut& obj, String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callInterfaceConst](std-reflect.md#api-40) | `Result<std::reflect::ReflectValue,Error> callInterfaceConst<I>(I const& obj, String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callMethod](std-reflect.md#api-30) | `Result<std::reflect::ReflectValue,Error> callMethod<T>(T mut& obj, String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callMethodConst](std-reflect.md#api-31) | `Result<std::reflect::ReflectValue,Error> callMethodConst<T>(T const& obj, String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::callStatic](std-reflect.md#api-32) | `Result<std::reflect::ReflectValue,Error> callStatic<T>(String name, List<std::reflect::ReflectValue> args)` |
+| [std::reflect::construct](std-reflect.md#api-36) | `Result<T,Error> construct<T>(List<std::reflect::ReflectValue> args)` |
+| [std::reflect::getAnnotationInfo](std-reflect.md#api-17) | `Option<std::reflect::AnnotationInfo> getAnnotationInfo(String name)` |
 | [std::reflect::getAnnotations](std-reflect.md#api-24) | `List<std::reflect::Annotation> getAnnotations<T>()` |
 | [std::reflect::getEnumInfo](std-reflect.md#api-21) | `Option<std::reflect::EnumInfo> getEnumInfo<T>()` |
-| [std::reflect::getField](std-reflect.md#api-37) | `Result<F,std::core::Error> getField<T,F>(T const& obj, std::core::String name)` |
-| [std::reflect::getFieldAnnotations](std-reflect.md#api-25) | `List<std::reflect::Annotation> getFieldAnnotations<T>(std::core::String name)` |
-| [std::reflect::getFuncAnnotations](std-reflect.md#api-26) | `List<std::reflect::Annotation> getFuncAnnotations(std::core::String name)` |
-| [std::reflect::getFuncInfo](std-reflect.md#api-16) | `Option<std::reflect::FuncInfo> getFuncInfo(std::core::String name)` |
+| [std::reflect::getField](std-reflect.md#api-37) | `Result<F,Error> getField<T,F>(T const& obj, String name)` |
+| [std::reflect::getFieldAnnotations](std-reflect.md#api-25) | `List<std::reflect::Annotation> getFieldAnnotations<T>(String name)` |
+| [std::reflect::getFuncAnnotations](std-reflect.md#api-26) | `List<std::reflect::Annotation> getFuncAnnotations(String name)` |
+| [std::reflect::getFuncInfo](std-reflect.md#api-16) | `Option<std::reflect::FuncInfo> getFuncInfo(String name)` |
 | [std::reflect::getInterfaceId](std-reflect.md#api-19) | `uint64 getInterfaceId<I>()` |
 | [std::reflect::getInterfaceInfo](std-reflect.md#api-22) | `Option<std::reflect::InterfaceInfo> getInterfaceInfo<I>()` |
-| [std::reflect::getMethodAnnotations](std-reflect.md#api-27) | `List<std::reflect::Annotation> getMethodAnnotations<T>(std::core::String name)` |
-| [std::reflect::getStaticMemberAnnotations](std-reflect.md#api-28) | `List<std::reflect::Annotation> getStaticMemberAnnotations<T>(std::core::String name)` |
+| [std::reflect::getMethodAnnotations](std-reflect.md#api-27) | `List<std::reflect::Annotation> getMethodAnnotations<T>(String name)` |
+| [std::reflect::getStaticMemberAnnotations](std-reflect.md#api-28) | `List<std::reflect::Annotation> getStaticMemberAnnotations<T>(String name)` |
 | [std::reflect::getStructInfo](std-reflect.md#api-20) | `Option<std::reflect::StructInfo> getStructInfo<T>()` |
 | [std::reflect::getTypeId](std-reflect.md#api-18) | `uint64 getTypeId<T>()` |
 | [std::reflect::implementsInterface](std-reflect.md#api-23) | `bool implementsInterface<T>(uint64 interfaceId)` |
 | [std::reflect::requireReflection](std-reflect.md#api-0) | `void requireReflection()` |
-| [std::reflect::setField](std-reflect.md#api-38) | `Result<bool,std::core::Error> setField<T,F>(T mut& obj, std::core::String name, F value)` |
-| [std::regex::Regex::capture](std-regex.md#api-5) | `std::core::String capture(std::core::String text, int64 group)` |
-| [std::regex::Regex::compile](std-regex.md#api-1) | `static Result<Regex, std::core::Error> compile(std::core::String pattern)` |
-| [std::regex::Regex::contains](std-regex.md#api-3) | `bool contains(std::core::String text)` |
-| [std::regex::Regex::find](std-regex.md#api-4) | `Option<int64> find(std::core::String text)` |
-| [std::regex::Regex::fullMatch](std-regex.md#api-2) | `bool fullMatch(std::core::String text)` |
-| [std::regex::Regex::replaceAll](std-regex.md#api-7) | `std::core::String replaceAll(std::core::String text, std::core::String replacement)` |
-| [std::regex::Regex::replaceFirst](std-regex.md#api-6) | `std::core::String replaceFirst(std::core::String text, std::core::String replacement)` |
+| [std::reflect::setField](std-reflect.md#api-38) | `Result<bool,Error> setField<T,F>(T mut& obj, String name, F value)` |
+| [std::regex::Regex::capture](std-regex.md#api-5) | `String capture(String text, int64 group)` |
+| [std::regex::Regex::compile](std-regex.md#api-1) | `static Result<Regex, Error> compile(String pattern)` |
+| [std::regex::Regex::contains](std-regex.md#api-3) | `bool contains(String text)` |
+| [std::regex::Regex::find](std-regex.md#api-4) | `Option<int64> find(String text)` |
+| [std::regex::Regex::fullMatch](std-regex.md#api-2) | `bool fullMatch(String text)` |
+| [std::regex::Regex::replaceAll](std-regex.md#api-7) | `String replaceAll(String text, String replacement)` |
+| [std::regex::Regex::replaceFirst](std-regex.md#api-6) | `String replaceFirst(String text, String replacement)` |
 | [std::regex::RegexError::toString](std-regex.md#api-0) | `String toString()` |
-| [std::serialization::deserialize](std-serialization.md#api-1) | `Result<T,std::core::Error> deserialize<T>(List<uint8> bytes)` |
-| [std::serialization::serialize](std-serialization.md#api-0) | `Result<List<uint8>,std::core::Error> serialize<T>(T const& value)` |
+| [std::serialization::deserialize](std-serialization.md#api-1) | `Result<T,Error> deserialize<T>(List<uint8> bytes)` |
+| [std::serialization::serialize](std-serialization.md#api-0) | `Result<List<uint8>,Error> serialize<T>(T const& value)` |
 | [std::signal::dft](std-signal.md#api-4) | `List<Complex<float64>> dft(List<Complex<float64>> input)` |
 | [std::signal::fft](std-signal.md#api-6) | `List<Complex<float64>> fft(List<Complex<float64>> input)` |
 | [std::signal::idft](std-signal.md#api-5) | `List<Complex<float64>> idft(List<Complex<float64>> input)` |
@@ -1282,94 +1282,94 @@
 | [std::sql::DataCell::asReal](std-sql.md#api-8) | `float64 asReal()` |
 | [std::sql::DataCell::isNull](std-sql.md#api-4) | `bool isNull()` |
 | [std::sql::DataCell::isNumber](std-sql.md#api-5) | `bool isNumber()` |
-| [std::sql::DataCell::text](std-sql.md#api-6) | `std::core::String text()` |
+| [std::sql::DataCell::text](std-sql.md#api-6) | `String text()` |
 | [std::sql::DataRow::at](std-sql.md#api-10) | `DataCell at(int64 index)` |
 | [std::sql::DataRow::size](std-sql.md#api-9) | `int64 size()` |
 | [std::sql::Database::affectedRows](std-sql.md#api-37) | `int64 affectedRows()` |
-| [std::sql::Database::backendName](std-sql.md#api-31) | `std::core::String backendName()` |
+| [std::sql::Database::backendName](std-sql.md#api-31) | `String backendName()` |
 | [std::sql::Database::close](std-sql.md#api-38) | `void close()` |
-| [std::sql::Database::count](std-sql.md#api-43) | `int64 count(std::core::String sql)` |
+| [std::sql::Database::count](std-sql.md#api-43) | `int64 count(String sql)` |
 | [std::sql::Database::driver](std-sql.md#api-29) | `Driver driver()` |
 | [std::sql::Database::exec](std-sql.md#api-40) | `ResultSet exec(SqlStatement statement)` |
-| [std::sql::Database::exec](std-sql.md#api-39) | `ResultSet exec(std::core::String sql)` |
-| [std::sql::Database::execOk](std-sql.md#api-41) | `bool execOk(std::core::String sql)` |
-| [std::sql::Database::hasTable](std-sql.md#api-44) | `bool hasTable(std::core::String tableName)` |
+| [std::sql::Database::exec](std-sql.md#api-39) | `ResultSet exec(String sql)` |
+| [std::sql::Database::execOk](std-sql.md#api-41) | `bool execOk(String sql)` |
+| [std::sql::Database::hasTable](std-sql.md#api-44) | `bool hasTable(String tableName)` |
 | [std::sql::Database::isOpen](std-sql.md#api-35) | `bool isOpen()` |
-| [std::sql::Database::lastError](std-sql.md#api-36) | `std::core::String lastError()` |
-| [std::sql::Database::local](std-sql.md#api-34) | `static Database local(std::core::String database)` |
+| [std::sql::Database::lastError](std-sql.md#api-36) | `String lastError()` |
+| [std::sql::Database::local](std-sql.md#api-34) | `static Database local(String database)` |
 | [std::sql::Database::maria](std-sql.md#api-33) | `static Database maria(String host, String user, String password, String database, int32 port = (int32)3306)` |
+| [std::sql::Database::mysql](std-sql.md#api-32) | `static Database mysql(String host, String user, String password, String database)` |
 | [std::sql::Database::mysql](std-sql.md#api-24) | `static Database mysql(String host, String user, String password, String database, int32 port)` |
-| [std::sql::Database::mysql](std-sql.md#api-32) | `static Database mysql(std::core::String host, std::core::String user, std::core::String password, std::core::String database)` |
 | [std::sql::Database::odbc](std-sql.md#api-27) | `static Database odbc(String options)` |
 | [std::sql::Database::postgres](std-sql.md#api-26) | `static Database postgres(String options)` |
-| [std::sql::Database::quote](std-sql.md#api-30) | `std::core::String quote(std::core::String text)` |
-| [std::sql::Database::scalar](std-sql.md#api-42) | `std::core::String scalar(std::core::String sql)` |
+| [std::sql::Database::quote](std-sql.md#api-30) | `String quote(String text)` |
+| [std::sql::Database::scalar](std-sql.md#api-42) | `String scalar(String sql)` |
 | [std::sql::Database::sqlServer](std-sql.md#api-28) | `static Database sqlServer(String options)` |
 | [std::sql::Database::sqlite](std-sql.md#api-25) | `static Database sqlite(String path)` |
-| [std::sql::Query::build](std-sql.md#api-3) | `Result<SqlStatement,std::core::Error> build(String operation = "select", String values = "{}")` |
+| [std::sql::Query::build](std-sql.md#api-3) | `Result<SqlStatement,Error> build(String operation = "select", String values = "{}")` |
 | [std::sql::Query::orderBy](std-sql.md#api-0) | `void orderBy(String field, bool descending = false)` |
 | [std::sql::Query::page](std-sql.md#api-2) | `void page(int64 limit, int64 offset = 0)` |
 | [std::sql::Query::select](std-sql.md#api-1) | `void select(String field)` |
 | [std::sql::ResultSet::at](std-sql.md#api-16) | `DataCell at(int64 row, int64 column)` |
 | [std::sql::ResultSet::colCount](std-sql.md#api-12) | `int64 colCount()` |
-| [std::sql::ResultSet::columnIndex](std-sql.md#api-15) | `int64 columnIndex(std::core::String name)` |
-| [std::sql::ResultSet::columnName](std-sql.md#api-14) | `std::core::String columnName(int64 index)` |
+| [std::sql::ResultSet::columnIndex](std-sql.md#api-15) | `int64 columnIndex(String name)` |
+| [std::sql::ResultSet::columnName](std-sql.md#api-14) | `String columnName(int64 index)` |
 | [std::sql::ResultSet::count](std-sql.md#api-21) | `int64 count()` |
 | [std::sql::ResultSet::intAt](std-sql.md#api-18) | `int64 intAt(int64 row, int64 column)` |
 | [std::sql::ResultSet::isEmpty](std-sql.md#api-13) | `bool isEmpty()` |
-| [std::sql::ResultSet::pad](std-sql.md#api-22) | `std::core::String pad(std::core::String text, int64 width)` |
+| [std::sql::ResultSet::pad](std-sql.md#api-22) | `String pad(String text, int64 width)` |
 | [std::sql::ResultSet::realAt](std-sql.md#api-19) | `float64 realAt(int64 row, int64 column)` |
-| [std::sql::ResultSet::render](std-sql.md#api-23) | `std::core::String render()` |
+| [std::sql::ResultSet::render](std-sql.md#api-23) | `String render()` |
 | [std::sql::ResultSet::rowCount](std-sql.md#api-11) | `int64 rowCount()` |
-| [std::sql::ResultSet::scalar](std-sql.md#api-20) | `std::core::String scalar()` |
-| [std::sql::ResultSet::textAt](std-sql.md#api-17) | `std::core::String textAt(int64 row, int64 column)` |
-| [std::sql::displayWidth](std-sql.md#api-49) | `int64 displayWidth(std::core::String text)` |
-| [std::sql::filter](std-sql.md#api-51) | `Result<bool,std::core::Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0)` |
-| [std::sql::filterMany](std-sql.md#api-52) | `Result<bool,std::core::Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11)` |
-| [std::sql::insert](std-sql.md#api-53) | `Result<SqlStatement,std::core::Error> insert<T>(Query mut& query, T const& value)` |
-| [std::sql::intLiteral](std-sql.md#api-47) | `std::core::String intLiteral(int64 value)` |
-| [std::sql::query](std-sql.md#api-50) | `Result<Query,std::core::Error> query<T>()` |
-| [std::sql::quote](std-sql.md#api-46) | `std::core::String quote(std::core::String text)` |
-| [std::sql::quote](std-sql.md#api-45) | `std::core::String quote(std::core::String text, bool escapeBackslash)` |
-| [std::sql::realLiteral](std-sql.md#api-48) | `std::core::String realLiteral(float64 value)` |
-| [std::sql::update](std-sql.md#api-54) | `Result<SqlStatement,std::core::Error> update<T>(Query mut& query, T const& value)` |
-| [std::text::StringBuilder::append](std-text.md#api-29) | `void append(std::core::String text)` |
+| [std::sql::ResultSet::scalar](std-sql.md#api-20) | `String scalar()` |
+| [std::sql::ResultSet::textAt](std-sql.md#api-17) | `String textAt(int64 row, int64 column)` |
+| [std::sql::displayWidth](std-sql.md#api-49) | `int64 displayWidth(String text)` |
+| [std::sql::filter](std-sql.md#api-51) | `Result<bool,Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0)` |
+| [std::sql::filterMany](std-sql.md#api-52) | `Result<bool,Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11)` |
+| [std::sql::insert](std-sql.md#api-53) | `Result<SqlStatement,Error> insert<T>(Query mut& query, T const& value)` |
+| [std::sql::intLiteral](std-sql.md#api-47) | `String intLiteral(int64 value)` |
+| [std::sql::query](std-sql.md#api-50) | `Result<Query,Error> query<T>()` |
+| [std::sql::quote](std-sql.md#api-46) | `String quote(String text)` |
+| [std::sql::quote](std-sql.md#api-45) | `String quote(String text, bool escapeBackslash)` |
+| [std::sql::realLiteral](std-sql.md#api-48) | `String realLiteral(float64 value)` |
+| [std::sql::update](std-sql.md#api-54) | `Result<SqlStatement,Error> update<T>(Query mut& query, T const& value)` |
+| [std::text::StringBuilder::append](std-text.md#api-29) | `void append(String text)` |
 | [std::text::StringBuilder::appendBool](std-text.md#api-34) | `void appendBool(bool value)` |
 | [std::text::StringBuilder::appendChar](std-text.md#api-31) | `void appendChar(char value)` |
 | [std::text::StringBuilder::appendFloat](std-text.md#api-33) | `void appendFloat(float64 value)` |
 | [std::text::StringBuilder::appendInt](std-text.md#api-32) | `void appendInt(int64 value)` |
-| [std::text::StringBuilder::appendLine](std-text.md#api-30) | `void appendLine(std::core::String text)` |
+| [std::text::StringBuilder::appendLine](std-text.md#api-30) | `void appendLine(String text)` |
 | [std::text::StringBuilder::clear](std-text.md#api-35) | `void clear()` |
 | [std::text::StringBuilder::create](std-text.md#api-26) | `static StringBuilder create()` |
 | [std::text::StringBuilder::drop](std-text.md#api-25) | `void drop()` |
 | [std::text::StringBuilder::isEmpty](std-text.md#api-28) | `bool isEmpty()` |
 | [std::text::StringBuilder::len](std-text.md#api-27) | `int64 len()` |
-| [std::text::StringBuilder::toString](std-text.md#api-36) | `std::core::String toString()` |
-| [std::text::Text::charAt](std-text.md#api-19) | `static char charAt(std::core::String text, int64 index)` |
-| [std::text::Text::compare](std-text.md#api-9) | `static int64 compare(std::core::String left, std::core::String right)` |
-| [std::text::Text::contains](std-text.md#api-2) | `static bool contains(std::core::String text, std::core::String needle)` |
-| [std::text::Text::countMatches](std-text.md#api-8) | `static int64 countMatches(std::core::String text, std::core::String needle)` |
-| [std::text::Text::endsWith](std-text.md#api-4) | `static bool endsWith(std::core::String text, std::core::String suffix)` |
-| [std::text::Text::find](std-text.md#api-0) | `static int64 find(std::core::String text, std::core::String needle)` |
-| [std::text::Text::isBlank](std-text.md#api-7) | `static bool isBlank(std::core::String text)` |
-| [std::text::Text::join](std-text.md#api-21) | `static std::core::String join(std::core::List<std::core::String> parts, std::core::String separator)` |
-| [std::text::Text::kmpFailureTable](std-text.md#api-24) | `static std::core::List<int64> kmpFailureTable(std::core::String needle)` |
-| [std::text::Text::kmpFind](std-text.md#api-22) | `static int64 kmpFind(std::core::String text, std::core::String needle)` |
-| [std::text::Text::kmpFindAll](std-text.md#api-23) | `static std::core::List<int64> kmpFindAll(std::core::String text, std::core::String needle)` |
-| [std::text::Text::ltrim](std-text.md#api-13) | `static std::core::String ltrim(std::core::String text)` |
-| [std::text::Text::padEnd](std-text.md#api-18) | `static std::core::String padEnd(std::core::String text, int64 width, char fill)` |
-| [std::text::Text::padStart](std-text.md#api-17) | `static std::core::String padStart(std::core::String text, int64 width, char fill)` |
-| [std::text::Text::repeat](std-text.md#api-16) | `static std::core::String repeat(std::core::String text, int64 count)` |
-| [std::text::Text::replace](std-text.md#api-15) | `static std::core::String replace(std::core::String text, std::core::String from, std::core::String to)` |
-| [std::text::Text::rfind](std-text.md#api-1) | `static int64 rfind(std::core::String text, std::core::String needle)` |
-| [std::text::Text::rtrim](std-text.md#api-14) | `static std::core::String rtrim(std::core::String text)` |
-| [std::text::Text::split](std-text.md#api-20) | `static std::core::List<std::core::String> split(std::core::String text, std::core::String separator)` |
-| [std::text::Text::startsWith](std-text.md#api-3) | `static bool startsWith(std::core::String text, std::core::String prefix)` |
-| [std::text::Text::stripPrefix](std-text.md#api-5) | `static std::core::String stripPrefix(std::core::String text, std::core::String prefix)` |
-| [std::text::Text::stripSuffix](std-text.md#api-6) | `static std::core::String stripSuffix(std::core::String text, std::core::String suffix)` |
-| [std::text::Text::toLower](std-text.md#api-11) | `static std::core::String toLower(std::core::String text)` |
-| [std::text::Text::toUpper](std-text.md#api-10) | `static std::core::String toUpper(std::core::String text)` |
-| [std::text::Text::trim](std-text.md#api-12) | `static std::core::String trim(std::core::String text)` |
+| [std::text::StringBuilder::toString](std-text.md#api-36) | `String toString()` |
+| [std::text::Text::charAt](std-text.md#api-19) | `static char charAt(String text, int64 index)` |
+| [std::text::Text::compare](std-text.md#api-9) | `static int64 compare(String left, String right)` |
+| [std::text::Text::contains](std-text.md#api-2) | `static bool contains(String text, String needle)` |
+| [std::text::Text::countMatches](std-text.md#api-8) | `static int64 countMatches(String text, String needle)` |
+| [std::text::Text::endsWith](std-text.md#api-4) | `static bool endsWith(String text, String suffix)` |
+| [std::text::Text::find](std-text.md#api-0) | `static int64 find(String text, String needle)` |
+| [std::text::Text::isBlank](std-text.md#api-7) | `static bool isBlank(String text)` |
+| [std::text::Text::join](std-text.md#api-21) | `static String join(List<String> parts, String separator)` |
+| [std::text::Text::kmpFailureTable](std-text.md#api-24) | `static List<int64> kmpFailureTable(String needle)` |
+| [std::text::Text::kmpFind](std-text.md#api-22) | `static int64 kmpFind(String text, String needle)` |
+| [std::text::Text::kmpFindAll](std-text.md#api-23) | `static List<int64> kmpFindAll(String text, String needle)` |
+| [std::text::Text::ltrim](std-text.md#api-13) | `static String ltrim(String text)` |
+| [std::text::Text::padEnd](std-text.md#api-18) | `static String padEnd(String text, int64 width, char fill)` |
+| [std::text::Text::padStart](std-text.md#api-17) | `static String padStart(String text, int64 width, char fill)` |
+| [std::text::Text::repeat](std-text.md#api-16) | `static String repeat(String text, int64 count)` |
+| [std::text::Text::replace](std-text.md#api-15) | `static String replace(String text, String from, String to)` |
+| [std::text::Text::rfind](std-text.md#api-1) | `static int64 rfind(String text, String needle)` |
+| [std::text::Text::rtrim](std-text.md#api-14) | `static String rtrim(String text)` |
+| [std::text::Text::split](std-text.md#api-20) | `static List<String> split(String text, String separator)` |
+| [std::text::Text::startsWith](std-text.md#api-3) | `static bool startsWith(String text, String prefix)` |
+| [std::text::Text::stripPrefix](std-text.md#api-5) | `static String stripPrefix(String text, String prefix)` |
+| [std::text::Text::stripSuffix](std-text.md#api-6) | `static String stripSuffix(String text, String suffix)` |
+| [std::text::Text::toLower](std-text.md#api-11) | `static String toLower(String text)` |
+| [std::text::Text::toUpper](std-text.md#api-10) | `static String toUpper(String text)` |
+| [std::text::Text::trim](std-text.md#api-12) | `static String trim(String text)` |
 | [std::thread::ThreadGroup::add](std-thread.md#api-21) | `void add(Thread task)` |
 | [std::thread::ThreadGroup::cancelAll](std-thread.md#api-22) | `void cancelAll()` |
 | [std::thread::ThreadGroup::create](std-thread.md#api-19) | `static ThreadGroup create()` |
@@ -1389,29 +1389,29 @@
 | [std::thread::current](std-thread.md#api-14) | `Thread current()` |
 | [std::thread::parent](std-thread.md#api-15) | `Thread parent()` |
 | [std::thread::receive](std-thread.md#api-13) | `String receive()` |
-| [std::thread::receiveFor](std-thread.md#api-16) | `std::concurrency::Receive<String> receiveFor(int64 millis)` |
+| [std::thread::receiveFor](std-thread.md#api-16) | `Receive<String> receiveFor(int64 millis)` |
 | [std::thread::requestStop](std-thread.md#api-5) | `void requestStop(Thread thread)` |
 | [std::thread::send](std-thread.md#api-12) | `void send(Thread thread, String message)` |
 | [std::thread::sleepFor](std-thread.md#api-8) | `int64 sleepFor(int64 millis)` |
 | [std::thread::state](std-thread.md#api-7) | `int64 state(Thread thread)` |
 | [std::thread::stopRequested](std-thread.md#api-6) | `bool stopRequested()` |
-| [std::thread::tryReceive](std-thread.md#api-17) | `std::concurrency::Receive<String> tryReceive()` |
+| [std::thread::tryReceive](std-thread.md#api-17) | `Receive<String> tryReceive()` |
 | [std::thread::tryWait](std-thread.md#api-4) | `bool tryWait(Thread thread)` |
 | [std::thread::wait](std-thread.md#api-2) | `void wait(Thread thread)` |
 | [std::thread::waitFor](std-thread.md#api-3) | `bool waitFor(Thread thread, int64 millis)` |
 | [std::thread::waitResult](std-thread.md#api-11) | `ThreadResult waitResult(Thread thread)` |
 | [std::thread::waitResultFor](std-thread.md#api-10) | `ThreadResult waitResultFor(Thread thread, int64 millis)` |
 | [std::toml::TomlValue::asBool](std-toml.md#api-17) | `Option<bool> asBool()` |
-| [std::toml::TomlValue::asBytes](std-toml.md#api-19) | `Option<std::core::List<uint8>> asBytes()` |
-| [std::toml::TomlValue::asDateTime](std-toml.md#api-20) | `Option<std::core::String> asDateTime()` |
+| [std::toml::TomlValue::asBytes](std-toml.md#api-19) | `Option<List<uint8>> asBytes()` |
+| [std::toml::TomlValue::asDateTime](std-toml.md#api-20) | `Option<String> asDateTime()` |
 | [std::toml::TomlValue::asFloat64](std-toml.md#api-16) | `Option<float64> asFloat64()` |
 | [std::toml::TomlValue::asInt](std-toml.md#api-15) | `Option<int64> asInt()` |
-| [std::toml::TomlValue::asString](std-toml.md#api-18) | `Option<std::core::String> asString()` |
+| [std::toml::TomlValue::asString](std-toml.md#api-18) | `Option<String> asString()` |
 | [std::toml::TomlValue::at](std-toml.md#api-23) | `Option<TomlValue> at(int64 index)` |
 | [std::toml::TomlValue::close](std-toml.md#api-3) | `bool close()` |
-| [std::toml::TomlValue::dump](std-toml.md#api-27) | `std::core::String dump()` |
-| [std::toml::TomlValue::find](std-toml.md#api-21) | `Option<TomlValue> find(std::core::String key)` |
-| [std::toml::TomlValue::findBytes](std-toml.md#api-22) | `Option<TomlValue> findBytes(std::core::List<uint8> key)` |
+| [std::toml::TomlValue::dump](std-toml.md#api-27) | `String dump()` |
+| [std::toml::TomlValue::find](std-toml.md#api-21) | `Option<TomlValue> find(String key)` |
+| [std::toml::TomlValue::findBytes](std-toml.md#api-22) | `Option<TomlValue> findBytes(List<uint8> key)` |
 | [std::toml::TomlValue::isArray](std-toml.md#api-10) | `bool isArray()` |
 | [std::toml::TomlValue::isBool](std-toml.md#api-6) | `bool isBool()` |
 | [std::toml::TomlValue::isDateTime](std-toml.md#api-13) | `bool isDateTime()` |
@@ -1423,13 +1423,13 @@
 | [std::toml::TomlValue::isTable](std-toml.md#api-12) | `bool isTable()` |
 | [std::toml::TomlValue::isValid](std-toml.md#api-2) | `bool isValid()` |
 | [std::toml::TomlValue::iterator](std-toml.md#api-24) | `Option<TomlValue> iterator(int64 index)` |
-| [std::toml::TomlValue::keyAt](std-toml.md#api-25) | `Option<std::core::String> keyAt(int64 index)` |
-| [std::toml::TomlValue::keyBytesAt](std-toml.md#api-26) | `Option<std::core::List<uint8>> keyBytesAt(int64 index)` |
+| [std::toml::TomlValue::keyAt](std-toml.md#api-25) | `Option<String> keyAt(int64 index)` |
+| [std::toml::TomlValue::keyBytesAt](std-toml.md#api-26) | `Option<List<uint8>> keyBytesAt(int64 index)` |
 | [std::toml::TomlValue::kind](std-toml.md#api-4) | `int64 kind()` |
 | [std::toml::TomlValue::len](std-toml.md#api-14) | `int64 len()` |
-| [std::toml::deserialize](std-toml.md#api-1) | `Result<T,std::core::Error> deserialize<T>(String text)` |
-| [std::toml::parse](std-toml.md#api-28) | `Result<TomlValue, std::core::Error> parse(std::core::String text)` |
-| [std::toml::serialize](std-toml.md#api-0) | `Result<String,std::core::Error> serialize<T>(T const& value)` |
+| [std::toml::deserialize](std-toml.md#api-1) | `Result<T,Error> deserialize<T>(String text)` |
+| [std::toml::parse](std-toml.md#api-28) | `Result<TomlValue, Error> parse(String text)` |
+| [std::toml::serialize](std-toml.md#api-0) | `Result<String,Error> serialize<T>(T const& value)` |
 | [std::tree::AvlTree::clear](std-tree.md#api-31) | `void clear()` |
 | [std::tree::AvlTree::contains](std-tree.md#api-30) | `bool contains(int64 key)` |
 | [std::tree::AvlTree::copy](std-tree.md#api-27) | `AvlTree copy()` |
@@ -1498,13 +1498,13 @@
 | [std::tree::RedBlackTree::remove](std-tree.md#api-24) | `bool remove(int64 key)` |
 | [std::tree::RedBlackTree::validate](std-tree.md#api-25) | `bool validate()` |
 | [std::utf8::Utf8Error::toString](std-utf8.md#api-0) | `String toString()` |
-| [std::utf8::codePointCount](std-utf8.md#api-6) | `Result<int64,std::core::Error> codePointCount(String text)` |
-| [std::utf8::decodeUtf8](std-utf8.md#api-2) | `Result<List<uint32>,std::core::Error> decodeUtf8(String text)` |
-| [std::utf8::decodeUtf8Bytes](std-utf8.md#api-1) | `Result<List<uint32>,std::core::Error> decodeUtf8Bytes(List<uint8> text)` |
-| [std::utf8::encodeUtf8](std-utf8.md#api-5) | `Result<String,std::core::Error> encodeUtf8(List<uint32> points)` |
-| [std::utf8::encodeUtf8Bytes](std-utf8.md#api-4) | `Result<List<uint8>,std::core::Error> encodeUtf8Bytes(List<uint32> points)` |
+| [std::utf8::codePointCount](std-utf8.md#api-6) | `Result<int64,Error> codePointCount(String text)` |
+| [std::utf8::decodeUtf8](std-utf8.md#api-2) | `Result<List<uint32>,Error> decodeUtf8(String text)` |
+| [std::utf8::decodeUtf8Bytes](std-utf8.md#api-1) | `Result<List<uint32>,Error> decodeUtf8Bytes(List<uint8> text)` |
+| [std::utf8::encodeUtf8](std-utf8.md#api-5) | `Result<String,Error> encodeUtf8(List<uint32> points)` |
+| [std::utf8::encodeUtf8Bytes](std-utf8.md#api-4) | `Result<List<uint8>,Error> encodeUtf8Bytes(List<uint32> points)` |
 | [std::utf8::isValidUtf8](std-utf8.md#api-3) | `bool isValidUtf8(String text)` |
-| [std::utf8::sliceCodePoints](std-utf8.md#api-7) | `Result<String,std::core::Error> sliceCodePoints(String text, int64 start, int64 count)` |
+| [std::utf8::sliceCodePoints](std-utf8.md#api-7) | `Result<String,Error> sliceCodePoints(String text, int64 start, int64 count)` |
 | [std::xml::XmlNode::attribute](std-xml.md#api-1) | `Option<String> attribute(String name)` |
 | [std::xml::XmlNode::child](std-xml.md#api-3) | `Option<XmlNode> child(int64 index)` |
 | [std::xml::XmlNode::childCount](std-xml.md#api-2) | `int64 childCount()` |

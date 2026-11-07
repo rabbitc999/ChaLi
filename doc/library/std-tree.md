@@ -149,7 +149,7 @@ static BinarySearchTree create();
 **调用形式**
 
 ```chali
-std::tree::BinarySearchTree::create();
+BinarySearchTree::create();
 ```
 
 **源码**：[source/std/tree.chl:96](../../source/std/tree.chl#L96)。
@@ -649,7 +649,7 @@ static RedBlackTree create();
 **调用形式**
 
 ```chali
-std::tree::RedBlackTree::create();
+RedBlackTree::create();
 ```
 
 **源码**：[source/std/tree.chl:139](../../source/std/tree.chl#L139)。
@@ -1081,7 +1081,7 @@ static AvlTree create();
 **调用形式**
 
 ```chali
-std::tree::AvlTree::create();
+AvlTree::create();
 ```
 
 **源码**：[source/std/tree.chl:243](../../source/std/tree.chl#L243)。
@@ -1689,7 +1689,7 @@ static MinHeap create();
 **调用形式**
 
 ```chali
-std::tree::MinHeap::create();
+MinHeap::create();
 ```
 
 **源码**：[source/std/tree.chl:386](../../source/std/tree.chl#L386)。
@@ -2013,7 +2013,7 @@ static GeneralTree create();
 **调用形式**
 
 ```chali
-std::tree::GeneralTree::create();
+GeneralTree::create();
 ```
 
 **源码**：[source/std/tree.chl:409](../../source/std/tree.chl#L409)。
@@ -2226,6 +2226,7 @@ int64 valueAt(int64 cursor);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`cursor>=0 && self.__nodes.valid(cursor+1),"GeneralTree 节点无效"`。
 
 **调用形式**
 
@@ -2472,7 +2473,7 @@ static GeneralTree fromBinary(BinarySearchTree tree);
 **调用形式**
 
 ```chali
-std::tree::GeneralTree::fromBinary(tree);
+GeneralTree::fromBinary(tree);
 ```
 
 **源码**：[source/std/tree.chl:456](../../source/std/tree.chl#L456)。

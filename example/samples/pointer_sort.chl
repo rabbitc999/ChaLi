@@ -30,16 +30,16 @@ void main() {
     /* &raw[0] 是首元素引用，len(raw) 是元素个数；两个下标 1 的元素排完都在前两位。 */
     int64 raw[] = new[5];
     raw[0] = 4; raw[1] = 1; raw[2] = 3; raw[3] = 1; raw[4] = 2;
-    std::algorithms::sortReference<int64>(raw, len(raw));
+    sortReference<int64>(raw, len(raw));
     println("{} {} {} {} {}", raw[0], raw[1], raw[2], raw[3], raw[4]);
     raw.drop();
 
     /* 字符串也走同一套：`>` 按字典序。 */
     String words[] = new[3];
     words[0] = "pear"; words[1] = "apple"; words[2] = "fig";
-    std::algorithms::sortReference<String>(&words[0], len(words));
+    sortReference<String>(&words[0], len(words));
     println("{} {} {}", words[0], words[1], words[2]);
-    let view = std::memory::Span<String>::from(&words[0], len(words));
+    let view = Span<String>::from(&words[0], len(words));
     assert(view[0] == "apple" && view[2] == "pear");
     for (String mut& item in view) {
         item[0] = 'X';
@@ -55,7 +55,7 @@ void main() {
     items[0].weight = 2; items[0].name = "b";
     items[1].weight = 5; items[1].name = "a";
     items[2].weight = 3; items[2].name = "c";
-    std::algorithms::sortReference<Item>(items, len(items));
+    sortReference<Item>(items, len(items));
     println("{} {} {}", items[0].name, items[1].name, items[2].name);
     items.drop();
 }

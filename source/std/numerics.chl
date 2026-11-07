@@ -42,7 +42,7 @@ inline float64 __numericsBisect(float64 fn(float64) function, float64 left, floa
     while (index < maxIterations) {
         float64 middle = left + (right - left) / 2.0;
         float64 value = function(middle);
-        if (std::math::abs(value) <= tolerance || (right - left) / 2.0 <= tolerance) { return middle; }
+        if (abs(value) <= tolerance || (right - left) / 2.0 <= tolerance) { return middle; }
         if ((value < 0.0 && low < 0.0) || (value > 0.0 && low > 0.0)) {
             left = middle;
             low = value;
@@ -52,7 +52,7 @@ inline float64 __numericsBisect(float64 fn(float64) function, float64 left, floa
         }
         index = index + 1;
     }
-    std::core::panic("bisect 在迭代上限内未收敛");
+    panic("bisect 在迭代上限内未收敛");
     return 0.0;
 }
 
@@ -75,28 +75,28 @@ inline float64 __numericsNewton(float64 fn(float64) function, float64 initial,
     int64 index = 0;
     while (index < maxIterations) {
         float64 value = function(current);
-        if (std::math::abs(value) <= tolerance) { return current; }
-        float64 scale = std::math::abs(current);
+        if (abs(value) <= tolerance) { return current; }
+        float64 scale = abs(current);
         if (scale < 1.0) { scale = 1.0; }
         float64 slope = __numericsDerivative(function, current, 0.000001 * scale);
-        float64 slopeSize = std::math::abs(slope);
+        float64 slopeSize = abs(slope);
         if (!(slopeSize > 0.000000000001)) {
-            std::core::panic("newton 导数太接近零");
+            panic("newton 导数太接近零");
             return 0.0;
         }
         current = current - value / slope;
         index = index + 1;
     }
-    std::core::panic("newton 在迭代上限内未收敛");
+    panic("newton 在迭代上限内未收敛");
     return 0.0;
 }
 
 /** 显式欧拉法解一维 ODE；调用者保证 `step > 0` 且 `steps >= 0`。 */
-inline std::core::List<float64> __numericsSolveOdeEuler(
+inline List<float64> __numericsSolveOdeEuler(
     float64 fn(float64, float64) rate,
     float64 initialTime, float64 initialValue, float64 step, int64 steps)
 {
-    std::core::List<float64> values;
+    List<float64> values;
     values.push(initialValue);
     float64 time = initialTime;
     float64 value = initialValue;
@@ -111,11 +111,11 @@ inline std::core::List<float64> __numericsSolveOdeEuler(
 }
 
 /** 四阶龙格-库塔解一维 ODE；调用者保证 `step > 0` 且 `steps >= 0`。 */
-inline std::core::List<float64> __numericsSolveOdeRK4(
+inline List<float64> __numericsSolveOdeRK4(
     float64 fn(float64, float64) rate,
     float64 initialTime, float64 initialValue, float64 step, int64 steps)
 {
-    std::core::List<float64> values;
+    List<float64> values;
     values.push(initialValue);
     float64 time = initialTime;
     float64 value = initialValue;
@@ -133,7 +133,7 @@ struct Numerics {
     /** 中心差分求导；`step` 不为正时停机。 */
     static float64 derivative(float64 fn(float64) function, float64 x, float64 step) {
         if (!(step > 0.0)) {
-            std::core::panic("derivative 步长必须为正");
+            panic("derivative 步长必须为正");
             return 0.0;
         }
         return __numericsDerivative(function, x, step);
@@ -142,7 +142,7 @@ struct Numerics {
     static float64 integrateSimpson(float64 fn(float64) function,
                                     float64 begin, float64 end, int64 intervals) {
         if (!(intervals > 0 && intervals % 2 == 0)) {
-            std::core::panic("Simpson 分段数必须为正偶数");
+            panic("Simpson 分段数必须为正偶数");
             return 0.0;
         }
         return __numericsSimpson(function, begin, end, intervals);
@@ -151,7 +151,7 @@ struct Numerics {
     static float64 bisect(float64 fn(float64) function, float64 left, float64 right,
                           float64 tolerance, int64 maxIterations) {
         if (!(left < right && tolerance > 0.0 && maxIterations > 0)) {
-            std::core::panic("bisect 区间、精度或迭代次数不合法");
+            panic("bisect 区间、精度或迭代次数不合法");
             return 0.0;
         }
         float64 low = function(left);
@@ -159,7 +159,7 @@ struct Numerics {
         if (low == 0.0) { return left; }
         if (high == 0.0) { return right; }
         if (!((low < 0.0 && high > 0.0) || (low > 0.0 && high < 0.0))) {
-            std::core::panic("bisect 端点必须异号");
+            panic("bisect 端点必须异号");
             return 0.0;
         }
         return __numericsBisect(function, left, right, tolerance, maxIterations);
@@ -168,7 +168,7 @@ struct Numerics {
     static float64 rk4Step(float64 fn(float64, float64) derivative,
                            float64 time, float64 value, float64 step) {
         if (!(step > 0.0)) {
-            std::core::panic("rk4Step 步长必须为正");
+            panic("rk4Step 步长必须为正");
             return 0.0;
         }
         return __numericsRk4Step(derivative, time, value, step);
@@ -177,30 +177,30 @@ struct Numerics {
     static float64 newton(float64 fn(float64) function, float64 initial,
                           float64 tolerance, int64 maxIterations) {
         if (!(tolerance > 0.0 && maxIterations > 0)) {
-            std::core::panic("newton 精度和迭代次数必须为正");
+            panic("newton 精度和迭代次数必须为正");
             return 0.0;
         }
         return __numericsNewton(function, initial, tolerance, maxIterations);
     }
 
     /** 显式欧拉法；步长或步数不合法时停机。 */
-    static std::core::List<float64> solveOdeEuler(
+    static List<float64> solveOdeEuler(
         float64 fn(float64, float64) rate,
         float64 initialTime, float64 initialValue, float64 step, int64 steps) {
         if (!(step > 0.0 && steps >= 0)) {
-            std::core::panic("Euler 步长或步数不合法");
-            std::core::List<float64> empty;
+            panic("Euler 步长或步数不合法");
+            List<float64> empty;
             return empty;
         }
         return __numericsSolveOdeEuler(rate, initialTime, initialValue, step, steps);
     }
     /** 四阶龙格-库塔；步长或步数不合法时停机。 */
-    static std::core::List<float64> solveOdeRK4(
+    static List<float64> solveOdeRK4(
         float64 fn(float64, float64) rate,
         float64 initialTime, float64 initialValue, float64 step, int64 steps) {
         if (!(step > 0.0 && steps >= 0)) {
-            std::core::panic("RK4 步长或步数不合法");
-            std::core::List<float64> empty;
+            panic("RK4 步长或步数不合法");
+            List<float64> empty;
             return empty;
         }
         return __numericsSolveOdeRK4(rate, initialTime, initialValue, step, steps);

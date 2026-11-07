@@ -33,28 +33,28 @@ chali run example/desktop-gui/demo.chl
 import std::gui;
 
 void main() {
-    assert(std::gui::openWindow(560, 380, "ChaLi desktop", 1));
-    let count = std::gui::button("Count");
-    let quit = std::gui::button("Close");
-    let enabled = std::gui::checkBox("Enable counter");
-    let input = std::gui::textBox("Edit this text");
-    let slider = std::gui::slider("Value");
-    let progress = std::gui::progressBar("");
+    assert(openWindow(560, 380, "ChaLi desktop", 1));
+    let count = button("Count");
+    let quit = button("Close");
+    let enabled = checkBox("Enable counter");
+    let input = textBox("Edit this text");
+    let slider = slider("Value");
+    let progress = progressBar("");
     assert(enabled.setChecked(true));
     assert(slider.setRange(0, 100)); assert(progress.setRange(0, 100));
     int64 clicks = 0;
-    count.onClick(void fn mut(std::gui::Event event) { clicks += 1; });
-    quit.onClick(void fn(std::gui::Event event) { std::gui::requestClose(); });
-    std::gui::run(void fn mut() {
-        std::gui::label((int32)24, (int32)20, (int32)500, (int32)28, "Clicks: " + clicks.toString());
-        enabled.draw(std::gui::Rect::at(24, 64, 24, 24));
+    count.onClick(void fn mut(Event event) { clicks += 1; });
+    quit.onClick(void fn(Event event) { requestClose(); });
+    run(void fn mut() {
+        label((int32)24, (int32)20, (int32)500, (int32)28, "Clicks: " + clicks.toString());
+        enabled.draw(Rect::at(24, 64, 24, 24));
         count.setEnabled(enabled.checked());
-        count.draw(std::gui::Rect::at(24, 108, 152, 36));
-        quit.draw(std::gui::Rect::at(200, 108, 152, 36));
-        input.draw(std::gui::Rect::at(24, 168, 328, 32));
-        slider.draw(std::gui::Rect::at(80, 228, 272, 24));
+        count.draw(Rect::at(24, 108, 152, 36));
+        quit.draw(Rect::at(200, 108, 152, 36));
+        input.draw(Rect::at(24, 168, 328, 32));
+        slider.draw(Rect::at(80, 228, 272, 24));
         progress.setValue(slider.value());
-        progress.draw(std::gui::Rect::at(24, 284, 328, 24));
+        progress.draw(Rect::at(24, 284, 328, 24));
     });
     count.close(); quit.close(); enabled.close(); input.close(); slider.close(); progress.close();
     println("clicks={}", clicks);
@@ -336,7 +336,7 @@ bool shouldClose();
 **调用形式**
 
 ```chali
-std::gui::shouldClose();
+shouldClose();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:8](../../library/desktop_gui/desktop_gui.chl.in#L8)。
@@ -372,7 +372,7 @@ bool beginFrame();
 **调用形式**
 
 ```chali
-std::gui::beginFrame();
+beginFrame();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:11](../../library/desktop_gui/desktop_gui.chl.in#L11)。
@@ -408,7 +408,7 @@ void endFrame();
 **调用形式**
 
 ```chali
-std::gui::endFrame();
+endFrame();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:14](../../library/desktop_gui/desktop_gui.chl.in#L14)。
@@ -444,7 +444,7 @@ void close();
 **调用形式**
 
 ```chali
-std::gui::close();
+close();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:17](../../library/desktop_gui/desktop_gui.chl.in#L17)。
@@ -486,7 +486,7 @@ bool open(int32 width, int32 height, String title);
 **调用形式**
 
 ```chali
-std::gui::open(width, height, title);
+open(width, height, title);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:26](../../library/desktop_gui/desktop_gui.chl.in#L26)。
@@ -528,7 +528,7 @@ void label(int32 x, int32 y, int32 width, int32 height, String text);
 **调用形式**
 
 ```chali
-std::gui::label(x, y, width, height, text);
+label(x, y, width, height, text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:27](../../library/desktop_gui/desktop_gui.chl.in#L27)。
@@ -570,7 +570,7 @@ bool button(int32 x, int32 y, int32 width, int32 height, String text);
 **调用形式**
 
 ```chali
-std::gui::button(x, y, width, height, text);
+button(x, y, width, height, text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:28](../../library/desktop_gui/desktop_gui.chl.in#L28)。
@@ -1007,7 +1007,7 @@ static Rect at(float64 x, float64 y, float64 width, float64 height);
 **调用形式**
 
 ```chali
-std::gui::Rect::at(x, y, width, height);
+Rect::at(x, y, width, height);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:86](../../library/desktop_gui/desktop_gui.chl.in#L86)。
@@ -1159,7 +1159,7 @@ static Point at(float64 x, float64 y);
 **调用形式**
 
 ```chali
-std::gui::Point::at(x, y);
+Point::at(x, y);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:106](../../library/desktop_gui/desktop_gui.chl.in#L106)。
@@ -1195,7 +1195,7 @@ void requestClose();
 **调用形式**
 
 ```chali
-std::gui::requestClose();
+requestClose();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:116](../../library/desktop_gui/desktop_gui.chl.in#L116)。
@@ -1233,7 +1233,7 @@ void setBackground(uint32 rgba);
 **调用形式**
 
 ```chali
-std::gui::setBackground(rgba);
+setBackground(rgba);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:126](../../library/desktop_gui/desktop_gui.chl.in#L126)。
@@ -1269,7 +1269,7 @@ void endClip();
 **调用形式**
 
 ```chali
-std::gui::endClip();
+endClip();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:130](../../library/desktop_gui/desktop_gui.chl.in#L130)。
@@ -1309,7 +1309,7 @@ bool setStyle(int32 control, int32 property, int32 value);
 **调用形式**
 
 ```chali
-std::gui::setStyle(control, property, value);
+setStyle(control, property, value);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:134](../../library/desktop_gui/desktop_gui.chl.in#L134)。
@@ -1348,7 +1348,7 @@ int32 getStyle(int32 control, int32 property);
 **调用形式**
 
 ```chali
-std::gui::getStyle(control, property);
+getStyle(control, property);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:136](../../library/desktop_gui/desktop_gui.chl.in#L136)。
@@ -1388,7 +1388,7 @@ bool loadFont(String path, int32 size, String glyphs);
 **调用形式**
 
 ```chali
-std::gui::loadFont(path, size, glyphs);
+loadFont(path, size, glyphs);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:140](../../library/desktop_gui/desktop_gui.chl.in#L140)。
@@ -1431,7 +1431,7 @@ bool openWindow(int64 width, int64 height, String title, int64 options);
 **调用形式**
 
 ```chali
-std::gui::openWindow(width, height, title, options);
+openWindow(width, height, title, options);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:167](../../library/desktop_gui/desktop_gui.chl.in#L167)。
@@ -1471,7 +1471,7 @@ bool open(int64 width, int64 height, String title);
 **调用形式**
 
 ```chali
-std::gui::open(width, height, title);
+open(width, height, title);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:171](../../library/desktop_gui/desktop_gui.chl.in#L171)。
@@ -1509,7 +1509,7 @@ bool setTitle(String text);
 **调用形式**
 
 ```chali
-std::gui::setTitle(text);
+setTitle(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:172](../../library/desktop_gui/desktop_gui.chl.in#L172)。
@@ -1547,7 +1547,7 @@ bool setTargetFps(int64 fps);
 **调用形式**
 
 ```chali
-std::gui::setTargetFps(fps);
+setTargetFps(fps);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:173](../../library/desktop_gui/desktop_gui.chl.in#L173)。
@@ -1585,7 +1585,7 @@ bool setExitKey(int64 key);
 **调用形式**
 
 ```chali
-std::gui::setExitKey(key);
+setExitKey(key);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:174](../../library/desktop_gui/desktop_gui.chl.in#L174)。
@@ -1624,7 +1624,7 @@ bool setMinSize(int64 width, int64 height);
 **调用形式**
 
 ```chali
-std::gui::setMinSize(width, height);
+setMinSize(width, height);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:175](../../library/desktop_gui/desktop_gui.chl.in#L175)。
@@ -1662,7 +1662,7 @@ bool setOpacity(float64 value);
 **调用形式**
 
 ```chali
-std::gui::setOpacity(value);
+setOpacity(value);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:179](../../library/desktop_gui/desktop_gui.chl.in#L179)。
@@ -1698,7 +1698,7 @@ int64 width();
 **调用形式**
 
 ```chali
-std::gui::width();
+width();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:180](../../library/desktop_gui/desktop_gui.chl.in#L180)。
@@ -1734,7 +1734,7 @@ int64 height();
 **调用形式**
 
 ```chali
-std::gui::height();
+height();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:181](../../library/desktop_gui/desktop_gui.chl.in#L181)。
@@ -1770,7 +1770,7 @@ float64 frameTime();
 **调用形式**
 
 ```chali
-std::gui::frameTime();
+frameTime();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:182](../../library/desktop_gui/desktop_gui.chl.in#L182)。
@@ -1806,7 +1806,7 @@ Point mousePosition();
 **调用形式**
 
 ```chali
-std::gui::mousePosition();
+mousePosition();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:183](../../library/desktop_gui/desktop_gui.chl.in#L183)。
@@ -1842,7 +1842,7 @@ Point mouseWheel();
 **调用形式**
 
 ```chali
-std::gui::mouseWheel();
+mouseWheel();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:184](../../library/desktop_gui/desktop_gui.chl.in#L184)。
@@ -1878,7 +1878,7 @@ Point dpiScale();
 **调用形式**
 
 ```chali
-std::gui::dpiScale();
+dpiScale();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:185](../../library/desktop_gui/desktop_gui.chl.in#L185)。
@@ -1914,7 +1914,7 @@ bool focused();
 **调用形式**
 
 ```chali
-std::gui::focused();
+focused();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:186](../../library/desktop_gui/desktop_gui.chl.in#L186)。
@@ -1950,7 +1950,7 @@ float64 time();
 **调用形式**
 
 ```chali
-std::gui::time();
+time();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:187](../../library/desktop_gui/desktop_gui.chl.in#L187)。
@@ -1988,7 +1988,7 @@ bool beginClip(Rect bounds);
 **调用形式**
 
 ```chali
-std::gui::beginClip(bounds);
+beginClip(bounds);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:188](../../library/desktop_gui/desktop_gui.chl.in#L188)。
@@ -2026,7 +2026,7 @@ bool enable(bool value);
 **调用形式**
 
 ```chali
-std::gui::enable(value);
+enable(value);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:189](../../library/desktop_gui/desktop_gui.chl.in#L189)。
@@ -2064,7 +2064,7 @@ bool lock(bool value);
 **调用形式**
 
 ```chali
-std::gui::lock(value);
+lock(value);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:190](../../library/desktop_gui/desktop_gui.chl.in#L190)。
@@ -2102,7 +2102,7 @@ bool setAlpha(float64 value);
 **调用形式**
 
 ```chali
-std::gui::setAlpha(value);
+setAlpha(value);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:191](../../library/desktop_gui/desktop_gui.chl.in#L191)。
@@ -2140,7 +2140,7 @@ bool setState(int64 value);
 **调用形式**
 
 ```chali
-std::gui::setState(value);
+setState(value);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:192](../../library/desktop_gui/desktop_gui.chl.in#L192)。
@@ -2178,7 +2178,7 @@ bool enableTooltips(bool value);
 **调用形式**
 
 ```chali
-std::gui::enableTooltips(value);
+enableTooltips(value);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:193](../../library/desktop_gui/desktop_gui.chl.in#L193)。
@@ -2214,7 +2214,7 @@ bool resetStyle();
 **调用形式**
 
 ```chali
-std::gui::resetStyle();
+resetStyle();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:194](../../library/desktop_gui/desktop_gui.chl.in#L194)。
@@ -2252,7 +2252,7 @@ bool setFontSize(int64 value);
 **调用形式**
 
 ```chali
-std::gui::setFontSize(value);
+setFontSize(value);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:195](../../library/desktop_gui/desktop_gui.chl.in#L195)。
@@ -2290,7 +2290,7 @@ bool setTooltip(String text);
 **调用形式**
 
 ```chali
-std::gui::setTooltip(text);
+setTooltip(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:196](../../library/desktop_gui/desktop_gui.chl.in#L196)。
@@ -2329,11 +2329,12 @@ uint32 rgba(int64 red, int64 green, int64 blue, int64 alpha);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`red >= 0 && red <= 255 && green >= 0 && green <= 255 && blue >= 0 && blue <= 255 && alpha >= 0 && alpha <= 255, "颜色通道必须在 0..255"`。
 
 **调用形式**
 
 ```chali
-std::gui::rgba(red, green, blue, alpha);
+rgba(red, green, blue, alpha);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:198](../../library/desktop_gui/desktop_gui.chl.in#L198)。
@@ -2371,7 +2372,7 @@ Event pollEvent();
 **调用形式**
 
 ```chali
-std::gui::pollEvent();
+pollEvent();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:204](../../library/desktop_gui/desktop_gui.chl.in#L204)。
@@ -4313,7 +4314,7 @@ Widget createControl(int64 kind, String text);
 **调用形式**
 
 ```chali
-std::gui::createControl(kind, text);
+createControl(kind, text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:324](../../library/desktop_gui/desktop_gui.chl.in#L324)。
@@ -4349,7 +4350,7 @@ int64 controlCount();
 **调用形式**
 
 ```chali
-std::gui::controlCount();
+controlCount();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:329](../../library/desktop_gui/desktop_gui.chl.in#L329)。
@@ -4389,7 +4390,7 @@ Widget windowBox(String text);
 **调用形式**
 
 ```chali
-std::gui::windowBox(text);
+windowBox(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:331](../../library/desktop_gui/desktop_gui.chl.in#L331)。
@@ -4429,7 +4430,7 @@ Widget groupBox(String text);
 **调用形式**
 
 ```chali
-std::gui::groupBox(text);
+groupBox(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:333](../../library/desktop_gui/desktop_gui.chl.in#L333)。
@@ -4469,7 +4470,7 @@ Widget line(String text);
 **调用形式**
 
 ```chali
-std::gui::line(text);
+line(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:335](../../library/desktop_gui/desktop_gui.chl.in#L335)。
@@ -4509,7 +4510,7 @@ Widget panel(String text);
 **调用形式**
 
 ```chali
-std::gui::panel(text);
+panel(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:337](../../library/desktop_gui/desktop_gui.chl.in#L337)。
@@ -4549,7 +4550,7 @@ Widget tabBar(String text);
 **调用形式**
 
 ```chali
-std::gui::tabBar(text);
+tabBar(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:339](../../library/desktop_gui/desktop_gui.chl.in#L339)。
@@ -4589,7 +4590,7 @@ Widget scrollPanel(String text);
 **调用形式**
 
 ```chali
-std::gui::scrollPanel(text);
+scrollPanel(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:341](../../library/desktop_gui/desktop_gui.chl.in#L341)。
@@ -4629,7 +4630,7 @@ Widget label(String text);
 **调用形式**
 
 ```chali
-std::gui::label(text);
+label(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:343](../../library/desktop_gui/desktop_gui.chl.in#L343)。
@@ -4669,7 +4670,7 @@ Widget button(String text);
 **调用形式**
 
 ```chali
-std::gui::button(text);
+button(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:345](../../library/desktop_gui/desktop_gui.chl.in#L345)。
@@ -4709,7 +4710,7 @@ Widget labelButton(String text);
 **调用形式**
 
 ```chali
-std::gui::labelButton(text);
+labelButton(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:347](../../library/desktop_gui/desktop_gui.chl.in#L347)。
@@ -4749,7 +4750,7 @@ Widget toggle(String text);
 **调用形式**
 
 ```chali
-std::gui::toggle(text);
+toggle(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:349](../../library/desktop_gui/desktop_gui.chl.in#L349)。
@@ -4789,7 +4790,7 @@ Widget toggleGroup(String text);
 **调用形式**
 
 ```chali
-std::gui::toggleGroup(text);
+toggleGroup(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:351](../../library/desktop_gui/desktop_gui.chl.in#L351)。
@@ -4829,7 +4830,7 @@ Widget toggleSlider(String text);
 **调用形式**
 
 ```chali
-std::gui::toggleSlider(text);
+toggleSlider(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:353](../../library/desktop_gui/desktop_gui.chl.in#L353)。
@@ -4869,7 +4870,7 @@ Widget checkBox(String text);
 **调用形式**
 
 ```chali
-std::gui::checkBox(text);
+checkBox(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:355](../../library/desktop_gui/desktop_gui.chl.in#L355)。
@@ -4909,7 +4910,7 @@ Widget comboBox(String text);
 **调用形式**
 
 ```chali
-std::gui::comboBox(text);
+comboBox(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:357](../../library/desktop_gui/desktop_gui.chl.in#L357)。
@@ -4949,7 +4950,7 @@ Widget dropdownBox(String text);
 **调用形式**
 
 ```chali
-std::gui::dropdownBox(text);
+dropdownBox(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:359](../../library/desktop_gui/desktop_gui.chl.in#L359)。
@@ -4989,7 +4990,7 @@ Widget spinner(String text);
 **调用形式**
 
 ```chali
-std::gui::spinner(text);
+spinner(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:361](../../library/desktop_gui/desktop_gui.chl.in#L361)。
@@ -5029,7 +5030,7 @@ Widget valueBox(String text);
 **调用形式**
 
 ```chali
-std::gui::valueBox(text);
+valueBox(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:363](../../library/desktop_gui/desktop_gui.chl.in#L363)。
@@ -5069,7 +5070,7 @@ Widget textBox(String text);
 **调用形式**
 
 ```chali
-std::gui::textBox(text);
+textBox(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:365](../../library/desktop_gui/desktop_gui.chl.in#L365)。
@@ -5109,7 +5110,7 @@ Widget slider(String text);
 **调用形式**
 
 ```chali
-std::gui::slider(text);
+slider(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:367](../../library/desktop_gui/desktop_gui.chl.in#L367)。
@@ -5149,7 +5150,7 @@ Widget sliderBar(String text);
 **调用形式**
 
 ```chali
-std::gui::sliderBar(text);
+sliderBar(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:369](../../library/desktop_gui/desktop_gui.chl.in#L369)。
@@ -5189,7 +5190,7 @@ Widget progressBar(String text);
 **调用形式**
 
 ```chali
-std::gui::progressBar(text);
+progressBar(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:371](../../library/desktop_gui/desktop_gui.chl.in#L371)。
@@ -5229,7 +5230,7 @@ Widget statusBar(String text);
 **调用形式**
 
 ```chali
-std::gui::statusBar(text);
+statusBar(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:373](../../library/desktop_gui/desktop_gui.chl.in#L373)。
@@ -5269,7 +5270,7 @@ Widget dummyRec(String text);
 **调用形式**
 
 ```chali
-std::gui::dummyRec(text);
+dummyRec(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:375](../../library/desktop_gui/desktop_gui.chl.in#L375)。
@@ -5309,7 +5310,7 @@ Widget grid(String text);
 **调用形式**
 
 ```chali
-std::gui::grid(text);
+grid(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:377](../../library/desktop_gui/desktop_gui.chl.in#L377)。
@@ -5349,7 +5350,7 @@ Widget listView(String text);
 **调用形式**
 
 ```chali
-std::gui::listView(text);
+listView(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:379](../../library/desktop_gui/desktop_gui.chl.in#L379)。
@@ -5389,7 +5390,7 @@ Widget listViewEx(String text);
 **调用形式**
 
 ```chali
-std::gui::listViewEx(text);
+listViewEx(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:381](../../library/desktop_gui/desktop_gui.chl.in#L381)。
@@ -5429,7 +5430,7 @@ Widget messageBox(String text);
 **调用形式**
 
 ```chali
-std::gui::messageBox(text);
+messageBox(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:383](../../library/desktop_gui/desktop_gui.chl.in#L383)。
@@ -5469,7 +5470,7 @@ Widget textInputBox(String text);
 **调用形式**
 
 ```chali
-std::gui::textInputBox(text);
+textInputBox(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:385](../../library/desktop_gui/desktop_gui.chl.in#L385)。
@@ -5509,7 +5510,7 @@ Widget colorPicker(String text);
 **调用形式**
 
 ```chali
-std::gui::colorPicker(text);
+colorPicker(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:387](../../library/desktop_gui/desktop_gui.chl.in#L387)。
@@ -5549,7 +5550,7 @@ Widget colorPanel(String text);
 **调用形式**
 
 ```chali
-std::gui::colorPanel(text);
+colorPanel(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:389](../../library/desktop_gui/desktop_gui.chl.in#L389)。
@@ -5589,7 +5590,7 @@ Widget colorBarAlpha(String text);
 **调用形式**
 
 ```chali
-std::gui::colorBarAlpha(text);
+colorBarAlpha(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:391](../../library/desktop_gui/desktop_gui.chl.in#L391)。
@@ -5629,7 +5630,7 @@ Widget colorBarHue(String text);
 **调用形式**
 
 ```chali
-std::gui::colorBarHue(text);
+colorBarHue(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:393](../../library/desktop_gui/desktop_gui.chl.in#L393)。
@@ -5669,7 +5670,7 @@ Widget colorPickerHsv(String text);
 **调用形式**
 
 ```chali
-std::gui::colorPickerHsv(text);
+colorPickerHsv(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:395](../../library/desktop_gui/desktop_gui.chl.in#L395)。
@@ -5709,7 +5710,7 @@ Widget colorPanelHsv(String text);
 **调用形式**
 
 ```chali
-std::gui::colorPanelHsv(text);
+colorPanelHsv(text);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:397](../../library/desktop_gui/desktop_gui.chl.in#L397)。
@@ -5749,7 +5750,7 @@ String controlName(int64 index);
 **调用形式**
 
 ```chali
-std::gui::controlName(index);
+controlName(index);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:399](../../library/desktop_gui/desktop_gui.chl.in#L399)。
@@ -5785,7 +5786,7 @@ bool frameActive();
 **调用形式**
 
 ```chali
-std::gui::frameActive();
+frameActive();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:438](../../library/desktop_gui/desktop_gui.chl.in#L438)。
@@ -5821,7 +5822,7 @@ bool inputEnabled();
 **调用形式**
 
 ```chali
-std::gui::inputEnabled();
+inputEnabled();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:440](../../library/desktop_gui/desktop_gui.chl.in#L440)。
@@ -5859,7 +5860,7 @@ uint64 frameCount();
 **调用形式**
 
 ```chali
-std::gui::frameCount();
+frameCount();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:444](../../library/desktop_gui/desktop_gui.chl.in#L444)。
@@ -5897,7 +5898,7 @@ Rect clipBounds();
 **调用形式**
 
 ```chali
-std::gui::clipBounds();
+clipBounds();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:451](../../library/desktop_gui/desktop_gui.chl.in#L451)。
@@ -5938,7 +5939,7 @@ bool drawPixel(Point point, uint32 color);
 **调用形式**
 
 ```chali
-std::gui::drawPixel(point, color);
+drawPixel(point, color);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:477](../../library/desktop_gui/desktop_gui.chl.in#L477)。
@@ -5979,7 +5980,7 @@ bool drawLine(Point start, Point end, float64 thickness, uint32 color);
 **调用形式**
 
 ```chali
-std::gui::drawLine(start, end, thickness, color);
+drawLine(start, end, thickness, color);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:478](../../library/desktop_gui/desktop_gui.chl.in#L478)。
@@ -6022,7 +6023,7 @@ thickness 为零填充矩形；大于零绘制边框，roundness 为 0..1。
 **调用形式**
 
 ```chali
-std::gui::drawRectangle(bounds, color, thickness, roundness);
+drawRectangle(bounds, color, thickness, roundness);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:480](../../library/desktop_gui/desktop_gui.chl.in#L480)。
@@ -6063,7 +6064,7 @@ bool drawCircle(Point center, float64 radius, uint32 color, float64 thickness = 
 **调用形式**
 
 ```chali
-std::gui::drawCircle(center, radius, color, thickness);
+drawCircle(center, radius, color, thickness);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:481](../../library/desktop_gui/desktop_gui.chl.in#L481)。
@@ -6104,7 +6105,7 @@ bool drawEllipse(Point center, Point radius, uint32 color, bool outline = false)
 **调用形式**
 
 ```chali
-std::gui::drawEllipse(center, radius, color, outline);
+drawEllipse(center, radius, color, outline);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:482](../../library/desktop_gui/desktop_gui.chl.in#L482)。
@@ -6146,7 +6147,7 @@ bool drawTriangle(Point a, Point b, Point c, uint32 color, bool outline = false)
 **调用形式**
 
 ```chali
-std::gui::drawTriangle(a, b, c, color, outline);
+drawTriangle(a, b, c, color, outline);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:483](../../library/desktop_gui/desktop_gui.chl.in#L483)。
@@ -6189,7 +6190,7 @@ bool drawPolygon(Point center, int64 sides, float64 radius, float64 rotation, ui
 **调用形式**
 
 ```chali
-std::gui::drawPolygon(center, sides, radius, rotation, color, thickness);
+drawPolygon(center, sides, radius, rotation, color, thickness);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:484](../../library/desktop_gui/desktop_gui.chl.in#L484)。
@@ -6232,7 +6233,7 @@ bool drawBezier(Point start, Point first_control, Point second_control, Point en
 **调用形式**
 
 ```chali
-std::gui::drawBezier(start, first_control, second_control, end, thickness, color);
+drawBezier(start, first_control, second_control, end, thickness, color);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:485](../../library/desktop_gui/desktop_gui.chl.in#L485)。
@@ -6277,7 +6278,7 @@ bool drawRing(Point center, float64 inner_radius, float64 outer_radius, float64 
 **调用形式**
 
 ```chali
-std::gui::drawRing(center, inner_radius, outer_radius, start_angle, end_angle, color);
+drawRing(center, inner_radius, outer_radius, start_angle, end_angle, color);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:487](../../library/desktop_gui/desktop_gui.chl.in#L487)。
@@ -6319,7 +6320,7 @@ bool drawText(String text, Point position, float64 size, uint32 color, float64 s
 **调用形式**
 
 ```chali
-std::gui::drawText(text, position, size, color, spacing);
+drawText(text, position, size, color, spacing);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:488](../../library/desktop_gui/desktop_gui.chl.in#L488)。
@@ -6359,7 +6360,7 @@ Point measureText(String text, float64 size, float64 spacing = 1);
 **调用形式**
 
 ```chali
-std::gui::measureText(text, size, spacing);
+measureText(text, size, spacing);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:489](../../library/desktop_gui/desktop_gui.chl.in#L489)。
@@ -6586,7 +6587,7 @@ Texture loadTexture(String path);
 **调用形式**
 
 ```chali
-std::gui::loadTexture(path);
+loadTexture(path);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:517](../../library/desktop_gui/desktop_gui.chl.in#L517)。
@@ -6629,7 +6630,7 @@ Event customEvent(String name, String text = "", int64 code = 0, float64 value =
 **调用形式**
 
 ```chali
-std::gui::customEvent(name, text, code, value);
+customEvent(name, text, code, value);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:520](../../library/desktop_gui/desktop_gui.chl.in#L520)。
@@ -8082,7 +8083,7 @@ CustomWidget customWidget();
 **调用形式**
 
 ```chali
-std::gui::customWidget();
+customWidget();
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:698](../../library/desktop_gui/desktop_gui.chl.in#L698)。
@@ -8123,7 +8124,7 @@ draw 中构建一帧；窗口输入在控件之后派发，不保存临时原生
 **调用形式**
 
 ```chali
-std::gui::run(draw, onEvent);
+run(draw, onEvent);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:701](../../library/desktop_gui/desktop_gui.chl.in#L701)。
@@ -8161,7 +8162,7 @@ void run(void fn() draw);
 **调用形式**
 
 ```chali
-std::gui::run(draw);
+run(draw);
 ```
 
 **源码**：[library/desktop_gui/desktop_gui.chl.in:720](../../library/desktop_gui/desktop_gui.chl.in#L720)。

@@ -25,91 +25,91 @@ import std::reflect;
 @Reflect char character(char value){return value;}
 struct Hidden {int64 read(){return 99;}};
 void main(){
-    List<std::reflect::ReflectValue> args;List<std::reflect::ReflectValue> empty;
-    args.push(std::reflect::ReflectValue::I64(2));
-    assert(std::reflect::call("program::plus",args).unwrap().asI64().unwrap()==3);
-    assert(std::reflect::call("program::absent",args).isErr());
-    assert(std::reflect::call("program::unsupported",args).isErr());
-    Counter obj=std::reflect::construct<Counter>(args).unwrap();
-    assert(std::reflect::callMethod<Counter>(&obj,"bump",args).unwrap().asI64().unwrap()==4);
-    assert(std::reflect::callMethodConst<Counter>(&obj,"read",empty).unwrap().asI64().unwrap()==4);
-    assert(std::reflect::callMethodConst<Counter>(&obj,"bump",args).isErr());
-    assert(std::reflect::callStatic<Counter>("answer",args).unwrap().asI64().unwrap()==42);
+    List<ReflectValue> args;List<ReflectValue> empty;
+    args.push(ReflectValue::I64(2));
+    assert(call("program::plus",args).unwrap().asI64().unwrap()==3);
+    assert(call("program::absent",args).isErr());
+    assert(call("program::unsupported",args).isErr());
+    Counter obj=construct<Counter>(args).unwrap();
+    assert(callMethod<Counter>(&obj,"bump",args).unwrap().asI64().unwrap()==4);
+    assert(callMethodConst<Counter>(&obj,"read",empty).unwrap().asI64().unwrap()==4);
+    assert(callMethodConst<Counter>(&obj,"bump",args).isErr());
+    assert(callStatic<Counter>("answer",args).unwrap().asI64().unwrap()==42);
     Counter mut& interfaceObj=new Counter(4);Any boxed;boxed.set(&interfaceObj);Reader mut& reader=boxed.getReference();
-    assert(std::reflect::callInterface<Reader>(reader,"bump",args).unwrap().asI64().unwrap()==6);
-    assert(std::reflect::callInterfaceConst<Reader>(reader,"read",empty).unwrap().asI64().unwrap()==6);
-    assert(std::reflect::callInterfaceConst<Reader>(reader,"bump",args).isErr());
+    assert(callInterface<Reader>(reader,"bump",args).unwrap().asI64().unwrap()==6);
+    assert(callInterfaceConst<Reader>(reader,"read",empty).unwrap().asI64().unwrap()==6);
+    assert(callInterfaceConst<Reader>(reader,"bump",args).isErr());
     Choice choice=Choice::Ready;
-    assert(std::reflect::callEnumMethod<Choice>(&choice,"read",empty).unwrap().asI64().unwrap()==1);
+    assert(callEnumMethod<Choice>(&choice,"read",empty).unwrap().asI64().unwrap()==1);
     choice=Choice::Value(9);
-    assert(std::reflect::callEnumMethodConst<Choice>(&choice,"read",empty).unwrap().asI64().unwrap()==9);
-    assert(std::reflect::callEnumStatic<Choice>("answer",empty).unwrap().asI64().unwrap()==8);
-    assert(std::reflect::call("program::nothing",empty).isOk());
-    List<std::reflect::ReflectValue> textArgs;textArgs.push(std::reflect::ReflectValue::Text("alive"));
-    assert(std::reflect::call("program::echo",textArgs).unwrap().asText().unwrap()=="alive");
+    assert(callEnumMethodConst<Choice>(&choice,"read",empty).unwrap().asI64().unwrap()==9);
+    assert(callEnumStatic<Choice>("answer",empty).unwrap().asI64().unwrap()==8);
+    assert(call("program::nothing",empty).isOk());
+    List<ReflectValue> textArgs;textArgs.push(ReflectValue::Text("alive"));
+    assert(call("program::echo",textArgs).unwrap().asText().unwrap()=="alive");
     assert(textArgs[0].asText().unwrap()=="alive");
-    assert(std::reflect::call("program::getFuncInfo",textArgs).unwrap().asI64().unwrap()==5);
-    args[0]=std::reflect::ReflectValue::I32((int32)2);
-    assert(std::reflect::call("program::plus",args).isErr());
-    assert(std::reflect::construct<Counter>(args).isErr());
-    assert(std::reflect::callMethod<Counter>(&obj,"bump",args).isErr());
-    assert(std::reflect::callStatic<Counter>("answer",empty).isErr());
-    List<std::reflect::ReflectValue> operand;operand.push(std::reflect::ReflectValue::I64(2));
-    operand[0]=std::reflect::ReflectValue::I32((int32)10);
-    assert(std::reflect::call("program::overloaded",operand).unwrap().asI32().unwrap()==(int32)11);
-    operand[0]=std::reflect::ReflectValue::I64(10);
-    assert(std::reflect::call("program::overloaded",operand).unwrap().asI64().unwrap()==12);
-    operand[0]=std::reflect::ReflectValue::U64((uint64)0xffffffffffffffff);
-    assert(std::reflect::call("program::high",operand).unwrap().asU64().unwrap()==(uint64)0xffffffffffffffff);
-    operand[0]=std::reflect::ReflectValue::F32((float32)1.25);
-    assert(std::reflect::call("program::single",operand).unwrap().asF32().unwrap()==(float32)1.25);
-    operand[0]=std::reflect::ReflectValue::F64(2.5);
-    assert(std::reflect::call("program::doubleValue",operand).unwrap().asF64().unwrap()==2.5);
-    operand[0]=std::reflect::ReflectValue::Bool(true);
-    assert(std::reflect::call("program::flag",operand).unwrap().asBool().unwrap());
-    operand[0]=std::reflect::ReflectValue::Char('x');
-    assert(std::reflect::call("program::character",operand).unwrap().asChar().unwrap()=='x');
-    Hidden hidden;assert(std::reflect::callMethod<Hidden>(&hidden,"read",empty).isErr());
+    assert(call("program::getFuncInfo",textArgs).unwrap().asI64().unwrap()==5);
+    args[0]=ReflectValue::I32((int32)2);
+    assert(call("program::plus",args).isErr());
+    assert(construct<Counter>(args).isErr());
+    assert(callMethod<Counter>(&obj,"bump",args).isErr());
+    assert(callStatic<Counter>("answer",empty).isErr());
+    List<ReflectValue> operand;operand.push(ReflectValue::I64(2));
+    operand[0]=ReflectValue::I32((int32)10);
+    assert(call("program::overloaded",operand).unwrap().asI32().unwrap()==(int32)11);
+    operand[0]=ReflectValue::I64(10);
+    assert(call("program::overloaded",operand).unwrap().asI64().unwrap()==12);
+    operand[0]=ReflectValue::U64((uint64)0xffffffffffffffff);
+    assert(call("program::high",operand).unwrap().asU64().unwrap()==(uint64)0xffffffffffffffff);
+    operand[0]=ReflectValue::F32((float32)1.25);
+    assert(call("program::single",operand).unwrap().asF32().unwrap()==(float32)1.25);
+    operand[0]=ReflectValue::F64(2.5);
+    assert(call("program::doubleValue",operand).unwrap().asF64().unwrap()==2.5);
+    operand[0]=ReflectValue::Bool(true);
+    assert(call("program::flag",operand).unwrap().asBool().unwrap());
+    operand[0]=ReflectValue::Char('x');
+    assert(call("program::character",operand).unwrap().asChar().unwrap()=='x');
+    Hidden hidden;assert(callMethod<Hidden>(&hidden,"read",empty).isErr());
     // 缺失、个数、精确类型和接收者错误须保留可区分的错误码。
-    match (std::reflect::call("program::absent",empty).error())
+    match (call("program::absent",empty).error())
     {
-        std::reflect::ReflectError(reflectionError) => {
-            match (reflectionError) { std::reflect::ReflectError::NotFound => {} _ => { assert(false); } }
+        ReflectError(reflectionError) => {
+            match (reflectionError) { ReflectError::NotFound => {} _ => { assert(false); } }
         }
         _ => { assert(false); }
     }
-    match (std::reflect::call("program::plus",empty).error())
+    match (call("program::plus",empty).error())
     {
-        std::reflect::ReflectError(reflectionError) => {
-            match (reflectionError) { std::reflect::ReflectError::ArgumentCount => {} _ => { assert(false); } }
+        ReflectError(reflectionError) => {
+            match (reflectionError) { ReflectError::ArgumentCount => {} _ => { assert(false); } }
         }
         _ => { assert(false); }
     }
-    match (std::reflect::call("program::plus",operand).error())
+    match (call("program::plus",operand).error())
     {
-        std::reflect::ReflectError(reflectionError) => {
-            match (reflectionError) { std::reflect::ReflectError::TypeMismatch => {} _ => { assert(false); } }
+        ReflectError(reflectionError) => {
+            match (reflectionError) { ReflectError::TypeMismatch => {} _ => { assert(false); } }
         }
         _ => { assert(false); }
     }
-    match (std::reflect::callMethodConst<Counter>(&obj,"bump",args).error())
+    match (callMethodConst<Counter>(&obj,"bump",args).error())
     {
-        std::reflect::ReflectError(reflectionError) => {
-            match (reflectionError) { std::reflect::ReflectError::TypeMismatch => {} _ => { assert(false); } }
+        ReflectError(reflectionError) => {
+            match (reflectionError) { ReflectError::TypeMismatch => {} _ => { assert(false); } }
         }
         _ => { assert(false); }
     }
-    match (std::reflect::call("program::unsupported",args).error())
+    match (call("program::unsupported",args).error())
     {
-        std::reflect::ReflectError(reflectionError) => {
-            match (reflectionError) { std::reflect::ReflectError::UnsupportedSignature => {} _ => { assert(false); } }
+        ReflectError(reflectionError) => {
+            match (reflectionError) { ReflectError::UnsupportedSignature => {} _ => { assert(false); } }
         }
         _ => { assert(false); }
     }
-    match (std::reflect::callMethod<Hidden>(&hidden,"read",empty).error())
+    match (callMethod<Hidden>(&hidden,"read",empty).error())
     {
-        std::reflect::ReflectError(reflectionError) => {
-            match (reflectionError) { std::reflect::ReflectError::NotExposed => {} _ => { assert(false); } }
+        ReflectError(reflectionError) => {
+            match (reflectionError) { ReflectError::NotExposed => {} _ => { assert(false); } }
         }
         _ => { assert(false); }
     }

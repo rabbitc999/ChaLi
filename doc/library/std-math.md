@@ -146,7 +146,7 @@ BigDecimal pi(int64 digits = 50);
 **调用形式**
 
 ```chali
-std::math::pi(digits);
+pi(digits);
 ```
 
 **源码**：[source/std/math.chl:14](../../source/std/math.chl#L14)。
@@ -186,7 +186,7 @@ let sin<T>(T value);
 **调用形式**
 
 ```chali
-std::math::sin<T>(value);
+sin(value);
 ```
 
 **源码**：[source/std/math.chl:17](../../source/std/math.chl#L17)。
@@ -226,7 +226,7 @@ let cos<T>(T value);
 **调用形式**
 
 ```chali
-std::math::cos<T>(value);
+cos(value);
 ```
 
 **源码**：[source/std/math.chl:33](../../source/std/math.chl#L33)。
@@ -266,7 +266,7 @@ let tan<T>(T value);
 **调用形式**
 
 ```chali
-std::math::tan<T>(value);
+tan(value);
 ```
 
 **源码**：[source/std/math.chl:49](../../source/std/math.chl#L49)。
@@ -306,7 +306,7 @@ let asin<T>(T value);
 **调用形式**
 
 ```chali
-std::math::asin<T>(value);
+asin(value);
 ```
 
 **源码**：[source/std/math.chl:65](../../source/std/math.chl#L65)。
@@ -346,7 +346,7 @@ let acos<T>(T value);
 **调用形式**
 
 ```chali
-std::math::acos<T>(value);
+acos(value);
 ```
 
 **源码**：[source/std/math.chl:81](../../source/std/math.chl#L81)。
@@ -386,7 +386,7 @@ let atan<T>(T value);
 **调用形式**
 
 ```chali
-std::math::atan<T>(value);
+atan(value);
 ```
 
 **源码**：[source/std/math.chl:97](../../source/std/math.chl#L97)。
@@ -426,7 +426,7 @@ let exp<T>(T value);
 **调用形式**
 
 ```chali
-std::math::exp<T>(value);
+exp(value);
 ```
 
 **源码**：[source/std/math.chl:113](../../source/std/math.chl#L113)。
@@ -466,7 +466,7 @@ let ln<T>(T value);
 **调用形式**
 
 ```chali
-std::math::ln<T>(value);
+ln(value);
 ```
 
 **源码**：[source/std/math.chl:129](../../source/std/math.chl#L129)。
@@ -506,7 +506,7 @@ let log10<T>(T value);
 **调用形式**
 
 ```chali
-std::math::log10<T>(value);
+log10(value);
 ```
 
 **源码**：[source/std/math.chl:145](../../source/std/math.chl#L145)。
@@ -546,7 +546,7 @@ let sqrt<T>(T value);
 **调用形式**
 
 ```chali
-std::math::sqrt<T>(value);
+sqrt(value);
 ```
 
 **源码**：[source/std/math.chl:161](../../source/std/math.chl#L161)。
@@ -586,7 +586,7 @@ let floor<T>(T value);
 **调用形式**
 
 ```chali
-std::math::floor<T>(value);
+floor(value);
 ```
 
 **源码**：[source/std/math.chl:177](../../source/std/math.chl#L177)。
@@ -626,7 +626,7 @@ let ceil<T>(T value);
 **调用形式**
 
 ```chali
-std::math::ceil<T>(value);
+ceil(value);
 ```
 
 **源码**：[source/std/math.chl:193](../../source/std/math.chl#L193)。
@@ -666,7 +666,7 @@ let round<T>(T value);
 **调用形式**
 
 ```chali
-std::math::round<T>(value);
+round(value);
 ```
 
 **源码**：[source/std/math.chl:209](../../source/std/math.chl#L209)。
@@ -706,7 +706,7 @@ let trunc<T>(T value);
 **调用形式**
 
 ```chali
-std::math::trunc<T>(value);
+trunc(value);
 ```
 
 **源码**：[source/std/math.chl:225](../../source/std/math.chl#L225)。
@@ -747,7 +747,7 @@ let pow<T, U>(T value, U other);
 **调用形式**
 
 ```chali
-std::math::pow<T, U>(value, other);
+pow(value, other);
 ```
 
 **源码**：[source/std/math.chl:241](../../source/std/math.chl#L241)。
@@ -788,7 +788,7 @@ let fmod<T, U>(T value, U other);
 **调用形式**
 
 ```chali
-std::math::fmod<T, U>(value, other);
+fmod(value, other);
 ```
 
 **源码**：[source/std/math.chl:390](../../source/std/math.chl#L390)。
@@ -828,7 +828,7 @@ bool isNaN<T>(T value);
 **调用形式**
 
 ```chali
-std::math::isNaN<T>(value);
+isNaN(value);
 ```
 
 **源码**：[source/std/math.chl:538](../../source/std/math.chl#L538)。
@@ -868,7 +868,7 @@ bool isInf<T>(T value);
 **调用形式**
 
 ```chali
-std::math::isInf<T>(value);
+isInf(value);
 ```
 
 **源码**：[source/std/math.chl:553](../../source/std/math.chl#L553)。
@@ -908,7 +908,7 @@ T abs<T>(T value);
 **调用形式**
 
 ```chali
-std::math::abs<T>(value);
+abs(value);
 ```
 
 **源码**：[source/std/math.chl:567](../../source/std/math.chl#L567)。
@@ -948,7 +948,7 @@ T min<T>(T... values);
 **调用形式**
 
 ```chali
-std::math::min<T>(values);
+min(values);
 ```
 
 **源码**：[source/std/math.chl:574](../../source/std/math.chl#L574)。
@@ -988,7 +988,7 @@ T max<T>(T... values);
 **调用形式**
 
 ```chali
-std::math::max<T>(values);
+max(values);
 ```
 
 **源码**：[source/std/math.chl:586](../../source/std/math.chl#L586)。
@@ -1031,7 +1031,7 @@ int64 clamp(int64 value, int64 low, int64 high);
 **调用形式**
 
 ```chali
-std::math::clamp(value, low, high);
+clamp(value, low, high);
 ```
 
 **源码**：[source/std/math.chl:598](../../source/std/math.chl#L598)。
@@ -1074,7 +1074,7 @@ float64 clamp(float64 value, float64 low, float64 high);
 **调用形式**
 
 ```chali
-std::math::clamp(value, low, high);
+clamp(value, low, high);
 ```
 
 **源码**：[source/std/math.chl:610](../../source/std/math.chl#L610)。

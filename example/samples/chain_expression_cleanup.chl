@@ -30,7 +30,7 @@ LifeValue makeLife() {
 int64 returnChain() { return makeLife().next().read(); }
 int64 doubleLifeNumber(int64 value) { return value * 2; }
 List<int64> mappedLife(List<int64> values) {
-    return std::algorithms::mapValue<int64>(values, doubleLifeNumber);
+    return mapValue(values, doubleLifeNumber);
 }
 struct LifeBox { List<int64> values; };
 void main() {
@@ -93,12 +93,12 @@ void main() {
 
         List<int64> mapped = mappedLife(numbers);
         assert((mapped[0]) == (6));
-        mapped = std::algorithms::mapValue<int64>(numbers, doubleLifeNumber);
+        mapped = mapValue(numbers, doubleLifeNumber);
         assert((mapped[0]) == (6));
         LifeBox box;
-        box.values = std::algorithms::mapValue<int64>(numbers, doubleLifeNumber);
+        box.values = mapValue(numbers, doubleLifeNumber);
         assert((box.values[0]) == (6));
-        let moved = std::algorithms::mapValue<int64>(numbers, doubleLifeNumber).intoIter();
+        let moved = mapValue(numbers, doubleLifeNumber).intoIter();
         List<int64> saved = moved.collect();
         assert((saved[0]) == (6));
     

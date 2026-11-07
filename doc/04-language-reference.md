@@ -462,8 +462,8 @@ match 检查**穷尽性**：漏掉变体是编译错误。`_` 兜底。
 int64 grade(int64 score) {
     match (score) {
         100 => { return 3; }
-        std::core::rangeEq(90, 99) => { return 2; }
-        std::core::rangeEq(60, 89) => { return 1; }
+        rangeEq(90, 99) => { return 2; }
+        rangeEq(60, 89) => { return 1; }
         _ => { return 0; }
     }
     return 0;
@@ -687,7 +687,7 @@ m=1
 ```chali
 import std::array;
 void main() {
-    std::array::DynamicArray<int64> values;
+    DynamicArray<int64> values;
     values.reserve(8);
     values.push(7);
     values.resize(3);
@@ -715,7 +715,7 @@ import std::text;
 ```
 
 - 模块用 `module 名字::子名字;` 声明，通常放在文件首行。用户文件省略声明时属于 `program` 模块，可用 `program::名字` 限定引用。
-- `import` 后可写完整限定名，也可使用唯一可见的短名；同名冲突时使用限定名明确归属。
+- `import` 后，函数、常量、接口、枚举、结构体及 opcode 都可使用唯一可见的短名；同名冲突时使用限定名明确归属。函数调用能从实参确定泛型参数时，省略 `<...>`，例如 `foldValue(items, 0, add)`。类型声明仍保留必要的类型参数，如 `List<int64>`。
 - 核心模块 `std::core`（`println` / `format` / `assert` / `len` / `Any` …）自动加载，无需 `import`。
 - 可见性、导出与跨模块泛型见 [`example/samples/import_names.chl`](../example/samples/import_names.chl)。
 
@@ -959,7 +959,7 @@ int32 useCallbacks<T>(int32 c) {
 ```chali
 void main()
 {
-    int64 first = for (let value in std::core::range(1, 8))
+    int64 first = for (let value in range(1, 8))
     {
         if (value % 2 == 0)
         {

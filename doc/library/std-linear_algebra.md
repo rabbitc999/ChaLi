@@ -32,32 +32,32 @@ import std::linear_algebra;
 import std::math;
 
 void checkSolve<T>() {
-    std::linear_algebra::Matrix<T> a = std::linear_algebra::Matrix<T>::zeros(3, 3);
+    Matrix<T> a = Matrix<T>::zeros(3, 3);
     a.set(0, 0, (T)0); a.set(0, 1, (T)2); a.set(0, 2, (T)1);
     a.set(1, 0, (T)2); a.set(1, 1, (T)1); a.set(1, 2, (T)0);
     a.set(2, 0, (T)1); a.set(2, 1, (T)0); a.set(2, 2, (T)3);
-    std::linear_algebra::Vector<T> b = std::linear_algebra::Vector<T>::zeros(3);
+    Vector<T> b = Vector<T>::zeros(3);
     b.set(0, (T)7); b.set(1, (T)4); b.set(2, (T)10);
-    std::linear_algebra::Vector<T> answer = a.solve(b);
-    assert(std::math::abs((float64)answer.at(0) - 1.0) < 0.00001);
-    assert(std::math::abs((float64)answer.at(1) - 2.0) < 0.00001);
-    assert(std::math::abs((float64)answer.at(2) - 3.0) < 0.00001);
+    Vector<T> answer = a.solve(b);
+    assert(abs((float64)answer.at(0) - 1.0) < 0.00001);
+    assert(abs((float64)answer.at(1) - 2.0) < 0.00001);
+    assert(abs((float64)answer.at(2) - 3.0) < 0.00001);
     assert(a.at(0, 0) == (T)0 && a.at(2, 2) == (T)3 && b.at(0) == (T)7);
-    std::linear_algebra::Matrix<T> empty = std::linear_algebra::Matrix<T>::zeros(0, 0);
-    std::linear_algebra::Vector<T> emptyRhs = std::linear_algebra::Vector<T>::zeros(0);
-    std::linear_algebra::Vector<T> emptyAnswer = empty.solve(emptyRhs);
+    Matrix<T> empty = Matrix<T>::zeros(0, 0);
+    Vector<T> emptyRhs = Vector<T>::zeros(0);
+    Vector<T> emptyAnswer = empty.solve(emptyRhs);
     assert(emptyAnswer.len() == 0);
-    std::linear_algebra::Matrix<T> one = std::linear_algebra::Matrix<T>::identity(1);
-    std::linear_algebra::Vector<T> rhs = std::linear_algebra::Vector<T>::zeros(1);
+    Matrix<T> one = Matrix<T>::identity(1);
+    Vector<T> rhs = Vector<T>::zeros(1);
     rhs.set(0, (T)7);
-    std::linear_algebra::Vector<T> single = one.solve(rhs);
+    Vector<T> single = one.solve(rhs);
     assert(single.at(0) == (T)7);
 }
 void checkInteger<T>() {
-    std::linear_algebra::Matrix<T> a = std::linear_algebra::Matrix<T>::identity(1);
-    std::linear_algebra::Vector<T> rhs = std::linear_algebra::Vector<T>::zeros(1);
+    Matrix<T> a = Matrix<T>::identity(1);
+    Vector<T> rhs = Vector<T>::zeros(1);
     rhs.set(0, (T)7);
-    std::linear_algebra::Vector<T> answer = a.solve(rhs);
+    Vector<T> answer = a.solve(rhs);
     assert(answer.at(0) == (T)7);
 }
 float64[] makeArray() {
@@ -72,9 +72,9 @@ struct ArrayFactory {
         return values;
     }
 };
-std::linear_algebra::Vector<float64> firstColumn() {
-    for (col in std::linear_algebra::Matrix<float64>::identity(2)) { return col; }
-    return std::linear_algebra::Vector<float64>::zeros(0);
+Vector<float64> firstColumn() {
+    for (col in Matrix<float64>::identity(2)) { return col; }
+    return Vector<float64>::zeros(0);
 }
 struct ArrayItem { int64 x; int64 y; };
 void checkArrays() {
@@ -84,15 +84,15 @@ void checkArrays() {
     float64 raw[6];
     raw[0] = 1.0; raw[1] = 2.0; raw[2] = 3.0;
     raw[3] = 4.0; raw[4] = 5.0; raw[5] = 6.0;
-    std::linear_algebra::Vector<float64> vector = std::linear_algebra::Vector<float64>::fromArray(raw, len(raw));
+    Vector<float64> vector = Vector<float64>::fromArray(raw, len(raw));
     assert(vector[2] == 3.0);
     float64 vectorArray[] = vector.toArray();
     vectorArray[0] = 99.0;
     assert(vector[0] == 1.0);
-    std::linear_algebra::Vector<float64> restored = std::linear_algebra::Vector<float64>::fromArray(vectorArray);
+    Vector<float64> restored = Vector<float64>::fromArray(vectorArray);
     assert(restored[0] == 99.0);
-    std::linear_algebra::Matrix<float64> matrix = std::linear_algebra::Matrix<float64>::fromArray(raw, len(raw), 2, 3);
-    std::linear_algebra::Vector<float64> column = matrix[1];
+    Matrix<float64> matrix = Matrix<float64>::fromArray(raw, len(raw), 2, 3);
+    Vector<float64> column = matrix[1];
     assert(column.len() == 2 && column[0] == 2.0 && column[1] == 5.0);
     float64 sum = 0.0;
     for (col in matrix) {
@@ -109,7 +109,7 @@ void checkArrays() {
         break;
     }
     assert(visited == 2);
-    std::linear_algebra::Vector<float64> returned = firstColumn();
+    Vector<float64> returned = firstColumn();
     assert(returned[0] == 1.0 && returned[1] == 0.0);
     float64 temporarySum = 0.0;
     for (number in makeArray()) { temporarySum = temporarySum + number; }
@@ -129,13 +129,13 @@ void checkArrays() {
     assert(matrix.at(0, 1) == 2.0);
     float64 flat[] = matrix.toArray();
     assert(len(flat) == 6 && flat[4] == 5.0);
-    std::linear_algebra::Matrix<float64> copy = std::linear_algebra::Matrix<float64>::fromArray(flat, 2, 3);
+    Matrix<float64> copy = Matrix<float64>::fromArray(flat, 2, 3);
     flat[0] = 77.0;
     assert(copy.at(0, 0) == 1.0 && raw[0] == 1.0);
-    std::linear_algebra::Vector<float64> last = copy.column(2);
+    Vector<float64> last = copy.column(2);
     assert(last[0] == 3.0 && last[1] == 6.0);
-    std::linear_algebra::Matrix<float64> empty = std::linear_algebra::Matrix<float64>::zeros(0, 2);
-    std::linear_algebra::Vector<float64> emptyColumn = empty[1];
+    Matrix<float64> empty = Matrix<float64>::zeros(0, 2);
+    Vector<float64> emptyColumn = empty[1];
     float64 emptyArray[] = emptyColumn.toArray();
     assert(len(emptyArray) == 0);
 }
@@ -152,10 +152,10 @@ void main() {
     checkInteger<uint32>();
     checkInteger<uint64>();
 
-    std::linear_algebra::Matrix<int64> ints = std::linear_algebra::Matrix<int64>::identity(2);
-    std::linear_algebra::Vector<int64> rhs = std::linear_algebra::Vector<int64>::zeros(2);
+    Matrix<int64> ints = Matrix<int64>::identity(2);
+    Vector<int64> rhs = Vector<int64>::zeros(2);
     rhs.set(0, -5); rhs.set(1, 7);
-    std::linear_algebra::Vector<int64> answer = ints.solve(rhs);
+    Vector<int64> answer = ints.solve(rhs);
     assert(answer.at(0) == -5 && answer.at(1) == 7);
     println("LU glue solve OK");
 }
@@ -364,6 +364,7 @@ T at(int64 index);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`index >= 0 && index < self.len(), "线性代数存储下标越界"`。
 
 **调用形式**
 
@@ -632,7 +633,7 @@ static Vector<T> zeros(int64 n);
 **调用形式**
 
 ```chali
-std::linear_algebra::Vector<T>::zeros(n);
+Vector<T>::zeros(n);
 ```
 
 **源码**：[source/std/linear_algebra.chl:45](../../source/std/linear_algebra.chl#L45)。
@@ -674,7 +675,7 @@ static Vector<T> fromArray(T const& data, int64 count);
 **调用形式**
 
 ```chali
-std::linear_algebra::Vector<T>::fromArray(data, count);
+Vector<T>::fromArray(data, count);
 ```
 
 **源码**：[source/std/linear_algebra.chl:56](../../source/std/linear_algebra.chl#L56)。
@@ -712,7 +713,7 @@ static Vector<T> fromArray(T data[]);
 **调用形式**
 
 ```chali
-std::linear_algebra::Vector<T>::fromArray(data);
+Vector<T>::fromArray(data);
 ```
 
 **源码**：[source/std/linear_algebra.chl:63](../../source/std/linear_algebra.chl#L63)。
@@ -1357,7 +1358,7 @@ static Matrix<T> zeros(int64 rows, int64 cols);
 **调用形式**
 
 ```chali
-std::linear_algebra::Matrix<T>::zeros(rows, cols);
+Matrix<T>::zeros(rows, cols);
 ```
 
 **源码**：[source/std/linear_algebra.chl:128](../../source/std/linear_algebra.chl#L128)。
@@ -1403,7 +1404,7 @@ static Matrix<T> fromArray(T const& data, int64 count, int64 rows, int64 cols);
 **调用形式**
 
 ```chali
-std::linear_algebra::Matrix<T>::fromArray(data, count, rows, cols);
+Matrix<T>::fromArray(data, count, rows, cols);
 ```
 
 **源码**：[source/std/linear_algebra.chl:140](../../source/std/linear_algebra.chl#L140)。
@@ -1443,7 +1444,7 @@ static Matrix<T> fromArray(T data[], int64 rows, int64 cols);
 **调用形式**
 
 ```chali
-std::linear_algebra::Matrix<T>::fromArray(data, rows, cols);
+Matrix<T>::fromArray(data, rows, cols);
 ```
 
 **源码**：[source/std/linear_algebra.chl:149](../../source/std/linear_algebra.chl#L149)。
@@ -1635,7 +1636,7 @@ static Matrix<T> identity(int64 n);
 **调用形式**
 
 ```chali
-std::linear_algebra::Matrix<T>::identity(n);
+Matrix<T>::identity(n);
 ```
 
 **源码**：[source/std/linear_algebra.chl:168](../../source/std/linear_algebra.chl#L168)。
@@ -2214,7 +2215,7 @@ LuFactorization luDecompose(Matrix<float64> input);
 **调用形式**
 
 ```chali
-std::linear_algebra::luDecompose(input);
+luDecompose(input);
 ```
 
 **源码**：[source/std/linear_algebra.chl:293](../../source/std/linear_algebra.chl#L293)。
@@ -2252,7 +2253,7 @@ LuFactorization lurDecompose(Matrix<float64> input);
 **调用形式**
 
 ```chali
-std::linear_algebra::lurDecompose(input);
+lurDecompose(input);
 ```
 
 **源码**：[source/std/linear_algebra.chl:301](../../source/std/linear_algebra.chl#L301)。
@@ -2290,7 +2291,7 @@ EigenDecomposition symmetricEigen(Matrix<float64> input);
 **调用形式**
 
 ```chali
-std::linear_algebra::symmetricEigen(input);
+symmetricEigen(input);
 ```
 
 **源码**：[source/std/linear_algebra.chl:314](../../source/std/linear_algebra.chl#L314)。
@@ -2328,7 +2329,7 @@ SingularValueDecomposition svd(Matrix<float64> input);
 **调用形式**
 
 ```chali
-std::linear_algebra::svd(input);
+svd(input);
 ```
 
 **源码**：[source/std/linear_algebra.chl:328](../../source/std/linear_algebra.chl#L328)。
@@ -2366,7 +2367,7 @@ JordanDecomposition jordan2(Matrix<float64> input);
 **调用形式**
 
 ```chali
-std::linear_algebra::jordan2(input);
+jordan2(input);
 ```
 
 **源码**：[source/std/linear_algebra.chl:341](../../source/std/linear_algebra.chl#L341)。
@@ -2404,7 +2405,7 @@ JordanDecomposition diagonalize2(Matrix<float64> input);
 **调用形式**
 
 ```chali
-std::linear_algebra::diagonalize2(input);
+diagonalize2(input);
 ```
 
 **源码**：[source/std/linear_algebra.chl:348](../../source/std/linear_algebra.chl#L348)。

@@ -125,13 +125,13 @@ void describe(Error error)
 {
     match (error)
     {
-        std::io::IoError(e) => { println("io: {}", e.toString()); }
+        IoError(e) => { println("io: {}", e.toString()); }
         _ => { println("other: {}", error.toString()); }
     }
 }
 void main()
 {
-    describe(std::io::IoError::Closed);
+    describe(IoError::Closed);
     describe(MessageError::from("invalid score"));
 }
 ```
@@ -194,7 +194,7 @@ Chapter 14 applies behavior requirements to generic constraints and links implem
 import std::io;
 Result<String, Error> readDemo()
 {
-    return Result<String, Error>::Err(std::io::IoError::ReadFailed("demo"));
+    return Result<String, Error>::Err(IoError::ReadFailed("demo"));
 }
 void main()
 {
@@ -202,13 +202,13 @@ void main()
     match (result)
     {
         Ok(text) => { println("{}", text); }
-        Err::std::io::IoError(e) => { println("qualified: {}", e.toString()); }
+        Err::IoError(e) => { println("qualified: {}", e.toString()); }
         Err(_) => { println("other error"); }
     }
     match (result)
     {
         Ok(_) => { println("ok"); }
-        std::io::IoError(e) => { println("short: {}", e.toString()); }
+        IoError(e) => { println("short: {}", e.toString()); }
         Err(_) => { println("other error"); }
     }
 }
@@ -229,19 +229,19 @@ enum Response
 };
 void main()
 {
-    let response = Response::Failed(503, std::io::IoError::Closed);
+    let response = Response::Failed(503, IoError::Closed);
     match (response)
     {
         Response::Pending => { println("pending"); }
-        Response::Failed(code, std::io::IoError e) => { println("{}: {}", code, e.toString()); }
+        Response::Failed(code, IoError e) => { println("{}: {}", code, e.toString()); }
         Response::Failed(code, _ other) => { println("{}: {}", code, other.toString()); }
     }
-    Result<Error, Error> result = Result<Error, Error>::Ok(std::io::IoError::Closed);
+    Result<Error, Error> result = Result<Error, Error>::Ok(IoError::Closed);
     match (result)
     {
-        Ok(std::io::IoError e) => { println("ok: {}", e.toString()); }
+        Ok(IoError e) => { println("ok: {}", e.toString()); }
         Ok(_) => { println("other success"); }
-        Err(std::io::IoError e) => { println("err: {}", e.toString()); }
+        Err(IoError e) => { println("err: {}", e.toString()); }
         Err(_) => { println("other failure"); }
     }
 }
@@ -255,18 +255,18 @@ ok: 文件已关闭
 <!-- verify-book -->
 ```chali
 import std::io;
-Result<String, std::io::IoError> leaf()
+Result<String, IoError> leaf()
 {
-    return Result<String, std::io::IoError>::Err(std::io::IoError::Closed);
+    return Result<String, IoError>::Err(IoError::Closed);
 }
 Result<String, Error> readName()
 {
     String name = leaf()?;
     return Result<String, Error>::Ok(name);
 }
-Option<std::io::IoError> optionalError()
+Option<IoError> optionalError()
 {
-    return Option<std::io::IoError>::Value(std::io::IoError::Closed);
+    return Option<IoError>::Value(IoError::Closed);
 }
 Option<Error> widenedError()
 {
@@ -278,12 +278,12 @@ void main()
     match (readName())
     {
         Ok(name) => { println("{}", name); }
-        Err(std::io::IoError e) => { println("result: {}", e.toString()); }
+        Err(IoError e) => { println("result: {}", e.toString()); }
         Err(_) => { println("other error"); }
     }
     match (widenedError())
     {
-        Value(std::io::IoError e) => { println("option: {}", e.toString()); }
+        Value(IoError e) => { println("option: {}", e.toString()); }
         Value(_) => { println("other value"); }
         None => { println("absent"); }
     }

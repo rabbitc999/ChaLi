@@ -24,9 +24,9 @@ module std::text;
 /* ---------------------------------------------------------------- 私有辅助 */
 
 /** 取字符串的字节表；逐字节扫描的入口。 */
-inline std::core::List<uint8> __textBytes(std::core::String text)
+inline List<uint8> __textBytes(String text)
 {
-    return std::core::stringBytes(text);
+    return stringBytes(text);
 }
 
 /** 该字节是不是空白（空格 / `\t` / `\n` / `\r` / `\v` / `\f`，与 C 的 `isspace` 同集合）。 */
@@ -37,7 +37,7 @@ inline bool __textIsSpace(uint8 byte)
 }
 
 /** `hay` 从 `at` 起是否与 `pattern` 逐字节相同。 */
-inline bool __textEqualsAt(std::core::List<uint8> hay, int64 at, std::core::List<uint8> pattern)
+inline bool __textEqualsAt(List<uint8> hay, int64 at, List<uint8> pattern)
 {
     if (at < 0) { return false; }
     if (at + pattern.len() > hay.len()) { return false; }
@@ -50,7 +50,7 @@ inline bool __textEqualsAt(std::core::List<uint8> hay, int64 at, std::core::List
 }
 
 /** 从 `from` 起找 `needle` 首次出现的字节下标；找不到 -1。空针按 `std::string::find` 口径给 `from`。 */
-inline int64 __textFindFrom(std::core::List<uint8> hay, std::core::List<uint8> needle, int64 from)
+inline int64 __textFindFrom(List<uint8> hay, List<uint8> needle, int64 from)
 {
     int64 hayLen = hay.len();
     int64 needleLen = needle.len();
@@ -67,7 +67,7 @@ inline int64 __textFindFrom(std::core::List<uint8> hay, std::core::List<uint8> n
 }
 
 /** 找 `needle` 最后出现的字节下标；找不到 -1。空针按 `std::string::rfind` 口径给长度。 */
-inline int64 __textRFind(std::core::List<uint8> hay, std::core::List<uint8> needle)
+inline int64 __textRFind(List<uint8> hay, List<uint8> needle)
 {
     int64 hayLen = hay.len();
     int64 needleLen = needle.len();
@@ -82,17 +82,17 @@ inline int64 __textRFind(std::core::List<uint8> hay, std::core::List<uint8> need
 }
 
 /** 预计算结果长度后一次分配，由 String 自举内核直接写入结果区。 */
-inline std::core::String __textConcatAll(std::core::List<std::core::String> pieces)
+inline String __textConcatAll(List<String> pieces)
 {
     return "".join(pieces);
 }
 
 /** 重复 `count` 次；`count <= 0` 给空串。二进制倍增，拼接次数是对数级。 */
-inline std::core::String __textRepeat(std::core::String text, int64 count)
+inline String __textRepeat(String text, int64 count)
 {
-    std::core::String result = "";
+    String result = "";
     if (count <= 0) { return result; }
-    std::core::String block = text;
+    String block = text;
     int64 remaining = count;
     while (remaining > 0) {
         if ((remaining & 1) != 0) { result = result + block; }
@@ -103,9 +103,9 @@ inline std::core::String __textRepeat(std::core::String text, int64 count)
 }
 
 /** ASCII 小写转大写，其余字节原样；按 UTF-8 宽度步进，只在字符边界上读写。 */
-inline std::core::String __textUpper(std::core::String text)
+inline String __textUpper(String text)
 {
-    std::core::String result = text;
+    String result = text;
     int64 index = 0;
     int64 size = len(result);
     while (index < size) {
@@ -121,9 +121,9 @@ inline std::core::String __textUpper(std::core::String text)
 }
 
 /** ASCII 大写转小写，其余字节原样；按 UTF-8 宽度步进，只在字符边界上读写。 */
-inline std::core::String __textLower(std::core::String text)
+inline String __textLower(String text)
 {
-    std::core::String result = text;
+    String result = text;
     int64 index = 0;
     int64 size = len(result);
     while (index < size) {
@@ -139,9 +139,9 @@ inline std::core::String __textLower(std::core::String text)
 }
 
 /** 去掉两端 / 左端 / 右端的空白。`mode`：0 两端、1 左端、2 右端。 */
-inline std::core::String __textTrim(std::core::String text, int64 mode)
+inline String __textTrim(String text, int64 mode)
 {
-    std::core::List<uint8> bytes = __textBytes(text);
+    List<uint8> bytes = __textBytes(text);
     int64 begin = 0;
     int64 end = bytes.len();
     if (mode == 0 || mode == 1) {
@@ -154,12 +154,12 @@ inline std::core::String __textTrim(std::core::String text, int64 mode)
 }
 
 /** 全部替换；`from` 为空时返回原串。 */
-inline std::core::String __textReplace(std::core::String text, std::core::String from, std::core::String to)
+inline String __textReplace(String text, String from, String to)
 {
     if (len(from) == 0) { return text; }
-    std::core::List<uint8> hay = __textBytes(text);
-    std::core::List<uint8> needle = __textBytes(from);
-    std::core::List<std::core::String> pieces;
+    List<uint8> hay = __textBytes(text);
+    List<uint8> needle = __textBytes(from);
+    List<String> pieces;
     int64 at = 0;
     int64 found = __textFindFrom(hay, needle, at);
     while (found >= 0) {
@@ -173,11 +173,11 @@ inline std::core::String __textReplace(std::core::String text, std::core::String
 }
 
 /** 按分隔符切成列表；分隔符为空时整串作为一个元素。 */
-inline std::core::List<std::core::String> __textSplit(std::core::String text, std::core::String separator)
+inline List<String> __textSplit(String text, String separator)
 {
-    std::core::List<uint8> hay = __textBytes(text);
-    std::core::List<uint8> needle = __textBytes(separator);
-    std::core::List<std::core::String> parts;
+    List<uint8> hay = __textBytes(text);
+    List<uint8> needle = __textBytes(separator);
+    List<String> parts;
     int64 start = 0;
     if (needle.len() > 0) {
         int64 at = __textFindFrom(hay, needle, start);
@@ -192,10 +192,10 @@ inline std::core::List<std::core::String> __textSplit(std::core::String text, st
 }
 
 /** 用分隔符把列表拼成一串（空列表给空串）。 */
-inline std::core::String __textJoin(std::core::List<std::core::String> parts, std::core::String separator)
+inline String __textJoin(List<String> parts, String separator)
 {
     if (parts.len() == 0) { return ""; }
-    std::core::List<std::core::String> pieces;
+    List<String> pieces;
     int64 index = 0;
     while (index < parts.len()) {
         if (index > 0) { pieces.push(separator); }
@@ -206,13 +206,13 @@ inline std::core::String __textJoin(std::core::List<std::core::String> parts, st
 }
 
 /** 补到 `width` 字节宽；已经够宽就原样返回副本。 */
-inline std::core::String __textPad(std::core::String text, int64 width, char fill, bool left)
+inline String __textPad(String text, int64 width, char fill, bool left)
 {
     /* `char` 是无符号单字节，恒在 0..255；这一档判不成，保留只为对齐原实现的入参校验。 */
     if ((int64)fill < 0 || (int64)fill > 255) { return text; }
-    std::core::String result = text;
+    String result = text;
     if (width > 0 && len(result) < width) {
-        std::core::String padding = __textRepeat(fill.toString(), width - len(result));
+        String padding = __textRepeat(fill.toString(), width - len(result));
         if (left) { result = padding + result; }
         else { result = result + padding; }
     }
@@ -277,51 +277,51 @@ struct KmpReply {
 
 struct Text {
     /** 子串第一次出现的位置；找不到 -1（空子串给 0）。 */
-    static int64 find(std::core::String text, std::core::String needle) {
+    static int64 find(String text, String needle) {
         return __textFindFrom(__textBytes(text), __textBytes(needle), 0);
     }
     /** 子串最后一次出现的位置；找不到 -1（空子串给串长）。 */
-    static int64 rfind(std::core::String text, std::core::String needle) {
+    static int64 rfind(String text, String needle) {
         return __textRFind(__textBytes(text), __textBytes(needle));
     }
     /** 含不含子串（等价 `find >= 0`）。 */
-    static bool contains(std::core::String text, std::core::String needle) {
+    static bool contains(String text, String needle) {
         return __textFindFrom(__textBytes(text), __textBytes(needle), 0) >= 0;
     }
-    static bool startsWith(std::core::String text, std::core::String prefix) {
-        std::core::List<uint8> hay = __textBytes(text);
-        std::core::List<uint8> pattern = __textBytes(prefix);
+    static bool startsWith(String text, String prefix) {
+        List<uint8> hay = __textBytes(text);
+        List<uint8> pattern = __textBytes(prefix);
         if (hay.len() < pattern.len()) { return false; }
         return __textEqualsAt(hay, 0, pattern);
     }
-    static bool endsWith(std::core::String text, std::core::String suffix) {
-        std::core::List<uint8> hay = __textBytes(text);
-        std::core::List<uint8> pattern = __textBytes(suffix);
+    static bool endsWith(String text, String suffix) {
+        List<uint8> hay = __textBytes(text);
+        List<uint8> pattern = __textBytes(suffix);
         if (hay.len() < pattern.len()) { return false; }
         return __textEqualsAt(hay, hay.len() - pattern.len(), pattern);
     }
     /** 去掉一次匹配的前缀，未匹配时返回原值副本。 */
-    static std::core::String stripPrefix(std::core::String text, std::core::String prefix) {
+    static String stripPrefix(String text, String prefix) {
         if (Text::startsWith(text, prefix)) { return text[len(prefix):]; }
         return text;
     }
     /** 去掉一次匹配的后缀，未匹配时返回原值副本。 */
-    static std::core::String stripSuffix(std::core::String text, std::core::String suffix) {
+    static String stripSuffix(String text, String suffix) {
         if (Text::endsWith(text, suffix)) { return text[0:len(text) - len(suffix)]; }
         return text;
     }
     /** 判断文本是否为空或仅由 ASCII 空白组成。 */
-    static bool isBlank(std::core::String text) {
-        std::core::List<uint8> bytes = __textBytes(text);
+    static bool isBlank(String text) {
+        List<uint8> bytes = __textBytes(text);
         for (uint8 byte in bytes) {
             if (!__textIsSpace(byte)) { return false; }
         }
         return true;
     }
     /** 统计从左到右互不重叠的匹配，空子串返回零。 */
-    static int64 countMatches(std::core::String text, std::core::String needle) {
-        std::core::List<uint8> hay = __textBytes(text);
-        std::core::List<uint8> pattern = __textBytes(needle);
+    static int64 countMatches(String text, String needle) {
+        List<uint8> hay = __textBytes(text);
+        List<uint8> pattern = __textBytes(needle);
         if (pattern.len() == 0) { return 0; }
         int64 count = 0;
         int64 found = __textFindFrom(hay, pattern, 0);
@@ -332,43 +332,43 @@ struct Text {
         return count;
     }
     /** 字典序比较：左小 -1、相等 0、左大 1。 */
-    static int64 compare(std::core::String left, std::core::String right) {
+    static int64 compare(String left, String right) {
         if (left < right) { return 0 - 1; }
         if (left > right) { return 1; }
         return 0;
     }
     /** ASCII 大小写（运行时不使用区域设置，结果可复现）。 */
-    static std::core::String toUpper(std::core::String text) { return __textUpper(text); }
-    static std::core::String toLower(std::core::String text) { return __textLower(text); }
+    static String toUpper(String text) { return __textUpper(text); }
+    static String toLower(String text) { return __textLower(text); }
     /** 去掉两端 / 左端 / 右端的空白（空格 \t \n \r \v \f）。 */
-    static std::core::String trim(std::core::String text) { return __textTrim(text, 0); }
-    static std::core::String ltrim(std::core::String text) { return __textTrim(text, 1); }
-    static std::core::String rtrim(std::core::String text) { return __textTrim(text, 2); }
+    static String trim(String text) { return __textTrim(text, 0); }
+    static String ltrim(String text) { return __textTrim(text, 1); }
+    static String rtrim(String text) { return __textTrim(text, 2); }
     /** 全部替换；`from` 为空时返回原串的副本。 */
-    static std::core::String replace(std::core::String text, std::core::String from, std::core::String to) {
+    static String replace(String text, String from, String to) {
         return __textReplace(text, from, to);
     }
     /** 重复 `count` 次（`count <= 0` 给空串）。 */
-    static std::core::String repeat(std::core::String text, int64 count) {
+    static String repeat(String text, int64 count) {
         return __textRepeat(text, count);
     }
     /** 补到 `width` 字节宽；已经够宽就原样返回副本。 */
-    static std::core::String padStart(std::core::String text, int64 width, char fill) {
+    static String padStart(String text, int64 width, char fill) {
         return __textPad(text, width, fill, true);
     }
-    static std::core::String padEnd(std::core::String text, int64 width, char fill) {
+    static String padEnd(String text, int64 width, char fill) {
         return __textPad(text, width, fill, false);
     }
     /** 第 `index` 个字节；越界报错（和 `text[index]` 一样）。 */
-    static char charAt(std::core::String text, int64 index) { return text[index]; }
+    static char charAt(String text, int64 index) { return text[index]; }
 
     /** 按分隔符切成列表；分隔符为空时整串作为一个元素。 */
-    static std::core::List<std::core::String> split(std::core::String text, std::core::String separator) {
+    static List<String> split(String text, String separator) {
         return __textSplit(text, separator);
     }
 
     /** 用分隔符把列表拼成一串（空列表给空串）。 */
-    static std::core::String join(std::core::List<std::core::String> parts, std::core::String separator) {
+    static String join(List<String> parts, String separator) {
         return __textJoin(parts, separator);
     }
 
@@ -379,7 +379,7 @@ struct Text {
      * @retval 首次出现的字节下标；未命中 -1；空针给 0（与 find 同口径）。
      * @note 位置按字节计；针是合法 UTF-8 时命中位置必然落在字符边界。
      */
-    static int64 kmpFind(std::core::String text, std::core::String needle) {
+    static int64 kmpFind(String text, String needle) {
         KmpReply reply;
         __kmpFind(__textBytes(text), __textBytes(needle), 0, &reply);
         return reply.value;
@@ -391,7 +391,7 @@ struct Text {
      * @param needle 针。
      * @retval 升序命中下标列表，拥有独立存储；空针给空列表。
      */
-    static std::core::List<int64> kmpFindAll(std::core::String text, std::core::String needle) {
+    static List<int64> kmpFindAll(String text, String needle) {
         KmpReply reply;
         __kmpFindAll(__textBytes(text), __textBytes(needle), &reply);
         return reply.positions;
@@ -402,7 +402,7 @@ struct Text {
      * @param needle 针。
      * @retval 失配表，长度与针相同；空针给空列表。
      */
-    static std::core::List<int64> kmpFailureTable(std::core::String needle) {
+    static List<int64> kmpFailureTable(String needle) {
         KmpReply reply;
         __kmpTable(__textBytes(needle), &reply);
         return reply.table;
@@ -416,7 +416,7 @@ struct Text {
  * `s = s + t` 每次复制整串，逐块累加是 O(n²)；构建器把每段代价压到拷贝一次片段，
  * `toString` 再用 O(n log k) 的合并收尾。循环拼字符串一律走这里。 */
 struct StringBuilder : Drop {
-    std::core::List<std::core::String> chunks; ///< 已累计的字符串片段。
+    List<String> chunks; ///< 已累计的字符串片段。
     int64 length; ///< 已累计的总字节数。
 
     void drop() { self.chunks.drop(); }
@@ -434,12 +434,12 @@ struct StringBuilder : Drop {
     /* 追加一律原地修改 self、返回 void：方法按值语义返回 `self` 时，
      * 链式调用的第二段会作用在临时副本上丢状态，这里不提供链式写法。 */
     /** 追加一段文本。 */
-    void append(std::core::String text) {
+    void append(String text) {
         self.chunks.push(text);
         self.length = self.length + len(text);
     }
     /** 追加一行（文本后补 LF）。 */
-    void appendLine(std::core::String text) { self.append(text + "\n"); }
+    void appendLine(String text) { self.append(text + "\n"); }
     /** 追加一个 ASCII 字符。 */
     void appendChar(char value) { self.append(format("{}", value)); }
     /** 追加一个整数的十进制文本。 */
@@ -454,11 +454,11 @@ struct StringBuilder : Drop {
 
     /** 清空已累计的片段，容量语义归零。 */
     void clear() {
-        std::core::List<std::core::String> fresh;
+        List<String> fresh;
         self.chunks = fresh;
         self.length = 0;
     }
 
     /** 摊平成最终字符串；之后可继续追加。 */
-    std::core::String toString() { return __textConcatAll(self.chunks); }
+    String toString() { return __textConcatAll(self.chunks); }
 };

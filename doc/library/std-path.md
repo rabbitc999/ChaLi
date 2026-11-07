@@ -34,10 +34,10 @@ import std::path;
 import std::random;
 
 void main() {
-    Result<int64, Error> integer = std::parse::Parse::parseInt64("-42");
-    Result<uint64, Error> natural = std::parse::Parse::parseUInt64("18446744073709551615");
-    Result<float64, Error> real = std::parse::Parse::parseFloat64("12.5");
-    Result<bool, Error> flag = std::parse::Parse::parseBool("true");
+    Result<int64, Error> integer = Parse::parseInt64("-42");
+    Result<uint64, Error> natural = Parse::parseUInt64("18446744073709551615");
+    Result<float64, Error> real = Parse::parseFloat64("12.5");
+    Result<bool, Error> flag = Parse::parseBool("true");
     match (integer) {
         Result<int64, Error>::Ok(value) => { println("int64={}", value); }
         Result<int64, Error>::Err(error) => { println("int64=error"); }
@@ -55,17 +55,17 @@ void main() {
         Result<bool, Error>::Err(error) => { println("bool=error"); }
     }
 
-    Result<int64, Error> empty = std::parse::Parse::parseInt64("");
-    Result<int64, Error> invalid = std::parse::Parse::parseInt64("4x");
+    Result<int64, Error> empty = Parse::parseInt64("");
+    Result<int64, Error> invalid = Parse::parseInt64("4x");
     Result<int64, Error> overflow =
-    std::parse::Parse::parseInt64("999999999999999999999999");
+    Parse::parseInt64("999999999999999999999999");
     match (empty) {
         Result<int64, Error>::Ok(value) => { println("empty=bad"); }
         Result<int64, Error>::Err(error) => {
             match (error) {
-                std::parse::ParseError(detail) => {
+                ParseError(detail) => {
                     match(detail) {
-                        std::parse::ParseError::Empty => { println("empty=ok"); }
+                        ParseError::Empty => { println("empty=ok"); }
                         _ => { println("empty=bad"); }
                     }
                 }
@@ -77,9 +77,9 @@ void main() {
         Result<int64, Error>::Ok(value) => { println("invalid=bad"); }
         Result<int64, Error>::Err(error) => {
             match (error) {
-                std::parse::ParseError(detail) => {
+                ParseError(detail) => {
                     match(detail) {
-                        std::parse::ParseError::Invalid => { println("invalid=ok"); }
+                        ParseError::Invalid => { println("invalid=ok"); }
                         _ => { println("invalid=bad"); }
                     }
                 }
@@ -91,9 +91,9 @@ void main() {
         Result<int64, Error>::Ok(value) => { println("overflow=bad"); }
         Result<int64, Error>::Err(error) => {
             match (error) {
-                std::parse::ParseError(detail) => {
+                ParseError(detail) => {
                     match(detail) {
-                        std::parse::ParseError::Overflow => { println("overflow=ok"); }
+                        ParseError::Overflow => { println("overflow=ok"); }
                         _ => { println("overflow=bad"); }
                     }
                 }
@@ -102,33 +102,33 @@ void main() {
         }
     }
 
-    std::random::Random first = std::random::Random::withSeed((uint64)7);
-    std::random::Random second = std::random::Random::withSeed((uint64)7);
+    Random first = Random::withSeed((uint64)7);
+    Random second = Random::withSeed((uint64)7);
     uint64 firstValue = first.nextUInt64();
     uint64 secondValue = second.nextUInt64();
     assert(firstValue == secondValue);
     println("random={},{}", firstValue, first.nextInt(-10, 10));
-    std::random::Random entropy = std::random::Random::fromEntropy();
+    Random entropy = Random::fromEntropy();
     entropy.nextUInt64();
 
-    String joined = std::path::PathString::join("alpha/beta", "../gamma.txt");
-    String name = std::path::PathString::fileName("alpha/gamma.txt");
-    String extension = std::path::PathString::extension("alpha/gamma.txt");
-    String normalized = std::path::PathString::normalize("a\\b/./c/../d");
+    String joined = PathString::join("alpha/beta", "../gamma.txt");
+    String name = PathString::fileName("alpha/gamma.txt");
+    String extension = PathString::extension("alpha/gamma.txt");
+    String normalized = PathString::normalize("a\\b/./c/../d");
     println("path={}", joined);
     println("name={} ext={}", name, extension);
     println("normalized={}", normalized);
 
-    int64 before = std::memory::Memory::stats().liveBytes;
+    int64 before = Memory::stats().liveBytes;
     int64 during = before;
     {
         char bytes[] = new[16];
-        std::memory::Span<char> view = std::memory::Span<char>::from(&bytes[0], 16);
+        Span<char> view = Span<char>::from(&bytes[0], 16);
         assert(view.len() == 16);
-        during = std::memory::Memory::stats().liveBytes;
+        during = Memory::stats().liveBytes;
         assert(during >= before + 16);
     }
-    int64 after = std::memory::Memory::stats().liveBytes;
+    int64 after = Memory::stats().liveBytes;
     assert(after <= during - 16);
     println("memory=ok");
 }
@@ -170,10 +170,10 @@ memory=ok
 
 | 名称 | 声明 |
 | --- | --- |
-| [PathString::join](#api-0) | `static std::core::String join(std::core::String left, std::core::String right)` |
-| [PathString::fileName](#api-1) | `static std::core::String fileName(std::core::String path)` |
-| [PathString::extension](#api-2) | `static std::core::String extension(std::core::String path)` |
-| [PathString::normalize](#api-3) | `static std::core::String normalize(std::core::String path)` |
+| [PathString::join](#api-0) | `static String join(String left, String right)` |
+| [PathString::fileName](#api-1) | `static String fileName(String path)` |
+| [PathString::extension](#api-2) | `static String extension(String path)` |
+| [PathString::normalize](#api-3) | `static String normalize(String path)` |
 | [PathString::parent](#api-4) | `static String parent(String path)` |
 | [PathString::stem](#api-5) | `static String stem(String path)` |
 
@@ -184,7 +184,7 @@ memory=ok
 **声明**
 
 ```chali
-static std::core::String join(std::core::String left, std::core::String right);
+static String join(String left, String right);
 ```
 
 **行为**
@@ -195,12 +195,12 @@ static std::core::String join(std::core::String left, std::core::String right);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `left` | `std::core::String left` | 左操作数或区间左端 | 无 |
-| `right` | `std::core::String right` | 右操作数或区间右端 | 无 |
+| `left` | `String left` | 左操作数或区间左端 | 无 |
+| `right` | `String right` | 右操作数或区间右端 | 无 |
 
 **返回值**
 
-`std::core::String`。将 left 与 right 组合为路径字符串。
+`String`。将 left 与 right 组合为路径字符串。
 
 **错误与边界**
 
@@ -209,7 +209,7 @@ static std::core::String join(std::core::String left, std::core::String right);
 **调用形式**
 
 ```chali
-std::path::PathString::join(left, right);
+PathString::join(left, right);
 ```
 
 **源码**：[source/std/path.chl:134](../../source/std/path.chl#L134)。
@@ -223,7 +223,7 @@ std::path::PathString::join(left, right);
 **声明**
 
 ```chali
-static std::core::String fileName(std::core::String path);
+static String fileName(String path);
 ```
 
 **行为**
@@ -234,11 +234,11 @@ static std::core::String fileName(std::core::String path);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `path` | `std::core::String path` | 文件/数据库路径 | 无 |
+| `path` | `String path` | 文件/数据库路径 | 无 |
 
 **返回值**
 
-`std::core::String`。返回路径末尾文件名。
+`String`。返回路径末尾文件名。
 
 **错误与边界**
 
@@ -247,7 +247,7 @@ static std::core::String fileName(std::core::String path);
 **调用形式**
 
 ```chali
-std::path::PathString::fileName(path);
+PathString::fileName(path);
 ```
 
 **源码**：[source/std/path.chl:135](../../source/std/path.chl#L135)。
@@ -261,7 +261,7 @@ std::path::PathString::fileName(path);
 **声明**
 
 ```chali
-static std::core::String extension(std::core::String path);
+static String extension(String path);
 ```
 
 **行为**
@@ -272,11 +272,11 @@ static std::core::String extension(std::core::String path);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `path` | `std::core::String path` | 文件/数据库路径 | 无 |
+| `path` | `String path` | 文件/数据库路径 | 无 |
 
 **返回值**
 
-`std::core::String`。返回路径的扩展名。
+`String`。返回路径的扩展名。
 
 **错误与边界**
 
@@ -285,7 +285,7 @@ static std::core::String extension(std::core::String path);
 **调用形式**
 
 ```chali
-std::path::PathString::extension(path);
+PathString::extension(path);
 ```
 
 **源码**：[source/std/path.chl:136](../../source/std/path.chl#L136)。
@@ -299,7 +299,7 @@ std::path::PathString::extension(path);
 **声明**
 
 ```chali
-static std::core::String normalize(std::core::String path);
+static String normalize(String path);
 ```
 
 **行为**
@@ -310,11 +310,11 @@ static std::core::String normalize(std::core::String path);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `path` | `std::core::String path` | 文件/数据库路径 | 无 |
+| `path` | `String path` | 文件/数据库路径 | 无 |
 
 **返回值**
 
-`std::core::String`。返回宿主规则下的规范化路径字符串。
+`String`。返回宿主规则下的规范化路径字符串。
 
 **错误与边界**
 
@@ -323,7 +323,7 @@ static std::core::String normalize(std::core::String path);
 **调用形式**
 
 ```chali
-std::path::PathString::normalize(path);
+PathString::normalize(path);
 ```
 
 **源码**：[source/std/path.chl:137](../../source/std/path.chl#L137)。
@@ -363,7 +363,7 @@ static String parent(String path);
 **调用形式**
 
 ```chali
-std::path::PathString::parent(path);
+PathString::parent(path);
 ```
 
 **源码**：[source/std/path.chl:140](../../source/std/path.chl#L140)。
@@ -401,7 +401,7 @@ static String stem(String path);
 **调用形式**
 
 ```chali
-std::path::PathString::stem(path);
+PathString::stem(path);
 ```
 
 **源码**：[source/std/path.chl:156](../../source/std/path.chl#L156)。

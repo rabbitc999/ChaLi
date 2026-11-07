@@ -34,18 +34,18 @@ import std::thread;
 int64 isolated;
 
 void worker() {
-    String message = std::thread::receive();
+    String message = receive();
     isolated = 77;
     String reply = "ack:" + message;
-    std::thread::send(std::thread::parent(), reply);
+    send(parent(), reply);
 }
 
 void main() {
     isolated = 5;
-    Thread task = std::thread::create(worker);
-    std::thread::send(task, "hello");
-    String reply = std::thread::receive();
-    std::thread::wait(task);
+    Thread task = create(worker);
+    send(task, "hello");
+    String reply = receive();
+    wait(task);
     println("{} {}", reply, isolated);
 }
 ```
@@ -83,7 +83,7 @@ ack:hello 5
 | ThreadGroup | <a id="symbol-498"></a>`bool successful` | 已完成线程组是否全部成功。 |
 | ThreadGroup | <a id="symbol-499"></a>`String error` | 最近操作的错误说明。 |
 | 模块 | <a id="symbol-500"></a>`struct ThreadPool : Drop` | 固定工作线程和有界静态任务队列。 |
-| ThreadPool | <a id="symbol-501"></a>`std::concurrency::Channel<void fn()> jobs` | 跨线程的有界静态任务队列。 |
+| ThreadPool | <a id="symbol-501"></a>`Channel<void fn()> jobs` | 跨线程的有界静态任务队列。 |
 | ThreadPool | <a id="symbol-502"></a>`ThreadGroup group` | 统一负责工作线程生命周期的线程组。 |
 | ThreadPool | <a id="symbol-503"></a>`bool closed` | 是否已停止接受任务或事件。 |
 
@@ -107,8 +107,8 @@ ack:hello 5
 | [receive](#api-13) | `String receive()` |
 | [current](#api-14) | `Thread current()` |
 | [parent](#api-15) | `Thread parent()` |
-| [receiveFor](#api-16) | `std::concurrency::Receive<String> receiveFor(int64 millis)` |
-| [tryReceive](#api-17) | `std::concurrency::Receive<String> tryReceive()` |
+| [receiveFor](#api-16) | `Receive<String> receiveFor(int64 millis)` |
+| [tryReceive](#api-17) | `Receive<String> tryReceive()` |
 | [closeInbox](#api-18) | `void closeInbox()` |
 | [ThreadGroup::create](#api-19) | `static ThreadGroup create()` |
 | [ThreadGroup::start](#api-20) | `Thread start(void fn() task)` |
@@ -154,7 +154,7 @@ Thread create(void fn() task);
 **调用形式**
 
 ```chali
-std::thread::create(task);
+create(task);
 ```
 
 **源码**：[source/std/thread.chl:11](../../source/std/thread.chl#L11)。
@@ -195,7 +195,7 @@ Thread createWith<T>(void fn(T) task, T value);
 **调用形式**
 
 ```chali
-std::thread::createWith<T>(task, value);
+createWith(task, value);
 ```
 
 **源码**：[source/std/thread.chl:13](../../source/std/thread.chl#L13)。
@@ -233,7 +233,7 @@ void wait(Thread thread);
 **调用形式**
 
 ```chali
-std::thread::wait(thread);
+wait(thread);
 ```
 
 **源码**：[source/std/thread.chl:14](../../source/std/thread.chl#L14)。
@@ -274,7 +274,7 @@ bool waitFor(Thread thread, int64 millis);
 **调用形式**
 
 ```chali
-std::thread::waitFor(thread, millis);
+waitFor(thread, millis);
 ```
 
 **源码**：[source/std/thread.chl:16](../../source/std/thread.chl#L16)。
@@ -312,7 +312,7 @@ bool tryWait(Thread thread);
 **调用形式**
 
 ```chali
-std::thread::tryWait(thread);
+tryWait(thread);
 ```
 
 **源码**：[source/std/thread.chl:17](../../source/std/thread.chl#L17)。
@@ -350,7 +350,7 @@ void requestStop(Thread thread);
 **调用形式**
 
 ```chali
-std::thread::requestStop(thread);
+requestStop(thread);
 ```
 
 **源码**：[source/std/thread.chl:18](../../source/std/thread.chl#L18)。
@@ -386,7 +386,7 @@ bool stopRequested();
 **调用形式**
 
 ```chali
-std::thread::stopRequested();
+stopRequested();
 ```
 
 **源码**：[source/std/thread.chl:19](../../source/std/thread.chl#L19)。
@@ -424,7 +424,7 @@ int64 state(Thread thread);
 **调用形式**
 
 ```chali
-std::thread::state(thread);
+state(thread);
 ```
 
 **源码**：[source/std/thread.chl:20](../../source/std/thread.chl#L20)。
@@ -464,7 +464,7 @@ int64 sleepFor(int64 millis);
 **调用形式**
 
 ```chali
-std::thread::sleepFor(millis);
+sleepFor(millis);
 ```
 
 **源码**：[source/std/thread.chl:22](../../source/std/thread.chl#L22)。
@@ -539,7 +539,7 @@ ThreadResult waitResultFor(Thread thread, int64 millis);
 **调用形式**
 
 ```chali
-std::thread::waitResultFor(thread, millis);
+waitResultFor(thread, millis);
 ```
 
 **源码**：[source/std/thread.chl:32](../../source/std/thread.chl#L32)。
@@ -577,7 +577,7 @@ ThreadResult waitResult(Thread thread);
 **调用形式**
 
 ```chali
-std::thread::waitResult(thread);
+waitResult(thread);
 ```
 
 **源码**：[source/std/thread.chl:41](../../source/std/thread.chl#L41)。
@@ -616,7 +616,7 @@ void send(Thread thread, String message);
 **调用形式**
 
 ```chali
-std::thread::send(thread, message);
+send(thread, message);
 ```
 
 **源码**：[source/std/thread.chl:42](../../source/std/thread.chl#L42)。
@@ -652,7 +652,7 @@ String receive();
 **调用形式**
 
 ```chali
-std::thread::receive();
+receive();
 ```
 
 **源码**：[source/std/thread.chl:43](../../source/std/thread.chl#L43)。
@@ -688,7 +688,7 @@ Thread current();
 **调用形式**
 
 ```chali
-std::thread::current();
+current();
 ```
 
 **源码**：[source/std/thread.chl:44](../../source/std/thread.chl#L44)。
@@ -724,7 +724,7 @@ Thread parent();
 **调用形式**
 
 ```chali
-std::thread::parent();
+parent();
 ```
 
 **源码**：[source/std/thread.chl:45](../../source/std/thread.chl#L45)。
@@ -738,7 +738,7 @@ std::thread::parent();
 **声明**
 
 ```chali
-std::concurrency::Receive<String> receiveFor(int64 millis);
+Receive<String> receiveFor(int64 millis);
 ```
 
 **行为**
@@ -753,7 +753,7 @@ std::concurrency::Receive<String> receiveFor(int64 millis);
 
 **返回值**
 
-`std::concurrency::Receive<String>`。显式限时接收，只有 READY 时 value 有效；-1 无限、0 非阻塞。
+`Receive<String>`。显式限时接收，只有 READY 时 value 有效；-1 无限、0 非阻塞。
 
 **错误与边界**
 
@@ -762,7 +762,7 @@ std::concurrency::Receive<String> receiveFor(int64 millis);
 **调用形式**
 
 ```chali
-std::thread::receiveFor(millis);
+receiveFor(millis);
 ```
 
 **源码**：[source/std/thread.chl:46](../../source/std/thread.chl#L46)。
@@ -776,7 +776,7 @@ std::thread::receiveFor(millis);
 **声明**
 
 ```chali
-std::concurrency::Receive<String> tryReceive();
+Receive<String> tryReceive();
 ```
 
 **行为**
@@ -789,7 +789,7 @@ std::concurrency::Receive<String> tryReceive();
 
 **返回值**
 
-`std::concurrency::Receive<String>`。立即尝试接收，未就绪返回 TIMEOUT，只有 READY 时读取 value。
+`Receive<String>`。立即尝试接收，未就绪返回 TIMEOUT，只有 READY 时读取 value。
 
 **错误与边界**
 
@@ -798,7 +798,7 @@ std::concurrency::Receive<String> tryReceive();
 **调用形式**
 
 ```chali
-std::thread::tryReceive();
+tryReceive();
 ```
 
 **源码**：[source/std/thread.chl:52](../../source/std/thread.chl#L52)。
@@ -834,7 +834,7 @@ void closeInbox();
 **调用形式**
 
 ```chali
-std::thread::closeInbox();
+closeInbox();
 ```
 
 **源码**：[source/std/thread.chl:53](../../source/std/thread.chl#L53)。
@@ -870,7 +870,7 @@ static ThreadGroup create();
 **调用形式**
 
 ```chali
-std::thread::ThreadGroup::create();
+ThreadGroup::create();
 ```
 
 **源码**：[source/std/thread.chl:61](../../source/std/thread.chl#L61)。
@@ -1096,7 +1096,7 @@ static ThreadPool create(int64 workers, int64 capacity);
 **调用形式**
 
 ```chali
-std::thread::ThreadPool::create(workers, capacity);
+ThreadPool::create(workers, capacity);
 ```
 
 **源码**：[source/std/thread.chl:121](../../source/std/thread.chl#L121)。

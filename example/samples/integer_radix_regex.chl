@@ -9,15 +9,15 @@ void main() {
     assert(binary == 35 && binaryWithSeparator == 35);
     assert(highBit == ((uint64)1 << 63));
 
-    Result<std::regex::Regex, Error> compiled =
-    std::regex::Regex::compile("[a-z]+[0-9]+");
+    Result<Regex, Error> compiled =
+    Regex::compile("[a-z]+[0-9]+");
     assert(compiled.isOk());
-    std::regex::Regex lettersDigits = compiled.unwrap();
-    std::regex::Regex digits = std::regex::Regex::compile("[0-9]+").unwrap();
-    std::regex::Regex oneDigit = std::regex::Regex::compile("[0-9]").unwrap();
-    std::regex::Regex groupsPattern = std::regex::Regex::compile("([a-z]+)([0-9]+)").unwrap();
-    std::regex::Regex oneGroup = std::regex::Regex::compile("([0-9])").unwrap();
-    assert(std::regex::Regex::compile("[").isErr());
+    Regex lettersDigits = compiled.unwrap();
+    Regex digits = Regex::compile("[0-9]+").unwrap();
+    Regex oneDigit = Regex::compile("[0-9]").unwrap();
+    Regex groupsPattern = Regex::compile("([a-z]+)([0-9]+)").unwrap();
+    Regex oneGroup = Regex::compile("([0-9])").unwrap();
+    assert(Regex::compile("[").isErr());
     assert(lettersDigits.fullMatch("ab12"));
     assert(!lettersDigits.fullMatch("!ab12"));
     assert(digits.contains("item42!"));

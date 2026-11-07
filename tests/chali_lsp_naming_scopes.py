@@ -137,6 +137,7 @@ def main():
             leaked = sorted(label for label in labels(request) if label.startswith('__'))
             assert not leaked, (module, leaked)
         assert 'range' in labels(private['std::core']) and 'abs' in labels(private['std::math'])
+        assert 'intIter' in labels(private['std::iter']) and 'range' not in labels(private['std::iter'])
         for module, expected, old in (
             ('std::number_theory', {'gcd', 'powMod', 'modInverse'}, {'pow_mod', 'mod_inverse'}),
             ('std::date_time', {'formatUtc', 'parseUtc'}, {'format_utc', 'parse_utc'}),

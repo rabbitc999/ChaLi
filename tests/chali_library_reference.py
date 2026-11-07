@@ -37,6 +37,15 @@ Result<std::core::List<T>, Error> convert<T>(
     std::core::List<T> values, String url="http://localhost/");
 int64 __hidden();
 '''
+    # 短名示例仍须保留实际的歧义边界与源码断言。
+    rows=json.loads((ROOT/'doc/library/api-index.json').read_text(encoding='utf-8'))
+    assert all(row['usage'].startswith('intIter(') for row in rows
+               if row['module']=='std::iter' and row['name']=='intIter')
+    assert not any(row['module']=='std::iter' and row['name']=='range' for row in rows)
+    folder=next(row for row in rows if row['module']=='std::algorithms' and row['name']=='foldValue')
+    assert folder['usage']=='foldValue(items, initial, folder);'
+    span=next(row for row in rows if row['module']=='std::memory' and row['name']=='Span::index')
+    assert 'key >= 0 && key < self.length' in span['errors']['preconditions']
     entries=reference.declarations(ROOT/'source/std/core.chl',fixture)
     functions=[r for r in entries if r['kind']=='function']
     assert [(r['owner'],r['name']) for r in functions]==[('Value','unwrapOr'),('Box','create'),('Box','next'),('','convert')]

@@ -14,12 +14,12 @@ import std::net;
 
 void main() {
     /* ---- 1. 回环 TCP：监听 / 连接 / 接受 / 收发 ---- */
-    std::net::TcpListener listener = std::net::TcpListener::listen("127.0.0.1", (int32)0, (int32)8);
+    TcpListener listener = TcpListener::listen("127.0.0.1", (int32)0, (int32)8);
     println("listener open={} port>0={}", listener.isOpen(), listener.localPort() > 0);
     int64 port = listener.localPort();
 
-    std::net::TcpSocket client = std::net::TcpSocket::connect("127.0.0.1", (int32)port, (int32)2000);
-    std::net::TcpSocket peer = listener.accept((int32)2000);
+    TcpSocket client = TcpSocket::connect("127.0.0.1", (int32)port, (int32)2000);
+    TcpSocket peer = listener.accept((int32)2000);
     println("client open={} peer open={}", client.isOpen(), peer.isOpen());
 
     client.send("ping\n");
@@ -36,16 +36,16 @@ void main() {
     println("closed client={} peer={} listener={}", client.isOpen(), peer.isOpen(), listener.isOpen());
 
     /* ---- 2. 纯函数：地址解析 / 请求拼装 / 响应解析 ---- */
-    std::net::Url url = std::net::parseUrl("http://example.com:8080/a/b?c=1");
+    Url url = parseUrl("http://example.com:8080/a/b?c=1");
     println("url ok={} host={} port={} path={}", url.ok, url.host, url.port, url.path);
-    std::net::Url bad = std::net::parseUrl("https://example.com/");
+    Url bad = parseUrl("https://example.com/");
     println("https rejected={} error=[{}]", !bad.ok, bad.error);
 
-    String get = std::net::buildRequest("GET", "http://example.com/x", "", "");
+    String get = buildRequest("GET", "http://example.com/x", "", "");
     println("GET request len={}", len(get));
 
     String raw = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type: text/plain\r\n\r\nhello";
-    std::net::HttpResponse response = std::net::parseResponse(raw);
+    HttpResponse response = parseResponse(raw);
     println("response ok={} status={} reason={} len={} type={} body={}",
     response.ok, response.status, response.reason,
     response.header("Content-Length"), response.header("content-type"), response.body);

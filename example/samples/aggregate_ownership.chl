@@ -36,7 +36,7 @@ String describe(Lookup item) {
 
 Result<String, String> positive(int64 value, String tag) {
     if (value <= 0) { return Result<String, String>::Err("bad:" + tag); }
-    return Result<String, String>::Ok(tag + ":" + std::text::Text::repeat("x", value));
+    return Result<String, String>::Ok(tag + ":" + Text::repeat("x", value));
 }
 
 /* `?` 取出的字符串载荷在源 Result 释放后仍然有效（又拼了一次并装进新的 Result）。 */

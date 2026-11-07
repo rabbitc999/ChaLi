@@ -1,8 +1,8 @@
 void main() {
-    String first=std::core::readLine();
-    String rest=std::core::readLines(3);
+    String first=readLine();
+    String rest=readLines(3);
     println("[{}]",first);
     println("[{}]",rest);
-    assert(std::core::readLines(0)=="");
-    assert(std::core::readLine()=="");
+    assert(readLines(0)=="");
+    assert(readLine()=="");
 }

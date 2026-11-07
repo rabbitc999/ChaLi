@@ -39,68 +39,68 @@ import std::json;
 import std::toml;
 
 void main() {
-    Result<std::json::JsonValue, Error> parsed = std::json::parse(
+    Result<JsonValue, Error> parsed = std::json::parse(
     "{\"name\":\"中文\",\"items\":[1,2,3],\"active\":true,\"nothing\":null,"
     "\"ratio\":1.5,\"min\":-9223372036854775808}");
-    std::json::JsonValue root = parsed.unwrap();
+    JsonValue root = parsed.unwrap();
     assert(root.isObject() && root.len() == 6);
     Option<String> firstKey = root.keyAt(0);
     assert(firstKey.unwrap() == "name");
-    Option<std::json::JsonValue> nameField = root.find("name");
-    std::json::JsonValue nameValue = nameField.unwrap();
+    Option<JsonValue> nameField = root.find("name");
+    JsonValue nameValue = nameField.unwrap();
     Option<String> nameText = nameValue.asString();
     assert(nameText.unwrap() == "中文");
 
-    Option<std::json::JsonValue> itemsField = root.find("items");
-    std::json::JsonValue items = itemsField.unwrap();
+    Option<JsonValue> itemsField = root.find("items");
+    JsonValue items = itemsField.unwrap();
     int64 sum = 0;
-    for (std::json::JsonValue item in items) {
+    for (JsonValue item in items) {
         Option<int64> itemNumber = item.asInt();
         sum = sum + itemNumber.unwrap();
     }
     assert(sum == 6 && items.at(-1).isNone() && items.at(3).isNone());
-    Option<std::json::JsonValue> missingField = root.find("missing");
+    Option<JsonValue> missingField = root.find("missing");
     assert(missingField.isNone());
-    Option<std::json::JsonValue> activeField = root.find("active");
-    std::json::JsonValue activeValue = activeField.unwrap();
+    Option<JsonValue> activeField = root.find("active");
+    JsonValue activeValue = activeField.unwrap();
     Option<bool> activeBool = activeValue.asBool();
     assert(activeBool.unwrap());
-    Option<std::json::JsonValue> nothingField = root.find("nothing");
-    std::json::JsonValue nothingValue = nothingField.unwrap();
+    Option<JsonValue> nothingField = root.find("nothing");
+    JsonValue nothingValue = nothingField.unwrap();
     assert(nothingValue.isNull());
     Option<int64> nothingInt = nothingValue.asInt();
     assert(nothingInt.isNone());
-    Option<std::json::JsonValue> ratioField = root.find("ratio");
-    std::json::JsonValue ratioValue = ratioField.unwrap();
+    Option<JsonValue> ratioField = root.find("ratio");
+    JsonValue ratioValue = ratioField.unwrap();
     Option<float64> ratioNumber = ratioValue.asFloat64();
     assert(ratioNumber.unwrap() == 1.5);
     Option<int64> ratioInt = ratioValue.asInt();
     assert(ratioInt.isNone());
-    Option<std::json::JsonValue> minField = root.find("min");
-    std::json::JsonValue minValue = minField.unwrap();
+    Option<JsonValue> minField = root.find("min");
+    JsonValue minValue = minField.unwrap();
     Option<int64> minNumber = minValue.asInt();
     assert(format("{}", minNumber.unwrap()) == "-9223372036854775808");
 
     String rootText = root.dump();
-    Result<std::json::JsonValue, Error> reparsed = std::json::parse(rootText);
-    std::json::JsonValue reloaded = reparsed.unwrap();
-    Option<std::json::JsonValue> reloadedName = reloaded.find("name");
-    std::json::JsonValue reloadedNameValue = reloadedName.unwrap();
+    Result<JsonValue, Error> reparsed = std::json::parse(rootText);
+    JsonValue reloaded = reparsed.unwrap();
+    Option<JsonValue> reloadedName = reloaded.find("name");
+    JsonValue reloadedNameValue = reloadedName.unwrap();
     Option<String> reloadedText = reloadedNameValue.asString();
     assert(reloadedText.unwrap() == "中文");
     assert(reloaded.close());
     assert(root.close() && items.isValid() && !root.close());
 
-    Result<std::json::JsonValue, Error> parsedZero =
+    Result<JsonValue, Error> parsedZero =
     std::json::parse("{\"a\\u0000b\":\"x\\u0000y\"}");
-    std::json::JsonValue zero = parsedZero.unwrap();
+    JsonValue zero = parsedZero.unwrap();
     Option<String> zeroKey = zero.keyAt(0);
     assert(zeroKey.isNone());
     Option<List<uint8>> keyResult = zero.keyBytesAt(0);
     List<uint8> key = keyResult.unwrap();
     assert(key.len() == 3 && key[1] == (uint8)0);
-    Option<std::json::JsonValue> zeroTextField = zero.findBytes(key);
-    std::json::JsonValue zeroText = zeroTextField.unwrap();
+    Option<JsonValue> zeroTextField = zero.findBytes(key);
+    JsonValue zeroText = zeroTextField.unwrap();
     Option<String> zeroTextString = zeroText.asString();
     assert(zeroTextString.isNone());
     Option<List<uint8>> rawResult = zeroText.asBytes();
@@ -108,79 +108,79 @@ void main() {
     assert(raw.len() == 3 && raw[0] == (uint8)120 && raw[1] == (uint8)0 &&
     raw[2] == (uint8)121);
     assert(zero.close());
-    Result<std::json::JsonValue, Error> badJson = std::json::parse("{\"x\":}");
+    Result<JsonValue, Error> badJson = std::json::parse("{\"x\":}");
     assert(badJson.isErr() && len(badJson.error().toString()) > 0);
-    Result<std::json::JsonValue, Error> trailing = std::json::parse("[1,]");
+    Result<JsonValue, Error> trailing = std::json::parse("[1,]");
     assert(trailing.isErr());
 
-    Result<std::toml::TomlValue, Error> parsedConfig = std::toml::parse(
+    Result<TomlValue, Error> parsedConfig = std::toml::parse(
     "title = \"ChaLi\"\nreleased = 1979-05-27T07:32:00Z\n[server]\nport = 8080\n"
     "enabled = true\nvalues = [1, 2, 3]\n[[products]]\nname = \"one\"\n"
     "[[products]]\nname = \"two\"\n");
-    std::toml::TomlValue config = parsedConfig.unwrap();
+    TomlValue config = parsedConfig.unwrap();
     assert(config.isTable());
     Option<String> titleKey = config.keyAt(0);
     assert(titleKey.unwrap() == "title");
-    Option<std::toml::TomlValue> titleField = config.find("title");
-    std::toml::TomlValue titleValue = titleField.unwrap();
+    Option<TomlValue> titleField = config.find("title");
+    TomlValue titleValue = titleField.unwrap();
     Option<String> titleText = titleValue.asString();
     assert(titleText.unwrap() == "ChaLi");
-    Option<std::toml::TomlValue> serverField = config.find("server");
-    std::toml::TomlValue server = serverField.unwrap();
-    Option<std::toml::TomlValue> portField = server.find("port");
-    std::toml::TomlValue portValue = portField.unwrap();
+    Option<TomlValue> serverField = config.find("server");
+    TomlValue server = serverField.unwrap();
+    Option<TomlValue> portField = server.find("port");
+    TomlValue portValue = portField.unwrap();
     Option<int64> portNumber = portValue.asInt();
     assert(portNumber.unwrap() == 8080);
-    Option<std::toml::TomlValue> enabledField = server.find("enabled");
-    std::toml::TomlValue enabledValue = enabledField.unwrap();
+    Option<TomlValue> enabledField = server.find("enabled");
+    TomlValue enabledValue = enabledField.unwrap();
     Option<bool> enabledBool = enabledValue.asBool();
     assert(enabledBool.unwrap());
-    Option<std::toml::TomlValue> releasedField = config.find("released");
-    std::toml::TomlValue releasedValue = releasedField.unwrap();
+    Option<TomlValue> releasedField = config.find("released");
+    TomlValue releasedValue = releasedField.unwrap();
     Option<String> releasedText = releasedValue.asDateTime();
     assert(releasedText.unwrap() == "1979-05-27T07:32:00Z");
 
-    Option<std::toml::TomlValue> productsField = config.find("products");
-    std::toml::TomlValue products = productsField.unwrap();
+    Option<TomlValue> productsField = config.find("products");
+    TomlValue products = productsField.unwrap();
     assert(products.len() == 2);
-    Option<std::toml::TomlValue> secondProduct = products.at(1);
-    std::toml::TomlValue second = secondProduct.unwrap();
-    Option<std::toml::TomlValue> secondName = second.find("name");
-    std::toml::TomlValue secondNameValue = secondName.unwrap();
+    Option<TomlValue> secondProduct = products.at(1);
+    TomlValue second = secondProduct.unwrap();
+    Option<TomlValue> secondName = second.find("name");
+    TomlValue secondNameValue = secondName.unwrap();
     Option<String> secondNameText = secondNameValue.asString();
     assert(secondNameText.unwrap() == "two");
     int64 members = 0;
-    for (std::toml::TomlValue item in server) { members = members + 1; }
+    for (TomlValue item in server) { members = members + 1; }
     assert(members == 3);
     Option<String> missingMember = server.keyAt(3);
     assert(missingMember.isNone());
 
     String configText = config.dump();
-    Result<std::toml::TomlValue, Error> reparsedConfig = std::toml::parse(configText);
-    std::toml::TomlValue copy = reparsedConfig.unwrap();
-    Option<std::toml::TomlValue> copyServer = copy.find("server");
-    std::toml::TomlValue copyServerValue = copyServer.unwrap();
-    Option<std::toml::TomlValue> copyPort = copyServerValue.find("port");
-    std::toml::TomlValue copyPortValue = copyPort.unwrap();
+    Result<TomlValue, Error> reparsedConfig = std::toml::parse(configText);
+    TomlValue copy = reparsedConfig.unwrap();
+    Option<TomlValue> copyServer = copy.find("server");
+    TomlValue copyServerValue = copyServer.unwrap();
+    Option<TomlValue> copyPort = copyServerValue.find("port");
+    TomlValue copyPortValue = copyPort.unwrap();
     Option<int64> copyPortNumber = copyPortValue.asInt();
     assert(copyPortNumber.unwrap() == 8080);
     assert(copy.close() && config.close() && server.isValid());
-    Result<std::toml::TomlValue, Error> duplicate = std::toml::parse("x = 1\nx = 2\n");
+    Result<TomlValue, Error> duplicate = std::toml::parse("x = 1\nx = 2\n");
     assert(duplicate.isErr() && len(duplicate.error().toString()) > 0);
     {
         int64 i = 0;
         while (i < 50) {
 
-        Result<std::json::JsonValue, Error> parsedSmall = std::json::parse("[]");
-        std::json::JsonValue small = parsedSmall.unwrap();
+        Result<JsonValue, Error> parsedSmall = std::json::parse("[]");
+        JsonValue small = parsedSmall.unwrap();
         assert(small.close());
-        Result<std::toml::TomlValue, Error> invalid = std::toml::parse("x = [");
+        Result<TomlValue, Error> invalid = std::toml::parse("x = [");
         assert(invalid.isErr());
     
             i = i + 1;
         }
     }
-    Result<std::json::JsonValue, Error> trailingOk = std::json::parse("true");
+    Result<JsonValue, Error> trailingOk = std::json::parse("true");
     assert(trailingOk.isOk()); // 注册表结束时清理未显式关闭的文档
     println("JSON and TOML parsing OK");
 }
@@ -224,9 +224,9 @@ $macro Json<T>(encode:ident, decode:ident) -> member
 
 | 名称 | 声明 |
 | --- | --- |
-| [Json::toJson](#api-0) | `Result<String,std::core::Error> toJson()` |
-| [serialize](#api-1) | `Result<String,std::core::Error> serialize<T>(T const& value)` |
-| [deserialize](#api-2) | `Result<T,std::core::Error> deserialize<T>(String text)` |
+| [Json::toJson](#api-0) | `Result<String,Error> toJson()` |
+| [serialize](#api-1) | `Result<String,Error> serialize<T>(T const& value)` |
+| [deserialize](#api-2) | `Result<T,Error> deserialize<T>(String text)` |
 | [JsonValue::isValid](#api-3) | `bool isValid()` |
 | [JsonValue::close](#api-4) | `bool close()` |
 | [JsonValue::kind](#api-5) | `int64 kind()` |
@@ -243,17 +243,17 @@ $macro Json<T>(encode:ident, decode:ident) -> member
 | [JsonValue::asInt](#api-16) | `Option<int64> asInt()` |
 | [JsonValue::asFloat64](#api-17) | `Option<float64> asFloat64()` |
 | [JsonValue::asBool](#api-18) | `Option<bool> asBool()` |
-| [JsonValue::asString](#api-19) | `Option<std::core::String> asString()` |
-| [JsonValue::asBytes](#api-20) | `Option<std::core::List<uint8>> asBytes()` |
-| [JsonValue::asDateTime](#api-21) | `Option<std::core::String> asDateTime()` |
-| [JsonValue::find](#api-22) | `Option<JsonValue> find(std::core::String key)` |
-| [JsonValue::findBytes](#api-23) | `Option<JsonValue> findBytes(std::core::List<uint8> key)` |
+| [JsonValue::asString](#api-19) | `Option<String> asString()` |
+| [JsonValue::asBytes](#api-20) | `Option<List<uint8>> asBytes()` |
+| [JsonValue::asDateTime](#api-21) | `Option<String> asDateTime()` |
+| [JsonValue::find](#api-22) | `Option<JsonValue> find(String key)` |
+| [JsonValue::findBytes](#api-23) | `Option<JsonValue> findBytes(List<uint8> key)` |
 | [JsonValue::at](#api-24) | `Option<JsonValue> at(int64 index)` |
 | [JsonValue::iterator](#api-25) | `Option<JsonValue> iterator(int64 index)` |
-| [JsonValue::keyAt](#api-26) | `Option<std::core::String> keyAt(int64 index)` |
-| [JsonValue::keyBytesAt](#api-27) | `Option<std::core::List<uint8>> keyBytesAt(int64 index)` |
-| [JsonValue::dump](#api-28) | `std::core::String dump()` |
-| [parse](#api-29) | `Result<JsonValue, std::core::Error> parse(std::core::String text)` |
+| [JsonValue::keyAt](#api-26) | `Option<String> keyAt(int64 index)` |
+| [JsonValue::keyBytesAt](#api-27) | `Option<List<uint8>> keyBytesAt(int64 index)` |
+| [JsonValue::dump](#api-28) | `String dump()` |
+| [parse](#api-29) | `Result<JsonValue, Error> parse(String text)` |
 
 <a id="api-0"></a>
 
@@ -262,7 +262,7 @@ $macro Json<T>(encode:ident, decode:ident) -> member
 **声明**
 
 ```chali
-Result<String,std::core::Error> toJson();
+Result<String,Error> toJson();
 ```
 
 **行为**
@@ -275,7 +275,7 @@ Result<String,std::core::Error> toJson();
 
 **返回值**
 
-`Result<String,std::core::Error>`。将当前值编码为 JSON；失败返回统一 Error，具体字段格式由实现决定。
+`Result<String,Error>`。将当前值编码为 JSON；失败返回统一 Error，具体字段格式由实现决定。
 
 **错误与边界**
 
@@ -298,7 +298,7 @@ obj.toJson();
 **声明**
 
 ```chali
-Result<String,std::core::Error> serialize<T>(T const& value);
+Result<String,Error> serialize<T>(T const& value);
 ```
 
 **行为**
@@ -315,7 +315,7 @@ Result<String,std::core::Error> serialize<T>(T const& value);
 
 **返回值**
 
-`Result<String,std::core::Error>`。按具体反射类型编码独立值，失败返回诊断。
+`Result<String,Error>`。按具体反射类型编码独立值，失败返回诊断。
 
 **错误与边界**
 
@@ -324,7 +324,7 @@ Result<String,std::core::Error> serialize<T>(T const& value);
 **调用形式**
 
 ```chali
-std::json::serialize<T>(value);
+serialize<T>(value);
 ```
 
 **源码**：[source/std/json.chl:27](../../source/std/json.chl#L27)。
@@ -338,7 +338,7 @@ std::json::serialize<T>(value);
 **声明**
 
 ```chali
-Result<T,std::core::Error> deserialize<T>(String text);
+Result<T,Error> deserialize<T>(String text);
 ```
 
 **行为**
@@ -355,7 +355,7 @@ Result<T,std::core::Error> deserialize<T>(String text);
 
 **返回值**
 
-`Result<T,std::core::Error>`。按具体反射类型严格校验并恢复独立拥有的值。
+`Result<T,Error>`。按具体反射类型严格校验并恢复独立拥有的值。
 
 **错误与边界**
 
@@ -364,7 +364,7 @@ Result<T,std::core::Error> deserialize<T>(String text);
 **调用形式**
 
 ```chali
-std::json::deserialize<T>(text);
+deserialize<T>(text);
 ```
 
 **源码**：[source/std/json.chl:34](../../source/std/json.chl#L34)。
@@ -960,7 +960,7 @@ obj.asBool();
 **声明**
 
 ```chali
-Option<std::core::String> asString();
+Option<String> asString();
 ```
 
 **行为**
@@ -975,7 +975,7 @@ Option<std::core::String> asString();
 
 **返回值**
 
-`Option<std::core::String>`。提取不含零字节的字符串；否则 None。
+`Option<String>`。提取不含零字节的字符串；否则 None。
 
 **错误与边界**
 
@@ -998,7 +998,7 @@ obj.asString();
 **声明**
 
 ```chali
-Option<std::core::List<uint8>> asBytes();
+Option<List<uint8>> asBytes();
 ```
 
 **行为**
@@ -1011,7 +1011,7 @@ Option<std::core::List<uint8>> asBytes();
 
 **返回值**
 
-`Option<std::core::List<uint8>>`。提取字符串的原始字节，包括零字节。
+`Option<List<uint8>>`。提取字符串的原始字节，包括零字节。
 
 **错误与边界**
 
@@ -1034,7 +1034,7 @@ obj.asBytes();
 **声明**
 
 ```chali
-Option<std::core::String> asDateTime();
+Option<String> asDateTime();
 ```
 
 **行为**
@@ -1047,7 +1047,7 @@ Option<std::core::String> asDateTime();
 
 **返回值**
 
-`Option<std::core::String>`。提取日期时间的文本表示。
+`Option<String>`。提取日期时间的文本表示。
 
 **错误与边界**
 
@@ -1070,7 +1070,7 @@ obj.asDateTime();
 **声明**
 
 ```chali
-Option<JsonValue> find(std::core::String key);
+Option<JsonValue> find(String key);
 ```
 
 **行为**
@@ -1081,7 +1081,7 @@ Option<JsonValue> find(std::core::String key);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `key` | `std::core::String key` | 查找键或下标 | 无 |
+| `key` | `String key` | 查找键或下标 | 无 |
 
 **返回值**
 
@@ -1108,7 +1108,7 @@ obj.find(key);
 **声明**
 
 ```chali
-Option<JsonValue> findBytes(std::core::List<uint8> key);
+Option<JsonValue> findBytes(List<uint8> key);
 ```
 
 **行为**
@@ -1121,7 +1121,7 @@ Option<JsonValue> findBytes(std::core::List<uint8> key);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `key` | `std::core::List<uint8> key` | 查找键或下标 | 无 |
+| `key` | `List<uint8> key` | 查找键或下标 | 无 |
 
 **返回值**
 
@@ -1226,7 +1226,7 @@ obj.iterator(index);
 **声明**
 
 ```chali
-Option<std::core::String> keyAt(int64 index);
+Option<String> keyAt(int64 index);
 ```
 
 **行为**
@@ -1243,7 +1243,7 @@ Option<std::core::String> keyAt(int64 index);
 
 **返回值**
 
-`Option<std::core::String>`。按遍历位置读取键。
+`Option<String>`。按遍历位置读取键。
 
 **错误与边界**
 
@@ -1266,7 +1266,7 @@ obj.keyAt(index);
 **声明**
 
 ```chali
-Option<std::core::List<uint8>> keyBytesAt(int64 index);
+Option<List<uint8>> keyBytesAt(int64 index);
 ```
 
 **行为**
@@ -1281,7 +1281,7 @@ Option<std::core::List<uint8>> keyBytesAt(int64 index);
 
 **返回值**
 
-`Option<std::core::List<uint8>>`。按成员位置读取原始字节键。
+`Option<List<uint8>>`。按成员位置读取原始字节键。
 
 **错误与边界**
 
@@ -1304,7 +1304,7 @@ obj.keyBytesAt(index);
 **声明**
 
 ```chali
-std::core::String dump();
+String dump();
 ```
 
 **行为**
@@ -1317,7 +1317,7 @@ std::core::String dump();
 
 **返回值**
 
-`std::core::String`。将节点序列化为文本。
+`String`。将节点序列化为文本。
 
 **错误与边界**
 
@@ -1340,7 +1340,7 @@ obj.dump();
 **声明**
 
 ```chali
-Result<JsonValue, std::core::Error> parse(std::core::String text);
+Result<JsonValue, Error> parse(String text);
 ```
 
 **行为**
@@ -1353,11 +1353,11 @@ Result<JsonValue, std::core::Error> parse(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`Result<JsonValue, std::core::Error>`。解析JSON 文本；成功返回根节点，失败返回诊断字符串。
+`Result<JsonValue, Error>`。解析JSON 文本；成功返回根节点，失败返回诊断字符串。
 
 **错误与边界**
 
@@ -1366,7 +1366,7 @@ Result<JsonValue, std::core::Error> parse(std::core::String text);
 **调用形式**
 
 ```chali
-std::json::parse(text);
+parse(text);
 ```
 
 **源码**：[source/std/json.chl:154](../../source/std/json.chl#L154)。

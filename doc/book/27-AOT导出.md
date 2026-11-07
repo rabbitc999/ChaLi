@@ -41,7 +41,7 @@ checked 有助于在运行时发现相应的非法访问，静态检查则在运
 import std::parse;
 
 void main() {
-    match (std::parse::Parse::parseInt64("-42")) {
+    match (Parse::parseInt64("-42")) {
         Ok(value) => { println("{}", value); }
         Err(error) => { println("{}", error.toString()); }
     }

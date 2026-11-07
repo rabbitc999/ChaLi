@@ -18,10 +18,10 @@ import std::iter;
 
 void main()
 {
-    println("sqrt={}", std::math::sqrt(144.0));
-    println("upper={}", std::text::Text::toUpper("chali"));
+    println("sqrt={}", sqrt(144.0));
+    println("upper={}", Text::toUpper("chali"));
     int64 sum = 0;
-    for (int64 v in std::iter::range(1, 5))
+    for (int64 v in intIter(1, 5))
     {
         sum += v;
     }
@@ -145,15 +145,15 @@ import std::reflect;
 
 @Reflect
 struct Numbers {
-    std::big_number::BigInteger integer;
-    std::big_number::BigDecimal decimal;
+    BigInteger integer;
+    BigDecimal decimal;
 }
 
 $macro CHECK_IDENTITIES<T>() -> stmt
-$if ($fields<T>())[0].type != std::big_number::BigInteger
+$if ($fields<T>())[0].type != BigInteger
 $compile_error("unexpected BigInteger identity");
 $end_if
-$if ($fields<T>())[1].type != std::big_number::BigDecimal
+$if ($fields<T>())[1].type != BigDecimal
 $compile_error("unexpected BigDecimal identity");
 $end_if
 $end_macro
@@ -161,13 +161,13 @@ $end_macro
 void main() {
     $CHECK_IDENTITIES<Numbers>();
     Numbers values;
-    values.integer = std::big_number::BigInteger("9000000000000000000") + BigInteger(7);
-    values.decimal = std::big_number::BigDecimal("1.25") + BigDecimal("2.50");
+    values.integer = BigInteger("9000000000000000000") + BigInteger(7);
+    values.decimal = BigDecimal("1.25") + BigDecimal("2.50");
     Option<BigInteger> boxed = Option<BigInteger>::Value(values.integer);
-    uint64 integerId = std::reflect::getTypeId<std::big_number::BigInteger>();
-    assert(integerId != 0 && integerId == std::reflect::getTypeId<BigInteger>());
-    String encoded = std::json::serialize<Numbers>(&values).unwrap();
-    Numbers decoded = std::json::deserialize<Numbers>(encoded).unwrap();
+    uint64 integerId = getTypeId<BigInteger>();
+    assert(integerId != 0 && integerId == getTypeId<BigInteger>());
+    String encoded = serialize<Numbers>(&values).unwrap();
+    Numbers decoded = deserialize<Numbers>(encoded).unwrap();
     assert(decoded.integer == boxed.unwrap() && decoded.decimal == values.decimal);
     println("{} {}", decoded.integer, decoded.decimal);
 }

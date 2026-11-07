@@ -72,7 +72,7 @@ struct Flaky : IterNext<int64> {
     (int64,Option<int64>) sizeHint() { return (0,Option<int64>::None); }
 };
 void main() {
-    let values = std::iter::range(1, 5);
+    let values = intIter(1, 5);
     let hint = values.sizeHint();
     assert((hint[0]) == (4));
     assert(((hint[1]).unwrap()) == (4));
@@ -80,53 +80,53 @@ void main() {
     assert((values.nth(1).unwrap()) == (3));
     assert((values.count()) == (1));
     assert((values.next().isNone()) == (true));
-    assert((std::iter::range(1,5).last().unwrap()) == (4));
-    assert((std::iter::range(1,5).all(positive)) == (true));
-    assert((std::iter::range(1,5).any(even)) == (true));
-    assert((std::iter::range(1,5).find(even).unwrap()) == (2));
-    let lazy = std::iter::range(1,6).inspect(observe).map(squared).filter(even).take(2);
+    assert((intIter(1,5).last().unwrap()) == (4));
+    assert((intIter(1,5).all(positive)) == (true));
+    assert((intIter(1,5).any(even)) == (true));
+    assert((intIter(1,5).find(even).unwrap()) == (2));
+    let lazy = intIter(1,6).inspect(observe).map(squared).filter(even).take(2);
     assert((observed) == (0));
     let selected = lazy.collect();
     assert((observed) == (10));
     assert((selected.len()) == (2));
     assert((selected[0]) == (4));
     assert((selected[1]) == (16));
-    assert((std::iter::range(1,5).fold(0, sum)) == (10));
-    assert((std::iter::range(1,7).filterMap(doubledEven).count()) == (3));
-    assert((std::iter::range(1,7).findMap(doubledEven).unwrap()) == (4));
-    assert((std::iter::range(1,7).mapWhile(firstThree).count()) == (3));
-    assert((std::iter::range(1,7).takeWhile(belowFour).count()) == (3));
-    assert((std::iter::range(1,7).skipWhile(belowFour).next().unwrap()) == (4));
-    assert((std::iter::range(1,7).skip(2).take(2).fold(0,sum)) == (7));
-    assert((std::iter::range(0,10).stepBy(2).last().unwrap()) == (8));
-    assert((std::iter::range(1,4).rev().next().unwrap()) == (3));
-    assert((std::iter::range(1,3).cycle().take(7).fold(0,sum)) == (10));
-    assert((std::iter::repeat<int64>(3).take(4).fold(0,sum)) == (12));
-    assert((std::iter::range(1,3).chain(std::iter::range(3,5)).fold(0,sum)) == (10));
-    assert((std::iter::range(1,4).sameItems(std::iter::range(1,4))) == (true));
-    assert((std::iter::range(1,4).sameItems(std::iter::range(1,5))) == (false));
-    let indexed = std::iter::range(5,7).enumerate().next().unwrap();
+    assert((intIter(1,5).fold(0, sum)) == (10));
+    assert((intIter(1,7).filterMap(doubledEven).count()) == (3));
+    assert((intIter(1,7).findMap(doubledEven).unwrap()) == (4));
+    assert((intIter(1,7).mapWhile(firstThree).count()) == (3));
+    assert((intIter(1,7).takeWhile(belowFour).count()) == (3));
+    assert((intIter(1,7).skipWhile(belowFour).next().unwrap()) == (4));
+    assert((intIter(1,7).skip(2).take(2).fold(0,sum)) == (7));
+    assert((intIter(0,10).stepBy(2).last().unwrap()) == (8));
+    assert((intIter(1,4).rev().next().unwrap()) == (3));
+    assert((intIter(1,3).cycle().take(7).fold(0,sum)) == (10));
+    assert((repeat<int64>(3).take(4).fold(0,sum)) == (12));
+    assert((intIter(1,3).chain(intIter(3,5)).fold(0,sum)) == (10));
+    assert((intIter(1,4).sameItems(intIter(1,4))) == (true));
+    assert((intIter(1,4).sameItems(intIter(1,5))) == (false));
+    let indexed = intIter(5,7).enumerate().next().unwrap();
     assert((indexed[0]) == (0));
     assert((indexed[1]) == (5));
-    let zipped = std::iter::range(1,4).zip("ab".chars()).collect();
+    let zipped = intIter(1,4).zip("ab".chars()).collect();
     assert((zipped.len()) == (2));
     assert(((zipped[1])[0]) == (2));
     assert(((zipped[1])[1]) == ('b'));
-    let split = std::iter::range(1,7).peekingTakeWhile(belowFour);
+    let split = intIter(1,7).peekingTakeWhile(belowFour);
     let first = split[0]; let rest = split[1];
     assert((first.count()) == (3));
     assert((rest.next().unwrap()) == (4));
     assert((rest.next().unwrap()) == (5));
-    let scanned = std::iter::range(1,5).scan(0,running).collect();
+    let scanned = intIter(1,5).scan(0,running).collect();
     assert((scanned[3]) == (10));
-    let failed = std::iter::range(1,5).tryFold(0,checkedSum);
+    let failed = intIter(1,5).tryFold(0,checkedSum);
     assert((failed.isErr()) == (true));
     assert((failed.error().toString()) == ("three"));
     Flaky state;
-    let nonFused = std::iter::fromState<int64,Flaky>(state);
+    let nonFused = fromState<int64,Flaky>(state);
     assert((nonFused.next().isNone()) == (true));
     assert((nonFused.next().unwrap()) == (9));
-    let fused = std::iter::fromState<int64,Flaky>(state).fuse();
+    let fused = fromState<int64,Flaky>(state).fuse();
     assert((fused.next().isNone()) == (true));
     assert((fused.next().isNone()) == (true));
     List<int64> empty;
@@ -174,19 +174,19 @@ void main() {
         { let refs = records.iterMut(); refs.forEach(updateRecord); }
         assert(((records[0]).text) == ("record!"));
         assert(((records[0]).number) == (5));
-        let text = std::iter::range(1,4).map(label).collect();
+        let text = intIter(1,4).map(label).collect();
         assert((text[2]) == ("n3"));
     
             round = round + 1;
         }
     }
     int64 raw[3]; raw[0] = 7; raw[1] = 8; raw[2] = 9;
-    assert((std::iter::fromSpan<int64>(&raw[0],3).map(read).fold(0,sum)) == (24));
+    assert((fromSpan<int64>(&raw[0],3).map(read).fold(0,sum)) == (24));
     int64 total = 0;
-    for (int64 item in std::iter::range(1,4).map(squared)) { total = total + item; }
+    for (int64 item in intIter(1,4).map(squared)) { total = total + item; }
     assert((total) == (14));
     assert((std::core::range(1,5).intoIter().fold(0,sum)) == (10));
-    assert((std::iter::range(5,1,-1).fold(0,sum)) == (14));
+    assert((intIter(5,1,-1).fold(0,sum)) == (14));
     assert((madeList().intoIter().fold(0,sum)) == (5));
     assert((madeList().iter().map(read).fold(0,sum)) == (5));
     let kept = localBorrow();
@@ -195,14 +195,14 @@ void main() {
     assert((reversedRefs.map(read).fold(0,sum)) == (6));
     let prefixRefs = prefixLocal();
     assert((prefixRefs.map(read).fold(0,sum)) == (2));
-    assert((std::iter::range(1,1).cycle().next().isNone()) == (true));
-    assert((std::iter::range(1,5).take(0).count()) == (0));
-    let extreme = std::iter::range(-(int64)9223372036854775807 - (int64)1, 9223372036854775807);
+    assert((intIter(1,1).cycle().next().isNone()) == (true));
+    assert((intIter(1,5).take(0).count()) == (0));
+    let extreme = intIter(-(int64)9223372036854775807 - (int64)1, 9223372036854775807);
     let extremeHint = extreme.sizeHint();
     assert((extremeHint[0]) == (0));
     assert(((extremeHint[1]).isNone()) == (true));
-    assert((std::iter::range(9223372036854775806, 9223372036854775807, 2).count()) == (1));
-    assert((std::iter::range(-(int64)9223372036854775807, -(int64)9223372036854775807 - (int64)1, -2).count()) == (1));
+    assert((intIter(9223372036854775806, 9223372036854775807, 2).count()) == (1));
+    assert((intIter(-(int64)9223372036854775807, -(int64)9223372036854775807 - (int64)1, -2).count()) == (1));
     println("iterator pipelines OK");
 }
 ```
@@ -261,14 +261,14 @@ iterator pipelines OK
 | --- | --- | --- |
 | 模块 | <a id="symbol-216"></a>`interface IterNext<T>` | 有状态迭代器接口；每次 next 消费一个元素。 |
 | 模块 | <a id="symbol-217"></a>`struct Iter<T> : Iterator<T>` | 持有惰性游标状态，按 ChaLi 值语义复制时获得独立游标。 |
-| Iter | <a id="symbol-218"></a>`std::core::Any state` | 以 Any 持有的具体迭代游标状态。 |
+| Iter | <a id="symbol-218"></a>`Any state` | 以 Any 持有的具体迭代游标状态。 |
 | Iter | <a id="symbol-219"></a>`bool buffered` | 是否已缓存 peek 取得的下一项。 |
 | Iter | <a id="symbol-220"></a>`Option<T> pending` | 等待消费的元素或队列。 |
 | 模块 | <a id="symbol-221"></a>`struct IteratorValueState<T,S : Iterator<T>> : IterNext<T>` | 将语言 Iterator 值保存为独立的惰性游标。 |
 | IteratorValueState | <a id="symbol-222"></a>`S source` | 被适配的源游标或连续存储。 |
 | IteratorValueState | <a id="symbol-223"></a>`int64 position` | 下一项在源存储中的位置。 |
 | 模块 | <a id="symbol-224"></a>`struct IterListState<T> : IterNext<T>` | 列表值迭代状态，保留未消费的元素。 |
-| IterListState | <a id="symbol-225"></a>`std::core::List<T> values` | 按声明顺序保存的元素存储。 |
+| IterListState | <a id="symbol-225"></a>`List<T> values` | 按声明顺序保存的元素存储。 |
 | IterListState | <a id="symbol-226"></a>`int64 position` | 下一项在源存储中的位置。 |
 | 模块 | <a id="symbol-227"></a>`struct IterRangeState : IterNext<int64>` | 创建半开整数区间的惰性迭代器。 |
 | IterRangeState | <a id="symbol-228"></a>`int64 current` | 当前迭代位置或正在消费的游标。 |
@@ -331,21 +331,21 @@ iterator pipelines OK
 | IterScanState | <a id="symbol-285"></a>`A accumulator` | 扫描过程中保存的累积状态。 |
 | IterScanState | <a id="symbol-286"></a>`Option<U> fn(A mut&, T) callback` | 宿主事件发生时执行的回调。 |
 | 模块 | <a id="symbol-287"></a>`struct IterBufferState<T> : IterNext<T>` | 缓存有限来源，保留来源状态以延长元素引用的有效期。 |
-| IterBufferState | <a id="symbol-288"></a>`std::core::List<T> values` | 按声明顺序保存的元素存储。 |
-| IterBufferState | <a id="symbol-289"></a>`std::core::Any anchor` | 用于维持缓冲元素借用有效性的源状态。 |
+| IterBufferState | <a id="symbol-288"></a>`List<T> values` | 按声明顺序保存的元素存储。 |
+| IterBufferState | <a id="symbol-289"></a>`Any anchor` | 用于维持缓冲元素借用有效性的源状态。 |
 | IterBufferState | <a id="symbol-290"></a>`int64 position` | 下一项在源存储中的位置。 |
 | 模块 | <a id="symbol-291"></a>`struct IterConstListState<T> : IterNext<T const&>` | 持有列表只读租约的迭代状态，逐项返回 const&。 |
-| IterConstListState | <a id="symbol-292"></a>`std::core::Any lease` | 保持源列表存储有效的迭代租约。 |
+| IterConstListState | <a id="symbol-292"></a>`Any lease` | 保持源列表存储有效的迭代租约。 |
 | IterConstListState | <a id="symbol-293"></a>`int64 position` | 下一项在源存储中的位置。 |
 | 模块 | <a id="symbol-294"></a>`struct IterMutListState<T> : IterNext<T mut&>` | 持有列表可写租约的迭代状态，逐项返回 mut&。 |
-| IterMutListState | <a id="symbol-295"></a>`std::core::Any lease` | 保持源列表存储有效的迭代租约。 |
+| IterMutListState | <a id="symbol-295"></a>`Any lease` | 保持源列表存储有效的迭代租约。 |
 | IterMutListState | <a id="symbol-296"></a>`int64 position` | 下一项在源存储中的位置。 |
 | 模块 | <a id="symbol-297"></a>`struct IterSpanState<T> : IterNext<T const&>` | 读取数组或 Span 的只读引用，来源必须覆盖游标生命周期。 |
 | IterSpanState | <a id="symbol-298"></a>`T const& source` | 被适配的源游标或连续存储。 |
 | IterSpanState | <a id="symbol-299"></a>`int64 length` | 连续存储中可访问的元素数量。 |
 | IterSpanState | <a id="symbol-300"></a>`int64 position` | 下一项在源存储中的位置。 |
 | 模块 | <a id="symbol-301"></a>`struct IterCharsState : IterNext<char>` | 按 ChaLi 字符模型遍历字符串字节，持有独立字符串副本。 |
-| IterCharsState | <a id="symbol-302"></a>`std::core::String source` | 被适配的源游标或连续存储。 |
+| IterCharsState | <a id="symbol-302"></a>`String source` | 被适配的源游标或连续存储。 |
 | IterCharsState | <a id="symbol-303"></a>`int64 position` | 下一项在源存储中的位置。 |
 | 模块 | <a id="symbol-304"></a>`struct IterRepeatState<T> : IterNext<T>` | 惰性无限重复一个值，可配合 take 创建有限输出。 |
 | IterRepeatState | <a id="symbol-305"></a>`T value` | 保存的单个值。 |
@@ -373,11 +373,11 @@ iterator pipelines OK
 | [fromIterator](#api-16) | `Iter<T> fromIterator<T,S : Iterator<T>>(S source)` |
 | [IterListState::next](#api-17) | `Option<T> next()` |
 | [IterListState::sizeHint](#api-18) | `(int64, Option<int64>) sizeHint()` |
-| [fromList](#api-19) | `Iter<T> fromList<T>(std::core::List<T> values)` |
+| [fromList](#api-19) | `Iter<T> fromList<T>(List<T> values)` |
 | [IterRangeState::next](#api-20) | `Option<int64> next()` |
 | [IterRangeState::sizeHint](#api-21) | `(int64, Option<int64>) sizeHint()` |
-| [range](#api-22) | `Iter<int64> range(int64 start, int64 stop, int64 step)` |
-| [range](#api-23) | `Iter<int64> range(int64 start, int64 stop)` |
+| [intIter](#api-22) | `Iter<int64> intIter(int64 start, int64 stop, int64 step)` |
+| [intIter](#api-23) | `Iter<int64> intIter(int64 start, int64 stop)` |
 | [IterMapState::next](#api-24) | `Option<U> next()` |
 | [IterMapState::sizeHint](#api-25) | `(int64, Option<int64>) sizeHint()` |
 | [map](#api-26) | `Iter<U> map<T,U>(Iter<T> source, U fn(T) callback)` |
@@ -426,7 +426,7 @@ iterator pipelines OK
 | [IterScanState::next](#api-69) | `Option<U> next()` |
 | [IterScanState::sizeHint](#api-70) | `(int64, Option<int64>) sizeHint()` |
 | [scan](#api-71) | `Iter<U> scan<T,A,U>(Iter<T> source, A initial, Option<U> fn(A mut&, T) callback)` |
-| [collect](#api-72) | `std::core::List<T> collect<T>(Iter<T> source)` |
+| [collect](#api-72) | `List<T> collect<T>(Iter<T> source)` |
 | [fold](#api-73) | `A fold<T,A>(Iter<T> source, A initial, A fn(A, T) callback)` |
 | [tryFold](#api-74) | `Result<A,E> tryFold<T,A,E>(Iter<T> source, A initial, Result<A,E> fn(A, T) callback)` |
 | [findMap](#api-75) | `Option<U> findMap<T,U>(Iter<T> source, Option<U> fn(T) callback)` |
@@ -442,24 +442,24 @@ iterator pipelines OK
 | [any](#api-85) | `bool any<T>(Iter<T> mut& source, bool fn(T) predicate)` |
 | [find](#api-86) | `Option<T> find<T>(Iter<T> mut& source, bool fn(T) predicate)` |
 | [forEach](#api-87) | `void forEach<T>(Iter<T> mut& source, void fn(T) action)` |
-| [listIntoIter](#api-88) | `Iter<T> listIntoIter<T>(std::core::List<T> mut& source)` |
+| [listIntoIter](#api-88) | `Iter<T> listIntoIter<T>(List<T> mut& source)` |
 | [fromRange](#api-89) | `Iter<int64> fromRange(std::core::__Range source)` |
 | [IterConstListState::next](#api-90) | `Option<T const&> next()` |
 | [IterConstListState::sizeHint](#api-91) | `(int64, Option<int64>) sizeHint()` |
 | [IterMutListState::next](#api-92) | `Option<T mut&> next()` |
 | [IterMutListState::sizeHint](#api-93) | `(int64, Option<int64>) sizeHint()` |
-| [listIter](#api-94) | `Iter<T const&> listIter<T>(std::core::List<T> const& source)` |
-| [listIterMut](#api-95) | `Iter<T mut&> listIterMut<T>(std::core::List<T> mut& source)` |
-| [setIntoIter](#api-96) | `Iter<T> setIntoIter<T>(std::core::Set<T> mut& source)` |
-| [setIter](#api-97) | `Iter<T> setIter<T>(std::core::Set<T> const& source)` |
-| [mapIntoIter](#api-98) | `Iter<Pair<K,V>> mapIntoIter<K,V>(std::core::Map<K,V> mut& source)` |
-| [mapIter](#api-99) | `Iter<Pair<K,V>> mapIter<K,V>(std::core::Map<K,V> const& source)` |
+| [listIter](#api-94) | `Iter<T const&> listIter<T>(List<T> const& source)` |
+| [listIterMut](#api-95) | `Iter<T mut&> listIterMut<T>(List<T> mut& source)` |
+| [setIntoIter](#api-96) | `Iter<T> setIntoIter<T>(Set<T> mut& source)` |
+| [setIter](#api-97) | `Iter<T> setIter<T>(Set<T> const& source)` |
+| [mapIntoIter](#api-98) | `Iter<Pair<K,V>> mapIntoIter<K,V>(Map<K,V> mut& source)` |
+| [mapIter](#api-99) | `Iter<Pair<K,V>> mapIter<K,V>(Map<K,V> const& source)` |
 | [IterSpanState::next](#api-100) | `Option<T const&> next()` |
 | [IterSpanState::sizeHint](#api-101) | `(int64, Option<int64>) sizeHint()` |
 | [fromSpan](#api-102) | `Iter<T const&> fromSpan<T>(T const& source, int64 length)` |
 | [IterCharsState::next](#api-103) | `Option<char> next()` |
 | [IterCharsState::sizeHint](#api-104) | `(int64, Option<int64>) sizeHint()` |
-| [chars](#api-105) | `Iter<char> chars(std::core::String source)` |
+| [chars](#api-105) | `Iter<char> chars(String source)` |
 | [IterRepeatState::next](#api-106) | `Option<T> next()` |
 | [IterRepeatState::sizeHint](#api-107) | `(int64, Option<int64>) sizeHint()` |
 | [repeat](#api-108) | `Iter<T> repeat<T>(T value)` |
@@ -986,7 +986,7 @@ Iter<T> fromState<T,S>(S state);
 **调用形式**
 
 ```chali
-std::iter::fromState<T,S>(state);
+fromState<T,S>(state);
 ```
 
 **源码**：[source/std/iter.chl:210](../../source/std/iter.chl#L210)。
@@ -1102,7 +1102,7 @@ Iter<T> fromIterator<T,S : Iterator<T>>(S source);
 **调用形式**
 
 ```chali
-std::iter::fromIterator<T,S >>(source);
+fromIterator<T,S >>(source);
 ```
 
 **源码**：[source/std/iter.chl:245](../../source/std/iter.chl#L245)。
@@ -1188,7 +1188,7 @@ obj.sizeHint();
 **声明**
 
 ```chali
-Iter<T> fromList<T>(std::core::List<T> values);
+Iter<T> fromList<T>(List<T> values);
 ```
 
 **行为**
@@ -1201,7 +1201,7 @@ Iter<T> fromList<T>(std::core::List<T> values);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `values` | `std::core::List<T> values` | 操作参数。 | 无 |
+| `values` | `List<T> values` | 操作参数。 | 无 |
 
 **返回值**
 
@@ -1214,7 +1214,7 @@ Iter<T> fromList<T>(std::core::List<T> values);
 **调用形式**
 
 ```chali
-std::iter::fromList<T>(values);
+fromList(values);
 ```
 
 **源码**：[source/std/iter.chl:284](../../source/std/iter.chl#L284)。
@@ -1295,17 +1295,19 @@ obj.sizeHint();
 
 <a id="api-22"></a>
 
-### range（23）
+### intIter（23）
 
 **声明**
 
 ```chali
-Iter<int64> range(int64 start, int64 stop, int64 step);
+Iter<int64> intIter(int64 start, int64 stop, int64 step);
 ```
 
 **行为**
 
 构造半开整数区间 [start,stop) 的惰性迭代器，步长不能为零。
+
+按起止值和步长建立惰性整数迭代器。
 
 **参数**
 
@@ -1327,7 +1329,7 @@ Iter<int64> range(int64 start, int64 stop, int64 step);
 **调用形式**
 
 ```chali
-std::iter::range(start, stop, step);
+intIter(start, stop, step);
 ```
 
 **源码**：[source/std/iter.chl:351](../../source/std/iter.chl#L351)。
@@ -1336,17 +1338,19 @@ std::iter::range(start, stop, step);
 
 <a id="api-23"></a>
 
-### range（24）
+### intIter（24）
 
 **声明**
 
 ```chali
-Iter<int64> range(int64 start, int64 stop);
+Iter<int64> intIter(int64 start, int64 stop);
 ```
 
 **行为**
 
 构造半开整数区间 [start,stop) 的惰性迭代器，步长不能为零。
+
+按起止值和步长建立惰性整数迭代器。
 
 **参数**
 
@@ -1366,7 +1370,7 @@ Iter<int64> range(int64 start, int64 stop);
 **调用形式**
 
 ```chali
-std::iter::range(start, stop);
+intIter(start, stop);
 ```
 
 **源码**：[source/std/iter.chl:366](../../source/std/iter.chl#L366)。
@@ -1477,7 +1481,7 @@ Iter<U> map<T,U>(Iter<T> source, U fn(T) callback);
 **调用形式**
 
 ```chali
-std::iter::map<T,U>(source, callback);
+map(source, callback);
 ```
 
 **源码**：[source/std/iter.chl:401](../../source/std/iter.chl#L401)。
@@ -1589,7 +1593,7 @@ Iter<T> filter<T>(Iter<T> source, bool fn(T) predicate);
 **调用形式**
 
 ```chali
-std::iter::filter<T>(source, predicate);
+filter(source, predicate);
 ```
 
 **源码**：[source/std/iter.chl:445](../../source/std/iter.chl#L445)。
@@ -1701,7 +1705,7 @@ Iter<U> filterMap<T,U>(Iter<T> source, Option<U> fn(T) callback);
 **调用形式**
 
 ```chali
-std::iter::filterMap<T,U>(source, callback);
+filterMap(source, callback);
 ```
 
 **源码**：[source/std/iter.chl:490](../../source/std/iter.chl#L490)。
@@ -1812,7 +1816,7 @@ Iter<U> mapWhile<T,U>(Iter<T> source, Option<U> fn(T) callback);
 **调用形式**
 
 ```chali
-std::iter::mapWhile<T,U>(source, callback);
+mapWhile(source, callback);
 ```
 
 **源码**：[source/std/iter.chl:538](../../source/std/iter.chl#L538)。
@@ -1923,7 +1927,7 @@ Iter<T> takeWhile<T>(Iter<T> source, bool fn(T) predicate);
 **调用形式**
 
 ```chali
-std::iter::takeWhile<T>(source, predicate);
+takeWhile(source, predicate);
 ```
 
 **源码**：[source/std/iter.chl:586](../../source/std/iter.chl#L586)。
@@ -2035,7 +2039,7 @@ Iter<T> skipWhile<T>(Iter<T> source, bool fn(T) predicate);
 **调用形式**
 
 ```chali
-std::iter::skipWhile<T>(source, predicate);
+skipWhile(source, predicate);
 ```
 
 **源码**：[source/std/iter.chl:632](../../source/std/iter.chl#L632)。
@@ -2147,7 +2151,7 @@ Iter<T> take<T>(Iter<T> source, int64 amount);
 **调用形式**
 
 ```chali
-std::iter::take<T>(source, amount);
+take(source, amount);
 ```
 
 **源码**：[source/std/iter.chl:680](../../source/std/iter.chl#L680)。
@@ -2259,7 +2263,7 @@ Iter<T> skip<T>(Iter<T> source, int64 amount);
 **调用形式**
 
 ```chali
-std::iter::skip<T>(source, amount);
+skip(source, amount);
 ```
 
 **源码**：[source/std/iter.chl:736](../../source/std/iter.chl#L736)。
@@ -2370,7 +2374,7 @@ Iter<T> chain<T>(Iter<T> left, Iter<T> right);
 **调用形式**
 
 ```chali
-std::iter::chain<T>(left, right);
+chain(left, right);
 ```
 
 **源码**：[source/std/iter.chl:779](../../source/std/iter.chl#L779)。
@@ -2481,7 +2485,7 @@ Iter<(T,U)> zip<T,U>(Iter<T> left, Iter<U> right);
 **调用形式**
 
 ```chali
-std::iter::zip<T,U>(left, right);
+zip(left, right);
 ```
 
 **源码**：[source/std/iter.chl:821](../../source/std/iter.chl#L821)。
@@ -2591,7 +2595,7 @@ Iter<(int64,T)> enumerate<T>(Iter<T> source);
 **调用形式**
 
 ```chali
-std::iter::enumerate<T>(source);
+enumerate(source);
 ```
 
 **源码**：[source/std/iter.chl:860](../../source/std/iter.chl#L860)。
@@ -2703,7 +2707,7 @@ Iter<T> stepBy<T>(Iter<T> source, int64 step);
 **调用形式**
 
 ```chali
-std::iter::stepBy<T>(source, step);
+stepBy(source, step);
 ```
 
 **源码**：[source/std/iter.chl:898](../../source/std/iter.chl#L898)。
@@ -2813,7 +2817,7 @@ Iter<T> fuse<T>(Iter<T> source);
 **调用形式**
 
 ```chali
-std::iter::fuse<T>(source);
+fuse(source);
 ```
 
 **源码**：[source/std/iter.chl:942](../../source/std/iter.chl#L942)。
@@ -2924,7 +2928,7 @@ Iter<T> inspect<T>(Iter<T> source, void fn(T) action);
 **调用形式**
 
 ```chali
-std::iter::inspect<T>(source, action);
+inspect(source, action);
 ```
 
 **源码**：[source/std/iter.chl:979](../../source/std/iter.chl#L979)。
@@ -3034,7 +3038,7 @@ Iter<T> cycle<T>(Iter<T> source);
 **调用形式**
 
 ```chali
-std::iter::cycle<T>(source);
+cycle(source);
 ```
 
 **源码**：[source/std/iter.chl:1025](../../source/std/iter.chl#L1025)。
@@ -3146,7 +3150,7 @@ Iter<U> scan<T,A,U>(Iter<T> source, A initial, Option<U> fn(A mut&, T) callback)
 **调用形式**
 
 ```chali
-std::iter::scan<T,A,U>(source, initial, callback);
+scan<T,A,U>(source, initial, callback);
 ```
 
 **源码**：[source/std/iter.chl:1066](../../source/std/iter.chl#L1066)。
@@ -3160,7 +3164,7 @@ std::iter::scan<T,A,U>(source, initial, callback);
 **声明**
 
 ```chali
-std::core::List<T> collect<T>(Iter<T> source);
+List<T> collect<T>(Iter<T> source);
 ```
 
 **行为**
@@ -3175,7 +3179,7 @@ std::core::List<T> collect<T>(Iter<T> source);
 
 **返回值**
 
-`std::core::List<T>`。消费迭代器，收集到独立 List。
+`List<T>`。消费迭代器，收集到独立 List。
 
 **错误与边界**
 
@@ -3185,7 +3189,7 @@ std::core::List<T> collect<T>(Iter<T> source);
 **调用形式**
 
 ```chali
-std::iter::collect<T>(source);
+collect(source);
 ```
 
 **源码**：[source/std/iter.chl:1080](../../source/std/iter.chl#L1080)。
@@ -3226,7 +3230,7 @@ A fold<T,A>(Iter<T> source, A initial, A fn(A, T) callback);
 **调用形式**
 
 ```chali
-std::iter::fold<T,A>(source, initial, callback);
+fold(source, initial, callback);
 ```
 
 **源码**：[source/std/iter.chl:1100](../../source/std/iter.chl#L1100)。
@@ -3267,7 +3271,7 @@ Result<A,E> tryFold<T,A,E>(Iter<T> source, A initial, Result<A,E> fn(A, T) callb
 **调用形式**
 
 ```chali
-std::iter::tryFold<T,A,E>(source, initial, callback);
+tryFold(source, initial, callback);
 ```
 
 **源码**：[source/std/iter.chl:1120](../../source/std/iter.chl#L1120)。
@@ -3307,7 +3311,7 @@ Option<U> findMap<T,U>(Iter<T> source, Option<U> fn(T) callback);
 **调用形式**
 
 ```chali
-std::iter::findMap<T,U>(source, callback);
+findMap(source, callback);
 ```
 
 **源码**：[source/std/iter.chl:1143](../../source/std/iter.chl#L1143)。
@@ -3347,7 +3351,7 @@ bool sameItems<T>(Iter<T> left, Iter<T> right);
 **调用形式**
 
 ```chali
-std::iter::sameItems<T>(left, right);
+sameItems(left, right);
 ```
 
 **源码**：[source/std/iter.chl:1164](../../source/std/iter.chl#L1164)。
@@ -3461,7 +3465,7 @@ Iter<T> rev<T>(Iter<T> source);
 **调用形式**
 
 ```chali
-std::iter::rev<T>(source);
+rev(source);
 ```
 
 **源码**：[source/std/iter.chl:1202](../../source/std/iter.chl#L1202)。
@@ -3500,7 +3504,7 @@ std::iter::rev<T>(source);
 **调用形式**
 
 ```chali
-std::iter::peekingTakeWhile<T>(source, predicate);
+peekingTakeWhile(source, predicate);
 ```
 
 **源码**：[source/std/iter.chl:1225](../../source/std/iter.chl#L1225)。
@@ -3538,7 +3542,7 @@ int64 countIter<T>(Iter<T> mut& source);
 **调用形式**
 
 ```chali
-std::iter::countIter<T>(source);
+countIter<T>(source);
 ```
 
 **源码**：[source/std/iter.chl:1244](../../source/std/iter.chl#L1244)。
@@ -3577,7 +3581,7 @@ Option<T> nth<T>(Iter<T> mut& source, int64 index);
 **调用形式**
 
 ```chali
-std::iter::nth<T>(source, index);
+nth<T>(source, index);
 ```
 
 **源码**：[source/std/iter.chl:1255](../../source/std/iter.chl#L1255)。
@@ -3615,7 +3619,7 @@ Option<T> last<T>(Iter<T> mut& source);
 **调用形式**
 
 ```chali
-std::iter::last<T>(source);
+last<T>(source);
 ```
 
 **源码**：[source/std/iter.chl:1265](../../source/std/iter.chl#L1265)。
@@ -3654,7 +3658,7 @@ bool all<T>(Iter<T> mut& source, bool fn(T) predicate);
 **调用形式**
 
 ```chali
-std::iter::all<T>(source, predicate);
+all<T>(source, predicate);
 ```
 
 **源码**：[source/std/iter.chl:1276](../../source/std/iter.chl#L1276)。
@@ -3693,7 +3697,7 @@ bool any<T>(Iter<T> mut& source, bool fn(T) predicate);
 **调用形式**
 
 ```chali
-std::iter::any<T>(source, predicate);
+any<T>(source, predicate);
 ```
 
 **源码**：[source/std/iter.chl:1287](../../source/std/iter.chl#L1287)。
@@ -3732,7 +3736,7 @@ Option<T> find<T>(Iter<T> mut& source, bool fn(T) predicate);
 **调用形式**
 
 ```chali
-std::iter::find<T>(source, predicate);
+find<T>(source, predicate);
 ```
 
 **源码**：[source/std/iter.chl:1298](../../source/std/iter.chl#L1298)。
@@ -3771,7 +3775,7 @@ void forEach<T>(Iter<T> mut& source, void fn(T) action);
 **调用形式**
 
 ```chali
-std::iter::forEach<T>(source, action);
+forEach<T>(source, action);
 ```
 
 **源码**：[source/std/iter.chl:1309](../../source/std/iter.chl#L1309)。
@@ -3785,7 +3789,7 @@ std::iter::forEach<T>(source, action);
 **声明**
 
 ```chali
-Iter<T> listIntoIter<T>(std::core::List<T> mut& source);
+Iter<T> listIntoIter<T>(List<T> mut& source);
 ```
 
 **行为**
@@ -3796,7 +3800,7 @@ Iter<T> listIntoIter<T>(std::core::List<T> mut& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::core::List<T> mut& source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `List<T> mut& source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -3809,7 +3813,7 @@ Iter<T> listIntoIter<T>(std::core::List<T> mut& source);
 **调用形式**
 
 ```chali
-std::iter::listIntoIter<T>(source);
+listIntoIter<T>(source);
 ```
 
 **源码**：[source/std/iter.chl:1319](../../source/std/iter.chl#L1319)。
@@ -3849,7 +3853,7 @@ Iter<int64> fromRange(std::core::__Range source);
 **调用形式**
 
 ```chali
-std::iter::fromRange(source);
+fromRange(source);
 ```
 
 **源码**：[source/std/iter.chl:1331](../../source/std/iter.chl#L1331)。
@@ -4007,7 +4011,7 @@ obj.sizeHint();
 **声明**
 
 ```chali
-Iter<T const&> listIter<T>(std::core::List<T> const& source);
+Iter<T const&> listIter<T>(List<T> const& source);
 ```
 
 **行为**
@@ -4020,7 +4024,7 @@ Iter<T const&> listIter<T>(std::core::List<T> const& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::core::List<T> const& source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `List<T> const& source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -4033,7 +4037,7 @@ Iter<T const&> listIter<T>(std::core::List<T> const& source);
 **调用形式**
 
 ```chali
-std::iter::listIter<T>(source);
+listIter<T>(source);
 ```
 
 **源码**：[source/std/iter.chl:1420](../../source/std/iter.chl#L1420)。
@@ -4047,7 +4051,7 @@ std::iter::listIter<T>(source);
 **声明**
 
 ```chali
-Iter<T mut&> listIterMut<T>(std::core::List<T> mut& source);
+Iter<T mut&> listIterMut<T>(List<T> mut& source);
 ```
 
 **行为**
@@ -4060,7 +4064,7 @@ Iter<T mut&> listIterMut<T>(std::core::List<T> mut& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::core::List<T> mut& source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `List<T> mut& source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -4073,7 +4077,7 @@ Iter<T mut&> listIterMut<T>(std::core::List<T> mut& source);
 **调用形式**
 
 ```chali
-std::iter::listIterMut<T>(source);
+listIterMut<T>(source);
 ```
 
 **源码**：[source/std/iter.chl:1432](../../source/std/iter.chl#L1432)。
@@ -4087,7 +4091,7 @@ std::iter::listIterMut<T>(source);
 **声明**
 
 ```chali
-Iter<T> setIntoIter<T>(std::core::Set<T> mut& source);
+Iter<T> setIntoIter<T>(Set<T> mut& source);
 ```
 
 **行为**
@@ -4098,7 +4102,7 @@ Iter<T> setIntoIter<T>(std::core::Set<T> mut& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::core::Set<T> mut& source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `Set<T> mut& source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -4111,7 +4115,7 @@ Iter<T> setIntoIter<T>(std::core::Set<T> mut& source);
 **调用形式**
 
 ```chali
-std::iter::setIntoIter<T>(source);
+setIntoIter<T>(source);
 ```
 
 **源码**：[source/std/iter.chl:1465](../../source/std/iter.chl#L1465)。
@@ -4125,7 +4129,7 @@ std::iter::setIntoIter<T>(source);
 **声明**
 
 ```chali
-Iter<T> setIter<T>(std::core::Set<T> const& source);
+Iter<T> setIter<T>(Set<T> const& source);
 ```
 
 **行为**
@@ -4138,7 +4142,7 @@ Iter<T> setIter<T>(std::core::Set<T> const& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::core::Set<T> const& source` | 来源集合，只读借用。 | 无 |
+| `source` | `Set<T> const& source` | 来源集合，只读借用。 | 无 |
 
 **返回值**
 
@@ -4151,7 +4155,7 @@ Iter<T> setIter<T>(std::core::Set<T> const& source);
 **调用形式**
 
 ```chali
-std::iter::setIter<T>(source);
+setIter<T>(source);
 ```
 
 **源码**：[source/std/iter.chl:1485](../../source/std/iter.chl#L1485)。
@@ -4165,7 +4169,7 @@ std::iter::setIter<T>(source);
 **声明**
 
 ```chali
-Iter<Pair<K,V>> mapIntoIter<K,V>(std::core::Map<K,V> mut& source);
+Iter<Pair<K,V>> mapIntoIter<K,V>(Map<K,V> mut& source);
 ```
 
 **行为**
@@ -4176,7 +4180,7 @@ Iter<Pair<K,V>> mapIntoIter<K,V>(std::core::Map<K,V> mut& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::core::Map<K,V> mut& source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `Map<K,V> mut& source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -4189,7 +4193,7 @@ Iter<Pair<K,V>> mapIntoIter<K,V>(std::core::Map<K,V> mut& source);
 **调用形式**
 
 ```chali
-std::iter::mapIntoIter<K,V>(source);
+mapIntoIter<K,V>(source);
 ```
 
 **源码**：[source/std/iter.chl:1504](../../source/std/iter.chl#L1504)。
@@ -4203,7 +4207,7 @@ std::iter::mapIntoIter<K,V>(source);
 **声明**
 
 ```chali
-Iter<Pair<K,V>> mapIter<K,V>(std::core::Map<K,V> const& source);
+Iter<Pair<K,V>> mapIter<K,V>(Map<K,V> const& source);
 ```
 
 **行为**
@@ -4216,7 +4220,7 @@ Iter<Pair<K,V>> mapIter<K,V>(std::core::Map<K,V> const& source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::core::Map<K,V> const& source` | 来源映射，只读借用。 | 无 |
+| `source` | `Map<K,V> const& source` | 来源映射，只读借用。 | 无 |
 
 **返回值**
 
@@ -4229,7 +4233,7 @@ Iter<Pair<K,V>> mapIter<K,V>(std::core::Map<K,V> const& source);
 **调用形式**
 
 ```chali
-std::iter::mapIter<K,V>(source);
+mapIter<K,V>(source);
 ```
 
 **源码**：[source/std/iter.chl:1524](../../source/std/iter.chl#L1524)。
@@ -4341,7 +4345,7 @@ Iter<T const&> fromSpan<T>(T const& source, int64 length);
 **调用形式**
 
 ```chali
-std::iter::fromSpan<T>(source, length);
+fromSpan<T>(source, length);
 ```
 
 **源码**：[source/std/iter.chl:1571](../../source/std/iter.chl#L1571)。
@@ -4427,7 +4431,7 @@ obj.sizeHint();
 **声明**
 
 ```chali
-Iter<char> chars(std::core::String source);
+Iter<char> chars(String source);
 ```
 
 **行为**
@@ -4438,7 +4442,7 @@ Iter<char> chars(std::core::String source);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `source` | `std::core::String source` | 来源游标、容器或连续存储。 | 无 |
+| `source` | `String source` | 来源游标、容器或连续存储。 | 无 |
 
 **返回值**
 
@@ -4451,7 +4455,7 @@ Iter<char> chars(std::core::String source);
 **调用形式**
 
 ```chali
-std::iter::chars(source);
+chars(source);
 ```
 
 **源码**：[source/std/iter.chl:1610](../../source/std/iter.chl#L1610)。
@@ -4561,7 +4565,7 @@ Iter<T> repeat<T>(T value);
 **调用形式**
 
 ```chali
-std::iter::repeat<T>(value);
+repeat(value);
 ```
 
 **源码**：[source/std/iter.chl:1640](../../source/std/iter.chl#L1640)。
@@ -4600,7 +4604,7 @@ Map<K,List<T>> groupBy<T,K>(Iter<T> source, K fn(T) key_of);
 **调用形式**
 
 ```chali
-std::iter::groupBy<T,K>(source, key_of);
+groupBy(source, key_of);
 ```
 
 **源码**：[source/std/iter.chl:1656](../../source/std/iter.chl#L1656)。
@@ -4635,11 +4639,12 @@ Iter<List<T>> chunk<T>(Iter<T> source, int64 length);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`length > 0, "chunk length must be positive"`。
 
 **调用形式**
 
 ```chali
-std::iter::chunk<T>(source, length);
+chunk(source, length);
 ```
 
 **源码**：[source/std/iter.chl:1725](../../source/std/iter.chl#L1725)。

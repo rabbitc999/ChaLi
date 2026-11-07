@@ -10,7 +10,7 @@ module sqlDemo;
 import std::sql;
 
 void main() {
-    std::sql::Database db = std::sql::Database::local("");
+    Database db = Database::local("");
     if (!db.isOpen()) {
         println("连接数据库失败：{}", db.lastError());
         return;
@@ -25,25 +25,25 @@ void main() {
     "('张三', 'Java', 92), ('张三', '高等数学', 78), ('李四', 'Java', 85)");
 
     println("== 全部成绩 ==");
-    std::sql::ResultSet all =
+    ResultSet all =
     db.exec("SELECT student, course, value FROM score ORDER BY student, course");
     println("{}", all.render());
 
     println("== 按课程统计 ==");
-    std::sql::ResultSet stats = db.exec(
+    ResultSet stats = db.exec(
     "SELECT course, COUNT(*) AS people, AVG(value) AS avg_score, MAX(value) AS best "
     "FROM score GROUP BY course ORDER BY course");
     println("{}", stats.render());
 
     println("== 条件查询 ==");
-    std::sql::ResultSet filtered =
+    ResultSet filtered =
     db.exec("SELECT student, value FROM score WHERE value >= 85 ORDER BY value DESC");
     println("{}", filtered.render());
 
     println("行数={} 平均分={}", db.count("SELECT COUNT(*) FROM score"),
     db.scalar("SELECT AVG(value) FROM score"));
 
-    std::sql::ResultSet bad = db.exec("SELECT * FROM 不存在的表");
+    ResultSet bad = db.exec("SELECT * FROM 不存在的表");
     println("故意写错：ok={} error={}", bad.ok, bad.error);
 
     db.close();

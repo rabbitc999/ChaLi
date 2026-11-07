@@ -39,7 +39,7 @@ struct OwnedNumber : ReadNumber, Drop {
 int64 dispatch(ReadNumber mut& value) { return value.read(); }
 
 // 租约持有局部 List 的存储；逆序适配器还须持有来源迭代器状态。
-std::iter::Iter<int64 const&> localLease() {
+Iter<int64 const&> localLease() {
     List<int64> values;
     values.push(3);
     values.push(7);

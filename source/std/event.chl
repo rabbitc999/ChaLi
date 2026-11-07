@@ -17,8 +17,8 @@ struct Event {
     int64 source;
     int64 missed;
 };
-std::concurrency::Receive<Event> receiveFor(int64 millis) {
-    std::concurrency::Receive<Event> result;
+Receive<Event> receiveFor(int64 millis) {
+    Receive<Event> result;
     result.status = __receive(millis);
     if (result.isReady()) {
         result.value.timer = __id();
@@ -28,8 +28,8 @@ std::concurrency::Receive<Event> receiveFor(int64 millis) {
     }
     return result;
 }
-std::concurrency::Receive<Event> receive() { return receiveFor(-1); }
-std::concurrency::Receive<Event> tryReceive() { return receiveFor(0); }
+Receive<Event> receive() { return receiveFor(-1); }
+Receive<Event> tryReceive() { return receiveFor(0); }
 int64 post(int64 tag, int64 source) { return __post(tag, source); }
 void close() { __close(); }
 /** 定时源由当前值独占；事件中的 timer 字段只作来源标识。 */

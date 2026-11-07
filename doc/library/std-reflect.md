@@ -60,23 +60,23 @@ void main() {
 | 模块 | <a id="symbol-381"></a>`enum ReflectError : Error` | 反射错误是普通枚举值，不保存目标地址或拥有资源。 |
 | ReflectError | `NotFound, Ambiguous, ArgumentCount, TypeMismatch, ReceiverMismatch, UnsupportedSignature, NotExposed, InvalidTarget` | 反射错误是普通枚举值，不保存目标地址或拥有资源。 变体及载荷见声明。 |
 | 模块 | <a id="symbol-382"></a>`enum ReflectValue` | 封闭值集合：精确保存位宽、符号及字符串所有权。 |
-| ReflectValue | `Empty, Bool(bool value), Char(char value), I8(int8 value), I16(int16 value), I32(int32 value), I64(int64 value), U8(uint8 value), U16(uint16 value), U32(uint32 value), U64(uint64 value), F32(float32 value), F64(float64 value), Text(std::core::String value)` | 封闭值集合：精确保存位宽、符号及字符串所有权。 变体及载荷见声明。 |
+| ReflectValue | `Empty, Bool(bool value), Char(char value), I8(int8 value), I16(int16 value), I32(int32 value), I64(int64 value), U8(uint8 value), U16(uint16 value), U32(uint32 value), U64(uint64 value), F32(float32 value), F64(float64 value), Text(String value)` | 封闭值集合：精确保存位宽、符号及字符串所有权。 变体及载荷见声明。 |
 | 模块 | <a id="symbol-383"></a>`struct ParameterInfo` | 反射参数的名称与类型身份。 |
-| ParameterInfo | <a id="symbol-384"></a>`std::core::String name` | 声明或选项的名称。 |
+| ParameterInfo | <a id="symbol-384"></a>`String name` | 声明或选项的名称。 |
 | ParameterInfo | <a id="symbol-385"></a>`uint64 typeId` | 编译器登记的类型身份，不是对象地址。 |
 | 模块 | <a id="symbol-386"></a>`struct AnnotationParameter` | 注解参数的名称、类型及可选默认值。 |
-| AnnotationParameter | <a id="symbol-387"></a>`std::core::String name` | 声明或选项的名称。 |
+| AnnotationParameter | <a id="symbol-387"></a>`String name` | 声明或选项的名称。 |
 | AnnotationParameter | <a id="symbol-388"></a>`uint64 typeId` | 编译器登记的类型身份，不是对象地址。 |
 | AnnotationParameter | <a id="symbol-389"></a>`Option<std::reflect::ReflectValue> defaultValue` | 可选的注解默认实参；None 表示没有默认值。 |
 | 模块 | <a id="symbol-390"></a>`struct AnnotationInfo` | 注解定义的名称、类型身份与参数声明。 |
-| AnnotationInfo | <a id="symbol-391"></a>`std::core::String name` | 声明或选项的名称。 |
+| AnnotationInfo | <a id="symbol-391"></a>`String name` | 声明或选项的名称。 |
 | AnnotationInfo | <a id="symbol-392"></a>`uint64 typeId` | 编译器登记的类型身份，不是对象地址。 |
 | AnnotationInfo | <a id="symbol-393"></a>`List<std::reflect::AnnotationParameter> params` | 按声明顺序保存的参数信息。 |
 | 模块 | <a id="symbol-394"></a>`struct Annotation` | 注解实例的定义身份与实际参数值。 |
 | Annotation | <a id="symbol-395"></a>`uint64 annotationId` | 注解定义的身份。 |
 | Annotation | <a id="symbol-396"></a>`List<std::reflect::ReflectValue> args` | 注解实例的实际参数值。 |
 | 模块 | <a id="symbol-397"></a>`struct FuncInfo` | 函数反射信息，包含参数、返回类型和注解。 |
-| FuncInfo | <a id="symbol-398"></a>`std::core::String name` | 声明或选项的名称。 |
+| FuncInfo | <a id="symbol-398"></a>`String name` | 声明或选项的名称。 |
 | FuncInfo | <a id="symbol-399"></a>`uint64 typeId` | 编译器登记的类型身份，不是对象地址。 |
 | FuncInfo | <a id="symbol-400"></a>`List<std::reflect::ParameterInfo> params` | 按声明顺序保存的参数信息。 |
 | FuncInfo | <a id="symbol-401"></a>`uint64 returnTypeId` | 函数返回类型的身份。 |
@@ -88,22 +88,22 @@ void main() {
 | MethodInfo | <a id="symbol-407"></a>`bool isConst` | 方法是否只读访问接收者。 |
 | MethodInfo | <a id="symbol-408"></a>`bool hasDefaultBody` | 接口方法是否提供默认实现。 |
 | 模块 | <a id="symbol-409"></a>`struct FieldInfo` | 实例字段反射信息，包含字节偏移、类型身份和拥有属性。 |
-| FieldInfo | <a id="symbol-410"></a>`std::core::String name` | 声明或选项的名称。 |
+| FieldInfo | <a id="symbol-410"></a>`String name` | 声明或选项的名称。 |
 | FieldInfo | <a id="symbol-411"></a>`uint32 offset` | 相对起始位置的字节偏移。 |
 | FieldInfo | <a id="symbol-412"></a>`uint64 typeId` | 编译器登记的类型身份，不是对象地址。 |
 | FieldInfo | <a id="symbol-413"></a>`bool isOwned` | 成员是否负责所存资源的所有权。 |
 | FieldInfo | <a id="symbol-414"></a>`List<std::reflect::Annotation> annotations` | 附加在该声明上的注解实例。 |
 | 模块 | <a id="symbol-415"></a>`struct StaticMemberInfo` | 静态成员反射信息，包含类型身份与拥有属性。 |
-| StaticMemberInfo | <a id="symbol-416"></a>`std::core::String name` | 声明或选项的名称。 |
+| StaticMemberInfo | <a id="symbol-416"></a>`String name` | 声明或选项的名称。 |
 | StaticMemberInfo | <a id="symbol-417"></a>`uint64 typeId` | 编译器登记的类型身份，不是对象地址。 |
 | StaticMemberInfo | <a id="symbol-418"></a>`bool isOwned` | 成员是否负责所存资源的所有权。 |
 | StaticMemberInfo | <a id="symbol-419"></a>`List<std::reflect::Annotation> annotations` | 附加在该声明上的注解实例。 |
 | 模块 | <a id="symbol-420"></a>`struct VariantInfo` | 枚举变体的名称、标签与载荷参数。 |
-| VariantInfo | <a id="symbol-421"></a>`std::core::String name` | 声明或选项的名称。 |
+| VariantInfo | <a id="symbol-421"></a>`String name` | 声明或选项的名称。 |
 | VariantInfo | <a id="symbol-422"></a>`uint32 tag` | 枚举变体的数值标签。 |
 | VariantInfo | <a id="symbol-423"></a>`List<std::reflect::ParameterInfo> payloads` | 枚举变体的载荷参数声明。 |
 | 模块 | <a id="symbol-424"></a>`struct StructInfo` | 结构体反射信息，包含字段、方法、静态成员、实现接口及注解。 |
-| StructInfo | <a id="symbol-425"></a>`std::core::String name` | 声明或选项的名称。 |
+| StructInfo | <a id="symbol-425"></a>`String name` | 声明或选项的名称。 |
 | StructInfo | <a id="symbol-426"></a>`uint64 typeId` | 编译器登记的类型身份，不是对象地址。 |
 | StructInfo | <a id="symbol-427"></a>`List<std::reflect::FieldInfo> fields` | 结构体的实例字段信息。 |
 | StructInfo | <a id="symbol-428"></a>`List<std::reflect::MethodInfo> methods` | 类型或接口的方法信息。 |
@@ -111,7 +111,7 @@ void main() {
 | StructInfo | <a id="symbol-430"></a>`List<uint64> implementedInterfaces` | 该类型实现的接口身份。 |
 | StructInfo | <a id="symbol-431"></a>`List<std::reflect::Annotation> annotations` | 附加在该声明上的注解实例。 |
 | 模块 | <a id="symbol-432"></a>`struct EnumInfo` | 枚举反射信息，包含变体、方法、静态成员、实现接口及注解。 |
-| EnumInfo | <a id="symbol-433"></a>`std::core::String name` | 声明或选项的名称。 |
+| EnumInfo | <a id="symbol-433"></a>`String name` | 声明或选项的名称。 |
 | EnumInfo | <a id="symbol-434"></a>`uint64 typeId` | 编译器登记的类型身份，不是对象地址。 |
 | EnumInfo | <a id="symbol-435"></a>`List<std::reflect::VariantInfo> variants` | 枚举的变体信息。 |
 | EnumInfo | <a id="symbol-436"></a>`List<std::reflect::MethodInfo> methods` | 类型或接口的方法信息。 |
@@ -119,7 +119,7 @@ void main() {
 | EnumInfo | <a id="symbol-438"></a>`List<uint64> implementedInterfaces` | 该类型实现的接口身份。 |
 | EnumInfo | <a id="symbol-439"></a>`List<std::reflect::Annotation> annotations` | 附加在该声明上的注解实例。 |
 | 模块 | <a id="symbol-440"></a>`struct InterfaceInfo` | 接口反射信息，包含方法、实现者类型及注解。 |
-| InterfaceInfo | <a id="symbol-441"></a>`std::core::String name` | 声明或选项的名称。 |
+| InterfaceInfo | <a id="symbol-441"></a>`String name` | 声明或选项的名称。 |
 | InterfaceInfo | <a id="symbol-442"></a>`uint64 typeId` | 编译器登记的类型身份，不是对象地址。 |
 | InterfaceInfo | <a id="symbol-443"></a>`List<std::reflect::MethodInfo> methods` | 类型或接口的方法信息。 |
 | InterfaceInfo | <a id="symbol-444"></a>`List<uint64> implementedBy` | 实现该接口的具体类型身份。 |
@@ -132,21 +132,21 @@ void main() {
 | [requireReflection](#api-0) | `void requireReflection()` |
 | [ReflectError::toString](#api-1) | `String toString()` |
 | [ReflectValue::typeId](#api-2) | `uint64 typeId()` |
-| [ReflectValue::asBool](#api-3) | `Result<bool,std::core::Error> asBool()` |
-| [ReflectValue::asChar](#api-4) | `Result<char,std::core::Error> asChar()` |
-| [ReflectValue::asI8](#api-5) | `Result<int8,std::core::Error> asI8()` |
-| [ReflectValue::asI16](#api-6) | `Result<int16,std::core::Error> asI16()` |
-| [ReflectValue::asI32](#api-7) | `Result<int32,std::core::Error> asI32()` |
-| [ReflectValue::asI64](#api-8) | `Result<int64,std::core::Error> asI64()` |
-| [ReflectValue::asU8](#api-9) | `Result<uint8,std::core::Error> asU8()` |
-| [ReflectValue::asU16](#api-10) | `Result<uint16,std::core::Error> asU16()` |
-| [ReflectValue::asU32](#api-11) | `Result<uint32,std::core::Error> asU32()` |
-| [ReflectValue::asU64](#api-12) | `Result<uint64,std::core::Error> asU64()` |
-| [ReflectValue::asF32](#api-13) | `Result<float32,std::core::Error> asF32()` |
-| [ReflectValue::asF64](#api-14) | `Result<float64,std::core::Error> asF64()` |
-| [ReflectValue::asText](#api-15) | `Result<std::core::String,std::core::Error> asText()` |
-| [getFuncInfo](#api-16) | `Option<std::reflect::FuncInfo> getFuncInfo(std::core::String name)` |
-| [getAnnotationInfo](#api-17) | `Option<std::reflect::AnnotationInfo> getAnnotationInfo(std::core::String name)` |
+| [ReflectValue::asBool](#api-3) | `Result<bool,Error> asBool()` |
+| [ReflectValue::asChar](#api-4) | `Result<char,Error> asChar()` |
+| [ReflectValue::asI8](#api-5) | `Result<int8,Error> asI8()` |
+| [ReflectValue::asI16](#api-6) | `Result<int16,Error> asI16()` |
+| [ReflectValue::asI32](#api-7) | `Result<int32,Error> asI32()` |
+| [ReflectValue::asI64](#api-8) | `Result<int64,Error> asI64()` |
+| [ReflectValue::asU8](#api-9) | `Result<uint8,Error> asU8()` |
+| [ReflectValue::asU16](#api-10) | `Result<uint16,Error> asU16()` |
+| [ReflectValue::asU32](#api-11) | `Result<uint32,Error> asU32()` |
+| [ReflectValue::asU64](#api-12) | `Result<uint64,Error> asU64()` |
+| [ReflectValue::asF32](#api-13) | `Result<float32,Error> asF32()` |
+| [ReflectValue::asF64](#api-14) | `Result<float64,Error> asF64()` |
+| [ReflectValue::asText](#api-15) | `Result<String,Error> asText()` |
+| [getFuncInfo](#api-16) | `Option<std::reflect::FuncInfo> getFuncInfo(String name)` |
+| [getAnnotationInfo](#api-17) | `Option<std::reflect::AnnotationInfo> getAnnotationInfo(String name)` |
 | [getTypeId](#api-18) | `uint64 getTypeId<T>()` |
 | [getInterfaceId](#api-19) | `uint64 getInterfaceId<I>()` |
 | [getStructInfo](#api-20) | `Option<std::reflect::StructInfo> getStructInfo<T>()` |
@@ -154,22 +154,22 @@ void main() {
 | [getInterfaceInfo](#api-22) | `Option<std::reflect::InterfaceInfo> getInterfaceInfo<I>()` |
 | [implementsInterface](#api-23) | `bool implementsInterface<T>(uint64 interfaceId)` |
 | [getAnnotations](#api-24) | `List<std::reflect::Annotation> getAnnotations<T>()` |
-| [getFieldAnnotations](#api-25) | `List<std::reflect::Annotation> getFieldAnnotations<T>(std::core::String name)` |
-| [getFuncAnnotations](#api-26) | `List<std::reflect::Annotation> getFuncAnnotations(std::core::String name)` |
-| [getMethodAnnotations](#api-27) | `List<std::reflect::Annotation> getMethodAnnotations<T>(std::core::String name)` |
-| [getStaticMemberAnnotations](#api-28) | `List<std::reflect::Annotation> getStaticMemberAnnotations<T>(std::core::String name)` |
-| [call](#api-29) | `Result<std::reflect::ReflectValue,std::core::Error> call(std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [callMethod](#api-30) | `Result<std::reflect::ReflectValue,std::core::Error> callMethod<T>(T mut& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [callMethodConst](#api-31) | `Result<std::reflect::ReflectValue,std::core::Error> callMethodConst<T>(T const& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [callStatic](#api-32) | `Result<std::reflect::ReflectValue,std::core::Error> callStatic<T>(std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [callEnumMethod](#api-33) | `Result<std::reflect::ReflectValue,std::core::Error> callEnumMethod<T>(T mut& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [callEnumMethodConst](#api-34) | `Result<std::reflect::ReflectValue,std::core::Error> callEnumMethodConst<T>(T const& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [callEnumStatic](#api-35) | `Result<std::reflect::ReflectValue,std::core::Error> callEnumStatic<T>(std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [construct](#api-36) | `Result<T,std::core::Error> construct<T>(List<std::reflect::ReflectValue> args)` |
-| [getField](#api-37) | `Result<F,std::core::Error> getField<T,F>(T const& obj, std::core::String name)` |
-| [setField](#api-38) | `Result<bool,std::core::Error> setField<T,F>(T mut& obj, std::core::String name, F value)` |
-| [callInterface](#api-39) | `Result<std::reflect::ReflectValue,std::core::Error> callInterface<I>(I mut& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
-| [callInterfaceConst](#api-40) | `Result<std::reflect::ReflectValue,std::core::Error> callInterfaceConst<I>(I const& obj, std::core::String name, List<std::reflect::ReflectValue> args)` |
+| [getFieldAnnotations](#api-25) | `List<std::reflect::Annotation> getFieldAnnotations<T>(String name)` |
+| [getFuncAnnotations](#api-26) | `List<std::reflect::Annotation> getFuncAnnotations(String name)` |
+| [getMethodAnnotations](#api-27) | `List<std::reflect::Annotation> getMethodAnnotations<T>(String name)` |
+| [getStaticMemberAnnotations](#api-28) | `List<std::reflect::Annotation> getStaticMemberAnnotations<T>(String name)` |
+| [call](#api-29) | `Result<std::reflect::ReflectValue,Error> call(String name, List<std::reflect::ReflectValue> args)` |
+| [callMethod](#api-30) | `Result<std::reflect::ReflectValue,Error> callMethod<T>(T mut& obj, String name, List<std::reflect::ReflectValue> args)` |
+| [callMethodConst](#api-31) | `Result<std::reflect::ReflectValue,Error> callMethodConst<T>(T const& obj, String name, List<std::reflect::ReflectValue> args)` |
+| [callStatic](#api-32) | `Result<std::reflect::ReflectValue,Error> callStatic<T>(String name, List<std::reflect::ReflectValue> args)` |
+| [callEnumMethod](#api-33) | `Result<std::reflect::ReflectValue,Error> callEnumMethod<T>(T mut& obj, String name, List<std::reflect::ReflectValue> args)` |
+| [callEnumMethodConst](#api-34) | `Result<std::reflect::ReflectValue,Error> callEnumMethodConst<T>(T const& obj, String name, List<std::reflect::ReflectValue> args)` |
+| [callEnumStatic](#api-35) | `Result<std::reflect::ReflectValue,Error> callEnumStatic<T>(String name, List<std::reflect::ReflectValue> args)` |
+| [construct](#api-36) | `Result<T,Error> construct<T>(List<std::reflect::ReflectValue> args)` |
+| [getField](#api-37) | `Result<F,Error> getField<T,F>(T const& obj, String name)` |
+| [setField](#api-38) | `Result<bool,Error> setField<T,F>(T mut& obj, String name, F value)` |
+| [callInterface](#api-39) | `Result<std::reflect::ReflectValue,Error> callInterface<I>(I mut& obj, String name, List<std::reflect::ReflectValue> args)` |
+| [callInterfaceConst](#api-40) | `Result<std::reflect::ReflectValue,Error> callInterfaceConst<I>(I const& obj, String name, List<std::reflect::ReflectValue> args)` |
 
 <a id="api-0"></a>
 
@@ -203,7 +203,7 @@ void requireReflection();
 **调用形式**
 
 ```chali
-std::reflect::requireReflection();
+requireReflection();
 ```
 
 **源码**：[source/std/reflect.chl:5](../../source/std/reflect.chl#L5)。
@@ -291,7 +291,7 @@ obj.typeId();
 **声明**
 
 ```chali
-Result<bool,std::core::Error> asBool();
+Result<bool,Error> asBool();
 ```
 
 **行为**
@@ -304,7 +304,7 @@ Result<bool,std::core::Error> asBool();
 
 **返回值**
 
-`Result<bool,std::core::Error>`。精确提取 Bool 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<bool,Error>`。精确提取 Bool 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -327,7 +327,7 @@ obj.asBool();
 **声明**
 
 ```chali
-Result<char,std::core::Error> asChar();
+Result<char,Error> asChar();
 ```
 
 **行为**
@@ -340,7 +340,7 @@ Result<char,std::core::Error> asChar();
 
 **返回值**
 
-`Result<char,std::core::Error>`。精确提取 Char 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<char,Error>`。精确提取 Char 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -363,7 +363,7 @@ obj.asChar();
 **声明**
 
 ```chali
-Result<int8,std::core::Error> asI8();
+Result<int8,Error> asI8();
 ```
 
 **行为**
@@ -376,7 +376,7 @@ Result<int8,std::core::Error> asI8();
 
 **返回值**
 
-`Result<int8,std::core::Error>`。精确提取 I8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<int8,Error>`。精确提取 I8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -399,7 +399,7 @@ obj.asI8();
 **声明**
 
 ```chali
-Result<int16,std::core::Error> asI16();
+Result<int16,Error> asI16();
 ```
 
 **行为**
@@ -412,7 +412,7 @@ Result<int16,std::core::Error> asI16();
 
 **返回值**
 
-`Result<int16,std::core::Error>`。精确提取 I16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<int16,Error>`。精确提取 I16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -435,7 +435,7 @@ obj.asI16();
 **声明**
 
 ```chali
-Result<int32,std::core::Error> asI32();
+Result<int32,Error> asI32();
 ```
 
 **行为**
@@ -448,7 +448,7 @@ Result<int32,std::core::Error> asI32();
 
 **返回值**
 
-`Result<int32,std::core::Error>`。精确提取 I32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<int32,Error>`。精确提取 I32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -471,7 +471,7 @@ obj.asI32();
 **声明**
 
 ```chali
-Result<int64,std::core::Error> asI64();
+Result<int64,Error> asI64();
 ```
 
 **行为**
@@ -484,7 +484,7 @@ Result<int64,std::core::Error> asI64();
 
 **返回值**
 
-`Result<int64,std::core::Error>`。精确提取 I64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<int64,Error>`。精确提取 I64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -507,7 +507,7 @@ obj.asI64();
 **声明**
 
 ```chali
-Result<uint8,std::core::Error> asU8();
+Result<uint8,Error> asU8();
 ```
 
 **行为**
@@ -520,7 +520,7 @@ Result<uint8,std::core::Error> asU8();
 
 **返回值**
 
-`Result<uint8,std::core::Error>`。精确提取 U8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<uint8,Error>`。精确提取 U8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -543,7 +543,7 @@ obj.asU8();
 **声明**
 
 ```chali
-Result<uint16,std::core::Error> asU16();
+Result<uint16,Error> asU16();
 ```
 
 **行为**
@@ -556,7 +556,7 @@ Result<uint16,std::core::Error> asU16();
 
 **返回值**
 
-`Result<uint16,std::core::Error>`。精确提取 U16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<uint16,Error>`。精确提取 U16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -579,7 +579,7 @@ obj.asU16();
 **声明**
 
 ```chali
-Result<uint32,std::core::Error> asU32();
+Result<uint32,Error> asU32();
 ```
 
 **行为**
@@ -592,7 +592,7 @@ Result<uint32,std::core::Error> asU32();
 
 **返回值**
 
-`Result<uint32,std::core::Error>`。精确提取 U32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<uint32,Error>`。精确提取 U32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -615,7 +615,7 @@ obj.asU32();
 **声明**
 
 ```chali
-Result<uint64,std::core::Error> asU64();
+Result<uint64,Error> asU64();
 ```
 
 **行为**
@@ -628,7 +628,7 @@ Result<uint64,std::core::Error> asU64();
 
 **返回值**
 
-`Result<uint64,std::core::Error>`。精确提取 U64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<uint64,Error>`。精确提取 U64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -651,7 +651,7 @@ obj.asU64();
 **声明**
 
 ```chali
-Result<float32,std::core::Error> asF32();
+Result<float32,Error> asF32();
 ```
 
 **行为**
@@ -664,7 +664,7 @@ Result<float32,std::core::Error> asF32();
 
 **返回值**
 
-`Result<float32,std::core::Error>`。精确提取 F32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<float32,Error>`。精确提取 F32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -687,7 +687,7 @@ obj.asF32();
 **声明**
 
 ```chali
-Result<float64,std::core::Error> asF64();
+Result<float64,Error> asF64();
 ```
 
 **行为**
@@ -700,7 +700,7 @@ Result<float64,std::core::Error> asF64();
 
 **返回值**
 
-`Result<float64,std::core::Error>`。精确提取 F64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<float64,Error>`。精确提取 F64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -723,7 +723,7 @@ obj.asF64();
 **声明**
 
 ```chali
-Result<std::core::String,std::core::Error> asText();
+Result<String,Error> asText();
 ```
 
 **行为**
@@ -736,7 +736,7 @@ Result<std::core::String,std::core::Error> asText();
 
 **返回值**
 
-`Result<std::core::String,std::core::Error>`。精确提取 Text 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<String,Error>`。精确提取 Text 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -759,7 +759,7 @@ obj.asText();
 **声明**
 
 ```chali
-Option<std::reflect::FuncInfo> getFuncInfo(std::core::String name);
+Option<std::reflect::FuncInfo> getFuncInfo(String name);
 ```
 
 **行为**
@@ -770,7 +770,7 @@ Option<std::reflect::FuncInfo> getFuncInfo(std::core::String name);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 
 **返回值**
 
@@ -783,7 +783,7 @@ Option<std::reflect::FuncInfo> getFuncInfo(std::core::String name);
 **调用形式**
 
 ```chali
-std::reflect::getFuncInfo(name);
+getFuncInfo(name);
 ```
 
 **源码**：[source/std/reflect.chl:149](../../source/std/reflect.chl#L149)。
@@ -797,7 +797,7 @@ std::reflect::getFuncInfo(name);
 **声明**
 
 ```chali
-Option<std::reflect::AnnotationInfo> getAnnotationInfo(std::core::String name);
+Option<std::reflect::AnnotationInfo> getAnnotationInfo(String name);
 ```
 
 **行为**
@@ -808,7 +808,7 @@ Option<std::reflect::AnnotationInfo> getAnnotationInfo(std::core::String name);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 
 **返回值**
 
@@ -821,7 +821,7 @@ Option<std::reflect::AnnotationInfo> getAnnotationInfo(std::core::String name);
 **调用形式**
 
 ```chali
-std::reflect::getAnnotationInfo(name);
+getAnnotationInfo(name);
 ```
 
 **源码**：[source/std/reflect.chl:150](../../source/std/reflect.chl#L150)。
@@ -857,7 +857,7 @@ uint64 getTypeId<T>();
 **调用形式**
 
 ```chali
-std::reflect::getTypeId<T>();
+getTypeId<T>();
 ```
 
 **源码**：[source/std/reflect.chl:152](../../source/std/reflect.chl#L152)。
@@ -893,7 +893,7 @@ uint64 getInterfaceId<I>();
 **调用形式**
 
 ```chali
-std::reflect::getInterfaceId<I>();
+getInterfaceId<I>();
 ```
 
 **源码**：[source/std/reflect.chl:153](../../source/std/reflect.chl#L153)。
@@ -929,7 +929,7 @@ Option<std::reflect::StructInfo> getStructInfo<T>();
 **调用形式**
 
 ```chali
-std::reflect::getStructInfo<T>();
+getStructInfo<T>();
 ```
 
 **源码**：[source/std/reflect.chl:154](../../source/std/reflect.chl#L154)。
@@ -965,7 +965,7 @@ Option<std::reflect::EnumInfo> getEnumInfo<T>();
 **调用形式**
 
 ```chali
-std::reflect::getEnumInfo<T>();
+getEnumInfo<T>();
 ```
 
 **源码**：[source/std/reflect.chl:155](../../source/std/reflect.chl#L155)。
@@ -1001,7 +1001,7 @@ Option<std::reflect::InterfaceInfo> getInterfaceInfo<I>();
 **调用形式**
 
 ```chali
-std::reflect::getInterfaceInfo<I>();
+getInterfaceInfo<I>();
 ```
 
 **源码**：[source/std/reflect.chl:156](../../source/std/reflect.chl#L156)。
@@ -1039,7 +1039,7 @@ bool implementsInterface<T>(uint64 interfaceId);
 **调用形式**
 
 ```chali
-std::reflect::implementsInterface<T>(interfaceId);
+implementsInterface<T>(interfaceId);
 ```
 
 **源码**：[source/std/reflect.chl:157](../../source/std/reflect.chl#L157)。
@@ -1075,7 +1075,7 @@ List<std::reflect::Annotation> getAnnotations<T>();
 **调用形式**
 
 ```chali
-std::reflect::getAnnotations<T>();
+getAnnotations<T>();
 ```
 
 **源码**：[source/std/reflect.chl:164](../../source/std/reflect.chl#L164)。
@@ -1089,7 +1089,7 @@ std::reflect::getAnnotations<T>();
 **声明**
 
 ```chali
-List<std::reflect::Annotation> getFieldAnnotations<T>(std::core::String name);
+List<std::reflect::Annotation> getFieldAnnotations<T>(String name);
 ```
 
 **行为**
@@ -1100,7 +1100,7 @@ List<std::reflect::Annotation> getFieldAnnotations<T>(std::core::String name);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 
 **返回值**
 
@@ -1113,7 +1113,7 @@ List<std::reflect::Annotation> getFieldAnnotations<T>(std::core::String name);
 **调用形式**
 
 ```chali
-std::reflect::getFieldAnnotations<T>(name);
+getFieldAnnotations<T>(name);
 ```
 
 **源码**：[source/std/reflect.chl:170](../../source/std/reflect.chl#L170)。
@@ -1127,7 +1127,7 @@ std::reflect::getFieldAnnotations<T>(name);
 **声明**
 
 ```chali
-List<std::reflect::Annotation> getFuncAnnotations(std::core::String name);
+List<std::reflect::Annotation> getFuncAnnotations(String name);
 ```
 
 **行为**
@@ -1138,7 +1138,7 @@ List<std::reflect::Annotation> getFuncAnnotations(std::core::String name);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 
 **返回值**
 
@@ -1151,7 +1151,7 @@ List<std::reflect::Annotation> getFuncAnnotations(std::core::String name);
 **调用形式**
 
 ```chali
-std::reflect::getFuncAnnotations(name);
+getFuncAnnotations(name);
 ```
 
 **源码**：[source/std/reflect.chl:175](../../source/std/reflect.chl#L175)。
@@ -1165,7 +1165,7 @@ std::reflect::getFuncAnnotations(name);
 **声明**
 
 ```chali
-List<std::reflect::Annotation> getMethodAnnotations<T>(std::core::String name);
+List<std::reflect::Annotation> getMethodAnnotations<T>(String name);
 ```
 
 **行为**
@@ -1176,7 +1176,7 @@ List<std::reflect::Annotation> getMethodAnnotations<T>(std::core::String name);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 
 **返回值**
 
@@ -1189,7 +1189,7 @@ List<std::reflect::Annotation> getMethodAnnotations<T>(std::core::String name);
 **调用形式**
 
 ```chali
-std::reflect::getMethodAnnotations<T>(name);
+getMethodAnnotations<T>(name);
 ```
 
 **源码**：[source/std/reflect.chl:185](../../source/std/reflect.chl#L185)。
@@ -1203,7 +1203,7 @@ std::reflect::getMethodAnnotations<T>(name);
 **声明**
 
 ```chali
-List<std::reflect::Annotation> getStaticMemberAnnotations<T>(std::core::String name);
+List<std::reflect::Annotation> getStaticMemberAnnotations<T>(String name);
 ```
 
 **行为**
@@ -1214,7 +1214,7 @@ List<std::reflect::Annotation> getStaticMemberAnnotations<T>(std::core::String n
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 
 **返回值**
 
@@ -1227,7 +1227,7 @@ List<std::reflect::Annotation> getStaticMemberAnnotations<T>(std::core::String n
 **调用形式**
 
 ```chali
-std::reflect::getStaticMemberAnnotations<T>(name);
+getStaticMemberAnnotations<T>(name);
 ```
 
 **源码**：[source/std/reflect.chl:189](../../source/std/reflect.chl#L189)。
@@ -1241,7 +1241,7 @@ std::reflect::getStaticMemberAnnotations<T>(name);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::core::Error> call(std::core::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,Error> call(String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1252,12 +1252,12 @@ Result<std::reflect::ReflectValue,std::core::Error> call(std::core::String name,
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 | `args` | `List<std::reflect::ReflectValue> args` | 与目标参数数量、位宽和类型匹配的封闭反射值列表 | 无 |
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::core::Error>`。按名称动态调用函数，返回封闭值或 ReflectError。
+`Result<std::reflect::ReflectValue,Error>`。按名称动态调用函数，返回封闭值或 ReflectError。
 
 **错误与边界**
 
@@ -1266,7 +1266,7 @@ Result<std::reflect::ReflectValue,std::core::Error> call(std::core::String name,
 **调用形式**
 
 ```chali
-std::reflect::call(name, args);
+call(name, args);
 ```
 
 **源码**：[source/std/reflect.chl:198](../../source/std/reflect.chl#L198)。
@@ -1280,7 +1280,7 @@ std::reflect::call(name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::core::Error> callMethod<T>(T mut& obj, std::core::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,Error> callMethod<T>(T mut& obj, String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1292,12 +1292,12 @@ Result<std::reflect::ReflectValue,std::core::Error> callMethod<T>(T mut& obj, st
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
 | `obj` | `T mut& obj` | 实例接收者，其引用可写性须匹配方法 | 无 |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 | `args` | `List<std::reflect::ReflectValue> args` | 与目标参数数量、位宽和类型匹配的封闭反射值列表 | 无 |
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::core::Error>`。通过可写接收者动态调用实例方法。
+`Result<std::reflect::ReflectValue,Error>`。通过可写接收者动态调用实例方法。
 
 **错误与边界**
 
@@ -1306,7 +1306,7 @@ Result<std::reflect::ReflectValue,std::core::Error> callMethod<T>(T mut& obj, st
 **调用形式**
 
 ```chali
-std::reflect::callMethod<T>(obj, name, args);
+callMethod<T>(obj, name, args);
 ```
 
 **源码**：[source/std/reflect.chl:199](../../source/std/reflect.chl#L199)。
@@ -1320,7 +1320,7 @@ std::reflect::callMethod<T>(obj, name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::core::Error> callMethodConst<T>(T const& obj, std::core::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,Error> callMethodConst<T>(T const& obj, String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1332,12 +1332,12 @@ Result<std::reflect::ReflectValue,std::core::Error> callMethodConst<T>(T const& 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
 | `obj` | `T const& obj` | 实例接收者，其引用可写性须匹配方法 | 无 |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 | `args` | `List<std::reflect::ReflectValue> args` | 与目标参数数量、位宽和类型匹配的封闭反射值列表 | 无 |
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::core::Error>`。通过只读接收者动态调用允许的实例方法。
+`Result<std::reflect::ReflectValue,Error>`。通过只读接收者动态调用允许的实例方法。
 
 **错误与边界**
 
@@ -1346,7 +1346,7 @@ Result<std::reflect::ReflectValue,std::core::Error> callMethodConst<T>(T const& 
 **调用形式**
 
 ```chali
-std::reflect::callMethodConst<T>(obj, name, args);
+callMethodConst<T>(obj, name, args);
 ```
 
 **源码**：[source/std/reflect.chl:200](../../source/std/reflect.chl#L200)。
@@ -1360,7 +1360,7 @@ std::reflect::callMethodConst<T>(obj, name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::core::Error> callStatic<T>(std::core::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,Error> callStatic<T>(String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1371,12 +1371,12 @@ Result<std::reflect::ReflectValue,std::core::Error> callStatic<T>(std::core::Str
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 | `args` | `List<std::reflect::ReflectValue> args` | 与目标参数数量、位宽和类型匹配的封闭反射值列表 | 无 |
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::core::Error>`。动态调用 T 的静态方法。
+`Result<std::reflect::ReflectValue,Error>`。动态调用 T 的静态方法。
 
 **错误与边界**
 
@@ -1385,7 +1385,7 @@ Result<std::reflect::ReflectValue,std::core::Error> callStatic<T>(std::core::Str
 **调用形式**
 
 ```chali
-std::reflect::callStatic<T>(name, args);
+callStatic<T>(name, args);
 ```
 
 **源码**：[source/std/reflect.chl:201](../../source/std/reflect.chl#L201)。
@@ -1399,7 +1399,7 @@ std::reflect::callStatic<T>(name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::core::Error> callEnumMethod<T>(T mut& obj, std::core::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,Error> callEnumMethod<T>(T mut& obj, String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1411,12 +1411,12 @@ Result<std::reflect::ReflectValue,std::core::Error> callEnumMethod<T>(T mut& obj
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
 | `obj` | `T mut& obj` | 实例接收者，其引用可写性须匹配方法 | 无 |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 | `args` | `List<std::reflect::ReflectValue> args` | 与目标参数数量、位宽和类型匹配的封闭反射值列表 | 无 |
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::core::Error>`。通过可写枚举接收者动态调用方法。
+`Result<std::reflect::ReflectValue,Error>`。通过可写枚举接收者动态调用方法。
 
 **错误与边界**
 
@@ -1425,7 +1425,7 @@ Result<std::reflect::ReflectValue,std::core::Error> callEnumMethod<T>(T mut& obj
 **调用形式**
 
 ```chali
-std::reflect::callEnumMethod<T>(obj, name, args);
+callEnumMethod<T>(obj, name, args);
 ```
 
 **源码**：[source/std/reflect.chl:202](../../source/std/reflect.chl#L202)。
@@ -1439,7 +1439,7 @@ std::reflect::callEnumMethod<T>(obj, name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::core::Error> callEnumMethodConst<T>(T const& obj, std::core::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,Error> callEnumMethodConst<T>(T const& obj, String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1451,12 +1451,12 @@ Result<std::reflect::ReflectValue,std::core::Error> callEnumMethodConst<T>(T con
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
 | `obj` | `T const& obj` | 实例接收者，其引用可写性须匹配方法 | 无 |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 | `args` | `List<std::reflect::ReflectValue> args` | 与目标参数数量、位宽和类型匹配的封闭反射值列表 | 无 |
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::core::Error>`。通过只读枚举接收者动态调用方法。
+`Result<std::reflect::ReflectValue,Error>`。通过只读枚举接收者动态调用方法。
 
 **错误与边界**
 
@@ -1465,7 +1465,7 @@ Result<std::reflect::ReflectValue,std::core::Error> callEnumMethodConst<T>(T con
 **调用形式**
 
 ```chali
-std::reflect::callEnumMethodConst<T>(obj, name, args);
+callEnumMethodConst<T>(obj, name, args);
 ```
 
 **源码**：[source/std/reflect.chl:203](../../source/std/reflect.chl#L203)。
@@ -1479,7 +1479,7 @@ std::reflect::callEnumMethodConst<T>(obj, name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::core::Error> callEnumStatic<T>(std::core::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,Error> callEnumStatic<T>(String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1490,12 +1490,12 @@ Result<std::reflect::ReflectValue,std::core::Error> callEnumStatic<T>(std::core:
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 | `args` | `List<std::reflect::ReflectValue> args` | 与目标参数数量、位宽和类型匹配的封闭反射值列表 | 无 |
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::core::Error>`。动态调用枚举的静态方法。
+`Result<std::reflect::ReflectValue,Error>`。动态调用枚举的静态方法。
 
 **错误与边界**
 
@@ -1504,7 +1504,7 @@ Result<std::reflect::ReflectValue,std::core::Error> callEnumStatic<T>(std::core:
 **调用形式**
 
 ```chali
-std::reflect::callEnumStatic<T>(name, args);
+callEnumStatic<T>(name, args);
 ```
 
 **源码**：[source/std/reflect.chl:204](../../source/std/reflect.chl#L204)。
@@ -1518,7 +1518,7 @@ std::reflect::callEnumStatic<T>(name, args);
 **声明**
 
 ```chali
-Result<T,std::core::Error> construct<T>(List<std::reflect::ReflectValue> args);
+Result<T,Error> construct<T>(List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1533,7 +1533,7 @@ Result<T,std::core::Error> construct<T>(List<std::reflect::ReflectValue> args);
 
 **返回值**
 
-`Result<T,std::core::Error>`。动态调用 T 的构造函数，返回 T 或错误。
+`Result<T,Error>`。动态调用 T 的构造函数，返回 T 或错误。
 
 **错误与边界**
 
@@ -1542,7 +1542,7 @@ Result<T,std::core::Error> construct<T>(List<std::reflect::ReflectValue> args);
 **调用形式**
 
 ```chali
-std::reflect::construct<T>(args);
+construct<T>(args);
 ```
 
 **源码**：[source/std/reflect.chl:205](../../source/std/reflect.chl#L205)。
@@ -1556,7 +1556,7 @@ std::reflect::construct<T>(args);
 **声明**
 
 ```chali
-Result<F,std::core::Error> getField<T,F>(T const& obj, std::core::String name);
+Result<F,Error> getField<T,F>(T const& obj, String name);
 ```
 
 **行为**
@@ -1570,11 +1570,11 @@ Result<F,std::core::Error> getField<T,F>(T const& obj, std::core::String name);
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
 | `obj` | `T const& obj` | 实例接收者，其引用可写性须匹配方法 | 无 |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 
 **返回值**
 
-`Result<F,std::core::Error>`。按字段名读取精确类型的独立值。
+`Result<F,Error>`。按字段名读取精确类型的独立值。
 
 **错误与边界**
 
@@ -1583,7 +1583,7 @@ Result<F,std::core::Error> getField<T,F>(T const& obj, std::core::String name);
 **调用形式**
 
 ```chali
-std::reflect::getField<T,F>(obj, name);
+getField<T,F>(obj, name);
 ```
 
 **源码**：[source/std/reflect.chl:207](../../source/std/reflect.chl#L207)。
@@ -1597,7 +1597,7 @@ std::reflect::getField<T,F>(obj, name);
 **声明**
 
 ```chali
-Result<bool,std::core::Error> setField<T,F>(T mut& obj, std::core::String name, F value);
+Result<bool,Error> setField<T,F>(T mut& obj, String name, F value);
 ```
 
 **行为**
@@ -1611,12 +1611,12 @@ Result<bool,std::core::Error> setField<T,F>(T mut& obj, std::core::String name, 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
 | `obj` | `T mut& obj` | 实例接收者，其引用可写性须匹配方法 | 无 |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 | `value` | `F value` | 输入值或写入的新值 | 无 |
 
 **返回值**
 
-`Result<bool,std::core::Error>`。按字段名写入精确类型的值。
+`Result<bool,Error>`。按字段名写入精确类型的值。
 
 **错误与边界**
 
@@ -1625,7 +1625,7 @@ Result<bool,std::core::Error> setField<T,F>(T mut& obj, std::core::String name, 
 **调用形式**
 
 ```chali
-std::reflect::setField<T,F>(obj, name, value);
+setField<T,F>(obj, name, value);
 ```
 
 **源码**：[source/std/reflect.chl:209](../../source/std/reflect.chl#L209)。
@@ -1639,7 +1639,7 @@ std::reflect::setField<T,F>(obj, name, value);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::core::Error> callInterface<I>(I mut& obj, std::core::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,Error> callInterface<I>(I mut& obj, String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1651,12 +1651,12 @@ Result<std::reflect::ReflectValue,std::core::Error> callInterface<I>(I mut& obj,
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
 | `obj` | `I mut& obj` | 实例接收者，其引用可写性须匹配方法 | 无 |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 | `args` | `List<std::reflect::ReflectValue> args` | 与目标参数数量、位宽和类型匹配的封闭反射值列表 | 无 |
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::core::Error>`。通过可写接口接收者动态调用方法。
+`Result<std::reflect::ReflectValue,Error>`。通过可写接口接收者动态调用方法。
 
 **错误与边界**
 
@@ -1665,7 +1665,7 @@ Result<std::reflect::ReflectValue,std::core::Error> callInterface<I>(I mut& obj,
 **调用形式**
 
 ```chali
-std::reflect::callInterface<I>(obj, name, args);
+callInterface<I>(obj, name, args);
 ```
 
 **源码**：[source/std/reflect.chl:210](../../source/std/reflect.chl#L210)。
@@ -1679,7 +1679,7 @@ std::reflect::callInterface<I>(obj, name, args);
 **声明**
 
 ```chali
-Result<std::reflect::ReflectValue,std::core::Error> callInterfaceConst<I>(I const& obj, std::core::String name, List<std::reflect::ReflectValue> args);
+Result<std::reflect::ReflectValue,Error> callInterfaceConst<I>(I const& obj, String name, List<std::reflect::ReflectValue> args);
 ```
 
 **行为**
@@ -1691,12 +1691,12 @@ Result<std::reflect::ReflectValue,std::core::Error> callInterfaceConst<I>(I cons
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
 | `obj` | `I const& obj` | 实例接收者，其引用可写性须匹配方法 | 无 |
-| `name` | `std::core::String name` | 名称 | 无 |
+| `name` | `String name` | 名称 | 无 |
 | `args` | `List<std::reflect::ReflectValue> args` | 与目标参数数量、位宽和类型匹配的封闭反射值列表 | 无 |
 
 **返回值**
 
-`Result<std::reflect::ReflectValue,std::core::Error>`。通过只读接口接收者动态调用方法。
+`Result<std::reflect::ReflectValue,Error>`。通过只读接口接收者动态调用方法。
 
 **错误与边界**
 
@@ -1705,7 +1705,7 @@ Result<std::reflect::ReflectValue,std::core::Error> callInterfaceConst<I>(I cons
 **调用形式**
 
 ```chali
-std::reflect::callInterfaceConst<I>(obj, name, args);
+callInterfaceConst<I>(obj, name, args);
 ```
 
 **源码**：[source/std/reflect.chl:211](../../source/std/reflect.chl#L211)。

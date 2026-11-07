@@ -39,47 +39,47 @@ float64 rootFunction(float64 x) { return x*x-2.0; }
 float64 exponentialRate(float64 time, float64 value) { return value; }
 
 void main() {
-    std::linear_algebra::Vector<float32> left=std::linear_algebra::Vector<float32>::zeros(2);
+    Vector<float32> left=Vector<float32>::zeros(2);
     left.set(0,(float32)3.0); left.set(1,(float32)4.0);
-    std::linear_algebra::Vector<float32> right=left+left;
-    std::linear_algebra::Vector<float32> difference=right-left;
-    std::linear_algebra::Vector<float32> scaled=left*(float32)2.0;
+    Vector<float32> right=left+left;
+    Vector<float32> difference=right-left;
+    Vector<float32> scaled=left*(float32)2.0;
     assert(difference.at(0)==(float32)3.0 && scaled.at(1)==(float32)8.0);
-    std::linear_algebra::Matrix<float32> matrix=std::linear_algebra::Matrix<float32>::identity(2);
-    std::linear_algebra::Matrix<float32> doubled=matrix+matrix;
-    std::linear_algebra::Matrix<float32> recovered=doubled-matrix;
-    std::linear_algebra::Matrix<float32> scaledMatrix=matrix*(float32)3.0;
-    std::linear_algebra::Vector<float32> mapped=doubled*left;
+    Matrix<float32> matrix=Matrix<float32>::identity(2);
+    Matrix<float32> doubled=matrix+matrix;
+    Matrix<float32> recovered=doubled-matrix;
+    Matrix<float32> scaledMatrix=matrix*(float32)3.0;
+    Vector<float32> mapped=doubled*left;
     assert(mapped.at(0)==(float32)6.0 && mapped.at(1)==(float32)8.0);
     assert(recovered.at(1,1)==(float32)1.0 && scaledMatrix.at(0,0)==(float32)3.0);
-    std::linear_algebra::Matrix<float32> product=matrix*matrix;
+    Matrix<float32> product=matrix*matrix;
     assert(product.at(0,0)==(float32)1.0);
 
-    float64 integral=std::numerics::Numerics::integrateSimpson(square,0.0,1.0,20);
-    float64 slope=std::numerics::Numerics::derivative(square,2.0,0.0001);
-    float64 root=std::numerics::Numerics::bisect(rootFunction,1.0,2.0,0.00000001,100);
-    float64 newton=std::numerics::Numerics::newton(rootFunction,1.0,0.00000001,20);
-    List<float64> euler=std::numerics::Numerics::solveOdeEuler(exponentialRate,0.0,1.0,0.1,10);
-    List<float64> rk4=std::numerics::Numerics::solveOdeRK4(exponentialRate,0.0,1.0,0.1,10);
-    assert(std::math::abs(integral-1.0/3.0)<0.00001);
-    assert(std::math::abs(slope-4.0)<0.00001);
-    assert(std::math::abs(root-std::math::sqrt(2.0))<0.000001);
-    assert(std::math::abs(newton-std::math::sqrt(2.0))<0.000001);
+    float64 integral=Numerics::integrateSimpson(square,0.0,1.0,20);
+    float64 slope=Numerics::derivative(square,2.0,0.0001);
+    float64 root=Numerics::bisect(rootFunction,1.0,2.0,0.00000001,100);
+    float64 newton=Numerics::newton(rootFunction,1.0,0.00000001,20);
+    List<float64> euler=Numerics::solveOdeEuler(exponentialRate,0.0,1.0,0.1,10);
+    List<float64> rk4=Numerics::solveOdeRK4(exponentialRate,0.0,1.0,0.1,10);
+    assert(abs(integral-1.0/3.0)<0.00001);
+    assert(abs(slope-4.0)<0.00001);
+    assert(abs(root-sqrt(2.0))<0.000001);
+    assert(abs(newton-sqrt(2.0))<0.000001);
     assert(euler.len()==11 && rk4.len()==11);
     assert(rk4.at(10)>euler.at(10) &&
-    std::math::abs(rk4.at(10)-std::math::E)<0.00001);
+    abs(rk4.at(10)-std::math::E)<0.00001);
 
-    assert(std::number_theory::gcd((uint64)54,(uint64)24)==6);
-    assert(std::number_theory::lcm((uint64)6,(uint64)8)==24);
-    assert(std::number_theory::modInverse((int64)3,(int64)11)==4);
-    assert(std::number_theory::modInverse((int64)-3,(int64)11)==7);
-    assert(std::number_theory::powMod((uint64)7,(uint64)128,(uint64)97)==35);
-    assert(std::number_theory::isPrime((uint64)97));
-    assert(!std::number_theory::isPrime((uint64)561));
+    assert(gcd((uint64)54,(uint64)24)==6);
+    assert(lcm((uint64)6,(uint64)8)==24);
+    assert(modInverse((int64)3,(int64)11)==4);
+    assert(modInverse((int64)-3,(int64)11)==7);
+    assert(powMod((uint64)7,(uint64)128,(uint64)97)==35);
+    assert(isPrime((uint64)97));
+    assert(!isPrime((uint64)561));
     uint64 largePrime=(uint64)2305843009213693951;
     assert(largePrime==(((uint64)1<<61)-1));
-    assert(std::number_theory::mulMod(largePrime-1,largePrime-1,largePrime)==1);
-    assert(std::number_theory::isPrime((uint64)65537));
+    assert(mulMod(largePrime-1,largePrime-1,largePrime)==1);
+    assert(isPrime((uint64)65537));
     println("generic matrix numerics number theory OK");
 }
 ```
@@ -114,8 +114,8 @@ generic matrix numerics number theory OK
 | [Numerics::bisect](#api-2) | `static float64 bisect(float64 fn(float64) function, float64 left, float64 right, float64 tolerance, int64 maxIterations)` |
 | [Numerics::rk4Step](#api-3) | `static float64 rk4Step(float64 fn(float64, float64) derivative, float64 time, float64 value, float64 step)` |
 | [Numerics::newton](#api-4) | `static float64 newton(float64 fn(float64) function, float64 initial, float64 tolerance, int64 maxIterations)` |
-| [Numerics::solveOdeEuler](#api-5) | `static std::core::List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
-| [Numerics::solveOdeRK4](#api-6) | `static std::core::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
+| [Numerics::solveOdeEuler](#api-5) | `static List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
+| [Numerics::solveOdeRK4](#api-6) | `static List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps)` |
 
 <a id="api-0"></a>
 
@@ -153,7 +153,7 @@ static float64 derivative(float64 fn(float64) function, float64 x, float64 step)
 **调用形式**
 
 ```chali
-std::numerics::Numerics::derivative(function, x, step);
+Numerics::derivative(function, x, step);
 ```
 
 **源码**：[source/std/numerics.chl:134](../../source/std/numerics.chl#L134)。
@@ -197,7 +197,7 @@ static float64 integrateSimpson(float64 fn(float64) function, float64 begin, flo
 **调用形式**
 
 ```chali
-std::numerics::Numerics::integrateSimpson(function, begin, end, intervals);
+Numerics::integrateSimpson(function, begin, end, intervals);
 ```
 
 **源码**：[source/std/numerics.chl:142](../../source/std/numerics.chl#L142)。
@@ -242,7 +242,7 @@ static float64 bisect(float64 fn(float64) function, float64 left, float64 right,
 **调用形式**
 
 ```chali
-std::numerics::Numerics::bisect(function, left, right, tolerance, maxIterations);
+Numerics::bisect(function, left, right, tolerance, maxIterations);
 ```
 
 **源码**：[source/std/numerics.chl:151](../../source/std/numerics.chl#L151)。
@@ -286,7 +286,7 @@ static float64 rk4Step(float64 fn(float64, float64) derivative, float64 time, fl
 **调用形式**
 
 ```chali
-std::numerics::Numerics::rk4Step(derivative, time, value, step);
+Numerics::rk4Step(derivative, time, value, step);
 ```
 
 **源码**：[source/std/numerics.chl:168](../../source/std/numerics.chl#L168)。
@@ -330,7 +330,7 @@ static float64 newton(float64 fn(float64) function, float64 initial, float64 tol
 **调用形式**
 
 ```chali
-std::numerics::Numerics::newton(function, initial, tolerance, maxIterations);
+Numerics::newton(function, initial, tolerance, maxIterations);
 ```
 
 **源码**：[source/std/numerics.chl:177](../../source/std/numerics.chl#L177)。
@@ -344,7 +344,7 @@ std::numerics::Numerics::newton(function, initial, tolerance, maxIterations);
 **声明**
 
 ```chali
-static std::core::List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps);
+static List<float64> solveOdeEuler( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps);
 ```
 
 **行为**
@@ -365,7 +365,7 @@ static std::core::List<float64> solveOdeEuler( float64 fn(float64, float64) rate
 
 **返回值**
 
-`std::core::List<float64>`。用 Euler 法求解标量初值问题并返回采样列表。
+`List<float64>`。用 Euler 法求解标量初值问题并返回采样列表。
 
 **错误与边界**
 
@@ -375,7 +375,7 @@ static std::core::List<float64> solveOdeEuler( float64 fn(float64, float64) rate
 **调用形式**
 
 ```chali
-std::numerics::Numerics::solveOdeEuler(rate, initialTime, initialValue, step, steps);
+Numerics::solveOdeEuler(rate, initialTime, initialValue, step, steps);
 ```
 
 **源码**：[source/std/numerics.chl:187](../../source/std/numerics.chl#L187)。
@@ -389,7 +389,7 @@ std::numerics::Numerics::solveOdeEuler(rate, initialTime, initialValue, step, st
 **声明**
 
 ```chali
-static std::core::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps);
+static List<float64> solveOdeRK4( float64 fn(float64, float64) rate, float64 initialTime, float64 initialValue, float64 step, int64 steps);
 ```
 
 **行为**
@@ -410,7 +410,7 @@ static std::core::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, 
 
 **返回值**
 
-`std::core::List<float64>`。用四阶 RK 法求解标量初值问题并返回采样列表。
+`List<float64>`。用四阶 RK 法求解标量初值问题并返回采样列表。
 
 **错误与边界**
 
@@ -420,7 +420,7 @@ static std::core::List<float64> solveOdeRK4( float64 fn(float64, float64) rate, 
 **调用形式**
 
 ```chali
-std::numerics::Numerics::solveOdeRK4(rate, initialTime, initialValue, step, steps);
+Numerics::solveOdeRK4(rate, initialTime, initialValue, step, steps);
 ```
 
 **源码**：[source/std/numerics.chl:198](../../source/std/numerics.chl#L198)。

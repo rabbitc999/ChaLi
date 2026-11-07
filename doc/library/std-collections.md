@@ -42,10 +42,10 @@ void main() {
     values.push(4);
     values.push(1);
     values.push(3);
-    List<int64> sorted = std::algorithms::sortValue<int64>(values);
+    List<int64> sorted = sortValue(values);
     println("{} {} {} {} {}", sorted[0], sorted[1], sorted[2],
-    std::algorithms::binarySearchValue<int64>(sorted, 3),
-    std::algorithms::foldValue<int64>(sorted, 0, addValues));
+    binarySearchValue(sorted, 3),
+    foldValue(sorted, 0, addValues));
     println("{} {} {}", values[0], values[1], values[2]);
 
     List<float64> stableValues;
@@ -53,42 +53,42 @@ void main() {
     stableValues.push(2.0);
     stableValues.push(0.0);
     stableValues.push(1.0);
-    List<float64> stableSorted = std::algorithms::sortValue<float64>(stableValues);
+    List<float64> stableSorted = sortValue(stableValues);
     println("{1:1F} {2:1F} {3:1F} {4:1F}", stableSorted[0], stableSorted[1],
     stableSorted[2], stableSorted[3]);
-    println("{} {} {} {} {}", std::algorithms::findValue<int64>(sorted, 4),
-    std::algorithms::minValue<int64>(9, 2), std::algorithms::maxValue<int64>(9, 2),
-    std::algorithms::clampValue<int64>(12, 0, 10),
-    std::algorithms::allValue<int64>(sorted, positive));
-    println("{} {} {} {}", std::algorithms::minValue<int64>(9, 2, 7, -1),
-    std::algorithms::maxValue<int64>(9, 2, 12, 7),
-    std::algorithms::minValue<int64>(5), std::algorithms::maxValue<int64>(6));
+    println("{} {} {} {} {}", findValue(sorted, 4),
+    minValue(9, 2), maxValue(9, 2),
+    clampValue(12, 0, 10),
+    allValue(sorted, positive));
+    println("{} {} {} {}", minValue(9, 2, 7, -1),
+    maxValue(9, 2, 12, 7),
+    minValue(5), maxValue(6));
 
-    std::collections::Deque<int64> deque = std::collections::Deque<int64>::create();
+    Deque<int64> deque = Deque<int64>::create();
     deque.pushBack(2);
     deque.pushFront(1);
     println("{} {} {}", deque.len(), deque.popFront().unwrap(),
     deque.popBack().unwrap());
 
-    std::collections::Queue<int64> queue = std::collections::Queue<int64>::create();
+    Queue<int64> queue = Queue<int64>::create();
     queue.push(7);
     queue.push(8);
     println("{} {}", queue.peek().unwrap(), queue.pop().unwrap());
 
-    std::collections::RingBuffer<int64> ring = std::collections::RingBuffer<int64>::withCapacity(2);
+    RingBuffer<int64> ring = RingBuffer<int64>::withCapacity(2);
     println("{} {} {}", ring.push(5), ring.push(6), ring.push(7));
     println("{} {}", ring.pop().unwrap(), ring.available());
 
-    std::collections::FixedVector<int64> fixed = std::collections::FixedVector<int64>::withCapacity(1);
+    FixedVector<int64> fixed = FixedVector<int64>::withCapacity(1);
     println("{} {} {}", fixed.push(9), fixed.push(10), fixed[0]);
 
     int64 raw[] = new[2];
     raw[0] = 11;
     raw[1] = 12;
-    std::memory::Span<int64> span = std::memory::Span<int64>::from(&raw[0], len(raw));
+    Span<int64> span = Span<int64>::from(&raw[0], len(raw));
     println("{} {} {}", span.len(), span[0], span[1]);
 
-    std::collections::Channel<int64> channel = std::collections::Channel<int64>::create();
+    Channel<int64> channel = Channel<int64>::create();
     channel.send(21);
     println("{} {}", channel.len(), channel.receive().unwrap());
 
@@ -139,7 +139,7 @@ void main() {
 | RingBuffer | <a id="symbol-34"></a>`Deque<T> values` | 按声明顺序保存的元素存储。 |
 | RingBuffer | <a id="symbol-35"></a>`int64 capacity` | 最多可保存的元素数量。 |
 | 模块 | <a id="symbol-36"></a>`struct FixedVector<T>: Iterator<T>, Index<T, int64>, Drop` | 容量固定的顺序容器；保存的元素数量不得超过 capacity。 |
-| FixedVector | <a id="symbol-37"></a>`std::core::List<T> values` | 按声明顺序保存的元素存储。 |
+| FixedVector | <a id="symbol-37"></a>`List<T> values` | 按声明顺序保存的元素存储。 |
 | FixedVector | <a id="symbol-38"></a>`int64 capacity` | 最多可保存的元素数量。 |
 | 模块 | <a id="symbol-39"></a>`struct Channel<T>: Iterator<T>, Drop` | 当前执行上下文中的值消息队列，不提供跨线程同步。 |
 | Channel | <a id="symbol-40"></a>`Queue<T> pending` | 等待消费的元素或队列。 |
@@ -240,7 +240,7 @@ static Deque<T> create();
 **调用形式**
 
 ```chali
-std::collections::Deque<T>::create();
+Deque<T>::create();
 ```
 
 **源码**：[source/std/collections.chl:18](../../source/std/collections.chl#L18)。
@@ -432,6 +432,7 @@ T index(int64 key);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`key>=0 && key<self.len(),"Deque 下标越界"`。
 
 **调用形式**
 
@@ -774,7 +775,7 @@ static Queue<T> create();
 **调用形式**
 
 ```chali
-std::collections::Queue<T>::create();
+Queue<T>::create();
 ```
 
 **源码**：[source/std/collections.chl:59](../../source/std/collections.chl#L59)。
@@ -1156,7 +1157,7 @@ static Stack<T> create();
 **调用形式**
 
 ```chali
-std::collections::Stack<T>::create();
+Stack<T>::create();
 ```
 
 **源码**：[source/std/collections.chl:86](../../source/std/collections.chl#L86)。
@@ -1536,11 +1537,12 @@ static RingBuffer<T> withCapacity(int64 capacity);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`capacity>0`。
 
 **调用形式**
 
 ```chali
-std::collections::RingBuffer<T>::withCapacity(capacity);
+RingBuffer<T>::withCapacity(capacity);
 ```
 
 **源码**：[source/std/collections.chl:111](../../source/std/collections.chl#L111)。
@@ -1961,7 +1963,7 @@ static FixedVector<T> withCapacity(int64 capacity);
 **调用形式**
 
 ```chali
-std::collections::FixedVector<T>::withCapacity(capacity);
+FixedVector<T>::withCapacity(capacity);
 ```
 
 **源码**：[source/std/collections.chl:138](../../source/std/collections.chl#L138)。
@@ -2257,7 +2259,7 @@ static Channel<T> create();
 **调用形式**
 
 ```chali
-std::collections::Channel<T>::create();
+Channel<T>::create();
 ```
 
 **源码**：[source/std/collections.chl:170](../../source/std/collections.chl#L170)。

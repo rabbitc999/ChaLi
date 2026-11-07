@@ -266,7 +266,7 @@ import std::iter;
 int64 square(int64 value) { return value * value; }
 bool even(int64 value) { return value % 2 == 0; }
 void main() {
-    let picked = std::iter::range(1, 6).map(square).filter(even).collect();
+    let picked = intIter(1, 6).map(square).filter(even).collect();
     println("{} {}", picked.len(), picked[0]);
 }
 ```
@@ -275,7 +275,7 @@ void main() {
 2 4
 ```
 
-`range(1, 6)` 是左闭右开；`map` / `filter` 惰性执行，`collect()` 才真正求值。
+`intIter(1, 6)` 是左闭右开；`map` / `filter` 惰性执行，`collect()` 才真正求值。
 
 ---
 
@@ -352,7 +352,7 @@ void main() {
     String name = "ChaLi";
     String joined = name + " " + format("{}", 2026);
     println("{}", joined);
-    println("first={} upper={}", name[0], std::text::Text::toUpper(name));
+    println("first={} upper={}", name[0], Text::toUpper(name));
 }
 ```
 

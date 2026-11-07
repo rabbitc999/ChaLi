@@ -368,6 +368,8 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行循环标签与退出清理回归" "$PYTHON" tests/chali_loop_labels.py --chali "$CHALI_BIN"
     run_step "运行双写法数组声明与所有权回归" "$PYTHON" tests/chali_runtime_array_declarations.py --chali "$CHALI_BIN"
     run_step "运行文件级命名指令与缓存回归" "$PYTHON" tests/chali_module_naming_pragma.py --chali "$CHALI_BIN"
+    run_step "运行整数迭代工厂 intIter 回归" "$PYTHON" tests/chali_iter_int_iter.py --chali "$CHALI_BIN"
+    run_step "运行算法短名与类型实参推导回归" "$PYTHON" tests/chali_imported_algorithms.py --chali "$CHALI_BIN"
     run_step "运行模块常量、全局可见性、借用来源及流式文件回归" "$PYTHON" tests/chali_module_constants.py --chali "$CHALI_BIN"
     run_step "运行原生 LSP 模块命名与标准库限定补全回归" "$PYTHON" tests/chali_lsp_naming_scopes.py --chali "$CHALI_BIN"
     run_step "运行编译完成提示与静默边界回归" "$PYTHON" tests/chali_completion_notice.py --chali "$CHALI_BIN"

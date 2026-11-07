@@ -31,18 +31,18 @@ chali run example/samples/std_glue_edges.chl
 import std::text;
 import std::math;
 void main() {
-    List<String> parts = std::text::Text::split("::甲::::乙::", "::");
-    println("{} [{}]", parts.len(), std::text::Text::join(parts, "|"));
-    List<String> empty = std::text::Text::split("", ",");
-    List<String> whole = std::text::Text::split("甲乙", "");
+    List<String> parts = Text::split("::甲::::乙::", "::");
+    println("{} [{}]", parts.len(), Text::join(parts, "|"));
+    List<String> empty = Text::split("", ",");
+    List<String> whole = Text::split("甲乙", "");
     List<String> none;
-    println("{} [{}] [{}]", empty.len(), whole[0], std::text::Text::join(none, ","));
+    println("{} [{}] [{}]", empty.len(), whole[0], Text::join(none, ","));
     parts[1] = "changed";
-    println("[{}]", std::text::Text::join(parts, "|"));
-    float64 notNumber = std::math::sqrt(-1.0);
-    println("{} {} {}", std::math::min(notNumber, 2.0), std::math::isNaN(std::math::max(2.0, notNumber)), std::math::isNaN(std::math::clamp(notNumber, 0.0, 1.0)));
+    println("[{}]", Text::join(parts, "|"));
+    float64 notNumber = sqrt(-1.0);
+    println("{} {} {}", min(notNumber, 2.0), isNaN(max(2.0, notNumber)), isNaN(clamp(notNumber, 0.0, 1.0)));
     int64 smallest = (int64)((uint64)1 << 63);
-    println("{} {} {} {}", std::math::abs(smallest) == smallest, std::math::min(4, 3), std::math::max(-4.0, -3.0), std::math::clamp(-4, -3, 2));
+    println("{} {} {} {}", abs(smallest) == smallest, min(4, 3), max(-4.0, -3.0), clamp(-4, -3, 2));
 }
 ```
 
@@ -79,50 +79,50 @@ void main() {
 | 模块 | <a id="symbol-484"></a>`struct StringBuilder : Drop` | 字符串构建器：把片段收进列表，最后一次分配写入结果区（与 `Text::join` 同口径）。
 `s = s + t` 每次复制整串，逐块累加是 O(n²)；构建器把每段代价压到拷贝一次片段，
 `toString` 再用 O(n log k) 的合并收尾。循环拼字符串一律走这里。 |
-| StringBuilder | <a id="symbol-485"></a>`std::core::List<std::core::String> chunks` | 已累计的字符串片段。 |
+| StringBuilder | <a id="symbol-485"></a>`List<String> chunks` | 已累计的字符串片段。 |
 | StringBuilder | <a id="symbol-486"></a>`int64 length` | 已累计的总字节数。 |
 
 ## 函数索引
 
 | 名称 | 声明 |
 | --- | --- |
-| [Text::find](#api-0) | `static int64 find(std::core::String text, std::core::String needle)` |
-| [Text::rfind](#api-1) | `static int64 rfind(std::core::String text, std::core::String needle)` |
-| [Text::contains](#api-2) | `static bool contains(std::core::String text, std::core::String needle)` |
-| [Text::startsWith](#api-3) | `static bool startsWith(std::core::String text, std::core::String prefix)` |
-| [Text::endsWith](#api-4) | `static bool endsWith(std::core::String text, std::core::String suffix)` |
-| [Text::stripPrefix](#api-5) | `static std::core::String stripPrefix(std::core::String text, std::core::String prefix)` |
-| [Text::stripSuffix](#api-6) | `static std::core::String stripSuffix(std::core::String text, std::core::String suffix)` |
-| [Text::isBlank](#api-7) | `static bool isBlank(std::core::String text)` |
-| [Text::countMatches](#api-8) | `static int64 countMatches(std::core::String text, std::core::String needle)` |
-| [Text::compare](#api-9) | `static int64 compare(std::core::String left, std::core::String right)` |
-| [Text::toUpper](#api-10) | `static std::core::String toUpper(std::core::String text)` |
-| [Text::toLower](#api-11) | `static std::core::String toLower(std::core::String text)` |
-| [Text::trim](#api-12) | `static std::core::String trim(std::core::String text)` |
-| [Text::ltrim](#api-13) | `static std::core::String ltrim(std::core::String text)` |
-| [Text::rtrim](#api-14) | `static std::core::String rtrim(std::core::String text)` |
-| [Text::replace](#api-15) | `static std::core::String replace(std::core::String text, std::core::String from, std::core::String to)` |
-| [Text::repeat](#api-16) | `static std::core::String repeat(std::core::String text, int64 count)` |
-| [Text::padStart](#api-17) | `static std::core::String padStart(std::core::String text, int64 width, char fill)` |
-| [Text::padEnd](#api-18) | `static std::core::String padEnd(std::core::String text, int64 width, char fill)` |
-| [Text::charAt](#api-19) | `static char charAt(std::core::String text, int64 index)` |
-| [Text::split](#api-20) | `static std::core::List<std::core::String> split(std::core::String text, std::core::String separator)` |
-| [Text::join](#api-21) | `static std::core::String join(std::core::List<std::core::String> parts, std::core::String separator)` |
-| [Text::kmpFind](#api-22) | `static int64 kmpFind(std::core::String text, std::core::String needle)` |
-| [Text::kmpFindAll](#api-23) | `static std::core::List<int64> kmpFindAll(std::core::String text, std::core::String needle)` |
-| [Text::kmpFailureTable](#api-24) | `static std::core::List<int64> kmpFailureTable(std::core::String needle)` |
+| [Text::find](#api-0) | `static int64 find(String text, String needle)` |
+| [Text::rfind](#api-1) | `static int64 rfind(String text, String needle)` |
+| [Text::contains](#api-2) | `static bool contains(String text, String needle)` |
+| [Text::startsWith](#api-3) | `static bool startsWith(String text, String prefix)` |
+| [Text::endsWith](#api-4) | `static bool endsWith(String text, String suffix)` |
+| [Text::stripPrefix](#api-5) | `static String stripPrefix(String text, String prefix)` |
+| [Text::stripSuffix](#api-6) | `static String stripSuffix(String text, String suffix)` |
+| [Text::isBlank](#api-7) | `static bool isBlank(String text)` |
+| [Text::countMatches](#api-8) | `static int64 countMatches(String text, String needle)` |
+| [Text::compare](#api-9) | `static int64 compare(String left, String right)` |
+| [Text::toUpper](#api-10) | `static String toUpper(String text)` |
+| [Text::toLower](#api-11) | `static String toLower(String text)` |
+| [Text::trim](#api-12) | `static String trim(String text)` |
+| [Text::ltrim](#api-13) | `static String ltrim(String text)` |
+| [Text::rtrim](#api-14) | `static String rtrim(String text)` |
+| [Text::replace](#api-15) | `static String replace(String text, String from, String to)` |
+| [Text::repeat](#api-16) | `static String repeat(String text, int64 count)` |
+| [Text::padStart](#api-17) | `static String padStart(String text, int64 width, char fill)` |
+| [Text::padEnd](#api-18) | `static String padEnd(String text, int64 width, char fill)` |
+| [Text::charAt](#api-19) | `static char charAt(String text, int64 index)` |
+| [Text::split](#api-20) | `static List<String> split(String text, String separator)` |
+| [Text::join](#api-21) | `static String join(List<String> parts, String separator)` |
+| [Text::kmpFind](#api-22) | `static int64 kmpFind(String text, String needle)` |
+| [Text::kmpFindAll](#api-23) | `static List<int64> kmpFindAll(String text, String needle)` |
+| [Text::kmpFailureTable](#api-24) | `static List<int64> kmpFailureTable(String needle)` |
 | [StringBuilder::drop](#api-25) | `void drop()` |
 | [StringBuilder::create](#api-26) | `static StringBuilder create()` |
 | [StringBuilder::len](#api-27) | `int64 len()` |
 | [StringBuilder::isEmpty](#api-28) | `bool isEmpty()` |
-| [StringBuilder::append](#api-29) | `void append(std::core::String text)` |
-| [StringBuilder::appendLine](#api-30) | `void appendLine(std::core::String text)` |
+| [StringBuilder::append](#api-29) | `void append(String text)` |
+| [StringBuilder::appendLine](#api-30) | `void appendLine(String text)` |
 | [StringBuilder::appendChar](#api-31) | `void appendChar(char value)` |
 | [StringBuilder::appendInt](#api-32) | `void appendInt(int64 value)` |
 | [StringBuilder::appendFloat](#api-33) | `void appendFloat(float64 value)` |
 | [StringBuilder::appendBool](#api-34) | `void appendBool(bool value)` |
 | [StringBuilder::clear](#api-35) | `void clear()` |
-| [StringBuilder::toString](#api-36) | `std::core::String toString()` |
+| [StringBuilder::toString](#api-36) | `String toString()` |
 
 <a id="api-0"></a>
 
@@ -131,7 +131,7 @@ void main() {
 **声明**
 
 ```chali
-static int64 find(std::core::String text, std::core::String needle);
+static int64 find(String text, String needle);
 ```
 
 **行为**
@@ -144,8 +144,8 @@ static int64 find(std::core::String text, std::core::String needle);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `needle` | `std::core::String needle` | 待查找子串 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `needle` | `String needle` | 待查找子串 | 无 |
 
 **返回值**
 
@@ -158,7 +158,7 @@ static int64 find(std::core::String text, std::core::String needle);
 **调用形式**
 
 ```chali
-std::text::Text::find(text, needle);
+Text::find(text, needle);
 ```
 
 **源码**：[source/std/text.chl:280](../../source/std/text.chl#L280)。
@@ -172,7 +172,7 @@ std::text::Text::find(text, needle);
 **声明**
 
 ```chali
-static int64 rfind(std::core::String text, std::core::String needle);
+static int64 rfind(String text, String needle);
 ```
 
 **行为**
@@ -185,8 +185,8 @@ static int64 rfind(std::core::String text, std::core::String needle);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `needle` | `std::core::String needle` | 待查找子串 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `needle` | `String needle` | 待查找子串 | 无 |
 
 **返回值**
 
@@ -199,7 +199,7 @@ static int64 rfind(std::core::String text, std::core::String needle);
 **调用形式**
 
 ```chali
-std::text::Text::rfind(text, needle);
+Text::rfind(text, needle);
 ```
 
 **源码**：[source/std/text.chl:284](../../source/std/text.chl#L284)。
@@ -213,7 +213,7 @@ std::text::Text::rfind(text, needle);
 **声明**
 
 ```chali
-static bool contains(std::core::String text, std::core::String needle);
+static bool contains(String text, String needle);
 ```
 
 **行为**
@@ -226,8 +226,8 @@ static bool contains(std::core::String text, std::core::String needle);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `needle` | `std::core::String needle` | 待查找子串 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `needle` | `String needle` | 待查找子串 | 无 |
 
 **返回值**
 
@@ -240,7 +240,7 @@ static bool contains(std::core::String text, std::core::String needle);
 **调用形式**
 
 ```chali
-std::text::Text::contains(text, needle);
+Text::contains(text, needle);
 ```
 
 **源码**：[source/std/text.chl:288](../../source/std/text.chl#L288)。
@@ -254,7 +254,7 @@ std::text::Text::contains(text, needle);
 **声明**
 
 ```chali
-static bool startsWith(std::core::String text, std::core::String prefix);
+static bool startsWith(String text, String prefix);
 ```
 
 **行为**
@@ -265,8 +265,8 @@ static bool startsWith(std::core::String text, std::core::String prefix);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `prefix` | `std::core::String prefix` | 前缀 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `prefix` | `String prefix` | 前缀 | 无 |
 
 **返回值**
 
@@ -279,7 +279,7 @@ static bool startsWith(std::core::String text, std::core::String prefix);
 **调用形式**
 
 ```chali
-std::text::Text::startsWith(text, prefix);
+Text::startsWith(text, prefix);
 ```
 
 **源码**：[source/std/text.chl:291](../../source/std/text.chl#L291)。
@@ -293,7 +293,7 @@ std::text::Text::startsWith(text, prefix);
 **声明**
 
 ```chali
-static bool endsWith(std::core::String text, std::core::String suffix);
+static bool endsWith(String text, String suffix);
 ```
 
 **行为**
@@ -304,8 +304,8 @@ static bool endsWith(std::core::String text, std::core::String suffix);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `suffix` | `std::core::String suffix` | 后缀 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `suffix` | `String suffix` | 后缀 | 无 |
 
 **返回值**
 
@@ -318,7 +318,7 @@ static bool endsWith(std::core::String text, std::core::String suffix);
 **调用形式**
 
 ```chali
-std::text::Text::endsWith(text, suffix);
+Text::endsWith(text, suffix);
 ```
 
 **源码**：[source/std/text.chl:297](../../source/std/text.chl#L297)。
@@ -332,7 +332,7 @@ std::text::Text::endsWith(text, suffix);
 **声明**
 
 ```chali
-static std::core::String stripPrefix(std::core::String text, std::core::String prefix);
+static String stripPrefix(String text, String prefix);
 ```
 
 **行为**
@@ -343,12 +343,12 @@ static std::core::String stripPrefix(std::core::String text, std::core::String p
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `prefix` | `std::core::String prefix` | 前缀 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `prefix` | `String prefix` | 前缀 | 无 |
 
 **返回值**
 
-`std::core::String`。去掉一次匹配的前缀，未匹配时返回原值副本。
+`String`。去掉一次匹配的前缀，未匹配时返回原值副本。
 
 **错误与边界**
 
@@ -357,7 +357,7 @@ static std::core::String stripPrefix(std::core::String text, std::core::String p
 **调用形式**
 
 ```chali
-std::text::Text::stripPrefix(text, prefix);
+Text::stripPrefix(text, prefix);
 ```
 
 **源码**：[source/std/text.chl:304](../../source/std/text.chl#L304)。
@@ -371,7 +371,7 @@ std::text::Text::stripPrefix(text, prefix);
 **声明**
 
 ```chali
-static std::core::String stripSuffix(std::core::String text, std::core::String suffix);
+static String stripSuffix(String text, String suffix);
 ```
 
 **行为**
@@ -382,12 +382,12 @@ static std::core::String stripSuffix(std::core::String text, std::core::String s
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `suffix` | `std::core::String suffix` | 后缀 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `suffix` | `String suffix` | 后缀 | 无 |
 
 **返回值**
 
-`std::core::String`。去掉一次匹配的后缀，未匹配时返回原值副本。
+`String`。去掉一次匹配的后缀，未匹配时返回原值副本。
 
 **错误与边界**
 
@@ -396,7 +396,7 @@ static std::core::String stripSuffix(std::core::String text, std::core::String s
 **调用形式**
 
 ```chali
-std::text::Text::stripSuffix(text, suffix);
+Text::stripSuffix(text, suffix);
 ```
 
 **源码**：[source/std/text.chl:309](../../source/std/text.chl#L309)。
@@ -410,7 +410,7 @@ std::text::Text::stripSuffix(text, suffix);
 **声明**
 
 ```chali
-static bool isBlank(std::core::String text);
+static bool isBlank(String text);
 ```
 
 **行为**
@@ -421,7 +421,7 @@ static bool isBlank(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
@@ -434,7 +434,7 @@ static bool isBlank(std::core::String text);
 **调用形式**
 
 ```chali
-std::text::Text::isBlank(text);
+Text::isBlank(text);
 ```
 
 **源码**：[source/std/text.chl:314](../../source/std/text.chl#L314)。
@@ -448,7 +448,7 @@ std::text::Text::isBlank(text);
 **声明**
 
 ```chali
-static int64 countMatches(std::core::String text, std::core::String needle);
+static int64 countMatches(String text, String needle);
 ```
 
 **行为**
@@ -459,8 +459,8 @@ static int64 countMatches(std::core::String text, std::core::String needle);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `needle` | `std::core::String needle` | 待查找子串 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `needle` | `String needle` | 待查找子串 | 无 |
 
 **返回值**
 
@@ -473,7 +473,7 @@ static int64 countMatches(std::core::String text, std::core::String needle);
 **调用形式**
 
 ```chali
-std::text::Text::countMatches(text, needle);
+Text::countMatches(text, needle);
 ```
 
 **源码**：[source/std/text.chl:322](../../source/std/text.chl#L322)。
@@ -487,7 +487,7 @@ std::text::Text::countMatches(text, needle);
 **声明**
 
 ```chali
-static int64 compare(std::core::String left, std::core::String right);
+static int64 compare(String left, String right);
 ```
 
 **行为**
@@ -500,8 +500,8 @@ static int64 compare(std::core::String left, std::core::String right);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `left` | `std::core::String left` | 左操作数或区间左端 | 无 |
-| `right` | `std::core::String right` | 右操作数或区间右端 | 无 |
+| `left` | `String left` | 左操作数或区间左端 | 无 |
+| `right` | `String right` | 右操作数或区间右端 | 无 |
 
 **返回值**
 
@@ -514,7 +514,7 @@ static int64 compare(std::core::String left, std::core::String right);
 **调用形式**
 
 ```chali
-std::text::Text::compare(left, right);
+Text::compare(left, right);
 ```
 
 **源码**：[source/std/text.chl:335](../../source/std/text.chl#L335)。
@@ -528,7 +528,7 @@ std::text::Text::compare(left, right);
 **声明**
 
 ```chali
-static std::core::String toUpper(std::core::String text);
+static String toUpper(String text);
 ```
 
 **行为**
@@ -541,11 +541,11 @@ ASCII 大小写（运行时不使用区域设置，结果可复现）。
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::core::String`。将 ASCII 小写字母转换成大写。
+`String`。将 ASCII 小写字母转换成大写。
 
 **错误与边界**
 
@@ -554,7 +554,7 @@ ASCII 大小写（运行时不使用区域设置，结果可复现）。
 **调用形式**
 
 ```chali
-std::text::Text::toUpper(text);
+Text::toUpper(text);
 ```
 
 **源码**：[source/std/text.chl:341](../../source/std/text.chl#L341)。
@@ -568,7 +568,7 @@ std::text::Text::toUpper(text);
 **声明**
 
 ```chali
-static std::core::String toLower(std::core::String text);
+static String toLower(String text);
 ```
 
 **行为**
@@ -579,11 +579,11 @@ static std::core::String toLower(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::core::String`。将 ASCII 大写字母转换成小写。
+`String`。将 ASCII 大写字母转换成小写。
 
 **错误与边界**
 
@@ -592,7 +592,7 @@ static std::core::String toLower(std::core::String text);
 **调用形式**
 
 ```chali
-std::text::Text::toLower(text);
+Text::toLower(text);
 ```
 
 **源码**：[source/std/text.chl:342](../../source/std/text.chl#L342)。
@@ -606,7 +606,7 @@ std::text::Text::toLower(text);
 **声明**
 
 ```chali
-static std::core::String trim(std::core::String text);
+static String trim(String text);
 ```
 
 **行为**
@@ -619,11 +619,11 @@ static std::core::String trim(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::core::String`。去掉两端 ASCII 空白。
+`String`。去掉两端 ASCII 空白。
 
 **错误与边界**
 
@@ -632,7 +632,7 @@ static std::core::String trim(std::core::String text);
 **调用形式**
 
 ```chali
-std::text::Text::trim(text);
+Text::trim(text);
 ```
 
 **源码**：[source/std/text.chl:344](../../source/std/text.chl#L344)。
@@ -646,7 +646,7 @@ std::text::Text::trim(text);
 **声明**
 
 ```chali
-static std::core::String ltrim(std::core::String text);
+static String ltrim(String text);
 ```
 
 **行为**
@@ -657,11 +657,11 @@ static std::core::String ltrim(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::core::String`。去掉左端 ASCII 空白。
+`String`。去掉左端 ASCII 空白。
 
 **错误与边界**
 
@@ -670,7 +670,7 @@ static std::core::String ltrim(std::core::String text);
 **调用形式**
 
 ```chali
-std::text::Text::ltrim(text);
+Text::ltrim(text);
 ```
 
 **源码**：[source/std/text.chl:345](../../source/std/text.chl#L345)。
@@ -684,7 +684,7 @@ std::text::Text::ltrim(text);
 **声明**
 
 ```chali
-static std::core::String rtrim(std::core::String text);
+static String rtrim(String text);
 ```
 
 **行为**
@@ -695,11 +695,11 @@ static std::core::String rtrim(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
-`std::core::String`。去掉右端 ASCII 空白。
+`String`。去掉右端 ASCII 空白。
 
 **错误与边界**
 
@@ -708,7 +708,7 @@ static std::core::String rtrim(std::core::String text);
 **调用形式**
 
 ```chali
-std::text::Text::rtrim(text);
+Text::rtrim(text);
 ```
 
 **源码**：[source/std/text.chl:346](../../source/std/text.chl#L346)。
@@ -722,7 +722,7 @@ std::text::Text::rtrim(text);
 **声明**
 
 ```chali
-static std::core::String replace(std::core::String text, std::core::String from, std::core::String to);
+static String replace(String text, String from, String to);
 ```
 
 **行为**
@@ -735,13 +735,13 @@ static std::core::String replace(std::core::String text, std::core::String from,
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `from` | `std::core::String from` | 被替换的子串 | 无 |
-| `to` | `std::core::String to` | 替换文本 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `from` | `String from` | 被替换的子串 | 无 |
+| `to` | `String to` | 替换文本 | 无 |
 
 **返回值**
 
-`std::core::String`。将所有 from 子串替换为 to；空 from 保留副本。
+`String`。将所有 from 子串替换为 to；空 from 保留副本。
 
 **错误与边界**
 
@@ -750,7 +750,7 @@ static std::core::String replace(std::core::String text, std::core::String from,
 **调用形式**
 
 ```chali
-std::text::Text::replace(text, from, to);
+Text::replace(text, from, to);
 ```
 
 **源码**：[source/std/text.chl:348](../../source/std/text.chl#L348)。
@@ -764,7 +764,7 @@ std::text::Text::replace(text, from, to);
 **声明**
 
 ```chali
-static std::core::String repeat(std::core::String text, int64 count);
+static String repeat(String text, int64 count);
 ```
 
 **行为**
@@ -777,12 +777,12 @@ static std::core::String repeat(std::core::String text, int64 count);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 | `count` | `int64 count` | 元素或字节数量，具体单位见行为说明 | 无 |
 
 **返回值**
 
-`std::core::String`。重复给定值或文本；文本次数非正时为空串，迭代器版本为无限源。
+`String`。重复给定值或文本；文本次数非正时为空串，迭代器版本为无限源。
 
 **错误与边界**
 
@@ -791,7 +791,7 @@ static std::core::String repeat(std::core::String text, int64 count);
 **调用形式**
 
 ```chali
-std::text::Text::repeat(text, count);
+Text::repeat(text, count);
 ```
 
 **源码**：[source/std/text.chl:352](../../source/std/text.chl#L352)。
@@ -805,7 +805,7 @@ std::text::Text::repeat(text, count);
 **声明**
 
 ```chali
-static std::core::String padStart(std::core::String text, int64 width, char fill);
+static String padStart(String text, int64 width, char fill);
 ```
 
 **行为**
@@ -818,13 +818,13 @@ static std::core::String padStart(std::core::String text, int64 width, char fill
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 | `width` | `int64 width` | 目标字节宽度或定宽字段大小 | 无 |
 | `fill` | `char fill` | 填充字节 | 无 |
 
 **返回值**
 
-`std::core::String`。在左侧以 fill 补到 width 字节。
+`String`。在左侧以 fill 补到 width 字节。
 
 **错误与边界**
 
@@ -833,7 +833,7 @@ static std::core::String padStart(std::core::String text, int64 width, char fill
 **调用形式**
 
 ```chali
-std::text::Text::padStart(text, width, fill);
+Text::padStart(text, width, fill);
 ```
 
 **源码**：[source/std/text.chl:356](../../source/std/text.chl#L356)。
@@ -847,7 +847,7 @@ std::text::Text::padStart(text, width, fill);
 **声明**
 
 ```chali
-static std::core::String padEnd(std::core::String text, int64 width, char fill);
+static String padEnd(String text, int64 width, char fill);
 ```
 
 **行为**
@@ -858,13 +858,13 @@ static std::core::String padEnd(std::core::String text, int64 width, char fill);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 | `width` | `int64 width` | 目标字节宽度或定宽字段大小 | 无 |
 | `fill` | `char fill` | 填充字节 | 无 |
 
 **返回值**
 
-`std::core::String`。在右侧以 fill 补到 width 字节。
+`String`。在右侧以 fill 补到 width 字节。
 
 **错误与边界**
 
@@ -873,7 +873,7 @@ static std::core::String padEnd(std::core::String text, int64 width, char fill);
 **调用形式**
 
 ```chali
-std::text::Text::padEnd(text, width, fill);
+Text::padEnd(text, width, fill);
 ```
 
 **源码**：[source/std/text.chl:359](../../source/std/text.chl#L359)。
@@ -887,7 +887,7 @@ std::text::Text::padEnd(text, width, fill);
 **声明**
 
 ```chali
-static char charAt(std::core::String text, int64 index);
+static char charAt(String text, int64 index);
 ```
 
 **行为**
@@ -900,7 +900,7 @@ static char charAt(std::core::String text, int64 index);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 | `index` | `int64 index` | 从 0 开始的位置 | 无 |
 
 **返回值**
@@ -914,7 +914,7 @@ static char charAt(std::core::String text, int64 index);
 **调用形式**
 
 ```chali
-std::text::Text::charAt(text, index);
+Text::charAt(text, index);
 ```
 
 **源码**：[source/std/text.chl:363](../../source/std/text.chl#L363)。
@@ -928,7 +928,7 @@ std::text::Text::charAt(text, index);
 **声明**
 
 ```chali
-static std::core::List<std::core::String> split(std::core::String text, std::core::String separator);
+static List<String> split(String text, String separator);
 ```
 
 **行为**
@@ -941,12 +941,12 @@ static std::core::List<std::core::String> split(std::core::String text, std::cor
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
-| `separator` | `std::core::String separator` | 分隔文本 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `separator` | `String separator` | 分隔文本 | 无 |
 
 **返回值**
 
-`std::core::List<std::core::String>`。按 separator 分割，空分隔符把整串作为一项。
+`List<String>`。按 separator 分割，空分隔符把整串作为一项。
 
 **错误与边界**
 
@@ -955,7 +955,7 @@ static std::core::List<std::core::String> split(std::core::String text, std::cor
 **调用形式**
 
 ```chali
-std::text::Text::split(text, separator);
+Text::split(text, separator);
 ```
 
 **源码**：[source/std/text.chl:366](../../source/std/text.chl#L366)。
@@ -969,7 +969,7 @@ std::text::Text::split(text, separator);
 **声明**
 
 ```chali
-static std::core::String join(std::core::List<std::core::String> parts, std::core::String separator);
+static String join(List<String> parts, String separator);
 ```
 
 **行为**
@@ -982,12 +982,12 @@ static std::core::String join(std::core::List<std::core::String> parts, std::cor
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `parts` | `std::core::List<std::core::String> parts` | 待拼接文本列表 | 无 |
-| `separator` | `std::core::String separator` | 分隔文本 | 无 |
+| `parts` | `List<String> parts` | 待拼接文本列表 | 无 |
+| `separator` | `String separator` | 分隔文本 | 无 |
 
 **返回值**
 
-`std::core::String`。用 separator 连接 parts。
+`String`。用 separator 连接 parts。
 
 **错误与边界**
 
@@ -996,7 +996,7 @@ static std::core::String join(std::core::List<std::core::String> parts, std::cor
 **调用形式**
 
 ```chali
-std::text::Text::join(parts, separator);
+Text::join(parts, separator);
 ```
 
 **源码**：[source/std/text.chl:371](../../source/std/text.chl#L371)。
@@ -1010,7 +1010,7 @@ std::text::Text::join(parts, separator);
 **声明**
 
 ```chali
-static int64 kmpFind(std::core::String text, std::core::String needle);
+static int64 kmpFind(String text, String needle);
 ```
 
 **行为**
@@ -1021,8 +1021,8 @@ KMP 查找：针在串中首次出现的字节下标，O(n + m)。
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 干草堆。 | 无 |
-| `needle` | `std::core::String needle` | 针。 | 无 |
+| `text` | `String text` | 干草堆。 | 无 |
+| `needle` | `String needle` | 针。 | 无 |
 
 **返回值**
 
@@ -1035,7 +1035,7 @@ KMP 查找：针在串中首次出现的字节下标，O(n + m)。
 **调用形式**
 
 ```chali
-std::text::Text::kmpFind(text, needle);
+Text::kmpFind(text, needle);
 ```
 
 **源码**：[source/std/text.chl:382](../../source/std/text.chl#L382)。
@@ -1049,7 +1049,7 @@ std::text::Text::kmpFind(text, needle);
 **声明**
 
 ```chali
-static std::core::List<int64> kmpFindAll(std::core::String text, std::core::String needle);
+static List<int64> kmpFindAll(String text, String needle);
 ```
 
 **行为**
@@ -1060,12 +1060,12 @@ KMP 查找全部（可重叠）匹配位置。
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 干草堆。 | 无 |
-| `needle` | `std::core::String needle` | 针。 | 无 |
+| `text` | `String text` | 干草堆。 | 无 |
+| `needle` | `String needle` | 针。 | 无 |
 
 **返回值**
 
-`std::core::List<int64>`。KMP 查找全部（可重叠）匹配位置。
+`List<int64>`。KMP 查找全部（可重叠）匹配位置。
 
 **错误与边界**
 
@@ -1074,7 +1074,7 @@ KMP 查找全部（可重叠）匹配位置。
 **调用形式**
 
 ```chali
-std::text::Text::kmpFindAll(text, needle);
+Text::kmpFindAll(text, needle);
 ```
 
 **源码**：[source/std/text.chl:394](../../source/std/text.chl#L394)。
@@ -1088,7 +1088,7 @@ std::text::Text::kmpFindAll(text, needle);
 **声明**
 
 ```chali
-static std::core::List<int64> kmpFailureTable(std::core::String needle);
+static List<int64> kmpFailureTable(String needle);
 ```
 
 **行为**
@@ -1099,11 +1099,11 @@ static std::core::List<int64> kmpFailureTable(std::core::String needle);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `needle` | `std::core::String needle` | 针。 | 无 |
+| `needle` | `String needle` | 针。 | 无 |
 
 **返回值**
 
-`std::core::List<int64>`。计算 KMP 失配表：table[i] 是 needle[0..i] 的最长相等真前后缀长度。
+`List<int64>`。计算 KMP 失配表：table[i] 是 needle[0..i] 的最长相等真前后缀长度。
 
 **错误与边界**
 
@@ -1112,7 +1112,7 @@ static std::core::List<int64> kmpFailureTable(std::core::String needle);
 **调用形式**
 
 ```chali
-std::text::Text::kmpFailureTable(needle);
+Text::kmpFailureTable(needle);
 ```
 
 **源码**：[source/std/text.chl:405](../../source/std/text.chl#L405)。
@@ -1188,7 +1188,7 @@ static StringBuilder create();
 **调用形式**
 
 ```chali
-std::text::StringBuilder::create();
+StringBuilder::create();
 ```
 
 **源码**：[source/std/text.chl:425](../../source/std/text.chl#L425)。
@@ -1278,7 +1278,7 @@ obj.isEmpty();
 **声明**
 
 ```chali
-void append(std::core::String text);
+void append(String text);
 ```
 
 **行为**
@@ -1289,7 +1289,7 @@ void append(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
@@ -1316,7 +1316,7 @@ obj.append(text);
 **声明**
 
 ```chali
-void appendLine(std::core::String text);
+void appendLine(String text);
 ```
 
 **行为**
@@ -1327,7 +1327,7 @@ void appendLine(std::core::String text);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `text` | `std::core::String text` | 输入文本，位置与长度通常按字节 | 无 |
+| `text` | `String text` | 输入文本，位置与长度通常按字节 | 无 |
 
 **返回值**
 
@@ -1544,7 +1544,7 @@ obj.clear();
 **声明**
 
 ```chali
-std::core::String toString();
+String toString();
 ```
 
 **行为**
@@ -1559,7 +1559,7 @@ std::core::String toString();
 
 **返回值**
 
-`std::core::String`。由实现者将当前值转换为文本，Formattable 重载接收 style。
+`String`。由实现者将当前值转换为文本，Formattable 重载接收 style。
 
 **错误与边界**
 

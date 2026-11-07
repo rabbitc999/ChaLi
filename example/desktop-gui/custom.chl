@@ -1,54 +1,54 @@
 import std::gui;
 
 void main() {
-    assert(std::gui::openWindow(800, 480, "ChaLi drawing and custom events", 1));
-    bool custom_font = std::gui::loadFont("C:/Windows/Fonts/segoeui.ttf", (int32)24, "");
-    if (!custom_font) { std::gui::loadFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", (int32)24, ""); }
-    std::gui::setBackground((uint32)0xf2f5faff);
-    let reset = std::gui::button("Reset");
-    let close = std::gui::button("Close");
-    let slider = std::gui::customWidget();
-    std::gui::EventBus events;
+    assert(openWindow(800, 480, "ChaLi drawing and custom events", 1));
+    bool custom_font = loadFont("C:/Windows/Fonts/segoeui.ttf", (int32)24, "");
+    if (!custom_font) { loadFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", (int32)24, ""); }
+    setBackground((uint32)0xf2f5faff);
+    let reset = button("Reset");
+    let close = button("Close");
+    let slider = customWidget();
+    EventBus events;
     float64 value = 35; bool dragging = false; String status = "Drag the custom slider";
-    events.on("value.changed", void fn mut(std::gui::Event event) { status = event.text + ": " + event.value.toString() + "%"; });
-    slider.onDraw(void fn(std::gui::Rect bounds) {
-        std::gui::drawRectangle(bounds, (uint32)0xffffffff, 0, 0.12);
-        std::gui::drawText("Custom slider", std::gui::Point::at(bounds.x + 24, bounds.y + 18), 22, (uint32)0x172b4dff);
+    events.on("value.changed", void fn mut(Event event) { status = event.text + ": " + event.value.toString() + "%"; });
+    slider.onDraw(void fn(Rect bounds) {
+        drawRectangle(bounds, (uint32)0xffffffff, 0, 0.12);
+        drawText("Custom slider", Point::at(bounds.x + 24, bounds.y + 18), 22, (uint32)0x172b4dff);
         float64 width = bounds.width - 48;
-        std::gui::drawRectangle(std::gui::Rect::at(bounds.x + 24, bounds.y + 80, width, 10), (uint32)0xe3eaf5ff, 0, 1);
-        if (value > 0) { std::gui::drawRectangle(std::gui::Rect::at(bounds.x + 24, bounds.y + 80, width * value / 100, 10), (uint32)0x3468d4ff, 0, 1); }
-        std::gui::drawCircle(std::gui::Point::at(bounds.x + 24 + width * value / 100, bounds.y + 85), 11, (uint32)0x3468d4ff);
-        std::gui::drawText(value.toString() + "%", std::gui::Point::at(bounds.x + 24, bounds.y + 120), 20, (uint32)0x3468d4ff);
+        drawRectangle(Rect::at(bounds.x + 24, bounds.y + 80, width, 10), (uint32)0xe3eaf5ff, 0, 1);
+        if (value > 0) { drawRectangle(Rect::at(bounds.x + 24, bounds.y + 80, width * value / 100, 10), (uint32)0x3468d4ff, 0, 1); }
+        drawCircle(Point::at(bounds.x + 24 + width * value / 100, bounds.y + 85), 11, (uint32)0x3468d4ff);
+        drawText(value.toString() + "%", Point::at(bounds.x + 24, bounds.y + 120), 20, (uint32)0x3468d4ff);
     });
-    slider.on("value.changed", void fn mut(std::gui::Event event) { events.post(event); });
-    slider.on("pointer.down", void fn mut(std::gui::Event event) {
+    slider.on("value.changed", void fn mut(Event event) { events.post(event); });
+    slider.on("pointer.down", void fn mut(Event event) {
         if (event.code == 0) {
             dragging = true; value = (event.x - 24) * 100 / 688;
             if (value < 0) { value = 0; } if (value > 100) { value = 100; }
-            slider.emit(std::gui::customEvent("value.changed", "Pointer", 0, value));
+            slider.emit(customEvent("value.changed", "Pointer", 0, value));
         }
     });
-    slider.on("pointer.move", void fn mut(std::gui::Event event) {
+    slider.on("pointer.move", void fn mut(Event event) {
         if (dragging) {
             value = (event.x - 24) * 100 / 688;
             if (value < 0) { value = 0; } if (value > 100) { value = 100; }
-            slider.emit(std::gui::customEvent("value.changed", "Drag", 0, value));
+            slider.emit(customEvent("value.changed", "Drag", 0, value));
         }
     });
-    slider.on("pointer.up", void fn mut(std::gui::Event event) { dragging = false; });
-    slider.on("focus.lost", void fn mut(std::gui::Event event) { dragging = false; });
-    reset.onClick(void fn mut(std::gui::Event event) { value = 35; slider.emit(std::gui::customEvent("value.changed", "Reset", 0, value)); });
-    close.onClick(void fn(std::gui::Event event) { std::gui::requestClose(); });
-    std::gui::run(void fn mut() {
+    slider.on("pointer.up", void fn mut(Event event) { dragging = false; });
+    slider.on("focus.lost", void fn mut(Event event) { dragging = false; });
+    reset.onClick(void fn mut(Event event) { value = 35; slider.emit(customEvent("value.changed", "Reset", 0, value)); });
+    close.onClick(void fn(Event event) { requestClose(); });
+    run(void fn mut() {
         events.pump();
-        std::gui::drawText("Drawing and custom events", std::gui::Point::at(32, 28), 28, (uint32)0x172b4dff);
-        std::gui::drawText(status, std::gui::Point::at(32, 72), 18, (uint32)0x5b6f8aff);
-        slider.draw(std::gui::Rect::at(32, 120, 736, 176));
-        reset.draw(std::gui::Rect::at(32, 328, 136, 36));
-        close.draw(std::gui::Rect::at(188, 328, 136, 36));
-        std::gui::drawBezier(std::gui::Point::at(420, 360), std::gui::Point::at(480, 310), std::gui::Point::at(580, 410), std::gui::Point::at(660, 340), 3, (uint32)0x3468d4ff);
-        std::gui::drawPolygon(std::gui::Point::at(720, 346), 6, 22, 0, (uint32)0x53ad8cff);
-        std::gui::drawText("C drawing API | 34 native controls | Named event callbacks", std::gui::Point::at(32, 420), 16, (uint32)0x5b6f8aff);
-    }, void fn mut(std::gui::Event event) { slider.handle(event); });
+        drawText("Drawing and custom events", Point::at(32, 28), 28, (uint32)0x172b4dff);
+        drawText(status, Point::at(32, 72), 18, (uint32)0x5b6f8aff);
+        slider.draw(Rect::at(32, 120, 736, 176));
+        reset.draw(Rect::at(32, 328, 136, 36));
+        close.draw(Rect::at(188, 328, 136, 36));
+        drawBezier(Point::at(420, 360), Point::at(480, 310), Point::at(580, 410), Point::at(660, 340), 3, (uint32)0x3468d4ff);
+        drawPolygon(Point::at(720, 346), 6, 22, 0, (uint32)0x53ad8cff);
+        drawText("C drawing API | 34 native controls | Named event callbacks", Point::at(32, 420), 16, (uint32)0x5b6f8aff);
+    }, void fn mut(Event event) { slider.handle(event); });
     slider.close(); reset.close(); close.close(); events.clear();
 }

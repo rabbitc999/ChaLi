@@ -2,18 +2,18 @@ import std::reflect;
 @Reflect void close(){}
 @Reflect struct Plain {int64 value;String label;};
 void main(){
-    List<std::reflect::ReflectValue> args;
-    assert(std::reflect::call("program::close",args).isOk());
-    Plain plain=std::reflect::construct<Plain>(args).unwrap();
+    List<ReflectValue> args;
+    assert(call("program::close",args).isOk());
+    Plain plain=construct<Plain>(args).unwrap();
     assert(plain.value==0 && plain.label=="");
-    let info=std::reflect::getStructInfo<Plain>().unwrap();
+    let info=getStructInfo<Plain>().unwrap();
     assert(info.methods.len()==2 && info.methods[1].isConstructor && info.methods[1].function.params.len()==0);
-    args.push(std::reflect::ReflectValue::I64(1));
-    assert(std::reflect::construct<Plain>(args).isErr());
-    match (std::reflect::construct<Plain>(args).error())
+    args.push(ReflectValue::I64(1));
+    assert(construct<Plain>(args).isErr());
+    match (construct<Plain>(args).error())
     {
-        std::reflect::ReflectError(reflectionError) => {
-            match (reflectionError) { std::reflect::ReflectError::ArgumentCount => {} _ => { assert(false); } }
+        ReflectError(reflectionError) => {
+            match (reflectionError) { ReflectError::ArgumentCount => {} _ => { assert(false); } }
         }
         _ => { assert(false); }
     }

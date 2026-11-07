@@ -38,7 +38,7 @@ chali run example/samples/std_math_clock_random.chl
  *
  * `choice` / `shuffle` 不在 `Random::` 下：ChaLi 没有泛型方法，而 `std::random::Random` 这个
  * 名字已经被同名的 struct 占着（再开同名模块会让 `Random::withSeed` 找不到）。
- * 它们放在 `algorithms`，调用写 `std::algorithms::choiceValue<int64>(表, 种子)`。
+ * 它们放在 `algorithms`，导入后写 `choiceValue(表, 种子)`。
  */
 
 import std::random;
@@ -50,30 +50,30 @@ import std::clock;
 
 void main() {
     /* --- Math：float64 取整 / 取余 / 特殊值判定（宿主 <cmath>） --- */
-    println("{} {} {} {}", std::math::floor(2.7), std::math::ceil(2.1),
-    std::math::round(2.5), std::math::trunc(-2.7));
-    println("{} {}", std::math::fmod(7.5, 2.0), std::math::fmod(-7.5, 2.0));
+    println("{} {} {} {}", floor(2.7), ceil(2.1),
+    round(2.5), trunc(-2.7));
+    println("{} {}", fmod(7.5, 2.0), fmod(-7.5, 2.0));
 
     /* ChaLi 里浮点除零是运行期错误，所以 NaN / Inf 从宿主函数拿：
      * sqrt(-1) = NaN、ln(0) = -Inf。 */
-    float64 notNumber = std::math::sqrt(-1.0);
-    float64 infinite = std::math::ln(0.0);
-    println("{} {} {} {}", std::math::isNaN(notNumber), std::math::isNaN(1.0),
-    std::math::isInf(infinite), std::math::isInf(1.0));
+    float64 notNumber = sqrt(-1.0);
+    float64 infinite = ln(0.0);
+    println("{} {} {} {}", isNaN(notNumber), isNaN(1.0),
+    isInf(infinite), isInf(1.0));
 
     /* --- Math：int64 版（ChaLi 重载转发到宿主胶水）+ float64 版 abs 仍然可用 --- */
-    println("{} {} {} {}", std::math::abs(-5), std::math::min(3, 8),
-    std::math::max(3, 8), std::math::clamp(12, 0, 10));
-    println("{}", std::math::abs(-2.5));
+    println("{} {} {} {}", abs(-5), min(3, 8),
+    max(3, 8), clamp(12, 0, 10));
+    println("{}", abs(-2.5));
 
     /* --- Clock：单调时钟。读数本身不可复现，只断言"拿到了、且不倒退"。 --- */
-    int64 before = std::clock::nowNanos();
-    int64 millis = std::clock::nowMs();
-    int64 after = std::clock::nowNanos();
+    int64 before = nowNanos();
+    int64 millis = nowMs();
+    int64 after = nowNanos();
     println("{} {} {}", before > 0, millis > 0, after >= before);
 
     /* --- Random：分布 --- */
-    std::random::Random rng = std::random::Random::withSeed((uint64)12345);
+    Random rng = Random::withSeed((uint64)12345);
     float64 ranged = rng.nextRange(10.0, 20.0);
     int64 drawn = rng.nextInt(0, 10);
     bool coin = rng.nextBool();
@@ -87,14 +87,14 @@ void main() {
     items.push(2);
     items.push(3);
     /* 种子 0：`0 % 3 == 0`，无论随机数怎么算都取到第 0 个。 */
-    println("{}", std::algorithms::choiceValue<int64>(items, (uint64)0));
+    println("{}", choiceValue(items, (uint64)0));
 
-    List<int64> mixed = std::algorithms::shuffleValue<int64>(items, (uint64)4242);
+    List<int64> mixed = shuffleValue(items, (uint64)4242);
     println("{} {} {}", mixed.len(),
     mixed[0] + mixed[1] + mixed[2],   /* 洗牌不改总和 */
     items[0]);                        /* 原表不动 */
 
-    List<int64> again = std::algorithms::shuffleValue<int64>(items, (uint64)4242);
+    List<int64> again = shuffleValue(items, (uint64)4242);
     println("{} {} {}", again[0] == mixed[0], again[1] == mixed[1],
     again[2] == mixed[2]);
 }
@@ -182,7 +182,7 @@ Random randomWithSeed(uint64 seed);
 **调用形式**
 
 ```chali
-std::random::randomWithSeed(seed);
+randomWithSeed(seed);
 ```
 
 **源码**：[source/std/random.chl:3](../../source/std/random.chl#L3)。
@@ -218,7 +218,7 @@ Random randomFromEntropy();
 **调用形式**
 
 ```chali
-std::random::randomFromEntropy();
+randomFromEntropy();
 ```
 
 **源码**：[source/std/random.chl:4](../../source/std/random.chl#L4)。
@@ -256,7 +256,7 @@ uint64 randomNextUInt64(uint64 handle);
 **调用形式**
 
 ```chali
-std::random::randomNextUInt64(handle);
+randomNextUInt64(handle);
 ```
 
 **源码**：[source/std/random.chl:5](../../source/std/random.chl#L5)。
@@ -296,7 +296,7 @@ int64 randomNextInt(uint64 handle, int64 minimum, int64 maximum);
 **调用形式**
 
 ```chali
-std::random::randomNextInt(handle, minimum, maximum);
+randomNextInt(handle, minimum, maximum);
 ```
 
 **源码**：[source/std/random.chl:6](../../source/std/random.chl#L6)。
@@ -334,7 +334,7 @@ float64 randomNextFloat64(uint64 handle);
 **调用形式**
 
 ```chali
-std::random::randomNextFloat64(handle);
+randomNextFloat64(handle);
 ```
 
 **源码**：[source/std/random.chl:7](../../source/std/random.chl#L7)。
@@ -374,7 +374,7 @@ float64 randomNextRange(uint64 handle, float64 minimum, float64 maximum);
 **调用形式**
 
 ```chali
-std::random::randomNextRange(handle, minimum, maximum);
+randomNextRange(handle, minimum, maximum);
 ```
 
 **源码**：[source/std/random.chl:8](../../source/std/random.chl#L8)。
@@ -412,7 +412,7 @@ bool randomNextBool(uint64 handle);
 **调用形式**
 
 ```chali
-std::random::randomNextBool(handle);
+randomNextBool(handle);
 ```
 
 **源码**：[source/std/random.chl:9](../../source/std/random.chl#L9)。
@@ -450,7 +450,7 @@ void randomDrop(uint64 handle);
 **调用形式**
 
 ```chali
-std::random::randomDrop(handle);
+randomDrop(handle);
 ```
 
 **源码**：[source/std/random.chl:10](../../source/std/random.chl#L10)。
@@ -490,7 +490,7 @@ static Random withSeed(uint64 seed);
 **调用形式**
 
 ```chali
-std::random::Random::withSeed(seed);
+Random::withSeed(seed);
 ```
 
 **源码**：[source/std/random.chl:20](../../source/std/random.chl#L20)。
@@ -528,7 +528,7 @@ static Random fromEntropy();
 **调用形式**
 
 ```chali
-std::random::Random::fromEntropy();
+Random::fromEntropy();
 ```
 
 **源码**：[source/std/random.chl:22](../../source/std/random.chl#L22)。

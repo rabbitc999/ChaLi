@@ -201,6 +201,15 @@ def render(data):
            '每项的“调用形式”展示如何排列参数，参数名代表调用者已准备的值，不能单独运行。模块页链接的 `.chl` 是带入口的完整参考代码；有输入、线程、反射或外部服务条件时以示例说明为准。错误条件既包括库显式返回的 Option/Result，也包括断言、宿主检查和借用检查诊断。', '',
            '## 模块目录', '', '| 模块 | 内容 | 函数重载数 | 宏数 |', '| --- | --- | ---: | ---: |']
     for module, records in data.items():
+        visible={'std::core', module}
+        for source in {entry['source'] for entry in records}:
+            path=ROOT/source
+            if path.is_file(): visible.update(re.findall(r'\bimport\s+([\w:]+)\s*;', path.read_text(encoding='utf-8')))
+        visible_names={}
+        for owner in visible:
+            for entry in data.get(owner, []):
+                if not entry['owner'] and entry['kind'] in ('function', 'struct', 'enum', 'interface', 'opcode'):
+                    visible_names.setdefault(entry['name'], set()).add(owner)
         title, contract=MODULES[module]
         # `__` 前缀是编译器/宿主协议，不是应用 API：既不进参考页，也不进编辑器索引，
         # 否则 LSP 会把 `__Range` 这类内部类型当成可补全的公开符号。
@@ -315,7 +324,7 @@ def render(data):
             if r['owner'] in ('Set','Map') and r['name']=='remove': return_text='找到并删除返回 1，键不存在返回 0。'
             if r['owner'] in ('Set','Map') and r['name'] in ('has','contains'): return_text='存在返回 1，不存在返回 0。'
             lines+=['', '**返回值**', '', '无返回值。' if result=='void' else f'`{result}`。'+(return_text or ('构造并初始化当前实例。' if not r['result'] else description)), '', '**错误与边界**', '', '遵循本页“公共约定与错误边界”。']
-            assertions=re.findall(r'std::core::assert\((.*?)(?:\);)',r.get('body',''),re.S)
+            assertions=re.findall(r'(?<![\w:])(?:std::core::)?assert\((.*?)(?:\);)',r.get('body',''),re.S)
             for assertion in assertions:
                 lines+=['显式前置检查：`'+re.sub(r'\s+',' ',assertion)+'`。']
             if 'panic(' in r.get('body',''): lines+=['实现包含 panic 分支；调用前应处理空值或失败状态。']
@@ -324,10 +333,17 @@ def render(data):
             type_args=generic.group(1) if generic and generic.group(1) else ''
             # 约束不是实参；调用形式只保留泛型参数名。
             type_args=re.sub(r':[^,>]+','',type_args)
+            # 实参出现全部类型参数时可以推导；仅返回类型携带参数的工厂保留显式实参。
+            generic_names=re.findall(r'\b\w+\b', type_args)
+            parameter_text=' '.join(p[1] for p in params)
+            if generic_names and '&' not in parameter_text and all(re.search(r'\b'+re.escape(name)+r'\b', parameter_text) for name in generic_names):
+                type_args=''
             owner_decl=next((t['signature'] for t in types if t['kind'] in ('struct','enum','interface','opcode') and t['name']==r['owner']), '')
             owner_type=re.match(r'(?:struct|enum|interface|opcode)\s+(\w+(?:<[^>]+>)?)',owner_decl)
             owner_type=owner_type.group(1) if owner_type else r['owner']
-            prefix='' if module=='std::core' else module+'::'
+            # 本页已给出导入；与核心或依赖模块重名时保留限定名。
+            lookup_name=r['owner'] if r['owner'] else r['name']
+            prefix=module+'::' if len(visible_names.get(lookup_name, ())) > 1 or (not r['owner'] and r['name']=='index') else ''
             call=(prefix+owner_type+'::' if r['owner'] and r['signature'].startswith('static ') else 'obj.' if r['owner'] else prefix)+r['name']+type_args+'('+', '.join(p[0] for p in params)+')'
             if r['name']==r['owner']: call='// 构造：'+r['owner']+' obj = new('+', '.join(p[0] for p in params)+')'
             lines += [call+';', '```', '', f'**源码**：[{r["source"]}:{r["line"]}](../../{r["source"]}#L{r["line"]})'+('（编译器内建，签名为等价调用形式）。' if r.get('intrinsic') else '。'), '']

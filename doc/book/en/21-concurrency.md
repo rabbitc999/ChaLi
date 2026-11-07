@@ -19,8 +19,8 @@ void worker()
 
 void main()
 {
-    Thread task = std::thread::create(worker);
-    std::thread::wait(task);
+    Thread task = create(worker);
+    wait(task);
     println("done");
 }
 ```
@@ -46,9 +46,9 @@ void report(int64 score)
 void main()
 {
     int64 score = 70;
-    Thread task = std::thread::createWith(report, score);
+    Thread task = createWith(report, score);
     score = 90;
-    std::thread::wait(task);
+    wait(task);
     println("main:{}", score);
 }
 ```
@@ -70,15 +70,15 @@ import std::thread;
 
 void receiver()
 {
-    String message = std::thread::receive();
+    String message = receive();
     println("received:{}", message);
 }
 
 void main()
 {
-    Thread task = std::thread::create(receiver);
-    std::thread::send(task, "ready");
-    std::thread::wait(task);
+    Thread task = create(receiver);
+    send(task, "ready");
+    wait(task);
     println("joined");
 }
 ```
@@ -114,8 +114,8 @@ void task() {
     println("finished");
 }
 void main() {
-    Thread worker = std::thread::create(task);
-    std::thread::wait(worker);
+    Thread worker = create(task);
+    wait(worker);
     println("joined");
 }
 ```

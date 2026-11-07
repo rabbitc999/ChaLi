@@ -6,7 +6,7 @@ void main() {
     println("{}", minimum + 1);
     println("{}", -9223372036854775808 / 2);
     int64 seen = 0;
-    for (let item in std::core::rangeEq<int64>(-9223372036854775808, -9223372036854775808))
+    for (let item in rangeEq<int64>(-9223372036854775808, -9223372036854775808))
     {
         if (item == minimum) { seen += 1; }
     }

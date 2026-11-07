@@ -6,6 +6,7 @@
  * AST arena; both representations must produce the same numeric results.
  */
 
+import std::algorithms;
 import std::iter;
 
 /* opcodes */
@@ -666,7 +667,7 @@ void main(List<String> args) {
     println("=== summary ===");
     println("ok={} errors={} tokens={}", okCount, errCount, totalTokens);
     if (okInstrs.len() > 0) {
-        int64 totalInstr = std::algorithms::foldValue<int64>(okInstrs, 0, addInts);
+        int64 totalInstr = foldValue(okInstrs, 0, addInts);
         int64 lo = okInstrs[0];
         int64 hi = okInstrs[0];
         {
@@ -679,7 +680,7 @@ void main(List<String> args) {
                 i = i + 1;
             }
         }
-        List<int64> sorted = std::algorithms::sortValue<int64>(okInstrs);
+        List<int64> sorted = sortValue(okInstrs);
         println("instructions over ok lines: total={} min={} max={}", totalInstr, lo, hi);
         println("sorted instruction counts: {}", renderInts(sorted));
     }
@@ -707,7 +708,7 @@ void main(List<String> args) {
         }
     }
 
-    List<int64> squares = std::iter::range(1, 6)
+    List<int64> squares = intIter(1, 6)
     .map(fn(value) { value * value })
     .collect();
     println("functional demo: squares 1..5 = {}", renderInts(squares));

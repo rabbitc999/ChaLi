@@ -10,10 +10,10 @@ int64 sendFor<T>(Thread thread, T value, int64 millis) {
     return __mailSend<T>(thread, millis, value);
 }
 int64 trySend<T>(Thread thread, T value) { return sendFor<T>(thread, value, 0); }
-std::concurrency::Receive<T> receiveFor<T>(int64 millis) {
-    std::concurrency::Receive<T> result;
+Receive<T> receiveFor<T>(int64 millis) {
+    Receive<T> result;
     result.status = std::concurrency::__poll(0, millis);
     if (result.isReady()) { result.value = std::concurrency::__channelTake<T>(); }
     return result;
 }
-std::concurrency::Receive<T> tryReceive<T>() { return receiveFor<T>(0); }
+Receive<T> tryReceive<T>() { return receiveFor<T>(0); }

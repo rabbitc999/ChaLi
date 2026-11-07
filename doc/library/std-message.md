@@ -39,16 +39,16 @@ struct Parcel { int64 id; String name; List<int64> readings; };
 int64 isolatedCounter;
 
 void typedWorker() {
-    std::concurrency::Shared<int64> sharedCounter = std::message::receiveThread<std::concurrency::Shared<int64>>();
-    Parcel received = std::message::receiveThread<Parcel>();
+    Shared<int64> sharedCounter = receiveThread<Shared<int64>>();
+    Parcel received = receiveThread<Parcel>();
     int64 old = sharedCounter.swap(20);
     isolatedCounter = 99;
-    std::message::sendThread<Parcel>(std::thread::parent(), received);
-    std::message::sendThread<int64>(std::thread::parent(), old);
+    sendThread<Parcel>(parent(), received);
+    sendThread<int64>(parent(), old);
 }
 
 void main() {
-    std::concurrency::Shared<int64> sharedCounter = std::concurrency::Shared<int64>::create(10);
+    Shared<int64> sharedCounter = Shared<int64>::create(10);
     isolatedCounter = 3;
     Parcel original;
     original.id = 7;
@@ -56,14 +56,14 @@ void main() {
     List<int64> readings;
     readings.push(4);
     original.readings = readings;
-    Thread task = std::thread::create(typedWorker);
-    std::message::sendThread<std::concurrency::Shared<int64>>(task, sharedCounter);
-    std::message::sendThread<Parcel>(task, original);
+    Thread task = create(typedWorker);
+    sendThread<Shared<int64>>(task, sharedCounter);
+    sendThread<Parcel>(task, original);
     original.id = 8;
     original.readings.push(6);
-    Parcel reply = std::message::receiveThread<Parcel>();
-    int64 previous = std::message::receiveThread<int64>();
-    std::thread::wait(task);
+    Parcel reply = receiveThread<Parcel>();
+    int64 previous = receiveThread<int64>();
+    wait(task);
     println("{} {} {} {} {} {}", reply.id, reply.name, reply.readings.len(),
     previous, sharedCounter.get(), isolatedCounter);
 }
@@ -90,8 +90,8 @@ void main() {
 | [receiveThread](#api-1) | `T receiveThread<T>()` |
 | [sendFor](#api-2) | `int64 sendFor<T>(Thread thread, T value, int64 millis)` |
 | [trySend](#api-3) | `int64 trySend<T>(Thread thread, T value)` |
-| [receiveFor](#api-4) | `std::concurrency::Receive<T> receiveFor<T>(int64 millis)` |
-| [tryReceive](#api-5) | `std::concurrency::Receive<T> tryReceive<T>()` |
+| [receiveFor](#api-4) | `Receive<T> receiveFor<T>(int64 millis)` |
+| [tryReceive](#api-5) | `Receive<T> tryReceive<T>()` |
 
 <a id="api-0"></a>
 
@@ -127,7 +127,7 @@ void sendThread<T>(Thread thread, T value);
 **调用形式**
 
 ```chali
-std::message::sendThread<T>(thread, value);
+sendThread(thread, value);
 ```
 
 **源码**：[source/std/message.chl:6](../../source/std/message.chl#L6)。
@@ -163,7 +163,7 @@ T receiveThread<T>();
 **调用形式**
 
 ```chali
-std::message::receiveThread<T>();
+receiveThread<T>();
 ```
 
 **源码**：[source/std/message.chl:7](../../source/std/message.chl#L7)。
@@ -203,7 +203,7 @@ int64 sendFor<T>(Thread thread, T value, int64 millis);
 **调用形式**
 
 ```chali
-std::message::sendFor<T>(thread, value, millis);
+sendFor(thread, value, millis);
 ```
 
 **源码**：[source/std/message.chl:9](../../source/std/message.chl#L9)。
@@ -242,7 +242,7 @@ int64 trySend<T>(Thread thread, T value);
 **调用形式**
 
 ```chali
-std::message::trySend<T>(thread, value);
+trySend(thread, value);
 ```
 
 **源码**：[source/std/message.chl:12](../../source/std/message.chl#L12)。
@@ -256,7 +256,7 @@ std::message::trySend<T>(thread, value);
 **声明**
 
 ```chali
-std::concurrency::Receive<T> receiveFor<T>(int64 millis);
+Receive<T> receiveFor<T>(int64 millis);
 ```
 
 **行为**
@@ -271,7 +271,7 @@ std::concurrency::Receive<T> receiveFor<T>(int64 millis);
 
 **返回值**
 
-`std::concurrency::Receive<T>`。显式限时接收，只有 READY 时 value 有效；-1 无限、0 非阻塞。
+`Receive<T>`。显式限时接收，只有 READY 时 value 有效；-1 无限、0 非阻塞。
 
 **错误与边界**
 
@@ -294,7 +294,7 @@ std::message::receiveFor<T>(millis);
 **声明**
 
 ```chali
-std::concurrency::Receive<T> tryReceive<T>();
+Receive<T> tryReceive<T>();
 ```
 
 **行为**
@@ -307,7 +307,7 @@ std::concurrency::Receive<T> tryReceive<T>();
 
 **返回值**
 
-`std::concurrency::Receive<T>`。立即尝试接收，未就绪返回 TIMEOUT，只有 READY 时读取 value。
+`Receive<T>`。立即尝试接收，未就绪返回 TIMEOUT，只有 READY 时读取 value。
 
 **错误与边界**
 

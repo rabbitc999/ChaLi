@@ -34,13 +34,13 @@ import std::audio;
 import std::thread;
 void main(List<String> args) {
     if (args.len() != 1) { println("pass one audio file path"); return; }
-    if (!std::audio::open()) { println("audio device unavailable"); return; }
-    int64 sound = std::audio::load(args[0]);
-    if (sound == 0) { std::audio::close(); println("audio file could not be loaded"); return; }
-    assert(std::audio::play(sound));
-    while (std::audio::isPlaying(sound)) { std::thread::sleepFor(10); }
-    assert(std::audio::unload(sound));
-    std::audio::close();
+    if (!open()) { println("audio device unavailable"); return; }
+    int64 sound = load(args[0]);
+    if (sound == 0) { close(); println("audio file could not be loaded"); return; }
+    assert(play(sound));
+    while (isPlaying(sound)) { sleepFor(10); }
+    assert(unload(sound));
+    close();
     println("playback finished");
 }
 ```
@@ -90,7 +90,7 @@ bool open();
 **调用形式**
 
 ```chali
-std::audio::open();
+open();
 ```
 
 **源码**：[library/desktop_gui/desktop_audio.chl.in:4](../../library/desktop_gui/desktop_audio.chl.in#L4)。
@@ -128,7 +128,7 @@ int64 load(String path);
 **调用形式**
 
 ```chali
-std::audio::load(path);
+load(path);
 ```
 
 **源码**：[library/desktop_gui/desktop_audio.chl.in:6](../../library/desktop_gui/desktop_audio.chl.in#L6)。
@@ -166,7 +166,7 @@ bool play(int64 id);
 **调用形式**
 
 ```chali
-std::audio::play(id);
+play(id);
 ```
 
 **源码**：[library/desktop_gui/desktop_audio.chl.in:8](../../library/desktop_gui/desktop_audio.chl.in#L8)。
@@ -204,7 +204,7 @@ bool stop(int64 id);
 **调用形式**
 
 ```chali
-std::audio::stop(id);
+stop(id);
 ```
 
 **源码**：[library/desktop_gui/desktop_audio.chl.in:10](../../library/desktop_gui/desktop_audio.chl.in#L10)。
@@ -242,7 +242,7 @@ bool isPlaying(int64 id);
 **调用形式**
 
 ```chali
-std::audio::isPlaying(id);
+isPlaying(id);
 ```
 
 **源码**：[library/desktop_gui/desktop_audio.chl.in:12](../../library/desktop_gui/desktop_audio.chl.in#L12)。
@@ -280,7 +280,7 @@ bool unload(int64 id);
 **调用形式**
 
 ```chali
-std::audio::unload(id);
+unload(id);
 ```
 
 **源码**：[library/desktop_gui/desktop_audio.chl.in:14](../../library/desktop_gui/desktop_audio.chl.in#L14)。
@@ -316,7 +316,7 @@ void close();
 **调用形式**
 
 ```chali
-std::audio::close();
+close();
 ```
 
 **源码**：[library/desktop_gui/desktop_audio.chl.in:16](../../library/desktop_gui/desktop_audio.chl.in#L16)。

@@ -42,10 +42,10 @@ void main() {
     values.push(4);
     values.push(1);
     values.push(3);
-    List<int64> sorted = std::algorithms::sortValue<int64>(values);
+    List<int64> sorted = sortValue(values);
     println("{} {} {} {} {}", sorted[0], sorted[1], sorted[2],
-    std::algorithms::binarySearchValue<int64>(sorted, 3),
-    std::algorithms::foldValue<int64>(sorted, 0, addValues));
+    binarySearchValue(sorted, 3),
+    foldValue(sorted, 0, addValues));
     println("{} {} {}", values[0], values[1], values[2]);
 
     List<float64> stableValues;
@@ -53,42 +53,42 @@ void main() {
     stableValues.push(2.0);
     stableValues.push(0.0);
     stableValues.push(1.0);
-    List<float64> stableSorted = std::algorithms::sortValue<float64>(stableValues);
+    List<float64> stableSorted = sortValue(stableValues);
     println("{1:1F} {2:1F} {3:1F} {4:1F}", stableSorted[0], stableSorted[1],
     stableSorted[2], stableSorted[3]);
-    println("{} {} {} {} {}", std::algorithms::findValue<int64>(sorted, 4),
-    std::algorithms::minValue<int64>(9, 2), std::algorithms::maxValue<int64>(9, 2),
-    std::algorithms::clampValue<int64>(12, 0, 10),
-    std::algorithms::allValue<int64>(sorted, positive));
-    println("{} {} {} {}", std::algorithms::minValue<int64>(9, 2, 7, -1),
-    std::algorithms::maxValue<int64>(9, 2, 12, 7),
-    std::algorithms::minValue<int64>(5), std::algorithms::maxValue<int64>(6));
+    println("{} {} {} {} {}", findValue(sorted, 4),
+    minValue(9, 2), maxValue(9, 2),
+    clampValue(12, 0, 10),
+    allValue(sorted, positive));
+    println("{} {} {} {}", minValue(9, 2, 7, -1),
+    maxValue(9, 2, 12, 7),
+    minValue(5), maxValue(6));
 
-    std::collections::Deque<int64> deque = std::collections::Deque<int64>::create();
+    Deque<int64> deque = Deque<int64>::create();
     deque.pushBack(2);
     deque.pushFront(1);
     println("{} {} {}", deque.len(), deque.popFront().unwrap(),
     deque.popBack().unwrap());
 
-    std::collections::Queue<int64> queue = std::collections::Queue<int64>::create();
+    Queue<int64> queue = Queue<int64>::create();
     queue.push(7);
     queue.push(8);
     println("{} {}", queue.peek().unwrap(), queue.pop().unwrap());
 
-    std::collections::RingBuffer<int64> ring = std::collections::RingBuffer<int64>::withCapacity(2);
+    RingBuffer<int64> ring = RingBuffer<int64>::withCapacity(2);
     println("{} {} {}", ring.push(5), ring.push(6), ring.push(7));
     println("{} {}", ring.pop().unwrap(), ring.available());
 
-    std::collections::FixedVector<int64> fixed = std::collections::FixedVector<int64>::withCapacity(1);
+    FixedVector<int64> fixed = FixedVector<int64>::withCapacity(1);
     println("{} {} {}", fixed.push(9), fixed.push(10), fixed[0]);
 
     int64 raw[] = new[2];
     raw[0] = 11;
     raw[1] = 12;
-    std::memory::Span<int64> span = std::memory::Span<int64>::from(&raw[0], len(raw));
+    Span<int64> span = Span<int64>::from(&raw[0], len(raw));
     println("{} {} {}", span.len(), span[0], span[1]);
 
-    std::collections::Channel<int64> channel = std::collections::Channel<int64>::create();
+    Channel<int64> channel = Channel<int64>::create();
     channel.send(21);
     println("{} {}", channel.len(), channel.receive().unwrap());
 
@@ -303,10 +303,10 @@ $macro assert(condition, message)
 | [toInt32](#api-65) | `Option<int32> toInt32(float32 value)` |
 | [toInt64](#api-66) | `int64 toInt64(float64 value)` |
 | [toInt64](#api-67) | `int64 toInt64(float32 value)` |
-| [float32ToBytes](#api-68) | `std::core::List<uint8> float32ToBytes(float32 value, bool bigEndian)` |
-| [float32ToBytes](#api-69) | `std::core::List<uint8> float32ToBytes(float32 value)` |
-| [bytesToFloat32](#api-70) | `Option<float32> bytesToFloat32(std::core::List<uint8> bytes, bool bigEndian)` |
-| [bytesToFloat32](#api-71) | `Option<float32> bytesToFloat32(std::core::List<uint8> bytes)` |
+| [float32ToBytes](#api-68) | `List<uint8> float32ToBytes(float32 value, bool bigEndian)` |
+| [float32ToBytes](#api-69) | `List<uint8> float32ToBytes(float32 value)` |
+| [bytesToFloat32](#api-70) | `Option<float32> bytesToFloat32(List<uint8> bytes, bool bigEndian)` |
+| [bytesToFloat32](#api-71) | `Option<float32> bytesToFloat32(List<uint8> bytes)` |
 | [bytesToFloat32](#api-72) | `Option<float32> bytesToFloat32(uint8 const& bytes, int64 count, bool bigEndian)` |
 | [bytesToFloat32](#api-73) | `Option<float32> bytesToFloat32(uint8 const& bytes, int64 count)` |
 | [bytesToFloat32](#api-74) | `Option<float32> bytesToFloat32(uint8 bytes[], bool bigEndian)` |
@@ -315,10 +315,10 @@ $macro assert(condition, message)
 | [float32ToBytes](#api-77) | `bool float32ToBytes(float32 value, uint8 mut& bytes, int64 count)` |
 | [float32ToBytes](#api-78) | `bool float32ToBytes(float32 value, uint8[] mut& bytes, bool bigEndian)` |
 | [float32ToBytes](#api-79) | `bool float32ToBytes(float32 value, uint8[] mut& bytes)` |
-| [float64ToBytes](#api-80) | `std::core::List<uint8> float64ToBytes(float64 value, bool bigEndian)` |
-| [float64ToBytes](#api-81) | `std::core::List<uint8> float64ToBytes(float64 value)` |
-| [bytesToFloat64](#api-82) | `Option<float64> bytesToFloat64(std::core::List<uint8> bytes, bool bigEndian)` |
-| [bytesToFloat64](#api-83) | `Option<float64> bytesToFloat64(std::core::List<uint8> bytes)` |
+| [float64ToBytes](#api-80) | `List<uint8> float64ToBytes(float64 value, bool bigEndian)` |
+| [float64ToBytes](#api-81) | `List<uint8> float64ToBytes(float64 value)` |
+| [bytesToFloat64](#api-82) | `Option<float64> bytesToFloat64(List<uint8> bytes, bool bigEndian)` |
+| [bytesToFloat64](#api-83) | `Option<float64> bytesToFloat64(List<uint8> bytes)` |
 | [bytesToFloat64](#api-84) | `Option<float64> bytesToFloat64(uint8 const& bytes, int64 count, bool bigEndian)` |
 | [bytesToFloat64](#api-85) | `Option<float64> bytesToFloat64(uint8 const& bytes, int64 count)` |
 | [bytesToFloat64](#api-86) | `Option<float64> bytesToFloat64(uint8 bytes[], bool bigEndian)` |
@@ -328,9 +328,9 @@ $macro assert(condition, message)
 | [float64ToBytes](#api-90) | `bool float64ToBytes(float64 value, uint8[] mut& bytes, bool bigEndian)` |
 | [float64ToBytes](#api-91) | `bool float64ToBytes(float64 value, uint8[] mut& bytes)` |
 | [assert](#api-92) | `void assert(bool condition)` |
-| [assert](#api-93) | `void assert(bool condition, std::core::String message)` |
+| [assert](#api-93) | `void assert(bool condition, String message)` |
 | [assert](#api-94) | `void assert(bool condition, int64 line)` |
-| [assert](#api-95) | `void assert(bool condition, std::core::String message, int64 line)` |
+| [assert](#api-95) | `void assert(bool condition, String message, int64 line)` |
 | [Try::branch](#api-96) | `TryBranch<T, R> branch()` |
 | [TryMove::intoBranch](#api-97) | `TryBranch<T, R> intoBranch()` |
 | [FromResidual::fromResidual](#api-98) | `static F fromResidual(R residual)` |
@@ -342,7 +342,7 @@ $macro assert(condition, message)
 | [Option::take](#api-104) | `T take()` |
 | [Option::unwrap](#api-105) | `T unwrap()` |
 | [Option::unwrapOr](#api-106) | `T unwrapOr(T fallback)` |
-| [Option::expect](#api-107) | `T expect(std::core::String message)` |
+| [Option::expect](#api-107) | `T expect(String message)` |
 | [Option::transform](#api-108) | `Option<T> transform(T fn(T) mapper)` |
 | [Option::andThen](#api-109) | `Option<T> andThen(Option<T> fn(T) mapper)` |
 | [Result::branch](#api-110) | `TryBranch<T, ErrorResidual<E>> branch()` |
@@ -354,7 +354,7 @@ $macro assert(condition, message)
 | [Result::take](#api-116) | `T take()` |
 | [Result::unwrap](#api-117) | `T unwrap()` |
 | [Result::unwrapOr](#api-118) | `T unwrapOr(T fallback)` |
-| [Result::expect](#api-119) | `T expect(std::core::String message)` |
+| [Result::expect](#api-119) | `T expect(String message)` |
 | [Result::takeError](#api-120) | `E takeError()` |
 | [Result::error](#api-121) | `E error()` |
 | [Result::transform](#api-122) | `Result<T, E> transform(T fn(T) mapper)` |
@@ -2901,6 +2901,7 @@ String readLines(int32 N);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`N>=0,"readLines requires a nonnegative line count"`。
 
 **调用形式**
 
@@ -2939,6 +2940,7 @@ String readLines(int64 N);
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`N>=0 && N<=2147483647,"readLines requires a nonnegative int32 line count"`。
 
 **调用形式**
 
@@ -3109,7 +3111,7 @@ toInt64(value);
 **声明**
 
 ```chali
-std::core::List<uint8> float32ToBytes(float32 value, bool bigEndian);
+List<uint8> float32ToBytes(float32 value, bool bigEndian);
 ```
 
 **行为**
@@ -3125,7 +3127,7 @@ std::core::List<uint8> float32ToBytes(float32 value, bool bigEndian);
 
 **返回值**
 
-`std::core::List<uint8>`。按 IEEE 754 binary32 输出 4 个字节。
+`List<uint8>`。按 IEEE 754 binary32 输出 4 个字节。
 
 **错误与边界**
 
@@ -3148,7 +3150,7 @@ float32ToBytes(value, bigEndian);
 **声明**
 
 ```chali
-std::core::List<uint8> float32ToBytes(float32 value);
+List<uint8> float32ToBytes(float32 value);
 ```
 
 **行为**
@@ -3163,7 +3165,7 @@ std::core::List<uint8> float32ToBytes(float32 value);
 
 **返回值**
 
-`std::core::List<uint8>`。默认小端编码。
+`List<uint8>`。默认小端编码。
 
 **错误与边界**
 
@@ -3186,7 +3188,7 @@ float32ToBytes(value);
 **声明**
 
 ```chali
-Option<float32> bytesToFloat32(std::core::List<uint8> bytes, bool bigEndian);
+Option<float32> bytesToFloat32(List<uint8> bytes, bool bigEndian);
 ```
 
 **行为**
@@ -3197,7 +3199,7 @@ Option<float32> bytesToFloat32(std::core::List<uint8> bytes, bool bigEndian);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `bytes` | `std::core::List<uint8> bytes` | 输入或输出字节存储 | 无 |
+| `bytes` | `List<uint8> bytes` | 输入或输出字节存储 | 无 |
 | `bigEndian` | `bool bigEndian` | true 为大端，false 为小端 | 无 |
 
 **返回值**
@@ -3225,7 +3227,7 @@ bytesToFloat32(bytes, bigEndian);
 **声明**
 
 ```chali
-Option<float32> bytesToFloat32(std::core::List<uint8> bytes);
+Option<float32> bytesToFloat32(List<uint8> bytes);
 ```
 
 **行为**
@@ -3236,7 +3238,7 @@ Option<float32> bytesToFloat32(std::core::List<uint8> bytes);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `bytes` | `std::core::List<uint8> bytes` | 输入或输出字节存储 | 无 |
+| `bytes` | `List<uint8> bytes` | 输入或输出字节存储 | 无 |
 
 **返回值**
 
@@ -3579,7 +3581,7 @@ float32ToBytes(value, bytes);
 **声明**
 
 ```chali
-std::core::List<uint8> float64ToBytes(float64 value, bool bigEndian);
+List<uint8> float64ToBytes(float64 value, bool bigEndian);
 ```
 
 **行为**
@@ -3595,7 +3597,7 @@ std::core::List<uint8> float64ToBytes(float64 value, bool bigEndian);
 
 **返回值**
 
-`std::core::List<uint8>`。按 IEEE 754 binary64 输出 8 个字节。
+`List<uint8>`。按 IEEE 754 binary64 输出 8 个字节。
 
 **错误与边界**
 
@@ -3618,7 +3620,7 @@ float64ToBytes(value, bigEndian);
 **声明**
 
 ```chali
-std::core::List<uint8> float64ToBytes(float64 value);
+List<uint8> float64ToBytes(float64 value);
 ```
 
 **行为**
@@ -3633,7 +3635,7 @@ std::core::List<uint8> float64ToBytes(float64 value);
 
 **返回值**
 
-`std::core::List<uint8>`。默认小端编码。
+`List<uint8>`。默认小端编码。
 
 **错误与边界**
 
@@ -3656,7 +3658,7 @@ float64ToBytes(value);
 **声明**
 
 ```chali
-Option<float64> bytesToFloat64(std::core::List<uint8> bytes, bool bigEndian);
+Option<float64> bytesToFloat64(List<uint8> bytes, bool bigEndian);
 ```
 
 **行为**
@@ -3667,7 +3669,7 @@ Option<float64> bytesToFloat64(std::core::List<uint8> bytes, bool bigEndian);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `bytes` | `std::core::List<uint8> bytes` | 输入或输出字节存储 | 无 |
+| `bytes` | `List<uint8> bytes` | 输入或输出字节存储 | 无 |
 | `bigEndian` | `bool bigEndian` | true 为大端，false 为小端 | 无 |
 
 **返回值**
@@ -3695,7 +3697,7 @@ bytesToFloat64(bytes, bigEndian);
 **声明**
 
 ```chali
-Option<float64> bytesToFloat64(std::core::List<uint8> bytes);
+Option<float64> bytesToFloat64(List<uint8> bytes);
 ```
 
 **行为**
@@ -3706,7 +3708,7 @@ Option<float64> bytesToFloat64(std::core::List<uint8> bytes);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `bytes` | `std::core::List<uint8> bytes` | 输入或输出字节存储 | 无 |
+| `bytes` | `List<uint8> bytes` | 输入或输出字节存储 | 无 |
 
 **返回值**
 
@@ -4071,6 +4073,7 @@ condition 为真时继续，为假时以指定诊断文本和可选行号触发 
 **错误与边界**
 
 遵循本页“公共约定与错误边界”。
+显式前置检查：`x) 的 x 为假"`。
 实现包含 panic 分支；调用前应处理空值或失败状态。
 
 **调用形式**
@@ -4090,7 +4093,7 @@ assert(condition);
 **声明**
 
 ```chali
-void assert(bool condition, std::core::String message);
+void assert(bool condition, String message);
 ```
 
 **行为**
@@ -4102,7 +4105,7 @@ condition 为真时继续，为假时以指定诊断文本和可选行号触发 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
 | `condition` | `bool condition` | 待验证的布尔条件 | 无 |
-| `message` | `std::core::String message` | 诊断文本或消息载荷 | 无 |
+| `message` | `String message` | 诊断文本或消息载荷 | 无 |
 
 **返回值**
 
@@ -4170,7 +4173,7 @@ assert(condition, line);
 **声明**
 
 ```chali
-void assert(bool condition, std::core::String message, int64 line);
+void assert(bool condition, String message, int64 line);
 ```
 
 **行为**
@@ -4182,7 +4185,7 @@ condition 为真时继续，为假时以指定诊断文本和可选行号触发 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
 | `condition` | `bool condition` | 待验证的布尔条件 | 无 |
-| `message` | `std::core::String message` | 诊断文本或消息载荷 | 无 |
+| `message` | `String message` | 诊断文本或消息载荷 | 无 |
 | `line` | `int64 line` | 用于诊断的源码行号 | 无 |
 
 **返回值**
@@ -4615,7 +4618,7 @@ obj.unwrapOr(fallback);
 **声明**
 
 ```chali
-T expect(std::core::String message);
+T expect(String message);
 ```
 
 **行为**
@@ -4626,7 +4629,7 @@ T expect(std::core::String message);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `message` | `std::core::String message` | 诊断文本或消息载荷 | 无 |
+| `message` | `String message` | 诊断文本或消息载荷 | 无 |
 
 **返回值**
 
@@ -5060,7 +5063,7 @@ obj.unwrapOr(fallback);
 **声明**
 
 ```chali
-T expect(std::core::String message);
+T expect(String message);
 ```
 
 **行为**
@@ -5071,7 +5074,7 @@ T expect(std::core::String message);
 
 | 参数 | 类型／声明 | 含义 | 默认值 |
 | --- | --- | --- | --- |
-| `message` | `std::core::String message` | 诊断文本或消息载荷 | 无 |
+| `message` | `String message` | 诊断文本或消息载荷 | 无 |
 
 **返回值**
 
@@ -5774,7 +5777,7 @@ unsafe BarePtr<T> barePointer<T>(RawPtr<T> pointer);
 **调用形式**
 
 ```chali
-barePointer<T>(pointer);
+barePointer(pointer);
 ```
 
 **源码**：[source/std/core.chl:1303](../../source/std/core.chl#L1303)。
@@ -5850,7 +5853,7 @@ unsafe T mut& dereference<T>(BarePtr<T> pointer);
 **调用形式**
 
 ```chali
-dereference<T>(pointer);
+dereference(pointer);
 ```
 
 **源码**：[source/std/core.chl:1325](../../source/std/core.chl#L1325)。
@@ -5890,7 +5893,7 @@ unsafe void memcpy<T,U>(BarePtr<T> destination, BarePtr<U> source, int64 bytes);
 **调用形式**
 
 ```chali
-memcpy<T,U>(destination, source, bytes);
+memcpy(destination, source, bytes);
 ```
 
 **源码**：[source/std/core.chl:1332](../../source/std/core.chl#L1332)。
@@ -5930,7 +5933,7 @@ unsafe void memset<T>(BarePtr<T> destination, uint8 value, int64 bytes);
 **调用形式**
 
 ```chali
-memset<T>(destination, value, bytes);
+memset(destination, value, bytes);
 ```
 
 **源码**：[source/std/core.chl:1341](../../source/std/core.chl#L1341)。
@@ -5969,7 +5972,7 @@ unsafe void initAt<T>(RawPtr<T> pointer, T value);
 **调用形式**
 
 ```chali
-initAt<T>(pointer, value);
+initAt(pointer, value);
 ```
 
 **源码**：[source/std/core.chl:1346](../../source/std/core.chl#L1346)。
@@ -6007,7 +6010,7 @@ unsafe T readAt<T>(RawPtr<T> pointer);
 **调用形式**
 
 ```chali
-readAt<T>(pointer);
+readAt(pointer);
 ```
 
 **源码**：[source/std/core.chl:1354](../../source/std/core.chl#L1354)。
@@ -6045,7 +6048,7 @@ unsafe T mut& borrowAt<T>(RawPtr<T> pointer);
 **调用形式**
 
 ```chali
-borrowAt<T>(pointer);
+borrowAt(pointer);
 ```
 
 **源码**：[source/std/core.chl:1361](../../source/std/core.chl#L1361)。
@@ -6083,7 +6086,7 @@ unsafe T takeAt<T>(RawPtr<T> pointer);
 **调用形式**
 
 ```chali
-takeAt<T>(pointer);
+takeAt(pointer);
 ```
 
 **源码**：[source/std/core.chl:1366](../../source/std/core.chl#L1366)。
@@ -6121,7 +6124,7 @@ unsafe void dropAt<T>(RawPtr<T> pointer);
 **调用形式**
 
 ```chali
-dropAt<T>(pointer);
+dropAt(pointer);
 ```
 
 **源码**：[source/std/core.chl:1375](../../source/std/core.chl#L1375)。
@@ -6165,7 +6168,7 @@ unsafe void relocateNonOverlapping<T>(RawPtr<T> destination, RawPtr<T> source, i
 **调用形式**
 
 ```chali
-relocateNonOverlapping<T>(destination, source, count);
+relocateNonOverlapping(destination, source, count);
 ```
 
 **源码**：[source/std/core.chl:1380](../../source/std/core.chl#L1380)。
@@ -6394,7 +6397,7 @@ __Range range(int64 start, int64 stop);
 range(start, stop);
 ```
 
-**源码**：[source/chali_generic.cpp:1945](../../source/chali_generic.cpp#L1945)。
+**源码**：[source/chali_generic.cpp:1950](../../source/chali_generic.cpp#L1950)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6435,7 +6438,7 @@ __Range range(int64 start, int64 stop, int64 step);
 range(start, stop, step);
 ```
 
-**源码**：[source/chali_generic.cpp:1953](../../source/chali_generic.cpp#L1953)。
+**源码**：[source/chali_generic.cpp:1958](../../source/chali_generic.cpp#L1958)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6476,7 +6479,7 @@ __Interval_int64 rangeEq(int64 start, int64 stop);
 rangeEq(start, stop);
 ```
 
-**源码**：[source/chali_generic.cpp:1968](../../source/chali_generic.cpp#L1968)。
+**源码**：[source/chali_generic.cpp:1973](../../source/chali_generic.cpp#L1973)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6512,7 +6515,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/chali_generic.cpp:2174](../../source/chali_generic.cpp#L2174)。
+**源码**：[source/chali_generic.cpp:2179](../../source/chali_generic.cpp#L2179)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6548,7 +6551,7 @@ void close();
 obj.close();
 ```
 
-**源码**：[source/chali_generic.cpp:2182](../../source/chali_generic.cpp#L2182)。
+**源码**：[source/chali_generic.cpp:2187](../../source/chali_generic.cpp#L2187)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7221,7 +7224,7 @@ T mut& toReference<T>(Option<T mut&> value);
 toReference<T>(value);
 ```
 
-**源码**：[source/chali_generic.cpp:1882](../../source/chali_generic.cpp#L1882)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:1887](../../source/chali_generic.cpp#L1887)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7259,7 +7262,7 @@ Option<T mut&> toOptional<T>(T mut& value);
 toOptional<T>(value);
 ```
 
-**源码**：[source/chali_generic.cpp:1888](../../source/chali_generic.cpp#L1888)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:1893](../../source/chali_generic.cpp#L1893)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -9108,7 +9111,7 @@ T index(T const& data,int64 index);
 **调用形式**
 
 ```chali
-index(data, index);
+std::core::index(data, index);
 ```
 
 **源码**：[source/semantics/boxing.cpp:771](../../source/semantics/boxing.cpp#L771)（编译器内建，签名为等价调用形式）。
@@ -10515,7 +10518,7 @@ T copy();
 obj.copy();
 ```
 
-**源码**：[source/chali_generic.cpp:1865](../../source/chali_generic.cpp#L1865)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:1870](../../source/chali_generic.cpp#L1870)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -10698,7 +10701,7 @@ Result<T,F> mapErr<F>(F fn(E) mapper);
 **调用形式**
 
 ```chali
-obj.mapErr<F>(mapper);
+obj.mapErr(mapper);
 ```
 
 **源码**：[source/std/core.chl:2](../../source/std/core.chl#L2)（编译器内建，签名为等价调用形式）。
@@ -10736,7 +10739,7 @@ Result<T,E> okOr<E>(E error);
 **调用形式**
 
 ```chali
-obj.okOr<E>(error);
+obj.okOr(error);
 ```
 
 **源码**：[source/std/core.chl:3](../../source/std/core.chl#L3)（编译器内建，签名为等价调用形式）。
@@ -10774,7 +10777,7 @@ Result<T,E> okOrElse<E>(E fn() factory);
 **调用形式**
 
 ```chali
-obj.okOrElse<E>(factory);
+obj.okOrElse(factory);
 ```
 
 **源码**：[source/std/core.chl:3](../../source/std/core.chl#L3)（编译器内建，签名为等价调用形式）。
@@ -10823,11 +10826,11 @@ obj.castTo<U>();
 
 ```chali
 void main() {
-    String first=std::core::readLine();
-    String rest=std::core::readLines(3);
+    String first=readLine();
+    String rest=readLines(3);
     println("[{}]",first);
     println("[{}]",rest);
-    assert(std::core::readLines(0)=="");
-    assert(std::core::readLine()=="");
+    assert(readLines(0)=="");
+    assert(readLine()=="");
 }
 ```

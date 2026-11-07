@@ -11,7 +11,7 @@ a * b
 $end_macro
 $macro PRINT(...args)
 $for item in args
-std::core::println("{}", item * item);
+println("{}", item * item);
 $end_for
 $end_macro
 $macro FIRST(a, b)
@@ -19,10 +19,10 @@ if (true) { a } else { b }
 $end_macro
 
 void main() {
-    std::core::String label = "expr";
-    std::core::List<int64> values;
+    String label = "expr";
+    List<int64> values;
     values.push(3);
-    std::core::println("{} {} {} {} {} {}", label,
+    println("{} {} {} {} {} {}", label,
     3 * $ADD(1 + 2, 4 * 2),
     3 * $EXPLICIT(1 + 2, 4 * 2),
     3 * $MIXED(1 + 2, 4 * 2),

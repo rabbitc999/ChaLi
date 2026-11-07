@@ -194,8 +194,8 @@ import std::gui;
 
 void main()
 {
-    std::gui::Point position;
-    std::gui::drawText("Hello", position, 20.0, (uint32)0xffffffff);
+    Point position;
+    drawText("Hello", position, 20.0, (uint32)0xffffffff);
 }
 ```
 
