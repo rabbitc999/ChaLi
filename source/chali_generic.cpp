@@ -1472,6 +1472,7 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
     }
     Memory::String output;
     Memory::String lookupModule = initialModule;
+    Memory::Set<Memory::String> importedModules;
     Memory::Map<Memory::String, Memory::String> scopedGenerics;
     for (const auto &entry : generics)
         scopedGenerics[entry.second.module + "::" + (entry.second.sourceName.empty() ? entry.second.name : entry.second.sourceName)] = entry.first;
@@ -1526,6 +1527,14 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
             lookupModule = text.substr(moduleBegin, moduleEnd - moduleBegin);
             if (lookupModule == "__root") lookupModule.clear();
         }
+        else if (name == "import")
+        {
+            auto importBegin = at;
+            skipSpace(text, importBegin);
+            auto importEnd = importBegin;
+            while (importEnd < text.size() && (identPart(text[importEnd]) || text[importEnd] == ':')) ++importEnd;
+            importedModules.insert(text.substr(importBegin, importEnd - importBegin));
+        }
         auto generic = generics.find(name);
         Memory::String qualifier;
         if (begin >= 2 && text.compare(begin - 2, 2, "::") == 0)
@@ -1539,7 +1548,10 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
         if (scoped != scopedGenerics.end()) generic = generics.find(scoped->second);
         std::size_t open = at;
         while (open < text.size() && std::isspace(static_cast<unsigned char>(text[open]))) ++open;
-        const bool qualifierMatches = generic == generics.end() || generic->second.requiredQualifier.empty() || (begin >= generic->second.requiredQualifier.size() && text.compare(begin - generic->second.requiredQualifier.size(), generic->second.requiredQualifier.size(), generic->second.requiredQualifier) == 0);
+        const auto requiredModule = generic == generics.end() ? Memory::String() : generic->second.requiredQualifier.empty() ? Memory::String() : generic->second.requiredQualifier.substr(0, generic->second.requiredQualifier.size() - 2u);
+        const bool explicitQualifierMatches = generic == generics.end() || generic->second.requiredQualifier.empty() || (begin >= generic->second.requiredQualifier.size() && text.compare(begin - generic->second.requiredQualifier.size(), generic->second.requiredQualifier.size(), generic->second.requiredQualifier) == 0);
+        const bool importedQualifierMatches = qualifier.empty() && !requiredModule.empty() && importedModules.count(requiredModule) != 0u;
+        const bool qualifierMatches = explicitQualifierMatches || importedQualifierMatches;
         if (generic == generics.end() || !qualifierMatches || open >= text.size() || text[open] != '<')
         {
             output += generic != generics.end() && generic->second.name != name && open < text.size() && text[open] == '(' ? generic->second.name : name;
