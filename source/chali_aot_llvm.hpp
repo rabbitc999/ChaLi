@@ -6,7 +6,7 @@
 #include "chali_aot.hpp"
 #include "chali_linker.hpp"
 
-namespace chali_aot::builtin
+namespace chali_build::builtin
 {
 /**
  * @brief 查询当前编译器是否实际链接了 LLVM 与 LLD 静态库。
@@ -37,4 +37,4 @@ int link(const chali_linker::Request &request, const Memory::String &product, Me
  */
 int compile(const Request &request, const Memory::String &module, const Memory::String &source, const Memory::String &product,
             Memory::Vector<Memory::String> *diagnostics);
-}  // namespace chali_aot::builtin
+}  // namespace chali_build::builtin

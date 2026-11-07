@@ -6,7 +6,7 @@
 #include "runtime_objects.hpp"
 #include "value_transfer.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 设置程序退出码并终止当前执行。
@@ -32,4 +32,4 @@ Slot programAssert(NativeContext &ctx, const Memory::Vector<Slot> &args);
  */
 Slot programPanic(NativeContext &ctx, const Memory::Vector<Slot> &args);
 
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

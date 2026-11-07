@@ -4,7 +4,7 @@
  */
 #include "artifact_binary_detail.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 /**
@@ -124,4 +124,4 @@ Memory::String encodeDataLayout(const Memory::Vector<LayoutRow> &rows)
     return out;
 }
 
-}  // namespace stackvm
+}  // namespace runtime

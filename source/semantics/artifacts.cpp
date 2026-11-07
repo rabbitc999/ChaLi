@@ -105,8 +105,8 @@ Memory::String AbiGlueSource(const Memory::Set<Memory::String> *reachableBuiltin
 {
     Memory::Map<Memory::String, Memory::Vector<const MFunctionDecl *>> libraries;
     for (const MFunctionDecl &function : g_functionDecls)
-        if (!function.abiLibrary.empty() && !::chali_aot::isDirectLinkLibrary(function.abiLibrary) && !function.superseded &&
-            (!reachableBuiltin || !::chali_aot::isBuiltinNativeLibrary(function.abiLibrary) || reachableBuiltin->count(function.label)))
+        if (!function.abiLibrary.empty() && !::chali_build::isDirectLinkLibrary(function.abiLibrary) && !function.superseded &&
+            (!reachableBuiltin || !::chali_build::isBuiltinNativeLibrary(function.abiLibrary) || reachableBuiltin->count(function.label)))
             libraries[function.abiLibrary].push_back(&function);
     if (libraries.empty() && CAbiExportFunctions().empty()) return {};
     Memory::String definitions;
@@ -175,7 +175,7 @@ Memory::String AbiGlueSource(const Memory::Set<Memory::String> *reachableBuiltin
     {
         const auto &function = *functions[index];
         const auto suffix = Memory::toString(index);
-        const bool linked = ::chali_aot::isBuiltinNativeLibrary(function.abiLibrary);
+        const bool linked = ::chali_build::isBuiltinNativeLibrary(function.abiLibrary);
         const auto callAlias = "chali_static_call_" + suffix;
         const auto freeAlias = "chali_static_free_" + suffix;
         if (linked && !function.abiRelease.empty())
@@ -217,7 +217,7 @@ Memory::String AbiGlueSource(const Memory::Set<Memory::String> *reachableBuiltin
     source += "if (!registry) return chali_abi_status(error, ChaliAbiInvalidArgument, \"missing registry\");\n";
     for (const auto *function : functions)
     {
-        if (::chali_aot::isBuiltinNativeLibrary(function->abiLibrary)) continue;
+        if (::chali_build::isBuiltinNativeLibrary(function->abiLibrary)) continue;
         source += "if (!chali_host_abi_lookup(" + CxxStringLiteral(function->abiLibrary) + ", " + CxxStringLiteral(function->abiSymbol) + ", error)) return ChaliAbiHostFailure;\n";
         if (!function->abiRelease.empty())
             source += "if (!chali_host_abi_lookup(" + CxxStringLiteral(function->abiLibrary) + ", " + CxxStringLiteral(function->abiRelease) + ", error)) return ChaliAbiHostFailure;\n";
@@ -239,7 +239,7 @@ Memory::String AbiGlueSource(const Memory::Set<Memory::String> *reachableBuiltin
  * @param abiType `CAbiType` 给出的名字（`std::int64_t` / `double` / `const char *` …）。
  * @return C ABI 类型拼写，由 LLVM 降低器转换成 LLVM 类型；未知类型按 long long 兜底。
  */
-static Memory::String AotCType(const Memory::String &abiType)
+static Memory::String BuildCType(const Memory::String &abiType)
 {
     if (abiType.empty()) return "long long";
     if (abiType == "void") return "void";
@@ -261,21 +261,21 @@ static Memory::String AotCType(const Memory::String &abiType)
  * AOT 将它们转换为 LLVM 函数声明与链接参数，产物直接调用外部符号。
  * @return 按声明顺序排列的外部函数清单。
  */
-Memory::Vector<::chali_aot::ExternFunction> ChaliAotAbiExterns()
+Memory::Vector<::chali_build::ExternFunction> ChaliBuildAbiExterns()
 {
-    Memory::Vector<::chali_aot::ExternFunction> out;
+    Memory::Vector<::chali_build::ExternFunction> out;
     for (const MFunctionDecl &function : g_functionDecls)
     {
         if (function.abiLibrary.empty() || function.superseded) continue;
-        ::chali_aot::ExternFunction entry;
+        ::chali_build::ExternFunction entry;
         entry.abiConvention = function.abiConvention.empty() ? "C" : function.abiConvention;
         entry.label = function.label;
         entry.symbol = function.abiSymbol.empty() ? function.label : function.abiSymbol;
         entry.library = function.abiLibrary;
         entry.requiresMarshalling = CAbiNeedsMarshalling(function);
-        entry.resultType = AotCType(CAbiType(function.signature.result));
+        entry.resultType = BuildCType(CAbiType(function.signature.result));
         for (const auto &parameter : function.signature.params)
-            entry.parameterTypes.push_back(AotCType(CAbiType(parameter.type)));
+            entry.parameterTypes.push_back(BuildCType(CAbiType(parameter.type)));
         out.push_back(std::move(entry));
     }
     return out;
@@ -288,22 +288,22 @@ Memory::Vector<::chali_aot::ExternFunction> ChaliAotAbiExterns()
  * @param reachableBuiltin 可达的内置服务函数。
  * @return 存在非标量 ABI 类型时返回全部绑定源码，否则返回空串。
  */
-Memory::String ChaliAotAbiGlue(const Memory::Set<Memory::String> &reachableBuiltin)
+Memory::String ChaliBuildAbiGlue(const Memory::Set<Memory::String> &reachableBuiltin)
 {
     if (!CAbiExportFunctions().empty()) return AbiGlueSource(&reachableBuiltin);
     for (const auto &function : g_functionDecls)
     {
         if (function.abiLibrary.empty() || function.superseded) continue;
-        if (::chali_aot::isBuiltinNativeLibrary(function.abiLibrary) && !reachableBuiltin.count(function.label)) continue;
+        if (::chali_build::isBuiltinNativeLibrary(function.abiLibrary) && !reachableBuiltin.count(function.label)) continue;
         if (CAbiNeedsMarshalling(function)) return AbiGlueSource(&reachableBuiltin);
     }
     return {};
 }
 
-static const bool kChaliAotRegistered = (::chali_aot::setAbiExternProvider(&ChaliAotAbiExterns),
-                                         ::chali_aot::setAbiGlueProvider(&ChaliAotAbiGlue),
-                                         ::chali_aot::setAbiExportProvider(&ChaliAotAbiExports),
-                                         ::chali_aot::setAbiExportHeaderProvider(&ChaliAotAbiExportHeader), true);
+static const bool kChaliBuildRegistered = (::chali_build::setAbiExternProvider(&ChaliBuildAbiExterns),
+                                         ::chali_build::setAbiGlueProvider(&ChaliBuildAbiGlue),
+                                         ::chali_build::setAbiExportProvider(&ChaliBuildAbiExports),
+                                         ::chali_build::setAbiExportHeaderProvider(&ChaliBuildAbiExportHeader), true);
 
 /**
  * @brief 写出编译产生的四元式、数据与二进制产物。
@@ -315,7 +315,7 @@ static const bool kChaliAotRegistered = (::chali_aot::setAbiExternProvider(&Chal
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  */
 bool WriteArtifacts(const Memory::String &prefix, const ast::CodegenResult &result,
-                    Memory::String *binaryPath, Memory::String *layoutPath, stackvm::QuadFile *parsed)
+                    Memory::String *binaryPath, Memory::String *layoutPath, runtime::QuadFile *parsed)
 {
     *binaryPath = prefix + ".data.bin";
     *layoutPath = prefix + ".layout";
@@ -331,17 +331,17 @@ bool WriteArtifacts(const Memory::String &prefix, const ast::CodegenResult &resu
     }
     else if (!WriteFile(prefix + ".abi.cpp", abiGlue))
         return false;
-    *parsed = stackvm::parseQuads(result.quads, prefix + ".quad");
-    const auto quadBytes = stackvm::encodeQuadBinary(*parsed);
-    Memory::Vector<stackvm::LayoutRow> rows;
-    if (quadBytes.empty() || !stackvm::decodeDataLayout(layout, rows)) return false;
+    *parsed = runtime::parseQuads(result.quads, prefix + ".quad");
+    const auto quadBytes = runtime::encodeQuadBinary(*parsed);
+    Memory::Vector<runtime::LayoutRow> rows;
+    if (quadBytes.empty() || !runtime::decodeDataLayout(layout, rows)) return false;
     // 文本转储与 C 数组都是重复数据；清理旧版本留下的同前缀产物。
     for (const char *suffix : { ".data", ".data.h" })
     {
         std::error_code removed;
         std::filesystem::remove(std::filesystem::path(prefix + suffix), removed);
     }
-    return WriteFile(prefix + ".quad", quadBytes) && WriteFile(*binaryPath, result.exportDataBinary()) && WriteFile(*layoutPath, stackvm::encodeDataLayout(rows));
+    return WriteFile(prefix + ".quad", quadBytes) && WriteFile(*binaryPath, result.exportDataBinary()) && WriteFile(*layoutPath, runtime::encodeDataLayout(rows));
 }
 
 /**

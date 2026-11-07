@@ -17,7 +17,7 @@
 #pragma once
 #include "program_model.hpp"
 
-namespace stackvm
+namespace runtime
 {
 namespace allocation
 {
@@ -82,4 +82,4 @@ Stats lastStats();
  */
 void resetStats();
 }  // namespace allocation
-}  // namespace stackvm
+}  // namespace runtime

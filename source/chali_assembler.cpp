@@ -21,14 +21,14 @@ namespace chali_assembler
  * @param diagnostics 接收原始汇编诊断。
  * @return 成功为零，失败为一。
  */
-int assemble(const Memory::String &input, const Memory::String &output, const chali_aot::Options &options, Memory::Vector<Memory::String> *diagnostics)
+int assemble(const Memory::String &input, const Memory::String &output, const chali_build::Options &options, Memory::Vector<Memory::String> *diagnostics)
 {
     namespace fs = std::filesystem;
     try
     {
-        chali_aot::TargetInfo target;
+        chali_build::TargetInfo target;
         Memory::String targetError;
-        if (!chali_aot::describeTarget(options.target, target, &targetError)) throw std::runtime_error(targetError.c_str());
+        if (!chali_build::describeTarget(options.target, target, &targetError)) throw std::runtime_error(targetError.c_str());
         const auto source = fs::absolute(fs::u8path(input.c_str())).lexically_normal();
         const auto product = fs::absolute(fs::u8path(output.c_str())).lexically_normal();
         if (source.extension() != ".s") throw std::runtime_error("汇编入口只接受 .s；.S 预处理及 NASM／MASM 不在当前方言范围内");
@@ -38,11 +38,11 @@ int assemble(const Memory::String &input, const Memory::String &output, const ch
         const auto object = work.path / "assembly.o";
         std::string diagnostic;
         int code = 1;
-        if (chali_aot::builtin::available() && options.compiler.empty())
+        if (chali_build::builtin::available() && options.compiler.empty())
             code = builtin::assemble(source.u8string(), object.u8string(), options, diagnostic);
         else
         {
-            const auto compiler = chali_aot::llvmCompilerPath(options.compiler);
+            const auto compiler = chali_build::llvmCompilerPath(options.compiler);
             if (!options.cpu.empty())
             {
                 std::string listing;
@@ -86,14 +86,20 @@ int assemble(const Memory::String &input, const Memory::String &output, const ch
  */
 int runCli(int argc, char **argv)
 {
-    chali_aot::Options options;
+    chali_build::Options options;
     Memory::String input, output;
     for (int i = 2; i < argc; ++i)
     {
         const std::string argument = argv[i];
+        if (chali_build::builtin::available() && (argument == "--llvm" || argument.compare(0, 7, "--llvm=") == 0))
+        {
+            std::fputs("chali: 静态 LLVM 编译器不支持 --llvm；请使用 llvm-external 变体指定外部工具链。\n", stderr);
+            return 2;
+        }
         if (argument == "--help" || argument == "-h")
         {
-            std::puts("chali asm FILE.s [--out FILE.o] [--target TARGET] [--cpu CPU] [-I DIR] [--include-path DIR] [--llvm CLANG] [--debug]");
+            std::printf("chali asm FILE.s [--out FILE.o] [--target TARGET] [--cpu CPU] [-I DIR] [--include-path DIR] [--debug]%s\n",
+                        chali_build::builtin::available() ? "" : " [--llvm CLANG]");
             return 0;
         }
         if (argument == "--debug")
@@ -137,9 +143,9 @@ int runCli(int argc, char **argv)
         std::fputs("chali asm: 缺少 .s 输入；使用 --help 查看用法\n", stderr);
         return 2;
     }
-    chali_aot::TargetInfo target;
+    chali_build::TargetInfo target;
     Memory::String error;
-    if (!chali_aot::describeTarget(options.target, target, &error))
+    if (!chali_build::describeTarget(options.target, target, &error))
     {
         std::fprintf(stderr, "chali asm: %s\n", error.c_str());
         return 2;

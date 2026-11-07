@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 // ---------------------------------------------------------------------------
@@ -586,4 +586,4 @@ bool assemble(const QuadFile &source, Program &out)
     out.preparedInternal = true;
     return out.ok();
 }
-}  // namespace stackvm
+}  // namespace runtime

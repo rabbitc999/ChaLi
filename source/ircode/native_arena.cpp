@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -40,4 +40,4 @@ Slot memoryPeakBytes(NativeContext &ctx, const Memory::Vector<Slot> &)
 }
 
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

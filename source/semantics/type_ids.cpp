@@ -83,7 +83,7 @@ struct MFunctionDecl
     Memory::String exportSymbol; ///< 对外原生符号，与内部语言标签分离。
     Memory::String abiConvention; ///< 外部边界采用的已验证调用约定。
     bool exported = false;    ///< 是否由源码 export 公开给原生调用方。
-    bool external = false;    /* 只有签名；实现从 stackvm::NativeRegistry 取得 */
+    bool external = false;    /* 只有签名；实现从 runtime::NativeRegistry 取得 */
     bool moduleLocal = false; /* `inline`：只允许声明模块内部调用，不导出。 */
     bool superseded = false;  /* 同名同签名又被定义了一次：这一条不降级（后面的覆盖前面的） */
     Memory::String abiLibrary;
@@ -241,7 +241,7 @@ struct MHostInterfaceImpl
     bool methodQualified = false;
 };
 Memory::Vector<MHostInterfaceImpl> g_hostInterfaceImpls;
-const stackvm::NativeRegistry *g_nativeRegistry = nullptr;
+const runtime::NativeRegistry *g_nativeRegistry = nullptr;
 /* 这次编译完成后会**立刻在本进程执行**（`--emit` / `--svmb` 只产出文件时为 false）。
  * 立刻跑就必须现在绑好宿主符号；导出的程序等到目标进程自己 setNativeRegistry 再绑。 */
 bool g_executeNow = false;

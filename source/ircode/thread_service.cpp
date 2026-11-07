@@ -5,7 +5,7 @@
 #include "concurrent_call_state.hpp"
 #include "runtime_i18n.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 /**
@@ -361,4 +361,4 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
 
     return std::nullopt;
 }
-}  // namespace stackvm
+}  // namespace runtime

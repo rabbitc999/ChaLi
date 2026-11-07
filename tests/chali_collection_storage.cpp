@@ -22,9 +22,9 @@ static collection_glue::ObjectKey keyFor(std::int64_t value)
  * @param value 数值。
  * @return 快照。
  */
-static stackvm::NativeStoredValue valueFor(std::int64_t value)
+static runtime::NativeStoredValue valueFor(std::int64_t value)
 {
-    stackvm::NativeStoredValue result;
+    runtime::NativeStoredValue result;
     result.integer = value;
     return result;
 }

@@ -4,7 +4,7 @@
  */
 #include "reflection.hpp"
 
-namespace stackvm::reflection
+namespace runtime::reflection
 {
 /**
  * @brief 规范身份的稳定 FNV-1a 编号；身份需包含类别、模块和具体签名。
@@ -531,16 +531,16 @@ std::optional<Memory::String> cppDefinition(const Table &table)
     Memory::Vector<std::uint8_t> bytes;
     if (!encode(table, bytes)) return std::nullopt;
     Memory::String code = "\n/** @brief 在调用方分配域构造本产物的元数据。 @return 拥有型表，查询返回只读引用。 */\n"
-                          "stackvm::reflection::Table chali_reflection_metadata() {\n"
+                          "runtime::reflection::Table chali_reflection_metadata() {\n"
                           "        static const std::uint8_t bytes[] = {\n";
     for (std::size_t i = 0; i < bytes.size(); ++i)
     {
         code += Memory::toString(static_cast<unsigned>(bytes[i])) + ",";
         if (i % 24 == 23) code += "\n";
     }
-    code += "\n        };\n        stackvm::reflection::Table result;\n"
-            "        if (!stackvm::reflection::decode(bytes, sizeof(bytes), result)) std::abort();\n"
+    code += "\n        };\n        runtime::reflection::Table result;\n"
+            "        if (!runtime::reflection::decode(bytes, sizeof(bytes), result)) std::abort();\n"
             "        return result;\n}\n";
     return code;
 }
-}  // namespace stackvm::reflection
+}  // namespace runtime::reflection

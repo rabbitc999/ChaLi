@@ -6,8 +6,8 @@
 #include <cassert>
 #include <cstdio>
 
-using namespace stackvm;
-using namespace stackvm::runtimeDetail;
+using namespace runtime;
+using namespace runtime::runtimeDetail;
 
 /**
  * @brief 保留优化前的读取协议，作为独立差分参考。

@@ -65,7 +65,7 @@ extern "C" ChaliAbiRegistry *chali_abi_registry_create(ChaliAbiError *error)
 try
 {
     Memory::AllocationScope allocation(nullptr);
-    auto owned = Memory::makeCHeapUnique<stackvm::NativeRegistry>();
+    auto owned = Memory::makeCHeapUnique<runtime::NativeRegistry>();
     auto *registry = Memory::makeCHeapUnique<ChaliAbiRegistry>(ChaliAbiRegistry{ std::move(owned), nullptr }).release();
     registry->backend = registry->owned.get();
     chali_abi_status(error, ChaliAbiOk, nullptr);
@@ -184,7 +184,7 @@ try
             else
             {
                 /* 迁移期复用原表的私有运行时回调；旧模板绑定删除后不产生此分支的标准库入口。 */
-                using namespace stackvm;
+                using namespace runtime;
                 Memory::Vector<NativeValue> values;
                 values.reserve(static_cast<std::size_t>(frame->count));
                 for (std::int64_t at = 0; at < frame->count; ++at)

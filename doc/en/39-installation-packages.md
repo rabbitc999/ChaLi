@@ -111,4 +111,4 @@ See [Microsoft HTML Help](https://learn.microsoft.com/en-us/previous-versions/wi
 
 Intermediate CHM HTML and project files stay under the repository's `tmp/`. Use `--prepare-only` on any platform to generate the project; CHM compilation requires Windows. Use `--repo PATH` when running separately downloaded scripts. Both formats share the same sources and include the book and examples by default. The HTML script also provides `--api-only`.
 
-See [current capabilities](17-capabilities.md) and [LLVM release build](38-aot.md) for supported platform behavior and compiler-side LLVM variants.
+See [current capabilities](17-capabilities.md) and [LLVM release build](38-build.md) for supported platform behavior and compiler-side LLVM variants.

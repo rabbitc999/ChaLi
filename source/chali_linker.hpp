@@ -9,7 +9,7 @@ namespace chali_linker
 /** @brief 一次独立原生链接，符号名使用对象文件中的原始身份。 */
 struct Request
 {
-    chali_aot::Options options;                         ///< 目标、驱动、调试、共享库、导出及目标运行时。
+    chali_build::Options options;                         ///< 目标、驱动、调试、共享库、导出及目标运行时。
     Memory::Vector<Memory::String> inputs;              ///< 对象、归档及适用的动态库文件。
     Memory::Vector<Memory::String> libraryDirectories;  ///< 库搜索目录。
     Memory::Vector<Memory::String> libraryNames;        ///< 交给链接器的 -l 名称。
@@ -32,7 +32,7 @@ int link(const Request &request, const Memory::String &output, Memory::Vector<Me
  * @param diagnostics 接收拒绝、归档和发布诊断。
  * @return 成功为零，失败为一。
  */
-int archive(const Memory::Vector<Memory::String> &objects, const Memory::String &output, const chali_aot::Options &options, Memory::Vector<Memory::String> *diagnostics);
+int archive(const Memory::Vector<Memory::String> &objects, const Memory::String &output, const chali_build::Options &options, Memory::Vector<Memory::String> *diagnostics);
 /**
  * @brief 派发 link／ar 命令，不经过语言解析和执行。
  * @param argc 归一化参数数量。

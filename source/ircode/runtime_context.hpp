@@ -6,7 +6,7 @@
 #include "runtime_slot.hpp"
 #include "execution_plan.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 调用帧：一层调用的局部变量存储 + 返回信息。
@@ -89,4 +89,4 @@ struct NativeContext
  * @brief 扫数据区字面量时最多看多少字节（运行时堆字符串直接读取长度）。
  */
 constexpr std::size_t kStringScanLimit = 1u << 20;
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

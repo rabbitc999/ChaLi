@@ -52,7 +52,7 @@ function runBuild(compiler, args, cwd, append, language = 'zh') {
 }
 
 /**
- * 注册格式选择、LLVM AOT 构建命令。
+ * 注册格式选择、LLVM 构建命令。
  * @param {object} vscode 编辑器 API。
  * @param {object} context 扩展上下文。
  * @param {object} deps 编译器配置提供方。

@@ -101,7 +101,7 @@ ChaLi 函数值的捕获环境和错误通道。C API 模块调用运行时函�
 - `--memory-size` 决定运行时堆容量；子进程边界与线程见[运行边界](17-capabilities.md)。
 - 原生产物与宿主共享进程权限：`#abi` 调进来的 C 代码与宿主同权限运行，边界安全由接口设计负责。
 
-参见[工具链](09-toolchain.md)、[AOT 编译](38-aot.md)与[同步回调示例](../example/native-callbacks/README.md)。
+参见[工具链](09-toolchain.md)、[LLVM 构建](38-build.md)与[同步回调示例](../example/native-callbacks/README.md)。
 
 `chali_abi_record_probe` 借用类型匹配的存活记录；零句柄、未知类型、失效句柄或类型不匹配返回空，不覆盖已有错误。它用于可失败的有效性查询，仍要求有效调用帧，并沿用记录借用期。需要此服务时声明 `CHALI_ABI_CAP_RECORD_PROBE`。严格借用仍用 `chali_abi_record_borrow`，后者对无效记录报告错误。
 

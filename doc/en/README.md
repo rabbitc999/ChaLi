@@ -6,7 +6,7 @@
 
 See [current capabilities and limits](17-capabilities.md) for implemented behavior and build defaults. Tutorials develop language usage, while reference pages provide interface details. Verification reports identify programs, configurations and platforms actually exercised.
 
-ChaLi uses LLVM AOT to generate native code. Prepare target runtimes, C ABI libraries, link assets and runtime resources for the actual platform; consult the module and AOT references for their conditions.
+ChaLi uses LLVM builds to generate native code. Prepare target runtimes, C ABI libraries, link assets and runtime resources for the actual platform; consult the module and LLVM build references for their conditions.
 
 Read the current language/toolchain version from [`VERSION`](../../VERSION).
 
@@ -111,7 +111,7 @@ The [30-chapter English book](../book/en/README.md) contains technical chapters 
 
 - [Name and related capabilities](37-name-freeze.md)
 
-- [AOT compilation](38-aot.md)
+- [LLVM build compilation](38-build.md)
 - [AOT lowering switches and counters](40-backend-ownership.md)
 - [Raw storage and C ABI directives](41-unsafe-abi.md)
 

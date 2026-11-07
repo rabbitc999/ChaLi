@@ -86,16 +86,16 @@ J projectInfo(const J &params)
     chali_package::Project project;
     Memory::String error;
     bool valid = chali_package::discover(Memory::String(file.u8string().c_str()), project, error);
-    chali_aot::TargetInfo target;
-    if (valid) valid = chali_aot::describeTarget(project.aotTarget, target, &error);
+    chali_build::TargetInfo target;
+    if (valid) valid = chali_build::describeTarget(project.aotTarget, target, &error);
     const auto manifest = project.file.empty() ? file.parent_path() / "chali.toml" : fs::u8path(projectText(project.file));
     A targets;
     for (const auto name : { "windows-x64", "linux-x64", "linux-arm64" })
     {
-        chali_aot::TargetInfo supported;
-        if (chali_aot::describeTarget(name, supported)) targets.push_back(object({ { "label", name }, { "target", projectText(supported.triple) } }));
+        chali_build::TargetInfo supported;
+        if (chali_build::describeTarget(name, supported)) targets.push_back(object({ { "label", name }, { "target", projectText(supported.triple) } }));
     }
-    return object({ { "valid", valid }, { "error", projectText(error) }, { "manifestUri", uri(manifest) }, { "exists", !project.file.empty() }, { "contents", projectText(project.contents) }, { "main", projectText(project.main) }, { "name", projectText(project.name) }, { "target", projectText(target.triple) }, { "native", target.native }, { "windows", target.windows }, { "hostTarget", projectText(chali_aot::hostTarget()) }, { "targets", targets }, { "output", project.aotOutput.empty() ? std::string("executable") : projectText(project.aotOutput) }, { "allocator", project.aotAllocator.empty() ? std::string("malloc") : projectText(project.aotAllocator) }, { "sysroot", projectText(project.aotSysroot) }, { "runtimeDirectory", projectText(project.aotRuntimeDirectory) }, { "compilerVersion", chali_package::compilerVersion }, { "llvm", chali_aot::builtin::available() ? "static" : "external" } });
+    return object({ { "valid", valid }, { "error", projectText(error) }, { "manifestUri", uri(manifest) }, { "exists", !project.file.empty() }, { "contents", projectText(project.contents) }, { "main", projectText(project.main) }, { "name", projectText(project.name) }, { "target", projectText(target.triple) }, { "native", target.native }, { "windows", target.windows }, { "hostTarget", projectText(chali_build::hostTarget()) }, { "targets", targets }, { "output", project.aotOutput.empty() ? std::string("executable") : projectText(project.aotOutput) }, { "allocator", project.aotAllocator.empty() ? std::string("malloc") : projectText(project.aotAllocator) }, { "sysroot", projectText(project.aotSysroot) }, { "runtimeDirectory", projectText(project.aotRuntimeDirectory) }, { "compilerVersion", chali_package::compilerVersion }, { "llvm", chali_build::builtin::available() ? "static" : "external" } });
 }
 /**
  * @brief 使用保留来源的 TOML 库生成配置编辑，不直接写文件。
@@ -109,9 +109,9 @@ J projectEdit(const J &params)
     const auto key = str(params, "key"), value = str(params, "value"), text = str(params, "text");
     if (key == "target")
     {
-        chali_aot::TargetInfo target;
+        chali_build::TargetInfo target;
         Memory::String error;
-        if (!chali_aot::describeTarget(Memory::String(value.data(), value.size()), target, &error)) throw std::runtime_error(projectText(error));
+        if (!chali_build::describeTarget(Memory::String(value.data(), value.size()), target, &error)) throw std::runtime_error(projectText(error));
     }
     else if (key != "output" || (value != "executable" && value != "object" && value != "assembly" && value != "llvm"))
         throw std::runtime_error("仅支持编辑 build target 或 output");

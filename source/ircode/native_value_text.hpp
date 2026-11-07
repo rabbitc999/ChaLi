@@ -5,7 +5,7 @@
 #pragma once
 #include "runtime_objects.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 根据运行时文本布局将标量或聚合转换为字符串。
@@ -14,4 +14,4 @@ namespace stackvm::runtimeDetail
  * @return 新字符串在 运行时 内存中的地址。
  */
 Slot valueToString(NativeContext &ctx, const Memory::Vector<Slot> &args);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

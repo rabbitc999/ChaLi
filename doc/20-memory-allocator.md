@@ -8,7 +8,7 @@
 
 ## 地址复用样例揭示什么
 
-自定义 `stackvm::HeapAllocator` 必须准确实现 `capacityAt`：未分配或已释放地址返回 false，有效地址返回到所属块末尾的剩余容量。运行时复用这份分配元数据，先检查再调用底层读写，不额外维护位图。`contains` 只表示地址属于池，不能作为有效分配的依据。可以用位图实现分配器，但仍须识别块边界，不能把两个相邻分配拼成一次合法访问。
+自定义 `runtime::HeapAllocator` 必须准确实现 `capacityAt`：未分配或已释放地址返回 false，有效地址返回到所属块末尾的剩余容量。运行时复用这份分配元数据，先检查再调用底层读写，不额外维护位图。`contains` 只表示地址属于池，不能作为有效分配的依据。可以用位图实现分配器，但仍须识别块边界，不能把两个相邻分配拼成一次合法访问。
 
 [heap_address_reuse.chl](../example/samples/heap_address_reuse.chl) 先分配整数并赋 11，释放后再分配同样大小的整数并赋 22，从新引用读取，正式预期输出为 [22](../example/expected/heap_address_reuse.txt)。物理块可以复用，逻辑身份不会复活；释放前的旧别名不能再解引用。拒绝旧别名的样例见 [heap_stale_alias.chl](../example/samples-error/heap_stale_alias.chl)，正常引用与所有权写法见[核心概念](03-core-concepts.md)。
 

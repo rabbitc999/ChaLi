@@ -5,7 +5,7 @@
  * @file allocation_index.hpp
  * @brief 稳定物理槽的分配身份与活跃区间索引。
  */
-namespace stackvm
+namespace runtime
 {
 namespace execution_detail
 {
@@ -329,4 +329,4 @@ private:
     std::size_t base_ = 8, live_ = 0, peak_ = 0, generationLimit_ = std::numeric_limits<std::size_t>::max();
 };
 }  // namespace execution_detail
-}  // namespace stackvm
+}  // namespace runtime

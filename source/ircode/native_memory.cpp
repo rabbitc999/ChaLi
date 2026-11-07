@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -167,4 +167,4 @@ template Slot moveLifetime<2>(NativeContext &, const Memory::Vector<Slot> &);
 template Slot moveLifetime<3>(NativeContext &, const Memory::Vector<Slot> &);
 
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

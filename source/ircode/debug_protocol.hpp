@@ -5,7 +5,7 @@
 #pragma once
 #include "program_model.hpp"
 
-namespace stackvm
+namespace runtime
 {
 /**
  * @brief 指令钩子收到的只读执行快照。
@@ -112,4 +112,4 @@ struct RunResult
      */
     Memory::Vector<DebugFrame> sourceTrace;
 };
-}  // namespace stackvm
+}  // namespace runtime

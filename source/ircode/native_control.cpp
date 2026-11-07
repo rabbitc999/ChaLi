@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -54,4 +54,4 @@ Slot programPanic(NativeContext &ctx, const Memory::Vector<Slot> &args)
 }
 
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

@@ -6,7 +6,7 @@
 #include "runtime_objects.hpp"
 #include "value_transfer.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 按标量协议查询字符串长度、数据地址、容量或描述符标记。
@@ -85,4 +85,4 @@ Slot strPrint(NativeContext &ctx, const Memory::Vector<Slot> &args);
  */
 Slot putChar(NativeContext &ctx, const Memory::Vector<Slot> &args);
 
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

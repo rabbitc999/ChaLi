@@ -9,16 +9,16 @@
 #include <mutex>
 #include <vector>
 #endif
-namespace stackvm
+namespace runtime
 {
 /**
  * @brief 线程安全的协作停止标志，独立于用户回调与调试钩子。
  */
 struct ExecutionControl
 { std::atomic<bool> requested{ false }; };
-}  // namespace stackvm
+}  // namespace runtime
 #if STACKVM_WITH_THREADS
-namespace stackvm
+namespace runtime
 {
 /**
  * @brief 单个接收队列的定时源，仅由共享事件服务计算截止时间，不创建宿主线程。
@@ -80,6 +80,6 @@ std::int64_t createEventTimer(const std::shared_ptr<EventQueue> &queue, std::int
  * @param id 定时源句柄，重复删除安全。
  */
 void destroyEventTimer(const std::shared_ptr<EventQueue> &queue, std::int64_t id);
-}  // namespace stackvm
+}  // namespace runtime
 #endif
 #endif

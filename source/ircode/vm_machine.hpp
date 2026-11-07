@@ -7,7 +7,7 @@
 #include "data_area.hpp"
 #include <optional>
 
-namespace stackvm
+namespace runtime
 {
 namespace runtimeDetail
 {
@@ -353,4 +353,4 @@ private:
     SourceLocation currentLocation_;            ///< 最近一次回调 / 停机时刻的位置。
     Memory::Vector<DebugFrame> debugFrames_;    ///< 最近一次回调 / 停机时刻的调用栈快照。
 };
-}  // namespace stackvm
+}  // namespace runtime

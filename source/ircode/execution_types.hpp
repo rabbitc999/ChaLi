@@ -5,7 +5,7 @@
 #pragma once
 #include "vm_config.hpp"
 
-namespace stackvm
+namespace runtime
 {
 /**
  * @brief 跨线程操作状态，超时不表示目标任务已停止。
@@ -54,4 +54,4 @@ inline constexpr std::size_t kScalarStorageBytes = 8u;
 // ---------------------------------------------------------------------------
 //  四元式（与 library/transfer 的文本格式兼容）
 // ---------------------------------------------------------------------------
-}  // namespace stackvm
+}  // namespace runtime

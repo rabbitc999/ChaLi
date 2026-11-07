@@ -6,7 +6,7 @@
 #include "runtime_internal.hpp"
 #include "thread_runtime.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 并发服务仅在当前调用内使用的执行环境。
@@ -30,4 +30,4 @@ struct ConcurrentCallState
     Memory::Function<void(std::unique_lock<std::mutex> &, const Memory::Function<bool()> &, std::chrono::steady_clock::time_point)> wait;
 #endif
 };
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

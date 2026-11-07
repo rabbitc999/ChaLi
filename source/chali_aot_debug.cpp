@@ -11,7 +11,7 @@
 #include <functional>
 #include <tuple>
 
-namespace chali_aot
+namespace chali_build
 {
 namespace
 {
@@ -451,4 +451,4 @@ void NativeDebugInfo::finish(std::string &module, const std::string &prefix, con
         module.insert(module.find('}', units), ", !" + std::to_string(unit_));
     module += "declare void @llvm.dbg.declare(metadata, metadata, metadata)\n" + metadata_;
 }
-}  // namespace chali_aot
+}  // namespace chali_build

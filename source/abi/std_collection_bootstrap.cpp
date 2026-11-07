@@ -339,7 +339,7 @@ Slot hashedStorageOperation(State &state, int operation, const Arguments &argume
  * @param floating 浮点实参位图。
  * @return 带有正确浮点种类的原始结果。
  */
-ScalarResult mapStorageScalarOperation(stackvm::NativeCallContext &host, std::int64_t operation,
+ScalarResult mapStorageScalarOperation(runtime::NativeCallContext &host, std::int64_t operation,
                                 std::int64_t first, std::int64_t second, std::int64_t third,
                                 std::int64_t fourth, std::int64_t fifth, std::int64_t sixth,
                                 std::int64_t seventh, std::uint64_t floating)

@@ -6,7 +6,7 @@
 #include "runtime_objects.hpp"
 #include "value_transfer.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 根据原生调用参数查找运行时对象。
@@ -71,4 +71,4 @@ void nativeReleaseViewContents(NativeContext &ctx, const RuntimeObject::ElementV
  * @brief 将容器快照复制到引用单元；字符串与对象叶子由单元独占。
  */
 bool nativeWriteView(NativeContext &ctx, const RuntimeObject::ElementView &view, const ObjectValue &value);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

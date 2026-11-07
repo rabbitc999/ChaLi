@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -24,4 +24,4 @@ std::chrono::steady_clock::time_point threadDeadline(std::int64_t millis)
 }
 #endif
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

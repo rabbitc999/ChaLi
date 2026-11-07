@@ -27,7 +27,7 @@ void Entries::reserve(std::size_t capacity) { values_.reserve(capacity); }
  * @param keepOwnership 是否在键中保留拥有型句柄标记。
  * @return 用于 Equal 查找及哈希桶索引的键快照。
  */
-ObjectKey valueKey(const stackvm::NativeStoredValue &value, bool keepOwnership)
+ObjectKey valueKey(const runtime::NativeStoredValue &value, bool keepOwnership)
 {
     ObjectKey out;
     out.isStruct = value.isStruct;

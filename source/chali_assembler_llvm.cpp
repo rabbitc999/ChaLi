@@ -55,12 +55,12 @@ void captureDiagnostic(const llvm::SMDiagnostic &message, void *opaque)
  * @param diagnostic 接收原始来源诊断。
  * @return 成功为零；当前变体无内置 MC 或汇编失败时为一。
  */
-int assemble(const std::string &input, const std::string &output, const chali_aot::Options &options, std::string &diagnostic)
+int assemble(const std::string &input, const std::string &output, const chali_build::Options &options, std::string &diagnostic)
 {
 #if CHALI_STATIC_LLVM
-    chali_aot::TargetInfo selected;
+    chali_build::TargetInfo selected;
     Memory::String error;
-    if (!chali_aot::describeTarget(options.target, selected, &error))
+    if (!chali_build::describeTarget(options.target, selected, &error))
     {
         diagnostic = error.c_str();
         return 1;

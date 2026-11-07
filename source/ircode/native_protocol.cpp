@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 /**
@@ -357,4 +357,4 @@ const NativeRegistry::Entry *NativeRegistry::find(const Memory::String &name) co
     const auto found = entries_.find(alias == compactNames_.end() ? name : alias->second);
     return found == entries_.end() ? nullptr : &found->second;
 }
-}  // namespace stackvm
+}  // namespace runtime

@@ -6,7 +6,7 @@
 #include "runtime_context.hpp"
 #include <array>
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 对象句柄的起点（2^62）：编码堆地址与数据区地址均低于此边界。
@@ -250,4 +250,4 @@ struct ObjectStore
  * @return 属于对象句柄区间时返回真。
  */
 [[nodiscard]] bool isObjectHandle(std::int64_t handle);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

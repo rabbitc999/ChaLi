@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -310,4 +310,4 @@ Slot inputChar(NativeContext &ctx, const Memory::Vector<Slot> &)
  * 分开：`(free, …)` / `(drop, …)` 一眼就能分出"这是对象句柄还是内存地址"。
  */
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

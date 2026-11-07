@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -212,4 +212,4 @@ bool restoreTransfer(NativeContext &ctx, const TransferPacket &packet, Slot *out
     return okay;
 }
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

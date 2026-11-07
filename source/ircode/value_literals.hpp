@@ -6,7 +6,7 @@
 #include "runtime_objects.hpp"
 #include "value_transfer.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 去掉首尾空白。
@@ -126,4 +126,4 @@ double normalizeFloat(double value, int bits);
  * @return 基础操作符。
  */
 Memory::String splitType(const Memory::String &op, Memory::String &typeName);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

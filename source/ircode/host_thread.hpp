@@ -6,7 +6,7 @@
 #include "../abi/chali_thread.h"
 #include "vm_config.hpp"
 
-namespace stackvm
+namespace runtime
 {
 /**
  * @brief 持有一个可等待的 C 线程句柄，供隔离任务复用。

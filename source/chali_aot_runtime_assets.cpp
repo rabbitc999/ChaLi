@@ -15,7 +15,7 @@
 #include <sstream>
 #include <vector>
 
-namespace chali_aot
+namespace chali_build
 {
 /**
  * @brief 创建独立临时目录，避免并行构建互相覆盖。
@@ -176,4 +176,4 @@ bool RuntimeAssets::prepareAbi(const Memory::String &source, Memory::String *obj
     *object = target.u8string();
     return true;
 }
-}  // namespace chali_aot
+}  // namespace chali_build

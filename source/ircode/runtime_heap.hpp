@@ -8,7 +8,7 @@
 #include "abi/chali_debug_memory.h"
 #include <atomic>
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 运行时自己的堆：一块连续的字节区 + 空闲块表。
@@ -342,4 +342,4 @@ public:
     bool writeBytes(std::size_t, const char *, std::size_t) override;
 };
 #endif
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

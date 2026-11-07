@@ -36,10 +36,10 @@ struct CountedInvoker
      * @param result 接收本次状态。
      * @return 函数标记非零时为真。
      */
-    bool operator()(std::int64_t function, const Memory::Vector<stackvm::NativeValue> &arguments, stackvm::NativeValue &result)
+    bool operator()(std::int64_t function, const Memory::Vector<runtime::NativeValue> &arguments, runtime::NativeValue &result)
     {
         (void)arguments;
-        result = stackvm::NativeValue::fromInt(++value);
+        result = runtime::NativeValue::fromInt(++value);
         return function != 0;
     }
 };
@@ -53,19 +53,19 @@ int main()
     Memory::SystemRuntimeArena arena(1024 * 1024);
     Memory::AllocationScope allocation(&arena);
     int copies = 0;
-    stackvm::runtimeDetail::NativeContext context;
-    stackvm::runtimeDetail::NativeInvoker invoker{ CountedInvoker(&copies) };
+    runtime::runtimeDetail::NativeContext context;
+    runtime::runtimeDetail::NativeInvoker invoker{ CountedInvoker(&copies) };
     const int initialCopies = copies;
     const auto initialAllocations = arena.stats().totalBlocks;
-    stackvm::runtimeDetail::NativeCallContextImpl borrowed(context, &invoker);
+    runtime::runtimeDetail::NativeCallContextImpl borrowed(context, &invoker);
     assert(copies == initialCopies && arena.stats().totalBlocks == initialAllocations);
     collection_glue::State collection(borrowed);
     assert(arena.stats().totalBlocks == initialAllocations);
-    Memory::Vector<stackvm::NativeValue> arguments;
-    stackvm::NativeValue result;
+    Memory::Vector<runtime::NativeValue> arguments;
+    runtime::NativeValue result;
     assert(borrowed.invoke(1, arguments, result) && result.asInt() == 1);
     assert(borrowed.invoke(1, arguments, result) && result.asInt() == 2);
-    stackvm::runtimeDetail::NativeCallContextImpl owned(context, invoker);
+    runtime::runtimeDetail::NativeCallContextImpl owned(context, invoker);
     assert(copies == initialCopies + 1);
     assert(owned.invoke(1, arguments, result) && result.asInt() == 3);
     assert(invoker(1, arguments, result) && result.asInt() == 3);

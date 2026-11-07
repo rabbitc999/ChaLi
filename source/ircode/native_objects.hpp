@@ -6,7 +6,7 @@
 #include "runtime_objects.hpp"
 #include "value_transfer.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief `__std_obj_new() -> obj`：造一个空格子（类型号 0 = 还没 set 过）。
@@ -131,4 +131,4 @@ Slot objAddress(NativeContext &ctx, const Memory::Vector<Slot> &args);
  * @retval 封装为原生值的运行时结果。
  */
 Slot ifaceFail(NativeContext &ctx, const Memory::Vector<Slot> &args);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

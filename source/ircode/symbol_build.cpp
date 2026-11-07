@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 /**
@@ -119,4 +119,4 @@ Memory::String symbolJsonString(const Memory::String &value)
     return out + "\"";
 }
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

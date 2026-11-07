@@ -57,7 +57,7 @@ struct ObjectKey
  * @param keepOwnership 是否在键中保留拥有型句柄标记。
  * @return 用于 Equal 查找及哈希桶索引的键快照。
  */
-ObjectKey valueKey(const stackvm::NativeStoredValue &value, bool keepOwnership = false);
+ObjectKey valueKey(const runtime::NativeStoredValue &value, bool keepOwnership = false);
 
 /**
  * @brief 为内建键生成与数值等价关系兼容的哈希，碰撞仍需精确比较。
@@ -74,7 +74,7 @@ class Entries
 {
 public:
     using Key = ObjectKey;
-    using Value = stackvm::NativeStoredValue;
+    using Value = runtime::NativeStoredValue;
     using Pair = std::pair<Key, Value>;
     using iterator = Memory::CSequence<Pair>::iterator;
     using const_iterator = Memory::CSequence<Pair>::const_iterator;

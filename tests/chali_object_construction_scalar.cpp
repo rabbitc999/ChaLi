@@ -14,8 +14,8 @@
  */
 int main()
 {
-    using namespace stackvm;
-    using namespace stackvm::runtimeDetail;
+    using namespace runtime;
+    using namespace runtime::runtimeDetail;
     Memory::SystemRuntimeArena arena(4 * 1024 * 1024);
     Memory::AllocationScope allocation(&arena);
     {

@@ -8,7 +8,7 @@
 
 教程与参考页分别介绍语言用法和接口细节，中英文说明保持对应。可执行例程和验证报告记录实际运行的程序、配置与平台，未运行的组合不据此推断为已支持。
 
-ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接资产与运行期资源按实际平台准备；平台相关能力分别参照对应模块和 AOT 文档。
+ChaLi 通过 LLVM 构建生成原生代码。目标运行时、C ABI 库、链接资产与运行期资源按实际平台准备；平台相关能力分别参照对应模块和 LLVM 构建文档。
 
 当前语言与工具链版本见 [`VERSION`](../VERSION)，变更记录见 [`CHANGELOG.md`](../CHANGELOG.md)。
 
@@ -146,7 +146,7 @@ ChaLi 通过 LLVM AOT 生成原生代码。目标运行时、C ABI 库、链接�
 
 - [名称与相关能力](37-name-freeze.md)
 
-- [AOT 编译入口](38-aot.md)
+- [LLVM 构建入口](38-build.md)
 - [AOT 降低开关与计数](40-backend-ownership.md)
 - [原始存储与 C ABI 指令](41-unsafe-abi.md)
 

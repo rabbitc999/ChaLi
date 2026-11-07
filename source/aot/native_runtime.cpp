@@ -102,13 +102,13 @@ extern const char __start_chali_code[], __stop_chali_code[];
 #endif
 }
 
-thread_local stackvm::aot::NativeThreadState stackvm::aot::nativeThreadState{};
+thread_local runtime::build::NativeThreadState runtime::build::nativeThreadState{};
 
 namespace
 {
-using namespace stackvm;
-using namespace stackvm::runtimeDetail;
-using namespace stackvm::aot;
+using namespace runtime;
+using namespace runtime::runtimeDetail;
+using namespace runtime::build;
 
 /**
  * @brief 将共享原生服务的输出直接写入宿主标准输出。
@@ -245,7 +245,7 @@ struct Runtime
     }
 };
 
-Runtime *runtime = nullptr;
+Runtime *hostRuntime = nullptr;
 
 /**
  * @brief 确认模块生命周期已开始并取得当前服务状态。
@@ -253,8 +253,8 @@ Runtime *runtime = nullptr;
  */
 Runtime &current()
 {
-    if (!runtime) chali_panic("必须先初始化原生模块");
-    return *runtime;
+    if (!hostRuntime) chali_panic("必须先初始化原生模块");
+    return *hostRuntime;
 }
 
 /**
@@ -332,7 +332,7 @@ struct DebugMemoryState
      * @param depth 当前递归深度。
      * @return 所有内容均在观察预算内时为真。
      */
-    bool copyStored(const stackvm::NativeStoredValue &source, std::size_t index, std::size_t depth)
+    bool copyStored(const runtime::NativeStoredValue &source, std::size_t index, std::size_t depth)
     {
         if (depth > 32 || source.fields.size() > 32768 || source.text.size() > 2 * 1024 * 1024
             || !room(source.text.size() + source.fields.size() * sizeof(ChaliDebugValue))) return false;
@@ -764,13 +764,13 @@ void *chali_host_abi_symbol(const char *path, const char *name)
  */
 void chali_host_init()
 {
-    if (runtime) chali_panic("原生模块已经初始化");
+    if (hostRuntime) chali_panic("原生模块已经初始化");
     chali_reset_address_view();
     nativeThreadState.logicalSteps = 0;
     nativeThreadState.nativeCleanup = false;
     nativeThreadState.nativeResultFloat = 0;
     chali_reset_slots();
-    runtime = Memory::makeCHeapUnique<Runtime>().release();
+    hostRuntime = Memory::makeCHeapUnique<Runtime>().release();
 }
 
 /**
@@ -843,8 +843,8 @@ void chali_host_trace()
 void chali_host_finish()
 {
     chali_reset_address_view();
-    Memory::destroyCHeap(runtime);
-    runtime = nullptr;
+    Memory::destroyCHeap(hostRuntime);
+    hostRuntime = nullptr;
     chali_reset_address_view();
 }
 
@@ -1401,7 +1401,7 @@ unsigned char *chali_host_data_snapshot(std::size_t *size)
 {
     *size = 0;
     NativeContext *context = nativeThreadState.activeContext ? nativeThreadState.activeContext :
-                             runtime                         ? &runtime->context :
+                             hostRuntime ? &hostRuntime->context :
                                                                nullptr;
     if (!context || !context->data) return nullptr;
     *size = context->data->binary.size();

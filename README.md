@@ -6,7 +6,7 @@
 
 ChaLi 是一门静态类型语言，提供可观察的值语义、显式借用与移动，以及按作用域清理资源的机制。类型、所有权和运行期规则由语言定义；宿主平台、导出目标与外部库要求分别核对。
 
-ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，从已检查的 AST 直接生成 LLVM IR，再通过 LLVM AOT 生成原生程序。run 使用 checked 编译执行，build 默认 unchecked 导出。
+ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，从已检查的 AST 直接生成 LLVM IR，再通过 LLVM 构建生成原生程序。run 使用 checked 编译执行，build 默认 unchecked 导出。
 
 最新的 [ParseEngine 仓库](https://github.com/rabbitc999/ParseEngine) 支持以五种模式生成用 ChaLi（`--lang chali`）编写的解析器：**LL(1)、SLR(1)、LALR(1)、LR(1) 和 IELR(1)**，分别通过 `--mode ll1`、`slr`、`lalr`、`lr1` 或 `ielr` 选择。生成的 `parser.chl` 可以用 ChaLi 运行或构建。该仓库的编译器前端使用 C++17 输出目标并采用 IELR(1)，配置见 `gen.sh`。
 
@@ -39,7 +39,7 @@ ChaLi 的五个字母分别代表以下语言特性。语言名中 C 与 L 大�
 
 ![ChaLi 发布构建流程：已检查 AST、LLVM IR、内置或外置 LLVM、目标链接与交付](doc/images/chali-aot.png)
 
-生成的应用无需 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。当前支持范围和完整选项见 [LLVM AOT 编译](doc/38-aot.md)，逐步操作见书稿[第 27 章 发布构建](doc/book/27-AOT导出.md)。
+生成的应用无需 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。当前支持范围和完整选项见 [LLVM 构建](doc/38-build.md)，逐步操作见书稿[第 27 章 发布构建](doc/book/27-AOT导出.md)。
 
 ## 运行过程
 

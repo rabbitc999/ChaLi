@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace chali_aot
+namespace chali_build
 {
 /**
  * @brief 源变量的实际帧槽及值类别。
@@ -193,4 +193,4 @@ public:
      */
     void finish(std::string &module, const std::string &prefix = "chali_debug", const std::string &libraries = "[]", const std::string &unit = "");
 };
-}  // namespace chali_aot
+}  // namespace chali_build

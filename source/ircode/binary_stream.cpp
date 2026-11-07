@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -459,4 +459,4 @@ bool BinaryReader::count(std::uint32_t *out, const char *what)
     return true;
 }
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

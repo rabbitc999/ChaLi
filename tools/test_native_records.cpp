@@ -31,8 +31,8 @@ void destroyRecord(void *record)
     ++destroys;
     delete static_cast<int *>(record);
 }
-const stackvm::NativeRecordType copyable{ "copyable", cloneRecord, destroyRecord };
-const stackvm::NativeRecordType unique{ "unique", nullptr, destroyRecord };
+const runtime::NativeRecordType copyable{ "copyable", cloneRecord, destroyRecord };
+const runtime::NativeRecordType unique{ "unique", nullptr, destroyRecord };
 }  // namespace
 
 /**
@@ -41,33 +41,33 @@ const stackvm::NativeRecordType unique{ "unique", nullptr, destroyRecord };
  */
 int main()
 {
-    using stackvm::NativeValue;
-    stackvm::NativeRegistry registry;
-    assert(registry.add("create", 0, [](stackvm::NativeCallContext &context, const Memory::Vector<NativeValue> &) {
+    using runtime::NativeValue;
+    runtime::NativeRegistry registry;
+    assert(registry.add("create", 0, [](runtime::NativeCallContext &context, const Memory::Vector<NativeValue> &) {
         return NativeValue::fromInt(context.makeNativeRecord(copyable, new int(17)));
     }));
-    assert(registry.add("copy", 1, [](stackvm::NativeCallContext &context, const Memory::Vector<NativeValue> &args) {
+    assert(registry.add("copy", 1, [](runtime::NativeCallContext &context, const Memory::Vector<NativeValue> &args) {
         return NativeValue::fromInt(context.cloneNativeRecord(args[0].asInt()));
     }));
-    assert(registry.add("mutate", 1, [](stackvm::NativeCallContext &context, const Memory::Vector<NativeValue> &args) {
+    assert(registry.add("mutate", 1, [](runtime::NativeCallContext &context, const Memory::Vector<NativeValue> &args) {
         auto *value = static_cast<int *>(context.nativeRecord(args[0].asInt(), copyable));
         assert(value && !context.nativeRecord(args[0].asInt(), unique));
         return NativeValue::fromInt(++*value);
     }));
-    assert(registry.add("drop", 1, [](stackvm::NativeCallContext &context, const Memory::Vector<NativeValue> &args) {
+    assert(registry.add("drop", 1, [](runtime::NativeCallContext &context, const Memory::Vector<NativeValue> &args) {
         context.releaseNativeRecord(args[0].asInt());
         assert(!context.nativeRecord(args[0].asInt(), copyable));
         return NativeValue::fromInt(0);
     }));
-    assert(registry.add("unique", 0, [](stackvm::NativeCallContext &context, const Memory::Vector<NativeValue> &) {
+    assert(registry.add("unique", 0, [](runtime::NativeCallContext &context, const Memory::Vector<NativeValue> &) {
         return NativeValue::fromInt(context.makeNativeRecord(unique, new int(23)));
     }));
-    assert(registry.add("audit", 4, [](stackvm::NativeCallContext &, const Memory::Vector<NativeValue> &args) {
+    assert(registry.add("audit", 4, [](runtime::NativeCallContext &, const Memory::Vector<NativeValue> &args) {
         assert(copies == 1 && args[0].asInt() != args[1].asInt());
         assert(args[2].asInt() == 18 && args[3].asInt() == 18);
         return NativeValue::fromInt(0);
     }));
-    const auto quads = stackvm::parseQuads(
+    const auto quads = runtime::parseQuads(
         "(call, create, _, original)\n(param, original, _, value)\n(call, copy, _, copied)\n"
         "(param, copied, _, value)\n(call, mutate, _, changedCopy)\n"
         "(param, original, _, value)\n(call, mutate, _, changedOriginal)\n"
@@ -77,9 +77,9 @@ int main()
         "(param, copied, _, value)\n(call, drop, _, repeated)\n"
         "(call, unique, _, item)\n(param, item, _, value)\n(call, copy, _, forbidden)\n(halt, _, _, _)\n",
         "native-records.quad");
-    stackvm::Program program;
-    assert(stackvm::assemble(quads, program));
-    stackvm::Machine machine;
+    runtime::Program program;
+    assert(runtime::assemble(quads, program));
+    runtime::Machine machine;
     machine.setNativeRegistry(&registry);
     const auto result = machine.run(program);
     assert(!result.ok && !result.error.empty());

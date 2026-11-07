@@ -66,8 +66,8 @@ void operator delete(void *value, std::size_t size) noexcept { (void)size; std::
  */
 void operator delete[](void *value, std::size_t size) noexcept { (void)size; std::free(value); }
 
-using namespace stackvm;
-using namespace stackvm::runtimeDetail;
+using namespace runtime;
+using namespace runtime::runtimeDetail;
 
 /** @brief 用可变状态和复制计数检查调用器按引用复用。 */
 struct Counter

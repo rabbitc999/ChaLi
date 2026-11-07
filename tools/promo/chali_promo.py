@@ -82,7 +82,7 @@ class ChaLiPromo(Scene):
         arrow=Arrow([2.2,-.25,0],[2.65,-.25,0],buff=0,color=BLUE,stroke_width=3)
         self.play(ShowCreation(arrow),FadeIn(result,shift=RIGHT*.15),run_time=.8)
         command=pill('chali run hello.chl',6.2,size=27).move_to([-2.3,-2.65,0])
-        note=text('LLVM AOT · 原生运行',25,TEAL).move_to([3.45,-2.65,0])
+        note=text('LLVM 构建 · 原生运行',25,TEAL).move_to([3.45,-2.65,0])
         self.play(FadeIn(command),FadeIn(note),run_time=.6)
         self.finish(start,10)
 

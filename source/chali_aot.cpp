@@ -37,7 +37,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
-namespace chali_aot
+namespace chali_build
 {
 /**
  * @brief 区分需要动态加载的 C ABI 库与显式链接的静态资产。
@@ -299,7 +299,7 @@ struct Translator
     std::map<std::string, std::size_t> sourceFiles;               ///< 可达指令的源码文件，用于原生错误定位。
     std::set<std::string> addressedFunctions;                     ///< 数据映像中实际保存了地址的函数。
     std::set<std::string> callbackReachable;                      ///< 可从函数值回调到达的语言函数。
-    Memory::Vector<stackvm::LayoutRow> dataRows;                 ///< 解码后的数据区布局，供格式串直连取字面量字节。
+    Memory::Vector<runtime::LayoutRow> dataRows;                 ///< 解码后的数据区布局，供格式串直连取字面量字节。
     bool dataRowsReady = false;                                   ///< dataRows 是否已解码。
     std::string formatScratch;                                    ///< formatBytesOf 的单槽缓存。
     std::vector<std::string> printLiterals;                       ///< `__std_print` 直连发射的字面量段常量。
@@ -490,8 +490,8 @@ struct Translator
  */
 void loadLayout(Translator &state)
 {
-    Memory::Vector<stackvm::LayoutRow> rows;
-    if (!stackvm::decodeDataLayout(state.request.dataLayout, rows))
+    Memory::Vector<runtime::LayoutRow> rows;
+    if (!runtime::decodeDataLayout(state.request.dataLayout, rows))
     {
         state.fail("AOT：读不懂数据区布局");
         return;
@@ -505,13 +505,13 @@ void loadLayout(Translator &state)
  */
 void analyze(Translator &state)
 {
-    const stackvm::QuadFile *file = state.request.quads;
+    const runtime::QuadFile *file = state.request.quads;
     if (file == nullptr)
     {
         state.fail("AOT：没有四元式输入");
         return;
     }
-    const Memory::Vector<stackvm::Quad> &quads = file->quads;
+    const Memory::Vector<runtime::Quad> &quads = file->quads;
     for (const auto &function : state.request.externs)
     {
         state.externsByLabel.emplace(std::string(function.label.c_str()), &function);
@@ -897,8 +897,8 @@ bool isLive(const Translator &state, const Function &function)
  */
 void emitDataImage(const Translator &state, std::string &out)
 {
-    Memory::Vector<stackvm::LayoutRow> rows;
-    if (!stackvm::decodeDataLayout(state.request.dataLayout, rows)) return;
+    Memory::Vector<runtime::LayoutRow> rows;
+    if (!runtime::decodeDataLayout(state.request.dataLayout, rows)) return;
     const auto *flag = std::getenv("CHALI_AOT_KEEP_DATA");
     const bool keepAll = state.request.syntax != nullptr || (flag && *flag && std::strcmp(flag, "0") != 0);
     std::set<Memory::String> used;
@@ -911,7 +911,7 @@ void emitDataImage(const Translator &state, std::string &out)
             }
     const auto &original = state.request.dataBytes;
     Memory::String selected(original.size(), '\0');
-    Memory::Vector<stackvm::LayoutRow> retained;
+    Memory::Vector<runtime::LayoutRow> retained;
     for (const auto &row : rows)
     {
         // 缺少长度或范围不合法的外部布局无法证明可裁剪，整体保留原始请求。
@@ -964,7 +964,7 @@ void emitDataImage(const Translator &state, std::string &out)
         segments.clear();
         if (!original.empty()) segments.push_back({ 0u, 0u, original.size() });
     }
-    const auto layout = stackvm::encodeDataLayout(retained);
+    const auto layout = runtime::encodeDataLayout(retained);
     out += "@chali_data_layout_size = constant i64 " + std::to_string(layout.size()) + "\n";
     out += "; AOT data image: original=" + std::to_string(original.size()) + " stored=" + std::to_string(packed.size())
            + " rows=" + std::to_string(retained.size()) + "/" + std::to_string(rows.size()) + " segments=" + std::to_string(segments.size()) + "\n";
@@ -2722,15 +2722,15 @@ static Memory::String generateLinkedLLVM(Request &request, Memory::Vector<Memory
     out += "declare ptr @chali_host_abi_symbol(ptr, ptr)\n";
     Memory::Vector<Memory::String> requiredNames;
     for (const auto &entry : state.nativeNames) requiredNames.push_back(entry.first.c_str());
-    const auto modules = std_registry::aotModulesFor(requiredNames, diagnostics);
+    const auto modules = std_registry::buildModulesFor(requiredNames, diagnostics);
     bool needsThreadServices = request.options.debug || request.options.shared || !request.abiGlue.empty();
     for (const auto &name : requiredNames)
         for (const char *prefix : {"std::thread::", "std::concurrency::", "std::event::", "__std_thread_",
                                   "__std_channel_", "__std_mail_", "__std_message_", "__std_shared_"})
             if (name.rfind(prefix, 0) == 0u) needsThreadServices = true;
-    if (needsThreadServices) out += "declare ptr @chali_aot_thread_services()\n";
+    if (needsThreadServices) out += "declare ptr @chali_build_thread_services()\n";
     out += "define hidden ptr @chali_program_thread_services() {\nentry:\n";
-    out += needsThreadServices ? "  %services = call ptr @chali_aot_thread_services()\n  ret ptr %services\n}\n" : "  ret ptr null\n}\n";
+    out += needsThreadServices ? "  %services = call ptr @chali_build_thread_services()\n  ret ptr %services\n}\n" : "  ret ptr null\n}\n";
 
     out += "; AOT standard modules:";
     for (const auto &module : modules) out += " " + textOf(module);
@@ -3228,4 +3228,4 @@ int executeNative(const Options &options, const Memory::Vector<Memory::String> &
 #endif
     return result;
 }
-}  // namespace chali_aot
+}  // namespace chali_build

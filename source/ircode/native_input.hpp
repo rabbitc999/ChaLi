@@ -6,7 +6,7 @@
 #include "runtime_objects.hpp"
 #include "value_transfer.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief `CHALI_NO_STDIN_INPUT=1` 时不做标准输入兜底。
@@ -135,4 +135,4 @@ Slot inputBool(NativeContext &ctx, const Memory::Vector<Slot> &);
  * @retval 封装为原生值的运行时结果。
  */
 Slot inputChar(NativeContext &ctx, const Memory::Vector<Slot> &);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

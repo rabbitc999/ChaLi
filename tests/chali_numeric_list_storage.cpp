@@ -14,11 +14,11 @@
  */
 int main()
 {
-    using namespace stackvm::runtimeDetail;
+    using namespace runtime::runtimeDetail;
     Memory::SystemRuntimeArena arena(16 * 1024 * 1024);
     Memory::AllocationScope allocation(&arena);
     {
-        stackvm::NativeServices services;
+        runtime::NativeServices services;
         ObjectStore objects;
         services.emplace("native.rev.v1", &objects.nativeRecordRevision);
         NativeContext context;
@@ -112,5 +112,5 @@ int main()
     }
     assert(arena.stats().liveBlocks == 0);
     std::printf("numeric List storage: scalar slot=%zu, generic slot=%zu; values, fallback, capacity and drop OK\n",
-                sizeof(collection_glue::ScalarResult), sizeof(stackvm::NativeStoredValue));
+                sizeof(collection_glue::ScalarResult), sizeof(runtime::NativeStoredValue));
 }

@@ -6,7 +6,7 @@
 #include "runtime_objects.hpp"
 #include "value_transfer.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 造一个对象并返回句柄。
@@ -76,4 +76,4 @@ Slot heapDropLive(NativeContext &ctx, const Memory::Vector<Slot> &args);
  */
 template <int Operation>
 Slot moveLifetime(NativeContext &ctx, const Memory::Vector<Slot> &args);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

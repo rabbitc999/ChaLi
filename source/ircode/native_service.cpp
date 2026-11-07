@@ -4,7 +4,7 @@
  */
 #include "concurrent_call_state.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 /**
@@ -148,4 +148,4 @@ void Machine::finishNativeServices(NativeContext &context)
     (void)context;
 #endif
 }
-}  // namespace stackvm
+}  // namespace runtime

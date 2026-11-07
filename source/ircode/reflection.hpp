@@ -12,7 +12,7 @@
 #include <string_view>
 #include <type_traits>
 
-namespace stackvm::reflection
+namespace runtime::reflection
 {
 /**
  * @brief 元数据格式版本；与指令容器版本独立演进。
@@ -342,5 +342,5 @@ bool fromHex(std::string_view text, Table &output);
  * @return C++ 定义；非法表返回空。
  */
 std::optional<Memory::String> cppDefinition(const Table &table);
-}  // namespace stackvm::reflection
+}  // namespace runtime::reflection
 #endif

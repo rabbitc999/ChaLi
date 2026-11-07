@@ -5,7 +5,7 @@
 #pragma once
 #include "stackvm.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 constexpr std::uint8_t kProgramMagic[] = { 'P', 'E', 'S', 'V', 'M', 'B', '\r', '\n' };
 /**
@@ -262,4 +262,4 @@ Memory::String symbolJsonString(const Memory::String &value);
  */
 bool validateSymbolProgram(const Memory::Vector<std::uint8_t> &bytes, Program &program,
                            Memory::Vector<Memory::String> *diagnostics);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

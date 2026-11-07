@@ -326,11 +326,11 @@ try
     if (argc == 2 && std::strcmp(argv[1], "--build-info") == 0)
     {
         std::printf("{\"version\":\"%s\",\"llvm\":\"%s\",\"execution\":\"aot\"}\n",
-                    chali_package::compilerVersion, chali_aot::builtin::available() ? "static" : "external");
+                    chali_package::compilerVersion, chali_build::builtin::available() ? "static" : "external");
         return 0;
     }
     if (argc > 1 && std::strcmp(argv[1], "new") == 0) return chali_project::runCli(argc, argv);
-    stackvm::NativeRegistry nativeRegistry;
+    runtime::NativeRegistry nativeRegistry;
     ChaliAbiRegistry glue{{}, &nativeRegistry};
     InstallDemoGlue(&glue);
     M_SetNativeRegistry(&nativeRegistry);
@@ -357,7 +357,7 @@ try
     bool reflectionExplicit = false; /* 用户是否显式给了 --reflection / --no-reflection。 */
 
     bool aot = false;
-    chali_aot::Options aotOptions;
+    chali_build::Options aotOptions;
     bool raw = false;            /* --raw：不跑前处理 */
     bool depsOnly = false;       /* --deps：只列出依赖文件 */
     bool threadsEnabled = true;  /* --no-threads：关闭隔离的宿主线程 */
@@ -412,6 +412,11 @@ try
     for (int index = firstArgument; index < argc; ++index)
     {
         const Memory::String argument = argv[index];
+        if (chali_build::builtin::available() && (argument == "--llvm" || argument.compare(0, 7, "--llvm=") == 0))
+        {
+            std::fputs("chali: 静态 LLVM 编译器不支持 --llvm；请使用 llvm-external 变体指定外部工具链。\n", stderr);
+            return 2;
+        }
         if (argument == "-h" || argument == "--help")
         {
             PrintUsage(stdout);
@@ -874,6 +879,11 @@ try
     if (aotOptions.runtimeDirectory.empty()) aotOptions.runtimeDirectory = project.aotRuntimeDirectory;
     if (aotOptions.allocator.empty()) aotOptions.allocator = project.aotAllocator;
     if (aotOptions.compiler.empty()) aotOptions.compiler = project.aotCompiler;
+    if ((aot || run) && chali_build::builtin::available() && !aotOptions.compiler.empty())
+    {
+        std::fputs("chali: 静态 LLVM 编译器不支持 [build].llvm；请使用 llvm-external 变体指定外部工具链。\n", stderr);
+        return 2;
+    }
     // 清单里的链接输入在命令行未显式给出同类项时生效；命令行优先。
     if (aotOptions.assemblySources.empty()) aotOptions.assemblySources = project.aotAssemblySources;
     if (aotOptions.assemblyIncludes.empty()) aotOptions.assemblyIncludes = project.aotAssemblyIncludes;
@@ -903,9 +913,9 @@ try
         aot = true;
         run = 0;
     }
-    chali_aot::TargetInfo selectedTarget;
+    chali_build::TargetInfo selectedTarget;
     Memory::String targetError;
-    if ((aot || run) && !chali_aot::describeTarget(aotOptions.target, selectedTarget, &targetError))
+    if ((aot || run) && !chali_build::describeTarget(aotOptions.target, selectedTarget, &targetError))
     {
         std::fprintf(stderr, "chali: %s\n", targetError.c_str());
         return 2;
@@ -1364,7 +1374,7 @@ try
     }
     if (code == 0)
     {
-        auto candidates = warningOptions.level("CHL2201") == "allow" ? Memory::Vector<chali_diagnostics::Diagnostic>() : chali_warnings::collect(M_AotSyntax());
+        auto candidates = warningOptions.level("CHL2201") == "allow" ? Memory::Vector<chali_diagnostics::Diagnostic>() : chali_warnings::collect(M_BuildSyntax());
         warnings.insert(warnings.end(), candidates.begin(), candidates.end());
         const std::regex typeName("[A-Z][a-z0-9]*([A-Z][a-z0-9]+)*"), methodName("[a-z][A-Za-z0-9]*");
         const std::regex moduleName("[a-z][a-z0-9]*(_[a-z0-9]+)*(::[a-z][a-z0-9]*(_[a-z0-9]+)*)*");
@@ -1451,10 +1461,10 @@ try
      * 它们都只在编译期累加，和运行期内存统计一起挂在 `--stats` 下。 */
     if (runtimeStats)
     {
-        const stackvm::execution_detail::SelectionStats selectionStats = stackvm::selection::lastStats();
+        const runtime::execution_detail::SelectionStats selectionStats = runtime::selection::lastStats();
         if (selectionStats.total != 0u)
-            std::fprintf(stderr, "%s\n", stackvm::selection::describe(selectionStats).c_str());
-        const stackvm::allocation::Stats allocationStats = stackvm::allocation::lastStats();
+            std::fprintf(stderr, "%s\n", runtime::selection::describe(selectionStats).c_str());
+        const runtime::allocation::Stats allocationStats = runtime::allocation::lastStats();
         if (allocationStats.functions != 0u)
             std::fprintf(stderr, "帧槽分配：%zu 个函数，符号 %zu 个 → 槽 %zu 个（省掉 %zu 个）\n",
                          allocationStats.functions, allocationStats.symbols, allocationStats.slots,
@@ -1548,12 +1558,12 @@ try
     if (aot && !checkOnly)
     {
         Memory::Vector<Memory::String> diagnostics;
-        chali_aot::Request request;
-        request.syntax = M_AotSyntax();
-        request.externs = chali_aot::collectAbiExterns();
-        request.abiGlue = chali_aot::collectAbiGlue();
-        request.abiExports = chali_aot::collectAbiExports();
-        request.abiExportHeader = chali_aot::collectAbiExportHeader();
+        chali_build::Request request;
+        request.syntax = M_BuildSyntax();
+        request.externs = chali_build::collectAbiExterns();
+        request.abiGlue = chali_build::collectAbiGlue();
+        request.abiExports = chali_build::collectAbiExports();
+        request.abiExportHeader = chali_build::collectAbiExportHeader();
         for (auto &name : aotOptions.exports)
         {
             bool exact = false, implicit = false;
@@ -1564,7 +1574,7 @@ try
             }
             if (!exact && implicit) name = "program::" + name;
         }
-        for (const auto &label : M_AotExports())
+        for (const auto &label : M_BuildExports())
             if (std::find(aotOptions.exports.begin(), aotOptions.exports.end(), label) == aotOptions.exports.end())
                 aotOptions.exports.push_back(label);
         /* 缺省导出物放在源文件同级（Windows 带 .exe，其他平台无后缀）；中间产物仍在 .chali/ 下。 */
@@ -1583,10 +1593,10 @@ try
         aotOptions.stepLimit = stepLimit;
         aotOptions.threadsEnabled = threadsEnabled;
         for (const auto &external : request.externs)
-            if (request.abiGlue.empty() && !external.library.empty() && !chali_aot::isDirectLinkLibrary(external.library) && !chali_aot::isBuiltinNativeLibrary(external.library) && !chali_aot::usesDynamicAbiLibrary(external) && std::find(aotOptions.linkLibraries.begin(), aotOptions.linkLibraries.end(), external.library) == aotOptions.linkLibraries.end())
+            if (request.abiGlue.empty() && !external.library.empty() && !chali_build::isDirectLinkLibrary(external.library) && !chali_build::isBuiltinNativeLibrary(external.library) && !chali_build::usesDynamicAbiLibrary(external) && std::find(aotOptions.linkLibraries.begin(), aotOptions.linkLibraries.end(), external.library) == aotOptions.linkLibraries.end())
                 aotOptions.linkLibraries.push_back(external.library);
         request.options = aotOptions;
-        const int status = chali_aot::run(request, &diagnostics);
+        const int status = chali_build::run(request, &diagnostics);
         for (const auto &message : diagnostics) std::fprintf(stderr, "chali: %s\n", message.c_str());
         if (status != 0) return status;
         const char *extension = aotOptions.emitLLVMOnly ? ".ll" : aotOptions.emitObjectOnly ? ".o" :
@@ -1616,7 +1626,7 @@ try
         {
             auto executionOptions = request.options;
             executionOptions.outputPrefix = exportPrefix;
-            return chali_aot::executeNative(executionOptions, programArguments);
+            return chali_build::executeNative(executionOptions, programArguments);
         }
     }
     if (jsonDiagnostics) chali_diagnostics::reportMany(warnings);

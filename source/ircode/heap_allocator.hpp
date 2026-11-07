@@ -5,7 +5,7 @@
 #pragma once
 #include "quad_model.hpp"
 
-namespace stackvm
+namespace runtime
 {
 /**
  * @brief 可替换的 运行时 字节堆。
@@ -125,4 +125,4 @@ public:
      */
     bool writeDouble(std::size_t address, double value);
 };
-}  // namespace stackvm
+}  // namespace runtime

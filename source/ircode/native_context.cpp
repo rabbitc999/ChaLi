@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -165,4 +165,4 @@ bool NativeCallContextImpl::setInstructionHook(std::size_t interval, Instruction
 Machine *NativeCallContextImpl::machine()
 { return context_.machine; }
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

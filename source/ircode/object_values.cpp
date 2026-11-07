@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -339,4 +339,4 @@ bool nativeWriteView(NativeContext &ctx, const RuntimeObject::ElementView &view,
     return true;
 }
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

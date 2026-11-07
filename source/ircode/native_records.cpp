@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -159,4 +159,4 @@ std::int64_t NativeCallContextImpl::makeTemporary(std::size_t bytes)
  */
 [[nodiscard]] bool isObjectHandle(std::int64_t handle) { return handle >= kObjectHandleBase; }
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

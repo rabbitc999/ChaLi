@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 /**
@@ -72,4 +72,4 @@ bool validateProgramMetadata(const Program &program, Memory::Vector<Memory::Stri
     if (diagnostics) diagnostics->push_back(error);
     return false;
 }
-}  // namespace stackvm
+}  // namespace runtime

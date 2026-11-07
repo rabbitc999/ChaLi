@@ -5,7 +5,7 @@
 #pragma once
 #include "quad_model.hpp"
 
-namespace stackvm
+namespace runtime
 {
 /**
  * @brief 数据区：加载 `.data.bin` 与布局表（`ast` 的 `exportDataLayout()` 输出）。
@@ -108,4 +108,4 @@ struct DataArea
     bool writeBytes(std::size_t address, const char *in, std::size_t count);
 };
 
-}  // namespace stackvm
+}  // namespace runtime

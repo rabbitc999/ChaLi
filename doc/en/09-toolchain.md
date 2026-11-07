@@ -8,7 +8,7 @@ GitHub runs the [command and documentation gates](../../.github/workflows/cli-co
 
 `run` compiles and executes checked AOT code. `build` performs a release build with checks disabled by default. See [build debugging](43-native-debugging.md).
 
-ChaLi executes programs through checked AOT by default. The front end loads modules, parses and checks source, then generates LLVM code directly from the checked AST. The explicit [AOT entry](38-aot.md) can generate LLVM modules and native products.
+ChaLi executes programs through checked AOT by default. The front end loads modules, parses and checks source, then generates LLVM code directly from the checked AST. The explicit [LLVM build entry](38-build.md) can generate LLVM modules and native products.
 
 ```sh
 chali run app.chl

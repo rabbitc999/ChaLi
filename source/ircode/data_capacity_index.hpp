@@ -1,7 +1,7 @@
 #pragma once
 #include <algorithm>
 
-namespace stackvm
+namespace runtime
 {
 namespace execution_detail
 {
@@ -69,4 +69,4 @@ public:
     }
 };
 }  // namespace execution_detail
-}  // namespace stackvm
+}  // namespace runtime

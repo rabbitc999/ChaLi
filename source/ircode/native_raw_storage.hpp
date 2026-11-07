@@ -5,7 +5,7 @@
 #pragma once
 #include "runtime_objects.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 处理原始存储与裸字节操作；裸字节路径不检查元素类型或改变初始化位图。
@@ -42,4 +42,4 @@ Slot rawStorageOperation(NativeContext &ctx, std::int64_t op, std::int64_t handl
  */
 bool rawMemoryView(NativeContext &ctx, std::int64_t operation, std::int64_t destination,
                    std::int64_t sourceOrByte, std::int64_t bytes, unsigned char *&output, unsigned char *&input);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

@@ -6,7 +6,7 @@
 #include "runtime_objects.hpp"
 #include "value_transfer.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 解析闭包或旧式无环境函数地址。
@@ -92,4 +92,4 @@ Slot functionCopy(NativeContext &ctx, const Memory::Vector<Slot> &args);
  * @retval 封装为原生值的运行时结果。
  */
 Slot objectFree(NativeContext &ctx, const Memory::Vector<Slot> &args);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

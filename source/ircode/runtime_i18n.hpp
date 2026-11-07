@@ -5,7 +5,7 @@
 #pragma once
 #include "../chali_i18n.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 在编译期查找一个字面量的英文消息。
@@ -30,6 +30,6 @@ constexpr const char *runtimeEnglish(const char *original)
 }
 /** @brief 仅用于运行时消息字面量，语言选择仍遵循进程配置。 */
 #define CHALI_RUNTIME_TEXT(original) ([]() { \
-    constexpr const char *english = stackvm::runtimeDetail::runtimeEnglish(original); \
+    constexpr const char *english = runtime::runtimeDetail::runtimeEnglish(original); \
     return chali_i18n::language() == chali_i18n::Language::Zh ? original : english; \
 }())

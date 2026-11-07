@@ -580,9 +580,9 @@ struct AstBuilder : Builder
         if (type->meta.rfind(prefix, 0) == 0)
         {
             const auto encoded = type->meta.substr(prefix.size());
-            stackvm::value_text::Shape shape;
+            runtime::value_text::Shape shape;
             std::size_t at = 0, remaining = 4096;
-            if (stackvm::value_text::decode(encoded, at, shape, remaining) && at == encoded.size())
+            if (runtime::value_text::decode(encoded, at, shape, remaining) && at == encoded.size())
                 return debugShape(shape);
             return out;
         }
@@ -665,7 +665,7 @@ struct AstBuilder : Builder
      * @param shape 容器及元素的静态布局。
      * @return 不含用户方法的调试节点。
      */
-    static LayoutShape debugShape(const stackvm::value_text::Shape &shape)
+    static LayoutShape debugShape(const runtime::value_text::Shape &shape)
     {
         LayoutShape out;
         out.kind = shape.kind;

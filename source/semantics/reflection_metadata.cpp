@@ -2,7 +2,7 @@
  * @file reflection_metadata.cpp
  * @brief 从已校验的具体声明和布局生成反射元数据。
  */
-namespace mr = stackvm::reflection;
+namespace mr = runtime::reflection;
 /**
  * @brief 单次编译的元数据生成器，不改动 __typeTag 或接口分派的既有编号。
  */

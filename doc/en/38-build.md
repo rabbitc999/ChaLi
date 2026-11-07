@@ -1,10 +1,10 @@
-# LLVM AOT compilation
+# LLVM build
 
 <!-- LANGUAGE NAVIGATION -->
-**English** · [简体中文](../38-aot.md)
+**English** · [简体中文](../38-build.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-`build` is the release-build command; the former `aot` command has been removed. Project configuration uses `[build]`; `[aot]` is rejected. LLVM AOT remains the compilation technology.
+`build` is the release-build command; the former `aot` command has been removed. Project configuration uses `[build]`; `[aot]` is rejected. LLVM handles optimization, object-code generation, and native linking.
 
 Successful `run` and `build` compilation reports `Compilation completed: OUTPUT` on standard error after publishing the final artifact. Run reports completion before executing the program, so a later runtime failure remains a failure. Standard output contains only program output. `--quiet` or `CHALI_QUIET=1` suppresses this notice without hiding diagnostics, statistics or program output. Check-only and JSON-diagnostic requests do not emit completion notices.
 
@@ -32,7 +32,7 @@ All applicable AOT optimizations are enabled by default. External LLVM uses `-O3
 | Option | Behavior |
 | --- | --- |
 | `--out prefix` | Prefix for the `.ll` module, C ABI header and native output; Windows uses .exe/.dll, Linux uses no executable suffix or .so |
-| `--llvm path` | Explicit external LLVM clang driver; the static variant defaults to its built-in backend; the external variant also accepts `CHALI_LLVM_CLANG` |
+| `--llvm PATH` | External variant only: select the LLVM clang driver; static variants report an option error. External variants can also use `CHALI_LLVM_CLANG`. |
 | `--emit-llvm` | Write the LLVM module and C ABI header without code generation or linking |
 | `--checked` | Emit array bounds and pointer checks; on for run and off by default for release builds |
 | `--unchecked` | Explicitly omit these checks for debugging or performance comparisons; object lifetime and actual memory accesses remain checked |
@@ -64,7 +64,7 @@ The `[build]` table accepts `allocator = "malloc"` or `allocator = "pool"`; expl
 | `make` or `make CHALI_STATIC_LLVM=0` | External LLVM clang under `library/llvm/` | `llvm-external` |
 | `make llvm-static` | Statically linked LLVM optimization, x64 code generation and LLD, with embedded CRT link assets; no clang or LLVM DLL required | `llvm-static` |
 
-The first static build runs [setup_static.py](../../library/llvm/setup_static.py), downloads pinned LLVM sources, verifies SHA-256 and incrementally builds the SDK under `library/llvm/`. With an existing SDK, use `make CHALI_STATIC_LLVM=1`. Windows x64 compiler outputs are named `chali-1.0.0-llvm-static-windows-x64.exe` and `chali-1.0.0-llvm-external-windows-x64.exe`; the version is read from `VERSION`. `CHALI_LLVM_SDK` selects an SDK with the same C++ ABI. The validated static distribution targets Windows x64. Static variants use the built-in backend by default; explicit `--llvm` selects an external driver. LLVM module export requires no code generation tools in either variant.
+The first static build runs [setup_static.py](../../library/llvm/setup_static.py), downloads pinned LLVM sources, verifies SHA-256 and incrementally builds the SDK under `library/llvm/`. With an existing SDK, use `make CHALI_STATIC_LLVM=1`. Windows x64 compiler outputs are named `chali-1.0.0-llvm-static-windows-x64.exe` and `chali-1.0.0-llvm-external-windows-x64.exe`; the version is read from `VERSION`. `CHALI_LLVM_SDK` selects an SDK with the same C++ ABI. The validated static distribution targets Windows x64. Static variants use the built-in backend. Their `run`, `build`, `asm`, `ar`, and `link` commands reject `--llvm` with exit code 2; project `[build].llvm` is also rejected. Use the `llvm-external` variant to select external tools. LLVM module export requires no code generation tools in either variant.
 
 `python tools/release_variants.py` builds and validates both program and plugin variants in sequence. Release ZIPs are placed in `dist/llvm-static/` and `dist/llvm-external/`. Both plugins retain their independent 1.0.0 version; VSIX filenames use `-llvm-static` and `-llvm-external` suffixes. They are alternative builds of the same extension. To package one, run `npm run package -- --llvm-variant static --compiler COMPILER_PATH` in `vscode/`, or replace static with external. The script creates local artifacts; remote publication requires an explicit action.
 
@@ -153,9 +153,9 @@ chali asm native/add.s --target linux-x64 --out build/add.o
 chali build main.chl --asm native/add.s --asm-include native/include --out build/app
 ```
 
-`asm` accepts one `.s` file and an exact output path. Without `--out`, it replaces the input suffix with `.obj` for Windows and `.o` for Linux. `--target`, `--cpu`, `--debug`, `-I DIR` / `-IDIR`, `--include-path DIR` and `--llvm CLANG` are supported. Target and CPU must match the source instructions. GAS-compatible LLVM syntax is used; `.S` preprocessing and NASM/MASM are not supported. Include search adds the source directory before the explicitly listed directories. Input files are limited to 64 MiB; this is a compiler tool, not an untrusted-code sandbox.
+`asm` accepts one `.s` file and an exact output path. Without `--out`, it replaces the input suffix with `.obj` for Windows and `.o` for Linux. `--target`, `--cpu`, `--debug`, `-I DIR` / `-IDIR`, `--include-path DIR` and the external-only `--llvm CLANG` are supported. Target and CPU must match the source instructions. GAS-compatible LLVM syntax is used; `.S` preprocessing and NASM/MASM are not supported. Include search adds the source directory before the explicitly listed directories. Input files are limited to 64 MiB; this is a compiler tool, not an untrusted-code sandbox.
 
-The static variant uses LLVM MC in process without clang; explicit `--llvm` selects the external integrated assembler. Objects are first produced in a private workspace and published only after successful assembly. A failed assembly preserves an existing output and cannot overwrite its own primary input. The output parent directory must exist. Source/include diagnostics retain their original positions.
+The static variant uses LLVM MC in process without clang and rejects `--llvm`; the external variant accepts that option to select its integrated assembler. Objects are first produced in a private workspace and published only after successful assembly. A failed assembly preserves an existing output and cannot overwrite its own primary input. The output parent directory must exist. Source/include diagnostics retain their original positions.
 
 AOT accepts repeated `--asm FILE.s` and `--asm-include DIR` options. Every object uses the same target and CPU as the language unit and participates in the final link. Use the established C ABI declaration to reference an assembly symbol; the assembly must follow that target's calling convention. These inputs require executable/shared-library output and cannot be combined with `--emit-asm`, `--emit-obj` or `--emit-llvm`. Assembling a cross-target object does not verify executable deployment on that target.
 
@@ -172,9 +172,9 @@ chali link build/public.o --shared --export public_entry --out build/example.dll
 chali link build/start.o --target linux-arm64 --no-runtime --entry _start --out build/app
 ```
 
-`ar` writes deterministic, indexed, self-contained archives from zero or more objects of the selected target. Timestamps, UID and GID are fixed. Windows `.lib` uses COFF archives; other suffixes use GNU ar format. Thin and nested archives are rejected. `--out` is an exact filename and its parent must exist. The static variant uses LLVM ArchiveWriter. The external variant finds llvm-ar beside clang or through `CHALI_LLVM_AR`; `--llvm LLVM-AR` selects an explicit archiver.
+`ar` writes deterministic, indexed, self-contained archives from zero or more objects of the selected target. Timestamps, UID and GID are fixed. Windows `.lib` uses COFF archives; other suffixes use GNU ar format. Thin and nested archives are rejected. `--out` is an exact filename and its parent must exist. The static variant uses LLVM ArchiveWriter. The external variant finds llvm-ar beside clang or through `CHALI_LLVM_AR`; `--llvm LLVM-AR` selects an explicit archiver in the external variant; static variants reject this option.
 
-`link` accepts multiple objects/archives and supports `--target`, `--shared`, repeated `--export SYMBOL`, `--entry SYMBOL`, `--debug`, `-L DIR` / `-LDIR` / `--library-path DIR`, repeated `--library NAME`, `--sysroot`, `--runtime-dir` and `--llvm CLANG`. Entry/export names are raw object symbols. Inputs enter one link group in their supplied order. Archives extract members on demand and are rescanned for cyclic references; unresolved symbols in unextracted members are irrelevant. LLD diagnoses duplicate definitions and referenced missing symbols. Shared libraries expose only explicit exports and hide other symbols. Arbitrary raw linker flags are not forwarded.
+`link` accepts multiple objects/archives and supports `--target`, `--shared`, repeated `--export SYMBOL`, `--entry SYMBOL`, `--debug`, `-L DIR` / `-LDIR` / `--library-path DIR`, repeated `--library NAME`, `--sysroot`, `--runtime-dir` and the external-only `--llvm CLANG`. Entry/export names are raw object symbols. Inputs enter one link group in their supplied order. Archives extract members on demand and are rescanned for cyclic references; unresolved symbols in unextracted members are irrelevant. LLD diagnoses duplicate definitions and referenced missing symbols. Shared libraries expose only explicit exports and hide other symbols. Arbitrary raw linker flags are not forwarded.
 
 The static Windows x64 variant uses embedded LLD, CRT and ChaLi runtime assets without external clang. The external variant requires matching clang/LLD and the applicable system toolchain. Full cross-target linking requires a target runtime and SDK. Explicit `--no-runtime` omits CRT and the ChaLi runtime for programs supplying their own entry and dependencies. Embedded LLD can link such inputs for the supported Linux x64/ARM64 targets; successful generation is distinct from execution on the target. Ordinary standalone C programs may use default runtime linkage; unreferenced archive members are omitted.
 

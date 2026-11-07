@@ -5,7 +5,7 @@
  * @file execution_plan.hpp
  * @brief 两端共用的执行准备层，不修改字节码或源码指令下标。
  */
-namespace stackvm
+namespace runtime
 {
 namespace execution_detail
 {
@@ -159,4 +159,4 @@ private:
     std::size_t generation_ = 0;
 };
 }  // namespace execution_detail
-}  // namespace stackvm
+}  // namespace runtime

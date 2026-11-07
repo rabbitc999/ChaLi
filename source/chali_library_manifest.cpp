@@ -184,9 +184,9 @@ void validateManifest(const Manifest &manifest)
     }
     for (const auto &target : manifest.targets)
     {
-        chali_aot::TargetInfo known;
+        chali_build::TargetInfo known;
         Memory::String error;
-        if (!chali_aot::describeTarget(Memory::String(target.triple.c_str()), known, &error) || target.triple != std::string(known.triple.c_str()) || !targets.insert(target.triple).second)
+        if (!chali_build::describeTarget(Memory::String(target.triple.c_str()), known, &error) || target.triple != std::string(known.triple.c_str()) || !targets.insert(target.triple).second)
             throw std::runtime_error("库目标不是唯一的规范三元组：" + target.triple);
         if (target.objectFormat != (known.windows ? "coff" : "elf") || target.dataLayout != known.dataLayout.c_str() || !nativeName(target.cpu) || (target.nativeAbi != "c-v1" && target.nativeAbi != "chali-borrow-v1" && target.nativeAbi != "chali-value-v1" && target.nativeAbi != "chali-owned-v1"))
             throw std::runtime_error("库目标格式、数据布局、CPU 或原生 ABI 不兼容");
@@ -414,8 +414,8 @@ void validate(const Package &package)
             const auto &layout = package.find(target.unitLayout)->bytes;
             const auto identity = package.manifest.module + "\n" + target.triple + "\n" + layout + "\n" + data;
             if (target.unitSymbol != "chali_unit_data_" + chali_digest::hex(chali_digest::sha256(identity))) throw std::runtime_error("单元数据身份与基址符号不匹配");
-            Memory::Vector<stackvm::LayoutRow> rows;
-            if (data.empty() || layout.size() > 32ull * 1024 * 1024 || !stackvm::decodeDataLayout(layout, rows) || rows.empty()) throw std::runtime_error("单元数据布局无效");
+            Memory::Vector<runtime::LayoutRow> rows;
+            if (data.empty() || layout.size() > 32ull * 1024 * 1024 || !runtime::decodeDataLayout(layout, rows) || rows.empty()) throw std::runtime_error("单元数据布局无效");
             std::set<Memory::String> names;
             for (const auto &row : rows)
                 if (!names.insert(row.name).second || !row.hasSize || row.offset > data.size() || row.size > data.size() - row.offset)
@@ -474,9 +474,9 @@ const Target &select(const Package &package, const std::string &requested, const
                      const std::string &implementation, const std::string &llvmVersion)
 {
     if (implementation != "native" && implementation != "bitcode") throw std::runtime_error("库实现选择必须是 native 或 bitcode");
-    chali_aot::TargetInfo known;
+    chali_build::TargetInfo known;
     Memory::String error;
-    if (!chali_aot::describeTarget(Memory::String(requested.c_str()), known, &error)) throw std::runtime_error(error.c_str());
+    if (!chali_build::describeTarget(Memory::String(requested.c_str()), known, &error)) throw std::runtime_error(error.c_str());
     for (const auto &target : package.manifest.targets)
     {
         if (target.triple != known.triple.c_str()) continue;
@@ -496,8 +496,8 @@ const Target &select(const Package &package, const std::string &requested, const
             const auto *entry = package.find(target.bitcode);
             if (!entry || entry->kind != Kind::Bitcode) throw std::runtime_error("库 bitcode 实现条目缺失");
             const auto actual = inspectBitcode(entry->bytes);
-            chali_aot::TargetInfo module;
-            if (!chali_aot::describeTarget(actual.triple.c_str(), module, &error) || module.triple != known.triple)
+            chali_build::TargetInfo module;
+            if (!chali_build::describeTarget(actual.triple.c_str(), module, &error) || module.triple != known.triple)
                 throw std::runtime_error("bitcode 内部目标与库清单不一致：" + actual.triple);
             if (actual.dataLayout != target.dataLayout) throw std::runtime_error("bitcode 内部数据布局与库清单不一致");
             if (actual.llvmVersion != target.llvmVersion) throw std::runtime_error("bitcode 实际生产版本与清单不一致：" + actual.llvmVersion);

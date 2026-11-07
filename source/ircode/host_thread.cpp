@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace stackvm
+namespace runtime
 {
 namespace
 {

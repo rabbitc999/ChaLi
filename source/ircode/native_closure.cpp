@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -259,4 +259,4 @@ Slot objectFree(NativeContext &ctx, const Memory::Vector<Slot> &args)
     return Slot::fromInt(0);
 }
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

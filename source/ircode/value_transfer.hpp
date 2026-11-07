@@ -5,7 +5,7 @@
 #pragma once
 #include "runtime_objects.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 脱离发送方堆和对象表的消息快照；对象句柄仅作为快照内部的索引。
@@ -16,4 +16,4 @@ struct TransferPacket
     ObjectValue value;
     Memory::Map<std::int64_t, RuntimeObject> objects;
 };
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

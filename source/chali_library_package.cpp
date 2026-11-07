@@ -119,8 +119,8 @@ void nativePayloads(const Package &package)
     {
         if (target.implementation.empty()) continue;
         const auto *entry = package.find(target.implementation);
-        chali_aot::TargetInfo known;
-        if (!entry || !chali_aot::describeTarget(Memory::String(target.triple.c_str()), known)) throw std::runtime_error("库目标实现未登记");
+        chali_build::TargetInfo known;
+        if (!entry || !chali_build::describeTarget(Memory::String(target.triple.c_str()), known)) throw std::runtime_error("库目标实现未登记");
         const auto format = known.windows ? chali_native_objects::Format::CoffX64 : known.arm64 ? chali_native_objects::Format::ElfArm64 :
                                                                                                   chali_native_objects::Format::ElfX64;
         std::string error;

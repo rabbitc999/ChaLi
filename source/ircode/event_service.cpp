@@ -2,7 +2,7 @@
 #if STACKVM_WITH_THREADS
 #include <algorithm>
 #include <limits>
-namespace stackvm
+namespace runtime
 {
 /**
  * @brief 根据相对时长计算饱和的单调截止时间。
@@ -133,5 +133,5 @@ void destroyEventTimer(const std::shared_ptr<EventQueue> &queue, std::int64_t id
                          queue->pending.end());
     queue->changed.notify_all();
 }
-}  // namespace stackvm
+}  // namespace runtime
 #endif

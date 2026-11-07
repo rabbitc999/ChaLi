@@ -1410,8 +1410,8 @@ bool RegisterTop()
         if (!top.abiLibrary.empty())
         {
             declaration.abiLibrary = DecodeAbiLibraryPath(top.abiLibrary);
-            if (!declaration.abiLibrary.empty() && !chali_aot::isDirectLinkLibrary(declaration.abiLibrary)
-                && !chali_aot::isBuiltinNativeLibrary(declaration.abiLibrary))
+            if (!declaration.abiLibrary.empty() && !chali_build::isDirectLinkLibrary(declaration.abiLibrary)
+                && !chali_build::isBuiltinNativeLibrary(declaration.abiLibrary))
             {
                 namespace fs = std::filesystem;
                 const auto library = Memory::u8path(declaration.abiLibrary);
@@ -1428,7 +1428,7 @@ bool RegisterTop()
                 return Fail("abi 库路径和符号不能包含 NUL 字节");
             if (declaration.abiLibrary.empty() || declaration.abiSymbol.empty())
                 return Fail("abi 库路径与 C 符号名不能为空");
-            if (chali_aot::isDirectLinkLibrary(declaration.abiLibrary)
+            if (chali_build::isDirectLinkLibrary(declaration.abiLibrary)
                 && (!declaration.abiRelease.empty() || CAbiNeedsMarshalling(declaration)))
                 return Fail("@link 当前仅支持固定标量 C ABI 签名，不接受释放函数");
             if (!declaration.abiRelease.empty())
@@ -1599,12 +1599,12 @@ bool RegisterTop()
     {
         MFunctionDecl &declaration = g_functionDecls[index];
         std::size_t sameName = 0;
-        bool linkedOverloads = chali_aot::isDirectLinkLibrary(declaration.abiLibrary);
+        bool linkedOverloads = chali_build::isDirectLinkLibrary(declaration.abiLibrary);
         for (const MFunctionDecl &other : g_functionDecls)
         {
             if (other.source != declaration.source || other.module != declaration.module) continue;
             ++sameName;
-            linkedOverloads = linkedOverloads && other.external && chali_aot::isDirectLinkLibrary(other.abiLibrary);
+            linkedOverloads = linkedOverloads && other.external && chali_build::isDirectLinkLibrary(other.abiLibrary);
         }
         if (declaration.external && sameName > 1u && !linkedOverloads)
             return Fail("宿主函数不能重载或与 CHALI 函数同名（胶水层按名称绑定）：" + declaration.source);

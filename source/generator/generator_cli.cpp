@@ -713,7 +713,7 @@ int runCli(int argc, char **argv)
     for (const char *name : {"chali_memory.c", "chali_memory.h", "chali_buffer.c", "chali_buffer.h", "chali_sequence.c", "chali_sequence.h", "chali_index.c", "chali_index.h", "chali_json.c", "chali_json.h", "chali_json_internal.h", "chali_toml.c", "chali_toml.h"})
         ok = copy(mc / "source/runtime_c" / name, Memory::String("runtime_c/") + name) && ok;
     for (const auto &[name, source] : runtime) ok = copy(source, "runtime/" + name) && ok;
-    for (const char *name : stackvm::assets::kCoreAssets)
+    for (const char *name : runtime::assets::kCoreAssets)
         ok = copy(mc / "source/ircode" / name, Memory::String("runtime/") + name) && ok;
     for (const char *name : Cas::Assets::kCoreAssets)
         ok = copy(mc / "library/caspp" / name, Memory::String("caspp/") + name) && ok;

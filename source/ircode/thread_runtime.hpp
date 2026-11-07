@@ -5,7 +5,7 @@
 #pragma once
 #include "runtime_internal.hpp"
 #include "host_thread.hpp"
-namespace stackvm
+namespace runtime
 {
 using runtimeDetail::TransferPacket;
 #if STACKVM_WITH_THREADS
@@ -101,4 +101,4 @@ namespace runtimeDetail
 std::chrono::steady_clock::time_point threadDeadline(std::int64_t millis);
 #endif
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

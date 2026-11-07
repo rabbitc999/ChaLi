@@ -7,7 +7,7 @@
 #include "symbol_table.hpp"
 #include "reflection.hpp"
 
-namespace stackvm
+namespace runtime
 {
 /**
  * @brief 栈指令操作码。
@@ -278,4 +278,4 @@ bool validateProgramMetadata(const Program &program, Memory::Vector<Memory::Stri
  * @return 成功返回 true（`out.diagnostics` 里给出不支持的原因）。
  */
 bool assemble(const QuadFile &file, Program &out);
-}  // namespace stackvm
+}  // namespace runtime

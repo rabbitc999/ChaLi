@@ -203,4 +203,4 @@ This only checks the call signature. Actual drawing also requires the GUI window
 
 ## A.9 Investigation order
 
-Keep a minimal reproducer, compiler version, command, configuration and first diagnostic. Separate external input, files, networking and databases from language checks. Verify both the original failure and a successful path after a change; do not report unexecuted checks as passed. Consult the [language reference](../../en/04-language-reference.md), [AOT reference](../../en/38-aot.md) and [library](../../library/README.md).
+Keep a minimal reproducer, compiler version, command, configuration and first diagnostic. Separate external input, files, networking and databases from language checks. Verify both the original failure and a successful path after a change; do not report unexecuted checks as passed. Consult the [language reference](../../en/04-language-reference.md), [LLVM build reference](../../en/38-build.md) and [library](../../library/README.md).

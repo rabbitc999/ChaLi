@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -271,4 +271,4 @@ Memory::String splitType(const Memory::String &op, Memory::String &typeName)
     return op.substr(0u, colon);
 }
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

@@ -14,9 +14,9 @@ Distinguish immediate development execution from exporting a native artifact for
 
 The relevant unchecked defaults mainly affect runtime array and pointer checking; static types, ownership and borrowing remain. Include configuration when comparing executions rather than checking source identity alone.
 
-Use chali help and the [LLVM AOT reference](../../en/38-aot.md) for exact options.
+Use chali help and the [LLVM build reference](../../en/38-build.md) for exact options.
 
-Default run/build publishes final artifacts beside the source and uses the adjacent `.chali` directory for intermediates; Windows marks it hidden. Success or failure cleans the session workspace while preserving existing user files. Successful compilation and publication reports completion on standard error, then run launches the native program. `--quiet` or `CHALI_QUIET=1` suppresses only that notice. Explicit output, retention and incremental settings follow the [artifact reference](../../en/38-aot.md).
+Default run/build publishes final artifacts beside the source and uses the adjacent `.chali` directory for intermediates; Windows marks it hidden. Success or failure cleans the session workspace while preserving existing user files. Successful compilation and publication reports completion on standard error, then run launches the native program. `--quiet` or `CHALI_QUIET=1` suppresses only that notice. Explicit output, retention and incremental settings follow the [artifact reference](../../en/38-build.md).
 
 ![release build and toolchain boundaries](../images/chali-aot-en.png)
 
@@ -111,7 +111,7 @@ The exported program is `build/counter.exe` on Windows and `build/counter` on Li
 
 ## 27.3 Required cross-compilation information
 
-Cross compilation needs a target triple, CPU/features, ABI, sysroot, linker, runtime libraries and startup assets. Store supported settings in toml using the exact keys and override rules in the [AOT reference](../../en/38-aot.md). Do not link host libraries into the target.
+Cross compilation needs a target triple, CPU/features, ABI, sysroot, linker, runtime libraries and startup assets. Store supported settings in toml using the exact keys and override rules in the [LLVM build reference](../../en/38-build.md). Do not link host libraries into the target.
 
 ```toml
 [build]

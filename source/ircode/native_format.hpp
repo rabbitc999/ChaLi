@@ -6,7 +6,7 @@
 #include "runtime_objects.hpp"
 #include "value_transfer.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 取一个实参的整数值（整数槽直接取，浮点槽取整）。
@@ -41,4 +41,4 @@ std::int64_t nativeInt(const Slot &slot);
  */
 bool nativeFormatInto(NativeContext &ctx, const Memory::String &format, const Memory::Vector<Slot> &args,
                       std::size_t argCount, Memory::String *out);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

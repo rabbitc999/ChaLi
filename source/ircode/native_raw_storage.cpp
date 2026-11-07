@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 独占字节分配与逐元素初始化状态；语言层负责存活元素的确定性清理。
@@ -206,4 +206,4 @@ Slot rawStorage(NativeContext &ctx, const Memory::Vector<Slot> &args)
     return rawStorageOperation(ctx, nativeInt(args[0]), nativeInt(args[1]), nativeInt(args[2]),
                                nativeInt(args[3]), nativeInt(args[4]), nativeInt(args[5]));
 }
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

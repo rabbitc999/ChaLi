@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 // ---------------------------------------------------------------------------
@@ -304,4 +304,4 @@ Memory::String Instruction::toString() const
     return "?";
 }
 
-}  // namespace stackvm
+}  // namespace runtime

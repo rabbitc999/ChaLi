@@ -6,7 +6,7 @@
 #include "runtime_objects.hpp"
 #include "value_transfer.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 查询当前存活分配占用的字节数。
@@ -29,4 +29,4 @@ Slot memoryLiveBlocks(NativeContext &ctx, const Memory::Vector<Slot> &);
  */
 Slot memoryPeakBytes(NativeContext &ctx, const Memory::Vector<Slot> &);
 
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

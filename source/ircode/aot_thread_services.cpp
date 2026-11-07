@@ -9,7 +9,7 @@ extern "C" {
 void chali_reset_address_view();
 std::int64_t chali_invoke(std::int64_t, std::int64_t, const std::int64_t *);
 }
-namespace stackvm::aot
+namespace runtime::build
 {
 using namespace runtimeDetail;
 namespace
@@ -211,9 +211,9 @@ const ChaliThreadServices threadServices{createMachine, destroyMachine, finishMa
  * @brief 返回跨平台线程服务，生成模块仅在需要时引用此入口。
  * @return 进程内只读服务表。
  */
-extern "C" const ChaliThreadServices *chali_aot_thread_services()
+extern "C" const ChaliThreadServices *chali_build_thread_services()
 {
-    return &stackvm::aot::threadServices;
+    return &runtime::build::threadServices;
 }
 /**
  * @brief 为尚未生成服务选择函数的旧对象提供完整线程服务。
@@ -221,5 +221,5 @@ extern "C" const ChaliThreadServices *chali_aot_thread_services()
  */
 extern "C" __attribute__((weak)) CHALI_AOT_SERVICE_LOCAL const ChaliThreadServices *chali_program_thread_services()
 {
-    return chali_aot_thread_services();
+    return chali_build_thread_services();
 }

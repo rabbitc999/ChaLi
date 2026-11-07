@@ -6,7 +6,7 @@
 #include "runtime_internal.hpp"
 #include "../abi/chali_thread_service.h"
 
-namespace stackvm::aot
+namespace runtime::build
 {
 using runtimeDetail::NativeContext;
 

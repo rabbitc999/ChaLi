@@ -11,7 +11,7 @@
 #include <vector>
 
 /** @brief 仅供可变回调状态检查使用的上下文。 */
-struct UnusedContext final : stackvm::NativeCallContext
+struct UnusedContext final : runtime::NativeCallContext
 {
     /** @brief 本测试不提供内存读取。
      * @param address 地址。
@@ -56,7 +56,7 @@ struct UnusedContext final : stackvm::NativeCallContext
      * @param result 输出。
      * @return 恒为假。
      */
-    bool invoke(std::int64_t function, const Memory::Vector<stackvm::NativeValue> &arguments, stackvm::NativeValue &result) override
+    bool invoke(std::int64_t function, const Memory::Vector<runtime::NativeValue> &arguments, runtime::NativeValue &result) override
     {
         (void)function;
         (void)arguments;
@@ -97,9 +97,9 @@ void transactions()
         bool complete = false;
         {
             Memory::AllocationScope allocation(&arena);
-            stackvm::NativeRegistry backend;
+            runtime::NativeRegistry backend;
             ChaliAbiRegistry registry{ {}, &backend };
-            assert(backend.add("existing", 0, [value = 0](auto &, const auto &) mutable { return stackvm::NativeValue::fromInt(++value); }));
+            assert(backend.add("existing", 0, [value = 0](auto &, const auto &) mutable { return runtime::NativeValue::fromInt(++value); }));
             const auto *original = backend.find("existing");
             UnusedContext context;
             assert(original->callback(context, {}).asInt() == 1);
@@ -241,11 +241,11 @@ void standardModules()
     chali_abi_registry_destroy(registry);
     Memory::Vector<Memory::String> diagnostics;
     const auto *print = abi_print_records(&count);
-    auto selected = std_registry::aotModulesFor({print[0].name}, &diagnostics);
+    auto selected = std_registry::buildModulesFor({print[0].name}, &diagnostics);
     assert(diagnostics.empty() && selected.size() == 1 && selected[0] == "print");
-    selected = std_registry::aotModulesFor({demo[0].name}, &diagnostics);
+    selected = std_registry::buildModulesFor({demo[0].name}, &diagnostics);
     assert(diagnostics.empty() && selected.size() == 1 && selected[0] == "demo");
-    selected = std_registry::aotModulesFor({"__unregistered_native_entry__"}, &diagnostics);
+    selected = std_registry::buildModulesFor({"__unregistered_native_entry__"}, &diagnostics);
     assert(diagnostics.empty() && selected.empty());
 }
 

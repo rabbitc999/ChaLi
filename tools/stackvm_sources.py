@@ -17,9 +17,9 @@ def asset_names():
 
 def render_assets():
     """从统一清单生成 C++ 资产名称表。"""
-    lines = ["#pragma once", "", "namespace stackvm::assets", "{", "/**", " * @brief 由 tools/stackvm_sources.py 生成的独立运行时资产清单。", " */", "inline constexpr const char *kCoreAssets[] = {"]
+    lines = ["#pragma once", "", "namespace runtime::assets", "{", "/**", " * @brief 由 tools/stackvm_sources.py 生成的独立运行时资产清单。", " */", "inline constexpr const char *kCoreAssets[] = {"]
     lines += ['    "' + name + '",' for name in asset_names()]
-    return "\n".join(lines + ["};", "}  // namespace stackvm::assets", ""])
+    return "\n".join(lines + ["};", "}  // namespace runtime::assets", ""])
 
 def main():
     """输出构建源文件名，或生成并检查导出资产名称表。"""

@@ -4,7 +4,7 @@
 [English](en/40-backend-ownership.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-ChaLi 前端完成类型、借用和确定性清理的降低后，正常路径把已检查 AST 直接交给 LLVM AOT，LLVM 负责全部优化。普通赋值的独立值语义，以及 `Copy<T>` 与 `#NonCopyable` 的互斥规则保持不变。
+ChaLi 前端完成类型、借用和确定性清理的降低后，正常路径把已检查 AST 直接交给 LLVM 构建，LLVM 负责全部优化。普通赋值的独立值语义，以及 `Copy<T>` 与 `#NonCopyable` 的互斥规则保持不变。
 
 常规发布 AOT 默认全开 LLVM 优化：静态 LLVM 使用 `default<O3>` 与激进代码生成等级，外置 LLVM 使用 `-O3`；调试构建沿用其文档中的低优化设置。保持常规浮点语义，不启用 fast-math。安全检查与回退仍然生效，计数插桩默认关闭。
 

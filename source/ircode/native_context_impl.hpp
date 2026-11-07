@@ -5,7 +5,7 @@
 #pragma once
 #include "native_functions.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 把私有运行时环境收窄成公开胶水接口。
@@ -180,4 +180,4 @@ private:
     const Invoker *borrowedInvoker_ = nullptr;
     const Memory::String *invocationError_ = nullptr;
 };
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

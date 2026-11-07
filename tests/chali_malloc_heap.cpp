@@ -14,7 +14,7 @@ void checkHeap(Memory::RuntimeAllocator &allocator)
 {
     Memory::AllocationScope allocation(&allocator);
     {
-        stackvm::runtimeDetail::Heap heap;
+        runtime::runtimeDetail::Heap heap;
         heap.reset(8);
         std::size_t stale = 0;
         for (int index = 0; index < 1000; ++index)

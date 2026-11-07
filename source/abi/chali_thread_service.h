@@ -35,7 +35,7 @@ typedef struct ChaliThreadServices
  * @brief 取得完整服务表。
  * @return 模块内只读服务表。
  */
-const ChaliThreadServices *chali_aot_thread_services(void);
+const ChaliThreadServices *chali_build_thread_services(void);
 /**
  * @brief 由生成模块选择服务，未使用并发的普通程序返回空指针。
  * @return 所选服务表，旧对象默认采用完整服务。

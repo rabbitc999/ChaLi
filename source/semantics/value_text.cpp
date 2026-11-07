@@ -9,10 +9,10 @@
  * @param remaining 只读调试布局的共享节点预算；空指针表示建立独立预算。
  * @retval 保持字段顺序、容器元素类型和数组边界的布局。
  */
-stackvm::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
+runtime::value_text::Shape ValueTextShape(const std::shared_ptr<MType> &type,
                                           Memory::Set<Memory::String> &visiting, Memory::Vector<ast::NodePtr> &callbacks, bool custom = true, std::size_t depth = 0, bool debugOnly = false, std::size_t *remaining = nullptr)
 {
-    using stackvm::value_text::Shape;
+    using runtime::value_text::Shape;
     Shape out;
     if (!type) return out;
     out.name = Describe(type);
@@ -139,7 +139,7 @@ Memory::String ValueTextLayout(const std::shared_ptr<MType> &type, bool customRo
 {
     Memory::Set<Memory::String> visiting;
     Memory::Vector<ast::NodePtr> callbacks;
-    return stackvm::value_text::encode(ValueTextShape(type, visiting, callbacks, customRoot));
+    return runtime::value_text::encode(ValueTextShape(type, visiting, callbacks, customRoot));
 }
 
 /**
@@ -151,7 +151,7 @@ Memory::String DebugValueLayout(const std::shared_ptr<MType> &type)
 {
     Memory::Set<Memory::String> visiting;
     Memory::Vector<ast::NodePtr> callbacks;
-    return stackvm::value_text::encode(ValueTextShape(type, visiting, callbacks, false, 0, true));
+    return runtime::value_text::encode(ValueTextShape(type, visiting, callbacks, false, 0, true));
 }
 
 /**

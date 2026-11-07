@@ -183,9 +183,9 @@ int runCli(int argc, char **argv)
                 if (equal == record.npos || hash == record.npos || equal >= hash) throw std::invalid_argument("依赖格式应为 MODULE=VERSION#SHA256");
                 manifest.dependencies.push_back({ record.substr(0, equal), record.substr(equal + 1, hash - equal - 1), record.substr(hash + 1) });
             }
-            chali_aot::TargetInfo known;
+            chali_build::TargetInfo known;
             Memory::String error;
-            if (!chali_aot::describeTarget(Memory::String(target.c_str()), known, &error)) throw std::invalid_argument(error.c_str());
+            if (!chali_build::describeTarget(Memory::String(target.c_str()), known, &error)) throw std::invalid_argument(error.c_str());
             Target implementation;
             implementation.triple = known.triple.c_str();
             implementation.objectFormat = known.windows ? "coff" : "elf";

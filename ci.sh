@@ -264,7 +264,11 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行数值、数组安全与 float32 后缀回归" "$PYTHON" tests/chali_numeric_v101.py --chali "$CHALI_BIN"
     run_step "运行 match 整数模式重叠警告回归" "$PYTHON" tests/chali_match_overlap.py --chali "$CHALI_BIN"
     run_step "运行 fn 匿名函数与 lambda 兼容回归" "$PYTHON" tests/chali_fn.py --chali "$CHALI_BIN"
-    run_step "运行 LLVM AOT 原生产物与 C 双向互调回归" "$PYTHON" tests/chali_aot.py --chali "$CHALI_BIN"
+    run_step "核对运行时与构建命名空间符号" "$PYTHON" tests/runtime_namespace_symbols.py
+    run_step "运行 LLVM 构建原生产物与 C 双向互调回归" "$PYTHON" tests/chali_aot.py --chali "$CHALI_BIN"
+    if "$CHALI_BIN" --build-info | "$PYTHON" -c "import json,sys; sys.exit(json.load(sys.stdin)['llvm'] != 'static')"; then
+        run_step "验证静态 LLVM 工具链选项边界" "$PYTHON" tests/chali_static_llvm_options.py --chali "$CHALI_BIN"
+    fi
     run_step "运行工程 build 配置与链接输入回归" "$PYTHON" tests/chali_aot_project_config.py --chali "$CHALI_BIN"
     if [ "${OS:-}" = Windows_NT ]; then
         run_step "运行 Windows 应用 PE 子系统回归" "$PYTHON" tests/chali_windows_subsystem.py --chali "$CHALI_BIN"

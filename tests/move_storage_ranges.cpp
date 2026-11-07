@@ -13,7 +13,7 @@
  */
 int main()
 {
-    stackvm::runtimeDetail::ObjectStore store;
+    runtime::runtimeDetail::ObjectStore store;
     std::mt19937_64 random(20261026);
     for (int round = 0; round < 100; ++round)
     {

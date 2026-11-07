@@ -1,4 +1,4 @@
-namespace chali_aot
+namespace chali_build
 {
 struct ExternFunction;
 }
@@ -33,7 +33,7 @@ namespace chali_macro
 struct MetadataValue;
 }
 
-namespace stackvm
+namespace runtime
 {
 class NativeRegistry;
 }
@@ -898,7 +898,7 @@ void M_SetSharedLibrary(bool enabled);
  * @brief 收集本次编译中 export 函数的实际四元式标签。
  * @return 未被覆盖的导出函数标签列表。
  */
-Memory::Vector<Memory::String> M_AotExports();
+Memory::Vector<Memory::String> M_BuildExports();
 /**
  * @brief 建立 lambda 表达式。
  * @param resultType 返回类型。
@@ -1141,7 +1141,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
  * @brief 取得最近一次成功语义检查后的后端 AST。
  * @return AST 指针；在下一次编译前有效。
  */
-const ast::Program *M_AotSyntax();
+const ast::Program *M_BuildSyntax();
 /**
  * @brief 当前竞技场里的语法节点数（装完预编译单元后即为标准库段的节点数）。
  * @return 节点数。
@@ -1230,7 +1230,7 @@ std::size_t M_RuntimePeakBytes();
 /**
  * 为后续 M_Compile 执行挂接 C++ 胶水函数；传 nullptr 取消。
  */
-void M_SetNativeRegistry(const stackvm::NativeRegistry *registry);
+void M_SetNativeRegistry(const runtime::NativeRegistry *registry);
 const char *M_LastError();
 
 /* Token → 语义值：数字 / 浮点看**词素原文**（`2.0` 这种浮点不能用 `value`，它是 int32），

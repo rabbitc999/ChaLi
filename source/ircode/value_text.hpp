@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <limits>
 
-namespace stackvm::value_text
+namespace runtime::value_text
 {
 /**
  * @brief 默认文本表示的类型布局，不包含运行时地址或反射元数据。
@@ -82,4 +82,4 @@ inline bool decode(const Memory::String &text, std::size_t &at, Shape &shape, st
     }
     return true;
 }
-}  // namespace stackvm::value_text
+}  // namespace runtime::value_text

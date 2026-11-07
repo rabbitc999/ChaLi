@@ -7,7 +7,7 @@
 ChaLi is a statically typed language with observable value semantics, explicit borrowing and moves, and scope-based resource cleanup. Its type, ownership and runtime rules are defined by the language. Supported hosts, export targets and external-library requirements are documented separately.
 
 The ChaLi compiler's front end is generated from this repository's `source/chali.gram` by
-[ParseEngine](https://github.com/rabbitc999/ParseEngine). It generates LLVM IR directly from the semantically checked AST and compiles native code through LLVM AOT. run uses checked compilation and execution; build defaults to unchecked export.
+[ParseEngine](https://github.com/rabbitc999/ParseEngine). It generates LLVM IR directly from the semantically checked AST and compiles native code through LLVM build. run uses checked compilation and execution; build defaults to unchecked export.
 
 The latest [ParseEngine repository](https://github.com/rabbitc999/ParseEngine) supports generating parsers written in ChaLi (`--lang chali`) in five modes: **LL(1), SLR(1), LALR(1), LR(1), and IELR(1)**, selected with `--mode ll1`, `slr`, `lalr`, `lr1`, or `ielr`, respectively. The generated `parser.chl` can be run or built with ChaLi. This repository's compiler front end uses the C++17 output target with IELR(1), as configured in `gen.sh`.
 
@@ -42,7 +42,7 @@ Run `./ChaLi.exe build input.chl --out build/program --checked` to lower the sem
 
 ![ChaLi release build: checked AST, LLVM IR, built-in or external LLVM, linking and delivery](doc/images/chali-aot-en.png)
 
-The generated application needs no LLVM DLL. Ship application-specific C ABI dynamic libraries when required. See [LLVM AOT compilation](doc/en/38-aot.md) and the Chinese book's [release build chapter](doc/book/en/27-aot-export.md) for the supported scope and steps.
+The generated application needs no LLVM DLL. Ship application-specific C ABI dynamic libraries when required. See [LLVM build](doc/en/38-build.md) and the Chinese book's [release build chapter](doc/book/en/27-aot-export.md) for the supported scope and steps.
 
 ## Execution
 

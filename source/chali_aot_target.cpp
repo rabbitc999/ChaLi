@@ -4,7 +4,7 @@
  */
 #include "chali_aot_target.hpp"
 
-namespace chali_aot
+namespace chali_build
 {
 /**
  * @brief 查询当前编译器宿主，不从目标选项推断已验证的运行平台。
@@ -78,4 +78,4 @@ Memory::String windowsSubsystemError(const Memory::String &subsystem, bool execu
     if (!executable) return "--subsystem 仅用于链接 Windows 可执行文件";
     return {};
 }
-}  // namespace chali_aot
+}  // namespace chali_build

@@ -5,7 +5,7 @@
 #pragma once
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 namespace artifact_binary
 {

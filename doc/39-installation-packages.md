@@ -113,4 +113,4 @@ python tools/export_library_html.py --output tmp/ChaLi-1.0.0-reference.html --zi
 
 CHM 工程的中间 HTML、目录和索引只放在仓库 `tmp/` 中。`--prepare-only` 可在任意平台准备工程，实际 CHM 编译需要 Windows；单独下载任一脚本时用 `--repo 仓库路径` 指定完整源码目录。两种格式共享同一套原文，默认都包括书稿与示例；HTML 脚本的 `--api-only` 选项可仅导出 API。
 
-版本、反射默认配置和平台能力见[当前能力](17-capabilities.md)，内置与外置 LLVM 的区别见 [发布构建](38-aot.md)。
+版本、反射默认配置和平台能力见[当前能力](17-capabilities.md)，内置与外置 LLVM 的区别见 [发布构建](38-build.md)。

@@ -17,7 +17,7 @@ void checkViews(Memory::RuntimeAllocator &arena)
     const std::atomic<std::uint64_t> *survivingRevision = nullptr;
     std::uint64_t beforeDestruction = 0;
     {
-        stackvm::runtimeDetail::Heap heap;
+        runtime::runtimeDetail::Heap heap;
         heap.reset(8);
         const auto address = heap.allocate(64);
         assert(address && heap.writeInt(address + 8, 12345));
@@ -29,7 +29,7 @@ void checkViews(Memory::RuntimeAllocator &arena)
         assert(snapshots[0].address == address && snapshots[0].size == 64);
         assert(snapshots[0].physical == reinterpret_cast<std::uintptr_t>(heap.borrowBytes(address, 64)));
         assert(snapshotRevision == heap.mappingRevision()->load());
-        stackvm::runtimeDetail::Heap::AddressView view;
+        runtime::runtimeDetail::Heap::AddressView view;
         auto *bytes = heap.borrowView(address + 8, 8, view);
         assert(bytes && bytes == heap.borrowBytes(address + 8, 8));
         assert(view.begin == address && view.size == 64 && bytes == view.bytes + 8);
@@ -87,14 +87,14 @@ int main()
     checkViews(pool);
     {
         Memory::AllocationScope allocation(&system);
-        stackvm::runtimeDetail::Heap heap;
+        runtime::runtimeDetail::Heap heap;
         heap.reset(8);
         const auto address = heap.allocate(64);
         // 只在所有正常配置验证后注入模块代次边界，回绕后必须永久禁用缓存。
         const_cast<std::atomic<std::uint64_t> *>(heap.mappingRevision())->store(std::numeric_limits<std::uint64_t>::max());
         assert(heap.allocate(16) && heap.mappingRevision()->load() == 0);
         assert(heap.allocate(16) && heap.mappingRevision()->load() == 0);
-        stackvm::runtimeDetail::Heap::AddressView view;
+        runtime::runtimeDetail::Heap::AddressView view;
         assert(heap.borrowView(address, 64, view) && view.stamp == 0);
     }
 }

@@ -5,7 +5,7 @@
 #include "runtime_internal.hpp"
 #include "thread_runtime.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 /**
@@ -40,4 +40,4 @@ void Machine::setBreakpoints(Memory::Vector<std::size_t> instructions)
     for (const std::size_t instruction : instructions) breakpoints_.insert(instruction);
 }
 
-}  // namespace stackvm
+}  // namespace runtime

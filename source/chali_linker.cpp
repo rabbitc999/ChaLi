@@ -27,7 +27,7 @@ namespace
  * @param target 已验证的目标。
  * @return 对应格式。
  */
-chali_native_objects::Format format(const chali_aot::TargetInfo &target)
+chali_native_objects::Format format(const chali_build::TargetInfo &target)
 {
     return target.windows ? chali_native_objects::Format::CoffX64 : target.arm64 ? chali_native_objects::Format::ElfArm64 :
                                                                                    chali_native_objects::Format::ElfX64;
@@ -53,7 +53,7 @@ bool symbolName(const Memory::String &symbol, bool windows)
  * @param libraries 是否接受归档及共享库。
  * @return 拥有绝对路径的输入数组。
  */
-Memory::Vector<Memory::String> checkedInputs(const Memory::Vector<Memory::String> &inputs, const std::filesystem::path &output, const chali_aot::TargetInfo &target, bool libraries)
+Memory::Vector<Memory::String> checkedInputs(const Memory::Vector<Memory::String> &inputs, const std::filesystem::path &output, const chali_build::TargetInfo &target, bool libraries)
 {
     Memory::Vector<Memory::String> result;
     for (const auto &input : inputs)
@@ -71,12 +71,12 @@ Memory::Vector<Memory::String> checkedInputs(const Memory::Vector<Memory::String
  * @param options 用户显式归档器或 LLVM clang 配置。
  * @return 归档器路径。
  */
-std::string archiver(const chali_aot::Options &options)
+std::string archiver(const chali_build::Options &options)
 {
     if (!options.compiler.empty()) return options.compiler.c_str();
     if (const char *value = std::getenv("CHALI_LLVM_AR"))
         if (*value) return value;
-    const auto compiler = std::filesystem::u8path(chali_aot::llvmCompilerPath({}).c_str());
+    const auto compiler = std::filesystem::u8path(chali_build::llvmCompilerPath({}).c_str());
     const auto sibling = compiler.parent_path() /
 #ifdef _WIN32
                          "llvm-ar.exe";
@@ -100,11 +100,11 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
     try
     {
         Request request = original;
-        chali_aot::TargetInfo target;
+        chali_build::TargetInfo target;
         Memory::String targetError;
-        if (!chali_aot::describeTarget(request.options.target, target, &targetError)) throw std::runtime_error(targetError.c_str());
+        if (!chali_build::describeTarget(request.options.target, target, &targetError)) throw std::runtime_error(targetError.c_str());
         if (request.inputs.empty() && request.libraryNames.empty()) throw std::runtime_error("链接需要对象或库输入");
-        const auto subsystemError = chali_aot::windowsSubsystemError(request.options.subsystem, target.windows && !request.options.shared);
+        const auto subsystemError = chali_build::windowsSubsystemError(request.options.subsystem, target.windows && !request.options.shared);
         if (!subsystemError.empty()) throw std::runtime_error(subsystemError.c_str());
         if (!request.entry.empty() && !symbolName(request.entry, target.windows)) throw std::runtime_error("入口符号不受支持");
         for (const auto &name : request.options.exports)
@@ -128,11 +128,11 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
         // 私有目录隔离写入，同时保留最终文件名，避免 DLL 导出表及宿主导入表记录错误的临时名字。
         const auto temporary = work.path / product.filename();
         int code = 1;
-        if (chali_aot::builtin::available() && request.options.compiler.empty() && (request.noRuntime || (target.native && target.windows && request.options.sysroot.empty() && request.options.runtimeDirectory.empty())))
-            code = chali_aot::builtin::link(request, Memory::String(temporary.u8string().c_str()), diagnostics);
+        if (chali_build::builtin::available() && request.options.compiler.empty() && (request.noRuntime || (target.native && target.windows && request.options.sysroot.empty() && request.options.runtimeDirectory.empty())))
+            code = chali_build::builtin::link(request, Memory::String(temporary.u8string().c_str()), diagnostics);
         else
         {
-            const auto compiler = chali_aot::llvmCompilerPath(request.options.compiler);
+            const auto compiler = chali_build::llvmCompilerPath(request.options.compiler);
             std::vector<std::string> arguments{ compiler.c_str(), "--target=" + std::string(target.triple.c_str()), "-fuse-ld=lld", "-o", temporary.u8string(), "-Wl,--gc-sections" };
             if (!request.options.subsystem.empty()) arguments.push_back(request.options.subsystem == "windows" ? "-mwindows" : "-mconsole");
             if (request.options.lto)
@@ -151,7 +151,7 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
             arguments.push_back("-Wl,--start-group");
             for (const auto &input : request.inputs) arguments.push_back(input.c_str());
             for (const auto &name : request.libraryNames) arguments.push_back("-l" + std::string(name.c_str()));
-            chali_aot::RuntimeAssets runtime;
+            chali_build::RuntimeAssets runtime;
             fs::path directory;
             if (!request.noRuntime)
             {
@@ -228,14 +228,14 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
  * @param diagnostics 接收工具和格式诊断。
  * @return 成功为零，失败为一。
  */
-int archive(const Memory::Vector<Memory::String> &objects, const Memory::String &output, const chali_aot::Options &options, Memory::Vector<Memory::String> *diagnostics)
+int archive(const Memory::Vector<Memory::String> &objects, const Memory::String &output, const chali_build::Options &options, Memory::Vector<Memory::String> *diagnostics)
 {
     namespace fs = std::filesystem;
     try
     {
-        chali_aot::TargetInfo target;
+        chali_build::TargetInfo target;
         Memory::String message;
-        if (!chali_aot::describeTarget(options.target, target, &message)) throw std::runtime_error(message.c_str());
+        if (!chali_build::describeTarget(options.target, target, &message)) throw std::runtime_error(message.c_str());
         const auto product = fs::absolute(fs::u8path(output.c_str())).lexically_normal();
         const auto inputs = checkedInputs(objects, product, target, false);
         const bool coff = target.windows && product.extension() == ".lib";
@@ -243,7 +243,7 @@ int archive(const Memory::Vector<Memory::String> &objects, const Memory::String 
         const auto temporary = work.path / (coff ? "archive.lib" : "archive.a");
         std::string diagnostic;
         int code = 1;
-        if (chali_aot::builtin::available() && options.compiler.empty())
+        if (chali_build::builtin::available() && options.compiler.empty())
             code = builtin::archive(inputs, temporary.u8string(), coff, diagnostic);
         else
         {
@@ -288,9 +288,16 @@ int runCli(int argc, char **argv)
             literal = true;
             continue;
         }
+        if (chali_build::builtin::available() && (argument == "--llvm" || argument.compare(0, 7, "--llvm=") == 0))
+        {
+            std::fputs("chali: 静态 LLVM 编译器不支持 --llvm；请使用 llvm-external 变体指定外部工具链。\n", stderr);
+            return 2;
+        }
         if (argument == "--help" || argument == "-h")
         {
-            std::puts(ar ? "chali ar [OBJECT ...] --out LIB.a [--target TARGET] [--llvm LLVM-AR]" : "chali link INPUT ... [--out FILE] [--target TARGET] [--cpu CPU] [--subsystem console|windows] [--shared] [--export SYMBOL] [--entry SYMBOL] [--no-runtime] [--lto|--no-lto|--lto-mode off|full|thin] [-L DIR] [--library NAME] [--llvm CLANG] [--sysroot DIR] [--runtime-dir DIR] [--debug]");
+            std::string usage = ar ? "chali ar [OBJECT ...] --out LIB.a [--target TARGET]" : "chali link INPUT ... [--out FILE] [--target TARGET] [--cpu CPU] [--subsystem console|windows] [--shared] [--export SYMBOL] [--entry SYMBOL] [--no-runtime] [--lto|--no-lto|--lto-mode off|full|thin] [-L DIR] [--library NAME] [--sysroot DIR] [--runtime-dir DIR] [--debug]";
+            if (!chali_build::builtin::available()) usage += ar ? " [--llvm LLVM-AR]" : " [--llvm CLANG]";
+            std::puts(usage.c_str());
             return 0;
         }
         if (!ar && argument == "--shared")
@@ -372,9 +379,9 @@ int runCli(int argc, char **argv)
         std::fputs("chali ar: 需要 --out 指定静态归档\n", stderr);
         return 2;
     }
-    chali_aot::TargetInfo target;
+    chali_build::TargetInfo target;
     Memory::String error;
-    if (!chali_aot::describeTarget(request.options.target, target, &error))
+    if (!chali_build::describeTarget(request.options.target, target, &error))
     {
         std::fprintf(stderr, "%s\n", error.c_str());
         return 2;

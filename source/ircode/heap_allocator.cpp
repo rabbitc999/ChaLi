@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 /**
@@ -50,4 +50,4 @@ bool HeapAllocator::writeDouble(std::size_t address, double value)
 {
     return allocatedHeapRange(*this, address, sizeof(value)) && writeBytes(address, reinterpret_cast<const char *>(&value), sizeof(value));
 }
-}  // namespace stackvm
+}  // namespace runtime

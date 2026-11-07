@@ -6,7 +6,7 @@
 #include "chali_aot.hpp"
 #include <filesystem>
 
-namespace chali_aot
+namespace chali_build
 {
 /**
  * @brief 单次编译私有的运行时链接目录，离开作用域时回收。
@@ -46,4 +46,4 @@ struct RuntimeAssets
      */
     bool prepareAbi(const Memory::String &source, Memory::String *object, Memory::Vector<Memory::String> *diagnostics);
 };
-}  // namespace chali_aot
+}  // namespace chali_build

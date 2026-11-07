@@ -2916,7 +2916,7 @@ bool M_SetReflectionEnabled(bool enabled)
     g_reflectionEnabled = false;
     if (!enabled) return true;
 #if CHALI_WITH_REFLECTION
-    if ((stackvm::supportedProgramFeatures() & stackvm::kFeatureReflection) == 0) return false;
+    if ((runtime::supportedProgramFeatures() & runtime::kFeatureReflection) == 0) return false;
     g_reflectionEnabled = true;
     return true;
 #else
@@ -3194,7 +3194,7 @@ bool ExpandAstMacroMembers(int owner);
  * @brief 从最终声明表收集源码显式公开的函数标签。
  * @return 保留重载和模块限定身份的有效导出标签。
  */
-Memory::Vector<Memory::String> M_AotExports()
+Memory::Vector<Memory::String> M_BuildExports()
 {
     Memory::Vector<Memory::String> labels;
     for (const auto &declaration : g_functionDecls)
@@ -3215,13 +3215,13 @@ void M_ReportLifetimeDiagnostics()
 /**
  * @brief 最近一次成功语义检查后的 AST，由编译器保留到下一次编译。
  */
-static std::unique_ptr<ast::Program> g_aotSyntax;
+static std::unique_ptr<ast::Program> g_buildSyntax;
 
 /**
  * @brief 返回最近一次语义降级完成的 AST，不构造四元式。
  * @return 下次编译前有效的 AST 指针。
  */
-const ast::Program *M_AotSyntax() { return g_aotSyntax.get(); }
+const ast::Program *M_BuildSyntax() { return g_buildSyntax.get(); }
 
 /**
  * @brief 完成语义检查和所有权展开，保留供 LLVM 直接访问的 AST。
@@ -3235,7 +3235,7 @@ const ast::Program *M_AotSyntax() { return g_aotSyntax.get(); }
 int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBinary,
               const char *inputText)
 {
-    g_aotSyntax.reset();
+    g_buildSyntax.reset();
     ResetState();
     g_executeNow = run != 0;
     /* 解析期攒下的错（复合引用等）：ResetState 会清 g_error，所以在这里补报。 */
@@ -3449,7 +3449,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
     if (g_checkOnly)
     {
         // 检查模式保留已验证的 AST，供诊断规则使用；不添加运行时辅助函数。
-        g_aotSyntax = std::make_unique<ast::Program>(std::move(program));
+        g_buildSyntax = std::make_unique<ast::Program>(std::move(program));
         return 0;
     }
 
@@ -3473,10 +3473,10 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
                 out.push_back({ capture.source, DebugValueLayout(capture.type), capture.captureMode,
                                 capture.captureMode < 2 && capture.type->kind != MType::Ptr });
         }
-    g_aotSyntax = std::make_unique<ast::Program>(std::move(program));
+    g_buildSyntax = std::make_unique<ast::Program>(std::move(program));
     /* 仅显式请求兼容四元式产物时生成；正常编译直接把 AST 交给 LLVM 后端。 */
     if (!emitBinary) return 0;
-    program = *g_aotSyntax;
+    program = *g_buildSyntax;
     ast::CodegenResult result = ast::generate(program, moduleName);
     if (g_reflectionEnabled) result.quads = "# chali-features: reflection\n# chali-reflection: " + *mr::toHex(reflection.table) + "\n" + result.quads;
     if (!result.ok())
@@ -3486,7 +3486,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
     }
     Memory::String binaryPath;
     Memory::String layoutPath;
-    stackvm::QuadFile file;
+    runtime::QuadFile file;
     if (!WriteArtifacts(outPrefix, result, &binaryPath, &layoutPath, &file)) return 1;
     (void)run;
     (void)emitBinary;
@@ -3509,7 +3509,7 @@ std::size_t M_RuntimePeakBytes() { return g_runtimePeak; }
  * @brief 设置程序执行使用的宿主原生函数注册表。
  * @param registry 接收函数绑定的宿主注册表。
  */
-void M_SetNativeRegistry(const stackvm::NativeRegistry *registry) { g_nativeRegistry = registry; }
+void M_SetNativeRegistry(const runtime::NativeRegistry *registry) { g_nativeRegistry = registry; }
 
 /**
  * @brief 设置本次程序执行是否启用线程调度。

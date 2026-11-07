@@ -6,7 +6,7 @@
 #include "runtime_objects.hpp"
 #include "value_transfer.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 捕获可跨运行时传递的对象值。
@@ -78,4 +78,4 @@ bool restoreTransferObject(NativeContext &ctx, const TransferPacket &packet,
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  */
 bool restoreTransfer(NativeContext &ctx, const TransferPacket &packet, Slot *out);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

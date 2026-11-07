@@ -39,7 +39,7 @@ LLD_HAS_DRIVER(mingw)
 LLD_HAS_DRIVER(elf)
 #endif
 
-namespace chali_aot::builtin
+namespace chali_build::builtin
 {
 #if CHALI_STATIC_LLVM
 namespace
@@ -492,4 +492,4 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     return 1;
 #endif
 }
-}  // namespace chali_aot::builtin
+}  // namespace chali_build::builtin

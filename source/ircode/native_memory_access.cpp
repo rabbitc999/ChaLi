@@ -5,7 +5,7 @@
 #include "runtime_internal.hpp"
 #include "runtime_i18n.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -224,4 +224,4 @@ std::size_t nativeAllocString(NativeContext &ctx, const Memory::String &text)
     return address;
 }
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

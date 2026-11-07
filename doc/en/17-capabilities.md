@@ -61,7 +61,7 @@ Every non-void value has default `toString()` and String conversion: structs `{.
 
 Release builds run LLVM O3, global DCE, full LTO and section GC; quadruples are not optimized internally — LLVM does all optimization. Reachable data uses sparse initialization, and arrays reuse runtime zeroing. Hosts embed native shared libraries through generated C ABI headers.
 
-DWARF source locations and variables support GDB/MI breakpoints, stepping and variable inspection in VS Code. Actual platforms and hashes are recorded separately; cross-building a compiler does not establish AOT support. See [AOT](38-aot.md) and [native debugging](43-native-debugging.md).
+DWARF source locations and variables support GDB/MI breakpoints, stepping and variable inspection in VS Code. Actual platforms and hashes are recorded separately; cross-building a compiler does not establish AOT support. See [LLVM build](38-build.md) and [native debugging](43-native-debugging.md).
 
 ## Host integration and reflection
 

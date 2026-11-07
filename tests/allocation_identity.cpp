@@ -12,7 +12,7 @@
  */
 int main()
 {
-    stackvm::execution_detail::AllocationIndex index;
+    runtime::execution_detail::AllocationIndex index;
     index.reset(8);
     const auto padded = index.add(0, 31);
     assert(padded && index.find(padded + 30));
@@ -64,7 +64,7 @@ int main()
     assert(merged && !index.find(right));
     assert(!index.release(right) && index.find(merged + 8) && !index.release(right + 1));
     assert(index.release(merged));
-    stackvm::execution_detail::AllocationIndex limited(3);
+    runtime::execution_detail::AllocationIndex limited(3);
     limited.reset(8);
     std::size_t exhausted = 0;
     for (int i = 0; i < 3; ++i)

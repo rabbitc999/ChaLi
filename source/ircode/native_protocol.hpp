@@ -7,7 +7,7 @@
 #include "debug_protocol.hpp"
 #include "abi/chali_abi.h"
 
-namespace stackvm
+namespace runtime
 {
 /**
  * @brief C++ 胶水函数与运行时交换的单槽值。字符串、指针和宿主句柄使用整数地址/句柄。
@@ -404,4 +404,4 @@ private:
     Memory::Map<Memory::String, Memory::String> compactNames_;  ///< 编号键到宿主原名。
 };
 
-}  // namespace stackvm
+}  // namespace runtime

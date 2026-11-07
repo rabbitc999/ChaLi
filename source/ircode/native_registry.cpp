@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -72,4 +72,4 @@ const SlotNativeEntry kSlotNativeEntries[] = {
 };
 const SlotNativeTable kSlotNatives{ kSlotNativeEntries, sizeof(kSlotNativeEntries) / sizeof(kSlotNativeEntries[0]) };
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

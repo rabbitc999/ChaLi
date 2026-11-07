@@ -14,7 +14,7 @@ namespace chali_assembler
  * @param diagnostics 接收原始源码位置及工具诊断。
  * @return 成功为零，失败非零。
  */
-int assemble(const Memory::String &input, const Memory::String &output, const chali_aot::Options &options, Memory::Vector<Memory::String> *diagnostics);
+int assemble(const Memory::String &input, const Memory::String &output, const chali_build::Options &options, Memory::Vector<Memory::String> *diagnostics);
 /**
  * @brief 执行独立汇编命令，不经过语言解析器。
  * @param argc 归一化参数数量。
@@ -32,6 +32,6 @@ namespace builtin
  * @param diagnostic 接收汇编诊断。
  * @return 成功为零，失败为一。
  */
-int assemble(const std::string &input, const std::string &output, const chali_aot::Options &options, std::string &diagnostic);
+int assemble(const std::string &input, const std::string &output, const chali_build::Options &options, std::string &diagnostic);
 }  // namespace builtin
 }  // namespace chali_assembler

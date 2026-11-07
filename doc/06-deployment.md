@@ -4,7 +4,7 @@
 [English](en/06-deployment.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-ChaLi 从已检查的 AST 生成 LLVM IR，再由 LLVM AOT 生成目标平台的原生机器码。部署时交付编译产物，并为目标机器准备其依赖的系统库。
+ChaLi 从已检查的 AST 生成 LLVM IR，再由 LLVM 构建生成目标平台的原生机器码。部署时交付编译产物，并为目标机器准备其依赖的系统库。
 
 ## 源码直接运行
 

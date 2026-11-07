@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -606,4 +606,4 @@ bool NoHeapAllocator::writeBytes(std::size_t, const char *, std::size_t)
 { return false; }
 #endif
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

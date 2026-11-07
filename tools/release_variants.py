@@ -55,6 +55,7 @@ def main():
                 release.run([sys.executable, 'tests/chali_windows_subsystem.py', '--chali', binary], env=env)
                 if variant == 'static':
                     release.run([sys.executable, 'tests/chali_aot_static.py', '--chali', binary], env=env)
+                    release.run([sys.executable, 'tests/chali_static_llvm_options.py', '--chali', binary], env=env)
             release.run(['npm.cmd', 'run', 'package', '--', '--llvm-variant', variant,
                          '--compiler', str(binary), *(['--skip-tests'] if args.skip_tests else [])], cwd=ROOT / 'vscode', env=env)
         vsix = ROOT / f'vscode/dist/chali-editor-{extension}-llvm-{variant}.vsix'

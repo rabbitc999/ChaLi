@@ -5,7 +5,7 @@
 #pragma once
 #include "vm_config.hpp"
 
-namespace stackvm
+namespace runtime
 {
 /**
  * @brief 注解与反射能力位；普通格式的最低位保留给载荷加密。
@@ -147,4 +147,4 @@ struct SymbolRecord
     std::int32_t line = 0;
     Memory::String original;
 };
-}  // namespace stackvm
+}  // namespace runtime

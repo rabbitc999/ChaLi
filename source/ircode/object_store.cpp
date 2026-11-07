@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -495,4 +495,4 @@ bool ObjectStore::release(std::int64_t handle)
 [[nodiscard]] std::size_t ObjectStore::liveCount() const
 { return objects.size() + inlineHandleCount; }
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

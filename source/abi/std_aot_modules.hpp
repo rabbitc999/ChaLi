@@ -12,5 +12,5 @@ namespace std_registry
  * @param diagnostics 绑定诊断接收器。
  * @return 必需模块名称；显式完整对照模式返回所有模块。
  */
-Memory::Vector<Memory::String> aotModulesFor(const Memory::Vector<Memory::String> &names, Memory::Vector<Memory::String> *diagnostics);
+Memory::Vector<Memory::String> buildModulesFor(const Memory::Vector<Memory::String> &names, Memory::Vector<Memory::String> *diagnostics);
 }  // namespace std_registry

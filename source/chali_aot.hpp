@@ -8,7 +8,7 @@
 
 namespace ast { struct Program; }
 
-namespace chali_aot
+namespace chali_build
 {
 
 /**
@@ -84,8 +84,8 @@ struct Options
 struct Request
 {
     const ast::Program *syntax = nullptr;      ///< 语义检查后的 AST；正常运行和 AOT 直接消费此树。
-    const stackvm::QuadFile *quads = nullptr;   ///< 独立库调用方的兼容四元式输入；正常编译为空。
-    const stackvm::Program *program = nullptr;  ///< 兼容组装结果；AST 路径不需要它。
+    const runtime::QuadFile *quads = nullptr;   ///< 独立库调用方的兼容四元式输入；正常编译为空。
+    const runtime::Program *program = nullptr;  ///< 兼容组装结果；AST 路径不需要它。
     Memory::String dataBytes;                   ///< `.data.bin` 原始字节。
     Memory::String dataLayout;                  ///< 布局文本（每行 `名 offset=… size=…`）。
     Memory::Vector<ExternFunction> externs;     ///< `abi` 声明的外部 C 函数。
@@ -175,4 +175,4 @@ void setAbiGlueProvider(Memory::String (*provider)(const Memory::Set<Memory::Str
  * @return 驱动路径或 clang 程序名。
  */
 Memory::String llvmCompilerPath(const Memory::String &wanted);
-}  // namespace chali_aot
+}  // namespace chali_build

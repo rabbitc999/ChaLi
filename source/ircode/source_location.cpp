@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 /**
@@ -69,4 +69,4 @@ const SourceLocation *DebugInfo::lookup(std::size_t instruction) const
     }
     return &entries[low].second;
 }
-}  // namespace stackvm
+}  // namespace runtime

@@ -5,7 +5,7 @@
 #pragma once
 #include "stackvm.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 栈里的一个值。
@@ -64,4 +64,4 @@ struct Slot
      */
     [[nodiscard]] double number() const { return isFloat ? real : static_cast<double>(integer); }
 };
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

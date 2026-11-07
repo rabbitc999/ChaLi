@@ -13,7 +13,7 @@
 #pragma once
 #include "program_model.hpp"
 
-namespace stackvm
+namespace runtime
 {
 namespace selection
 {
@@ -49,4 +49,4 @@ void resetStats();
  */
 [[nodiscard]] Memory::String describe(const Stats &stats);
 }  // namespace selection
-}  // namespace stackvm
+}  // namespace runtime

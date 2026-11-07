@@ -16,7 +16,7 @@
  */
 struct ChaliAbiRuntime
 {
-    stackvm::runtimeDetail::NativeContext *context = nullptr;  ///< 本次调用借用的运行时上下文。
+    runtime::runtimeDetail::NativeContext *context = nullptr;  ///< 本次调用借用的运行时上下文。
     int32_t status = ChaliAbiOk;                               ///< 首个失败状态；每次外层调用独立持有。
     std::string diagnostic;                                    ///< 完整诊断，使用宿主堆而非语言临时 arena。
     const char *fallback = nullptr;                            ///< 诊断分配失败时仍可报告的静态文本。

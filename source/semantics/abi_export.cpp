@@ -17,12 +17,12 @@ Memory::Vector<const MFunctionDecl *> CAbiExportFunctions()
  * @brief 生成与内部逻辑地址调用分离的原生导出元数据。
  * @return 含准确 C 类型的导出声明。
  */
-Memory::Vector<::chali_aot::ExternFunction> ChaliAotAbiExports()
+Memory::Vector<::chali_build::ExternFunction> ChaliBuildAbiExports()
 {
-    Memory::Vector<::chali_aot::ExternFunction> result;
+    Memory::Vector<::chali_build::ExternFunction> result;
     for (const auto *function : CAbiExportFunctions())
     {
-        ::chali_aot::ExternFunction entry;
+        ::chali_build::ExternFunction entry;
         entry.label = function->label;
         entry.symbol = function->exportSymbol;
         entry.abiConvention = "C";
@@ -47,7 +47,7 @@ Memory::String CExportType(const std::shared_ptr<MType> &type)
  * @brief 生成纯 C 的结构体布局与函数原型，不公开内部六十四位槽约定。
  * @return 导出头文件的声明片段。
  */
-Memory::String ChaliAotAbiExportHeader()
+Memory::String ChaliBuildAbiExportHeader()
 {
     Memory::String out;
     Memory::Set<Memory::String> emitted;

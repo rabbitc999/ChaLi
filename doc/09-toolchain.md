@@ -8,7 +8,7 @@ GitHub 在每次 push 和 pull request 时运行[命令与文档门禁](../.gith
 
 `run` 使用 checked AOT 编译执行，`build` 默认 unchecked 导出。原生调试见[构建调试](43-native-debugging.md)。
 
-ChaLi 默认通过 checked AOT 执行程序。源码经过模块加载、语法与语义检查，直接从已检查的 AST 生成 LLVM IR；正常路径绕过四元式生成及组装，可显式使用 [AOT 编译入口](38-aot.md)生成 LLVM 模块与原生产物。
+ChaLi 默认通过 checked AOT 执行程序。源码经过模块加载、语法与语义检查，直接从已检查的 AST 生成 LLVM IR；正常路径绕过四元式生成及组装，可显式使用 [LLVM 构建入口](38-build.md)生成 LLVM 模块与原生产物。
 
 ## 执行与检查
 

@@ -4,7 +4,7 @@
  */
 #include "artifact_binary_detail.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 /**
@@ -96,4 +96,4 @@ bool decodeDataLayout(std::string_view bytes, Memory::Vector<LayoutRow> &rows)
     rows = std::move(decoded);
     return true;
 }
-}  // namespace stackvm
+}  // namespace runtime

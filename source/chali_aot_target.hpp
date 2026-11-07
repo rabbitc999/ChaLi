@@ -5,7 +5,7 @@
 #pragma once
 #include "allocator/chali_allocator.hpp"
 
-namespace chali_aot
+namespace chali_build
 {
 /**
  * @brief 一个已经验证的六十四位小端 AOT 目标。
@@ -43,4 +43,4 @@ bool describeTarget(const Memory::String &requested, TargetInfo &target, Memory:
  * @return 选项可用时返回空串，否则返回诊断。
  */
 Memory::String windowsSubsystemError(const Memory::String &subsystem, bool executable);
-}  // namespace chali_aot
+}  // namespace chali_build

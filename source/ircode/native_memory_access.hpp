@@ -6,7 +6,7 @@
 #include "runtime_objects.hpp"
 #include "value_transfer.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 已验证的堆字符串字节视图，同时兼容原长度头与新容量描述符。
@@ -80,4 +80,4 @@ bool nativeReadCString(const NativeContext &ctx, std::size_t address, Memory::St
  * @return 地址；0 = 失败（`ctx.error` 里是原因）。
  */
 std::size_t nativeAllocString(NativeContext &ctx, const Memory::String &text);
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

@@ -27,8 +27,8 @@
 
 namespace
 {
-using namespace stackvm;
-using namespace stackvm::runtimeDetail;
+using namespace runtime;
+using namespace runtime::runtimeDetail;
 
 /**
  * @brief 取当前帧的运行时上下文。

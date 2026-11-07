@@ -11,7 +11,7 @@ This page records protection for confirmed defects. It does not claim that the c
 ## Representative inputs and measured boundaries
 
 The [case catalog](../../tests/compiler_limits_cases.py) selects 25 cases each for everyday application components, advanced compositions and bounded stress inputs.
-The [driver](../../tests/chali_compiler_limits.py) checks compilation, execution and an independent expected result for historical interpreter and LLVM AOT, retaining exit codes, diagnostics, timeouts and output bytes.
+The [driver](../../tests/chali_compiler_limits.py) checks compilation, execution and an independent expected result for historical interpreter and LLVM build, retaining exit codes, diagnostics, timeouts and output bytes.
 Discovery finishes with a frozen inventory before implementation fixes begin. Use `--verify` for regression checks that fail on unexpected outcomes.
 
 The [0.31.0 discovery snapshot](../../tests/fixtures/compiler_limits/discovery_0_31_0.json) records sources, host, LLVM, build options and compiler SHA256.
@@ -24,7 +24,7 @@ The selected signature remains attached to the expression through type checking 
 
 Stress runs use a separate 64 MiB execution budget and the default compiler pool. Recorded points include:
 
-| Input | historical interpreter | LLVM AOT |
+| Input | historical interpreter | LLVM build |
 | --- | --- | --- |
 | A plain addition expression with 512 terms | Fragment depth or size budget diagnostic | Same diagnostic |
 | A dynamic array requesting approximately 128 MiB | Heap capacity diagnostic | Heap capacity diagnostic |

@@ -5,7 +5,7 @@
 #include "runtime_internal.hpp"
 #include "../abi/chali_real_text.h"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -513,4 +513,4 @@ Slot valueToString(NativeContext &ctx, const Memory::Vector<Slot> &args)
     return Slot::fromInt(static_cast<std::int64_t>(nativeAllocString(ctx, text)));
 }
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

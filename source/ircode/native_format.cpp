@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 namespace runtimeDetail
@@ -238,4 +238,4 @@ bool nativeFormatInto(NativeContext &ctx, const Memory::String &format, const Me
     return true;
 }
 }  // namespace runtimeDetail
-}  // namespace stackvm
+}  // namespace runtime

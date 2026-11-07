@@ -89,25 +89,25 @@ void buildCopyFixture(const Memory::String &prefix, const Memory::String &mode)
     }
     body += "(param, " + target + ", _, d)\n(param, " + source + ", _, s)\n(param, " + slots + ", _, n)\n(call, __chali_copy_struct, _, ignored)\n";
     body += "(load:i64, " + result + ", _, value)\n(+:i64, value, 48, character)\n(param, character, _, c)\n(call, putchar, _, ignored)\n(ret, 0, _, _)\n";
-    const auto quads = stackvm::parseQuads("(call, main, _, _)\n(halt, _, _, _)\n(label, _, _, main)\n" + body + "(decl, i64, local, d)\n(decl, i64, local, s)\n(decl, i64, local, n)\n(label, _, _, __chali_copy_struct)\n"
+    const auto quads = runtime::parseQuads("(call, main, _, _)\n(halt, _, _, _)\n(label, _, _, main)\n" + body + "(decl, i64, local, d)\n(decl, i64, local, s)\n(decl, i64, local, n)\n(label, _, _, __chali_copy_struct)\n"
                                                                                                                  "(decl, i64, local, k)\n(:=, 0, _, k)\n(label, _, _, loop)\n(<:i64, k, n, more)\n(jz, more, _, done)\n"
                                                                                                                  "(*:i64, k, 8, offset)\n(+:i64, s, offset, from)\n(load:i64, from, _, word)\n(+:i64, d, offset, to)\n(store:i64, to, word, _)\n"
                                                                                                                  "(+:i64, k, 1, k)\n(j, _, _, loop)\n(label, _, _, done)\n(ret, 0, _, _)\n",
                                            "copy-boundary");
-    chali_aot::Request request;
+    chali_build::Request request;
     request.quads = &quads;
     request.options.outputPrefix = prefix;
     request.options.memoryBytes = 1024 * 1024;
     request.dataBytes = Memory::String(1, '\0');
     request.dataLayout = "zero offset=0 size=1 stride=1\n";
-    chali_aot::ExternFunction output;
+    chali_build::ExternFunction output;
     output.label = "putchar";
     output.symbol = "putchar";
     output.resultType = "int";
     output.parameterTypes = { "int" };
     request.externs.push_back(output);
     Memory::Vector<Memory::String> diagnostics;
-    const int status = chali_aot::run(request, &diagnostics);
+    const int status = chali_build::run(request, &diagnostics);
     for (const auto &message : diagnostics) std::cerr << message << '\n';
     require(status == 0, "复制边界 AOT 编译失败");
 }
@@ -126,22 +126,22 @@ int main(int argc, char **argv)
             buildCopyFixture(argv[2], argv[3]);
             return 0;
         }
-        const auto quads = stackvm::parseQuads("(call, main, _, _)\n(halt, _, _, _)\n(label, _, _, main)\n"
+        const auto quads = runtime::parseQuads("(call, main, _, _)\n(halt, _, _, _)\n(label, _, _, main)\n"
                                                "(alloc, 8, _, p)\n(store:i64, p, 7, _)\n(load:i64, p, _, first)\n(load:i64, p, _, second)\n(drop, p, _, _)\n(ret, second, _, _)\n",
                                                "address-cache");
-        chali_aot::Request request;
+        chali_build::Request request;
         request.quads = &quads;
         Memory::Vector<Memory::String> diagnostics;
         environment("CHALI_NO_AOT_ADDRESS_CACHE", "1");
-        const auto plain = chali_aot::generateLLVM(request, &diagnostics);
+        const auto plain = chali_build::generateLLVM(request, &diagnostics);
         for (const auto &message : diagnostics) std::cerr << message << '\n';
         require(diagnostics.empty() && !plain.empty(), "原始 LLVM 生成失败");
         environment("CHALI_NO_AOT_ADDRESS_CACHE", "");
-        const auto optimized = chali_aot::generateLLVM(request, &diagnostics);
+        const auto optimized = chali_build::generateLLVM(request, &diagnostics);
         require(diagnostics.empty() && !optimized.empty(), "优化 LLVM 生成失败");
         require(occurrences(plain, "call ptr @chali_host_address(") == occurrences(optimized, "call ptr @chali_host_address(") + 1, "重复地址验证未按证明消除");
         require(optimized.find("inlinehint") != Memory::String::npos, "极小 AOT 函数缺少内联提示");
-        const auto callbacks = stackvm::parseQuads("(call, main, _, _)\n(halt, _, _, _)\n(label, _, _, main)\n"
+        const auto callbacks = runtime::parseQuads("(call, main, _, _)\n(halt, _, _, _)\n(label, _, _, main)\n"
                                                    "(addr, function_label, _, fp)\n(param, 41, _, x)\n(callptr, fp, _, answer)\n(ret, answer, _, _)\n"
                                                    "(decl, i64, local, x)\n(label, _, _, tiny)\n(+:i64, x, 1, result)\n(ret, result, _, _)\n",
                                                    "known-function");
@@ -149,9 +149,9 @@ int main(int argc, char **argv)
         request.dataBytes = Memory::String("\0tiny\0", 6);
         request.dataLayout = "function_label offset=1 size=5 stride=1\n";
         environment("CHALI_NO_AOT_DIRECT_CALLS", "1");
-        const auto indirect = chali_aot::generateLLVM(request, &diagnostics);
+        const auto indirect = chali_build::generateLLVM(request, &diagnostics);
         environment("CHALI_NO_AOT_DIRECT_CALLS", "");
-        const auto direct = chali_aot::generateLLVM(request, &diagnostics);
+        const auto direct = chali_build::generateLLVM(request, &diagnostics);
         require(diagnostics.empty(), "函数值调用 LLVM 生成失败");
         require(occurrences(indirect, "call i64 @chali_invoke(") == occurrences(direct, "call i64 @chali_invoke(") + 1,
                 "已证明的无环境函数值未降低为直接调用");

@@ -4,7 +4,7 @@
  */
 #include "concurrent_call_state.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 /**
@@ -372,4 +372,4 @@ std::optional<bool> Machine::callTransferService(runtimeDetail::ConcurrentCallSt
 
     return std::nullopt;
 }
-}  // namespace stackvm
+}  // namespace runtime

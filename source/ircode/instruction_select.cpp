@@ -5,7 +5,7 @@
 #include "instruction_select.hpp"
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 namespace selection
 {
@@ -392,4 +392,4 @@ Memory::String describe(const Stats &stats)
     return text;
 }
 }  // namespace selection
-}  // namespace stackvm
+}  // namespace runtime

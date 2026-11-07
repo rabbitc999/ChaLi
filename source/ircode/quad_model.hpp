@@ -6,7 +6,7 @@
 #include "execution_types.hpp"
 #include "reflection.hpp"
 
-namespace stackvm
+namespace runtime
 {
 /**
  * @brief 一条四元式：`(op, arg1, arg2, result[, extra])`。
@@ -141,4 +141,4 @@ enum class PrintFormat
     Float,     ///< 浮点。
     Text,      ///< 字符串（`print`）。
 };
-}  // namespace stackvm
+}  // namespace runtime

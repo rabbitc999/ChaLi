@@ -4,7 +4,7 @@
 **English** · [简体中文](../40-backend-ownership.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-After the ChaLi front end completes type, borrow and deterministic-cleanup lowering, the checked AST goes straight to LLVM AOT; LLVM performs all optimization. Independent value semantics for ordinary assignment and the exclusion between `Copy<T>` and `#NonCopyable` remain in force.
+After the ChaLi front end completes type, borrow and deterministic-cleanup lowering, the checked AST goes straight to LLVM build; LLVM performs all optimization. Independent value semantics for ordinary assignment and the exclusion between `Copy<T>` and `#NonCopyable` remain in force.
 
 Release AOT defaults to full LLVM optimization: static LLVM uses `default<O3>` and aggressive code generation; external LLVM uses `-O3`. Debug builds retain their documented lower optimization. Normal floating-point semantics remain enabled without fast-math. Safety checks and fallbacks still apply, and instrumentation is off by default.
 

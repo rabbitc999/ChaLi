@@ -21,7 +21,7 @@ namespace std_registry
  * @param diagnostics 绑定错误。
  * @return 需要链接的模块名称。
  */
-Memory::Vector<Memory::String> aotModulesFor(const Memory::Vector<Memory::String> &names, Memory::Vector<Memory::String> *diagnostics)
+Memory::Vector<Memory::String> buildModulesFor(const Memory::Vector<Memory::String> &names, Memory::Vector<Memory::String> *diagnostics)
 {
     /** @brief 选择表中的独立模块绑定入口。 */
     struct Module

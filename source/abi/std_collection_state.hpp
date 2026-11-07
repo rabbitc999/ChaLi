@@ -12,8 +12,8 @@
 
 namespace collection_glue
 {
-using NativeValue = stackvm::NativeValue;
-using ObjectValue = stackvm::NativeStoredValue;
+using NativeValue = runtime::NativeValue;
+using ObjectValue = runtime::NativeStoredValue;
 
 /**
  * @brief 胶水内部的数值槽，保持浮点位模式与整数句柄分离。
@@ -116,7 +116,7 @@ struct Record;
  * @param kind 胶水内部的存储类别。
  * @return 对应的不透明记录描述符。
  */
-const stackvm::NativeRecordType &descriptor(StorageKind kind);
+const runtime::NativeRecordType &descriptor(StorageKind kind);
 /**
  * @brief 将元素引用单元中的当前值同步到记录快照。
  * @param ctx 本次调用的公开运行时适配状态。
@@ -130,7 +130,7 @@ bool nativeRefreshViews(State &ctx, Record &object);
  * @param host 当前运行时上下文。
  * @param record 待清理的记录。
  */
-void disposeRecord(stackvm::NativeCallContext &host, void *record);
+void disposeRecord(runtime::NativeCallContext &host, void *record);
 
 /**
  * @brief 多个游标副本共享一次来源租约与稳定元素单元。
@@ -180,7 +180,7 @@ struct Record
  */
 struct Heap
 {
-    stackvm::NativeCallContext &host;
+    runtime::NativeCallContext &host;
     /**
      * @brief 为稳定引用或临时聚合申请受运行时追踪的内存。
      * @param bytes 请求字节数。
@@ -208,7 +208,7 @@ struct Heap
  */
 struct Temporaries
 {
-    stackvm::NativeCallContext &host;
+    runtime::NativeCallContext &host;
     bool object;
     /**
      * @brief 将临时资源加入运行时清理队列。
@@ -222,7 +222,7 @@ struct Temporaries
  */
 struct Store
 {
-    stackvm::NativeCallContext &host;
+    runtime::NativeCallContext &host;
     Temporaries materializedHeap{ host, false }, materializedObjects{ host, true };
     /**
      * @brief 将集合记录交给运行时通用壳管理。
@@ -337,7 +337,7 @@ struct Store
  */
 struct State
 {
-    stackvm::NativeCallContext &host;
+    runtime::NativeCallContext &host;
     Memory::String error;
     Heap memory{ host };
     Store storage{ host };
@@ -347,7 +347,7 @@ struct State
      * @brief 将同步回调接到当前 运行时 调用帧。
      * @param context 仅本次胶水调用有效的公开上下文。
      */
-    explicit State(stackvm::NativeCallContext &context) : host(context) {}
+    explicit State(runtime::NativeCallContext &context) : host(context) {}
 };
 
 /**

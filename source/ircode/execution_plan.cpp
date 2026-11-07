@@ -5,7 +5,7 @@
 #include "runtime_internal.hpp"
 #include "register_allocate.hpp"
 
-namespace stackvm
+namespace runtime
 {
 namespace execution_detail
 {
@@ -219,4 +219,4 @@ const FrameLayout *ExecutionPlan::layout(std::size_t entry)
     return result;
 }
 }  // namespace execution_detail
-}  // namespace stackvm
+}  // namespace runtime

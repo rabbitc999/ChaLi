@@ -4,7 +4,7 @@
  */
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 using namespace runtimeDetail;
 /**
@@ -202,4 +202,4 @@ bool DataArea::writeBytes(std::size_t address, const char *in, std::size_t count
     if (count != 0u) std::memcpy(binary.data() + address, in, count);
     return true;
 }
-}  // namespace stackvm
+}  // namespace runtime

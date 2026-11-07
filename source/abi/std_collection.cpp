@@ -41,7 +41,7 @@ static DebugValueView debugValue(const T &source)
  * @param view 接收视图。
  * @return 安全可观察时返回真。
  */
-bool debugCollection(const stackvm::NativeRecordType *type, const void *record, DebugCollectionView *view)
+bool debugCollection(const runtime::NativeRecordType *type, const void *record, DebugCollectionView *view)
 {
     *view = {};
     if (!record) return false;
@@ -128,7 +128,7 @@ bool debugCollectionField(const DebugValueView &parent, std::size_t index, Debug
  * @param handle 目标集合句柄。
  * @param view 接收头部和失效代次，不可用时清空。
  */
-void numericListView(stackvm::NativeCallContext &host, std::int64_t handle, NumericListView *view)
+void numericListView(runtime::NativeCallContext &host, std::int64_t handle, NumericListView *view)
 {
     *view = {};
     auto *record = static_cast<Record *>(host.nativeRecord(handle, descriptor(StorageKind::Vector)));
@@ -1352,7 +1352,7 @@ inline Slot mapValAt(State &ctx, const Arguments &args)
  * @retval 创建原生调用可用的运行时列表。
  * @param host 当前调用所属的公开运行时上下文。
  */
-std::int64_t makeList(stackvm::NativeCallContext &host)
+std::int64_t makeList(runtime::NativeCallContext &host)
 {
     State state(host);
     if (state.objects == nullptr)
@@ -1372,7 +1372,7 @@ std::int64_t makeList(stackvm::NativeCallContext &host)
  * @param count 字节数量。
  * @return 新列表句柄，失败为零。
  */
-std::int64_t makeByteList(stackvm::NativeCallContext &host, const unsigned char *data, std::size_t count)
+std::int64_t makeByteList(runtime::NativeCallContext &host, const unsigned char *data, std::size_t count)
 {
     auto object = Memory::makeCHeapUnique<Record>();
     object->kind = StorageKind::Vector;
@@ -1400,7 +1400,7 @@ std::int64_t makeByteList(stackvm::NativeCallContext &host, const unsigned char 
  * @param count 元素数量。
  * @return 完整列表句柄，失败为零，未发布对象由本地所有者清理。
  */
-std::int64_t makeNumericList(stackvm::NativeCallContext &host, const std::int64_t *bits,
+std::int64_t makeNumericList(runtime::NativeCallContext &host, const std::int64_t *bits,
                              const unsigned char *kinds, std::size_t count)
 {
     auto object = Memory::makeCHeapUnique<Record>();
@@ -1455,7 +1455,7 @@ std::int64_t makeNumericList(stackvm::NativeCallContext &host, const std::int64_
  * @param required 接收实际长度。
  * @return 查询或复制成功为真，失败不改写输出数组。
  */
-bool copyListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, std::int64_t *bits,
+bool copyListNumbers(runtime::NativeCallContext &host, std::int64_t handle, std::int64_t *bits,
                       unsigned char *kinds, std::size_t capacity, std::size_t &required)
 {
     required = 0;
@@ -1512,7 +1512,7 @@ bool copyListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, std:
  * @param count 追加数量。
  * @return 成功为真，失败保留原有元素和长度。
  */
-bool appendListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, const std::int64_t *bits,
+bool appendListNumbers(runtime::NativeCallContext &host, std::int64_t handle, const std::int64_t *bits,
                         const unsigned char *kinds, std::size_t count)
 {
     if ((count && !bits) || count > SIZE_MAX / sizeof(std::int64_t))
@@ -1574,7 +1574,7 @@ bool appendListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, co
  * @param required 接收列表长度。
  * @return 验证与复制成功时为真。
  */
-bool copyListBytes(stackvm::NativeCallContext &host, std::int64_t handle, unsigned char *data,
+bool copyListBytes(runtime::NativeCallContext &host, std::int64_t handle, unsigned char *data,
                    std::size_t capacity, std::size_t &required)
 {
     required = 0;
@@ -1614,7 +1614,7 @@ bool copyListBytes(stackvm::NativeCallContext &host, std::int64_t handle, unsign
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool listPush(stackvm::NativeCallContext &host, std::int64_t listHandle, const NativeValue &value)
+bool listPush(runtime::NativeCallContext &host, std::int64_t listHandle, const NativeValue &value)
 {
     State state(host);
     if (state.objects == nullptr)
@@ -1656,7 +1656,7 @@ bool listPush(stackvm::NativeCallContext &host, std::int64_t listHandle, const N
  * @param length 字节长度。
  * @return 追加成功为真，类型或存活检查失败为假。
  */
-bool listPushText(stackvm::NativeCallContext &host, std::int64_t listHandle, const char *data, std::size_t length)
+bool listPushText(runtime::NativeCallContext &host, std::int64_t listHandle, const char *data, std::size_t length)
 {
     // 先在最终元素内复制输入，再查询记录；查询可能刷新并回收语言字节视图。
     ObjectValue value;
@@ -1687,7 +1687,7 @@ bool listPushText(stackvm::NativeCallContext &host, std::int64_t listHandle, con
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool listPushStruct(stackvm::NativeCallContext &host, std::int64_t listHandle, std::int64_t structAddress,
+bool listPushStruct(runtime::NativeCallContext &host, std::int64_t listHandle, std::int64_t structAddress,
                     std::size_t slotCount)
 {
     State state(host);
@@ -1734,7 +1734,7 @@ bool listPushStruct(stackvm::NativeCallContext &host, std::int64_t listHandle, s
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool readListStruct(stackvm::NativeCallContext &host, std::int64_t handle, std::size_t slotCount,
+bool readListStruct(runtime::NativeCallContext &host, std::int64_t handle, std::size_t slotCount,
                     Memory::Vector<double> &out)
 {
     State state(host);
@@ -1773,7 +1773,7 @@ bool readListStruct(stackvm::NativeCallContext &host, std::int64_t handle, std::
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool readList(stackvm::NativeCallContext &host, std::int64_t handle,
+bool readList(runtime::NativeCallContext &host, std::int64_t handle,
               Memory::Vector<NativeValue> &out)
 {
     State state(host);
@@ -1804,7 +1804,7 @@ bool readList(stackvm::NativeCallContext &host, std::int64_t handle,
  * @retval 创建原生调用可用的运行时映射。
  * @param host 当前调用所属的公开运行时上下文。
  */
-std::int64_t makeMap(stackvm::NativeCallContext &host)
+std::int64_t makeMap(runtime::NativeCallContext &host)
 {
     State state(host);
     if (state.objects == nullptr)
@@ -1822,7 +1822,7 @@ std::int64_t makeMap(stackvm::NativeCallContext &host)
  * @retval 创建原生调用可用的运行时集合。
  * @param host 当前调用所属的公开运行时上下文。
  */
-std::int64_t makeSet(stackvm::NativeCallContext &host)
+std::int64_t makeSet(runtime::NativeCallContext &host)
 {
     State state(host);
     if (state.objects == nullptr)
@@ -1892,7 +1892,7 @@ inline ObjectValue valueFromNative(const NativeValue &value)
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool mapSet(stackvm::NativeCallContext &host, std::int64_t mapHandle, const NativeValue &key,
+bool mapSet(runtime::NativeCallContext &host, std::int64_t mapHandle, const NativeValue &key,
             const NativeValue &value)
 {
     State state(host);
@@ -1918,7 +1918,7 @@ bool mapSet(stackvm::NativeCallContext &host, std::int64_t mapHandle, const Nati
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool setInsert(stackvm::NativeCallContext &host, std::int64_t setHandle, const NativeValue &value)
+bool setInsert(runtime::NativeCallContext &host, std::int64_t setHandle, const NativeValue &value)
 {
     State state(host);
     if (state.objects == nullptr)
@@ -1968,7 +1968,7 @@ inline NativeValue nativeFromValue(const ObjectValue &value)
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool readMap(stackvm::NativeCallContext &host, std::int64_t handle, Memory::Vector<NativeValue> &keys,
+bool readMap(runtime::NativeCallContext &host, std::int64_t handle, Memory::Vector<NativeValue> &keys,
              Memory::Vector<NativeValue> &values)
 {
     State state(host);
@@ -1992,7 +1992,7 @@ bool readMap(stackvm::NativeCallContext &host, std::int64_t handle, Memory::Vect
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool readSet(stackvm::NativeCallContext &host, std::int64_t handle, Memory::Vector<NativeValue> &elements)
+bool readSet(runtime::NativeCallContext &host, std::int64_t handle, Memory::Vector<NativeValue> &elements)
 {
     State state(host);
     elements.clear();
@@ -2037,7 +2037,7 @@ inline void destroyRecord(void *record)
  * @param record 待同步记录。
  * @return 同步成功时返回 true。
  */
-inline bool prepareRecord(stackvm::NativeCallContext &host, void *record)
+inline bool prepareRecord(runtime::NativeCallContext &host, void *record)
 {
     State state(host);
     const bool ok = nativeRefreshViews(state, *static_cast<Record *>(record));
@@ -2069,7 +2069,7 @@ inline ObjectValue keyValue(const ObjectKey &key)
  * @param record 已同步的源记录。
  * @return 独立副本；失败返回空并保留原始运行时诊断。
  */
-inline void *copyRecord(stackvm::NativeCallContext &host, const void *record)
+inline void *copyRecord(runtime::NativeCallContext &host, const void *record)
 {
     State state(host);
     Memory::String error;
@@ -2120,23 +2120,23 @@ inline void *copyRecord(stackvm::NativeCallContext &host, const void *record)
  * @param record 待释放记录。
  * @return 可立即释放、已接受延期或当前回调拒绝释放的决定。
  */
-inline stackvm::NativeRecordRelease requestRelease(void *record)
+inline runtime::NativeRecordRelease requestRelease(void *record)
 {
     auto &value = *static_cast<Record *>(record);
-    if (value.mapComparing) return stackvm::NativeRecordRelease::Rejected;
+    if (value.mapComparing) return runtime::NativeRecordRelease::Rejected;
     if (value.iteratorLeases || !value.elementViews.empty())
     {
         value.pendingRelease = true;
-        return stackvm::NativeRecordRelease::Deferred;
+        return runtime::NativeRecordRelease::Deferred;
     }
-    return stackvm::NativeRecordRelease::Immediate;
+    return runtime::NativeRecordRelease::Immediate;
 }
 /**
  * @brief 清理记录拥有的元素、键值及最后一个游标副本的借用单元。
  * @param host 所属运行时上下文。
  * @param record 待释放记录。
  */
-void disposeRecord(stackvm::NativeCallContext &host, void *record)
+void disposeRecord(runtime::NativeCallContext &host, void *record)
 {
     State state(host);
     auto &value = *static_cast<Record *>(record);
@@ -2212,7 +2212,7 @@ inline bool visitRecord(void *record, const Memory::Function<bool(ObjectValue &)
  * @param view 接收分隔符和元素字段。
  * @return 成功构造文本视图时返回 true。
  */
-inline bool textRecord(stackvm::NativeCallContext &host, const void *record, stackvm::NativeRecordTextView &view)
+inline bool textRecord(runtime::NativeCallContext &host, const void *record, runtime::NativeRecordTextView &view)
 {
     (void)host;
     const auto &value = *static_cast<const Record *>(record);
@@ -2245,12 +2245,12 @@ inline bool textRecord(stackvm::NativeCallContext &host, const void *record, sta
  * @param kind 胶水存储类别。
  * @return 静态生命周期的通用记录描述符。
  */
-const stackvm::NativeRecordType &descriptor(StorageKind kind)
+const runtime::NativeRecordType &descriptor(StorageKind kind)
 {
-    static const stackvm::NativeRecordType list{ "ArrayList", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.ArrayList.3" };
-    static const stackvm::NativeRecordType set{ "Set", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.Set.3" };
-    static const stackvm::NativeRecordType map{ "Map", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.Map.3" };
-    static const stackvm::NativeRecordType lease{ "iterator lease", nullptr, destroyRecord, nullptr, copyRecord, disposeRecord, nullptr, nullptr, nullptr, nullptr, "chali.std.ListLease.1" };
+    static const runtime::NativeRecordType list{ "ArrayList", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.ArrayList.3" };
+    static const runtime::NativeRecordType set{ "Set", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.Set.3" };
+    static const runtime::NativeRecordType map{ "Map", cloneRecord, destroyRecord, nullptr, copyRecord, disposeRecord, prepareRecord, requestRelease, visitRecord, textRecord, "chali.std.Map.3" };
+    static const runtime::NativeRecordType lease{ "iterator lease", nullptr, destroyRecord, nullptr, copyRecord, disposeRecord, nullptr, nullptr, nullptr, nullptr, "chali.std.ListLease.1" };
     return kind == StorageKind::Vector ? list : kind == StorageKind::Set ? set :
                                             kind == StorageKind::Map     ? map :
                                                                            lease;
@@ -2273,7 +2273,7 @@ const stackvm::NativeRecordType &descriptor(StorageKind kind)
  * @param floating 浮点实参位图。
  * @return 保持原始数值种类的结果。
  */
-ScalarResult listStorageScalarOperation(stackvm::NativeCallContext &host, std::int64_t operation,
+ScalarResult listStorageScalarOperation(runtime::NativeCallContext &host, std::int64_t operation,
                                  std::int64_t first, std::int64_t second, std::int64_t third,
                                  std::int64_t fourth, std::int64_t fifth, std::uint64_t floating)
 {
@@ -2363,7 +2363,7 @@ template<int Operation> Slot hashPrimitive(State &state,const Arguments &argumen
  * @param count 参数数量，已由 C 入口精确检查。
  * @return 不拥有资源的原始位模式与结果种类；失败写入上下文。
  */
-ScalarResult applyPrimitive(stackvm::NativeCallContext &host, std::size_t operation,
+ScalarResult applyPrimitive(runtime::NativeCallContext &host, std::size_t operation,
                             const std::int64_t *bits, const unsigned char *kinds, std::size_t count)
 {
     using Operation = Slot (*)(State &, const Arguments &);

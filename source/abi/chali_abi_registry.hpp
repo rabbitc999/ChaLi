@@ -11,6 +11,6 @@
 /** @brief 拥有或借用同一个运行时函数表，不另建名称索引。 */
 struct ChaliAbiRegistry
 {
-    Memory::CHeapUniquePtr<stackvm::NativeRegistry> owned;  ///< create 创建的表；借用视图为空。
-    stackvm::NativeRegistry *backend = nullptr;      ///< 所有注册与查找共用的表。
+    Memory::CHeapUniquePtr<runtime::NativeRegistry> owned;  ///< create 创建的表；借用视图为空。
+    runtime::NativeRegistry *backend = nullptr;      ///< 所有注册与查找共用的表。
 };

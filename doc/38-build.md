@@ -1,10 +1,10 @@
-# LLVM AOT 编译
+# LLVM 构建
 
 <!-- LANGUAGE NAVIGATION -->
-[English](en/38-aot.md) · **简体中文**
+[English](en/38-build.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-`build` 是发布构建命令；原 `aot` 命令已移除。项目配置使用 `[build]`，不再接受 `[aot]`。LLVM AOT 是编译技术名称。
+`build` 是发布构建命令；原 `aot` 命令已移除。项目配置使用 `[build]`，不再接受 `[aot]`。LLVM 构建由 LLVM 负责优化、目标代码生成与原生链接。
 
 `run`／`build` 成功编译并发布最终产物后，会在标准错误输出“编译完成：产物路径”。run 先提示再执行程序，后续运行失败仍返回失败；程序标准输出不混入提示。`--quiet` 或 `CHALI_QUIET=1` 仅关闭完成提示，不隐藏错误、统计或程序输出。仅检查及 JSON 诊断不发送完成提示。
 
@@ -32,7 +32,7 @@ AOT 的 LLVM 优化始终全开：外置 LLVM 使用 `-O3`，静态 LLVM 使用 
 | 参数 | 行为 |
 | --- | --- |
 | `--out 前缀` | 输出 `.ll` 模块、C ABI 头文件及原生产物；Windows 使用 .exe/.dll，Linux 使用无后缀可执行文件或 .so |
-| `--llvm 路径` | 指定外置 LLVM clang 驱动；静态变体缺省使用内置后端，外置变体也可用 `CHALI_LLVM_CLANG` 选择工具 |
+| `--llvm 路径` | 指定外置 LLVM clang 驱动；仅外置变体接受此选项；静态变体报参数错误。外置变体也可用 `CHALI_LLVM_CLANG` 选择工具 |
 | `--emit-llvm` | 只生成 LLVM 模块与 C ABI 头文件，不执行目标代码生成或链接 |
 | `--allocator malloc\|pool` | 0.32.10 起缺省使用系统 malloc；pool 保留连续 arena 与原有字节堆分配策略 |
 | `--checked` | 生成 AST 中已检查的数组边界与指针检查；run 默认启用，发布构建默认关闭 |
@@ -65,7 +65,7 @@ chali build app.chl --allocator pool --out build/app-pool
 | `make` 或 `make CHALI_STATIC_LLVM=0` | 调用外置 LLVM clang；工具链位于 `library/llvm/` | `llvm-external` |
 | `make llvm-static` | 静态链接 LLVM 优化与 x64 代码生成库、LLD；内嵌 CRT 链接资产，编译时无需 clang 或 LLVM DLL | `llvm-static` |
 
-首次静态构建由 [setup_static.py](../library/llvm/setup_static.py) 自动下载固定版本 LLVM/LLD 预编译开发库与匹配的 GCC，核对 SHA-256 并安装到隔离 SDK 目录。已有开发库时可直接使用 `make CHALI_STATIC_LLVM=1`；Windows x64 的编译器产物为 `chali-1.0.0-llvm-static-windows-x64.exe`，外置变体为 `chali-1.0.0-llvm-external-windows-x64.exe`，文件名版本取自 `VERSION`。`CHALI_LLVM_SDK` 可指定同 ABI 的开发库目录。当前静态分发验收目标为 Windows x64。静态变体默认使用内置后端；显式 `--llvm` 可选择外部工具。只导出 LLVM 模块时，两种变体都不需要运行代码生成工具。
+首次静态构建由 [setup_static.py](../library/llvm/setup_static.py) 自动下载固定版本 LLVM/LLD 预编译开发库与匹配的 GCC，核对 SHA-256 并安装到隔离 SDK 目录。已有开发库时可直接使用 `make CHALI_STATIC_LLVM=1`；Windows x64 的编译器产物为 `chali-1.0.0-llvm-static-windows-x64.exe`，外置变体为 `chali-1.0.0-llvm-external-windows-x64.exe`，文件名版本取自 `VERSION`。`CHALI_LLVM_SDK` 可指定同 ABI 的开发库目录。当前静态分发验收目标为 Windows x64。静态变体使用内置后端，`run`、`build`、`asm`、`ar`、`link` 均拒绝 `--llvm`（退出码 2），工程 `[build].llvm` 也会报错。需要指定外部工具时使用 `llvm-external` 变体；静态版不会用该选项切换后端。只导出 LLVM 模块时，两种变体都不需要运行代码生成工具。
 
 `python tools/release_variants.py` 顺序构建和验收两个程序与插件变体，发布 ZIP 分别保存在 `dist/llvm-static/` 与 `dist/llvm-external/`。插件版本与 VERSION 中的编译器版本一致，VSIX 文件名分别使用 `-llvm-static` 与 `-llvm-external` 后缀；二者安装为同一个扩展的替代变体。单独打包可在 `vscode/` 使用 `npm run package -- --llvm-variant static --compiler 编译器路径`，或将 static 改为 external。发布脚本只生成本地产物，远端发布仍需显式执行。
 
@@ -160,9 +160,9 @@ chali asm native/add.s --target linux-x64 --out build/add.o
 chali build main.chl --asm native/add.s --asm-include native/include --out build/app
 ```
 
-`asm` 每次接受一个 `.s` 和完整输出路径。不写 `--out` 时，Windows 默认 `.obj`，Linux 默认 `.o`。支持 `--target`、`--cpu`、`--debug`、`-I DIR`／`-IDIR`、`--include-path DIR` 和 `--llvm CLANG`。源指令必须匹配目标和 CPU；采用 LLVM 的 GAS 兼容语法，不处理 `.S` 预处理、NASM 或 MASM。包含目录先加入源文件所在目录，再按显式目录顺序搜索。主输入最多 64 MiB；该入口是编译工具，不是面向不可信代码的沙箱。
+`asm` 每次接受一个 `.s` 和完整输出路径。不写 `--out` 时，Windows 默认 `.obj`，Linux 默认 `.o`。支持 `--target`、`--cpu`、`--debug`、`-I DIR`／`-IDIR`、`--include-path DIR` 和仅外置变体支持的 `--llvm CLANG`。源指令必须匹配目标和 CPU；采用 LLVM 的 GAS 兼容语法，不处理 `.S` 预处理、NASM 或 MASM。包含目录先加入源文件所在目录，再按显式目录顺序搜索。主输入最多 64 MiB；该入口是编译工具，不是面向不可信代码的沙箱。
 
-静态变体直接调用 LLVM MC，无需 clang；显式 `--llvm` 使用外置集成汇编器。对象先生成在独占工作区，汇编成功后才发布，失败保留已有产物，且禁止覆盖自己的主输入。输出父目录必须存在。源文件及包含文件的诊断保留实际位置。
+静态变体直接调用 LLVM MC，无需 clang，并拒绝 `--llvm`；外置变体使用该选项指定集成汇编器。对象先生成在独占工作区，汇编成功后才发布，失败保留已有产物，且禁止覆盖自己的主输入。输出父目录必须存在。源文件及包含文件的诊断保留实际位置。
 
 AOT 可重复指定 `--asm FILE.s` 和 `--asm-include DIR`，每个对象使用语言单元相同的目标和 CPU，参与最终链接。通过既有 C ABI 声明引用汇编符号，汇编须遵循目标调用约定。该输入只适用于可执行文件或共享库输出，不能与 `--emit-asm`、`--emit-obj`、`--emit-llvm` 组合。生成交叉对象不等于已经验证目标系统的可执行交付。
 
@@ -179,9 +179,9 @@ chali link build/public.o --shared --export public_entry --out build/example.dll
 chali link build/start.o --target linux-arm64 --no-runtime --entry _start --out build/app
 ```
 
-`ar` 创建带符号索引的确定性自包含归档，接受零个或多个同目标对象；时间、UID 和 GID 不随构建变化。Windows 的 `.lib` 选择 COFF 归档，其他后缀使用 GNU ar 格式。薄归档和嵌套归档不接受。`--out` 指定完整文件名，父目录须已存在。静态变体调用 LLVM ArchiveWriter；外置变体查找 clang 旁的 llvm-ar 或 `CHALI_LLVM_AR`，也可用 `--llvm LLVM-AR` 显式指定。
+`ar` 创建带符号索引的确定性自包含归档，接受零个或多个同目标对象；时间、UID 和 GID 不随构建变化。Windows 的 `.lib` 选择 COFF 归档，其他后缀使用 GNU ar 格式。薄归档和嵌套归档不接受。`--out` 指定完整文件名，父目录须已存在。静态变体调用 LLVM ArchiveWriter；外置变体查找 clang 旁的 llvm-ar 或 `CHALI_LLVM_AR`，也可用 `--llvm LLVM-AR` 显式指定；静态变体拒绝该选项。
 
-`link` 接受多个对象／归档，支持 `--target`、`--shared`、重复 `--export SYMBOL`、`--entry SYMBOL`、`--debug`、`-L DIR`／`-LDIR`／`--library-path DIR`、重复 `--library NAME`、`--sysroot`、`--runtime-dir` 和 `--llvm CLANG`。入口及导出使用原始对象符号名。对象和库按输入顺序进入同一链接组，归档按需提取并重复扫描，允许库间循环引用；未提取成员的未定义符号不引发错误。重复定义及已引用的缺失符号由 LLD 报告。共享库只公开显式导出的符号，其他符号隐藏；不提供任意原始链接器参数透传。
+`link` 接受多个对象／归档，支持 `--target`、`--shared`、重复 `--export SYMBOL`、`--entry SYMBOL`、`--debug`、`-L DIR`／`-LDIR`／`--library-path DIR`、重复 `--library NAME`、`--sysroot`、`--runtime-dir` 和仅外置变体支持的 `--llvm CLANG`。入口及导出使用原始对象符号名。对象和库按输入顺序进入同一链接组，归档按需提取并重复扫描，允许库间循环引用；未提取成员的未定义符号不引发错误。重复定义及已引用的缺失符号由 LLD 报告。共享库只公开显式导出的符号，其他符号隐藏；不提供任意原始链接器参数透传。
 
 静态 Windows x64 变体默认使用内置 LLD、CRT 与 ChaLi 运行时，无需外置 clang；外置变体使用匹配 clang／LLD 和所需系统工具链。完整跨目标链接需要目标运行时与 SDK。显式 `--no-runtime` 不添加 CRT 或 ChaLi 运行时，可用于自备入口与依赖的程序；内置 LLD 可为受支持 Linux x64／ARM64 目标链接此类输入，生成成功不等于已在目标系统运行。普通独立 C 程序也可使用默认运行时链接，未被引用的归档成员不装入应用。
 

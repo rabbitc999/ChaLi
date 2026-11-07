@@ -5,7 +5,7 @@
 #include "register_allocate.hpp"
 #include "runtime_internal.hpp"
 
-namespace stackvm
+namespace runtime
 {
 namespace allocation
 {
@@ -346,4 +346,4 @@ Stats lastStats() { return accumulated(); }
 
 void resetStats() { accumulated() = Stats{}; }
 }  // namespace allocation
-}  // namespace stackvm
+}  // namespace runtime

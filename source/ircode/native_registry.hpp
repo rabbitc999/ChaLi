@@ -5,7 +5,7 @@
 #pragma once
 #include "runtime_context.hpp"
 
-namespace stackvm::runtimeDetail
+namespace runtime::runtimeDetail
 {
 /**
  * @brief 一个"内部 C++"原生函数（字符串 / 格式化那一套）。
@@ -51,4 +51,4 @@ struct SlotNativeTable
 };
 extern const SlotNativeEntry kSlotNativeEntries[];
 extern const SlotNativeTable kSlotNatives;
-}  // namespace stackvm::runtimeDetail
+}  // namespace runtime::runtimeDetail

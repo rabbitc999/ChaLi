@@ -3,7 +3,7 @@
 
 namespace collection_glue
 {
-using NativeValue = stackvm::NativeValue;
+using NativeValue = runtime::NativeValue;
 
 struct ObjectKey;
 /** @brief 调试发布期间借用的单值视图，不取得对象或文本所有权。 */
@@ -13,7 +13,7 @@ struct DebugValueView
     std::uint64_t bits = 0;
     const char *text = nullptr;
     std::size_t length = 0, fields = 0;
-    const stackvm::NativeStoredValue *stored = nullptr;
+    const runtime::NativeStoredValue *stored = nullptr;
     const ObjectKey *key = nullptr;
 };
 /** @brief 已核对身份的集合只读视图，仅在当前正常执行的发布期间有效。 */
@@ -30,7 +30,7 @@ struct DebugCollectionView
  * @param view 接收视图，不可用时清空。
  * @return 活跃集合且没有未同步写入时返回真。
  */
-bool debugCollection(const stackvm::NativeRecordType *type, const void *record, DebugCollectionView *view);
+bool debugCollection(const runtime::NativeRecordType *type, const void *record, DebugCollectionView *view);
 /**
  * @brief 读取集合元素或 Map 键的借用快照。
  * @param collection 已验证集合视图。
@@ -57,7 +57,7 @@ bool debugCollectionField(const DebugValueView &parent, std::size_t index, Debug
  * @param length 字节数。
  * @return 追加成功为真。
  */
-bool listPushText(stackvm::NativeCallContext &host, std::int64_t listHandle, const char *data, std::size_t length);
+bool listPushText(runtime::NativeCallContext &host, std::int64_t listHandle, const char *data, std::size_t length);
 
 /**
  * @brief 集合原语的数值结果，直接保留位模式与种类，不构造拥有文本的通用值。
@@ -76,7 +76,7 @@ struct ScalarResult
  * @param count 元素数量。
  * @return 独立列表句柄，失败为零。
  */
-std::int64_t makeNumericList(stackvm::NativeCallContext &host, const std::int64_t *bits,
+std::int64_t makeNumericList(runtime::NativeCallContext &host, const std::int64_t *bits,
                              const unsigned char *kinds, std::size_t count);
 /**
  * @brief 验证完整数值列表后复制位模式，不为没有元素视图的列表物化通用槽。
@@ -88,7 +88,7 @@ std::int64_t makeNumericList(stackvm::NativeCallContext &host, const std::int64_
  * @param required 接收实际元素数量。
  * @return 验证及复制成功时为真；失败不改写两个输出数组。
  */
-bool copyListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, std::int64_t *bits,
+bool copyListNumbers(runtime::NativeCallContext &host, std::int64_t handle, std::int64_t *bits,
                       unsigned char *kinds, std::size_t capacity, std::size_t &required);
 /**
  * @brief 将独立宿主数值批量追加到原列表，先验证与预留容量再写入元素。
@@ -99,7 +99,7 @@ bool copyListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, std:
  * @param count 追加元素数量。
  * @return 成功为真，失败不改变长度及原有元素。
  */
-bool appendListNumbers(stackvm::NativeCallContext &host, std::int64_t handle, const std::int64_t *bits,
+bool appendListNumbers(runtime::NativeCallContext &host, std::int64_t handle, const std::int64_t *bits,
                         const unsigned char *kinds, std::size_t count);
 
 /** @brief LLVM 数值数组视图，代次由所属运行时对象表拥有；上下文退出前清空缓存。 */
@@ -117,7 +117,7 @@ struct NumericListView
  * @param handle 目标集合句柄。
  * @param view 接收数值头部和失效代次，不可用时清空。
  */
-void numericListView(stackvm::NativeCallContext &host, std::int64_t handle, NumericListView *view);
+void numericListView(runtime::NativeCallContext &host, std::int64_t handle, NumericListView *view);
 
 
 
@@ -133,7 +133,7 @@ void numericListView(stackvm::NativeCallContext &host, std::int64_t handle, Nume
  * @param floating 各实参是否为浮点位模式的位图。
  * @return 原语的整数或浮点结果；失败写入当前运行时诊断。
  */
-ScalarResult listStorageScalarOperation(stackvm::NativeCallContext &host, std::int64_t operation,
+ScalarResult listStorageScalarOperation(runtime::NativeCallContext &host, std::int64_t operation,
                                  std::int64_t first, std::int64_t second, std::int64_t third,
                                  std::int64_t fourth, std::int64_t fifth, std::uint64_t floating);
 
@@ -153,7 +153,7 @@ ScalarResult listStorageScalarOperation(stackvm::NativeCallContext &host, std::i
  * @param floating 浮点实参位图。
  * @return 原语结果；失败写入当前运行时诊断。
  */
-ScalarResult mapStorageScalarOperation(stackvm::NativeCallContext &host, std::int64_t operation,
+ScalarResult mapStorageScalarOperation(runtime::NativeCallContext &host, std::int64_t operation,
                                 std::int64_t first, std::int64_t second, std::int64_t third,
                                 std::int64_t fourth, std::int64_t fifth, std::int64_t sixth,
                                 std::int64_t seventh, std::uint64_t floating);
@@ -163,7 +163,7 @@ ScalarResult mapStorageScalarOperation(stackvm::NativeCallContext &host, std::in
  * @retval 创建原生调用可用的运行时列表。
  * @param host 当前调用所属的公开运行时上下文。
  */
-std::int64_t makeList(stackvm::NativeCallContext &host);
+std::int64_t makeList(runtime::NativeCallContext &host);
 
 /**
  * @brief 从独立字节跨度构造拥有型整数列表，保持原有逐元素增长策略。
@@ -172,7 +172,7 @@ std::int64_t makeList(stackvm::NativeCallContext &host);
  * @param count 字节数。
  * @return 完整创建后发布的列表句柄，失败为零。
  */
-std::int64_t makeByteList(stackvm::NativeCallContext &host, const unsigned char *data, std::size_t count);
+std::int64_t makeByteList(runtime::NativeCallContext &host, const unsigned char *data, std::size_t count);
 
 /**
  * @brief 查询或复制列表中的字节值，短缓冲和无效元素不写入目标。
@@ -183,7 +183,7 @@ std::int64_t makeByteList(stackvm::NativeCallContext &host, const unsigned char 
  * @param required 接收实际字节数。
  * @return 验证及复制成功时为真。
  */
-bool copyListBytes(stackvm::NativeCallContext &host, std::int64_t handle, unsigned char *data,
+bool copyListBytes(runtime::NativeCallContext &host, std::int64_t handle, unsigned char *data,
                    std::size_t capacity, std::size_t &required);
 
 /**
@@ -193,7 +193,7 @@ bool copyListBytes(stackvm::NativeCallContext &host, std::int64_t handle, unsign
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool listPush(stackvm::NativeCallContext &host, std::int64_t listHandle, const NativeValue &value);
+bool listPush(runtime::NativeCallContext &host, std::int64_t listHandle, const NativeValue &value);
 
 /**
  * @brief 将结构体数据追加到运行时列表。
@@ -203,7 +203,7 @@ bool listPush(stackvm::NativeCallContext &host, std::int64_t listHandle, const N
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool listPushStruct(stackvm::NativeCallContext &host, std::int64_t listHandle, std::int64_t structAddress,
+bool listPushStruct(runtime::NativeCallContext &host, std::int64_t listHandle, std::int64_t structAddress,
                     std::size_t slotCount);
 
 /**
@@ -214,7 +214,7 @@ bool listPushStruct(stackvm::NativeCallContext &host, std::int64_t listHandle, s
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool readListStruct(stackvm::NativeCallContext &host, std::int64_t handle, std::size_t slotCount,
+bool readListStruct(runtime::NativeCallContext &host, std::int64_t handle, std::size_t slotCount,
                     Memory::Vector<double> &out);
 
 /**
@@ -224,7 +224,7 @@ bool readListStruct(stackvm::NativeCallContext &host, std::int64_t handle, std::
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool readList(stackvm::NativeCallContext &host, std::int64_t handle,
+bool readList(runtime::NativeCallContext &host, std::int64_t handle,
               Memory::Vector<NativeValue> &out);
 
 /**
@@ -232,14 +232,14 @@ bool readList(stackvm::NativeCallContext &host, std::int64_t handle,
  * @retval 创建原生调用可用的运行时映射。
  * @param host 当前调用所属的公开运行时上下文。
  */
-std::int64_t makeMap(stackvm::NativeCallContext &host);
+std::int64_t makeMap(runtime::NativeCallContext &host);
 
 /**
  * @brief 创建原生调用可用的运行时集合。
  * @retval 创建原生调用可用的运行时集合。
  * @param host 当前调用所属的公开运行时上下文。
  */
-std::int64_t makeSet(stackvm::NativeCallContext &host);
+std::int64_t makeSet(runtime::NativeCallContext &host);
 
 /**
  * @brief 向运行时映射写入一个键值对。
@@ -249,7 +249,7 @@ std::int64_t makeSet(stackvm::NativeCallContext &host);
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool mapSet(stackvm::NativeCallContext &host, std::int64_t mapHandle, const NativeValue &key,
+bool mapSet(runtime::NativeCallContext &host, std::int64_t mapHandle, const NativeValue &key,
             const NativeValue &value);
 
 /**
@@ -259,7 +259,7 @@ bool mapSet(stackvm::NativeCallContext &host, std::int64_t mapHandle, const Nati
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool setInsert(stackvm::NativeCallContext &host, std::int64_t setHandle, const NativeValue &value);
+bool setInsert(runtime::NativeCallContext &host, std::int64_t setHandle, const NativeValue &value);
 
 /**
  * @brief 读取运行时映射的全部键值。
@@ -269,7 +269,7 @@ bool setInsert(stackvm::NativeCallContext &host, std::int64_t setHandle, const N
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool readMap(stackvm::NativeCallContext &host, std::int64_t handle, Memory::Vector<NativeValue> &keys,
+bool readMap(runtime::NativeCallContext &host, std::int64_t handle, Memory::Vector<NativeValue> &keys,
              Memory::Vector<NativeValue> &values);
 
 /**
@@ -279,7 +279,7 @@ bool readMap(stackvm::NativeCallContext &host, std::int64_t handle, Memory::Vect
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  * @param host 当前调用所属的公开运行时上下文。
  */
-bool readSet(stackvm::NativeCallContext &host, std::int64_t handle, Memory::Vector<NativeValue> &elements);
+bool readSet(runtime::NativeCallContext &host, std::int64_t handle, Memory::Vector<NativeValue> &elements);
 
 /**
  * @brief 执行由 C 入口统一清单选择的私有集合存储操作。
@@ -290,6 +290,6 @@ bool readSet(stackvm::NativeCallContext &host, std::int64_t handle, Memory::Vect
  * @param count 参数数量，已由 C 入口校验。
  * @return 原始结果位模式与种类；不建立第二套注册系统。
  */
-ScalarResult applyPrimitive(stackvm::NativeCallContext &host,std::size_t operation,
+ScalarResult applyPrimitive(runtime::NativeCallContext &host,std::size_t operation,
                             const std::int64_t *bits,const unsigned char *kinds,std::size_t count);
 } // namespace collection_glue
