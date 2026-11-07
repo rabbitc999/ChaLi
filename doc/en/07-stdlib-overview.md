@@ -164,7 +164,7 @@ capabilities:
 
 - [`source/std/`](../../source/std) — all module sources, `source/std/<name>.chl`
 - [`source/abi/`](../../source/abi) — host C ABI services and necessary C++ adapters; `abi_*.c` / `abi_*.cpp` implement services,
-  and `aot_modules.inc` organizes demand-driven AOT bindings
+  and `aot_modules.inc` organizes demand-driven native bindings
 - [`example/samples/`](../../example/samples/) — runnable samples organised by feature
 - Per-domain API reference: [`doc/library/`](../library/README.md) has one page per module
   (`std-json.md`, `std-toml.md`, `std-regex.md`, `std-linear_algebra.md`, `std-complex.md`, `std-net.md`,

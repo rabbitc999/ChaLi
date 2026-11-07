@@ -66,7 +66,7 @@ Binding scans have a separate limit of sixteen entries and sixteen MiB in total;
 
 ## Verification
 
-Run `python tools/run_module_gates.py lsp --chali <compiler-path>` for the LSP-only gates, covering native protocol requests, types and scopes, macros, caches and performance, plus client cancellation, providers and highlighting. Closure tests use `--lsp-only` to skip program execution; this module does not run runtime or AOT application regressions. The selected compiler is passed to all protocol tests through environment variables.
+Run `python tools/run_module_gates.py lsp --chali <compiler-path>` for the LSP-only gates, covering native protocol requests, types and scopes, macros, caches and performance, plus client cancellation, providers and highlighting. Closure tests use `--lsp-only` to skip program execution; this module does not run runtime or native builds application regressions. The selected compiler is passed to all protocol tests through environment variables.
 
 [Closure risk tests](../../../tests/chali_lsp_risks.py) compare hover on `let` and its binding with completion details, covering shadowing, identical closure text, local inference, unknown branches and signatures after consecutive edits. An unknown branch must not be discarded in favor of a concrete type from another branch. [Highlight performance tests](../../../tests/chali_lsp_highlight_speed.py) verify token encoding, UTF-16 positions, repeated requests and invalidation after edits for multiline and long-line documents, and report request timings.
 

@@ -21,7 +21,7 @@
 
 已登记 Windows x64、Linux x64、Linux ARM64 三个目标，输出支持可执行文件、对象文件及 LLVM IR。生成交叉目标对象不代表目标运行时与部署执行已经验证，详见[工具链说明](../doc/09-toolchain.md)。
 
-运行命令在集成终端执行 checked AOT。原生调试通过编译器的 DAP 适配器使用 DWARF 和 GDB/MI，需要匹配的 GDB。源码构建默认使用 O0，`debugMode: "optimized"` 选择保留 DWARF 的 O3／LTO，优化变量只读；详见[原生调试](../doc/43-native-debugging.md)。
+运行命令在集成终端执行 checked 原生构建。原生调试通过编译器的 DAP 适配器使用 DWARF 和 GDB/MI，需要匹配的 GDB。源码构建默认使用 O0，`debugMode: "optimized"` 选择保留 DWARF 的 O3／LTO，优化变量只读；详见[原生调试](../doc/43-native-debugging.md)。
 
 静态与外置 LLVM 分别打包。静态变体内嵌 LLVM／LLD 及所需链接资产；外置变体在代码生成时需要适用的 LLVM 工具链。应用额外使用的 C ABI 库按各自约定链接与交付。两种语言服务都不依赖 Python。
 

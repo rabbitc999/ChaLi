@@ -21,7 +21,7 @@ Use **ChaLi: Select Project Target**, **ChaLi: Select Build Output**, or **ChaLi
 
 Registered targets are Windows x64, Linux x64 and Linux ARM64. Output can be an executable, object file or LLVM IR. A cross-target object does not establish that its target runtime or executable deployment has been tested. See the [toolchain reference](../doc/en/09-toolchain.md).
 
-Run executes checked AOT in the integrated terminal. Native debugging uses DWARF and GDB/MI through the compiler's DAP adapter; a suitable GDB is required. Source builds use O0 by default; `debugMode: "optimized"` selects O3/LTO with DWARF and read-only optimized variables. See [native debugging](../doc/en/43-native-debugging.md).
+Run executes checked native compilation in the integrated terminal. Native debugging uses DWARF and GDB/MI through the compiler's DAP adapter; a suitable GDB is required. Source builds use O0 by default; `debugMode: "optimized"` selects O3/LTO with DWARF and read-only optimized variables. See [native debugging](../doc/en/43-native-debugging.md).
 
 Static and external LLVM VSIX files are separate. The static variant embeds LLVM/LLD and required link assets; the external variant needs a suitable LLVM toolchain for code generation. Extra application C ABI libraries follow their own link/deployment requirements. Neither variant needs Python for language services.
 

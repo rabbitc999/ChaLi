@@ -6,7 +6,7 @@
 
 On Windows, per-thread debug observation buffers use FLS-managed heap state. Thread exit retires the directory entry and releases its snapshot buffers; module unload releases the FLS slot and remaining states. This avoids accessing emulated TLS storage after older MinGW runtimes have freed it. Non-Windows builds retain their native TLS path.
 
-`run` compiles and executes checked AOT code. `build` performs a release build with checks disabled by default. Native debugging uses machine code, DWARF source locations, and actual frame slots.
+`run` compiles and executes checked native code. `build` performs a release build with checks disabled by default. Native debugging uses machine code, DWARF source locations, and actual frame slots.
 
 ## VS Code
 

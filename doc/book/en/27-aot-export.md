@@ -4,13 +4,13 @@
 **English** · [简体中文](../27-AOT导出.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Running a development example and delivering a deployable application require different evidence. AOT generates target machine code, while target libraries, loaders, dynamic dependencies and resources still need to match. File creation alone is insufficient acceptance.
+Running a development example and delivering a deployable application require different evidence. LLVM generates target machine code, while target libraries, loaders, dynamic dependencies and resources still need to match. File creation alone is insufficient acceptance.
 
 Begin with run/build defaults, follow the frontend and backend representations, then distinguish toolchain and application dependencies. Cross compilation, native debugging and staged deployment complete the workflow. State host, target and completed steps for each configuration.
 
 ## 27.1 Run and export settings
 
-Distinguish immediate development execution from exporting a native artifact for a particular environment. Run combines compilation and execution with checked AOT defaults. Aot exports with unchecked and LLVM O3 defaults.
+Distinguish immediate development execution from exporting a native artifact for a particular environment. `run` compiles a checked native program and executes it. `build` exports unchecked native artifacts with LLVM O3 by default.
 
 The relevant unchecked defaults mainly affect runtime array and pointer checking; static types, ownership and borrowing remain. Include configuration when comparing executions rather than checking source identity alone.
 
@@ -24,9 +24,9 @@ Default run/build publishes final artifacts beside the source and uses the adjac
 
 Normal run and build execution generates LLVM IR directly from the semantically checked AST. The frontend parses declarations and expressions, expands macros and checks names, types, ownership and borrowing. The backend reads the checked tree and emits LLVM instructions and required runtime calls. LLVM performs optimization and target code generation. Linking combines objects with runtime components, system libraries and application dependencies.
 
-Unqualified IR in this book means ChaLi quadruple IR; LLVM IR is named explicitly. Quadruple export and compatibility entry points for independent callers remain, but normal AOT does not require generating quadruples, writing them to disk and reading them back. LLVM performs optimization through O3/LTO. Results depend on the program and configuration.
+Unqualified IR in this book means ChaLi quadruple IR; LLVM IR is named explicitly. Quadruple export and compatibility entry points for independent callers remain, but normal native compilation does not require generating quadruples, writing them to disk and reading them back. LLVM performs optimization through O3/LTO. Results depend on the program and configuration.
 
-`run` compiles and executes programs through checked AOT. A program validated with run still needs its export target, check settings and link configuration verified; the two commands have different defaults.
+`run` compiles and executes programs through checked native compilation. A program validated with run still needs its export target, check settings and link configuration verified; the two commands have different defaults.
 
 Checked execution helps detect the corresponding invalid accesses at runtime, while static checking rejects invalid programs before execution. Their coverage differs, and neither proves business inputs valid. Understand the actual switches before selecting unchecked and validate the release configuration itself rather than relying only on a development run.
 
@@ -174,7 +174,7 @@ This invocation can validate target code generation, but its ARM64 object cannot
 
 Paths are relative to chali.toml. Explicit command-line options override matching settings. The --emit-obj example generates an object without target linking.
 
-An object file does not establish a deployable application. Validate object generation, target linking and device execution separately. Building a cross-architecture compiler does not automatically enable every AOT target.
+An object file does not establish a deployable application. Validate object generation, target linking and device execution separately. Building a cross-architecture compiler does not automatically enable every native target.
 
 ## 27.4 Deployment checks and diagnostics
 

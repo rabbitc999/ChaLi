@@ -124,7 +124,7 @@ sum=10
 | [`std::serialization`](../library/std-serialization.md) | `serialize<T>`、`deserialize<T>`，字节流保存版本、稳定类型 ID 和长度，恢复时严格检查模型类型 |
 
 JSON/TOML 的模型编解码见对应格式模块，数据库模型与动态 SQL 见 `std::sql`。
-源码编译默认启用反射；关闭本次元数据输出时显式使用 `--no-reflection`。执行使用 checked AOT 或导出原生代码。
+源码编译默认启用反射；关闭本次元数据输出时显式使用 `--no-reflection`。执行使用 checked 原生构建 或导出原生代码。
 
 ### 并发与协作
 

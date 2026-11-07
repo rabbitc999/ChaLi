@@ -46,7 +46,7 @@ This complete runnable example contains no module or import. It illustrates a fu
 
 ## 11.3 Project configuration and commands
 
-chali.toml records the entry and project options. When opening an existing project, compare its settings with the options listed by chali help. The run command uses checked native builds; build produces unchecked native artifacts by default. Chapter 27 covers targets and linker configuration.
+chali.toml records the entry and project options. When opening an existing project, compare its settings with the options listed by chali help. The run command uses checked native compilation; build produces unchecked native artifacts by default. Chapter 27 covers targets and linker configuration.
 
 
 ### A manifest at the project root

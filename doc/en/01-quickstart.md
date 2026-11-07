@@ -72,7 +72,7 @@ Output:
 Hello, ChaLi!
 ```
 
-Handing a source file straight to `chali` also compiles it with checked AOT and runs it, and everything after it is passed to
+Handing a source file straight to `chali` also compiles it with checked native compilation and runs it, and everything after it is passed to
 `main` as program arguments:
 
 ```sh

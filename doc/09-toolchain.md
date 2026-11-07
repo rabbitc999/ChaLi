@@ -6,9 +6,9 @@
 
 GitHub 在每次 push 和 pull request 时运行[命令与文档门禁](../.github/workflows/cli-contract.yml)，核对 `build`、`[build]`、构建调试入口、旧文案、参数归一化及编辑器项目配置。可在本地执行 `python tests/chali_cli_contract.py` 和 `python tests/chali_doc_history.py`。实际原生产物验收使用 `python tests/chali_build_command.py --chali 编译器路径`。
 
-`run` 使用 checked AOT 编译执行，`build` 默认 unchecked 导出。原生调试见[构建调试](43-native-debugging.md)。
+`run` 使用 checked 原生构建 编译执行，`build` 默认 unchecked 导出。原生调试见[构建调试](43-native-debugging.md)。
 
-ChaLi 默认通过 checked AOT 执行程序。源码经过模块加载、语法与语义检查，直接从已检查的 AST 生成 LLVM IR；正常路径绕过四元式生成及组装，可显式使用 [LLVM 构建入口](38-build.md)生成 LLVM 模块与原生产物。
+ChaLi 默认通过 checked 原生构建 执行程序。源码经过模块加载、语法与语义检查，直接从已检查的 AST 生成 LLVM IR；正常路径绕过四元式生成及组装，可显式使用 [LLVM 构建入口](38-build.md)生成 LLVM 模块与原生产物。
 
 ## 执行与检查
 
@@ -64,7 +64,7 @@ chali clear out build/compiler
 | `CHALI_NO_SLOT_REUSE=1` | 退回「形参在前 + 声明顺序一人一槽」，不看活跃性 |
 | `CHALI_ONE_SLOT_PER_SYMBOL=1` | 一人一槽但仍走分配器，用来分辨「别名」与「编号」两类问题 |
 
-AOT 快速路径的对照开关见[AOT 降低开关与计数](40-backend-ownership.md)。
+LLVM 构建 快速路径的对照开关见[LLVM 构建 降低开关与计数](40-backend-ownership.md)。
 
 指令选择覆盖率与帧槽复用前后都能在 `--stats` 里看到：
 
@@ -91,7 +91,7 @@ AOT 快速路径的对照开关见[AOT 降低开关与计数](40-backend-ownersh
 `chali_standard.h` 提供标准库登记。实现文件可以使用 C 或 C++17，公开边界均使用 C 类型。
 
 模块提供只读的 `ChaliAbiRecord` 入口表。`abi/aot_modules.inc` 统一维护模块名与取表函数，
-集中标准库登记排除 demo，AOT 根据实际入口名称选择需要链接的模块。
+集中标准库登记排除 demo，LLVM 构建 根据实际入口名称选择需要链接的模块。
 每张入口表通过 `chali_abi_registry_register` 原子登记，失败保留首个诊断；
 注册完成后封存。同一运行时只使用一张函数表，不另建类型化绑定表。
 
@@ -113,10 +113,10 @@ AST 声明位于 `chali_ast.hpp`；`semantics/` 中的符号登记、卫生展�
 `chali_stdlib_embedded.o`；压缩数据不再被公共头包含。生成器在 `build/embedded-sha256/` 保存各组资产的
 `.sha256` 清单，生成前检查输入、生成脚本和现有产物的 SHA-256；全部一致时直接跳过压缩和源码生成，
 保持产物时间戳。文件缺失或损坏、输入内容或资产索引变化会重新生成。此检查也用于手册、中英文消息、
-运行时资产清单和 AOT 链接资产。`gen.sh` 统一 Python 子进程的 UTF-8 编码，保证 Windows 下的中文提示
+运行时资产清单和 LLVM 构建 链接资产。`gen.sh` 统一 Python 子进程的 UTF-8 编码，保证 Windows 下的中文提示
 与脚本输出编码一致。独立导出的编译器工程也将这些实现作为单独的 CMake 源文件链接。
 
-构建、测试、AOT 资产解包、LSP 检查、ABI 调用桥和编译器工程生成器的临时文件夹统一放在
+构建、测试、LLVM 构建 资产解包、LSP 检查、ABI 调用桥和编译器工程生成器的临时文件夹统一放在
 仓库根目录的 `tmp/` 内，各任务使用独立子目录；不在仓库同级创建 `tmp`。从子目录或上级目录启动
 仓库内的编译器时也定位到同一目录。Python、Node 测试和构建子进程继承统一临时路径。
 
@@ -217,7 +217,7 @@ allocator = "malloc"
 
 `chali build app.chl --emit-asm --out build/app` 按实际目标、CPU、检查及优化／调试设置导出 `build/app.s`。这是机器汇编，与 LLVM IR 文本 `.ll` 不同。输出在对象生成和链接之前停止，跨目标导出不要求准备目标运行时链接资产。静态变体使用内置 LLVM，外置变体使用 clang；采用相应后端默认语法（x86 为 AT&T，AArch64 为目标语法），不表示兼容 NASM／MASM。
 
-项目可设置 `[build] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked AOT。VSCode 输出选择和构建支持汇编及 `.s` 后缀。
+项目可设置 `[build] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked 原生构建。VSCode 输出选择和构建支持汇编及 `.s` 后缀。
 
 同时保留 `.ll` 和适用的 C ABI 头文件；复杂 C ABI 还可能生成 `.abi.cpp` 封送侧文件，单独的汇编文件不等于已链接应用。重新汇编和最终链接需要匹配的目标工具链、运行时及依赖。独立汇编、链接与归档入口见下文。
 
@@ -233,7 +233,7 @@ chali build main.chl --asm native/add.s --asm-include native/include --out build
 
 静态变体直接调用 LLVM MC，无需 clang，并拒绝 `--llvm`；外置变体可用该选项指定集成汇编器。对象先生成在独占工作区，汇编成功后才发布，失败保留已有产物，且禁止覆盖自己的主输入。输出父目录必须存在。源文件及包含文件的诊断保留实际位置。
 
-AOT 可重复指定 `--asm FILE.s` 和 `--asm-include DIR`，每个对象使用语言单元相同的目标和 CPU，参与最终链接。通过既有 C ABI 声明引用汇编符号，汇编须遵循目标调用约定。该输入只适用于可执行文件或共享库输出，不能与 `--emit-asm`、`--emit-obj`、`--emit-llvm` 组合。生成交叉对象不等于已经验证目标系统的可执行交付。
+LLVM 构建 可重复指定 `--asm FILE.s` 和 `--asm-include DIR`，每个对象使用语言单元相同的目标和 CPU，参与最终链接。通过既有 C ABI 声明引用汇编符号，汇编须遵循目标调用约定。该输入只适用于可执行文件或共享库输出，不能与 `--emit-asm`、`--emit-obj`、`--emit-llvm` 组合。生成交叉对象不等于已经验证目标系统的可执行交付。
 
 链接的标量 C 函数可声明为 `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`。符号由交给链接器的对象或归档提供。结构体、引用、缓冲区和回调签名使用兼容的动态库，遵循 [C ABI 封送约定](41-unsafe-abi.md)。
 

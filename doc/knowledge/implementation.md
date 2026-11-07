@@ -5,7 +5,7 @@
 | 问题 | 从哪里追踪 |
 | --- | --- |
 | 语法、宏展开、类型和借用 | [文法](../../source/chali.gram) → [语义实现](../../source/semantics/) → [语义冻结清单](../21-semantics-frozen.md) |
-| `run`、`build` 的产物和目标 | [AOT 驱动](../../source/chali_aot.cpp) → [目标三元组和布局](../../source/chali_aot_target.cpp) → [运行时资产](../../source/chali_aot_runtime_assets.cpp) |
+| `run`、`build` 的产物和目标 | [LLVM 构建 驱动](../../source/chali_aot.cpp) → [目标三元组和布局](../../source/chali_aot_target.cpp) → [运行时资产](../../source/chali_aot_runtime_assets.cpp) |
 | 静态 LLVM、汇编与独立链接 | [内置 LLVM／LLD](../../source/chali_aot_llvm.cpp) → [汇编器](../../source/chali_assembler_llvm.cpp) → [链接入口](../../source/chali_linker.cpp) |
 | 分配器、引用身份和宿主调用 | [共享运行时](../../source/ircode/) → [分配器](../../source/allocator/) → [C ABI 说明](../41-unsafe-abi.md) |
 | 标准库源文件、预编译单元和内嵌文档 | [标准库源码](../../source/std/) → [阶段编译器生成单元](../../tools/build_stdlib_units.py) → [资产嵌入](../../tools/embed_stdlib.py) → [手册生成](../../tools/embed_manual.py) |

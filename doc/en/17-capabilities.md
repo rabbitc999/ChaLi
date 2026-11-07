@@ -27,7 +27,7 @@ Sources and macros are shared through `module` / `import`; a macro definition is
 
 Executable entry points support only `void main`, with no parameters or `List<String>` arguments. It exits with code 0 on normal completion; panic still fails. Trailing semicolons on `struct`, `enum`, and `interface` declarations are optional.
 
-AOT shared libraries expose functions using `export` and may omit `main`. `chali_init` and `chali_finish` run global initialization and cleanup. Executables still require an entry function.
+native shared libraries expose functions using `export` and may omit `main`. `chali_init` and `chali_finish` run global initialization and cleanup. Executables still require an entry function.
 
 | Area | Implemented capability and contract |
 | --- | --- |
@@ -57,11 +57,11 @@ Every non-void value has default `toString()` and String conversion: structs `{.
 
 ## Execution, optimization and deployment
 
-`run` compiles and executes checked AOT code. `build` defaults to unchecked export and accepts an explicit `--checked` flag. Quadruple export is available for analysis.
+`run` compiles and executes checked native code. `build` defaults to unchecked export and accepts an explicit `--checked` flag. Quadruple export is available for analysis.
 
 Release builds run LLVM O3, global DCE, full LTO and section GC; quadruples are not optimized internally — LLVM does all optimization. Reachable data uses sparse initialization, and arrays reuse runtime zeroing. Hosts embed native shared libraries through generated C ABI headers.
 
-DWARF source locations and variables support GDB/MI breakpoints, stepping and variable inspection in VS Code. Actual platforms and hashes are recorded separately; cross-building a compiler does not establish AOT support. See [LLVM build](38-build.md) and [native debugging](43-native-debugging.md).
+DWARF source locations and variables support GDB/MI breakpoints, stepping and variable inspection in VS Code. Actual platforms and hashes are recorded separately; cross-building a compiler does not establish native compilation support. See [LLVM build](38-build.md) and [native debugging](43-native-debugging.md).
 
 ## Host integration and reflection
 
@@ -104,7 +104,7 @@ for the target architecture. Linux devices use ordinary hosts, with no separate 
 mode or front-end module blacklist. Memory and instruction budgets use the general runtime options. See
 [deployment](06-deployment.md). Microcontroller, bare-metal firmware and board SDKs are outside the support scope.
 
-Installation packages target Windows x64, Ubuntu x64/ARM64 and CentOS x64. The x86 runtime fails startup validation, so x86 installers are not provided. Native AOT host layouts currently target x64. See [installation and architecture builds](39-installation-packages.md) for LLVM variants and package formats.
+Installation packages target Windows x64, Ubuntu x64/ARM64 and CentOS x64. The x86 runtime fails startup validation, so x86 installers are not provided. Native host layouts currently target x64. See [installation and architecture builds](39-installation-packages.md) for LLVM variants and package formats.
 
 The CLI provides projects, checks, formatting, tests and dependency locks/caches. LSP provides diagnostics,
 completion, hover, signatures and cross-file navigation, plus complete inferred `let` type hover, optional type inlays,
@@ -155,4 +155,4 @@ Connections and timer sources have exclusive owners; containers and random gener
 
 Reflection provides exact typed field access and generates codecs for JSON, TOML, byte serialization, and annotated std::sql models. Dynamic SQL generation and direct binding currently support SQLite; bound execution on other backends reports an explicit error. See [reflection serialization and dynamic SQL](33-reflection-serialization-sql.md).
 
-The companion book contains 29 chapters, exercises with reference answers, literary adaptations and compilation and native AOT diagrams. General host callbacks and event APIs retain their documented protocols.
+The companion book contains 29 chapters, exercises with reference answers, literary adaptations and compilation and native compilation diagrams. General host callbacks and event APIs retain their documented protocols.

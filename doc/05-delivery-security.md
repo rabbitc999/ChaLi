@@ -4,7 +4,7 @@
 [English](en/05-delivery-security.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-原生可执行文件不提供加密或混淆：`--encrypt` 与 `[chali] encrypt` 不受支持，交付物始终由源码经 AOT 生成。
+原生可执行文件不提供加密或混淆：`--encrypt` 与 `[chali] encrypt` 不受支持，交付物始终由源码经 LLVM 构建 生成。
 
 ## 1. 交付形态
 

@@ -44,4 +44,9 @@ int main()
     check({ "chali", "build", "--target", "linux-arm64", "demo.chl", "out", "native" }, { "chali", "build", "--target", "linux-arm64", "demo.chl", "--out", "native" });
     check({ "chali", "build", "demo.chl", "--", "out", "help" }, { "chali", "build", "demo.chl", "--", "out", "help" });
     check({ "chali", "--check", "demo.chl", "--out", "help" }, { "chali", "--check", "demo.chl", "--out", "help" });
+    check({ "chali", "run", "-B", "out", "demo.chl" }, { "chali", "run", "-B", "out", "demo.chl" });
+    check({ "chali", "build", "demo.chl", "-B", "debug" }, { "chali", "build", "demo.chl", "-B", "debug" });
+    check({ "chali", "run", "-BA", "-BB", "demo.chl" }, { "chali", "run", "-BA", "-BB", "demo.chl" });
+    check({ "chali", "run", "-I", "debug", "-B", "out", "demo.chl" }, { "chali", "run", "-I", "debug", "-B", "out", "demo.chl" });
+    check({ "chali", "run", "demo.chl", "--", "-B", "out" }, { "chali", "run", "demo.chl", "--", "-B", "out" });
 }

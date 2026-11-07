@@ -19,7 +19,7 @@
 | [注解与反射](#53-注解与反射) | [`example/reflection/`](../example/reflection/) | 编译期注解、运行期元数据查询 | 需开启反射构建宏 |
 | [标准库配套程序](#54-标准库配套程序) | [`doc/examples/library/`](examples/library/) | io / sqlite / reflect 三段可跑程序 | 部分需反射 |
 | [C ABI 配套示例](#55-c-abi-配套示例) | [`doc/examples/abi_buffers/`](examples/abi_buffers/)、[`abi_dynamic/`](examples/abi_dynamic/) | 静态缓冲与动态库两种绑定方式 | C 编译器 |
-| [同步回调](../example/native-callbacks/README.md) | [`example/native-callbacks/`](../example/native-callbacks/) | AOT 下 C 调用 ChaLi 函数值：具名函数、闭包、引用与重入 | C 编译器 |
+| [同步回调](../example/native-callbacks/README.md) | [`example/native-callbacks/`](../example/native-callbacks/) | LLVM 构建 下 C 调用 ChaLi 函数值：具名函数、闭包、引用与重入 | C 编译器 |
 | [编辑器语言服务器](#62-编辑器语言服务器与-vs-code-插件) | [`source/lsp/`](../source/lsp)、[`vscode/`](../vscode/) | 宏配对检查、语义高亮、真诊断 | 无 / VS Code |
 
 ---

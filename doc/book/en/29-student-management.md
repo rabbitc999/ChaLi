@@ -160,7 +160,7 @@ Ada 42
 
 Follow a teacher's grade correction end to end: the browser submits a token and data, the server validates session/account state, checks fields and teaching scope, writes the database and returns an outcome for the page. Testing only buttons or only writes does not cover that chain.
 
-Structures organize values, enums and Result express states, modules separate responsibilities, C ABI connects system capabilities and AOT defines delivery. Preserve these boundaries and add positive and negative acceptance cases when extending the application rather than generalizing local results to arbitrary deployment.
+Structures organize values, enums and Result express states, modules separate responsibilities, C ABI connects system capabilities and native compilation defines delivery. Preserve these boundaries and add positive and negative acceptance cases when extending the application rather than generalizing local results to arbitrary deployment.
 
 ## 29.10 Follow a Request Through the Router
 

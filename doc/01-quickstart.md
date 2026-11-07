@@ -68,7 +68,7 @@ chali run hello.chl
 Hello, ChaLi!
 ```
 
-把源码文件直接交给 `chali` 也会使用 checked AOT 编译并运行，后面的内容全部作为程序参数传给 `main`：
+把源码文件直接交给 `chali` 也会使用 checked 原生构建 编译并运行，后面的内容全部作为程序参数传给 `main`：
 
 ```sh
 chali hello.chl Alice "two words"
@@ -91,7 +91,7 @@ void main(List<String> arguments) {
 1. **加载源码** —— 加载 `import` 模块，维护来源位置，展开插值和宏；
 2. **解析与类型检查** —— 语法、类型、引用生命周期检查都在这里，不通过就不执行；
 3. **生成 LLVM IR** —— 正常运行路径从已检查的 AST 直接降到 LLVM IR；ChaLi 四元式是单独的导出路径；
-4. **AOT 编译执行** —— LLVM 生成带运行时检查的原生程序，发布到源码同级、提示编译完成，然后启动程序。
+4. **LLVM 构建 编译执行** —— LLVM 生成带运行时检查的原生程序，发布到源码同级、提示编译完成，然后启动程序。
 
 想只看前两步（不执行、不产出文件）：
 

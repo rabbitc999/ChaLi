@@ -56,7 +56,7 @@ ChaLi 通过 LLVM 构建生成原生代码。目标运行时、C ABI 库、链�
 | [03](03-core-concepts.md) | 核心概念 | 准备深入使用的人 | 值语义、非空引用、无 GC 的资源管理，为什么这样设计 |
 | [04](04-language-reference.md) | 语言参考 | 日常写代码的人 | 按主题查阅语法、语义、示例与常见错误（含泛型嵌套、默认类型与单态化边界） |
 | [05](05-delivery-security.md) | 交付安全 | 需要对外交付的团队 | 交付形态选择、导出与分发、符号与调试信息、边界声明 |
-| [06](06-deployment.md) | 跨平台部署 | 做部署的人 | checked 运行与 AOT 交付、嵌入宿主、桌面 / 嵌入式 Linux、资源与边界 |
+| [06](06-deployment.md) | 跨平台部署 | 做部署的人 | checked 运行与 LLVM 构建 交付、嵌入宿主、桌面 / 嵌入式 Linux、资源与边界 |
 | [07](07-stdlib-overview.md) | 标准库概览 | 想知道"能做什么"的人 | 按能力域列出现有模块与核心 API |
 | [08](08-host-integration.md) | 宿主集成与 C ABI | 做集成的人 | 胶水绑定、abi 块、类型映射、可空引用 |
 | [09](09-toolchain.md) | 工具链使用 | 日常用 chali 命令的人 | 命令行、chali.toml、在线依赖与共享缓存、标准库预编译单元、编译选项、测试、LSP、显示语言 |
@@ -81,7 +81,7 @@ ChaLi 通过 LLVM 构建生成原生代码。目标运行时、C ABI 库、链�
 - [`doc/examples/`](examples/) —— 需要配套工程布局的示例（ABI、SQLite、GUI）。
 - [`doc/examples/`](examples/) 里的配套工程总览见 [13 示例项目](13-projects.md)。
 - [项目 README](../README.cn.md) —— 构建、快速使用、调试、配置。
-- [入门书《ChaLi 程序设计语言》](book/README.md) —— 从第一个程序逐步学习的 30 章教程与附录，含经典作品改编番外，以及前端编译与 AOT 流程图；完整示例与生成内容按对应回归核验。
+- [入门书《ChaLi 程序设计语言》](book/README.md) —— 从第一个程序逐步学习的 30 章教程与附录，含经典作品改编番外，以及前端编译与 LLVM 构建 流程图；完整示例与生成内容按对应回归核验。
 - [完整语法参考（EBNF）](14-grammar-ebnf.md) —— 文法的权威形式，由 [`source/chali.gram`](../source/chali.gram) 生成。
 
 ## 英文文档
@@ -147,7 +147,7 @@ ChaLi 通过 LLVM 构建生成原生代码。目标运行时、C ABI 库、链�
 - [名称与相关能力](37-name-freeze.md)
 
 - [LLVM 构建入口](38-build.md)
-- [AOT 降低开关与计数](40-backend-ownership.md)
+- [LLVM 构建 降低开关与计数](40-backend-ownership.md)
 - [原始存储与 C ABI 指令](41-unsafe-abi.md)
 
 - [在线构建依赖](42-build-dependencies.md)：SQLite／miniz 固定版本下载、摘要校验、缓存、离线复用与许可证。
@@ -158,4 +158,4 @@ ChaLi 通过 LLVM 构建生成原生代码。目标运行时、C ABI 库、链�
 
 - [可选宿主库](45-optional-libraries.md)：窗体、音频、XML、密码学与 HTTP 流式传输。
 
-- [AOT 可执行文件体积与抽样验证](46-aot-executable-size.md)
+- [原生可执行文件体积与抽样验证](46-aot-executable-size.md)

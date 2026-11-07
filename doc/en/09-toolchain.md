@@ -6,9 +6,9 @@
 
 GitHub runs the [command and documentation gates](../../.github/workflows/cli-contract.yml) on each push and pull request. They check `build`, `[build]`, build debugging, obsolete wording, argument normalization and editor project configuration. Run `python tests/chali_cli_contract.py` and `python tests/chali_doc_history.py` locally. Validate native outputs with `python tests/chali_build_command.py --chali PATH_TO_COMPILER`.
 
-`run` compiles and executes checked AOT code. `build` performs a release build with checks disabled by default. See [build debugging](43-native-debugging.md).
+`run` compiles and executes checked native code. `build` performs a release build with checks disabled by default. See [build debugging](43-native-debugging.md).
 
-ChaLi executes programs through checked AOT by default. The front end loads modules, parses and checks source, then generates LLVM code directly from the checked AST. The explicit [LLVM build entry](38-build.md) can generate LLVM modules and native products.
+ChaLi executes programs through checked native compilation by default. The front end loads modules, parses and checks source, then generates LLVM code directly from the checked AST. The explicit [LLVM build entry](38-build.md) can generate LLVM modules and native products.
 
 ```sh
 chali run app.chl
@@ -57,7 +57,7 @@ Back-end debugging switches change diagnostics or the execution path, never prog
 | `CHALI_NO_SLOT_REUSE=1` | Fall back to "parameters first, then one slot per declaration in order" |
 | `CHALI_ONE_SLOT_PER_SYMBOL=1` | One slot per symbol but still through the allocator — separates aliasing bugs from numbering bugs |
 
-AOT fast-path comparison switches are listed in [AOT lowering switches and counters](40-backend-ownership.md).
+Native compilation fast-path comparison switches are listed in [native lowering switches and counters](40-backend-ownership.md).
 
 Instruction-selection coverage and frame slots before/after reuse are both visible in `--stats`:
 
@@ -77,7 +77,7 @@ slots, opaque registry handles and caller-owned error buffers; `chali_standard.h
 Implementations may use C or C++17, and their public boundaries use C types.
 
 `abi/aot_modules.inc` holds module names and C table providers. Standard registration excludes demo;
-AOT selects modules by actual reachable entry names. Each table registers atomically, and the first failure
+The LLVM backend selects modules by actual reachable entry names. Each table registers atomically, and the first failure
 stops registration with its diagnostic. The runtime shares one function table and seals it after setup.
 
 `chali_host_call` forwards slot arrays to C entries. LLVM can call scalar C ABI functions directly.
@@ -100,8 +100,8 @@ The generators keep `.sha256` manifests in `build/embedded-sha256/`. Before comp
 they compare SHA-256 digests of inputs, generator scripts and existing outputs. Matching digests skip
 generation and preserve output timestamps; missing or damaged outputs, changed contents and changed
 asset indexes require regeneration. This also covers the manual, bilingual messages, runtime asset lists
-and AOT linker assets. `gen.sh` forces UTF-8 for Python subprocesses so Chinese output remains valid on Windows.
-Builds, tests, AOT asset extraction, LSP checks, ABI bridges and compiler-project generation keep temporary
+and native compilation linker assets. `gen.sh` forces UTF-8 for Python subprocesses so Chinese output remains valid on Windows.
+Builds, tests, native compilation asset extraction, LSP checks, ABI bridges and compiler-project generation keep temporary
 directories under the repository's `tmp/`, using independent subdirectories. They do not create a sibling `tmp`.
 Repository compiler binaries locate this directory even when started from a child or parent directory;
 Python and Node tests and build subprocesses inherit the same temporary path.
@@ -204,7 +204,7 @@ Static and external LLVM builds use separate build directories and versioned art
 
 `chali build app.chl --emit-asm --out build/app` exports `build/app.s` using the current target, CPU, check mode and optimization/debug settings. This is machine assembly, distinct from LLVM IR text `.ll`. It stops before object generation and linking, so cross-target assembly does not require target runtime link assets. The static variant uses its built-in LLVM backend; the external variant uses clang. Output uses the selected backend's default syntax (x86 AT&T, AArch64 target syntax); no NASM/MASM compatibility is implied.
 
-The project setting `[build] output = "assembly"` selects the same output for AOT builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked AOT execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.
+The project setting `[build] output = "assembly"` selects the same output for native builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked native execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.
 
 The `.ll` and any C ABI header remain available alongside `.s`. Complex C ABI signatures can also produce a `.abi.cpp` marshalling sidecar; assembly alone is not a complete linkable application. Reassembly and final linking require a matching target toolchain, runtime and dependencies. See the standalone assembler, linker and archiver below.
 
@@ -220,7 +220,7 @@ chali build main.chl --asm native/add.s --asm-include native/include --out build
 
 The static variant uses LLVM MC in process without clang and rejects `--llvm`; the external variant may use this option to select its integrated assembler. Objects are first produced in a private workspace and published only after successful assembly. A failed assembly preserves an existing output and cannot overwrite its own primary input. The output parent directory must exist. Source/include diagnostics retain their original positions.
 
-AOT accepts repeated `--asm FILE.s` and `--asm-include DIR` options. Every object uses the same target and CPU as the language unit and participates in the final link. Use the established C ABI declaration to reference an assembly symbol; the assembly must follow that target's calling convention. These inputs require executable/shared-library output and cannot be combined with `--emit-asm`, `--emit-obj` or `--emit-llvm`. Assembling a cross-target object does not verify executable deployment on that target.
+`build` accepts repeated `--asm FILE.s` and `--asm-include DIR` options. Every object uses the same target and CPU as the language unit and participates in the final link. Use the established C ABI declaration to reference an assembly symbol; the assembly must follow that target's calling convention. These inputs require executable/shared-library output and cannot be combined with `--emit-asm`, `--emit-obj` or `--emit-llvm`. Assembling a cross-target object does not verify executable deployment on that target.
 
 Declare a linked scalar C function as `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`. The object or archive supplied to the linker provides the symbol. Signatures with structures, references, buffers or callbacks use a compatible dynamic library and the [C ABI marshalling rules](41-unsafe-abi.md).
 

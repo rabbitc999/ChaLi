@@ -124,7 +124,7 @@ let inferred = LIMIT;      // 类型推导
 
 ## 4. 函数
 
-`export` 放在普通函数定义前，标记供 AOT 原生调用方使用的公开入口。例如：
+`export` 放在普通函数定义前，标记供 原生调用方使用的公开入口。例如：
 
 ```chali
 #export("f_add")
@@ -618,7 +618,7 @@ void main() {
 值字段不能直接或间接包含自身；同一实例的引用递归允许存在。不断扩大的递归类型会报错，
 每次编译最多生成 1024 个泛型实例，类型表达式嵌套达到 128 层时停止展开并给出诊断。
 综合回归见 [`tests/chali_generic_monomorphization.py`](../tests/chali_generic_monomorphization.py)，
-覆盖 AOT 执行、实例复用及非法代码诊断。
+覆盖 LLVM 构建 执行、实例复用及非法代码诊断。
 
 ---
 

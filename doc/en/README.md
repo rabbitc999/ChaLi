@@ -112,7 +112,7 @@ The [30-chapter English book](../book/en/README.md) contains technical chapters 
 - [Name and related capabilities](37-name-freeze.md)
 
 - [LLVM build compilation](38-build.md)
-- [AOT lowering switches and counters](40-backend-ownership.md)
+- [native lowering switches and counters](40-backend-ownership.md)
 - [Raw storage and C ABI directives](41-unsafe-abi.md)
 
 - [Downloaded build dependencies](42-build-dependencies.md): pinned SQLite/miniz downloads, checksums, caches, offline reuse and licensing.
@@ -123,4 +123,4 @@ The [30-chapter English book](../book/en/README.md) contains technical chapters 
 
 - [Optional host libraries](45-optional-libraries.md): windows, audio, XML, cryptography and streaming HTTP.
 
-- [AOT executable size and sample validation](46-aot-executable-size.md)
+- [native executable size and sample validation](46-aot-executable-size.md)

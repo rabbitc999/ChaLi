@@ -20,7 +20,7 @@ is written `chali`).
 | [Annotations and reflection](#53-annotations-and-reflection) | [`example/reflection/`](../../example/reflection/) | Compile-time annotations, runtime metadata queries | reflection build macros |
 | [Standard library companions](#54-standard-library-companions) | [`doc/examples/library/`](../examples/library/) | Three runnable programs: io / sqlite / reflect | some need reflection |
 | [C ABI companions](#55-c-abi-companions) | [`doc/examples/abi_buffers/`](../examples/abi_buffers/), [`abi_dynamic/`](../examples/abi_dynamic/) | Static buffers vs. dynamic library bindings | a C compiler |
-| [Synchronous callbacks](../../example/native-callbacks/README.md) | [`example/native-callbacks/`](../../example/native-callbacks/) | C calling ChaLi function values under AOT: named functions, closures, references, reentry | a C compiler |
+| [Synchronous callbacks](../../example/native-callbacks/README.md) | [`example/native-callbacks/`](../../example/native-callbacks/) | C calling ChaLi function values under native compilation: named functions, closures, references, reentry | a C compiler |
 | [Editor language servers](#62-editor-language-servers-and-the-vs-code-extension) | [`source/lsp/`](../../source/lsp), [`vscode/`](../../vscode/) | Macro pairing checks, semantic highlighting, real diagnostics | none / VS Code |
 
 ---

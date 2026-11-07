@@ -168,7 +168,7 @@ void main() {
 标准库源码本身就是最好的参考，每个模块头部都有能力说明：
 
 - [`source/std/`](../source/std) —— 全部模块源码，`source/std/<名字>.chl`
-- [`source/abi/`](../source/abi) —— 宿主侧 C ABI 服务及必要的 C++ 适配；`abi_*.c` / `abi_*.cpp` 实现服务，`aot_modules.inc` 组织 AOT 按需绑定
+- [`source/abi/`](../source/abi) —— 宿主侧 C ABI 服务及必要的 C++ 适配；`abi_*.c` / `abi_*.cpp` 实现服务，`aot_modules.inc` 组织 LLVM 构建 按需绑定
 - [`example/samples/`](../example/samples/) —— 按特性组织的可运行样例
 - 各能力域的 API 参考：[`doc/library/`](library/README.md) 按模块分页（`std-json.md`、`std-toml.md`、`std-regex.md`、`std-linear_algebra.md`、`std-complex.md`、`std-net.md`、`std-sql.md` …）
 

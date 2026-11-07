@@ -61,7 +61,7 @@ Names follow `chali-VERSION-llvm-VARIANT-SYSTEM_OR_DISTRIBUTION-ARCHITECTURE`. F
 
 Distribution identifiers come from the actual build environment's `/etc/os-release`. An Ubuntu binary is not relabeled as CentOS. PE/ELF machine headers must match the requested package architecture. Adjacent JSON records compiler and package SHA256 values.
 
-These are build targets and naming rules, not a claim that every target has passed runtime acceptance. Cross-compiling a package does not run it on the target machine. No x86 installers are provided: the 32-bit compiler can be built but its runtime fails startup validation. The ARM64 package provides the compiler front end and language server. The embedded native AOT runtime currently targets x64 host layouts.
+These are build targets and naming rules, not a claim that every target has passed runtime acceptance. Cross-compiling a package does not run it on the target machine. No x86 installers are provided: the 32-bit compiler can be built but its runtime fails startup validation. The ARM64 package provides the compiler front end and language server. The embedded native runtime currently targets x64 host layouts.
 
 ## Automatic builds
 

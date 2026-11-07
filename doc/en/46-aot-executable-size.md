@@ -1,4 +1,4 @@
-# AOT executable size and sample validation
+# Native executable size and sample validation
 
 <!-- LANGUAGE NAVIGATION -->
 **English** · [简体中文](../46-aot-executable-size.md)
@@ -27,7 +27,7 @@ Each of the three new executables was run without arguments, with `--help`, and 
 
 ## Historical first reduction across LTO modes
 
-The table covers 9 programs and 27 AOT compilations. The other 8 programs use existing repository samples. Every executable's standard output was compared with `example/expected/<sample>.txt`, with a zero exit code and empty standard error required.
+The table covers 9 programs and 27 native compilations. The other 8 programs use existing repository samples. Every executable's standard output was compared with `example/expected/<sample>.txt`, with a zero exit code and empty standard error required.
 
 | Program | Coverage | LTO off | Full LTO | ThinLTO |
 | --- | --- | ---: | ---: | ---: |
@@ -45,7 +45,7 @@ The 10 KiB size and 99.79% reduction apply to the measured Hello World benchmark
 
 ## Subsequent C service measurement (version 1.0.0)
 
-The following follow-up covers 15 programs and 45 AOT compilations. Output, exit codes and diagnostics were checked for every executable. The earlier measurements above retain their original commit and configuration; these follow-up sizes include the C numeric and collection services.
+The following follow-up covers 15 programs and 45 native compilations. Output, exit codes and diagnostics were checked for every executable. The earlier measurements above retain their original commit and configuration; these follow-up sizes include the C numeric and collection services.
 
 | Program | Coverage | LTO off | Full LTO | ThinLTO |
 | --- | --- | ---: | ---: | ---: |
@@ -67,14 +67,14 @@ The following follow-up covers 15 programs and 45 AOT compilations. Output, exit
 
 ## Runtime and failure-path samples
 
-The new compiler also ran checked `run` and AOT comparisons for the following 12 samples. All compiled successfully, exited with zero, produced matching standard output, and left AOT standard error empty.
+The new compiler also ran checked `run` and native execution comparisons for the following 12 samples. All compiled successfully, exited with zero, produced matching standard output, and left native program standard error empty.
 
 - Closures and capture modes cover `lambda_callbacks` and `lambda_capture_modes`.
 - Errors, structured data, reflection serialization, binary data and UTF-8 cover `std_errors`, `std_structured_data`, `reflect_serialization`, `std_binary` and `std_utf8`.
 - Collection algorithms cover `std_collections_algorithms`.
 - Thread messages, channels, thread pools and timed events cover `thread_messages`, `thread_channel`, `thread_pool` and `event_timer`.
 
-The runtime regression also checked integer division by zero, integer division overflow, out-of-range shifts and floating-point division by zero. Both checked `run` and AOT failed at the expected point, retained output produced before the failure, and reported the expected diagnostic. An infinite loop with a 1,000-step limit also stopped as expected, with matching exit codes, output and diagnostics.
+The runtime regression also checked integer division by zero, integer division overflow, out-of-range shifts and floating-point division by zero. Both checked `run` and native execution failed at the expected point, retained output produced before the failure, and reported the expected diagnostic. An infinite loop with a 1,000-step limit also stopped as expected, with matching exit codes, output and diagnostics.
 
 ```powershell
 python tests/chali_aot_runtime.py --chali path/to/chali.exe --samples lambda_callbacks lambda_capture_modes std_errors std_structured_data reflect_serialization std_binary std_utf8 std_collections_algorithms thread_messages thread_channel thread_pool event_timer
@@ -106,7 +106,7 @@ chali.exe build example/samples/dynamic_array.chl --lto-mode full --out tmp/dyna
 ./tmp/dynamic-array.exe
 ```
 
-`tests/chali_aot_static.py` checks the basic output program's behavior and size limit in all three LTO modes, alongside container calculations and a C ABI shared library. `tests/chali_aot_runtime.py` compares runtime samples under checked `run` and AOT.
+`tests/chali_aot_static.py` checks the basic output program's behavior and size limit in all three LTO modes, alongside container calculations and a C ABI shared library. `tests/chali_aot_runtime.py` compares runtime samples under checked `run` and native execution.
 
 ## On-demand C services and standard module names
 

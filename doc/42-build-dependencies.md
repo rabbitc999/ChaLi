@@ -29,7 +29,7 @@ make -j4
 
 ## 运行与交付
 
-这是构建期下载。编译器及生成的 AOT 程序仍静态链接所需实现，运行 SQLite 程序不需要下载源码或寻找 `sqlite3.dll`。SQLite 开启线程安全并禁用动态扩展加载；miniz 只编译所需的 tinfl 解压内核。
+这是构建期下载。编译器及生成的 原生程序仍静态链接所需实现，运行 SQLite 程序不需要下载源码或寻找 `sqlite3.dll`。SQLite 开启线程安全并禁用动态扩展加载；miniz 只编译所需的 tinfl 解压内核。
 
 miniz 的 MIT 许可证保存在 [licenses/miniz/LICENSE](../licenses/miniz/LICENSE)，发行包继续携带该许可证与项目 [NOTICE](../NOTICE)。SQLite 保持公共领域身份，来源记录保留在锁定清单及 NOTICE 中。
 

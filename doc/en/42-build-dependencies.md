@@ -29,7 +29,7 @@ Writes to the shared cache are locked. Files are installed after archive and mem
 
 ## Runtime and delivery
 
-Downloads happen at build time. Compilers and AOT programs still statically link the required implementations; running SQLite programs requires neither a source download nor `sqlite3.dll`. SQLite enables thread safety and disables dynamic extension loading. Only miniz's required tinfl decompression kernel is compiled.
+Downloads happen at build time. Compilers and native programs still statically link the required implementations; running SQLite programs requires neither a source download nor `sqlite3.dll`. SQLite enables thread safety and disables dynamic extension loading. Only miniz's required tinfl decompression kernel is compiled.
 
 The miniz MIT license is retained at [licenses/miniz/LICENSE](../../licenses/miniz/LICENSE) and included in release packages alongside [NOTICE](../../NOTICE). SQLite remains public domain, with upstream provenance recorded in the lock file and NOTICE.
 

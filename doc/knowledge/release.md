@@ -10,7 +10,7 @@
 
 | 改动范围 | 定向入口 |
 | --- | --- |
-| AOT、静态 LLVM、目标对象与链接 | [AOT 回归](../../tests/chali_aot.py)、[静态后端](../../tests/chali_aot_static.py)、[汇编](../../tests/chali_aot_assembly.py)、[Windows PE 子系统](../../tests/chali_windows_subsystem.py) |
+| LLVM 构建、静态 LLVM、目标对象与链接 | [LLVM 构建 回归](../../tests/chali_aot.py)、[静态后端](../../tests/chali_aot_static.py)、[汇编](../../tests/chali_aot_assembly.py)、[Windows PE 子系统](../../tests/chali_windows_subsystem.py) |
 | LSP、命名与补全 | [原生 LSP 专项](../../tests/chali_lsp_naming_scopes.py)、[扩展测试](../../vscode/test/) |
 | 书稿与正式文档 | [书稿例程及 LaTeX](../../tests/chali_book_updates.py)、[双语结构](../../tests/chali_book_rewrite.py)、[链接检查](../../tools/check_doc_links.py) |
 | 临时目录与默认产物路径 | [临时目录专项](../../tests/chali_temporary_paths.py)、[产物文档](../15-artifacts.md) |

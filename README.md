@@ -43,7 +43,7 @@ ChaLi 的五个字母分别代表以下语言特性。语言名中 C 与 L 大�
 
 ## 运行过程
 
-`run` 编译并执行 checked AOT 机器码；`build` 默认导出 unchecked 原生产物。原生运行时提供共享内存、所有权、宿主回调与线程服务。
+`run` 编译并执行 checked 原生机器码；`build` 默认导出 unchecked 原生产物。原生运行时提供共享内存、所有权、宿主回调与线程服务。
 
 ## 文档
 
@@ -135,7 +135,7 @@ make reflection     # 保留的显式启用入口
 
 ### 调试
 
-VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的 AOT 程序，支持源码断点、继续、单步进入／越过／跳出、调用栈、参数、局部变量和表达式。开发调试保留符号并使用 O0；`--debug-optimized` 或 VSCode 的 `debugMode: "optimized"` 保留 DWARF 并使用 O3／LTO，支持内联调用帧。普通发布构建仍使用最高优化。见[构建调试](doc/43-native-debugging.md)。
+VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的 原生程序，支持源码断点、继续、单步进入／越过／跳出、调用栈、参数、局部变量和表达式。开发调试保留符号并使用 O0；`--debug-optimized` 或 VSCode 的 `debugMode: "optimized"` 保留 DWARF 并使用 O3／LTO，支持内联调用帧。普通发布构建仍使用最高优化。见[构建调试](doc/43-native-debugging.md)。
 
 ### 报错
 
@@ -210,7 +210,7 @@ chali/
 │   ├── lsp/ dap/                   编辑器集成
 │   └── generator/            生成独立编译器工程的入口
 ├── library/                        可复用 C++ 库与目标宿主
-│   ├── ircode/                     四元式与 AOT 共享运行时
+│   ├── ircode/                     四元式与 原生共享运行时
 │   ├── bignum/ json/ toml/ console/ lztext/ …
 │   └── …
 ├── doc/                            面向使用者的文档（00–20、99）

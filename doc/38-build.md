@@ -10,7 +10,7 @@
 
 默认 `run` 与 `build` 的最终产物位于 `.chl` 同级，run 生成的可执行文件也会保留。中间文件使用源码旁 `.chali` 中的独占工作区，Windows 下隐藏，成功或失败结束后清理并删除空目录；既有用户文件保留。显式输出与保留选项继续可用。VSCode 默认同样输出到源码旁；static VSIX 不提供 `Chali › Build: Llvm Path`，external 必须配置，构建和运行均传递 `--llvm`。
 
-`run` 使用 checked AOT 编译执行，`build` 默认 unchecked 导出。原生调试见[构建调试](43-native-debugging.md)。
+`run` 使用 checked 原生构建 编译执行，`build` 默认 unchecked 导出。原生调试见[构建调试](43-native-debugging.md)。
 
 ### Windows 应用的控制台
 
@@ -23,11 +23,11 @@ chali build app.chl --subsystem windows --out app-gui
 
 在 `chali.toml` 的 `[build]` 中设置 `subsystem = "windows"` 可用于项目构建，`run` 和编辑器构建也会读取该设置。命令行选项优先。分步构建时把选项传给 `chali link`；导出的 LLVM IR、汇编或对象尚未设置 PE 子系统。
 
-`chali build input.chl --out build/program` 从语义检查后的 AST 直接生成 LLVM 代码，不经过四元式生成或组装，由 LLVM 优化、生成机器码并链接原生产物。也可使用 `chali --mode build input.chl`。默认源码运行同样使用 AOT，且开启检查。
+`chali build input.chl --out build/program` 从语义检查后的 AST 直接生成 LLVM 代码，不经过四元式生成或组装，由 LLVM 优化、生成机器码并链接原生产物。也可使用 `chali --mode build input.chl`。默认源码运行同样使用 LLVM 构建，且开启检查。
 
 Windows x64 依赖通过 [在线下载脚本](../library/llvm/README.md) 准备。外置后端运行 `python tools/fetch_llvm_toolchain.py`；静态后端运行 `python tools/fetch_llvm_sdk.py`，下载预编译 LLVM/LLD 和匹配 GCC，全部缓存位于 `build/`。仓库不保存 SDK 或离线分片；归档按固定 SHA-256 校验。只导出 LLVM IR 不需要代码生成工具链。
 
-AOT 的 LLVM 优化始终全开：外置 LLVM 使用 `-O3`，静态 LLVM 使用 `default<O3>` 与激进代码生成等级，保留正常浮点语义与存活检查；run 开启数组和指针检查，发布构建缺省关闭这些检查。四元式不做内部优化。批量复制、直接调用和可选计数的适用条件与对照开关见[AOT 降低开关与计数](40-backend-ownership.md)。
+LLVM 构建 的 LLVM 优化始终全开：外置 LLVM 使用 `-O3`，静态 LLVM 使用 `default<O3>` 与激进代码生成等级，保留正常浮点语义与存活检查；run 开启数组和指针检查，发布构建缺省关闭这些检查。四元式不做内部优化。批量复制、直接调用和可选计数的适用条件与对照开关见[LLVM 构建 降低开关与计数](40-backend-ownership.md)。
 
 | 参数 | 行为 |
 | --- | --- |
@@ -69,13 +69,13 @@ chali build app.chl --allocator pool --out build/app-pool
 
 `python tools/release_variants.py` 顺序构建和验收两个程序与插件变体，发布 ZIP 分别保存在 `dist/llvm-static/` 与 `dist/llvm-external/`。插件版本与 VERSION 中的编译器版本一致，VSIX 文件名分别使用 `-llvm-static` 与 `-llvm-external` 后缀；二者安装为同一个扩展的替代变体。单独打包可在 `vscode/` 使用 `npm run package -- --llvm-variant static --compiler 编译器路径`，或将 static 改为 external。发布脚本只生成本地产物，远端发布仍需显式执行。
 
-程序代码直接生成 LLVM 指令、基本块和全局存储，不经过 C/C++ 程序源码。手写的 [AOT 运行时](../source/aot/runtime.c) 在维护期使用固定版本 LLVM 生成为平台模块，再内嵌进编译器；执行 `sh tools/build_aot_runtime.sh --check` 可验证生成结果同步。当前运行时提供 Windows x64、Linux x64 与 Linux ARM64 布局，Windows x64 已提供配套工具分发。Linux x64 构建机需准备对应宿主的 LLVM clang 和系统链接环境。
+程序代码直接生成 LLVM 指令、基本块和全局存储，不经过 C/C++ 程序源码。手写的 [原生运行时](../source/aot/runtime.c) 在维护期使用固定版本 LLVM 生成为平台模块，再内嵌进编译器；执行 `sh tools/build_aot_runtime.sh --check` 可验证生成结果同步。当前运行时提供 Windows x64、Linux x64 与 Linux ARM64 布局，Windows x64 已提供配套工具分发。Linux x64 构建机需准备对应宿主的 LLVM clang 和系统链接环境。
 
-`--incremental` 在 AOT 路径不复用编译产物，ABI 声明来自本次语义分析。功能验证由 [AOT 回归](../tests/chali_aot.py)、[列表与 opcode 差分回归](../tests/chali_aot_values.py)、[复杂 ABI 值与引用回归](../tests/chali_abi_values.py)（--aot）、[C 回调及返回所有权回归](../tests/chali_abi_contracts.py)（--aot）和[静态 LLVM 隔离回归](../tests/chali_aot_static.py)覆盖。
+`--incremental` 在 LLVM 构建 路径不复用编译产物，ABI 声明来自本次语义分析。功能验证由 [LLVM 构建 回归](../tests/chali_aot.py)、[列表与 opcode 差分回归](../tests/chali_aot_values.py)、[复杂 ABI 值与引用回归](../tests/chali_abi_values.py)（--aot）、[C 回调及返回所有权回归](../tests/chali_abi_contracts.py)（--aot）和[静态 LLVM 隔离回归](../tests/chali_aot_static.py)覆盖。
 
 ## 导出无入口的动态库
 
-`export` 放在普通函数定义前，标记供 AOT 原生调用方使用的公开入口。例如：
+`export` 放在普通函数定义前，标记供 原生调用方使用的公开入口。例如：
 
 ```chali
 #export("f_add")
@@ -93,7 +93,7 @@ int64 add(int64 left, int64 right)
 
 Windows 原生进程入口从 CRT 宽字符参数转换到 UTF-8，再交给 main 的 List<String>；中文、非 BMP 字符、空串、引号及反斜线均保留。入口行为的回归为 python tests/chali_aot_arguments.py，同时检查中文与空格产物路径。
 
-在线工具链下载也支持 Linux x64、Linux ARM64 与 macOS ARM64，可运行 `python tools/fetch_llvm_toolchain.py --list` 查看，或用 `--platform` 显式选择。静态 SDK 自动准备目前限定 Windows x64；下载能力不代表相应平台 AOT 已验收。
+在线工具链下载也支持 Linux x64、Linux ARM64 与 macOS ARM64，可运行 `python tools/fetch_llvm_toolchain.py --list` 查看，或用 `--platform` 显式选择。静态 SDK 自动准备目前限定 Windows x64；下载能力不代表相应平台 LLVM 构建 已验收。
 
 ## 交叉编译与项目配置
 
@@ -148,7 +148,7 @@ chali build --target linux-x64 --emit-obj --out build/x64/app
 
 `chali build app.chl --emit-asm --out build/app` 按实际目标、CPU、检查及优化／调试设置导出 `build/app.s`。这是机器汇编，与 LLVM IR 文本 `.ll` 不同。输出在对象生成和链接之前停止，跨目标导出不要求准备目标运行时链接资产。静态变体使用内置 LLVM，外置变体使用 clang；采用相应后端默认语法（x86 为 AT&T，AArch64 为目标语法），不表示兼容 NASM／MASM。
 
-项目可设置 `[build] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked AOT。VSCode 输出选择和构建支持汇编及 `.s` 后缀。
+项目可设置 `[build] output = "assembly"`。显式 `--emit-asm`、`--emit-obj` 或 `--emit-llvm` 覆盖项目输出，三个选项互斥；普通 `run` 仍执行 checked 原生构建。VSCode 输出选择和构建支持汇编及 `.s` 后缀。
 
 同时保留 `.ll` 和适用的 C ABI 头文件；复杂 C ABI 还可能生成 `.abi.cpp` 封送侧文件，单独的汇编文件不等于已链接应用。重新汇编和最终链接需要匹配的目标工具链、运行时及依赖。独立汇编、链接与归档入口见下文。
 
@@ -164,7 +164,7 @@ chali build main.chl --asm native/add.s --asm-include native/include --out build
 
 静态变体直接调用 LLVM MC，无需 clang，并拒绝 `--llvm`；外置变体使用该选项指定集成汇编器。对象先生成在独占工作区，汇编成功后才发布，失败保留已有产物，且禁止覆盖自己的主输入。输出父目录必须存在。源文件及包含文件的诊断保留实际位置。
 
-AOT 可重复指定 `--asm FILE.s` 和 `--asm-include DIR`，每个对象使用语言单元相同的目标和 CPU，参与最终链接。通过既有 C ABI 声明引用汇编符号，汇编须遵循目标调用约定。该输入只适用于可执行文件或共享库输出，不能与 `--emit-asm`、`--emit-obj`、`--emit-llvm` 组合。生成交叉对象不等于已经验证目标系统的可执行交付。
+LLVM 构建 可重复指定 `--asm FILE.s` 和 `--asm-include DIR`，每个对象使用语言单元相同的目标和 CPU，参与最终链接。通过既有 C ABI 声明引用汇编符号，汇编须遵循目标调用约定。该输入只适用于可执行文件或共享库输出，不能与 `--emit-asm`、`--emit-obj`、`--emit-llvm` 组合。生成交叉对象不等于已经验证目标系统的可执行交付。
 
 链接的标量 C 函数可声明为 `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`。符号由交给链接器的对象或归档提供。结构体、引用、缓冲区和回调签名使用兼容的动态库，遵循 [C ABI 封送约定](41-unsafe-abi.md)。
 

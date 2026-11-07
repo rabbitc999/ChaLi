@@ -42,7 +42,7 @@ Complete examples have a main function and expected output. Interactive examples
 | [24](24-compiler-directives.md) | Compiler Directives |
 | [25](25-unsafe.md) | Unsafe Code |
 | [26](26-c-interop.md) | Interoperating with C |
-| [27](27-aot-export.md) | AOT Export |
+| [27](27-aot-export.md) | Native Build |
 | [28](28-http-file-server.md) | An HTTP File Server |
 | [29](29-student-management.md) | Student Information Management |
 | [30](30-standard-library-tour.md) | Project: Conway’s Game of Life |

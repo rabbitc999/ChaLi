@@ -32,7 +32,7 @@ See [naming and related capabilities](doc/en/37-name-freeze.md) for references a
 
 ## Compilation
 
-Module loading and source mapping precede the generated parser. Hygienic AST macros expand during semantic analysis alongside type inference. After name, type, generic and borrow checks, the C++ backend generates LLVM IR directly from the checked AST; LLVM optimizes it and generates native code. Normal run and AOT paths skip quadruple generation, serialization and assembly.
+Module loading and source mapping precede the generated parser. Hygienic AST macros expand during semantic analysis alongside type inference. After name, type, generic and borrow checks, the C++ backend generates LLVM IR directly from the checked AST; LLVM optimizes it and generates native code. Normal run and native build paths skip quadruple generation, serialization and assembly.
 
 ![ChaLi compilation: module loading, parsing, semantic macro expansion, borrow checks, checked AST and LLVM Build](doc/images/chali-compilation-en.png)
 
@@ -46,7 +46,7 @@ The generated application needs no LLVM DLL. Ship application-specific C ABI dyn
 
 ## Execution
 
-`run` compiles and executes checked AOT machine code. `build` exports unchecked native products by default. The native runtime provides shared memory, ownership, host callbacks, and thread services.
+`run` compiles and executes checked native machine code. `build` exports unchecked native products by default. The native runtime provides shared memory, ownership, host callbacks, and thread services.
 
 ## Documentation
 
@@ -136,7 +136,7 @@ exists solely to validate the compiler itself — it is not a supported trim con
 ## Quick usage
 
 ```sh
-./chali run  example/samples/hello.chl        # checked AOT (default)
+./chali run  example/samples/hello.chl        # checked native compilation (default)
 ./chali new  hello-chali                       # create a new application project
 ```
 
@@ -146,7 +146,7 @@ subcommands and `--mode`.
 
 ### Debugging
 
-VS Code uses GDB/MI to debug an AOT program with DWARF source locations and variables. Source breakpoints, continue, step in/over/out, stack frames, parameters, locals and expressions are supported. Development debugging retains symbols at O0; `--debug-optimized` or VSCode `debugMode: "optimized"` retains DWARF with O3/LTO and inline frames. Normal release builds retain highest optimization. See [build debugging](doc/en/43-native-debugging.md).
+VS Code uses GDB/MI to debug a native program with DWARF source locations and variables. Source breakpoints, continue, step in/over/out, stack frames, parameters, locals and expressions are supported. Development debugging retains symbols at O0; `--debug-optimized` or VSCode `debugMode: "optimized"` retains DWARF with O3/LTO and inline frames. Normal release builds retain highest optimization. See [build debugging](doc/en/43-native-debugging.md).
 
 ### Diagnostics
 
@@ -235,7 +235,7 @@ chali/
 │   ├── lsp/ dap/                   editor integration
 │   └── generator/            entry point that generates standalone compiler projects
 ├── library/                        reusable C++ libraries and the board host
-│   ├── ircode/                     Quad IR and AOT shared runtime
+│   ├── ircode/                     Quad IR and native shared runtime
 │   ├── bignum/ json/ toml/ console/ lztext/ …
 │   └── …
 ├── doc/                            user-facing documentation (00–20, 99)

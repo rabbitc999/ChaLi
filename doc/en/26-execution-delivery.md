@@ -4,11 +4,11 @@
 **English** · [简体中文](../26-execution-delivery.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Normal run and AOT compilation generate LLVM code directly from the semantically checked AST, bypassing quadruple generation and assembly.
+Normal run and build generate LLVM code directly from the semantically checked AST, bypassing quadruple generation and assembly.
 
 | Task | Command or API | Result |
 | --- | --- | --- |
-| Run source | `chali run app.chl` | Checked AOT compile-and-run, returns the program's exit status |
+| Run source | `chali run app.chl` | Checked native compilation and execution, returns the program's exit status |
 | Check | `chali check app.chl` | Syntax, type, borrow and semantic diagnostics; nothing runs, nothing is written |
 | Native export | `chali build app.chl` | Native executable next to `app.chl` (`.exe` on Windows) |
 | LLVM IR | `chali build app.chl --emit-llvm --out build/app` | `build/app.ll`, generated directly from the AST |

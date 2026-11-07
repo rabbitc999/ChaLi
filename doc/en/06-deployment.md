@@ -12,7 +12,7 @@ ChaLi lowers the checked AST to LLVM IR and uses LLVM build to produce native ma
 chali run app.chl
 ```
 
-`run` uses checked AOT: compile with `default<O3>` and execute in-process, with runtime checks (bounds, null, type) still enabled. It is for development and acceptance, not a delivery form.
+`run` uses checked native compilation: compile with `default<O3>` and execute the resulting native program in a child process, with runtime checks (bounds, null, type) still enabled. It is for development and acceptance, not a delivery form.
 
 ## Ship an executable
 
@@ -20,7 +20,7 @@ chali run app.chl
 chali build app.chl --out build/app
 ```
 
-`build` is unchecked AOT: same `default<O3>`, runtime checks removed, and the output is a self-contained executable (`.exe` on Windows). Copy it to the target machine together with any dynamic libraries and data files the program uses. `--debug` switches to `default<O0>,globaldce` and keeps debug information for troubleshooting. `--debug-optimized` retains DWARF while keeping O3; see [native debugging](43-native-debugging.md).
+`build` is unchecked native compilation: same `default<O3>`, runtime checks removed, and the output is a self-contained executable (`.exe` on Windows). Copy it to the target machine together with any dynamic libraries and data files the program uses. `--debug` switches to `default<O0>,globaldce` and keeps debug information for troubleshooting. `--debug-optimized` retains DWARF while keeping O3; see [native debugging](43-native-debugging.md).
 
 Startup no longer needs a host to register glue, reserve the data area or set an instruction budget — those were runtime-era interfaces. To call an external C function, declare it with `#abi("C", "library path", "symbol")`; the path resolves relative to the declaring source file, and the library must sit next to the artifact.
 

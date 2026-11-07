@@ -1,4 +1,4 @@
-# AOT 可执行文件体积与抽样验证
+# 原生可执行文件体积与抽样验证
 
 <!-- LANGUAGE NAVIGATION -->
 [English](en/46-aot-executable-size.md) · **简体中文**
@@ -27,7 +27,7 @@ void main()
 
 ## 首次裁剪的历史测量
 
-表中包含 9 个程序、27 次 AOT 编译。其余 8 个程序直接使用仓库中的样例源码，每个产物均与 `example/expected/<样例名>.txt` 对照标准输出，并检查退出码为零和标准错误为空。
+表中包含 9 个程序、27 次 LLVM 构建 编译。其余 8 个程序直接使用仓库中的样例源码，每个产物均与 `example/expected/<样例名>.txt` 对照标准输出，并检查退出码为零和标准错误为空。
 
 | 程序 | 覆盖内容 | 关闭 LTO | Full LTO | ThinLTO |
 | --- | --- | ---: | ---: | ---: |
@@ -45,7 +45,7 @@ void main()
 
 ## C 服务阶段的后续测量（版本仍为 1.0.0）
 
-下表复测 15 个程序，共 45 次 AOT 编译，每个产物均核对标准输出、退出码和标准错误。上表保留首次裁剪时的实际提交和配置；下表包含 C 数值与集合服务重构后的结果。
+下表复测 15 个程序，共 45 次 LLVM 构建 编译，每个产物均核对标准输出、退出码和标准错误。上表保留首次裁剪时的实际提交和配置；下表包含 C 数值与集合服务重构后的结果。
 
 | 程序 | 覆盖内容 | 关闭 LTO | Full LTO | ThinLTO |
 | --- | --- | ---: | ---: | ---: |
@@ -67,14 +67,14 @@ void main()
 
 ## 运行时与失败路径抽样
 
-新编译器另执行了以下 12 个样例的 checked `run` 与 AOT 对照，全部编译成功，产物退出码为零、标准输出一致、AOT 标准错误为空。
+新编译器另执行了以下 12 个样例的 checked `run` 与 LLVM 构建 对照，全部编译成功，产物退出码为零、标准输出一致、LLVM 构建 标准错误为空。
 
 - 闭包与捕获模式包括 `lambda_callbacks`、`lambda_capture_modes`。
 - 错误、结构化数据、反射序列化、二进制与 UTF-8 包括 `std_errors`、`std_structured_data`、`reflect_serialization`、`std_binary`、`std_utf8`。
 - 集合算法包括 `std_collections_algorithms`。
 - 线程消息、通道、线程池和定时事件包括 `thread_messages`、`thread_channel`、`thread_pool`、`event_timer`。
 
-运行时回归还核对了整数除零、整数除法溢出、越界移位和浮点除零。checked `run` 与 AOT 均在预期位置失败，保留失败前的输出并给出对应诊断。带有 1,000 步限制的无限循环也按预期停止，两条路径的退出码、输出和诊断一致。
+运行时回归还核对了整数除零、整数除法溢出、越界移位和浮点除零。checked `run` 与 LLVM 构建 均在预期位置失败，保留失败前的输出并给出对应诊断。带有 1,000 步限制的无限循环也按预期停止，两条路径的退出码、输出和诊断一致。
 
 ```powershell
 python tests/chali_aot_runtime.py --chali path/to/chali.exe --samples lambda_callbacks lambda_capture_modes std_errors std_structured_data reflect_serialization std_binary std_utf8 std_collections_algorithms thread_messages thread_channel thread_pool event_timer
@@ -106,7 +106,7 @@ chali.exe build example/samples/dynamic_array.chl --lto-mode full --out tmp/dyna
 ./tmp/dynamic-array.exe
 ```
 
-`tests/chali_aot_static.py` 持续核对三种 LTO 模式下基础输出程序的运行结果与体积上限，并覆盖容器计算和 C ABI 共享库。运行时样例的 checked `run` 与 AOT 对照入口为 `tests/chali_aot_runtime.py`。
+`tests/chali_aot_static.py` 持续核对三种 LTO 模式下基础输出程序的运行结果与体积上限，并覆盖容器计算和 C ABI 共享库。运行时样例的 checked `run` 与 LLVM 构建 对照入口为 `tests/chali_aot_runtime.py`。
 
 ## 按需 C 服务与标准库命名
 

@@ -245,7 +245,7 @@ The headless model fixture checks negative coordinates, toggling, isolated-cell 
 python tests/chali_desktop_life.py --compiler path/to/chali.exe --library path/to/testing/chali_desktop.dll
 ```
 
-Use a GUI library built with `CHALI_GUI_TESTING=ON` for this test. Normal applications do not require test hooks. The script checks both checked run and AOT and writes screenshots to `tmp/life-regression/`.
+Use a GUI library built with `CHALI_GUI_TESTING=ON` for this test. Normal applications do not require test hooks. The script checks both checked run and native execution and writes screenshots to `tmp/life-regression/`.
 
 This headless program verifies the blinker period:
 

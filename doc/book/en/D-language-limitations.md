@@ -48,7 +48,7 @@ unsafe permits specified low-level operations while retaining other type and own
 
 ## D.6 Builds and platforms
 
-run uses checked native builds; build defaults to unchecked release builds. Unchecked builds do not promise the same dynamic checks. LLVM performs optimization. A compiler with statically embedded LLVM rejects --llvm and build.llvm project settings; external LLVM variants accept the relevant tool-path configuration.
+run uses checked native compilation; build defaults to unchecked release builds. Unchecked builds do not promise the same dynamic checks. LLVM performs optimization. A compiler with statically embedded LLVM rejects --llvm and build.llvm project settings; external LLVM variants accept the relevant tool-path configuration.
 
 The shared runtime requires C++17 and operating-system services; bare-metal support is not promised. Building the compiler for an architecture does not establish support for every native export from that architecture. Dynamic libraries, graphics, audio, and debugging depend on the deployment platform. Language function values are not machine function pointers; host callbacks use the public C ABI invocation boundary. Consult the [LLVM build reference](../../en/38-build.md) and actual platform validation.
 

@@ -68,7 +68,7 @@ Experimental implementations live in `tests/fixtures/unsafe_storage/raw_containe
 
 Within an `unsafe` scope, `BarePtr<T>.castTo<U>()` returns a `BarePtr<U>` at the same address. It changes the element view without numerical conversion, allocation, or a target-type check. The caller must ensure the required range, alignment, initialization, and lifetime. Cast to `uint8` for byte-wise arithmetic and dereferencing; pointer offsets use the resulting element layout.
 
-IEEE754 codecs use this method to reinterpret and dereference storage rather than obtaining bit patterns through numerical integer/float casts. Both `float32` and `float64` occupy eight-byte floating-point slots in the language. The four-byte external binary32 representation is therefore reconstructed from the slot's binary64 bit pattern, rather than reading its first four bytes as binary32. AOT lowers the supported conversions directly to LLVM `bitcast` and floating-point width conversions, and inlines pointer-view wrappers. Codec arguments explicitly select byte order.
+IEEE754 codecs use this method to reinterpret and dereference storage rather than obtaining bit patterns through numerical integer/float casts. Both `float32` and `float64` occupy eight-byte floating-point slots in the language. The four-byte external binary32 representation is therefore reconstructed from the slot's binary64 bit pattern, rather than reading its first four bytes as binary32. The LLVM backend lowers the supported conversions directly to LLVM `bitcast` and floating-point width conversions, and inlines pointer-view wrappers. Codec arguments explicitly select byte order.
 
 ## Default self-hosted standard library
 
@@ -100,21 +100,21 @@ Imports retain synchronous callback and return-ownership adapters; release funct
 
 `#export` supports scalars and resource-free value structs. Generated C headers describe the platform C ABI, and the C++ compiler adapts by-value struct arguments and returns. String, containers, closures, references and structs requiring cleanup cannot cross this value-only export boundary directly. Hosts use the generated header and follow the `chali_init`/`chali_finish` lifecycle.
 
-## Demand-driven AOT linking
+## Demand-driven native linking
 
-AOT selects standard-library host modules from reachable native calls. The linker then collects unused function sections within selected modules. An unused source import does not force all its host code into the executable. Exports, reflection, callbacks and initialization/cleanup retain their reachability roots.
+The LLVM backend selects standard-library host modules from reachable native calls. The linker then collects unused function sections within selected modules. An unused source import does not force all its host code into the executable. Exports, reflection, callbacks and initialization/cleanup retain their reachability roots.
 
 The external LLVM path defaults to O3 and full LTO, eliminating unreachable LLVM definitions during linking before section collection and symbol stripping. The static LLVM path is configured for O3, global dead-code elimination and LTO; release reports identify the platforms actually validated. `CHALI_AOT_FULL_STDLIB=1` forces selection of every standard host module for same-version comparisons.
 
 On MinGW, the CAS 64 MiB zero-initialized backing pool occupies BSS instead of embedding the entire zero buffer in the file. Runtime pool capacity remains unchanged. File size and runtime memory use are separate measurements.
 
-The AOT data image retains only data referenced by `addr` in reachable functions and records needed by function values, removing unreachable initializers and layout entries. Startup zeroes the logical image and copies nonzero segments; identical payloads share file storage. Binary layouts use an explicit byte length, supporting empty tables and embedded zero bytes. Logical addresses, object identity, array length headers and the heap boundary remain unchanged, so a smaller file does not imply a smaller runtime data area. `CHALI_AOT_KEEP_DATA=1` retains the complete image and layout for debugging comparisons.
+The native data image retains only data referenced by `addr` in reachable functions and records needed by function values, removing unreachable initializers and layout entries. Startup zeroes the logical image and copies nonzero segments; identical payloads share file storage. Binary layouts use an explicit byte length, supporting empty tables and embedded zero bytes. Logical addresses, object identity, array length headers and the heap boundary remain unchanged, so a smaller file does not imply a smaller runtime data area. `CHALI_AOT_KEEP_DATA=1` retains the complete image and layout for debugging comparisons.
 
 ## C frames for host entries
 
 The standard library's direct C entries use `source/abi/chali_abi.h`, a separate boundary from external signatures declared with `#abi`. A `ChaliAbiFrame` contains 64-bit argument slots and a separate kind array. Integer slots also carry checked language handles; floating slots hold double bit patterns. A handle is not a dereferenceable host pointer.
 
-A module calls `chali_abi_local_info(requiredCapabilities)` using its own compiler, and the host checks that descriptor with `chali_abi_check`. It records the ABI version, target architecture and platform, pointer width, byte order, C calling convention, and frame/record sizes, alignments and field offsets. Different versions, architectures/platforms, target layouts, packing or unsupported required capabilities are rejected. Copying the host descriptor does not describe a module's actual layout. Compatibility does not establish AOT execution support for a cross target.
+A module calls `chali_abi_local_info(requiredCapabilities)` using its own compiler, and the host checks that descriptor with `chali_abi_check`. It records the ABI version, target architecture and platform, pointer width, byte order, C calling convention, and frame/record sizes, alignments and field offsets. Different versions, architectures/platforms, target layouts, packing or unsupported required capabilities are rejected. Copying the host descriptor does not describe a module's actual layout. Compatibility does not establish native execution support for a cross target.
 
 `chali_abi_check_module` validates a `ChaliAbiModuleDescriptor` before registration, including missing names/functions, invalid arities and duplicate names. It does not register anything. `chali_abi_check_frame` validates the argument count, arrays and slot kinds before a call; `chali_abi_check_result` checks the returned kind. The native direct-entry path performs these checks as well. Callers must still supply accessible, sufficiently large memory: these functions cannot prove arbitrary pointers are readable.
 

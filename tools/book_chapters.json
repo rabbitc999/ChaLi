@@ -190,7 +190,7 @@
       "id": 27,
       "zh": "27-AOT导出.md",
       "en": "27-aot-export.md",
-      "title": "AOT导出",
+      "title": "发布构建",
       "description": "把程序交给另一台机器运行"
     },
     {

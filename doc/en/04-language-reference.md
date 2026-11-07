@@ -125,7 +125,7 @@ let inferred = LIMIT;      // inferred type
 
 ## 4. Functions
 
-Place `export` before a function definition to expose it to native AOT callers:
+Place `export` before a function definition to expose it to native callers:
 
 ```chali
 #export("f_add")

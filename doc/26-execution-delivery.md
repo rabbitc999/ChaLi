@@ -4,11 +4,11 @@
 [English](en/26-execution-delivery.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-正常运行与 AOT 直接从语义检查后的 AST 生成 LLVM 代码，绕过四元式生成和组装。
+正常运行与 LLVM 构建 直接从语义检查后的 AST 生成 LLVM 代码，绕过四元式生成和组装。
 
 | 场景 | 入口 | 结果 |
 | --- | --- | --- |
-| 直接运行 | `chali run app.chl` | checked AOT 编译并执行，返回程序退出状态 |
+| 直接运行 | `chali run app.chl` | checked 原生构建 编译并执行，返回程序退出状态 |
 | 检查 | `chali check app.chl` | 语法、类型、借用与语义诊断，不执行、不产出 |
 | 原生导出 | `chali build app.chl` | 与 `app.chl` 同级的原生可执行文件（Windows 带 `.exe`） |
 | LLVM IR | `chali build app.chl --emit-llvm --out build/app` | `build/app.ll`，直接从 AST 生成 |

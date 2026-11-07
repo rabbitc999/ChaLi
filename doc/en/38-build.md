@@ -10,7 +10,7 @@ Successful `run` and `build` compilation reports `Compilation completed: OUTPUT`
 
 Default `run` and `build` publish final outputs beside the `.chl` source, including executables produced by run. Intermediate files use a unique workspace under the source-adjacent `.chali` directory, hidden on Windows and removed when empty after success or failure. Existing user files are preserved. Explicit output/retention settings remain available. VS Code defaults to source-adjacent output; static VSIX packages omit `Chali › Build: Llvm Path`, while external packages require it and pass `--llvm` for both build and run.
 
-`run` compiles and executes checked AOT code. `build` performs a release build with checks disabled by default. See [build debugging](43-native-debugging.md).
+`run` compiles and executes checked native code. `build` performs a release build with checks disabled by default. See [build debugging](43-native-debugging.md).
 
 ### Windows application consoles
 
@@ -23,11 +23,11 @@ chali build app.chl --subsystem windows --out app-gui
 
 Set `subsystem = "windows"` under `[build]` in `chali.toml` to apply it to project builds, `run`, and editor builds. Command-line options take precedence. When building in stages, pass the option to `chali link`. Exported LLVM IR, assembly, and object files acquire a PE subsystem at final link time.
 
-`chali build input.chl --out build/program` generates LLVM code directly from the semantically checked AST without generating or assembling quadruples. LLVM optimizes the module, emits machine code and links the native product. `chali --mode build input.chl` selects the same path. Ordinary source execution uses checked AOT.
+`chali build input.chl --out build/program` generates LLVM code directly from the semantically checked AST without generating or assembling quadruples. LLVM optimizes the module, emits machine code and links the native product. `chali --mode build input.chl` selects the same path. Ordinary source execution uses checked native compilation.
 
 Windows x64 dependencies use [online setup scripts](../../library/llvm/README.md). Run `python tools/fetch_llvm_toolchain.py` for external LLVM, or `python tools/fetch_llvm_sdk.py` for the prebuilt static LLVM/LLD SDK and matching GCC. Downloads and installations stay under ignored `build/` directories; SDK binaries and offline archive parts are not committed. Archives have pinned SHA-256 checksums. LLVM IR export alone does not require the code-generation toolchain.
 
-All applicable AOT optimizations are enabled by default. External LLVM uses `-O3`; static LLVM uses `default<O3>` and aggressive code generation. Normal floating-point semantics and liveness checks remain; run enables array/pointer checks while release builds default to omitting them. See [backend ownership optimization](40-backend-ownership.md) for destination storage, temporary transfers, bulk copies, direct calls, optional counters and comparison switches.
+All applicable native compilation optimizations are enabled by default. External LLVM uses `-O3`; static LLVM uses `default<O3>` and aggressive code generation. Normal floating-point semantics and liveness checks remain; run enables array/pointer checks while release builds default to omitting them. See [backend ownership optimization](40-backend-ownership.md) for destination storage, temporary transfers, bulk copies, direct calls, optional counters and comparison switches.
 
 | Option | Behavior |
 | --- | --- |
@@ -68,13 +68,13 @@ The first static build runs [setup_static.py](../../library/llvm/setup_static.py
 
 `python tools/release_variants.py` builds and validates both program and plugin variants in sequence. Release ZIPs are placed in `dist/llvm-static/` and `dist/llvm-external/`. Plugin versions match the compiler version in `VERSION`; VSIX filenames use `-llvm-static` and `-llvm-external` suffixes. They are alternative builds of the same extension. To package one, run `npm run package -- --llvm-variant static --compiler COMPILER_PATH` in `vscode/`, or replace static with external. The script creates local artifacts; remote publication requires an explicit action.
 
-Program code is emitted directly as LLVM instructions, basic blocks and global storage. The hand-written [AOT runtime](../../source/aot/runtime.c) is compiled into platform modules during maintenance using the pinned LLVM version and embedded in the compiler. `sh tools/build_aot_runtime.sh --check` verifies synchronization. Runtime layouts cover Windows x64 and Linux x64; the bundled executable toolchain targets Windows x64. Linux x64 build hosts require their native LLVM clang and system linker environment.
+Program code is emitted directly as LLVM instructions, basic blocks and global storage. The hand-written [native runtime](../../source/aot/runtime.c) is compiled into platform modules during maintenance using the pinned LLVM version and embedded in the compiler. `sh tools/build_aot_runtime.sh --check` verifies synchronization. Runtime layouts cover Windows x64 and Linux x64; the bundled executable toolchain targets Windows x64. Linux x64 build hosts require their native LLVM clang and system linker environment.
 
-AOT does not reuse compiled outputs with `--incremental`, so ABI declarations come from the current semantic analysis. See the [functional regression](../../tests/chali_aot.py), [list and opcode differential checks](../../tests/chali_aot_values.py) and [static LLVM isolation checks](../../tests/chali_aot_static.py).
+Native compilation does not reuse compiled outputs with `--incremental`, so ABI declarations come from the current semantic analysis. See the [functional regression](../../tests/chali_aot.py), [list and opcode differential checks](../../tests/chali_aot_values.py) and [static LLVM isolation checks](../../tests/chali_aot_static.py).
 
 ## Exporting a library without main
 
-Place `export` before a function definition to expose it to native AOT callers:
+Place `export` before a function definition to expose it to native callers:
 
 ```chali
 #export("f_add")
@@ -96,7 +96,7 @@ Complex ABI value/reference checks run with python tests/chali_abi_values.py --a
 
 On Windows, native process arguments are converted from the CRT wide-character argument vector to UTF-8 before reaching main(List<String>). Chinese text, supplementary Unicode characters, empty strings, quotes and backslashes are preserved. Run python tests/chali_aot_arguments.py to check native product paths containing Chinese text and spaces.
 
-Online toolchain setup also covers Linux x64, Linux ARM64 and macOS ARM64. Use `python tools/fetch_llvm_toolchain.py --list` or select `--platform` explicitly. Automatic static SDK setup currently targets Windows x64; downloading a toolchain does not establish AOT support for that platform.
+Online toolchain setup also covers Linux x64, Linux ARM64 and macOS ARM64. Use `python tools/fetch_llvm_toolchain.py --list` or select `--platform` explicitly. Automatic static SDK setup currently targets Windows x64; downloading a toolchain does not establish native compilation support for that platform.
 
 ## Cross-compilation and project configuration
 
@@ -141,7 +141,7 @@ Standalone `chali link --shared --out FILE` links under the final basename insid
 
 `chali build app.chl --emit-asm --out build/app` exports `build/app.s` using the current target, CPU, check mode and optimization/debug settings. This is machine assembly, distinct from LLVM IR text `.ll`. It stops before object generation and linking, so cross-target assembly does not require target runtime link assets. The static variant uses its built-in LLVM backend; the external variant uses clang. Output uses the selected backend's default syntax (x86 AT&T, AArch64 target syntax); no NASM/MASM compatibility is implied.
 
-The project setting `[build] output = "assembly"` selects the same output for AOT builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked AOT execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.
+The project setting `[build] output = "assembly"` selects the same output for native builds. An explicit `--emit-asm`, `--emit-obj`, or `--emit-llvm` overrides the project output; these three options are mutually exclusive. Ordinary `run` retains checked native execution. VSCode's output selector and build command recognize assembly and its `.s` suffix.
 
 The `.ll` and any C ABI header remain available alongside `.s`. Complex C ABI signatures can also produce a `.abi.cpp` marshalling sidecar; assembly alone is not a complete linkable application. Reassembly and final linking require a matching target toolchain, runtime and dependencies. See the standalone assembler, linker and archiver below.
 
@@ -157,7 +157,7 @@ chali build main.chl --asm native/add.s --asm-include native/include --out build
 
 The static variant uses LLVM MC in process without clang and rejects `--llvm`; the external variant accepts that option to select its integrated assembler. Objects are first produced in a private workspace and published only after successful assembly. A failed assembly preserves an existing output and cannot overwrite its own primary input. The output parent directory must exist. Source/include diagnostics retain their original positions.
 
-AOT accepts repeated `--asm FILE.s` and `--asm-include DIR` options. Every object uses the same target and CPU as the language unit and participates in the final link. Use the established C ABI declaration to reference an assembly symbol; the assembly must follow that target's calling convention. These inputs require executable/shared-library output and cannot be combined with `--emit-asm`, `--emit-obj` or `--emit-llvm`. Assembling a cross-target object does not verify executable deployment on that target.
+`build` accepts repeated `--asm FILE.s` and `--asm-include DIR` options. Every object uses the same target and CPU as the language unit and participates in the final link. Use the established C ABI declaration to reference an assembly symbol; the assembly must follow that target's calling convention. These inputs require executable/shared-library output and cannot be combined with `--emit-asm`, `--emit-obj` or `--emit-llvm`. Assembling a cross-target object does not verify executable deployment on that target.
 
 Declare a linked scalar C function as `#abi("C", "@link", "asm_add") int64 asm_add(int64 a, int64 b);`. The object or archive supplied to the linker provides the symbol. Signatures with structures, references, buffers or callbacks use a compatible dynamic library and the [C ABI marshalling rules](41-unsafe-abi.md).
 

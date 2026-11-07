@@ -4,7 +4,7 @@
 **English** · [简体中文](../05-delivery-security.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-Native executables are never encrypted or obfuscated: `--encrypt` and `[chali] encrypt` are unsupported, so deliverables always come from source through AOT.
+Native executables are never encrypted or obfuscated: `--encrypt` and `[chali] encrypt` are unsupported, so deliverables always come from source through native compilation.
 
 ## Delivery forms
 
