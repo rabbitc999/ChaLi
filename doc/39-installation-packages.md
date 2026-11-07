@@ -23,6 +23,17 @@ Windows x64 默认使用静态内置 LLVM，编译器 EXE 已链接 LLVM 后端�
 
 MSI 支持系统的应用卸载入口，也可以通过 `msiexec /x 安装包.msi` 卸载。相同架构的静态和外置 LLVM 变体使用同一升级系列，选择其中一种。
 
+
+本版本 Windows x64 交付附件如下；表中大小由最终构件生成后按实际字节数换算为 MiB，重新打包或更换工具链后应同步更新：
+
+| 文件 | 大小 | 用途 |
+| --- | ---: | --- |
+| `ChaLi-1.0.0-licenses.zip` | 0.21 MiB | ChaLi 与随附第三方组件的 LICENSE、NOTICE 和许可文本 |
+| `chali-1.0.0-llvm-external-windows-x64.msi` | 18.78 MiB | Windows x64 安装包，使用外部 LLVM/Clang 工具链；适合已有工具链的环境 |
+| `chali-1.0.0-llvm-static-windows-x64.msi` | 52.31 MiB | Windows x64 安装包，内置 LLVM 工具链；推荐一般用户选择 |
+| `ChaLi-1.0.0-reference.chm` | 未生成（缺少 hhc.exe） | Windows 离线参考手册，集中查阅语法、用法、教程与示例 |
+| `chali-editor-1.0.0-llvm-external.vsix` | 21.93 MiB | VS Code 扩展，内嵌外置 LLVM 版编译器，构建需要外部工具链 |
+| `chali-editor-1.0.0-llvm-static.vsix` | 64.55 MiB | VS Code 扩展，内嵌静态 LLVM 版编译器，提供语言服务与开发入口 |
 Debian/Ubuntu 使用 DEB；以下名称以 Ubuntu 22.04 amd64 构建为例：
 
 ```sh

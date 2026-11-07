@@ -23,6 +23,17 @@ Windows x64 defaults to statically embedded LLVM, so its compiler EXE does not n
 
 Use Windows application settings or `msiexec /x package.msi` to uninstall. Static and external LLVM variants of the same architecture share an upgrade family; choose one variant.
 
+
+The Windows x64 delivery files for this version are listed below. Sizes are calculated from the final bytes in MiB after the build and must be refreshed whenever the toolchain or packaging inputs change:
+
+| File | Size | Purpose |
+| --- | ---: | --- |
+| `ChaLi-1.0.0-licenses.zip` | 0.21 MiB | ChaLi and bundled third-party LICENSE, NOTICE and license texts |
+| `chali-1.0.0-llvm-external-windows-x64.msi` | 18.78 MiB | Windows x64 installer using an external LLVM/Clang toolchain; suitable for environments that already provide the toolchain |
+| `chali-1.0.0-llvm-static-windows-x64.msi` | 52.31 MiB | Windows x64 installer with LLVM embedded; recommended for most users |
+| `ChaLi-1.0.0-reference.chm` | not generated (hhc.exe unavailable) | Offline Windows reference manual for syntax, usage, tutorials and examples |
+| `chali-editor-1.0.0-llvm-external.vsix` | 21.93 MiB | VS Code extension embedding the external-LLVM compiler; builds require an external toolchain |
+| `chali-editor-1.0.0-llvm-static.vsix` | 64.55 MiB | VS Code extension embedding the static-LLVM compiler with language services and development commands |
 On Debian/Ubuntu, install the package built for the appropriate distribution and architecture:
 
 ```sh
