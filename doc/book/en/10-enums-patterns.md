@@ -22,26 +22,26 @@ enum Packet
 };
 void main()
 {
-    Packet packet = Packet::Data("original");
+    Packet packet = Data("original");
     String label = match (packet)
     {
-        Packet::Data(text) =>
+        Data(text) =>
         {
             text = "copy";
             yield text;
         }
-        Packet::Empty =>
+        Empty =>
         {
             "empty"
         }
     };
     String original = match (packet)
     {
-        Packet::Data(text) =>
+        Data(text) =>
         {
             text
         }
-        Packet::Empty =>
+        Empty =>
         {
             "empty"
         }
@@ -56,12 +56,16 @@ copy original
 
 Packet has a Data variant carrying a String and an Empty variant carrying none. Packet currently holds Data, so both matches choose that arm. Empty still needs handling so the expression produces a result for every variant.
 
+Prefer short names such as Data and Empty for construction and matching when the type context determines the enum or the variant name is unambiguous. Result's Ok/Err and Option's Value/None follow the same rule; variable, return, and parameter types can supply generic arguments. Use a necessary qualifier such as Packet::Data when names collide and context is insufficient.
+
 The first match binds a value copy of the payload as text, changes it to copy and yields it to label. It does not update packet. Matching again therefore reads original, producing `copy original`. Each text binding belongs to its own arm scope; the second is not the modified variable from the first match.
 
 
+When the target enum and its arguments are known, a uniquely matching single-payload variant may also be omitted. For example, a String payload for Option<String> may appear directly in initialization, reassignment, arguments or returns and is wrapped as Value. Multiple-payload variants still use explicit construction; equally matching variants require an explicit name. Chapter 14 applies the same rule to error objects. Move and borrow checks remain in force.
+
 ## 10.2 Multiple payloads and wildcards
 
-Write multiple payloads in declaration order. Bind ordinary payloads directly, or use _ when their values are unnecessary. Interface payload refinement uses Type value inside an explicit outer variant; Chapter 13 explains the concrete-type test.
+Write multiple payloads in declaration order. Bind ordinary payloads directly, or use _ when their values are unnecessary. Interface payload refinement uses Type value inside an explicit outer variant; Chapter 17 explains the concrete-type test.
 
 <!-- verify-book -->
 ```chali
@@ -72,16 +76,16 @@ enum Event
 };
 void main()
 {
-    let event = Event::Message("Ada", "ready");
+    let event = Message("Ada", "ready");
     match (event)
     {
-        Event::Idle => { println("idle"); }
-        Event::Message(sender, text) => { println("{}: {}", sender, text); }
+        Idle => { println("idle"); }
+        Message(sender, text) => { println("{}: {}", sender, text); }
     }
     match (event)
     {
-        Event::Idle => { println("idle"); }
-        Event::Message(_, text) => { println("{}", text); }
+        Idle => { println("idle"); }
+        Message(_, text) => { println("{}", text); }
     }
 }
 ```
@@ -115,9 +119,9 @@ enum BookPacket
 
 void main()
 {
-    BookPacket first = BookPacket::Text("value");
+    BookPacket first = Text("value");
     BookPacket second = first.clone();
-    assert(!(first == BookPacket::Empty));
+    assert(!(first == Empty));
     println("{} {}", first == second, first.hash(first) == second.hash(second));
 }
 ```
@@ -146,9 +150,9 @@ enum Signal {
 };
 
 void main() {
-    Signal item = Signal::Data(42);
+    Signal item = Data(42);
     match (item) {
-        Signal::Data(value) => {
+        Data(value) => {
             println("{}", value);
         }
         _ => {
@@ -166,6 +170,6 @@ void main() {
 
 Enums define possible states, match maps states to paths and payload bindings expose typed data within the corresponding arm. For result-producing matches, check coverage and result compatibility instead of guessing states afterward.
 
-Option and Result apply this structure to absence and failure in Chapter 16. First, Chapter 11 organizes typed values in containers.
+Option and Result apply this structure to absence and failure in Chapter 14. Chapter 13 organizes typed values in containers.
 
-Next: [Chapter 13](13-collections.md).
+Next: [Chapter 11](11-modules-projects.md).

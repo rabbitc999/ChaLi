@@ -302,6 +302,7 @@ void CollectGenericClosureNames(int id, Memory::Set<Memory::String> &locals, Mem
         auto nested = locals;
         nested.insert(node.s);
         CollectGenericClosureNames(node.kids[1], nested, names);
+        if (node.kids.size() > 2u) CollectGenericClosureNames(node.kids[2], nested, names);
         return;
     }
     for (const auto child : node.kids) CollectGenericClosureNames(child, locals, names);
@@ -362,7 +363,7 @@ bool PrepareGenericSignatures()
                 param.constant = false;
             }
         Memory::String error;
-        if (!chali_generic::rewrite(source, templates, unchecked, patterns, pending, error))
+        if (!chali_generic::rewrite(source, templates, unchecked, patterns, pending, error, 0u, generic.module))
             return Fail(error);
         for (const auto &item : patterns)
         {
@@ -371,9 +372,10 @@ bool PrepareGenericSignatures()
             g_genericPatterns[item.first] = std::move(pattern);
         }
         const auto savedCaptureSpecifications = chali_lambda::captureSpecifications;
+        const auto savedLifetimeDirectives = chali_lifetime::g_directiveNodes;
         chali::Engine parser;
         int value = 0;
-        g_parseModule.clear();
+        g_parseModule = generic.module;
         chali_generic::markContainerTypeArguments(source);
         if (parser.runText(source, &value) != chali::Status::Ok)
             return Fail("泛型声明的签名无法解析：" + generic.name);
@@ -431,10 +433,48 @@ bool PrepareGenericSignatures()
         g_types.resize(typeCount);
         g_names.resize(nameCount);
         chali_lambda::captureSpecifications = savedCaptureSpecifications;
+        chali_lifetime::g_directiveNodes = savedLifetimeDirectives;
     }
     g_top = savedTop;
     g_parseModule = savedModule;
     return true;
+}
+
+/**
+ * @brief 按已登记声明解析符号签名中的具体具名类型。
+ * @param registerOpcodes 是否同时登记 opcode 声明。
+ * @param comparisonType 要解析的类型树。
+ * @return 名称及模块来源合法时返回真。
+ */
+bool ResolveImportedTypeNames(bool registerOpcodes, const std::shared_ptr<MType> &comparisonType);
+/**
+ * @brief 从实例表保留的规范参数文本恢复缺失的引用包装类型树。
+ * @param text 实例参数原文，不是截断后的修饰名。
+ * @param index 已解析的具体或符号类型索引。
+ * @param symbolic 是否允许未实例化的符号名义类型。
+ * @return 已解析类型，不能可靠恢复时为空。
+ */
+std::shared_ptr<MType> InferenceArgumentType(const Memory::String &text,
+                                            Memory::Map<Memory::String, std::shared_ptr<MType>> &index,
+                                            bool symbolic)
+{
+    const auto key = CanonicalInferenceName(text);
+    const auto found = index.find(key);
+    if (found != index.end()) return found->second;
+    for (const Memory::String suffix : { Memory::String(" const&"), Memory::String(" mut&") })
+        if (key.size() > suffix.size() && key.compare(key.size() - suffix.size(), suffix.size(), suffix) == 0)
+        {
+            const auto element = InferenceArgumentType(key.substr(0, key.size() - suffix.size()), index, symbolic);
+            if (!element) return nullptr;
+            auto result = Memory::makeShared<MType>();
+            result->kind = MType::Ptr;
+            result->elem = element;
+            result->readOnly = suffix == " const&";
+            index[key] = result;
+            return result;
+        }
+    if (symbolic || chali_generic::session.made.count(key)) return NamedType(key);
+    return nullptr;
 }
 
 /**
@@ -451,6 +491,10 @@ bool UnifyGenericType(const std::shared_ptr<MType> &pattern, const std::shared_p
         bindings[pattern->name] = actual;
         return true;
     }
+    // 签名探测发生在符号登记之前；具体叶子类型仍需按声明模块解析 opcode／接口身份。
+    if (pattern->unresolvedName && pattern->kind == MType::Struct
+        && !g_genericPatterns.count(CanonicalInferenceName(pattern->name))
+        && !ResolveImportedTypeNames(false, pattern)) return false;
     if (pattern->kind != actual->kind) return false;
     if (pattern->kind == MType::Func && pattern->name != actual->name) return false;
     if (pattern->kind == MType::Ptr || pattern->kind == MType::Array || IsContainer(pattern) || pattern->kind == MType::Func)
@@ -484,16 +528,8 @@ bool UnifyGenericType(const std::shared_ptr<MType> &pattern, const std::shared_p
                 std::shared_ptr<MType> a, p;
                 IndexInferenceTypes(g_types, g_inferenceConcreteCount, g_inferenceConcreteTypes);
                 IndexInferenceTypes(g_genericPatternTypes, g_inferenceSymbolicCount, g_inferenceSymbolicTypes);
-                const auto actualType = g_inferenceConcreteTypes.find(concrete->second.args[i]);
-                const auto patternType = g_inferenceSymbolicTypes.find(symbolic->second.args[i]);
-                if (actualType != g_inferenceConcreteTypes.end()) a = actualType->second;
-                if (patternType != g_inferenceSymbolicTypes.end()) p = patternType->second;
-                if (!p)
-                {
-                    p = Memory::makeShared<MType>();
-                    p->kind = MType::Struct;
-                    p->name = symbolic->second.args[i];
-                }
+                a = InferenceArgumentType(concrete->second.args[i], g_inferenceConcreteTypes, false);
+                p = InferenceArgumentType(symbolic->second.args[i], g_inferenceSymbolicTypes, true);
                 if (i < concrete->second.generic->params.size() && concrete->second.generic->params[i].constant)
                 {
                     a = Memory::makeShared<MType>();
@@ -867,7 +903,7 @@ bool CheckLambdaCaptures(const Memory::String &name, const Memory::String &modul
                 auto nested = names;
                 nested.insert(node.bindingIdentity ? Memory::String("binding:") + Memory::toString(node.bindingIdentity) : node.s);
                 if (!node.syntaxContext) nested.insert(node.s);
-                return visit(node.kids[1], nested);
+                return visit(node.kids[1], nested) && (node.kids.size() <= 2u || visit(node.kids[2], nested));
             }
             for (const int child : node.kids)
                 if (!visit(child, names)) return false;
@@ -1621,7 +1657,54 @@ bool ResolveExplicitAstGenericCall(int id)
  * @param id 要补齐类型信息的表达式节点。
  * @param expected 外层提供的目标类型；为空时从表达式及实参推导。
  */
+void InferExpressionCore(int id, const std::shared_ptr<MType> &expected);
+
+/**
+ * @brief 按目标类型推导表达式，并为唯一匹配的枚举载荷补上构造器。
+ * @param id 原表达式节点，包装后仍保留该节点的源码位置。
+ * @param expected 初始化、赋值、实参或返回值提供的目标类型。
+ */
 void InferExpression(int id, const std::shared_ptr<MType> &expected)
+{
+    static Memory::Set<int> visiting;
+    if (id < 0 || !visiting.insert(id).second) return;
+    struct Guard
+    {
+        int id;
+        /** @brief 清除表达式包装的重入标记。 */
+        ~Guard() { visiting.erase(id); }
+    } guard{id};
+    InferExpressionCore(id, expected);
+    if (!g_error.empty() || !IsEnumType(expected)) return;
+    const auto source = RawExprType(id);
+    bool ambiguous = false;
+    const auto *variant = ChooseImplicitEnumVariant(expected, source, &ambiguous);
+    if (ambiguous)
+    {
+        Fail("枚举自动包装存在歧义，请显式指定变体：" + Describe(expected));
+        return;
+    }
+    if (!variant) return;
+    const auto original = N(id);
+    const int child = static_cast<int>(g_nodes.size());
+    g_nodes.push_back(original);
+    auto wrapper = original;
+    wrapper.kind = MNode::EnumCtor;
+    wrapper.s = expected->name;
+    wrapper.s2 = variant->name;
+    wrapper.type = -1;
+    wrapper.type2 = 1;
+    wrapper.kids = {child};
+    g_nodes[id] = std::move(wrapper);
+    InferExpression(child, variant->payloads.front().type);
+}
+
+/**
+ * @brief 执行表达式原有的上下文推导，包装由外层统一处理。
+ * @param id 表达式节点编号。
+ * @param expected 调用方提供的目标类型。
+ */
+void InferExpressionCore(int id, const std::shared_ptr<MType> &expected)
 {
     if (id < 0 || !g_inferringExpressions.insert(id).second) return;
     struct Guard

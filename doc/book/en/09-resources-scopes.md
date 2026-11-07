@@ -118,7 +118,7 @@ Resource two moves from second to third without creating another independently o
 
 New T creates manually allocated storage, optionally with constructor arguments. Its release protocol differs from ordinary automatic local values. Do not assume raw storage is an automatic resource wrapper.
 
-Closing, moving and release affect borrows. The compiler can merge known cleanup paths; repeated release is not a test of arbitrary pointer safety. Chapter 23 covers raw storage and unsafe operations.
+Closing, moving and release affect borrows. The compiler can merge known cleanup paths; repeated release is not a test of arbitrary pointer safety. Chapter 25 covers raw storage and unsafe operations.
 
 ### Observe block exit order
 
@@ -147,6 +147,6 @@ after
 
 Track registered exit actions separately from the current owner of each resource. A move changes ownership; leaving scope executes exit actions and owning-value cleanup. References do not assume ownership of their sources.
 
-An absence of crashes does not prove correct closure. Verify order, ownership and outcomes on normal and early exits. Chapter 23 extends this reasoning to per-slot initialization and cleanup in raw storage.
+An absence of crashes does not prove correct closure. Verify order, ownership and outcomes on normal and early exits. Chapter 25 extends this reasoning to per-slot initialization and cleanup in raw storage.
 
-Next: [Chapter 6](06-structs.md).
+Next: [Chapter 10](10-enums-patterns.md).

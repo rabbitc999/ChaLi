@@ -1,0 +1,5 @@
+void consume(String value) {}
+void main() {
+    List<String> items = ["first"];
+    for (let x in items) { consume(move x); } else { println("{}", x); }
+}

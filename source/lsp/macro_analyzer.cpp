@@ -428,6 +428,9 @@ std::vector<CompletionItem> McDocument::completion(Position) const
         { "$file", "keyword", "当前源码文件名（可在 $macro 之外用）", "$file" },
         { "$match", "keyword", "完整语法片段匹配", "$match value is expr\n$end_match" },
         { "$regex", "keyword", "原文正则完整匹配", "$regex value is \"[0-9]+\"\n$end_regex" },
+        { "$system", "keyword", "目标操作系统名称", "$system" },
+        { "$cpu", "keyword", "目标 CPU 架构名称", "$cpu" },
+        { "$build", "keyword", "查询布尔构建标志是否存在", "$build[\"NAME\"]" },
         { "$module", "keyword", "调用处模块名称", "$module" },
     };
     for (const auto &macro : macros_)

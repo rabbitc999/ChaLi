@@ -1,0 +1,6 @@
+import borrow_fail;
+void main() {
+    int64 a = 1;
+    int64 b = 2;
+    borrow_fail::wrong(&a, &b);
+}

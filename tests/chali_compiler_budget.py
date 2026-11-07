@@ -1,5 +1,5 @@
 """验证综合标准错误样例的前端预算边界，禁止未捕获分配异常与异常退出。"""
-from compiler_path import compiler_path
+from compiler_path import compiler_path, compiler_build_info
 from project_temp import tempfile
 from pathlib import Path
 import argparse
@@ -42,7 +42,7 @@ def main():
         output = work / backend
         environment = dict(os.environ, CHALI_LANG=language)
         command = [compiler, backend, source, '--out', output]
-        if backend == 'build':
+        if backend == 'build' and compiler_build_info(compiler)['llvm']!='static':
             command += ['--llvm', ROOT / 'build/dependencies/llvm/toolchain/bin' / ('clang.exe' if os.name == 'nt' else 'clang')]
         result = invoke(command, environment, work)
         report['results'][backend] = result

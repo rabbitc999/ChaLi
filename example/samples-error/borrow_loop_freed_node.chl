@@ -1,0 +1,3 @@
+struct Cell { int64 value; Option<Cell mut&> next; }
+void bad(Option<Cell mut&> head) { while(head.isValue()) { Cell mut& node = head.unwrap(); head = node.next; node.drop(); println("{}", node.value); } }
+void main() { bad(None); }

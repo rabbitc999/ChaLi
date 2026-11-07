@@ -1,0 +1,1 @@
+chali build: move 的源对象已经销毁，必须先重新赋值

@@ -1,0 +1,2 @@
+#static(local)
+void f(){int64 local=1;}void main(){}

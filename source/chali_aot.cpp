@@ -1987,6 +1987,8 @@ struct Builder
                  && !state.addressedFunctions.count(textOf(function.label)) && function.end - function.labelIndex <= 12u)
             signature += "inlinehint ";
         signature += "uwtable section \"chali_code\" {\nentry:\n";
+        signature += "  %caller_source_function = load ptr, ptr @chali_source_function\n  %caller_source_file = load ptr, ptr @chali_source_file\n  %caller_source_line = load i64, ptr @chali_source_line\n";
+        const Text restoreSource = "  store ptr %caller_source_function, ptr @chali_source_function\n  store ptr %caller_source_file, ptr @chali_source_file\n  store i64 %caller_source_line, ptr @chali_source_line\n";
         std::size_t argumentCapacity = 1;
         for (std::size_t at = function.begin; at < function.end; ++at)
             if (state.request.quads->quads[at].op == "param") ++argumentCapacity;
@@ -2148,7 +2150,7 @@ struct Builder
             {
                 const Value value = convert(read(op == "halt" ? Memory::String() : a), resultType);
                 body += "  store i8 " + (resultType == "double" ? Text("1") : (value.floating.empty() ? Text("0") : value.floating)) + ", ptr @chali_return_float\n";
-                body += "  ret " + resultType + " " + value.text + "\n";
+                body += restoreSource + "  ret " + resultType + " " + value.text + "\n";
                 terminated = true;
             }
             else if (op == "j" || op == "jz" || op == "jnz")
@@ -2243,7 +2245,7 @@ struct Builder
             }
             if (!terminated) body += "  br label %q" + std::to_string(at + 1) + "\n";
         }
-        body += "q" + std::to_string(function.end) + ":\n  store i8 0, ptr @chali_return_float\n  ret " + resultType + " " + (resultType == "double" ? "0.0" : "0") + "\n}\n";
+        body += "q" + std::to_string(function.end) + ":\n  store i8 0, ptr @chali_return_float\n" + restoreSource + "  ret " + resultType + " " + (resultType == "double" ? "0.0" : "0") + "\n}\n";
         if (!state.request.options.debug) return signature + body;
         std::map<std::size_t, DebugLine> sourceLines;
         for (std::size_t at = function.begin; at < function.end; ++at)

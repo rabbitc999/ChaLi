@@ -1,0 +1,1 @@
+void main(){const int64 end=18446744073709551615;for(let item in rangeEq<int64>(0,end)){}}

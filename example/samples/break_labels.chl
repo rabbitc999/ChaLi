@@ -6,7 +6,7 @@ void main()
             loop {
                 visited++;
                 break inner;
-            };
+            }
         }
         visited += 10;
         if (item == 1) { break outer; }

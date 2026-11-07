@@ -1,0 +1,2 @@
+#borrow(#ret,a)
+int64 mut& f(int64 mut& a,int64 mut& b,bool flag){int64 mut& r=a;if(flag){r=&b;}return r;}void main(){}

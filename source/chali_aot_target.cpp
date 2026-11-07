@@ -7,6 +7,57 @@
 namespace chali_build
 {
 /**
+ * @brief 保存单次命令行编译的宏上下文。
+ * @return 当前进程的上下文。
+ */
+MacroEnvironment &macroEnvironment()
+{
+    static MacroEnvironment environment;
+    return environment;
+}
+/**
+ * @brief 验证布尔标志名称，禁止通过名称携带赋值。
+ * @param name 构建选项名称。
+ * @return 非空且由字母、数字、下划线、点或连字符组成时为真。
+ */
+bool validBuildOption(const Memory::String &name)
+{
+    if (name.empty()) return false;
+    for (const unsigned char c : name)
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '-' || c == '.')) return false;
+    return true;
+}
+/**
+ * @brief 根据选定目标三元组生成平台名称，不读取 CPU 调优选项。
+ * @param cpu 为真时返回 CPU 架构，否则返回操作系统。
+ * @return 简短的平台或架构名称。
+ */
+Memory::String targetMacroName(bool cpu)
+{
+    auto target = macroEnvironment().target;
+    if (target.empty()) target = hostTarget();
+    TargetInfo normalized;
+    if (describeTarget(target, normalized)) target = normalized.triple;
+    if (cpu)
+    {
+        const auto arch = target.substr(0, target.find('-'));
+        if (arch == "x86_64" || arch == "amd64" || arch == "x64") return "amd64";
+        if (arch == "aarch64" || arch == "arm64") return "arm64";
+        if (arch.find("arm") == 0 || arch.find("thumb") == 0) return "arm32";
+        if (arch == "i386" || arch == "i486" || arch == "i586" || arch == "i686" || arch == "x86") return "x86";
+        return arch.empty() ? Memory::String("unknown") : arch;
+    }
+    if (target.find("windows") != Memory::String::npos || target.find("mingw") != Memory::String::npos) return "win";
+    if (target.find("android") != Memory::String::npos) return "android";
+    if (target.find("ios") != Memory::String::npos) return "ios";
+    if (target.find("darwin") != Memory::String::npos || target.find("macos") != Memory::String::npos) return "mac";
+    if (target.find("linux") != Memory::String::npos) return "linux";
+    if (target.find("freebsd") != Memory::String::npos) return "freebsd";
+    if (target.find("wasi") != Memory::String::npos) return "wasi";
+    return "unknown";
+}
+
+/**
  * @brief 查询当前编译器宿主，不从目标选项推断已验证的运行平台。
  * @return 当前受支持宿主的规范三元组。
  */

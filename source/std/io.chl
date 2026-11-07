@@ -95,7 +95,7 @@ struct FileStream : Reader, Writer, Seek {
             if(len(part)==0) { break; }
             if(len(part)>maxBytes-total) { return Result<String,Error>::Err(IoError::ReadFailed("file exceeds byte limit")); }
             text=text+part;total=total+len(part);
-        };
+        }
         return Result<String,Error>::Ok(text);
     }
 
@@ -203,7 +203,7 @@ String fileReadAllString(File const& handle, int64 maxBytes = 16777216) {
         if (len(part) == 0) { break; }
         if (len(part) > remaining) { panic("file exceeds byte limit"); }
         text = text + part;
-    };
+    }
     return text;
 }
 int64 fileWrite(file const& handle, String text) { return __fileWrite(handle, text); }
@@ -254,7 +254,7 @@ Result<List<uint8>,Error> readAllBytes(String path, int64 maxBytes=16777216) {
         if (len(block) > remaining) { return Result<List<uint8>,Error>::Err(IoError::ReadFailed("file exceeds byte limit")); }
         for (uint8 byte in block) { bytes.push(byte); }
         if (len(block) < count) { break; }
-    };
+    }
     return Result<List<uint8>,Error>::Ok(bytes);
 }
 /** 覆盖写完整文件，返回字节数量；不隐式创建父目录。 */

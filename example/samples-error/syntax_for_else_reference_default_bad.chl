@@ -1,0 +1,4 @@
+void main() {
+    List<int64 mut&> references;
+    for (int64 mut& x in references) {} else { println("{}", x); }
+}

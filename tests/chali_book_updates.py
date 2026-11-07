@@ -27,8 +27,10 @@ def main():
     # 章节数跟随 md2tex 的映射表，加章时只改那一处，不用再改这里的常数。
     chapterCount = sum(1 for _, name in FILES if name.startswith('ch'))
     assert len(re.findall(r'\\input\{chapters/ch\d+\}',book))==chapterCount
-    for name in (name for _, name in FILES if name.startswith('ch')):
+    for name in (name for _, name in FILES if name.startswith(('ch','appendix-'))):
         assert re.search(r'\\input\{chapters/%s\}' % name[:-4], book), name
+    appendix=Converter('appendix').convert('# 附录 D ChaLi 语言限制\n\n## D.1 语法\n\n正文。')
+    assert r'\chapter{ChaLi 语言限制}' in appendix and r'\section{语法}' in appendix, appendix
     headings=Converter().convert('## 3.7 字面量\n\n### 数字后缀\n\n说明。')
     assert r'\subsection*{数字后缀}' in headings and r'\subsection{数字后缀}' not in headings
     directive=Converter().convert('#borrow 描述借用来源。\n\n## 22.3 借用\n\n正文。')
@@ -84,7 +86,7 @@ def main():
                 assert '<!-- verify-book' in text, ('章节缺少可核对的代码示例', source)
                 if source in EXTRAS:
                     assert '番外：' in re.findall(r'^## (.+)$', text, re.M)[-1], source
-            mode='preface' if source=='README.md' else 'appendix' if source.startswith(('A-','B-','C-')) else 'chapter'
+            mode='preface' if source=='README.md' else 'appendix' if re.match(r'^[A-Z]-',source) else 'chapter'
             expected=Converter(mode).convert(text)
             if mode == 'chapter':
                 assert expected.count(r'\chapter{') == 1, ('正文被误识别为章标题', source)
@@ -110,9 +112,12 @@ def main():
             includes=[arg for directory in IMPORTS.get(source,[]) for arg in ('--include-path',str(ROOT/directory))]
             result=subprocess.run([str(COMPILER),'run',str(file),'--out',str(prefix),*includes],cwd=work,
                 env=environment,input=stdin,capture_output=True,encoding='utf-8',timeout=180)
-            assert result.returncode==0 and result.stdout.replace('\r\n','\n')==output,(source,result.stdout,result.stderr,output)
+            if result.returncode!=0 or result.stdout.replace('\r\n','\n')!=output:
+                return (source,file.stem,result.stdout,result.stderr,output)
+            return None
         with ThreadPoolExecutor(max_workers=4) as pool:
-            list(pool.map(execute, programs))
+            failures=[failure for failure in pool.map(execute, programs) if failure]
+        assert not failures,failures
         negative_count = 0
         negative_block = re.compile(
             r'<!-- verify-book-error:\s*([^\n]+?)\s*-->\s*```chali\n(.*?)```\s*```text\n(.*?)```', re.S)

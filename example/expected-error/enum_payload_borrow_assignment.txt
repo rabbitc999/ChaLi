@@ -1,0 +1,1 @@
+chali: example/samples-error/enum_payload_borrow_assignment.chl 第 1 行：[CHL1204] 保存的引用不能超过来源的生命周期

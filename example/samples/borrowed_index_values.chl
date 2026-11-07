@@ -14,9 +14,7 @@ void main() {
     IndexedValues source; source.text="source";
     IndexedLists lists; lists.values.push(7);
     CopiedValues copied; copied.text="copied";
-    {
-        int64 i=0;
-        while (i<10) {
+    for (int64 i=0; i<10; i++) {
 
         { String value=source[0]; assert(value=="source"); }
         assert(source.text=="source");
@@ -24,9 +22,7 @@ void main() {
         assert(lists.values.len()==1 && lists.values[0]==7);
         { String value=copied[0]; assert(value=="copied"); }
         assert(copied.text=="copied");
-    
-            i++;
-        }
+
     }
     source.text="still alive";
     assert(source[0]=="still alive");

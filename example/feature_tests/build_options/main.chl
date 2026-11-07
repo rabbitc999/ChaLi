@@ -1,0 +1,7 @@
+import build_option_flags;
+void main() {
+    int64 A = 7;
+    assert(A == 7);
+    assert($ENABLED() == $build["A"]);
+    println("A={}, B={}, absent={}", $build[A], $build["B"], $build[never_defined]);
+}

@@ -6397,7 +6397,7 @@ __Range range(int64 start, int64 stop);
 range(start, stop);
 ```
 
-**源码**：[source/chali_generic.cpp:1950](../../source/chali_generic.cpp#L1950)。
+**源码**：[source/chali_generic.cpp:1965](../../source/chali_generic.cpp#L1965)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6438,7 +6438,7 @@ __Range range(int64 start, int64 stop, int64 step);
 range(start, stop, step);
 ```
 
-**源码**：[source/chali_generic.cpp:1958](../../source/chali_generic.cpp#L1958)。
+**源码**：[source/chali_generic.cpp:1973](../../source/chali_generic.cpp#L1973)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6479,7 +6479,7 @@ __Interval_int64 rangeEq(int64 start, int64 stop);
 rangeEq(start, stop);
 ```
 
-**源码**：[source/chali_generic.cpp:1973](../../source/chali_generic.cpp#L1973)。
+**源码**：[source/chali_generic.cpp:1988](../../source/chali_generic.cpp#L1988)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6515,7 +6515,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/chali_generic.cpp:2179](../../source/chali_generic.cpp#L2179)。
+**源码**：[source/chali_generic.cpp:2194](../../source/chali_generic.cpp#L2194)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6551,7 +6551,7 @@ void close();
 obj.close();
 ```
 
-**源码**：[source/chali_generic.cpp:2187](../../source/chali_generic.cpp#L2187)。
+**源码**：[source/chali_generic.cpp:2202](../../source/chali_generic.cpp#L2202)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6590,7 +6590,7 @@ int64 print(String format, Any args...);
 print(format, args);
 ```
 
-**源码**：[source/semantics/boxing.cpp:1361](../../source/semantics/boxing.cpp#L1361)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1363](../../source/semantics/boxing.cpp#L1363)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6629,7 +6629,7 @@ int64 println(String format, Any args...);
 println(format, args);
 ```
 
-**源码**：[source/semantics/boxing.cpp:1361](../../source/semantics/boxing.cpp#L1361)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1363](../../source/semantics/boxing.cpp#L1363)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6746,7 +6746,7 @@ String format(String format, Any args...);
 format(format, args);
 ```
 
-**源码**：[source/semantics/boxing.cpp:1365](../../source/semantics/boxing.cpp#L1365)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1367](../../source/semantics/boxing.cpp#L1367)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6784,7 +6784,7 @@ int64 putChar(char value);
 putChar(value);
 ```
 
-**源码**：[source/semantics/boxing.cpp:1411](../../source/semantics/boxing.cpp#L1411)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1413](../../source/semantics/boxing.cpp#L1413)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6820,7 +6820,7 @@ int64 pause();
 pause();
 ```
 
-**源码**：[source/semantics/boxing.cpp:1372](../../source/semantics/boxing.cpp#L1372)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1374](../../source/semantics/boxing.cpp#L1374)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6856,7 +6856,7 @@ String inputLine();
 inputLine();
 ```
 
-**源码**：[source/semantics/boxing.cpp:1421](../../source/semantics/boxing.cpp#L1421)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1423](../../source/semantics/boxing.cpp#L1423)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6892,7 +6892,7 @@ int64 inputInt();
 inputInt();
 ```
 
-**源码**：[source/semantics/boxing.cpp:1421](../../source/semantics/boxing.cpp#L1421)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1423](../../source/semantics/boxing.cpp#L1423)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6928,7 +6928,7 @@ uint64 inputUInt();
 inputUInt();
 ```
 
-**源码**：[source/semantics/boxing.cpp:1421](../../source/semantics/boxing.cpp#L1421)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1423](../../source/semantics/boxing.cpp#L1423)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6964,7 +6964,7 @@ float64 inputFloat();
 inputFloat();
 ```
 
-**源码**：[source/semantics/boxing.cpp:1421](../../source/semantics/boxing.cpp#L1421)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1423](../../source/semantics/boxing.cpp#L1423)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7000,7 +7000,7 @@ bool inputBool();
 inputBool();
 ```
 
-**源码**：[source/semantics/boxing.cpp:1421](../../source/semantics/boxing.cpp#L1421)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1423](../../source/semantics/boxing.cpp#L1423)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7036,7 +7036,7 @@ char inputChar();
 inputChar();
 ```
 
-**源码**：[source/semantics/boxing.cpp:1421](../../source/semantics/boxing.cpp#L1421)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1423](../../source/semantics/boxing.cpp#L1423)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7072,7 +7072,7 @@ BigInteger inputBigInteger();
 inputBigInteger();
 ```
 
-**源码**：[source/semantics/boxing.cpp:1421](../../source/semantics/boxing.cpp#L1421)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1423](../../source/semantics/boxing.cpp#L1423)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7108,7 +7108,7 @@ BigDecimal inputBigDecimal();
 inputBigDecimal();
 ```
 
-**源码**：[source/semantics/boxing.cpp:1421](../../source/semantics/boxing.cpp#L1421)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1423](../../source/semantics/boxing.cpp#L1423)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7146,7 +7146,7 @@ int64 panic(String message);
 panic(message);
 ```
 
-**源码**：[source/semantics/boxing.cpp:1440](../../source/semantics/boxing.cpp#L1440)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1442](../../source/semantics/boxing.cpp#L1442)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7224,7 +7224,7 @@ T mut& toReference<T>(Option<T mut&> value);
 toReference<T>(value);
 ```
 
-**源码**：[source/chali_generic.cpp:1887](../../source/chali_generic.cpp#L1887)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:1902](../../source/chali_generic.cpp#L1902)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7262,7 +7262,7 @@ Option<T mut&> toOptional<T>(T mut& value);
 toOptional<T>(value);
 ```
 
-**源码**：[source/chali_generic.cpp:1893](../../source/chali_generic.cpp#L1893)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:1908](../../source/chali_generic.cpp#L1908)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7302,7 +7302,7 @@ int64 memcpy(char mut& destination, char const& source, int64 bytes);
 memcpy(destination, source, bytes);
 ```
 
-**源码**：[source/semantics/boxing.cpp:1457](../../source/semantics/boxing.cpp#L1457)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1459](../../source/semantics/boxing.cpp#L1459)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7342,7 +7342,7 @@ int64 memset(char mut& destination, int64 value, int64 bytes);
 memset(destination, value, bytes);
 ```
 
-**源码**：[source/semantics/boxing.cpp:1457](../../source/semantics/boxing.cpp#L1457)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1459](../../source/semantics/boxing.cpp#L1459)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -8917,7 +8917,7 @@ R add(T left,U right);
 add(left, right);
 ```
 
-**源码**：[source/semantics/boxing.cpp:1226](../../source/semantics/boxing.cpp#L1226)（编译器内建，签名为等价调用形式）。
+**源码**：[source/semantics/boxing.cpp:1227](../../source/semantics/boxing.cpp#L1227)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -10518,7 +10518,7 @@ T copy();
 obj.copy();
 ```
 
-**源码**：[source/chali_generic.cpp:1870](../../source/chali_generic.cpp#L1870)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:1885](../../source/chali_generic.cpp#L1885)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 

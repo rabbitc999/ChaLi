@@ -1,0 +1,6 @@
+module borrow_sources::right;
+#borrow(#ret,b)
+int64 mut& pick(int64 mut& a, int64 mut& b) { return b; }
+
+#borrow(#ret,b)
+T mut& pickGeneric<T>(T mut& a, T mut& b) { return b; }

@@ -1,0 +1,69 @@
+// 泛型引用来源在分支、循环、提前返回及值表达式中保持一致。
+#borrow(#ret,[a,b])
+T mut& choose<T>(T mut& a, T mut& b, int64 mode) {
+    if (mode == 0) { return a; }
+    for (int64 i in range(0, 3)) {
+        if (i == mode) { return b; }
+    }
+    return a;
+}
+
+#borrow(#ret,a)
+T mut& merge<T>(T mut& a, T mut& b, int64 mode) {
+    T mut& selected = b;
+    if (mode > 0) {
+        while (true) { selected = &a; break; }
+    } else {
+        selected = &a;
+    }
+    return selected;
+}
+
+#borrow(#ret,[a,b])
+T mut& expression<T>(T mut& a, T mut& b, bool first) {
+    return if (first) { a } else { b };
+}
+
+#borrow(out,b)
+T store<T>(T mut& a, T mut& b) {
+    T mut& out = b;
+    return out;
+}
+
+int64 cleanups = 0;
+Result<T, MessageError> propagate<T>(Result<T, MessageError> value, int64 mode) {
+    defer { cleanups += 1; }
+    if (mode == 0) { return Ok(value?); }
+    while (mode > 0) {
+        if (mode == 1) { return Ok(value?); }
+        mode -= 1;
+        continue;
+    }
+    return Ok(value?);
+}
+
+void main() {
+    for (int64 mode in range(0, 2048)) {
+        int64 a = mode;
+        int64 b = mode + 1;
+        int64 mut& p = choose(&a, &b, mode % 4);
+        int64 expected = if (mode % 4 == 1 || mode % 4 == 2) { b } else { a };
+        assert(p == expected);
+        assert(merge(&a, &b, mode % 3 - 1) == a);
+        assert(expression(&a, &b, true) == a);
+        assert(expression<int64>(&a, &b, false) == b);
+        assert(store(&a, &b) == b);
+        float64 x = 1.25;
+        float64 y = 2.5;
+        assert(choose(&x, &y, 1) == y && merge(&x, &y, 0) == x);
+        String left = "left";
+        String right = "right";
+        assert(expression(&left, &right, false) == "right");
+        Result<int64, MessageError> ok = Ok(mode);
+        Result<int64, MessageError> bad = Err(MessageError::from("expected"));
+        assert(propagate(ok, mode % 3).unwrap() == mode);
+        assert(propagate(bad, mode % 3).isErr());
+    }
+    assert(cleanups == 4096);
+    println("generic flow: iterations=2048 types=int64,float64,String cleanups=4096");
+}

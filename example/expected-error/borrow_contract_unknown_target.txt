@@ -1,0 +1,1 @@
+chali: example/samples-error/borrow_contract_unknown_target.chl 第 1 行：[CHL1210] 生命周期契约引用了不存在的名字 missing（只能是本函数的形参或局部变量）

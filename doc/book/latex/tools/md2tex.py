@@ -21,6 +21,7 @@ FILES = [(chapter['zh'], f"ch{chapter['id']:02d}.tex") for chapter in CHAPTERS] 
     ('A-常见错误速查.md', 'appendix-a.tex'),
     ('B-标准库速查.md', 'appendix-b.tex'),
     ('C-语法与操作符.md', 'appendix-c.tex'),
+    ('D-语言限制.md', 'appendix-d.tex'),
     ('README.md', 'preface.tex'),
 ]
 
@@ -94,7 +95,7 @@ def chapter_label(target):
     m = re.match(r'^(\d{2})-', target)
     if m:
         return 'ch:' + m.group(1)
-    m = re.match(r'^([ABC])-', target)
+    m = re.match(r'^([A-Z])-', target)
     if m:
         return 'ch:app' + m.group(1)
     return None
@@ -358,7 +359,7 @@ class Converter:
             m = re.match(r'^第 (\d+) 章 (.+)$', text)
             if m:
                 return '\\chapter{%s}\n\\label{ch:%s}' % (m.group(2), m.group(1).zfill(2))
-            m = re.match(r'^附录 ([ABC]) (.+)$', text)
+            m = re.match(r'^附录 ([A-Z]) (.+)$', text)
             if m:
                 return '\\chapter{%s}\n\\label{ch:app%s}' % (m.group(2), m.group(1))
             return '\\chapter{%s}' % text
@@ -369,14 +370,14 @@ class Converter:
         if level == 2:
             if self.mode == 'preface' and text == '目录':
                 return r'\clearpage\section*{目录}'
-            if not re.match(r'^(\d+\.\d+|[AB]\.\d+)\s+', text):
+            if not re.match(r'^(\d+\.\d+|[A-Z]\.\d+)\s+', text):
                 star = '*'
-            text = re.sub(r'^(\d+\.\d+|[AB]\.\d+)\s+', '', text)
+            text = re.sub(r'^(\d+\.\d+|[A-Z]\.\d+)\s+', '', text)
             return '\\section%s{%s}' % (star, text)
-        numbered = re.match(r'^(\d+\.\d+\.\d+|[AB]\.\d+\.\d+)\s+', text)
+        numbered = re.match(r'^(\d+\.\d+\.\d+|[A-Z]\.\d+\.\d+)\s+', text)
         if not numbered:
             star = '*'
-        text = re.sub(r'^(\d+\.\d+\.\d+|[AB]\.\d+\.\d+)\s+', '', text)
+        text = re.sub(r'^(\d+\.\d+\.\d+|[A-Z]\.\d+\.\d+)\s+', '', text)
         return '\\subsection%s{%s}' % (star, text)
 
     # ---------------- 主流程 ----------------
@@ -487,7 +488,7 @@ class Converter:
         numbered_children = {}
         for block in blocks:
             if block[0] == 'h' and block[1] >= 3:
-                match = re.match(r'^((?:\d+|[AB])\.\d+)\.\d+\s+', block[2])
+                match = re.match(r'^((?:\d+|[A-Z])\.\d+)\.\d+\s+', block[2])
                 if match:
                     numbered_children[match[1]] = numbered_children.get(match[1], 0) + 1
         for parent, count in numbered_children.items():
@@ -515,7 +516,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     for src, dst in FILES:
         mode = 'preface' if src == 'README.md' else (
-            'appendix' if re.match(r'^[ABC]-', src) else 'chapter')
+            'appendix' if re.match(r'^[A-Z]-', src) else 'chapter')
         text = io.open(os.path.join(BOOK, src), encoding='utf-8').read()
         tex = Converter(mode).convert(text)
         io.open(os.path.join(OUT, dst), 'w', encoding='utf-8', newline='\n').write(tex)

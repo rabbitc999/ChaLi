@@ -1,0 +1,2 @@
+int64 global=1;#static(a)
+void f(int64 const& a){}void main(){f(&global);}

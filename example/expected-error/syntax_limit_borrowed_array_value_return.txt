@@ -1,0 +1,1 @@
+chali: example/samples-error/syntax_limit_borrowed_array_value_return.chl 第 4 行：[CHL1205] 借用来源已移动或销毁，不能继续访问（源对象已经销毁）：__chali_return_expr$11532

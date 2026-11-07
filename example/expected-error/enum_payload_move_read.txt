@@ -1,0 +1,1 @@
+chali: example/samples-error/enum_payload_move_read.chl 第 3 行：[CHL1205] 借用来源已移动或销毁，不能继续访问（源对象已经销毁）：id

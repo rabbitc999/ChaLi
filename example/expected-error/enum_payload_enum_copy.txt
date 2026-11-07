@@ -1,0 +1,1 @@
+chali: example/samples-error/enum_payload_enum_copy.chl 第 3 行第 1 列：不可复制的值禁止复制：Owned（实现 Closeable 或声明了 #NonCopyable），请显式 move 或改用引用

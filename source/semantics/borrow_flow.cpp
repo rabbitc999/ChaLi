@@ -1,4 +1,4 @@
-/* 语义状态到独立借用控制流的适配层；只提取存储身份和控制流，不检查合法性。 */
+/* 已绑定存储与控制流的适配层；构图后核对来源契约，函数摘要传播后再检查失效访问。 */
 using MBorrowPlace = chali_borrow_checker::Place;
 using MBorrowFlowNode = chali_borrow_checker::FlowNode;
 /**
@@ -7,6 +7,11 @@ using MBorrowFlowNode = chali_borrow_checker::FlowNode;
 struct MBorrowFlowCapture
 {
     Memory::Map<int, MBorrowPlace> variables;
+    Memory::Map<Memory::String, Memory::String> names;
+    Memory::Map<Memory::String, Memory::String> parameters;
+    Memory::Map<Memory::String, std::shared_ptr<MType>> parameterTypes;
+    Memory::Set<Memory::String> globals;
+    Memory::Map<int, std::size_t> depths;
     Memory::Map<int, Memory::Vector<MBorrowPlace>> lambdaMoves;
     Memory::Map<int, Memory::Vector<MBorrowPlace>> lambdaReads;
     Memory::Map<int, Memory::Vector<MBorrowPlace>> lambdaBorrows;
@@ -16,14 +21,43 @@ struct MBorrowFlowCapture
     Memory::Map<int, bool> managed;
     Memory::Map<int, MBorrowPlace> declarations;
     Memory::Map<int, bool> declarationReferences;
+    struct Store
+    {
+        int target;
+        bool binding;
+    };
+    Memory::Map<int, Memory::Vector<Store>> stores;  ///< 按实际值求值节点记录赋值、容器与 Any 的借用写入。
     Memory::Map<int, MBorrowPlace> redeclarations;
     Memory::Map<int, MBorrowPlace> foreachBindings;
+    Memory::Set<int> foreachNoDefault;
+    Memory::Map<int, std::pair<MBorrowPlace, int>> foreachSnapshots;
     Memory::Set<int> storageReleases;                                  ///< 明确释放堆存储的 drop() 调用。
     Memory::Set<int> terminalCalls;                                    ///< 确认为 Drop 协议的显式调用，不包括普通同名方法。
     Memory::Map<int, std::pair<ast::NodePtr, ast::NodePtr>> releases;  ///< 显式终结及其路径守卫。
     Memory::Set<int> valueLoops;                                       ///< 实际分配了结果槽的循环，独立语句也可能接收并丢弃结果。
 };
+/**
+ * @brief 调用点的实际存储与待填充的引用移动效果。
+ */
+struct MBorrowFlowCall
+{
+    std::size_t entry = 0;
+    Memory::String callee;
+    Memory::Vector<MBorrowPlace> arguments;
+    Memory::Set<MBorrowPlace> applied;
+};
+/**
+ * @brief 函数退出状态及引用形参到调用实参的对应关系。
+ */
+struct MBorrowFunctionFlow
+{
+    Memory::String label;
+    Memory::Vector<Memory::String> parameters;
+    Memory::Vector<MBorrowFlowCall> calls;
+    std::size_t exit = 0;
+};
 Memory::Vector<chali_borrow_checker::FlowGraph> g_borrowFlows;
+Memory::Vector<MBorrowFunctionFlow> g_borrowFunctionFlows;
 MBorrowFlowCapture *g_borrowFlowCapture = nullptr;
 /**
  * @brief 保存拥有捕获内部引用的外部来源，结构字段按真实布局逐层展开。
@@ -64,6 +98,7 @@ void CaptureBorrowExpression(int id, const std::shared_ptr<MType> &type)
     if (type)
     {
         g_borrowFlowCapture->types[id] = type;
+        if (HasBorrowedValue(type)) g_borrowFlowCapture->depths[id] = BorrowSourceDepth(id);
         g_borrowFlowCapture->references[id] = type->kind == MType::Ptr || IsRuntimeArray(type);
         const auto value = type->kind == MType::Ptr ? type->elem : type;
         g_borrowFlowCapture->managed[id] = value && (value->kind == MType::Struct || IsOwnedKind(value));
@@ -78,6 +113,9 @@ void CaptureBorrowExpression(int id, const std::shared_ptr<MType> &type)
             if (variable)
             {
                 g_borrowFlowCapture->variables[current] = { variable->emitted, {} };
+                g_borrowFlowCapture->names[variable->emitted] = node.s;
+                for (const auto &entry : g_scope.front())
+                    if (&entry.second == variable) g_borrowFlowCapture->globals.insert(variable->emitted);
                 g_borrowFlowCapture->references[current] = variable->type->kind == MType::Ptr || IsRuntimeArray(variable->type);
                 const auto value = variable->type->kind == MType::Ptr ? variable->type->elem : variable->type;
                 g_borrowFlowCapture->managed[current] = value && (value->kind == MType::Struct || IsOwnedKind(value));
@@ -103,7 +141,26 @@ void CaptureBorrowDeclaration(int id, const MVar *variable)
 {
     if (!g_borrowFlowCapture || !variable) return;
     g_borrowFlowCapture->declarations[id] = { variable->emitted, {} };
+    g_borrowFlowCapture->names[variable->emitted] = N(id).s;
     g_borrowFlowCapture->declarationReferences[id] = variable->type->kind == MType::Ptr || IsRuntimeArray(variable->type);
+}
+/**
+ * @brief 保存语义确认的借用写入，由控制流按实际求值路径检查契约。
+ * @param target 写入目标，包括容器接收者。
+ * @param value 要保存的引用或含引用的值。
+ * @param binding 是否重绑引用槽，而非写入其指向的对象。
+ */
+void CaptureBorrowStore(int target, int value, bool binding)
+{
+    if (!g_borrowFlowCapture || target < 0 || value < 0) return;
+    const auto valueType = RawExprType(value);
+    if (!HasBorrowedValue(valueType) && !IsRuntimeArray(valueType)) return;
+    CaptureBorrowExpression(target, RawExprType(target));
+    CaptureBorrowExpression(value, valueType);
+    auto &stores = g_borrowFlowCapture->stores[value];
+    if (std::none_of(stores.begin(), stores.end(), [&](const MBorrowFlowCapture::Store &store) {
+            return store.target == target && store.binding == binding;
+        })) stores.push_back({target, binding});
 }
 #include "borrow_return_sources.cpp"
 
@@ -115,9 +172,34 @@ struct MBorrowFlowBuilder
     const MBorrowFlowCapture &capture;
     chali_borrow_checker::FlowGraph graph;
     mutable Memory::Map<Memory::String, MBorrowOrigins> summaries;
-    Memory::Vector<std::size_t> valueStops;                      ///< 值表达式出口独立于普通循环出口，带值退出可穿透循环。
-    Memory::Vector<std::pair<int, std::size_t>> controlStops;    ///< 解析后出口身份与当前图中的后继。
-    Memory::Vector<std::pair<int, std::size_t>> controlRepeats;  ///< 解析后循环身份与当前图中的下一轮入口。
+    Memory::Vector<MBorrowFlowCall> calls;
+    Memory::Vector<int> defers;
+    /**
+     * @brief 实际求值后的契约来源检查点。
+     */
+    struct ContractCheck
+    {
+        std::size_t node;
+        Memory::String target;
+        MBorrowPlace source;
+        int expression;
+        MBorrowPlace destination;  ///< 可经别名解析到契约目标；声明与返回检查可为空。
+    };
+    Memory::Vector<ContractCheck> contractChecks;
+    std::size_t functionExit = 0;
+    std::size_t loopPeelBudget = 0;  ///< 按本函数源码节点数限制循环首轮展开，避免嵌套循环指数增长。
+    /**
+     * @brief 已解析的控制出口及跳转后仍保留的延迟清理深度。
+     */
+    struct ControlTarget
+    {
+        int first;
+        std::size_t second;
+        std::size_t deferDepth;
+    };
+    Memory::Vector<ControlTarget> valueStops;  ///< 值表达式出口独立于普通循环出口，带值退出可穿透循环。
+    Memory::Vector<ControlTarget> controlStops;                      ///< 解析后出口身份与当前图中的后继。
+    Memory::Vector<ControlTarget> controlRepeats;                    ///< 解析后循环身份与当前图中的下一轮入口。
     /**
      * @brief 将方法体返回来源替换为调用点的具体接收者或实参。
      * @param id 调用节点。
@@ -187,9 +269,104 @@ struct MBorrowFlowBuilder
     std::size_t add(MBorrowFlowNode::Kind kind, MBorrowPlace target, MBorrowPlace source, std::size_t next, int id)
     {
         const auto index = graph.nodes.size();
-        graph.nodes.push_back({ kind, std::move(target), std::move(source), {}, id >= 0 ? N(id).sourceLine : 0u, id >= 0 && !N(id).s.empty() ? N(id).s : Memory::String("表达式"), id });
+        graph.nodes.push_back({ kind, std::move(target), std::move(source), {}, id >= 0 ? (N(id).expansionLine ? N(id).expansionLine : N(id).sourceLine) : 0u, id >= 0 && !N(id).s.empty() ? N(id).s : Memory::String("表达式"), id });
         if (next != static_cast<std::size_t>(-1)) graph.nodes.back().next.push_back(next);
         return index;
+    }
+    /**
+     * @brief 在退出边按后登记先执行的顺序检查仍存活的延迟回调借用。
+     * @param next 清理完成后的后继。
+     * @param depth 本次退出保留的外层延迟动作数量。
+     * @return 清理检查入口。
+     */
+    std::size_t cleanup(std::size_t next, std::size_t depth)
+    {
+        for (std::size_t i = depth; i < defers.size(); ++i)
+        {
+            const int id = defers[i];
+            next = add(MBorrowFlowNode::CheckCaptures, { "$defer:" + Memory::toString(id), {} }, {}, next, id);
+            graph.nodes[next].label = "defer";
+        }
+        return next;
+    }
+    /**
+     * @brief 在实参求值后保留具体调用的引用移动效果占位。
+     * @param id 调用节点。
+     * @param arguments 显式实参。
+     * @param next 调用后继。
+     * @param receiver 实例接收者；静态调用为负数。
+     * @return 调用效果入口。
+     */
+    std::size_t callEffects(int id, const Memory::Vector<int> &arguments, std::size_t next, int receiver = -1)
+    {
+        const auto called = capture.calls.find(id);
+        if (called == capture.calls.end()) return next;
+        const auto entry = add(MBorrowFlowNode::Nop, {}, {}, next, id);
+        MBorrowFlowCall site;
+        site.entry = entry;
+        site.callee = called->second;
+        if (receiver >= 0) site.arguments.push_back(place(receiver));
+        for (const int argument : arguments) site.arguments.push_back(place(argument));
+        calls.push_back(std::move(site));
+        return entry;
+    }
+    /**
+     * @brief 为含堆释放的循环分离首轮入口，保留游标重绑与释放状态的路径关联。
+     * @param begin 本循环的首个图节点。
+     * @param repeat 后续迭代入口；首轮回边直接进入原循环。
+     * @param entry 原首轮入口。
+     * @return 预算允许时返回首轮副本入口，否则保守复用原入口。
+     */
+    std::size_t peelLoop(std::size_t begin, std::size_t repeat, std::size_t entry)
+    {
+        const auto end = graph.nodes.size();
+        const auto count = end - begin;
+        if (entry < begin || entry >= end || count > loopPeelBudget || std::none_of(graph.nodes.begin() + begin, graph.nodes.end(),
+                                                  [](const MBorrowFlowNode &node) { return node.kind == MBorrowFlowNode::Destroy; })) return entry;
+        loopPeelBudget -= count;
+        const auto offset = end - begin;
+        for (auto index = begin; index < end; ++index)
+        {
+            auto node = graph.nodes[index];
+            for (auto &next : node.next)
+                if (next != repeat && next >= begin && next < end) next += offset;
+            graph.nodes.push_back(std::move(node));
+        }
+        const auto callCount = calls.size();
+        for (std::size_t i = 0; i < callCount; ++i)
+            if (calls[i].entry >= begin && calls[i].entry < end)
+            {
+                auto call = calls[i];
+                call.entry += offset;
+                calls.push_back(std::move(call));
+            }
+        const auto checkCount = contractChecks.size();
+        for (std::size_t i = 0; i < checkCount; ++i)
+            if (contractChecks[i].node >= begin && contractChecks[i].node < end)
+            {
+                auto check = contractChecks[i];
+                check.node += offset;
+                contractChecks.push_back(std::move(check));
+            }
+        return entry + offset;
+    }
+    /**
+     * @brief 保存引用值出口的来源，再连接该出口应执行的清理。
+     * @param value 出口值表达式。
+     * @param target 已解析的值出口。
+     * @return 实参求值入口。
+     */
+    std::size_t exitValue(int value, const ControlTarget &target)
+    {
+        auto next = cleanup(target.second, target.deferDepth);
+        if (value < 0) return next;
+        const auto type = capture.types.find(target.first);
+        if (type != capture.types.end() && IsRuntimeArray(type->second) && !HasBorrowedValue(type->second->elem))
+            next = add(MBorrowFlowNode::Allocate, place(target.first, true),
+                       { "$yieldedArray:" + Memory::toString(value), {} }, next, value);
+        else if (reference(target.first))
+            next = add(MBorrowFlowNode::Bind, place(target.first, true), place(value), next, value);
+        return expression(value, next);
     }
     /**
      * @brief 引用节点是否指向存储。
@@ -241,6 +418,8 @@ struct MBorrowFlowBuilder
             result = variable->second;
         else if (node.kind == MNode::Call && node.kids.size() > 1 && (StandardCallName(N(node.kids[0])) == "__move" || StandardCallName(N(node.kids[0])) == "copy") && N(node.kids[1]).kids.size() == 1u)
             return place(N(node.kids[1]).kids[0], slot);
+        else if (node.kind == MNode::Loop && reference(id))
+            result = { "$value:" + Memory::toString(id), {} };
         else if (node.kind == MNode::Call && carriesCaptures(id))
             return { "$callvalue:" + Memory::toString(id), {} };
         else if (node.kind == MNode::EnumCtor && node.type2 == 1 && reference(id) && !methodOrigins(id).empty())
@@ -295,7 +474,7 @@ struct MBorrowFlowBuilder
         }
         if ((node.kind == MNode::Member || node.kind == MNode::Arrow || node.kind == MNode::Un || node.kind == MNode::Cast) && !node.kids.empty())
             return address(node.kids[0], next);
-        if (node.kind == MNode::Call || (node.kind == MNode::EnumCtor && node.type2 == 1 && reference(id))) return expression(id, next);
+        if (node.kind == MNode::Call || node.kind == MNode::Loop || node.kind == MNode::Block || (node.kind == MNode::EnumCtor && node.type2 == 1 && reference(id))) return expression(id, next);
         return next;
     }
     /**
@@ -409,6 +588,15 @@ struct MBorrowFlowBuilder
     {
         if (id < 0) return next;
         const auto node = N(id);
+        if (const auto stores = capture.stores.find(id); stores != capture.stores.end())
+            for (const auto &store : stores->second)
+            {
+                const auto root = capture.names.find(place(store.target, true).root);
+                if (root == capture.names.end()) continue;
+                const auto point = add(MBorrowFlowNode::Nop, {}, {}, next, id);
+                contractChecks.push_back({point, root->second, place(id), id, place(store.target, store.binding)});
+                next = point;
+            }
         const auto reads = capture.lambdaReads.find(id);
         if (reads != capture.lambdaReads.end())
         {
@@ -446,13 +634,24 @@ struct MBorrowFlowBuilder
                 return address(target, expression(value, allocation));
             }
             next = copyCaptures(place(target), value, next);
-            auto entry = add(binding(target, value) ? MBorrowFlowNode::Bind : MBorrowFlowNode::Write,
+            const auto incoming = N(value);
+            const bool movedReplacement = incoming.kind == MNode::Call && !incoming.kids.empty()
+                                          && StandardCallName(N(incoming.kids[0])) == "__move";
+            auto entry = add(binding(target, value) ? MBorrowFlowNode::Bind : movedReplacement ? MBorrowFlowNode::Initialize : MBorrowFlowNode::Write,
                              place(target, binding(target, value)), place(value), next, id);
+            const auto storedType = capture.types.count(value) ? capture.types.at(value) : nullptr;
+            if (binding(target, value) || (storedType && HasBorrowedValue(storedType->kind == MType::Ptr ? storedType->elem : storedType)))
+            {
+                const auto root = capture.names.find(place(target, true).root);
+                if (root != capture.names.end())
+                    contractChecks.push_back({entry, root->second, place(value), value, place(target, binding(target, value))});
+            }
             if (!binding(target, value)) entry = aggregateBindings(place(target), value, entry);
             entry = address(target, entry);
             return binding(target, value) ? address(value, entry) : expression(value, entry);
         }
         if (node.kind == MNode::Un && node.s == "&") return address(node.kids[0], next);
+        if (node.kind == MNode::EnumCtor && node.type2 == 1) next = callEffects(id, node.kids, next);
         if (node.kind == MNode::EnumCtor && node.type2 == 1 && reference(id))
         {
             const auto origins = methodOrigins(id);
@@ -526,6 +725,8 @@ struct MBorrowFlowBuilder
                 next = add(capture.managed.count(arguments[0]) && capture.managed.at(arguments[0]) ? MBorrowFlowNode::Move : MBorrowFlowNode::MoveScalar, place(arguments[0]), {}, next, id);
             else if ((callee.kind == MNode::Member || callee.kind == MNode::Arrow) && capture.terminalCalls.count(id) && !callee.kids.empty())
                 next = add(capture.storageReleases.count(id) ? MBorrowFlowNode::Destroy : MBorrowFlowNode::Drop, place(callee.kids[0]), {}, next, id);
+            next = callEffects(id, arguments, next,
+                               (callee.kind == MNode::Member || callee.kind == MNode::Arrow) && !callee.kids.empty() ? callee.kids[0] : -1);
             // 实参可能移动或释放捕获来源，调用前再检查已求值的闭包环境。
             if (!arguments.empty() && !place(node.kids[0]).root.empty())
                 next = add(MBorrowFlowNode::CheckCaptures, place(node.kids[0]), {}, next, id);
@@ -538,8 +739,8 @@ struct MBorrowFlowBuilder
         }
         if (node.kind == MNode::Loop)
         {
-            valueStops.push_back(next);
-            controlStops.push_back({ id, next });
+            valueStops.push_back({ id, next, defers.size() });
+            controlStops.push_back({ id, next, defers.size() });
             const auto entry = node.s.empty() ? statement(id, next, next, next) : statement(node.kids[0], next, next, next);
             controlStops.pop_back();
             valueStops.pop_back();
@@ -608,12 +809,20 @@ struct MBorrowFlowBuilder
         if (node.kind == MNode::Block || node.kind == MNode::List)
         {
             const auto children = node.kind == MNode::Block ? N(node.i).kids : node.kids;
-            for (auto it = children.rbegin(); it != children.rend(); ++it) next = statement(*it, next, stop, repeat);
+            const auto depth = defers.size();
+            for (const int child : children)
+                if (N(child).kind == MNode::Defer) defers.push_back(child);
+            next = cleanup(next, depth);
+            for (auto it = children.rbegin(); it != children.rend(); ++it)
+            {
+                if (N(*it).kind == MNode::Defer) defers.pop_back();
+                next = statement(*it, next, stop, repeat);
+            }
             return next;
         }
-        if (node.kind == MNode::Declare && node.s == "local")
+        if (node.kind == MNode::Declare && (capture.declarations.count(id) || (!node.kids.empty() && N(node.kids[0]).kind == MNode::List)))
         {
-            const auto declarations = N(node.kids[0]).kids;
+            const auto declarations = capture.declarations.count(id) ? Memory::Vector<int>{ id } : N(node.kids[0]).kids;
             for (auto it = declarations.rbegin(); it != declarations.rend(); ++it)
             {
                 const auto found = capture.declarations.find(*it);
@@ -626,12 +835,16 @@ struct MBorrowFlowBuilder
                     const bool allocation = N(value).kind == MNode::NewPtr;
                     if (allocation) source = { found->second.root + "$heap", {} };
                     next = add(allocation ? MBorrowFlowNode::Allocate : MBorrowFlowNode::Bind, found->second, source, next, *it);
+                    contractChecks.push_back({ next, N(*it).s, source, value });
                     next = allocation ? expression(value, next) : address(value, next);
                 }
                 else
                 {
                     const auto copied = copyCaptures(found->second, value, next);
                     const auto write = add(MBorrowFlowNode::Initialize, found->second, {}, copied, *it);
+                    const auto type = capture.types.find(value);
+                    if (type != capture.types.end() && HasBorrowedValue(type->second->kind == MType::Ptr ? type->second->elem : type->second))
+                        contractChecks.push_back({ write, N(*it).s, place(value), value });
                     next = expression(value, aggregateBindings(found->second, value, write));
                 }
                 // 每次执行声明均创建新的绑定，包括循环内重复到达的声明。
@@ -667,20 +880,32 @@ struct MBorrowFlowBuilder
         }
         if (node.kind == MNode::While || node.kind == MNode::For || node.kind == MNode::DoWhile || node.kind == MNode::Foreach || node.kind == MNode::Loop)
         {
-            const auto test = add(MBorrowFlowNode::Nop, {}, {}, next, id);
+            const int fallback = node.kind == MNode::For && node.kids.size() > 4u ? node.kids[4] :
+                                 node.kind == MNode::Foreach && node.kids.size() > 2u ? node.kids[2] : -1;
+            const auto exit = fallback >= 0 ? statement(fallback, next, stop, repeat) : next;
+            const auto loopBegin = graph.nodes.size();
+            const auto test = add(MBorrowFlowNode::Nop, {}, {}, exit, id);
             const int condition = node.kind == MNode::While ? node.kids[0] : node.kind == MNode::For ? node.kids[1] :
                                                                          node.kind == MNode::DoWhile ? node.kids[1] :
                                                                                                        -1;
             const auto testEntry = expression(condition, test);
-            const auto update = node.kind == MNode::For ? expression(node.kids[2], testEntry) : testEntry;
+            const auto snapshot = capture.foreachSnapshots.find(id);
+            const auto saveSnapshot = [&](std::size_t successor) {
+                if (snapshot == capture.foreachSnapshots.end()) return successor;
+                const auto copied = copyCaptures(snapshot->second.first, snapshot->second.second, successor);
+                const auto initialized = add(MBorrowFlowNode::Initialize, snapshot->second.first, {}, copied, id);
+                return expression(snapshot->second.second, initialized);
+            };
+            const auto update = node.kind == MNode::For ? statement(node.kids[2], testEntry, stop, repeat) : saveSnapshot(testEntry);
+            const auto broken = saveSnapshot(exit);
             const int body = node.kind == MNode::For ? node.kids[3] : node.kind == MNode::Loop ? node.kids[0] :
                                                                   node.kind == MNode::DoWhile  ? node.kids[0] :
                                                                                                  node.kids[1];
             const bool ownValue = capture.valueLoops.count(id) != 0u;
-            if (ownValue) valueStops.push_back(next);
-            controlStops.push_back({ id, next });
-            controlRepeats.push_back({ id, update });
-            auto bodyEntry = statement(body, update, next, update);
+            if (ownValue) valueStops.push_back({ id, next, defers.size() });
+            controlStops.push_back({ id, broken, defers.size() });
+            controlRepeats.push_back({ id, update, defers.size() });
+            auto bodyEntry = statement(body, update, broken, update);
             controlRepeats.pop_back();
             controlStops.pop_back();
             if (ownValue) valueStops.pop_back();
@@ -691,11 +916,21 @@ struct MBorrowFlowBuilder
             if (node.kind == MNode::Loop || (node.kind == MNode::For && condition < 0))
                 graph.nodes[test].next = { bodyEntry };
             else if (condition >= 0 && N(condition).kind == MNode::Bool)
-                graph.nodes[test].next = { N(condition).i ? bodyEntry : next };
-            if (node.kind == MNode::For) return statement(node.kids[0], testEntry, stop, repeat);
-            if (node.kind == MNode::DoWhile) return bodyEntry;
-            if (node.kind == MNode::Foreach) return expression(node.kids[0], testEntry);
-            return testEntry;
+                graph.nodes[test].next = { N(condition).i ? bodyEntry : exit };
+            const auto firstEntry = peelLoop(loopBegin, update, node.kind == MNode::DoWhile ? bodyEntry : testEntry);
+            if (node.kind == MNode::For) return statement(node.kids[0], firstEntry, stop, repeat);
+            if (node.kind == MNode::Foreach)
+            {
+                auto entry = firstEntry;
+                if (fallback >= 0 && iteration != capture.foreachBindings.end())
+                    entry = add(capture.foreachNoDefault.count(id) ? MBorrowFlowNode::Destroy : MBorrowFlowNode::Initialize,
+                                iteration->second, {}, entry, id);
+                if (snapshot != capture.foreachSnapshots.end())
+                    entry = add(capture.foreachNoDefault.count(id) ? MBorrowFlowNode::Destroy : MBorrowFlowNode::Initialize,
+                                snapshot->second.first, {}, entry, id);
+                return expression(node.kids[0], entry);
+            }
+            return firstEntry;
         }
         if (node.kind == MNode::Switch)
         {
@@ -718,42 +953,111 @@ struct MBorrowFlowBuilder
             {
                 for (auto target = controlStops.rbegin(); target != controlStops.rend(); ++target)
                     if (target->first == node.controlTarget)
-                        return node.kids.empty() ? target->second : expression(node.kids[0], target->second);
+                        return exitValue(node.kids.empty() ? -1 : node.kids[0], *target);
                 return Fail("借用控制流缺少已解析的退出目标"), next;
             }
-            return node.kids.empty() ? stop : expression(node.kids[0], valueStops.empty() ? stop : valueStops.back());
+            if (!node.kids.empty() && !valueStops.empty())
+                return exitValue(node.kids[0], valueStops.back());
+            const auto depth = controlStops.empty() ? 0u : controlStops.back().deferDepth;
+            return node.kids.empty() ? cleanup(stop, depth) : expression(node.kids[0], cleanup(stop, depth));
         }
         if (node.kind == MNode::Continue)
         {
             if (node.controlTarget >= 0)
             {
                 for (auto target = controlRepeats.rbegin(); target != controlRepeats.rend(); ++target)
-                    if (target->first == node.controlTarget) return target->second;
+                    if (target->first == node.controlTarget) return cleanup(target->second, target->deferDepth);
                 return Fail("借用控制流缺少已解析的继续目标"), next;
             }
-            return repeat;
+            return cleanup(repeat, controlRepeats.empty() ? 0u : controlRepeats.back().deferDepth);
         }
-        if (node.kind == MNode::Return) return node.kids.empty() ? static_cast<std::size_t>(-1) : expression(node.kids[0], static_cast<std::size_t>(-1));
+        if (node.kind == MNode::Return)
+        {
+            const auto exit = cleanup(functionExit, 0);
+            if (node.kids.empty()) return exit;
+            const auto check = add(MBorrowFlowNode::Nop, {}, {}, exit, id);
+            contractChecks.push_back({ check, "#ret", place(node.kids[0]), node.kids[0] });
+            return expression(node.kids[0], check);
+        }
+        if (node.kind == MNode::Defer)
+            return expression(node.kids[0], add(MBorrowFlowNode::CopyCaptures, { "$defer:" + Memory::toString(id), {} }, place(node.kids[0]), next, id));
 
         return expression(id, next);
     }
 };
 /**
- * @brief 完成函数的借用控制流事实，不在语义分析中执行检查。
+ * @brief 用控制流合流后的真实来源核对返回与保存契约。
+ * @param builder 已绑定表达式及契约检查点。
+ * @param states 各节点入口状态。
+ * @param reachable 可达标记。
+ */
+void CheckLifetimeFlow(const MBorrowFlowBuilder &builder, const Memory::Vector<chali_borrow_checker::FlowState> &states,
+                       const Memory::Vector<bool> &reachable);
+/**
+ * @brief 完成函数借用控制流事实，并核对已绑定来源的显式契约。
  * @param body 函数体。
  * @param capture 已绑定事实。
+ * @param label 具体函数的调用标签。
+ * @param parameters 按调用实参顺序排列的引用形参存储，非引用形参为空。
  * @return 无。
  */
-void FinishBorrowFlow(int body, const MBorrowFlowCapture &capture)
+void FinishBorrowFlow(int body, const MBorrowFlowCapture &capture, const Memory::String &label, const Memory::Vector<Memory::String> &parameters)
 {
     MBorrowFlowBuilder builder{ capture, {} };
+    Memory::Set<int> sourceNodes;
+    Memory::Vector<int> pending{body};
+    while (!pending.empty())
+    {
+        const int id = pending.back();
+        pending.pop_back();
+        if (id < 0 || !sourceNodes.insert(id).second) continue;
+        if (N(id).kind == MNode::Block) pending.push_back(static_cast<int>(N(id).i));
+        for (const int child : N(id).kids) pending.push_back(child);
+    }
+    builder.loopPeelBudget = sourceNodes.size() * 8u;
     builder.graph.nodes.push_back({});
     const auto end = builder.add(MBorrowFlowNode::Nop, {}, {}, static_cast<std::size_t>(-1), body);
-    const auto entry = builder.statement(body, end, end, end);
+    builder.functionExit = end;
+    auto entry = builder.statement(body, end, end, end);
+    for (const auto &parameter : capture.parameterTypes)
+    {
+        const auto root = capture.parameters.at(parameter.first);
+        std::function<void(std::shared_ptr<MType>, MBorrowPlace, Memory::Vector<Memory::String>, unsigned)> fields;
+        fields = [&](std::shared_ptr<MType> type, MBorrowPlace slot, Memory::Vector<Memory::String> path, unsigned depth) {
+            if (!type || depth > 16u) return;
+            if (type->kind == MType::Ptr)
+            {
+                auto source = path;
+                source.insert(source.begin(), "$borrowed");
+                entry = builder.add(MBorrowFlowNode::Bind, slot, { root, std::move(source) }, entry, -1);
+                return;
+            }
+            if (type->kind != MType::Struct) return;
+            const auto definition = g_structs.find(type->name);
+            if (definition == g_structs.end()) return;
+            for (const auto &field : definition->second.fields)
+            {
+                auto child = slot;
+                child.path.push_back("." + field.name);
+                auto member = path;
+                member.push_back("." + field.name);
+                fields(field.type, std::move(child), std::move(member), depth + 1u);
+            }
+        };
+        auto type = parameter.second;
+        MBorrowPlace slot{ root, {} };
+        if (type && type->kind == MType::Ptr)
+        {
+            type = type->elem;
+            slot.path.push_back("$external");
+        }
+        fields(type, std::move(slot), {}, 0u);
+    }
     builder.graph.nodes[0].next.push_back(entry);
     Memory::Vector<chali_borrow_checker::FlowState> states;
     Memory::Vector<bool> reachable;
     chali_borrow_checker::checkFlow(builder.graph, &states, &reachable);
+    CheckLifetimeFlow(builder, states, reachable);
     for (const auto &merge : chali_resource_cleanup::coalesce(builder.graph, states, reachable))
     {
         const auto found = capture.releases.find(merge.operation);
@@ -767,5 +1071,8 @@ void FinishBorrowFlow(int body, const MBorrowFlowCapture &capture)
             *operation = *ast::Node::ifThenElse(found->second.second, original, nullptr);
         }
     }
+    g_borrowFunctionFlows.push_back({ label, parameters, std::move(builder.calls), end });
     g_borrowFlows.push_back(std::move(builder.graph));
 }
+
+#include "borrow_call_effects.cpp"

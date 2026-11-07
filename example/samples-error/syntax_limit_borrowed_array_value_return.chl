@@ -1,0 +1,6 @@
+int64 stable = 7;
+struct Borrowed { int64 mut& value; }
+Borrowed[] validButConservative() {
+    return { Borrowed values[] = new[1]; values[0].value = &stable; yield values; };
+}
+void main() { validButConservative(); }

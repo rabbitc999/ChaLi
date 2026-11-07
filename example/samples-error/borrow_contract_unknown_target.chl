@@ -1,0 +1,2 @@
+#borrow(missing,a)
+void f(int64 mut& a){}void main(){}

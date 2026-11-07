@@ -6,7 +6,7 @@
 
 Choose containers by access patterns: fixed positions, growing sequences, key lookup or duplicate detection. Arrays, List, Map and Set provide distinct structures and contracts rather than interchangeable syntax.
 
-A matrix illustrates boundaries and copying. Any containers then distinguish heterogeneous contents from unchecked extraction. Length, capacity and mutation during iteration prepare the iterator discussion in Chapter 17.
+A matrix illustrates boundaries and copying. Any containers then distinguish heterogeneous contents from unchecked extraction. Length, capacity and mutation during iteration prepare the iterator discussion in Chapter 20.
 
 ## 13.1 Track list length across mutations
 
@@ -136,7 +136,10 @@ void main()
     List<Any> values = [1, "two", true];
     values.push(1.5);
     Any text = values[1];
-    println("{} {}", values.len(), tryGet<String>(&text).unwrap());
+    match (tryGet<String>(&text)) {
+        Value(value) => { println("{} {}", values.len(), value); }
+        None => { println("类型不匹配"); }
+    }
 
     Set<Any> unique;
     Any key = "key";
@@ -149,11 +152,17 @@ void main()
     mixed.put(key, "stored");
     mixed.put(3, true);
     Any saved = mixed[key];
-    println("{} {}", mixed.len(), tryGet<String>(&saved).unwrap());
+    match (tryGet<String>(&saved)) {
+        Value(value) => { println("{} {}", mixed.len(), value); }
+        None => { println("类型不匹配"); }
+    }
 
     Map<String, Any> record = {"count": 3, "name": "ChaLi"};
     Any count = record["count"];
-    println("{}", tryGet<int64>(&count).unwrap());
+    match (tryGet<int64>(&count)) {
+        Value(value) => { println("{}", value); }
+        None => { println("类型不匹配"); }
+    }
     saved.clear();
     println("{}", saved.isEmpty());
 }
@@ -167,7 +176,7 @@ void main()
 1
 ```
 
-List<Any> stores differing concrete types, but retrieval still returns Any and requires a typed query such as `tryGet<String>`. Three initial entries plus 1.5 make length four. Entry one really contains a string, allowing this example to unwrap two. A mismatched query requires handling failure instead.
+List<Any> stores differing concrete types, but retrieval still returns Any and requires a typed query such as `tryGet<String>`. Three initial entries plus 1.5 make length four. Entry one contains a string, so match selects Value and reads two. A mismatched query selects None and is handled explicitly.
 
 Set removes the duplicate string key, so two identical additions plus an integer yield length two. The mixed Map has two key-value entries and returns stored for key. Record fixes its key type to String while retaining Any values, so count is extracted as int64. Finally clear empties only the local saved dynamic value, making isEmpty true; it does not clear the entire mixed map.
 
@@ -180,11 +189,11 @@ Element size, metadata, indexes, alignment and allocator limits also bound capac
 
 ## 13.5 Borrowing and traversal
 
-Avoid structural changes that may move a buffer while element references are live. Copying obtains a value, moving transfers ownership, and iteration obtains successive elements through its protocol. Chapter 17 demonstrates iterator consumption and transformations.
+Avoid structural changes that may move a buffer while element references are live. Copying obtains a value, moving transfers ownership, and iteration obtains successive elements through its protocol. Chapter 20 demonstrates iterator consumption and transformations.
 
 ### Check whether a key exists
 
-Check present and missing keys before deciding whether to unwrap.
+Handle present and missing keys explicitly before using their values.
 
 <!-- verify-book -->
 ```chali
@@ -230,4 +239,4 @@ void main()
 
 The example creates a Bag, fills its list and copies the aggregate. Updating the copied list preserves the original owned contents. Compare the simple Student from Chapter 7: adding an owned collection requires value semantics throughout the fields, not a shared writable list address.
 
-Next: [Chapter 12](12-strings-text.md).
+Next: [Chapter 14](14-error-handling.md).

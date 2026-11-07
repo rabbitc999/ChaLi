@@ -1,0 +1,4 @@
+int64 incomplete(bool enter) {
+    for (int64 i = 0; enter; i++) { return i; }
+}
+void main() { println("{}", incomplete(false)); }

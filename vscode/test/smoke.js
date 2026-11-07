@@ -258,7 +258,7 @@ async function testChaLiLsp(chali) {
  */
 async function main() {
   const index = process.argv.indexOf('--chali');
-  const given = index >= 0 ? process.argv[index + 1] : '';
+  const given = index >= 0 ? process.argv[index + 1] : process.env.CHALI_BIN || '';
   if (index >= 0 && !given) {
     console.error('--chali 后面要跟编译器路径');
     process.exit(2);

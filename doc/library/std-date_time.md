@@ -365,7 +365,7 @@ Result<String,Error> formatUtc(DateTime value);
 formatUtc(value);
 ```
 
-**源码**：[source/std/date_time.chl:70](../../source/std/date_time.chl#L70)。
+**源码**：[source/std/date_time.chl:66](../../source/std/date_time.chl#L66)。
 
 **完整示例**：[example/samples/std_datetime.chl](../../example/samples/std_datetime.chl)。
 
@@ -403,7 +403,7 @@ Result<DateTime,Error> parseUtc(String text);
 parseUtc(text);
 ```
 
-**源码**：[source/std/date_time.chl:76](../../source/std/date_time.chl#L76)。
+**源码**：[source/std/date_time.chl:72](../../source/std/date_time.chl#L72)。
 
 **完整示例**：[example/samples/std_datetime.chl](../../example/samples/std_datetime.chl)。
 
@@ -442,7 +442,7 @@ Result<DateTime,Error> addSeconds(DateTime value, int64 delta);
 addSeconds(value, delta);
 ```
 
-**源码**：[source/std/date_time.chl:102](../../source/std/date_time.chl#L102)。
+**源码**：[source/std/date_time.chl:94](../../source/std/date_time.chl#L94)。
 
 **完整示例**：[example/samples/std_datetime.chl](../../example/samples/std_datetime.chl)。
 
@@ -481,7 +481,7 @@ Result<DateTime,Error> addDays(DateTime value, int64 days);
 addDays(value, days);
 ```
 
-**源码**：[source/std/date_time.chl:108](../../source/std/date_time.chl#L108)。
+**源码**：[source/std/date_time.chl:100](../../source/std/date_time.chl#L100)。
 
 **完整示例**：[example/samples/std_datetime.chl](../../example/samples/std_datetime.chl)。
 
@@ -517,7 +517,7 @@ Result<DateTime,Error> nowUtc();
 nowUtc();
 ```
 
-**源码**：[source/std/date_time.chl:115](../../source/std/date_time.chl#L115)。
+**源码**：[source/std/date_time.chl:107](../../source/std/date_time.chl#L107)。
 
 **完整示例**：[example/samples/std_datetime.chl](../../example/samples/std_datetime.chl)。
 
@@ -553,7 +553,7 @@ Result<DateTime,Error> utc();
 obj.utc();
 ```
 
-**源码**：[source/std/date_time.chl:130](../../source/std/date_time.chl#L130)。
+**源码**：[source/std/date_time.chl:122](../../source/std/date_time.chl#L122)。
 
 **完整示例**：[example/samples/std_datetime.chl](../../example/samples/std_datetime.chl)。
 
@@ -592,7 +592,7 @@ Result<DateTimeOffset,Error> atOffset(DateTime utc, int64 offset_minutes);
 atOffset(utc, offset_minutes);
 ```
 
-**源码**：[source/std/date_time.chl:139](../../source/std/date_time.chl#L139)。
+**源码**：[source/std/date_time.chl:131](../../source/std/date_time.chl#L131)。
 
 **完整示例**：[example/samples/std_datetime.chl](../../example/samples/std_datetime.chl)。
 
@@ -630,7 +630,7 @@ Result<String,Error> formatOffset(DateTimeOffset value);
 formatOffset(value);
 ```
 
-**源码**：[source/std/date_time.chl:150](../../source/std/date_time.chl#L150)。
+**源码**：[source/std/date_time.chl:142](../../source/std/date_time.chl#L142)。
 
 **完整示例**：[example/samples/std_datetime.chl](../../example/samples/std_datetime.chl)。
 
@@ -668,6 +668,6 @@ Result<DateTimeOffset,Error> parseOffset(String text);
 parseOffset(text);
 ```
 
-**源码**：[source/std/date_time.chl:161](../../source/std/date_time.chl#L161)。
+**源码**：[source/std/date_time.chl:153](../../source/std/date_time.chl#L153)。
 
 **完整示例**：[example/samples/std_datetime.chl](../../example/samples/std_datetime.chl)。

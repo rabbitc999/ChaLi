@@ -1,0 +1,4 @@
+int64 stable = 7;
+struct Borrowed { int64 mut& value; }
+Borrowed[] named() { Borrowed values[] = new[1]; values[0].value = &stable; return values; }
+void main() { let values = named(); assert(values[0].value == 7); println("named borrowed array OK"); }

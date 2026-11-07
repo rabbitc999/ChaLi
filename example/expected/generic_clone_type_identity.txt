@@ -1,0 +1,1 @@
+generic clone: nominal String and core String remain distinct

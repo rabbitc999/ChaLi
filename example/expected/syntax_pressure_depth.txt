@@ -1,0 +1,1 @@
+syntax depth: parentheses=192 blocks=48 generic=16 expression=64

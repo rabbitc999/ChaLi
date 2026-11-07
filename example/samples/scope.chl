@@ -18,16 +18,12 @@
 struct Node { int64 value; Option<Node mut&> next; };
 Option<Node mut&> chain(int64 n) {
     Option<Node mut&> head = Option<Node mut&>::None;
-    {
-        int64 i = 0;
-        while (i < n) {
+    for (int64 i = 0; i < n; i = i + 1) {
 
         Node mut& node = new Node;
         node.value = i; node.next = head;
         head = Option<Node mut&>::Value(node);
-    
-            i = i + 1;
-        }
+
     }
     return head;
 }
@@ -62,24 +58,16 @@ void main() {
 
         /* 块里声明的运行时数组与堆字符串：离开这个块时自动释放 */
         int64 a[] = new [4];
-        {
-            int64 i = 0;
-            while (i < 4) {
+        for (int64 i = 0; i < 4; i = i + 1) {
 
             a[i] = i * i;
-        
-                i = i + 1;
-            }
+
         }
         String joined = "";
-        {
-            int64 i = 0;
-            while (i < 4) {
+        for (int64 i = 0; i < 4; i = i + 1) {
 
             joined = joined + format("{},", a[i]);
-        
-                i = i + 1;
-            }
+
         }
         println("块里：a={} len(a)={}", joined, len(a));
     }
@@ -87,14 +75,10 @@ void main() {
     println("块外：x={} tag={}", x, tag);
 
     /* for 的初始化变量归**这一层循环**：外面看不见，同名可以遮蔽 */
-    {
-        int64 i = 0;
-        while (i < 2) {
+    for (int64 i = 0; i < 2; i = i + 1) {
 
         println("循环里：i={}", i);
-    
-            i = i + 1;
-        }
+
     }
     int64 i = 100;              /* 和上面那个 `i` 不冲突（那个已经出了作用域） */
     println("循环外：i={}", i);

@@ -1,0 +1,10 @@
+int64 calls = 0;
+int64 next() { calls += 1; return 3; }
+void main() {
+    int64 temporary = 100;
+    int32 a = (int32)(next() + 10);
+    int64 b = 4 + 10;
+    int16 source = 7; let inferred = source;
+    assert(a == 13 && b == 14 && calls == 1 && temporary == 100 && inferred == 7);
+    println("generic={},{} calls={} temporary={} inferred={}", a, b, calls, temporary, inferred);
+}

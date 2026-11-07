@@ -1,0 +1,8 @@
+$macro TARGET() -> expr
+$if $system == "linux" && $cpu == "arm64"
+7
+$else
+$compile_error("target alias was not normalized")
+$end_if
+$end_macro
+void main() { int64 result = $TARGET(); assert(result == 7); }

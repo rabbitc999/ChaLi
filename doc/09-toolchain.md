@@ -39,7 +39,7 @@ chali build app.chl --out build/app
 
 ```sh
 chali new demo name demo
-chali test tests backend interpret
+chali test tests
 chali fmt check src
 chali deps lock project . offline
 chali man List
@@ -48,7 +48,7 @@ chali gen compiler out build/compiler
 chali clear out build/compiler
 ```
 
-生成器用于独立编译器工程；宿主集成通过共享运行时、宿主注册表与原生 AOT 入口完成。
+生成器用于独立编译器工程；宿主集成通过共享运行时、C 注册边界与原生构建入口完成。
 可恢复的运行失败、调用栈及宿主错误按运行时的统一协议传播。
 
 ## 默认构建与优化
@@ -229,9 +229,9 @@ chali asm native/add.s --target linux-x64 --out build/add.o
 chali build main.chl --asm native/add.s --asm-include native/include --out build/app
 ```
 
-`asm` 每次接受一个 `.s` 和完整输出路径。不写 `--out` 时，Windows 默认 `.obj`，Linux 默认 `.o`。支持 `--target`、`--cpu`、`--debug`、`-I DIR`／`-IDIR`、`--include-path DIR` 和 `--llvm CLANG`。源指令必须匹配目标和 CPU；采用 LLVM 的 GAS 兼容语法，不处理 `.S` 预处理、NASM 或 MASM。包含目录先加入源文件所在目录，再按显式目录顺序搜索。主输入最多 64 MiB；该入口是编译工具，不是面向不可信代码的沙箱。
+`asm` 每次接受一个 `.s` 和完整输出路径。不写 `--out` 时，Windows 默认 `.obj`，Linux 默认 `.o`。支持 `--target`、`--cpu`、`--debug`、`-I DIR`／`-IDIR`、`--include-path DIR` 和仅外置变体支持的 `--llvm CLANG`。源指令必须匹配目标和 CPU；采用 LLVM 的 GAS 兼容语法，不处理 `.S` 预处理、NASM 或 MASM。包含目录先加入源文件所在目录，再按显式目录顺序搜索。主输入最多 64 MiB；该入口是编译工具，不是面向不可信代码的沙箱。
 
-静态变体直接调用 LLVM MC，无需 clang；显式 `--llvm` 使用外置集成汇编器。对象先生成在独占工作区，汇编成功后才发布，失败保留已有产物，且禁止覆盖自己的主输入。输出父目录必须存在。源文件及包含文件的诊断保留实际位置。
+静态变体直接调用 LLVM MC，无需 clang，并拒绝 `--llvm`；外置变体可用该选项指定集成汇编器。对象先生成在独占工作区，汇编成功后才发布，失败保留已有产物，且禁止覆盖自己的主输入。输出父目录必须存在。源文件及包含文件的诊断保留实际位置。
 
 AOT 可重复指定 `--asm FILE.s` 和 `--asm-include DIR`，每个对象使用语言单元相同的目标和 CPU，参与最终链接。通过既有 C ABI 声明引用汇编符号，汇编须遵循目标调用约定。该输入只适用于可执行文件或共享库输出，不能与 `--emit-asm`、`--emit-obj`、`--emit-llvm` 组合。生成交叉对象不等于已经验证目标系统的可执行交付。
 
@@ -248,10 +248,20 @@ chali link build/public.o --shared --export public_entry --out build/example.dll
 chali link build/start.o --target linux-arm64 --no-runtime --entry _start --out build/app
 ```
 
-`ar` 创建带符号索引的确定性自包含归档，接受零个或多个同目标对象；时间、UID 和 GID 不随构建变化。Windows 的 `.lib` 选择 COFF 归档，其他后缀使用 GNU ar 格式。薄归档和嵌套归档不接受。`--out` 指定完整文件名，父目录须已存在。静态变体调用 LLVM ArchiveWriter；外置变体查找 clang 旁的 llvm-ar 或 `CHALI_LLVM_AR`，也可用 `--llvm LLVM-AR` 显式指定。
+`ar` 创建带符号索引的确定性自包含归档，接受零个或多个同目标对象；时间、UID 和 GID 不随构建变化。Windows 的 `.lib` 选择 COFF 归档，其他后缀使用 GNU ar 格式。薄归档和嵌套归档不接受。`--out` 指定完整文件名，父目录须已存在。静态变体调用 LLVM ArchiveWriter；外置变体查找 clang 旁的 llvm-ar 或 `CHALI_LLVM_AR`，也可用 `--llvm LLVM-AR` 显式指定；静态变体拒绝该选项。
 
-`link` 接受多个对象／归档，支持 `--target`、`--shared`、重复 `--export SYMBOL`、`--entry SYMBOL`、`--debug`、`-L DIR`／`-LDIR`／`--library-path DIR`、重复 `--library NAME`、`--sysroot`、`--runtime-dir` 和 `--llvm CLANG`。入口及导出使用原始对象符号名。对象和库按输入顺序进入同一链接组，归档按需提取并重复扫描，允许库间循环引用；未提取成员的未定义符号不引发错误。重复定义及已引用的缺失符号由 LLD 报告。共享库只公开显式导出的符号，其他符号隐藏；不提供任意原始链接器参数透传。
+`link` 接受多个对象／归档，支持 `--target`、`--shared`、重复 `--export SYMBOL`、`--entry SYMBOL`、`--debug`、`-L DIR`／`-LDIR`／`--library-path DIR`、重复 `--library NAME`、`--sysroot`、`--runtime-dir` 和仅外置变体支持的 `--llvm CLANG`。入口及导出使用原始对象符号名。对象和库按输入顺序进入同一链接组，归档按需提取并重复扫描，允许库间循环引用；未提取成员的未定义符号不引发错误。重复定义及已引用的缺失符号由 LLD 报告。共享库只公开显式导出的符号，其他符号隐藏；不提供任意原始链接器参数透传。
 
 静态 Windows x64 变体默认使用内置 LLD、CRT 与 ChaLi 运行时，无需外置 clang；外置变体使用匹配 clang／LLD 和所需系统工具链。完整跨目标链接需要目标运行时与 SDK。显式 `--no-runtime` 不添加 CRT 或 ChaLi 运行时，可用于自备入口与依赖的程序；内置 LLD 可为受支持 Linux x64／ARM64 目标链接此类输入，生成成功不等于已在目标系统运行。普通独立 C 程序也可使用默认运行时链接，未被引用的归档成员不装入应用。
 
 输入先检查对象格式、位宽、架构及归档成员边界；实际符号、节和重定位仍由 LLVM／LLD 检查。这些工具不构成执行不可信代码的沙箱。产物先在私有工作区生成，成功后才替换最终文件；失败保留原文件，禁止输出覆盖输入。链接错误不能作为旧产物仍有效的依据，调用方必须检查返回状态。
+
+## 样例与全量测试
+
+`sh check.sh` 执行全部正常样例和错误样例，分别核对输出与诊断；`sh ci.sh --full --jobs 4` 执行完整发布门禁，包含构建、样例、原生与 C ABI、泛型、借用、文档、生成器和真实编辑器宿主测试。完整门禁包含编辑器与原生调试测试，并在 `dist/ci/` 生成与实际编译器变体匹配的 VSIX；需要 Node.js、npm、VSCode 与 GDB。静态 LLVM 构建设置 `CHALI_STATIC_LLVM=1`。依赖或图形宿主缺失、构建失败、测试跳过均须在验收记录中说明，不能当作通过。
+
+可独立运行的语言行为回归放在 `example/samples/`，预期输出放在 `example/expected/`；拒绝程序放在 `example/samples-error/`，首行诊断放在 `example/expected-error/`，由样例门禁自动发现。新用例优先维护这些源码，不在 Python 字符串中重复嵌入同一程序。Python 驱动仅用于多构建模式、诊断详情、跨模块临时工程、宿主交互及需要动态规模的测试。
+
+当前例程包括 `generic_borrow_control_flow.chl`、`borrow_contract_pressure.chl`、`nested_result.chl` 和 `nested_result_stress.chl`。`borrow_contract_*`、`borrow_move_*` 的正常／错误对照同时覆盖来源契约、泛型实例、控制流、引用移动和清理；嵌套 Result 专项另外核对 checked／unchecked 的关闭次数与错误传播。
+
+复杂语法与语义压力入口为 `python tests/chali_syntax_semantic_stress.py`：正常／错误程序保存在样例目录，驱动只负责格式化往返、双模式构建、独立预期和进程超时分类。[已知限制与分析流程](34-compiler-safety.md)区分设计拒绝、保守精度限制和待修复问题。

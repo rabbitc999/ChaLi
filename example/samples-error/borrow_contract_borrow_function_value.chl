@@ -1,0 +1,2 @@
+#borrow(#ret,a)
+int64 mut& f(int64 mut& a){return a;}void main(){let callback=f;}

@@ -33,12 +33,12 @@ bool validName(String name)
 /** 更换口令并使该账号现有会话失效。 */
 Result<bool, Error> password(Database mut& database, int64 id, String value)
 {
-    if (len(value) < 12 || len(value) > 1024) { return Result<bool, Error>::Err(MessageError::from("口令长度须为 12–1024 个 UTF-8 字节")); }
+    if (len(value) < 12 || len(value) > 1024) { return MessageError::from("口令长度须为 12–1024 个 UTF-8 字节"); }
     String salt = token()?;
     String digest = derive(value, salt, (uint64)600000)?;
     let result = database.exec("UPDATE school_users SET salt=" + database.quote(salt) + ",digest=" + database.quote(digest) + ",version=version+1,failed_count=0,locked_until=0 WHERE id=" + id.toString());
-    if (!result.ok) { return Result<bool, Error>::Err(MessageError::from("无法更新口令")); }
-    return Result<bool, Error>::Ok(true);
+    if (!result.ok) { return MessageError::from("无法更新口令"); }
+    return Ok(true);
 }
 
 /** 本人修改口令前再次校验旧口令，成功后由页面重新登录。 */

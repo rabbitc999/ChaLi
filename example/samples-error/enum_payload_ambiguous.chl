@@ -1,0 +1,2 @@
+enum Both { First(int64 value), Second(int64 value) }
+void main() { Both value = (int64)1; }

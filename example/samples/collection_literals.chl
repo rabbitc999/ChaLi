@@ -66,9 +66,7 @@ void main() {
     assert(!skipped && evaluations == before);
     let tupleSet = {(1, "one"), (2, "two"), (1, "one")};
     assert(tupleSet.len() == 2);
-    {
-        int64 round = 0;
-        while (round < 8) {
+    for (int64 round = 0; round < 8; round = round + 1) {
 
         let textSet = {"first", "sec" + "ond", "first"};
         let textMap = makeMap();
@@ -110,9 +108,7 @@ void main() {
         DerivedKey inherited; inherited.id = 5;
         let derived = {inherited: 55};
         assert(derived[inherited] == 55);
-    
-            round = round + 1;
-        }
+
     }
     // 花括号语句块及 loop / if 保持正常解析。
     {} { int64 local = 1; assert(local == 1); }

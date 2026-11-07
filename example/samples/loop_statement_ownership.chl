@@ -1,0 +1,17 @@
+int64 statementCloses = 0;
+struct StatementHandle : Closeable {
+    int64 id;
+    void close() { assert(self.id == 7); statementCloses++; }
+}
+StatementHandle statementHandle() {
+    StatementHandle value; value.id = 7; return move value;
+}
+void main() {
+    for (int64 round = 0; round < 64; round++) {
+        loop { StatementHandle value = statementHandle(); yield move value; }
+        loop { yield statementHandle(); }
+        loop { yield statementHandle(); };
+        assert(statementCloses == (round + 1) * 3);
+    }
+    println("loop statement ownership: closed=192 with and without semicolon");
+}

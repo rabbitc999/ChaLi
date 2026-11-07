@@ -1,0 +1,18 @@
+struct Handle : Closeable {
+    int64 id;
+    void close() { println("close={}", self.id); }
+}
+void consume(Handle value) { println("consume={}", value.id); }
+$macro TAKE(mut &x) -> stmt
+consume(move x);
+$end_macro
+void main() {
+    Handle h;
+    h.id = 7;
+    unsafe {
+        BarePtr<Handle> raw = pointerFromAddress<Handle>((int64)&h);
+        Handle mut& ref = dereference<Handle>(raw);
+        $TAKE(ref);
+        $TAKE(ref);
+    }
+}

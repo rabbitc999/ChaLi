@@ -44,9 +44,7 @@ Set<int64> mut& set, Map<String, int64> mut& map,
     tuple = (7, "seven");
 }
 void main() {
-    {
-        int64 round = 0;
-        while (round < 4) {
+    for (int64 round = 0; round < 4; round = round + 1) {
 
         String text = "hello";
         String mut& ref = &text;
@@ -134,9 +132,7 @@ void main() {
         listRef.push("list");
         listRef[0] = "value";
         assert(list[0] == "value" && listRef[0][0] == 'v');
-    
-            round = round + 1;
-        }
+
     }
     String mut& globalRef = &globalText;
     globalRef = "updated";

@@ -24,12 +24,8 @@ void main() {
     assert(result == 4);
     match ("hello") { "hello" if false => { result = 8; } "hello" => { result = 5; } _ => { result = 0; } }
     assert(result == 5);
-    {
-        int64 i=0;
-        while (i<20) {
- let (a, (_, b)) = makePair(); assert(a == "hello" && b == "owned"); 
-            i++;
-        }
+    for (int64 i=0; i<20; i++) {
+        let (a, (_, b)) = makePair(); assert(a == "hello" && b == "owned");
     }
     println("destructuring guards OK");
 }

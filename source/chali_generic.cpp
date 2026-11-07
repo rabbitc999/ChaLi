@@ -789,6 +789,21 @@ bool collect(Memory::String &source, const Memory::Vector<preprocess::LineOrigin
                 std::size_t open = Memory::String::npos;
                 int angleDepth = 0;
                 std::size_t signatureBegin = decl;
+                // 生命周期契约保留在声明中，但其括号不是泛型函数的参数表。
+                while (source.compare(signatureBegin, 7, "#borrow") == 0 || source.compare(signatureBegin, 7, "#static") == 0)
+                {
+                    std::size_t openDirective = signatureBegin + 7u;
+                    skipSpace(source, openDirective);
+                    std::size_t closeDirective = 0;
+                    if (openDirective >= source.size() || source[openDirective] != '('
+                        || !balanced(source, openDirective, '(', ')', closeDirective))
+                    {
+                        error = "泛型生命周期契约缺少完整参数表";
+                        return false;
+                    }
+                    signatureBegin = closeDirective + 1u;
+                    skipSpace(source, signatureBegin);
+                }
                 // 元组返回类型的括号不是函数参数表。
                 if (source[signatureBegin] == '(')
                 {

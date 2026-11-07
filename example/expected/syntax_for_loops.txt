@@ -1,0 +1,1 @@
+for loops: scope,continue,comma,empty,labels,generic,macro,cleanup; loop semicolon optional

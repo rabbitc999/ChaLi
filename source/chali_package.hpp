@@ -21,6 +21,7 @@ struct Project
     /// [warnings] 中按规则配置 allow、warn 或 error，命令行可覆盖。
     Memory::Map<Memory::String, Memory::String> warnings;
     Memory::Vector<Memory::String> authors, imports, searchPaths, includePaths, importPaths;
+    Memory::Vector<Memory::String> buildOptions; ///< 仅表示存在性的构建标志。
     /**
      * `[chali] debug`：是否按 `--debug` 构建（O0、保留符号与源码行），缺省 `false`。
      *  为 `true` 时等价于命令行加 `--debug`：保留"指令 → 文件/行"位置表，

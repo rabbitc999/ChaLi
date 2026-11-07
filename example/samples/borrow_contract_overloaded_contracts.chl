@@ -1,0 +1,3 @@
+#borrow(#ret,a)
+int64 mut& choose(int64 mut& a,int64 mut& b){return a;}#borrow(#ret,b)
+float64 mut& choose(float64 mut& a,float64 mut& b){return b;}int64 mut& ai(int64 mut& x){int64 local=0;return choose(x,&local);}float64 mut& af(float64 mut& x){float64 local=0;return choose(&local,x);}void main(){int64 a=3;float64 b=4;assert(ai(&a)==3&&af(&b)==4);}

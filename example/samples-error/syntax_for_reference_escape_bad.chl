@@ -1,0 +1,6 @@
+void main() {
+    int64 outer = 1;
+    int64 const& alias = &outer;
+    for (int64 local = 0; local < 1; local++) { alias = &local; }
+    println("{}", alias);
+}

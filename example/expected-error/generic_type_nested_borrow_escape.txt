@@ -1,0 +1,1 @@
+chali: example/samples-error/generic_type_nested_borrow_escape.chl 第 1 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（G__G____chl_781a4d470610857c_int64_mut_，所属类型 ，来源 g）

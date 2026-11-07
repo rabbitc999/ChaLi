@@ -1,0 +1,1 @@
+struct G<T>{T value;};G<G<int64 mut&>> bad(){int64 local=1;G<G<int64 mut&>> g;g.value.value=&local;return g;}void main(){}

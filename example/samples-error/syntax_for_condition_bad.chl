@@ -1,0 +1,3 @@
+void main() {
+    for (int64 i = 0; i; i++) { println("{}", i); }
+}

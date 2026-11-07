@@ -39,18 +39,18 @@ String bearer(Request const& request)
 Result<bool, Error> ensureSchema(Database mut& database)
 {
     let created = database.exec("CREATE TABLE IF NOT EXISTS school_users (id BIGINT PRIMARY KEY AUTO_INCREMENT, username VARCHAR(64) NOT NULL UNIQUE, role VARCHAR(16) NOT NULL, enabled TINYINT NOT NULL DEFAULT 1, salt VARCHAR(64) NOT NULL, digest VARCHAR(64) NOT NULL, version BIGINT NOT NULL DEFAULT 1, failed_count INT NOT NULL DEFAULT 0, locked_until BIGINT NOT NULL DEFAULT 0) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-    if (!created.ok) { return Result<bool, Error>::Err(MessageError::from(created.error)); }
+    if (!created.ok) { return MessageError::from(created.error); }
     let count = database.exec("SELECT COUNT(*) FROM school_users");
-    if (!count.ok) { return Result<bool, Error>::Err(MessageError::from(count.error)); }
-    if (count.intAt(0, 0) != 0) { return Result<bool, Error>::Ok(true); }
+    if (!count.ok) { return MessageError::from(count.error); }
+    if (count.intAt(0, 0) != 0) { return Ok(true); }
     String password = token()?;
     String salt = token()?;
     String digest = derive(password, salt, (uint64)600000)?;
     let inserted = database.exec("INSERT INTO school_users(username,role,salt,digest) VALUES ('admin','admin'," + database.quote(salt) + "," + database.quote(digest) + ")");
-    if (!inserted.ok) { return Result<bool, Error>::Err(MessageError::from(inserted.error)); }
+    if (!inserted.ok) { return MessageError::from(inserted.error); }
     eprintln("首次创建管理员 admin，一次性初始口令：{}", password);
     eprintln("请保存口令，登录后修改；服务不会再次显示该口令。");
-    return Result<bool, Error>::Ok(true);
+    return Ok(true);
 }
 
 /** 清理超时会话；会话只在此进程内有效，使用单调时钟计算存活时间。 */
@@ -70,20 +70,20 @@ Option<User> authenticate(Database mut& database, State mut& state, Request cons
 {
     prune(&state);
     String token = bearer(&request);
-    if (token.isEmpty()) { return Option<User>::None; }
+    if (token.isEmpty()) { return None; }
     for (Session session in state.sessions)
     {
         if (!equalDigest(session.token, token)) { continue; }
         let rows = database.exec("SELECT id,username,role,version FROM school_users WHERE enabled=1 AND id=" + session.userId.toString());
-        if (!rows.ok || rows.rowCount() != 1 || rows.intAt(0, 3) != session.version) { return Option<User>::None; }
+        if (!rows.ok || rows.rowCount() != 1 || rows.intAt(0, 3) != session.version) { return None; }
         User user;
         user.id = rows.intAt(0, 0);
         user.username = rows.textAt(0, 1);
         user.role = rows.textAt(0, 2);
         user.version = rows.intAt(0, 3);
-        return Option<User>::Value(user);
+        return Value(user);
     }
-    return Option<User>::None;
+    return None;
 }
 
 /** 对外只序列化账号标识与角色，不导出盐和密码摘要。 */
@@ -97,9 +97,10 @@ String userJson(User user)
 Reply login(Database mut& database, State mut& state, String body)
 {
     prune(&state);
-    let parsed = parse(body);
-    if (parsed.isErr()) { return errorReply(400, "登录数据必须是 JSON 对象"); }
-    let value = parsed.unwrap();
+    let value = match (parse(body)) {
+        Ok(json) => { json }
+        Err(_) => { return errorReply(400, "登录数据必须是 JSON 对象"); }
+    };
     String username = stringField(&value, "username");
     String password = stringField(&value, "password");
     if (username.isEmpty() || len(username) > 64 || len(password) < 1 || len(password) > 1024)
@@ -115,10 +116,12 @@ Reply login(Database mut& database, State mut& state, String body)
     }
     int64 now = rows.intAt(0, 9);
     if (rows.intAt(0, 8) > now) { return errorReply(429, "登录尝试过多，请稍后再试"); }
-    let digest = derive(password, rows.textAt(0, 5), (uint64)600000);
-    if (digest.isErr()) { return errorReply(503, "认证服务暂不可用"); }
+    String digest = match (derive(password, rows.textAt(0, 5), (uint64)600000)) {
+        Ok(value) => { value }
+        Err(_) => { return errorReply(503, "认证服务暂不可用"); }
+    };
     int64 id = rows.intAt(0, 0);
-    if (rows.intAt(0, 4) != 1 || !equalDigest(digest.unwrap(), rows.textAt(0, 6)))
+    if (rows.intAt(0, 4) != 1 || !equalDigest(digest, rows.textAt(0, 6)))
     {
         int64 attempts = rows.intAt(0, 7) + 1;
         int64 until = 0;
@@ -127,10 +130,12 @@ Reply login(Database mut& database, State mut& state, String body)
         return errorReply(401, "账号、口令无效或账号暂不可用");
     }
     if (len(state.sessions) >= 4096) { return errorReply(503, "会话数量已达上限"); }
-    let random = token();
-    if (random.isErr()) { return errorReply(503, "无法创建会话"); }
+    String random = match (token()) {
+        Ok(value) => { value }
+        Err(_) => { return errorReply(503, "无法创建会话"); }
+    };
     Session session;
-    session.token = random.unwrap(); session.userId = id; session.version = rows.intAt(0, 3); session.expires = nowMs() + 1800000;
+    session.token = random; session.userId = id; session.version = rows.intAt(0, 3); session.expires = nowMs() + 1800000;
     state.sessions.push(session);
     let reset = database.exec("UPDATE school_users SET failed_count=0,locked_until=0 WHERE id=" + id.toString());
     User user;user.id=id;user.username=rows.textAt(0,1);user.role=rows.textAt(0,2);user.version=session.version;

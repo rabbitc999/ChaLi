@@ -1040,6 +1040,7 @@ struct AstBuilder : Builder
         case N::EnumNew:
             return { "i64", std::to_string(state.astData.at(node.get())) };
         case N::Sequence:
+            location(node);
             for (std::size_t index = 0; index + 1 < node->kids.size(); ++index) statement(node->kids[index]);
             return node->kids.empty() ? Value{ "i64", "0" } : expression(node->kids.back());
         case N::Binary:
@@ -1392,7 +1393,7 @@ struct AstBuilder : Builder
             value = convert(value, floating ? "double" : "i64");
             body += "  store i8 " + Text(floating ? "1" : value.floating.empty() ? "0" :
                                                                                    value.floating)
-                    + ", ptr @chali_return_float\n  ret " + value.type + " " + value.text + "\n";
+                    + ", ptr @chali_return_float\n  store ptr %caller_source_function, ptr @chali_source_function\n  store ptr %caller_source_file, ptr @chali_source_file\n  store i64 %caller_source_line, ptr @chali_source_line\n  ret " + value.type + " " + value.text + "\n";
             terminated = true;
             return;
         }
@@ -1434,6 +1435,7 @@ struct AstBuilder : Builder
         // 显式节中的局部函数不能由 ThinLTO 提升；独立库尚不提供该调试代码区登记，使用普通代码节。
         signature += " section \"chali_code\"";
         signature += " {\nentry:\n";
+        signature += "  %caller_source_function = load ptr, ptr @chali_source_function\n  %caller_source_file = load ptr, ptr @chali_source_file\n  %caller_source_line = load i64, ptr @chali_source_line\n";
         signature += "  %indirect_arguments = alloca [" + std::to_string(argumentCapacity) + " x i64]\n  %native_argument_types = alloca [" + std::to_string(argumentCapacity) + " x i8]\n";
         signature += "  %raw_memory_output = alloca ptr\n  %raw_memory_input = alloca ptr\n  %collection_result_kind = alloca i8\n";
         if (snapshotData) signature += "  %data_snapshot_size = alloca i64\n";
@@ -1482,7 +1484,7 @@ struct AstBuilder : Builder
             for (const auto &constant : state.request.syntax->constants)
                 write(constant.first, read(constant.second->meta.empty() ? Memory::String("0") : constant.second->meta));
         statement(syntax.body);
-        if (!terminated) body += "  store i8 0, ptr @chali_return_float\n  ret " + Text(function.returnsFloat ? "double 0.0" : "i64 0") + "\n";
+        if (!terminated) body += "  store i8 0, ptr @chali_return_float\n  store ptr %caller_source_function, ptr @chali_source_function\n  store ptr %caller_source_file, ptr @chali_source_file\n  store i64 %caller_source_line, ptr @chali_source_line\n  ret " + Text(function.returnsFloat ? "double 0.0" : "i64 0") + "\n";
         const auto definition = signature + body + "}\n";
         if (!state.request.options.debug) return definition;
         std::vector<DebugVariable> variables;

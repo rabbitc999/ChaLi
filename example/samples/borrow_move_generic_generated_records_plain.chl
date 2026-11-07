@@ -1,0 +1,6 @@
+struct NumberBox { int64 value; }
+struct TextBox { String value; }
+void main() {
+    NumberBox a; a.value = 42; TextBox b; b.value = "hello";
+    assert(a.value == 42 && b.value == "hello"); println("records={},{}", a.value, b.value);
+}

@@ -34,9 +34,7 @@ List<int64> mappedLife(List<int64> values) {
 }
 struct LifeBox { List<int64> values; };
 void main() {
-    {
-        int64 i = 0;
-        while (i < 5) {
+    for (int64 i = 0; i < 5; i = i + 1) {
 
         lifeTrace = 0;
         int64 before = lifeDrops;
@@ -49,9 +47,7 @@ void main() {
         assert((skipped) == (false));
         assert((lifeDrops) == (before + 2));
         assert((live) == ("still alive"));
-    
-            i = i + 1;
-        }
+
     }
     lifeTrace = 0;
     {
@@ -87,9 +83,7 @@ void main() {
     assert((lifeTrace) == (1));
     List<int64> numbers;
     numbers.push(3);
-    {
-        int64 i = 0;
-        while (i < 4) {
+    for (int64 i = 0; i < 4; i = i + 1) {
 
         List<int64> mapped = mappedLife(numbers);
         assert((mapped[0]) == (6));
@@ -101,9 +95,7 @@ void main() {
         let moved = mapValue(numbers, doubleLifeNumber).intoIter();
         List<int64> saved = moved.collect();
         assert((saved[0]) == (6));
-    
-            i = i + 1;
-        }
+
     }
     println("chain expression cleanup OK");
 }

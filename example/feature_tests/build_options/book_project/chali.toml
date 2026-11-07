@@ -1,0 +1,13 @@
+[package]
+name = "demo"
+version = "0.1.0"
+
+[chali]
+main = "src/main.chl"
+search_paths = ["src"]
+
+[build]
+build_option = ["A", "B"]
+output = "executable"
+lto = "full"
+allocator = "malloc"

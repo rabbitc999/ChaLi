@@ -8,17 +8,43 @@
 namespace chali_build
 {
 /**
+ * @brief 编译期目标宏与布尔构建选项的进程内上下文。
+ */
+struct MacroEnvironment
+{
+    Memory::String target;
+    Memory::Set<Memory::String> flags;
+};
+/**
+ * @brief 获取当前编译任务的目标宏上下文。
+ * @return 可配置的上下文。
+ */
+MacroEnvironment &macroEnvironment();
+/**
+ * @brief 检查仅表示存在性的构建选项名称。
+ * @param name 选项名称，不接受等号与取值。
+ * @return 名称有效时为真。
+ */
+bool validBuildOption(const Memory::String &name);
+/**
+ * @brief 查询目标平台宏，处理目标三元组而非宿主或 CPU 调优名称。
+ * @param cpu 为真时查询架构，否则查询操作系统。
+ * @return 归一化名称；不能识别时返回 unknown。
+ */
+Memory::String targetMacroName(bool cpu);
+
+/**
  * @brief 一个已经验证的六十四位小端 AOT 目标。
  */
 struct TargetInfo
 {
-    Memory::String triple;   ///< LLVM 的规范目标三元组。
-    Memory::String runtime;  ///< 内嵌的目标运行时 LLVM 模块。
-    Memory::String cpu;      ///< 默认 CPU 名称。
-    bool windows = false;    ///< 使用 Windows CRT、COFF 和 PE 产物。
-    bool arm64 = false;      ///< 使用 AArch64 指令集。
-    bool native = false;     ///< 三元组与当前编译器宿主一致。
-    Memory::String dataLayout; ///< 与目标运行时一致的数据布局，用于独立实现兼容检查。
+    Memory::String triple;      ///< LLVM 的规范目标三元组。
+    Memory::String runtime;     ///< 内嵌的目标运行时 LLVM 模块。
+    Memory::String cpu;         ///< 默认 CPU 名称。
+    bool windows = false;       ///< 使用 Windows CRT、COFF 和 PE 产物。
+    bool arm64 = false;         ///< 使用 AArch64 指令集。
+    bool native = false;        ///< 三元组与当前编译器宿主一致。
+    Memory::String dataLayout;  ///< 与目标运行时一致的数据布局，用于独立实现兼容检查。
 };
 
 /**

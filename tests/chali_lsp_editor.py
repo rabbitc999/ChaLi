@@ -8,7 +8,7 @@ import struct
 import subprocess
 import tomllib
 import time
-from compiler_path import compiler_path
+from compiler_path import compiler_path, compiler_build_info
 from project_temp import tempfile
 from native_lsp_transport import Transport, position
 
@@ -106,7 +106,7 @@ def main():
                 bundled = Path(__file__).resolve().parents[1] / 'build/dependencies/llvm/toolchain/bin/clang.exe'
                 if bundled.exists():
                     clang = str(bundled)
-            if clang:
+            if clang and compiler_build_info(compiler)['llvm']!='static':
                 command += ['--llvm', clang]
         result = subprocess.run(command, cwd=project,
                                 capture_output=True, encoding='utf-8', timeout=180)

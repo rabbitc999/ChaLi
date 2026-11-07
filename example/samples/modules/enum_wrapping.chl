@@ -1,0 +1,5 @@
+module enum_wrapping;
+enum Envelope<T> { Item(T value), Empty }
+Envelope<T> pack<T>(T value) { return value; }
+#borrow(#ret, [source])
+Option<T const&> reference<T>(T const& source) { return source; }

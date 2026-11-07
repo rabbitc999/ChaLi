@@ -53,15 +53,15 @@ Result<int64, Error> checkedScore(int64 value)
 {
     if (value < 0 || value > 100)
     {
-        return Result<int64, Error>::Err(MessageError::from("invalid score"));
+        return MessageError::from("invalid score");
     }
-    return Result<int64, Error>::Ok(value);
+    return Ok(value);
 }
 
 Result<int64, Error> addBonus(int64 value)
 {
     int64 score = checkedScore(value)?;
-    return Result<int64, Error>::Ok(score + 5);
+    return Ok(score + 5);
 }
 
 void main()
@@ -87,6 +87,8 @@ invalid score
 checkedScore accepts zero through one hundred. It otherwise constructs MessageError and returns it through Error. The common toString interface is enough to display it; Chapter 17 explains concrete implementations.
 
 main prints 75 for the valid input and invalid score for the rejected input. An error is not a successful score or a magic sentinel integer.
+
+The declared Result<int64, Error> return type selects its unique matching Err payload automatically, so the error object can be returned directly. Initialization, assignment and arguments with known target types follow the same rule, including Option and custom single-payload enum variants. Equal matches require an explicit variant: a String cannot choose between Ok and Err in Result<String, String>. Keeping Ok on successful returns can still make the two paths easier to read.
 
 ## 14.3 Propagate When Computation Cannot Continue
 

@@ -235,6 +235,6 @@ Result<String,Error> writeCsv(List<List<String>> rows, char delimiter=',');
 writeCsv(rows, delimiter);
 ```
 
-**源码**：[source/std/csv.chl:62](../../source/std/csv.chl#L62)。
+**源码**：[source/std/csv.chl:58](../../source/std/csv.chl#L58)。
 
 **完整示例**：[example/samples/std_csv.chl](../../example/samples/std_csv.chl)。

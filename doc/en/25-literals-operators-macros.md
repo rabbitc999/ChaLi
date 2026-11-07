@@ -600,3 +600,26 @@ void main() {
 ```text
 42 auto
 ```
+
+
+### Target platform and boolean build options
+
+`$system` and `$cpu` are bare string constants describing the target program's operating system and architecture. Windows, macOS and Linux use `"win"`, `"mac"` and `"linux"`; common architecture names are `"amd64"`, `"arm64"` and `"arm32"`. Cross builds use the selected target rather than the compiler host. CPU tuning through `--cpu` does not change the architecture macro. Name normalization does not add native output targets; consult the LLVM build chapter for supported targets.
+
+```csharp
+void main() {
+    println("system={}, cpu={}", $system, $cpu);
+    println("A={}, B={}", $build[A], $build["B"]);
+}
+```
+
+`chali run main.chl -B A -BB` defines both names. A project can also declare:
+
+```toml
+[build]
+build_option = ["A", "B"]
+```
+
+CLI and manifest names form a union. Names are case sensitive; duplicates have no additional effect. `$build[A]` and `$build["A"]` are equivalent: the bare name is a literal flag name, not a variable lookup. Defined names yield `true`, undefined names yield `false`. Values such as `-BA=false`, numbers and strings are unsupported. Names must be nonempty and contain only ASCII letters, digits, underscores, dots or hyphens; quote names containing dots or hyphens.
+
+Inside macro templates, use `$if $build[A]`, `$else`, `$end_if` or `$if ($system == "win")` to select code. Ordinary expressions can read the same constants. `$build` accepts a literal name or string, not a computed runtime key. `-I` keeps its module-search-directory meaning.

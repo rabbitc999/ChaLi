@@ -1,0 +1,1 @@
+loop labels: while,loop,for-in,for,for-in else,for else; closed=6

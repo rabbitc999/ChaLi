@@ -131,7 +131,7 @@ void describe(Error error)
 }
 void main()
 {
-    describe(IoError::Closed);
+    describe(Closed);
     describe(MessageError::from("invalid score"));
 }
 ```
@@ -154,7 +154,7 @@ Compile-time tools can enumerate a type's implemented interfaces while retaining
 
 ## 17.5 Matching versus calling
 
-Call the interface directly when every implementation supplies the required behavior. Refine types when recovery, payload access or handling actually differs. Avoid duplicating identical toString calls for every known implementation. Chapter 16 handles interface payloads inside Result and propagation.
+Call the interface directly when every implementation supplies the required behavior. Refine types when recovery, payload access or handling actually differs. Avoid duplicating identical toString calls for every known implementation. Chapter 14 handles interface payloads inside Result and propagation.
 
 ### Call a method through an interface
 
@@ -185,7 +185,7 @@ void main() {
 
 Interfaces promise callable behavior rather than a particular field layout. Borrowed implementations still need live sources, and value payloads retain concrete copy and resource semantics. Refine types only when recovery or extra data requires it.
 
-Chapter 14 applies behavior requirements to generic constraints and links implementations to results through associated types. Chapter 16 places interface errors inside Result states.
+Chapter 18 applies behavior requirements to generic constraints and links implementations to results through associated types. Chapter 14 places interface errors inside Result states.
 
 ## 17.6 Refining Errors Inside Enum Payloads
 
@@ -194,7 +194,7 @@ Chapter 14 applies behavior requirements to generic constraints and links implem
 import std::io;
 Result<String, Error> readDemo()
 {
-    return Result<String, Error>::Err(IoError::ReadFailed("demo"));
+    return ReadFailed("demo");
 }
 void main()
 {
@@ -229,14 +229,14 @@ enum Response
 };
 void main()
 {
-    let response = Response::Failed(503, IoError::Closed);
+    let response = Failed(503, Closed);
     match (response)
     {
-        Response::Pending => { println("pending"); }
-        Response::Failed(code, IoError e) => { println("{}: {}", code, e.toString()); }
-        Response::Failed(code, _ other) => { println("{}: {}", code, other.toString()); }
+        Pending => { println("pending"); }
+        Failed(code, IoError e) => { println("{}: {}", code, e.toString()); }
+        Failed(code, _ other) => { println("{}: {}", code, other.toString()); }
     }
-    Result<Error, Error> result = Result<Error, Error>::Ok(IoError::Closed);
+    Result<Error, Error> result = Ok(Closed);
     match (result)
     {
         Ok(IoError e) => { println("ok: {}", e.toString()); }
@@ -257,21 +257,21 @@ ok: 文件已关闭
 import std::io;
 Result<String, IoError> leaf()
 {
-    return Result<String, IoError>::Err(IoError::Closed);
+    return Closed;
 }
 Result<String, Error> readName()
 {
     String name = leaf()?;
-    return Result<String, Error>::Ok(name);
+    return Ok(name);
 }
 Option<IoError> optionalError()
 {
-    return Option<IoError>::Value(IoError::Closed);
+    return Value(Closed);
 }
 Option<Error> widenedError()
 {
     let error = optionalError()?;
-    return Option<Error>::Value(error);
+    return Value(error);
 }
 void main()
 {

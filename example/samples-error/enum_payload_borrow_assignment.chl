@@ -1,0 +1,1 @@
+void main() { Option<int64 const&> value = None; { int64 local = 1; value = &local; } println("{}", value); }

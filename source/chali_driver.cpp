@@ -170,6 +170,7 @@ void PrintUsage(std::FILE *out)
              "  --cpu 名称             目标 CPU；也可在 chali.toml 的 [build] 表配置\n",
              "  --allocator malloc|pool  选择系统 malloc 或内存池；缺省 malloc\n",
              "  --hard-realtime        禁止整个编译单元使用反射\n",
+             "  -B 名称                定义布尔构建标志，可重复；$build[名称] 查询\n",
              "  --import-dir 目录      追加 import 搜索目录\n",
              "  --include-path 目录    追加模块搜索目录\n",
              "  --incremental          跨次复用模块预处理与完整编译产物\n",
@@ -375,6 +376,7 @@ try
     bool sourceStdin = false;  ///< 编辑器用真实文件身份读取标准输入中的未保存内容。
     Memory::String cacheDirectory, overlayPath, analysisDependencies, analysisTypes;
     Memory::Vector<Memory::String> includeDirs;
+    Memory::Vector<Memory::String> buildOptions;
     Memory::Vector<Memory::String> importDirs;
     Memory::Vector<Memory::String> moduleRuntimeDirs;
     {
@@ -749,6 +751,18 @@ try
             depsOnly = true;
             continue;
         }
+        if (argument == "-B" || (argument.size() > 2u && argument.substr(0, 2u) == "-B"))
+        {
+            if (argument == "-B" && !NeedValue(index, argc, "-B")) return 2;
+            const Memory::String option = argument == "-B" ? Memory::String(argv[++index]) : argument.substr(2u);
+            if (!chali_build::validBuildOption(option))
+            {
+                std::fputs("chali: -B 只接受非空布尔标志名称，不支持赋值。\n", stderr);
+                return 2;
+            }
+            buildOptions.push_back(option);
+            continue;
+        }
         if (argument == "-I" || argument == "--include-dir")
         {
             if (!NeedValue(index, argc, argument.c_str())) return 2;
@@ -785,11 +799,6 @@ try
 
     /* 既没给源文件也没要 `--stdin`：显示帮助并退出 0。以前这里会一直等标准输入，
      * 管道没接上时看起来像卡死；现在把「要读管道」变成显式动作。 */
-    if (path == nullptr && !readStdin && !aot)
-    {
-        PrintUsage(stdout);
-        return 0;
-    }
 
     /* 硬实时禁止反射：默认开启的那份自动让位，只有用户显式点名要反射才算冲突。 */
     if (hardRealtime && reflectionEnabled)
@@ -814,11 +823,6 @@ try
             chali_diagnostics::report("CHL1102", message, path ? path : "<命令行>");
         else
             std::fprintf(stderr, "chali: %s\n", message);
-        return 2;
-    }
-    if (!aot && incremental && (path == nullptr || raw))
-    {
-        std::fprintf(stderr, CHALI_TEXT("chali: --incremental 需要源文件，且不能与 --raw 合用\n"));
         return 2;
     }
     if (run) { aot = true; aotOptions.checked = true; }
@@ -925,11 +929,15 @@ try
         std::fputs("chali: run 只能执行宿主目标；请使用 build 发布构建交叉编译产物。\n", stderr);
         return 2;
     }
+    chali_build::macroEnvironment().target = selectedTarget.triple.empty() ? aotOptions.target : selectedTarget.triple;
+    chali_build::macroEnvironment().flags.clear();
+    for (const auto &option : project.buildOptions) chali_build::macroEnvironment().flags.insert(option);
+    for (const auto &option : buildOptions) chali_build::macroEnvironment().flags.insert(option);
     /* 构建**项目**时入口是 `[chali] main` 指定的主文件（命令行没给源文件才用它）；
      * 单文件编译就是命令行显式给的那个文件，不看主文件。
      * `projectMainPath` 只是为了让 `const char *path` 在整个编译期都有效。 */
     Memory::String projectMainPath;
-    if (path == nullptr && !project.main.empty())
+    if (path == nullptr && !readStdin && !project.main.empty())
     {
         projectMainPath = project.main;
         path = projectMainPath.c_str();
@@ -940,6 +948,11 @@ try
         return 0;
     }
     std::unique_ptr<DefaultArtifactDirectory> defaultArtifacts;
+    if ((!aot || run) && incremental && (path == nullptr || raw))
+    {
+        std::fprintf(stderr, CHALI_TEXT("chali: --incremental 需要源文件，且不能与 --raw 合用\n"));
+        return 2;
+    }
     if (!outGiven && aot && !checkOnly && !depsOnly)
     {
         try
@@ -962,6 +975,8 @@ try
         for (const auto &entry : warningOptions.levels) pathSignature += entry.first + "=" + entry.second + "\n";
         if (warningOptions.errors) pathSignature += "warnings as errors\n";
         for (const auto &directory : includeDirs) pathSignature += chali_incremental::canonical(directory) + "\n";
+        pathSignature += "target macros\n" + chali_build::macroEnvironment().target + "\n";
+        for (const auto &option : chali_build::macroEnvironment().flags) pathSignature += "build option " + option + "\n";
         pathSignature += "import paths\n";
         for (const auto &directory : importDirs) pathSignature += chali_incremental::canonical(directory) + "\n";
         const Memory::String defaultCache = defaultArtifacts ? Memory::String((defaultArtifacts->root / "cache").u8string().c_str())

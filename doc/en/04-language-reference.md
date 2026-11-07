@@ -495,6 +495,8 @@ match (res) // Result<A, B>; E and F implement interface B
 
 For a single interface payload, `Err::IoError(e)` is equivalent to `Err(IoError e)`, with `Err::IoError(_)` for no binding. The tag may be omitted as `IoError(e)` only when its unique destination is unambiguous and its name does not collide with a variant. This sugar is restricted to single-payload variants. Multiple payloads retain the tag and parentheses: `Pair(A a, B b)` or `Many(A a, B b, text, count)`. Ordinary payloads may use untyped variable bindings; interface payloads need type annotations only for dynamic type filtering.
 
+The type pattern `MessageError(error)` binds the concrete `MessageError` object, not its string field; use `error.toString()` for the text. Each `?` unwraps one layer of `Result<Result<T,E1>,E2>`, so `Ok((value?)?)` propagates both failure layers. Normal implicit text conversion still applies when the destination payload is `String`: `Ok(value?)` may turn the remaining inner `Result` into a successful string such as `"Err(inner)"`. That does not propagate the inner failure. Keep both `?` operators when both error layers must be checked. See the [nested Result stress tests](../../tests/chali_nested_result_stress.py).
+
 Bind a variable, then add a condition with `if`:
 
 ```chali
@@ -514,6 +516,28 @@ kind(Choice::Value("bad"))  = 0
 ```
 
 ---
+
+
+### Automatic enum payload wrapping from a target type
+
+With a known target type, initializers, assignments, arguments and returns may provide a single-payload variant's payload directly:
+
+```chali
+Result<String, Error> failure() {
+    return MessageError::from("failed");
+}
+void main() {
+    Option<int64> value = (int64)7;
+    value = (int64)9;
+    Result<String, Error> result = MessageError::from("initial");
+    result = "ready";
+}
+```
+
+This supplies `Err(...)`, `Value(...)` or `Ok(...)` as appropriate, also for custom enums. An expression already having the target enum type passes through unchanged. Exact payload types win, followed by compatible references, interfaces and ordinary implicit conversions. Universal String formatting ranks last, so an error object assigned to `Result<String, Error>` selects Err. Equal best matches are rejected: `Result<String, String> result = "ambiguous";` needs an explicit Ok or Err. Zero-payload and multiple-payload variants do not participate. Recursive enum conversion cycles are not expanded.
+
+The target enum and its generic arguments must already be known; wrapping does not replace generic inference or relax narrowing, moves, reference origins or `#borrow`. Resources still require explicit move where applicable, and local references cannot escape through a wrapper. An unconstrained let expression does not guess an outer enum. Explicit constructors remain useful for intentional success/failure selection, ambiguity and nested layers. See the [runnable payload wrapping example](../../example/samples/enum_payload_wrapping.chl).
+
 
 ## 8. Interfaces and runtime polymorphism
 
@@ -609,15 +633,9 @@ void main() {
     }
     println("loop={}", n);
     int64 total = 0;
-    {
-        int64 k = 0;
-        while (k < 5) {
-
-        if (k == 1) { { k = k + 1; continue; } }
-        total = total + k;
-
-            k = k + 1;
-        }
+    for (int64 k = 0; k < 5; k++) {
+        if (k == 1) { continue; }
+        total += k;
     }
     println("for={}", total);
 }
@@ -637,9 +655,13 @@ for=9
 | `for (T x in c) { }` | iterate a container / iterator |
 | `break` / `continue` / `return` | exit / continue / return |
 
+Three-part `for (int64 i = 0; i < n; i++) { ... }` scopes declarations to the loop. Continue runs the update before testing again. Each part is optional; comma-separated initialization and update expressions run left to right.
+
 > `loop { … }` is an **expression**, but a `loop` in statement position takes no trailing
 > semicolon; when a declaration, assignment, argument or return value receives it, the
 > enclosing statement supplies the semicolon (`int64 v = loop { … };`).
+
+Both for forms support else with loop variables still in scope. C-style for exposes the final initialized state; for-in exposes its last value or an ordinary value default for empty input. Copyable borrowed elements are saved independently before the next iterator call can invalidate them. Handle noncopyable borrowed elements in the body; references without a proven valid origin cannot be read on empty paths. Plain break enters the fallback, while value-producing yield delivers the result and skips else.
 
 ---
 

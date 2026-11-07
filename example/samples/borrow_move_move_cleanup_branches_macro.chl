@@ -1,0 +1,17 @@
+int64 closed = 0;
+struct Handle : Closeable {
+    int64 id;
+    void close() { closed = closed * 10 + self.id; }
+}
+void consume(Handle value) { assert(value.id > 0); }
+$macro TAKE(mut &x) -> stmt
+consume(move x);
+$end_macro
+void test(bool flag, int64 id) {
+    Handle h; h.id = id;
+    if (flag) { $TAKE(h); } else { assert(h.id == id); }
+}
+void main() {
+    test(true, 1); assert(closed == 1); println("closed={}", closed);
+    closed = 0; test(false, 2); assert(closed == 2); println("closed={}", closed);
+}

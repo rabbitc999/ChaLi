@@ -1,0 +1,2 @@
+struct View{int64 mut& p;};#borrow(#ret,a)
+View f(int64 mut& a,int64 mut& b){View value;value.p=&a;return value;}void main(){}

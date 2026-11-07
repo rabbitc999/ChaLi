@@ -8,7 +8,7 @@
 #   sh ci.sh --jobs 4       并行独立回归；--jobs 1 串行（也可设 CHALI_GATE_JOBS）
 #   sh ci.sh --help
 #
-# 环境要求：g++ / gcc / make / python3.11+ 必需；cmake 仅发布门禁需要。
+# 环境要求：g++ / gcc / make / python3.11+ 必需；cmake、node、npm 仅发布门禁需要。
 # 发布门禁的真实扩展测试还需 VSCode、GDB 和图形会话；可用 CHALI_VSCODE_EXECUTABLE 指定宿主。
 # 还要一份 **ParseEngine 文法生成器**：先查 ENGINE、仓库根目录及相邻 ParseEngine 构建目录，
 # 它由 ParseEngine 仓库（不含在本项目里）产出；不在就报错退出 2。
@@ -83,14 +83,16 @@ for tool in g++ gcc; do
         missing="$missing $tool"
     fi
 done
-# cmake 只有发布门禁（--full）的 stackvm 单测需要。
+# 完整发布门禁还构建原生测试并执行编辑器、调试及 VSIX 打包验收。
 if [ "$full" = 1 ]; then
-    if have cmake; then
-        printf '  %-8s %s\n' cmake "$(command -v cmake)"
-    else
-        printf '  %-8s 缺失（必需）\n' cmake
-        missing="$missing cmake"
-    fi
+    for tool in cmake node npm; do
+        if have "$tool"; then
+            printf '  %-8s %s\n' "$tool" "$(command -v "$tool")"
+        else
+            printf '  %-8s 缺失（必需）\n' "$tool"
+            missing="$missing $tool"
+        fi
+    done
 fi
 PYTHON=''
 for candidate in python3 python; do
@@ -217,6 +219,11 @@ run_step "检查 Map Pair 迭代元素类型" "$PYTHON" tests/chali_map_pair_ite
 run_step "检查泛型命名构造入口推导" "$PYTHON" tests/chali_generic_constructors.py --chali "$CHALI_BIN"
 run_step "检查标准库 opcode 存储与资源边界" "$PYTHON" tests/chali_opcode_std_storage.py --chali "$CHALI_BIN"
 run_step "运行闭包来源与借用控制流回归" "$PYTHON" tests/chali_borrow_flow.py --chali "$CHALI_BIN"
+run_step "运行引用移动、延迟清理与原生错误位置回归" "$PYTHON" tests/chali_borrow_move_defer.py --chali "$CHALI_BIN"
+run_step "运行显式借用契约边界与压力回归" "$PYTHON" tests/chali_borrow_contract_stress.py --chali "$CHALI_BIN"
+run_step "运行嵌套 Result 与错误传播压力回归" "$PYTHON" tests/chali_nested_result_stress.py --chali "$CHALI_BIN"
+run_step "运行复杂语法、格式化往返与语义组合压力" "$PYTHON" tests/chali_syntax_semantic_stress.py --chali "$CHALI_BIN"
+run_step "运行目标宏与布尔构建选项样例" "$PYTHON" tests/chali_build_options.py --chali "$CHALI_BIN"
 run_step "运行泛型闭包与特化回归" "$PYTHON" tests/chali_generic_closures.py --chali "$CHALI_BIN"
 run_step "检查模块路径与文本包含指令删除" "$PYTHON" tests/chali_package_paths.py
 run_step "检查统一入口、产物布局与未知文件" "$PYTHON" tests/chali_tool.py
@@ -387,6 +394,8 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "检查 EBNF 附录与文法同步" "$PYTHON" tools/export_chali_ebnf.py --check
     # CHANGELOG 与 VERSION / 发布 tag 对齐：改了版本忘写一节、打了 tag 没有记录，这里就红。
     run_step "检查 CHANGELOG 与版本一致" "$PYTHON" tools/changelog.py --check
+    # 包清单变体、内嵌编译器及调试测试共享发布资源，必须作为串行屏障执行。
+    run_step "完整编辑器与原生调试回归并生成匹配 VSIX" node -e 'const {spawnSync}=require("node:child_process"); const report=spawnSync(process.argv[1],["--build-info"],{encoding:"utf8",windowsHide:true}); if(report.status!==0)throw new Error(report.stderr); const result=spawnSync(process.execPath,["vscode/tools/package.js","--llvm-variant",JSON.parse(report.stdout).llvm,"--compiler",process.argv[1],"--out",process.argv[2]],{stdio:"inherit",windowsHide:true}); process.exit(result.status===null?1:result.status);' "$CHALI_BIN" "$root/dist/ci"
 fi
 
 # ---- 执行与汇总 ----

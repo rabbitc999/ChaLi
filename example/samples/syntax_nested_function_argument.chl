@@ -1,0 +1,9 @@
+struct CallbackBox<F> { F value; }
+T invokeBox<T>(CallbackBox<T fn(T, int32, bool, String)> callback, T value) { return callback.value(value, 2, true, "tag"); }
+int64 increment(int64 value, int32 step, bool enabled, String tag) { assert(enabled && tag == "tag"); return value + step; }
+void main() {
+    CallbackBox<int64 fn(int64, int32, bool, String)> callback;
+    callback.value = increment;
+    assert(invokeBox(callback, (int64)3) == 5);
+    println("nested callback argument: inferred int64");
+}

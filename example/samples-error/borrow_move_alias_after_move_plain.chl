@@ -1,0 +1,8 @@
+int64 closed = 0;
+struct Handle : Closeable {
+    int64 id;
+    void close() { closed = closed * 10 + self.id; }
+}
+void consume(Handle value) { assert(value.id > 0); }
+void test(bool flag) { Handle h; h.id = 1; Handle const& view = &h; consume(move h); println("{}", view.id); }
+void main() { test(true); }

@@ -1,0 +1,26 @@
+$macro PLATFORM() -> expr
+$if $system == "win"
+"win"
+$elif $system == "linux"
+"linux"
+$else
+$system
+$end_if
+$end_macro
+$macro FLAG() -> expr
+$if $build[FEATURE_A]
+true
+$else
+false
+$end_if
+$end_macro
+void main() {
+    assert($system == "win" || $system == "linux" || $system == "mac");
+    assert($cpu == "amd64" || $cpu == "arm64" || $cpu == "arm32");
+    assert($PLATFORM() == $system);
+    assert($cpu != "unknown");
+    assert($build[FEATURE_A] == $build["FEATURE_A"]);
+    assert($FLAG() == $build[FEATURE_A]);
+    assert(!$build["undefined.flag"]);
+    println("target macros ok");
+}

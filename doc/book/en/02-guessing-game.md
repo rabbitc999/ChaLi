@@ -60,7 +60,7 @@ void main()
             println("found");
             break;
         }
-    };
+    }
 }
 ```
 

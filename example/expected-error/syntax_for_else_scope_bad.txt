@@ -1,0 +1,1 @@
+chali: example/samples-error/syntax_for_else_scope_bad.chl 第 3 行第 19 列：引用了没声明的变量：i

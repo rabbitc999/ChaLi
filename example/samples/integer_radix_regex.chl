@@ -44,19 +44,15 @@ void main() {
         break;
     }
     int64 iterations = 0;
-    {
-        int64 i = 0;
-        while (oneGroup.capture("7", 1) == "7") {
+    for (int64 i = 0; oneGroup.capture("7", 1) == "7"; i = i + 1) {
 
         iterations = iterations + 1;
         if (iterations == 2) { break; }
-    
-            i = i + 1;
-        }
+
     }
     { bool chaliLoopFirst1 = true; while (chaliLoopFirst1 || (oneGroup.capture("7", 1) != "7")) { chaliLoopFirst1 = false;
-        iterations = iterations + 1;
-     } }
+            iterations = iterations + 1;
+        } }
     assert(iterations == 3);
     String radixText = format("{:x}/{:X}/{:b}", hex, hex, binary);
     assert(radixText == "ff/FF/100011");

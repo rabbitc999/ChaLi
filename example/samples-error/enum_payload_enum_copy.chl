@@ -1,0 +1,3 @@
+struct Handle : Closeable { int64 id; void close() {} }
+enum Owned { Empty, Resource(Handle value) }
+void main() { Handle owner; Owned first = move owner; Owned second = first; }

@@ -233,6 +233,8 @@ void CollectLoopBreakValues(int statementId, Memory::Vector<std::shared_ptr<MTyp
         PushScope();
         CollectLoopBreakValues(statement.kids[0], values, hasPlain, expected, borrowDepth, loopDepth);
         CollectLoopBreakValues(statement.kids[3], values, hasPlain, expected, borrowDepth, loopDepth + 1);
+        if (statement.kids.size() > 4u)
+            CollectLoopBreakValues(statement.kids[4], values, hasPlain, expected, borrowDepth, loopDepth);
         PopScope();
         return;
     case MNode::Foreach:
@@ -250,6 +252,8 @@ void CollectLoopBreakValues(int statementId, Memory::Vector<std::shared_ptr<MTyp
         binding.bindingIdentity = statement.bindingIdentity;
         g_scope.back()[NodeBindingKey(statement)] = binding;
         CollectLoopBreakValues(statement.kids[1], values, hasPlain, expected, borrowDepth, loopDepth + 1);
+        if (statement.kids.size() > 2u)
+            CollectLoopBreakValues(statement.kids[2], values, hasPlain, expected, borrowDepth, loopDepth);
         PopScope();
         return;
     }

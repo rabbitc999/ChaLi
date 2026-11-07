@@ -1,0 +1,5 @@
+struct Handle : Closeable { int64 id; void close() {} }
+struct Cell { int64 value; }
+void consume(Handle value) {}
+void take(Handle mut& value) { consume(move value); }
+void main() { Handle owner; for(int64 i in range(0, 2)) { take(&owner); Cell mut& cell = new Cell; cell.drop(); } }

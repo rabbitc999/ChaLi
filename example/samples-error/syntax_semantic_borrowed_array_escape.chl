@@ -1,0 +1,10 @@
+struct Borrowed<T> { T mut& value; }
+Borrowed<T>[] invalid<T>(T value) {
+    return {
+        T local = value;
+        Borrowed<T> refs[] = new[1];
+        refs[0].value = &local;
+        yield refs;
+    };
+}
+void main() { invalid((int64)1); }

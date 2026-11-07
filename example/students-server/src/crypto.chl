@@ -45,9 +45,9 @@ Result<String, Error> token()
     Bytes32 bytes;
     if (nativeRandom(0, &bytes, (uint32)32, (uint32)2) != 0)
     {
-        return Result<String, Error>::Err(MessageError::from("系统随机数生成失败"));
+        return MessageError::from("系统随机数生成失败");
     }
-    return Result<String, Error>::Ok(encode(bytes));
+    return Ok(encode(bytes));
 }
 
 /** 使用 PBKDF2-HMAC-SHA256 派生密码摘要，盐按 UTF-8 字节输入。 */
@@ -55,7 +55,7 @@ Result<String, Error> derive(String password, String salt, uint64 iterations)
 {
     if (len(password) > 1024 || len(salt) > 128 || iterations < (uint64)1)
     {
-        return Result<String, Error>::Err(MessageError::from("密码派生参数超出范围"));
+        return MessageError::from("密码派生参数超出范围");
     }
     uint16 algorithm[7];
     algorithm[0] = (uint16)83;
@@ -67,7 +67,7 @@ Result<String, Error> derive(String password, String salt, uint64 iterations)
     int64 provider = 0;
     if (nativeOpen(&provider, algorithm, 0, (uint32)8) != 0)
     {
-        return Result<String, Error>::Err(MessageError::from("无法打开 SHA256 HMAC 提供器"));
+        return MessageError::from("无法打开 SHA256 HMAC 提供器");
     }
     Bytes32 result;
     int32 status = nativeDerive(provider, password, (uint32)len(password), salt, (uint32)len(salt),
@@ -75,9 +75,9 @@ Result<String, Error> derive(String password, String salt, uint64 iterations)
     int32 closed = nativeClose(provider, (uint32)0);
     if (status != 0 || closed != 0)
     {
-        return Result<String, Error>::Err(MessageError::from("密码派生失败"));
+        return MessageError::from("密码派生失败");
     }
-    return Result<String, Error>::Ok(encode(result));
+    return Ok(encode(result));
 }
 
 /** 比较固定长度摘要，不在首个不同字符处提前返回。 */

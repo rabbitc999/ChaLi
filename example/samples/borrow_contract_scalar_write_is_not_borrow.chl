@@ -1,0 +1,2 @@
+#borrow(a,b)
+void f(int64 mut& a,int64 mut& b,int64 mut& c){a=c;}void main(){}

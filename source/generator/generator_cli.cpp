@@ -681,7 +681,7 @@ int runCli(int argc, char **argv)
                              "lifetime.cpp", "aggregate_ownership.cpp", "resource_lifetime.cpp", "scope.cpp",
                              "return_expression_ast.cpp", "named_function_ast.cpp", "operator_switch_ast.cpp", "json_model.cpp",
                              "types.cpp", "interfaces.cpp", "formatted_output.cpp", "builtins.cpp", "generic_inference.cpp", "constants.cpp", "annotation_ast.cpp", "annotations.cpp", "reflection_metadata.cpp", "reflection_queries.cpp", "reflection_calls.cpp", "reflection_serialization.cpp",
-                             "lowering.cpp", "borrow_facts.cpp", "borrow_flow.cpp", "borrow_return_sources.cpp", "expression_effects.cpp", "interface_dispatch.cpp", "boxing.cpp",
+                             "lowering.cpp", "borrow_facts.cpp", "borrow_flow.cpp", "borrow_call_effects.cpp", "lifetime_flow.cpp", "borrow_return_sources.cpp", "expression_effects.cpp", "interface_dispatch.cpp", "boxing.cpp",
                              "symbol_registration.cpp", "program_lowering.cpp", "artifacts.cpp"})
         ok = copy(mc / "source/semantics" / name, Memory::String("semantics/") + name) && ok;
     const Memory::Map<Memory::String, fs::path> runtime{

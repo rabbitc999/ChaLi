@@ -212,7 +212,7 @@ static String join(String left, String right);
 PathString::join(left, right);
 ```
 
-**源码**：[source/std/path.chl:134](../../source/std/path.chl#L134)。
+**源码**：[source/std/path.chl:130](../../source/std/path.chl#L130)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
 
@@ -250,7 +250,7 @@ static String fileName(String path);
 PathString::fileName(path);
 ```
 
-**源码**：[source/std/path.chl:135](../../source/std/path.chl#L135)。
+**源码**：[source/std/path.chl:131](../../source/std/path.chl#L131)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
 
@@ -288,7 +288,7 @@ static String extension(String path);
 PathString::extension(path);
 ```
 
-**源码**：[source/std/path.chl:136](../../source/std/path.chl#L136)。
+**源码**：[source/std/path.chl:132](../../source/std/path.chl#L132)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
 
@@ -326,7 +326,7 @@ static String normalize(String path);
 PathString::normalize(path);
 ```
 
-**源码**：[source/std/path.chl:137](../../source/std/path.chl#L137)。
+**源码**：[source/std/path.chl:133](../../source/std/path.chl#L133)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
 
@@ -366,7 +366,7 @@ static String parent(String path);
 PathString::parent(path);
 ```
 
-**源码**：[source/std/path.chl:140](../../source/std/path.chl#L140)。
+**源码**：[source/std/path.chl:136](../../source/std/path.chl#L136)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。
 
@@ -404,6 +404,6 @@ static String stem(String path);
 PathString::stem(path);
 ```
 
-**源码**：[source/std/path.chl:156](../../source/std/path.chl#L156)。
+**源码**：[source/std/path.chl:152](../../source/std/path.chl#L152)。
 
 **完整示例**：[example/samples/std_parse_random_path_memory.chl](../../example/samples/std_parse_random_path_memory.chl)。

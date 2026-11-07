@@ -1,0 +1,1 @@
+chali: example/samples-error/borrow_contract_static_function_value.chl 第 2 行第 50 列：[CHL1210] 带生命周期契约的函数须直接调用，当前函数值类型不能保留该契约：program::f

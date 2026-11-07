@@ -1,0 +1,1 @@
+chali: example/samples-error/enum_constructor_ambiguous.chl 第 4 行第 5 列：枚举变体 Value 存在歧义，请指定枚举类型

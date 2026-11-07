@@ -1,0 +1,1 @@
+chali: example/samples-error/borrow_move_boundary_function_alias.chl 第 1 行：[CHL1205] 借用来源已移动或销毁，不能继续访问（源对象已经销毁）：id

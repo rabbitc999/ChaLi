@@ -1,0 +1,1 @@
+Result<String,Error> bad(){Result<String,int64> value=Err(3);return Ok(value?);}void main(){}

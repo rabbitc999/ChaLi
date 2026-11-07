@@ -1,0 +1,2 @@
+Option<int64 const&> bad() { int64 local = 1; return &local; }
+void main() { bad(); }

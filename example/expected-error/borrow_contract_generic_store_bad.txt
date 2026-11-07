@@ -1,0 +1,1 @@
+chali: [CHL1212] out借用了契约未声明的来源 a；当前契约为 #borrow(out, [b])

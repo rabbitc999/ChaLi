@@ -1,0 +1,1 @@
+chali: example/samples-error/syntax_limit_path_correlation.chl 第 5 行：[CHL1211] 返回值借用了契约未声明的来源 second；当前契约为 #borrow(#ret, [first])

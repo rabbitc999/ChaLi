@@ -1,0 +1,1 @@
+chali: example/samples-error/syntax_for_else_return_reference_bad.chl 第 2 行：[CHL1204] 保存的引用不能超过来源的生命周期

@@ -1,0 +1,1 @@
+chali: example/samples-error/borrow_contract_static_call_bad.chl 第 2 行：[CHL1214] program::f 要求 'static 实参，但 local 是局部或形参来源；只能传全局变量或用 'static 存储

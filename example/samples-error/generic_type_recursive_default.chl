@@ -1,0 +1,1 @@
+struct G<T=G<>>{T value;};void main(){G<> g;}

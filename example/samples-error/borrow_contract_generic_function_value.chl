@@ -1,0 +1,5 @@
+#borrow(#ret,a)
+T mut& identity<T>(T mut& a) { return a; }
+void main() {
+    let callback = identity<int64>;
+}

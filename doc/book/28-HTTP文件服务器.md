@@ -72,7 +72,7 @@ Result<List<Asset>, Error> loadAssets(String root)
     assets.push(loadAsset(root, "/", "index.html", "text/html; charset=utf-8")?);
     assets.push(loadAsset(root, "/notes.txt", "notes.txt", "text/plain; charset=utf-8")?);
     assets.push(loadAsset(root, "/style.css", "style.css", "text/css; charset=utf-8")?);
-    return Result<List<Asset>, Error>::Ok(assets);
+    return Ok(assets);
 }
 ```
 

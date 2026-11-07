@@ -1,0 +1,5 @@
+module borrow_fail;
+#borrow(#ret,a)
+T mut& wrong<T>(T mut& a, T mut& b) { return b; }
+#borrow(#ret,a)
+T mut& first<T>(T mut& a, T mut& b) { return a; }

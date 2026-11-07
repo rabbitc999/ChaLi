@@ -186,3 +186,63 @@ chali link build/start.o --target linux-arm64 --no-runtime --entry _start --out 
 静态 Windows x64 变体默认使用内置 LLD、CRT 与 ChaLi 运行时，无需外置 clang；外置变体使用匹配 clang／LLD 和所需系统工具链。完整跨目标链接需要目标运行时与 SDK。显式 `--no-runtime` 不添加 CRT 或 ChaLi 运行时，可用于自备入口与依赖的程序；内置 LLD 可为受支持 Linux x64／ARM64 目标链接此类输入，生成成功不等于已在目标系统运行。普通独立 C 程序也可使用默认运行时链接，未被引用的归档成员不装入应用。
 
 输入先检查对象格式、位宽、架构及归档成员边界；实际符号、节和重定位仍由 LLVM／LLD 检查。这些工具不构成执行不可信代码的沙箱。产物先在私有工作区生成，成功后才替换最终文件；失败保留原文件，禁止输出覆盖输入。链接错误不能作为旧产物仍有效的依据，调用方必须检查返回状态。
+
+
+### 目标平台与布尔构建选项
+
+`$system` 和 `$cpu` 是不带括号的字符串常量，分别读取目标程序的操作系统和 CPU 架构。Windows、macOS、Linux 对应 `"win"`、`"mac"`、`"linux"`；常见架构名称为 `"amd64"`、`"arm64"`、`"arm32"`。交叉构建读取选定目标，不读取运行编译器的宿主；`--cpu` 的指令调优名称不会改变架构宏。名称映射不表示新增了原生产物支持，当前可构建目标仍以 LLVM 构建章节为准。
+
+```csharp
+void main() {
+    println("system={}, cpu={}", $system, $cpu);
+    println("A={}, B={}", $build[A], $build["B"]);
+}
+```
+
+命令行 `chali run main.chl -B A -BB` 定义 `A` 和 `B`。也可以在工程清单中声明：
+
+```toml
+[build]
+build_option = ["A", "B"]
+```
+
+命令行与清单中的名称取并集；名称区分大小写，重复定义没有额外效果。`$build[A]` 与 `$build["A"]` 等价：前者的 `A` 是标志名称，不查找同名变量。已定义为 `true`，未定义为 `false`，不支持 `-BA=false`、数值或字符串取值。名称必须非空，只含英文字母、数字、下划线、点或连字符；含点或连字符时使用字符串下标。
+
+在宏模板内，可以写 `$if $build[A]`、`$else`、`$end_if`，也可以用 `$if ($system == "win")` 选择目标代码。普通代码可以直接读取这些常量。`$build` 只接受名称或字符串字面量下标，不接受运行时计算表达式。`-I` 仍用于模块搜索目录。
+
+
+
+### 用 TOML 保存构建配置
+
+第 11 章的工程清单可以继续扩展 `[build]`。下面是 Windows x64 发布构建的配置片段；其他目标需要匹配的运行时、SDK 和链接输入。
+
+```toml
+[build]
+target = "windows-x64"
+output = "executable"
+lto = "full"
+allocator = "malloc"
+subsystem = "console"
+build_option = ["A", "B"]
+assembly_sources = []
+assembly_includes = []
+objects = []
+libraries = []
+search_paths = ["src"]
+```
+
+| 配置项 | 含义与命令行关系 |
+| --- | --- |
+| target、cpu | 目标三元组或已支持别名、CPU 调优名称；显式 --target、--cpu 优先 |
+| output | executable、llvm、object、assembly；显式 --emit-llvm、--emit-obj、--emit-asm 优先，run 仍编译并执行程序 |
+| lto | true、false，或 full、thin、off；显式 LTO 选项优先 |
+| allocator、subsystem | malloc／pool 和 Windows console／windows；显式同名选项优先 |
+| sysroot、runtime_dir | 目标 SDK 根与目标运行时目录；显式对应选项优先 |
+| assembly_sources、assembly_includes | 汇编源与汇编包含目录；命令行已给同类输入时使用命令行集合 |
+| objects、libraries | 额外对象与链接库；命令行已给同类输入时使用命令行集合 |
+| search_paths | 追加模块和导入搜索目录，以清单所在目录解析相对路径 |
+| build_option | 布尔标志名称数组，与 -B 定义取并集；$build[name] 查询存在性 |
+
+`libraries` 中没有路径分隔符和点的裸名称交给链接器解析；其他路径相对清单目录。`cpu` 选择指令调优，不改变 `$cpu` 表示的目标架构。`$system`、`$cpu` 与 `$build` 在宏展开阶段成为常量，具体写法见[第 22 章](book/22-预处理与宏.md)。
+
+静态 LLVM 变体使用内置后端，拒绝 `--llvm` 和 `[build] llvm`。外置变体才允许配置外部工具链路径。不能通过修改 TOML 让静态版切换后端。完整选项见[LLVM 构建参考](38-build.md)，项目入口和搜索规则见[第 11 章](book/11-模块与工程.md)。

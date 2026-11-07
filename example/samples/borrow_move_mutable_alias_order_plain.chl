@@ -1,0 +1,2 @@
+void alias(int64 mut& a, int64 mut& b) { a += 1; b += a; }
+void main() { int64 x = 1; alias(&x, &x); assert(x == 4); println("alias={}", x); }

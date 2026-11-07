@@ -126,7 +126,7 @@ void main()
             Value(v) => { sum = sum + v; }
             None => { break; }
         }
-    };
+    }
     println("sum = {} len = {}", sum, s.len());
     Map<int64, int64> m;
     m.put(1, 10);
@@ -140,7 +140,7 @@ void main()
             Value(pair) => { doubled = doubled + pair.first * pair.second; }
             None => { break; }
         }
-    };
+    }
     println("doubled = {} len = {}", doubled, m.len());
 }
 ```
@@ -180,6 +180,6 @@ void main() {
 
 Traversal obtains a source, advances, handles items and ends. All, any and fold consume current state; next expresses availability through Option. A new container iterator starts a fresh traversal.
 
-Check each interface for source mutation, value versus borrowed elements and invalidating modifications. An order-independent sum does not establish stable ordering. Chapter 18 extends the discussion from individual algorithms to modules and project dependencies.
+Check each interface for source mutation, value versus borrowed elements and invalidating modifications. An order-independent sum does not establish stable ordering. Chapter 11 covers the discussion from individual algorithms to modules and project dependencies.
 
-Next: [Chapter 11](11-modules-projects.md).
+Next: [Chapter 21](21-concurrency.md).

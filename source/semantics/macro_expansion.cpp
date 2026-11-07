@@ -497,6 +497,8 @@ bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t dep
     --budget;
     auto &node = g_nodes[id];
     if (node.kind == MNode::MacroCall && node.s == "member" && !PrepareMacroMember(id)) return false;
+    Memory::String environmentError;
+    if (ExpandAstMacroEnvironment(id, environmentError)) return environmentError.empty() || ReportAstMacroFailure(id, environmentError);
     if (ExpandAstMacroSource(id)) return true;
     Memory::String textError;
     if (ExpandAstMacroText(id, textError))

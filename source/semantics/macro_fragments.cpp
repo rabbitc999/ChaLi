@@ -92,7 +92,8 @@ bool BindMacroCallerSyntax(int id, Memory::Map<Memory::String, std::uint32_t> &b
         if (!BindMacroCallerSyntax(node.kids[0], scope, depth + 1, argumentSyntax)) return false;
         node.bindingIdentity = 0x80000000u | (static_cast<std::uint32_t>(id) + 1u);
         scope[node.s] = node.bindingIdentity;
-        return BindMacroCallerSyntax(node.kids[1], scope, depth + 1, argumentSyntax);
+        return BindMacroCallerSyntax(node.kids[1], scope, depth + 1, argumentSyntax)
+               && (node.kids.size() <= 2u || BindMacroCallerSyntax(node.kids[2], scope, depth + 1, argumentSyntax));
     }
     for (const int child : node.kids)
         if (!BindMacroCallerSyntax(child, scope, depth + 1, argumentSyntax)) return false;
@@ -265,7 +266,7 @@ bool ApplyMacroFragmentEnvironment(int root, const MacroFragmentEnvironment &env
 bool MaterializeMacroFragments(int id, Memory::Set<int> &seen, std::size_t depth, const MacroFragmentEnvironment *outer = nullptr)
 {
     if (id < 0 || !seen.insert(id).second) return true;
-    if (depth >= 256 || seen.size() > 1000000) return Fail("宏原始片段超过深度或规模预算"), false;
+    if (depth >= 256 || seen.size() > 1000000) return Fail("语法树片段遍历超过深度或规模预算（最大深度 256，最多 1000000 个节点）"), false;
     auto &node = g_nodes[id];
     MacroFragmentEnvironment environment = outer ? *outer : MacroFragmentEnvironment{};
     if (node.kind == MNode::FuncDef || node.kind == MNode::StructDecl || node.kind == MNode::EnumDecl || node.kind == MNode::InterfaceDecl)

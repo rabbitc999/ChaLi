@@ -16,9 +16,10 @@ Reply handle(Database mut& database, State mut& state, Request const& request)
         if (request.method != "POST") { return errorReply(405, "登录需要 POST"); }
         return login(&database, &state, request.body);
     }
-    let identity = authenticate(&database, &state, &request);
-    if (identity.isNone()) { return errorReply(401, "请登录，会话已失效或账号已更新"); }
-    let user = identity.unwrap();
+    let user = match (authenticate(&database, &state, &request)) {
+        Value(value) => { value }
+        None => { return errorReply(401, "请登录，会话已失效或账号已更新"); }
+    };
     if (request.path == "/api/auth/me" && request.method == "GET") { return jsonReply(200, userJson(user)); }
     if (request.path == "/api/auth/logout" && request.method == "POST")
     {

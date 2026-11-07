@@ -1,0 +1,9 @@
+[package]
+name = "build_options"
+version = "1.0.0"
+
+[chali]
+main = "main.chl"
+
+[build]
+build_option = ["A"]

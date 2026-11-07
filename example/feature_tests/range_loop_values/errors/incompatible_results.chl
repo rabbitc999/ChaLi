@@ -1,0 +1,1 @@
+void main(){let value=while(false){yield 1;}else{true};}

@@ -107,7 +107,7 @@ def main():
             "tools/fetch_dependencies.py", "tools/dependencies.lock.json", "tools/cmake_dependencies.cmake",
             "LICENSE", "NOTICE", "licenses/miniz/LICENSE",
             "template/engine.hpp", "chali_aot_ast.hpp", "chali_aot_target.cpp",
-            "runtime/artifact_binary.cpp", "semantics/associated_types.cpp",
+            "runtime/artifact_binary.cpp", "semantics/associated_types.cpp", "semantics/borrow_call_effects.cpp", "semantics/lifetime_flow.cpp",
             ".chali-generator-manifest",
         ]
         required += ["macro/metadata.hpp", "semantics/macro_metadata.cpp", "semantics/macro_type_metadata.cpp",

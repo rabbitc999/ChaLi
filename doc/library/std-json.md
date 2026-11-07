@@ -167,18 +167,14 @@ void main() {
     assert(copy.close() && config.close() && server.isValid());
     Result<TomlValue, Error> duplicate = std::toml::parse("x = 1\nx = 2\n");
     assert(duplicate.isErr() && len(duplicate.error().toString()) > 0);
-    {
-        int64 i = 0;
-        while (i < 50) {
+    for (int64 i = 0; i < 50; i = i + 1) {
 
         Result<JsonValue, Error> parsedSmall = std::json::parse("[]");
         JsonValue small = parsedSmall.unwrap();
         assert(small.close());
         Result<TomlValue, Error> invalid = std::toml::parse("x = [");
         assert(invalid.isErr());
-    
-            i = i + 1;
-        }
+
     }
     Result<JsonValue, Error> trailingOk = std::json::parse("true");
     assert(trailingOk.isOk()); // 注册表结束时清理未显式关闭的文档

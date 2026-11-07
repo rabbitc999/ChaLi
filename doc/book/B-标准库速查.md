@@ -243,18 +243,28 @@ $compile_error("unexpected BigDecimal identity");
 $end_if
 $end_macro
 
-void main() {
+Result<bool, Error> roundTrip() {
     $CHECK_IDENTITIES<Numbers>();
     Numbers values;
     values.integer = BigInteger("9000000000000000000") + BigInteger(7);
     values.decimal = BigDecimal("1.25") + BigDecimal("2.50");
-    Option<BigInteger> boxed = Option<BigInteger>::Value(values.integer);
+    Option<BigInteger> boxed = Value(values.integer);
     uint64 integerId = getTypeId<BigInteger>();
     assert(integerId != 0 && integerId == getTypeId<BigInteger>());
-    String encoded = serialize<Numbers>(&values).unwrap();
-    Numbers decoded = deserialize<Numbers>(encoded).unwrap();
-    assert(decoded.integer == boxed.unwrap() && decoded.decimal == values.decimal);
+    String encoded = serialize<Numbers>(&values)?;
+    Numbers decoded = deserialize<Numbers>(encoded)?;
+    match (boxed) {
+        Value(integer) => { assert(decoded.integer == integer && decoded.decimal == values.decimal); }
+        None => { return MessageError::from("missing integer"); }
+    }
     println("{} {}", decoded.integer, decoded.decimal);
+    return Ok(true);
+}
+void main() {
+    match (roundTrip()) {
+        Ok(_) => {}
+        Err(error) => { println("{}", error.toString()); }
+    }
 }
 ```
 

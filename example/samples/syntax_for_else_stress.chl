@@ -1,0 +1,57 @@
+import syntax_helpers;
+int64 stressClosed = 0;
+int64 stressDeferred = 0;
+struct StressHandle : Closeable {
+    int64 id;
+    void close() { stressClosed++; }
+}
+struct StressValues : Iterator<StressHandle> {
+    Option<StressHandle> iterator(int64 index) {
+        if (index >= 3) { return None; }
+        StressHandle value; value.id = index + 1;
+        return Value(move value);
+    }
+}
+$macro LAST_IN(mut &out, source: expr) -> stmt
+for (let item in source) {} else { out = item; }
+$end_macro
+
+void main() {
+    List<String> words = ["first", "last"];
+    List<String> empty;
+    List<int64> values = [3, 5, 7];
+    List<(int64, String)> pairs = [(1, "one"), (2, "two")];
+    List<Option<String>> options = [Value("a"), None, Value("b")];
+    List<List<String>> nested = [["a"], ["last"]];
+    for (int64 round = 0; round < 1024; round++) {
+        defer { stressDeferred++; }
+        assert(afterLoop(words) == "last" && afterLoop(empty) == "");
+        let pair = afterLoop(pairs);
+        assert(pair[0] == 2 && pair[1] == "two");
+        match (afterLoop(options)) {
+            Value(text) => { assert(text == "b"); }
+            None => { assert(false); }
+        }
+        assert(afterLoop(nested)[0] == "last");
+        int64 last = 0;
+        $LAST_IN(last, values);
+        assert(last == 7);
+        let ending = for (let advance = fn(int64 n) { n + 1 }, index = 0;
+        advance(index) < 4; index = advance(index)) {}
+        else { index };
+        assert(ending == 3);
+        for (Map<String, List<(int64, String)>> table; table.len() < 1;
+        table.put("x", [(1, "one")])) {}
+        else {
+            let items = table["x"];
+            assert(items[0][0] == 1 && items[0][1] == "one");
+        }
+        StressValues resources;
+        for (let value in resources) {} else {
+            assert(value.id == 3 && stressClosed == round * 3 + 2);
+        }
+        assert(stressClosed == (round + 1) * 3);
+    }
+    assert(stressClosed == 3072 && stressDeferred == 1024);
+    println("for else stress: iterations=1024 closed=3072 deferred=1024 cross-module generic,macro,nested types,closures");
+}

@@ -1,0 +1,1 @@
+struct Item {int64 value;};void main(){Item value;Item end;match(value){range<Item>(value,end)=>{} _=>{}}}

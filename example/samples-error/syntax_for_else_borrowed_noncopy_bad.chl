@@ -1,0 +1,8 @@
+struct Handle : Closeable {
+    int64 id;
+    void close() {}
+}
+void main() {
+    List<Handle> items;
+    for (let x in items) {} else { println("{}", x.id); }
+}

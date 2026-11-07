@@ -193,7 +193,7 @@ Result<List<uint32>,Error> decodeUtf8(String text);
 decodeUtf8(text);
 ```
 
-**源码**：[source/std/utf8.chl:52](../../source/std/utf8.chl#L52)。
+**源码**：[source/std/utf8.chl:48](../../source/std/utf8.chl#L48)。
 
 **完整示例**：[example/samples/std_utf8.chl](../../example/samples/std_utf8.chl)。
 
@@ -231,7 +231,7 @@ bool isValidUtf8(String text);
 isValidUtf8(text);
 ```
 
-**源码**：[source/std/utf8.chl:57](../../source/std/utf8.chl#L57)。
+**源码**：[source/std/utf8.chl:53](../../source/std/utf8.chl#L53)。
 
 **完整示例**：[example/samples/std_utf8.chl](../../example/samples/std_utf8.chl)。
 
@@ -269,7 +269,7 @@ Result<List<uint8>,Error> encodeUtf8Bytes(List<uint32> points);
 encodeUtf8Bytes(points);
 ```
 
-**源码**：[source/std/utf8.chl:59](../../source/std/utf8.chl#L59)。
+**源码**：[source/std/utf8.chl:55](../../source/std/utf8.chl#L55)。
 
 **完整示例**：[example/samples/std_utf8.chl](../../example/samples/std_utf8.chl)。
 
@@ -307,7 +307,7 @@ Result<String,Error> encodeUtf8(List<uint32> points);
 encodeUtf8(points);
 ```
 
-**源码**：[source/std/utf8.chl:78](../../source/std/utf8.chl#L78)。
+**源码**：[source/std/utf8.chl:70](../../source/std/utf8.chl#L70)。
 
 **完整示例**：[example/samples/std_utf8.chl](../../example/samples/std_utf8.chl)。
 
@@ -345,7 +345,7 @@ Result<int64,Error> codePointCount(String text);
 codePointCount(text);
 ```
 
-**源码**：[source/std/utf8.chl:87](../../source/std/utf8.chl#L87)。
+**源码**：[source/std/utf8.chl:79](../../source/std/utf8.chl#L79)。
 
 **完整示例**：[example/samples/std_utf8.chl](../../example/samples/std_utf8.chl)。
 
@@ -385,6 +385,6 @@ Result<String,Error> sliceCodePoints(String text, int64 start, int64 count);
 sliceCodePoints(text, start, count);
 ```
 
-**源码**：[source/std/utf8.chl:92](../../source/std/utf8.chl#L92)。
+**源码**：[source/std/utf8.chl:84](../../source/std/utf8.chl#L84)。
 
 **完整示例**：[example/samples/std_utf8.chl](../../example/samples/std_utf8.chl)。

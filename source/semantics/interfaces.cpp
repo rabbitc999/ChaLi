@@ -525,7 +525,53 @@ bool AnyAcceptsType(const std::shared_ptr<MType> &type)
 }
 
 /**
- * @brief 形参能不能接住实参：完全一致最好，其次只允许 int64 → float64 的加宽。
+ * @brief 在目标枚举中选择唯一匹配的单载荷变体，递归枚举不展开循环转换。
+ * @param target 已确定的目标枚举类型。
+ * @param source 原表达式的类型。
+ * @param ambiguous 接收最佳候选是否存在歧义。
+ * @return 唯一最佳变体；不匹配或歧义时返回空指针。
+ */
+const MEnumVariantDef *ChooseImplicitEnumVariant(const std::shared_ptr<MType> &target,
+                                                const std::shared_ptr<MType> &source, bool *ambiguous)
+{
+    *ambiguous = false;
+    if (!target || !source || !IsEnumType(target) || SameType(target, source)
+        || (source->kind == MType::Ptr && SameType(target, source->elem))
+        || source->kind == MType::Void || HasImplicitConversion(source, target)) return nullptr;
+    static Memory::Set<Memory::String> visiting;
+    if (!visiting.insert(target->name).second) return nullptr;
+    struct Guard
+    {
+        Memory::String name;
+        /** @brief 离开候选检查时释放递归标记。 */
+        ~Guard() { visiting.erase(name); }
+    } guard{target->name};
+    const auto found = g_enums.find(target->name);
+    if (found == g_enums.end()) return nullptr;
+    const MEnumVariantDef *best = nullptr;
+    int bestRank = 1000;
+    for (const auto &variant : found->second.variants)
+    {
+        if (variant.payloads.size() != 1u) continue;
+        const auto &payload = variant.payloads.front().type;
+        bool nestedAmbiguous = false;
+        if (!Acceptable(payload, source, true)
+            && !ChooseImplicitEnumVariant(payload, source, &nestedAmbiguous)) continue;
+        int rank = 4;
+        if (SameType(payload, source)) rank = 0;
+        else if (source->kind == MType::Ptr && SameType(payload, source->elem)) rank = 1;
+        else if (IsStandardOpcode(payload, "String") && !FindConversion(source, payload, false)) rank = 100;
+        else if (IsInterfaceType(payload) || IsInterfacePointer(payload)) rank = 2;
+        else if (payload->kind == MType::Obj) rank = 50;
+        else if (IsEnumType(payload)) rank = 10;
+        if (rank < bestRank) { best = &variant; bestRank = rank; *ambiguous = false; }
+        else if (rank == bestRank) *ambiguous = true;
+    }
+    return *ambiguous ? nullptr : best;
+}
+
+/**
+ * @brief 检查精确类型、引用绑定及允许的数值加宽、接口与直接隐式转换。
  * @param param 目标形参的类型描述。
  * @param argument 待解析的参数文本。
  * @param widening 是否允许数值拓宽转换。

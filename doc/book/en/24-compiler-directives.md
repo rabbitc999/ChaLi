@@ -76,7 +76,7 @@ A #borrow annotation describes the relationship between a returned borrow and it
 
 <!-- verify-book -->
 ```chali
-#borrow(#ret, [a])
+#borrow(#ret, a)
 int64 mut& first(int64 mut& a, int64 mut& b)
 {
     return a;
@@ -106,6 +106,12 @@ The borrow directive states that first's returned borrow comes only from a. Alth
 Outer passes an external x and local temporary. The returned source remains x, so destroying local does not invalidate it. Selected therefore refers to number in main, and writing 31 updates both observations. A source declaration must agree with the implementation; it cannot disguise a local reference as an external borrow.
 
 
+A single source can use #borrow(#ret,a). In contrast, #borrow(a,b) means that destination a saves a reference from b, exactly like #borrow(a,[b]); it is not shorthand for two return sources. Use #borrow(#ret,[a,b]) for either possible return source. The list is an upper bound, and even an unused listed source constrains a caller.
+
+The same contract applies to generic functions, whose direct calls may still infer type arguments. Contracts travel with module function signatures to importers. Cross-module generic calls check concrete origins, and forwarding inside a module must preserve the relationship. Bodies are checked at concrete instantiation; an unused declaration does not verify every type combination. Branch and loop joins conservatively retain possible origins without proving arbitrary numerical conditions complementary. Prefer an explicit if/else when every branch must change the origin. The executable [generic borrowing and control-flow sample](../../../example/samples/generic_borrow_control_flow.chl) covers integer, floating-point and String instances.
+
+Contracts check initialization, aliases, rebinding and joins; they neither extend local storage nor revive moved values. Function-value types currently cannot carry contracts, so functions with #borrow or #static must be called directly. A closure may make such a direct call while retaining normal capture and argument checks. Host implementations and unsafe raw addresses do not acquire a complete safety proof from this directive. See the [resource lifetime reference](../../en/22-resource-lifetime.md) for output borrows and other limits.
+
 Without an explicit return-source contract, an ordinary function call conservatively combines the possible sources of all reference arguments. The assigned result must stay within every source lifetime. The following example is rejected even though first's body returns a.
 
 <!-- verify-book-error: CHL1204 -->
@@ -128,7 +134,7 @@ CHL1204
 
 ## 24.3 Choose the smallest special mechanism
 
-Prefer ordinary methods when they express the business rule. Chapter 8 covers cleanup, Chapter 20 reflection and Chapter 21 C ABI. Check each mechanism at its own boundary instead of stacking directives and guessing their meaning from one run.
+Prefer ordinary methods when they express the business rule. Chapter 9 covers cleanup, Chapter 23 reflection and Chapter 26 C ABI. Check each mechanism at its own boundary instead of stacking directives and guessing their meaning from one run.
 
 ### Suppress naming warnings in one source file
 

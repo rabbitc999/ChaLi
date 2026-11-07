@@ -1,0 +1,1 @@
+chali: example/samples-error/syntax_for_move_backedge_bad.chl 第 8 行：[CHL1205] 借用来源已移动或销毁，不能继续访问（源对象已经销毁）：表达式

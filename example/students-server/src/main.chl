@@ -54,17 +54,17 @@ Result<String, Error> readAsset(String webRoot, String fileName)
     let opened = FileStream::open(path, "r");
     if (opened.isErr())
     {
-        return Result<String, Error>::Err(MessageError::from("打不开前端文件 " + webRoot + "/" + fileName
-            + "（要在 example/students-server 目录里启动）"));
+        return MessageError::from("打不开前端文件 " + webRoot + "/" + fileName
+            + "（要在 example/students-server 目录里启动）");
     }
     FileStream stream = opened.take();
     let content = stream.readAllString();
     stream.close();
     if (content.isErr())
     {
-        return Result<String, Error>::Err(MessageError::from("读取前端文件失败：" + webRoot + "/" + fileName));
+        return MessageError::from("读取前端文件失败：" + webRoot + "/" + fileName);
     }
-    return Result<String, Error>::Ok(content.unwrap());
+    return Ok(content.unwrap());
 }
 
 /**
@@ -75,13 +75,10 @@ Result<String, Error> readAsset(String webRoot, String fileName)
  */
 void serve(Database mut& database, State mut& state, TcpSocket mut& peer, String page)
 {
-    let read = readRequest(peer, 10000);
-    if (read.isErr())
-    {
-        /* 空连接 / 超时是常态（浏览器预连接），安静地关掉即可。 */
-        return;
-    }
-    Request request = read.unwrap();
+    Request request = match (readRequest(peer, 10000)) {
+        Ok(value) => { value }
+        Err(_) => { return; }
+    };
     if ((request.path == "/" || request.path == "/index.html") && request.method == "GET")
     {
         let sent = sendResponse(peer, 200, "OK", "text/html; charset=utf-8", page);

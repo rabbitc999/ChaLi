@@ -1,0 +1,6 @@
+import borrow_fail;
+int64 mut& invalid(int64 mut& stable) {
+    int64 local = 2;
+    return borrow_fail::first(&local, stable);
+}
+void main() {}

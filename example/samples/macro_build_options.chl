@@ -1,0 +1,3 @@
+void main() {
+    println("A={}, B={}, absent={}", $build[A], $build["B"], $build[never_defined]);
+}

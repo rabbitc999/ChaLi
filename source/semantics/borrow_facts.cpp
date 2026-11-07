@@ -99,6 +99,7 @@ const Memory::Vector<int> *LifetimeCallRetParams(int callId);
  */
 std::optional<Memory::Vector<std::pair<int, bool>>> MethodBorrowSourceExpressions(int callId);
 void CheckLifetimeStore(int target, int value, std::size_t line);
+void CaptureBorrowStore(int target, int value, bool binding);
 void CheckLifetimeReturn(int value, std::size_t line);
 MVar *BorrowAliasOwner(const MVar *variable)
 {
@@ -353,6 +354,7 @@ void RecordBorrowStore(int target, int value, bool container)
     g_borrowFacts.push_back({ chali_borrow_checker::Fact::Store, depth, targetDepth, g_reductionLine, {} });
     /* `#borrow(out, [in...])`：写入 out 的引用必须真来自 in，光靠作用域深度看不出来。 */
     CheckLifetimeStore(target, value, g_reductionLine);
+    if (container) CaptureBorrowStore(target, value, binding);
     // 分支按来源寿命的交集保守合并，后续赋值不能洗掉较短的借用。
     if (variable)
     {

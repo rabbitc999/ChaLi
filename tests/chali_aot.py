@@ -8,7 +8,7 @@
 4. **AOT 调外部 C**：`abi` 块声明的函数在产物里变成 extern 调用并链接动态库；
 5. **外部 C 调 AOT**：`--shared --export` 出动态库与头文件，C 驱动能调进去。
 """
-from compiler_path import compiler_path
+from compiler_path import compiler_path, compiler_build_info
 import argparse
 import os
 from pathlib import Path
@@ -89,6 +89,8 @@ def main():
     env = dict(os.environ, CHALI_LANG='zh', CHALI_NO_STDIN_INPUT='1')
     cc = str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else shutil.which('clang')
     cc = os.environ.get('CHALI_LLVM_CLANG') or cc
+    static_llvm = compiler_build_info(compiler)['llvm']=='static'
+    backend = [] if static_llvm else ['--llvm',cc]
     with tempfile.TemporaryDirectory(prefix='chali-aot-') as directory:
         work = Path(directory)
 
@@ -110,7 +112,7 @@ def main():
             print('[跳过] 没有 C 编译器，AOT 产物相关检查不跑', flush=True)
             return
         exe = work / 'aot_basic'
-        result = invoke([compiler, 'build', sample, '--out', exe, '--llvm', cc])
+        result = invoke([compiler, 'build', sample, '--out', exe, *backend])
         assert result.returncode == 0, (result.stdout, result.stderr)
         product = exe.with_suffix('.exe' if os.name == 'nt' else '')
         assert product.exists(), 'AOT 没产出可执行文件'
@@ -137,7 +139,7 @@ def main():
         print('[通过] Linux x64 LLVM 模块生成 ELF 目标文件', flush=True)
         assert 'checks: off' in opened
         unchecked_prefix = work / 'aot_checked'
-        result = invoke([compiler, 'build', sample, '--out', unchecked_prefix, '--llvm', cc, '--checked'])
+        result = invoke([compiler, 'build', sample, '--out', unchecked_prefix, *backend, '--checked'])
         assert result.returncode == 0, (result.stdout, result.stderr)
         unchecked = unchecked_prefix.with_suffix('.ll').read_text(encoding='utf-8')
         assert 'checks: on' in unchecked
@@ -147,7 +149,7 @@ def main():
 
         # 3) `--emit-llvm` 只出 LLVM 模块
         emit_only = work / 'aot_emit'
-        result = invoke([compiler, 'build', sample, '--out', emit_only, '--llvm', cc, '--emit-llvm'])
+        result = invoke([compiler, 'build', sample, '--out', emit_only, *backend, '--emit-llvm'])
         assert result.returncode == 0, (result.stdout, result.stderr)
         assert (emit_only.with_suffix('.ll')).exists()
         assert not (emit_only.with_suffix('.exe' if os.name == 'nt' else '')).exists(), '--emit-llvm 不该出可执行文件'
@@ -159,9 +161,9 @@ def main():
         # 模块导出完全由编译器完成，不依赖本机 LLVM 工具可执行。
         result = invoke([compiler, 'build', sample, '--out', work / 'without_tool', '--emit-llvm',
                          '--llvm', work / 'missing-clang'])
-        assert result.returncode == 0, result
+        assert result.returncode == (2 if static_llvm else 0), result
         result = invoke([compiler, 'build', sample, '--llvm'])
-        assert result.returncode == 2 and '缺少取值' in result.stderr, result
+        assert result.returncode == 2 and ('不支持 --llvm' if static_llvm else '缺少取值') in result.stderr, result
         print('[通过] --mode build 与缺少参数诊断', flush=True)
         result = invoke([compiler, 'build', sample, '--emit-llvm', '--shared', '--export', 'missing_function',
                          '--out', work / 'missing_export'])
@@ -183,7 +185,7 @@ def main():
         expected_abi = result.stdout
         assert result.returncode == 0 and expected_abi == 'aot -> c: 42\nabi values: 3.75 4294967295\nalias: 42\n', result
         abi_exe = work / 'abi_use'
-        result = invoke([compiler, 'build', abi, '--out', abi_exe, '--llvm', cc])
+        result = invoke([compiler, 'build', abi, '--out', abi_exe, *backend])
         assert result.returncode == 0, (result.stdout, result.stderr)
         abi_llvm = abi_exe.with_suffix('.ll').read_text(encoding='utf-8')
         encoded_symbol = ''.join(f'\\{byte:02X}' for byte in b'aot_add')
@@ -197,7 +199,7 @@ def main():
         exported = work / 'exported.chl'
         exported.write_text(EXPORT_SOURCE, encoding='utf-8')
         shared = work / 'exported'
-        result = invoke([compiler, 'build', exported, '--out', shared, '--llvm', cc, '--shared'])
+        result = invoke([compiler, 'build', exported, '--out', shared, *backend, '--shared'])
         assert result.returncode == 0, (result.stdout, result.stderr)
         header = (shared.with_suffix('.h')).read_text(encoding='utf-8')
         assert 'int64_t f_add(int64_t' in header, header

@@ -1,0 +1,28 @@
+import borrow_sources::left;
+import borrow_sources::right;
+
+int64 mut& leftSource(int64 mut& stable) {
+    int64 local = 2;
+    return borrow_sources::left::pick(stable, &local);
+}
+int64 mut& rightSource(int64 mut& stable) {
+    int64 local = 2;
+    return borrow_sources::right::pick(&local, stable);
+}
+void main() {
+    int64 stable = 3;
+    assert(leftSource(&stable) == 3 && rightSource(&stable) == 3);
+    for (int64 i in range(0, 512)) {
+        int64 local = 2;
+        assert(borrow_sources::left::pickGeneric(&stable, &local, i % 2 == 0) == 3);
+        assert(borrow_sources::right::pickGeneric(&local, &stable) == 3);
+        float64 x = 1.25;
+        float64 y = 2.5;
+        assert(borrow_sources::left::pickGeneric(&x, &y, true) == x);
+        assert(borrow_sources::right::pickGeneric(&x, &y) == y);
+        Number number;
+        number.value = 7;
+        Number ignored;
+        assert(borrow_sources::left::constrained(&number, &ignored).number() == 7);
+    }
+}

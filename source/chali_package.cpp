@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include "chali_package.hpp"
+#include "chali_aot_target.hpp"
 #include "toml/toml.hpp"
 
 namespace chali_package
@@ -300,6 +301,15 @@ bool read(const std::filesystem::path &file, Project &project, Memory::String &e
                 const Memory::String where = name + "." + key;
                 if (name == "build")
                 {
+                    if (key == "build_option")
+                    {
+                        for (const auto &option : tomlArray(entry.value, where))
+                        {
+                            if (!chali_build::validBuildOption(option)) throw std::runtime_error("build.build_option expects nonempty boolean option names without values");
+                            project.buildOptions.push_back(option);
+                        }
+                        continue;
+                    }
                     if (key == "lto")
                     {
                         if (entry.value.isBool())

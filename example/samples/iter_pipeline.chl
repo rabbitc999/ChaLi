@@ -101,9 +101,7 @@ void main() {
     assert((fused.next().isNone()) == (true));
     List<int64> empty;
     assert((empty.intoIter().count()) == (0));
-    {
-        int64 round = 0;
-        while (round < 4) {
+    for (int64 round = 0; round < 4; round = round + 1) {
 
         List<int64> source; source.push(1); source.push(2); source.push(3);
         {
@@ -132,7 +130,7 @@ void main() {
         assert((map.len()) == (0));
         for (Pair<String, String> entry in entries) {
             assert((entry.first == "a" && entry.second == "one")
-                || (entry.first == "b" && entry.second == "two"));
+            || (entry.first == "b" && entry.second == "two"));
         }
         List<String> words; words.push("one"); words.push("two");
         {
@@ -146,9 +144,7 @@ void main() {
         assert(((records[0]).number) == (5));
         let text = intIter(1,4).map(label).collect();
         assert((text[2]) == ("n3"));
-    
-            round = round + 1;
-        }
+
     }
     int64 raw[3]; raw[0] = 7; raw[1] = 8; raw[2] = 9;
     assert((fromSpan<int64>(&raw[0],3).map(read).fold(0,sum)) == (24));

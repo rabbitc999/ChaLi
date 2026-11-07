@@ -20,6 +20,42 @@ unchecked 的相关默认开关主要影响运行期数组与指针检查，静�
 
 ![发布构建与工具链边界](images/chali-aot.png)
 
+
+### 用 TOML 保存构建配置
+
+第 11 章的工程清单可以继续扩展 `[build]`。下面是 Windows x64 发布构建的配置片段；其他目标需要匹配的运行时、SDK 和链接输入。
+
+```toml
+[build]
+target = "windows-x64"
+output = "executable"
+lto = "full"
+allocator = "malloc"
+subsystem = "console"
+build_option = ["A", "B"]
+assembly_sources = []
+assembly_includes = []
+objects = []
+libraries = []
+search_paths = ["src"]
+```
+
+| 配置项 | 含义与命令行关系 |
+| --- | --- |
+| target、cpu | 目标三元组或已支持别名、CPU 调优名称；显式 --target、--cpu 优先 |
+| output | executable、llvm、object、assembly；显式 --emit-llvm、--emit-obj、--emit-asm 优先，run 仍编译并执行程序 |
+| lto | true、false，或 full、thin、off；显式 LTO 选项优先 |
+| allocator、subsystem | malloc／pool 和 Windows console／windows；显式同名选项优先 |
+| sysroot、runtime_dir | 目标 SDK 根与目标运行时目录；显式对应选项优先 |
+| assembly_sources、assembly_includes | 汇编源与汇编包含目录；命令行已给同类输入时使用命令行集合 |
+| objects、libraries | 额外对象与链接库；命令行已给同类输入时使用命令行集合 |
+| search_paths | 追加模块和导入搜索目录，以清单所在目录解析相对路径 |
+| build_option | 布尔标志名称数组，与 -B 定义取并集；$build[name] 查询存在性 |
+
+`libraries` 中没有路径分隔符和点的裸名称交给链接器解析；其他路径相对清单目录。`cpu` 选择指令调优，不改变 `$cpu` 表示的目标架构。`$system`、`$cpu` 与 `$build` 在宏展开阶段成为常量，具体写法见[第 22 章](22-预处理与宏.md)。
+
+静态 LLVM 变体使用内置后端，拒绝 `--llvm` 和 `[build] llvm`。外置变体才允许配置外部工具链路径。不能通过修改 TOML 让静态版切换后端。完整选项见[LLVM 构建参考](../38-build.md)，项目入口和搜索规则见[第 11 章](11-模块与工程.md)。
+
 ### 从源码走到原生执行
 
 正常的 run 和 build 从语义检查后的 AST 直接生成 LLVM IR。前端解析声明与表达式，展开宏，并进行名称、类型、所有权和借用检查；后端读取这棵已检查的树，生成 LLVM 指令和必要的运行时调用。LLVM 负责优化和目标代码生成，链接步骤把对象与所需运行时、系统库和应用依赖组合成原生产物。

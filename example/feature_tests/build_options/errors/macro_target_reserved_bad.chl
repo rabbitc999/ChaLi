@@ -1,0 +1,4 @@
+$macro system
+1
+$end_macro
+void main() {}

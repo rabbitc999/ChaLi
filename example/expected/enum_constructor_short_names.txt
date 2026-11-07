@@ -1,0 +1,1 @@
+enum constructors: contextual short names OK

@@ -1,0 +1,11 @@
+struct Handle : Closeable {
+    int64 id;
+    void close() { println("close={}", self.id); }
+}
+void consume(Handle value) { println("consume={}", value.id); }
+void main() {
+    Handle h;
+    h.id = 7;
+    defer { println("deferred={}", h.id); }
+    consume(move h);
+}

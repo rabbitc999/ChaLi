@@ -1,0 +1,29 @@
+Option<int64> look(List<int64> values, int64 index) {
+    if (index < 0 || index >= len(values)) {
+        return None;
+    }
+    return Value(values[index]);
+}
+
+Result<int64, MessageError> divide(int64 a, int64 b) {
+    if (b == 0) {
+        return Err(MessageError::from("除数为零"));
+    }
+    return Ok(a / b);
+}
+
+void main() {
+    List<int64> values;
+    values.push(7);
+    values.push(9);
+
+    match (look(values, 1)) {
+        Value(value) => { println("找到 {}", value); }
+        None => { println("越界"); }
+    }
+
+    Result<int64, MessageError> ok = divide(9, 3);
+    if (ok.isOk()) { println("商 {}", ok.take()); }
+    Result<int64, MessageError> bad = divide(1, 0);
+    if (bad.isErr()) { println("错误 {}", bad.takeError()); }
+}

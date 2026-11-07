@@ -1,0 +1,2 @@
+#borrow(#ret,[a,b])
+int64 mut& f(int64 mut& a,int64 mut& b,bool flag){return if(flag){yield a;}else{yield b;};}void main(){}

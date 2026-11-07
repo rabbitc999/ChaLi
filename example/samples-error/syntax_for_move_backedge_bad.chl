@@ -1,0 +1,9 @@
+struct ForHandle : Closeable {
+    int64 id;
+    void close() {}
+}
+void consume(ForHandle value) {}
+void main() {
+    ForHandle h;
+    for (int64 i = 0; i < 2; i++) { consume(move h); }
+}

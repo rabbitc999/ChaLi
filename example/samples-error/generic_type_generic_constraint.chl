@@ -1,0 +1,1 @@
+interface I{int64 number();};struct B<T>{T value;};struct G<T:I>{T value;};void main(){G<B<int64>> g;}

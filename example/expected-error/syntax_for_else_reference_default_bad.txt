@@ -1,0 +1,1 @@
+chali: example/samples-error/syntax_for_else_reference_default_bad.chl 第 3 行：[CHL1205] 借用来源已释放，不能继续访问：x

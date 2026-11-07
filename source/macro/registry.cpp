@@ -47,7 +47,7 @@ bool Registry::add(int definition, ScopeId scope, std::string &error)
     }
     const auto node = nodes_[definition];
     const auto key = std::make_pair(std::string(node.module.data(), node.module.size()), std::string(node.s.data(), node.s.size()));
-    if (key.second == "line" || key.second == "file" || key.second == "module" || key.second == "concat" || key.second == "stringify" || key.second == "fields" || key.second == "variants" || key.second == "methods" || key.second == "interfaces" || key.second == "member" || key.second == "count" || key.second == "compile_error" || key.second == "compile_assert")
+    if (key.second == "system" || key.second == "cpu" || key.second == "build" || key.second == "line" || key.second == "file" || key.second == "module" || key.second == "concat" || key.second == "stringify" || key.second == "fields" || key.second == "variants" || key.second == "methods" || key.second == "interfaces" || key.second == "member" || key.second == "count" || key.second == "compile_error" || key.second == "compile_assert")
     {
         error = "宏名称占用了编译期内建名称：" + key.second;
         return false;

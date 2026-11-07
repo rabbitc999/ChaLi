@@ -1,0 +1,22 @@
+import syntax_helpers;
+#borrow(refs, [first])
+#borrow(mapping, [first])
+#borrow(box, [first])
+void allowed(int64 mut& first, int64 mut& second) {
+    List<int64 mut&> refs;
+    refs.push(first);
+    List<int64 mut&> mut& alias = &refs;
+    alias.push(&first);
+    append(&refs, first);
+    refs.insert(0, &first);
+    refs[0] = &first;
+    if (false) { refs.push(&second); }
+    Map<String, int64 mut&> mapping;
+    String key = "key";
+    mapping.put(key, &first);
+    mapping.put("other", &first);
+    Any box;
+    box.set(&first);
+    assert(refs.len() == 4 && mapping.len() == 2);
+}
+void main() { int64 a = 1; int64 b = 2; allowed(&a, &b); println("borrow stores: direct,alias,module,map,Any,dead branch"); }

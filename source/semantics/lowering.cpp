@@ -1664,7 +1664,6 @@ bool ReceiverRooted(int id, const Memory::Set<Memory::String> &roots)
         return ReceiverRooted(node.kids[0], roots);
     return false;
 }
-
 bool MethodMutatesReceiver(const Memory::String &owner, const MMethod &method,
                            Memory::Set<Memory::String> *visiting);
 /**
@@ -1755,7 +1754,8 @@ bool BodyMutatesReceiver(int id, const Memory::String &owner, Memory::Set<Memory
         auto nestedLocals = locals;
         nested.erase(node.s);
         if (ReceiverRooted(node.kids[0], roots)) nested.insert(node.s);
-        return BodyMutatesReceiver(node.kids[1], owner, nested, visiting, nestedLocals, returnType);
+        return BodyMutatesReceiver(node.kids[1], owner, nested, visiting, nestedLocals, returnType)
+               || (node.kids.size() > 2u && BodyMutatesReceiver(node.kids[2], owner, nested, visiting, nestedLocals, returnType));
     }
     if (!node.kids.empty() && ((node.kind == MNode::Cast && node.type >= 0 && ReceiverConversionMutates(node.kids[0], T(node.type), true, owner, roots, locals, visiting)) || (node.kind == MNode::Declare && node.type >= 0 && ReceiverConversionMutates(node.kids[0], T(node.type), false, owner, roots, locals, visiting)) || (node.kind == MNode::Return && ReceiverConversionMutates(node.kids[0], returnType, false, owner, roots, locals, visiting)))) return true;
     if (node.kind == MNode::Assign && node.kids.size() > 1u && ReceiverConversionMutates(node.kids[1], ReceiverConversionType(node.kids[0], owner, locals), false, owner, roots, locals, visiting)) return true;
@@ -2146,8 +2146,8 @@ ast::NodePtr ReplaceBorrowedStruct(const ast::NodePtr &address, int valueId,
         ast::Node::declare(destination, ast::Type::i64()),
         ast::Node::assign(destination, address)
     };
-    if (const auto release = MakeAggregateRelease(type->name, ast::Node::var(destination)))
-        out.push_back(release);
+    const auto cleanup = MakeAggregateCleanup(type, ast::Node::var(destination));
+    out.insert(out.end(), cleanup.begin(), cleanup.end());
     out.push_back(MoveStructValue(ast::Node::var(destination), ast::Node::var(temp), type));
     return ast::Node::block(out);
 }
@@ -2235,8 +2235,8 @@ ast::NodePtr LowerAssignImpl(int targetId, int valueId)
                     ast::Node::declare(address, ast::Type::i64()),
                     ast::Node::assign(address, LowerRawExpr(targetId))
                 };
-                if (const auto release = MakeAggregateRelease(referenceType->elem->name,
-                                                              ast::Node::var(address))) out.push_back(release);
+                const auto cleanup = MakeAggregateCleanup(referenceType->elem, ast::Node::var(address));
+                out.insert(out.end(), cleanup.begin(), cleanup.end());
                 out.push_back(CopyStructValue(ast::Node::var(address),
                                               ast::Node::var(temp), referenceType->elem));
                 return ast::Node::block(out);
@@ -2377,7 +2377,7 @@ ast::NodePtr LowerAssignImpl(int targetId, int valueId)
                     out.push_back(init);
                 out.push_back(StoreStructValue(ast::Node::var(temp), valueId,
                                                LowerValueForType(valueId, found->type), found->type));
-                if (previous.drop || previous.close || previous.aggregate)
+                if (previous.drop || previous.close || previous.aggregate || StructNeedsDestruction(previous.owner))
                     out.push_back(MakeDestructorCall(previous));
                 out.push_back(CopyStructValue(ast::Node::var(found->emitted),
                                               ast::Node::var(temp), found->type));
@@ -2857,8 +2857,13 @@ ast::NodePtr AllocateDefaultObject(const std::shared_ptr<MType> &type)
         out.push_back(BeginAggregateLifetime(Node::var(address), bytes));
         InitializeDefaultContainers(Node::var(address), type->name, &out);
     }
-    else if (IsStandardOpcode(type, "String"))
-        out.push_back(Node::storeAt(Node::var(address), Node::call("std::core::__bootStringNew", {}, {}), ast::Type::i64()));
+    else if (type->kind != MType::Array && type->kind != MType::Ptr)
+    {
+        const auto initial = AllocateName("__chali_default_object_value");
+        out.push_back(Node::declare(initial, LowerType(type, initial)));
+        if (const auto init = DefaultInit(initial, type, true, false)) out.push_back(init);
+        out.push_back(Node::storeAt(Node::var(address), Node::var(initial), LowerType(type, initial)));
+    }
     return Node::sequence(std::move(out), Node::var(address));
 }
 
@@ -3069,6 +3074,7 @@ bool LowerConstructInit(const Memory::String &emitted, const std::shared_ptr<MTy
 #include "borrow_facts.cpp"
 #include "borrow_flow.cpp"
 #include "lifetime_contract.cpp"
+#include "lifetime_flow.cpp"
 
 /**
  * @brief 局部声明组：`int i = 0, m[3][4];` → 一条 `decl` + 初始化，逐个名字来。
@@ -4870,13 +4876,119 @@ ast::NodePtr LowerInterval(int id)
 }
 
 /**
- * @brief 为可迭代对象生成遍历循环。
- * @param id 待查找或操作的对象编号。
- * @retval 生成的低层语法节点。
+ * @brief 空输入时为借用元素槽建立默认值，按运行时构造标志清理。
+ * @param item 元素地址槽。
+ * @param element 元素值类型。
+ * @param prefix 收集运行时标志声明。
+ * @return 仅在后备路径调用的默认对象初始化。
+ */
+ast::NodePtr ForeachDefaultSource(const Memory::String &item, const std::shared_ptr<MType> &element,
+                                  Memory::Vector<ast::NodePtr> &prefix)
+{
+    if (element->kind == MType::Ptr || IsRuntimeArray(element)) return nullptr;
+    const auto active = AllocateName("__chali_foreach_default_active");
+    prefix.push_back(ast::Node::declare(active, ast::Type::i64()));
+    prefix.push_back(ast::Node::assign(active, ast::Node::i(0)));
+    const auto name = AllocateName("__chali_foreach_default");
+    const int type = M_TypePtrMut(M_AddType(element));
+    const int declaration = M_Decl(M_Name(name.c_str()), -1, M_NewPtr(-1));
+    g_nodes[declaration].type = type;
+    PushOwnedScope();
+    const auto init = LowerLocalDecl(M_LocalDecl(type, M_List1(declaration), 0));
+    const auto variable = Find(name);
+    const auto emitted = variable ? variable->emitted : Memory::String();
+    const MOwnedScope defaults = g_ownedScopes.back();
+    g_ownedScopes.pop_back();
+    Memory::Vector<ast::NodePtr> cleanup;
+    AppendScopeDrops(defaults, Memory::String(), &cleanup);
+    g_ownedScopes.back().finalizers.push_back(ast::Node::ifThenElse(
+        ast::Node::binary("!=", ast::Node::var(active), ast::Node::i(0)), ast::Node::block(cleanup), nullptr));
+    return ast::Node::block({ init, ast::Node::assign(item, ast::Node::var(emitted)),
+                              ast::Node::assign(active, ast::Node::i(1)) });
+}
+
+/**
+ * @brief 保存借用迭代元素的独立后备值，避免下一次 iterator 调用使旧借用失效。
+ */
+struct MForeachElseSnapshot
+{
+    ast::NodePtr update; ///< 继续迭代或普通 break 之前保存当前值。
+    ast::NodePtr empty; ///< 没有迭代时建立普通默认值。
+    MVar binding; ///< 后备分支使用的独立值绑定。
+    bool available = false; ///< 后备分支确实引用了循环变量。
+};
+/**
+ * @brief 为后备分支建立按值快照及条件清理，复制继续服从不可复制类型规则。
+ * @param id 循环节点。
+ * @param element 循环变量的公开值类型。
+ * @param prefix 收集外层存储和标志声明。
+ * @return 快照更新、空输入初始化及后备绑定。
+ */
+MForeachElseSnapshot ForeachElseSnapshot(int id, const std::shared_ptr<MType> &element,
+                                       Memory::Vector<ast::NodePtr> &prefix)
+{
+    const auto loop = N(id);
+    MForeachElseSnapshot result;
+    if (loop.kids.size() <= 2u) return result;
+    Memory::Set<Memory::String> locals, names;
+    CollectGenericClosureNames(loop.kids[2], locals, names);
+    if (!names.count(loop.s)) return result;
+    if (HasNonCopyableValue(element))
+    {
+        Fail("for-in 的 else 保存借用元素需要可复制的值类型；不可复制元素应在循环体内处理");
+        return result;
+    }
+    const auto active = AllocateName("__chali_foreach_snapshot_active");
+    prefix.push_back(ast::Node::declare(active, ast::Type::i64()));
+    prefix.push_back(ast::Node::assign(active, ast::Node::i(0)));
+    const auto name = AllocateName("__chali_foreach_snapshot");
+    if (g_addressTakenNames.count(loop.s)) g_addressTakenNames.insert(name);
+    const int source = M_Var(M_Name(loop.s.c_str()));
+    g_nodes[source].module = loop.module;
+    g_nodes[source].bindingIdentity = loop.bindingIdentity;
+    g_nodes[source].syntaxContext = loop.syntaxContext;
+    g_nodes[source].sourceLine = loop.sourceLine;
+    g_nodes[source].sourceColumn = loop.sourceColumn;
+    const int type = M_AddType(element);
+    const int declaration = M_Decl(M_Name(name.c_str()), -1, source);
+    g_nodes[declaration].type = type;
+    PushOwnedScope();
+    const auto init = LowerLocalDecl(M_LocalDecl(type, M_List1(declaration), 0));
+    const auto variable = Find(name);
+    if (variable) result.binding = *variable;
+    const MOwnedScope values = g_ownedScopes.back();
+    g_ownedScopes.pop_back();
+    if (!variable || !g_error.empty()) return result;
+    prefix.push_back(ast::Node::declare(result.binding.emitted, result.binding.elementReference ? ast::Type::i64() : LowerType(element, result.binding.emitted)));
+    Memory::Vector<ast::NodePtr> cleanup;
+    AppendScopeDrops(values, Memory::String(), &cleanup);
+    const auto release = ast::Node::ifThenElse(
+        ast::Node::binary("!=", ast::Node::var(active), ast::Node::i(0)), ast::Node::block(cleanup), nullptr);
+    g_ownedScopes.back().finalizers.push_back(release);
+    result.update = ast::Node::block({ release, init, ast::Node::assign(active, ast::Node::i(1)) });
+    const auto sourceVariable = FindNodeVar(loop);
+    const auto defaults = ForeachDefaultSource(sourceVariable ? sourceVariable->emitted : Memory::String(), element, prefix);
+    result.empty = ast::Node::ifThenElse(
+        ast::Node::binary("==", ast::Node::var(active), ast::Node::i(0)),
+        ast::Node::block({ defaults, result.update }), nullptr);
+    result.binding.bindingIdentity = loop.bindingIdentity;
+    result.available = true;
+    if (g_borrowFlowCapture)
+        g_borrowFlowCapture->foreachSnapshots[id] = { { result.binding.emitted, {} }, source };
+    return result;
+}
+
+/**
+ * @brief 降低 for-in，后备分支在循环存储和迭代来源清理之前执行。
+ * @param id 带可选后备分支的迭代节点。
+ * @return 包含迭代、默认值和作用域清理的低层语句。
  */
 ast::NodePtr LowerForeach(int id)
 {
     const MNode node = N(id);
+    const int fallbackId = node.kids.size() > 2u ? node.kids[2] : -1;
+    const bool fallback = fallbackId >= 0;
+    const auto seen = fallback ? AllocateName("__chali_foreach_seen") : Memory::String();
     RewriteRangeCall(node.kids[0]);
     const bool intervalSource = N(node.kids[0]).kind == MNode::Range;
     if (intervalSource && node.type >= 0 && N(node.kids[0]).s != "typed") g_nodes[node.kids[0]].type = node.type;
@@ -4891,6 +5003,7 @@ ast::NodePtr LowerForeach(int id)
         const Memory::String loopLabel = NewBlockLabel("foreach_vector");
         const Memory::String continueLabel = NewBlockLabel("foreach_next");
         const Memory::String breakLabel = NewBlockLabel("foreach_end");
+        const Memory::String breakCleanup = fallback ? NewBlockLabel("foreach_else_snapshot") : breakLabel;
         Memory::Vector<ast::NodePtr> out{
             ast::Node::declare(source, sourceType->kind == MType::Array ? ast::Type::i64() : LowerType(sourceType, source)),
             ast::Node::assign(source, LowerExpr(node.kids[0])),
@@ -4911,16 +5024,36 @@ ast::NodePtr LowerForeach(int id)
         binding->elementReference = true;
         binding->isConst = IsReadOnlyAccess(node.kids[0]);
         out.push_back(ast::Node::declare(item, ast::Type::i64()));
-        const std::size_t loopDepth = g_ownedScopes.size();
+        if (g_borrowFlowCapture)
+        {
+            g_borrowFlowCapture->foreachBindings[id] = { item, {} };
+            if (HasBorrowedValue(element) || IsRuntimeArray(element)) g_borrowFlowCapture->foreachNoDefault.insert(id);
+        }
+        if (fallback)
+        {
+            out.push_back(ast::Node::declare(seen, ast::Type::i64()));
+            out.push_back(ast::Node::assign(seen, ast::Node::i(0)));
+        }
+        const MVar originalBinding = *FindNodeVar(node);
+        const auto snapshot = fallback ? ForeachElseSnapshot(id, element, out) : MForeachElseSnapshot{};
+        if (!g_error.empty()) { g_ownedScopes.pop_back(); PopScope(); return Bad(); }
+        const std::size_t loopDepth = g_ownedScopes.size() + (fallback ? 1u : 0u);
         PushOwnedScope();
         if (sourceType->kind != MType::Array)
-            g_ownedScopes.back().finalizers.push_back(ast::Node::exprStmt(ast::Node::call(
-                "__std_vec_unref", { "__chali_v", "__chali_address" },
-                { ast::Node::var(source), ast::Node::var(item) })));
-        g_blockStack.push_back(MBlockContext{ breakLabel, continueLabel, loopDepth, {}, nullptr });
+        {
+            const auto release = ast::Node::exprStmt(ast::Node::call(
+                "__std_vec_unref", { "__chali_v", "__chali_address" }, { ast::Node::var(source), ast::Node::var(item) }));
+            g_ownedScopes.back().finalizers.push_back(fallback ? ast::Node::ifThenElse(
+                ast::Node::binary("!=", ast::Node::var(seen), ast::Node::i(0)),
+                ast::Node::block({ release, ast::Node::assign(seen, ast::Node::i(0)) }), nullptr) : release);
+        }
+        g_blockStack.push_back(MBlockContext{ breakCleanup, continueLabel, loopDepth, {}, nullptr });
         g_blockStack.back().sourceNode = id;
         const ast::NodePtr body = LowerStmt(node.kids[1]);
         g_blockStack.pop_back();
+        if (snapshot.available) *FindNodeVar(node) = snapshot.binding;
+        const auto fallbackBody = fallback ? LowerStmt(fallbackId) : nullptr;
+        *FindNodeVar(node) = originalBinding;
         const MOwnedScope iteration = g_ownedScopes.back();
         g_ownedScopes.pop_back();
         const MOwnedScope owned = g_ownedScopes.back();
@@ -4950,14 +5083,31 @@ ast::NodePtr LowerForeach(int id)
             ast::Node::binary("<", ast::Node::var(index), length),
             ast::Node::block({}), ast::Node::jump(breakLabel)));
         out.push_back(ast::Node::assign(item, value));
+        if (fallback) out.push_back(ast::Node::assign(seen, ast::Node::i(1)));
         out.push_back(body);
-        AppendScopeDrops(iteration, Memory::String(), &out);
+        if (!fallback) AppendScopeDrops(iteration, Memory::String(), &out);
         out.push_back(ast::Node::label(continueLabel));
+        if (fallback)
+        {
+            if (snapshot.update) out.push_back(snapshot.update);
+            AppendScopeDrops(iteration, Memory::String(), &out);
+        }
         out.push_back(ast::Node::assign(
             index, ast::Node::binary("+", ast::Node::var(index),
                                      ast::Node::i(1))));
         out.push_back(ast::Node::jump(loopLabel));
+        if (fallback)
+        {
+            out.push_back(ast::Node::label(breakCleanup));
+            if (snapshot.update) out.push_back(snapshot.update);
+            AppendScopeDrops(iteration, Memory::String(), &out);
+        }
         out.push_back(ast::Node::label(breakLabel));
+        if (fallback)
+        {
+            if (snapshot.empty) out.push_back(snapshot.empty);
+            out.push_back(fallbackBody);
+        }
         AppendScopeDrops(owned, Memory::String(), &out);
         return ast::Node::block(out);
     }
@@ -5012,9 +5162,22 @@ ast::NodePtr LowerForeach(int id)
         out.push_back(ast::Node::assign(item, ast::Node::alloc(ast::Node::i(ElementBytes(element)))));
         MarkOwned(item);
     }
-    if (intervalSource && g_borrowFlowCapture) g_borrowFlowCapture->foreachBindings[id] = { item, {} };
-    if (!reference && element->kind == MType::Struct)
-        out.push_back(DefaultInit(item, element));
+    if (g_borrowFlowCapture)
+    {
+        g_borrowFlowCapture->foreachBindings[id] = { item, {} };
+        if (HasBorrowedValue(element) || IsRuntimeArray(element)) g_borrowFlowCapture->foreachNoDefault.insert(id);
+    }
+    if (!reference && (element->kind == MType::Struct || fallback))
+        out.push_back(captureStorage ? ast::Node::storeAt(ast::Node::var(item), ast::Node::i(0), LowerType(element, item)) :
+                                      DefaultInit(item, element));
+    if (fallback)
+    {
+        out.push_back(ast::Node::declare(seen, ast::Type::i64()));
+        out.push_back(ast::Node::assign(seen, ast::Node::i(0)));
+    }
+    const MVar originalBinding = *FindNodeVar(node);
+    const auto snapshot = fallback && reference ? ForeachElseSnapshot(id, element, out) : MForeachElseSnapshot{};
+    if (!g_error.empty()) { g_ownedScopes.pop_back(); PopScope(); return Bad(); }
     // Option 的载荷移交给循环变量；每轮结束清理，return item 时允许转移所有权。
     PushOwnedScope();
     if (!reference)
@@ -5033,6 +5196,9 @@ ast::NodePtr LowerForeach(int id)
     g_blockStack.back().sourceNode = id;
     const ast::NodePtr body = LowerStmt(node.kids[1]);
     g_blockStack.pop_back();
+    if (snapshot.available) *FindNodeVar(node) = snapshot.binding;
+    const auto fallbackBody = fallback ? LowerStmt(fallbackId) : nullptr;
+    *FindNodeVar(node) = originalBinding;
     const MOwnedScope iterationOwned = g_ownedScopes.back();
     g_ownedScopes.pop_back();
     const MOwnedScope owned = g_ownedScopes.back();
@@ -5051,13 +5217,22 @@ ast::NodePtr LowerForeach(int id)
     out.push_back(ast::Node::ifThenElse(
         ast::Node::binary("==", tag, ast::Node::i(value->tag)),
         ast::Node::block({}), ast::Node::jump(breakLabel)));
+    if (fallback && !reference)
+    {
+        Memory::Vector<ast::NodePtr> previous;
+        AppendScopeDrops(iterationOwned, Memory::String(), &previous);
+        const auto initialRelease = element->kind == MType::Struct ? MakeAggregateRelease(element->name, ast::Node::var(item)) : ast::Node::block(previous);
+        out.push_back(ast::Node::ifThenElse(
+            ast::Node::binary("!=", ast::Node::var(seen), ast::Node::i(0)), ast::Node::block(previous), initialRelease));
+    }
     const ast::NodePtr payloadAddress = ast::Node::offset(
         ast::Node::var(result), ast::Node::i(valueField->slot), 8);
     if (reference)
         out.push_back(ast::Node::assign(item, ast::Node::loadInt(payloadAddress)));
     else if (element->kind == MType::Struct)
-        /* 载荷是借来的（下一轮迭代就换 / 释放），绑进循环变量时深拷贝一份。 */
-        out.push_back(DeepCopyStructValue(ast::Node::var(item), payloadAddress, element));
+        // 值迭代器移交不可复制载荷；可复制载荷继续保存独立副本。
+        out.push_back(HasNonCopyableValue(element) ? MoveStructValue(ast::Node::var(item), payloadAddress, element) :
+                                                  DeepCopyStructValue(ast::Node::var(item), payloadAddress, element));
     else if (captureStorage)
         out.push_back(ast::Node::storeAt(ast::Node::var(item),
                                          ast::Node::loadFrom(payloadAddress, LowerType(element, item)), LowerType(element, item)));
@@ -5073,16 +5248,25 @@ ast::NodePtr LowerForeach(int id)
         if (const ast::NodePtr release =
                 MakeAggregateRelease(iterator->result->name, ast::Node::var(result)))
             out.push_back(release);
+    if (fallback) out.push_back(ast::Node::assign(seen, ast::Node::i(1)));
     out.push_back(body);
     out.push_back(ast::Node::label(continueLabel));
-    AppendScopeDrops(iterationOwned, Memory::String(), &out);
+    if (snapshot.update) out.push_back(snapshot.update);
+    if (!fallback) AppendScopeDrops(iterationOwned, Memory::String(), &out);
     out.push_back(ast::Node::assign(
         index, ast::Node::binary("+", ast::Node::var(index),
                                  ast::Node::i(1))));
     out.push_back(ast::Node::jump(loopLabel));
     out.push_back(ast::Node::label(breakCleanup));
-    AppendScopeDrops(iterationOwned, Memory::String(), &out);
+    if (snapshot.update) out.push_back(snapshot.update);
+    if (!fallback) AppendScopeDrops(iterationOwned, Memory::String(), &out);
     out.push_back(ast::Node::label(breakLabel));
+    if (fallback)
+    {
+        if (snapshot.empty) out.push_back(snapshot.empty);
+        out.push_back(fallbackBody);
+        AppendScopeDrops(iterationOwned, Memory::String(), &out);
+    }
     AppendScopeDrops(owned, Memory::String(), &out);
     return ast::Node::block(out);
 }
@@ -5178,12 +5362,14 @@ ast::NodePtr LowerFor(int id)
     Memory::Vector<ast::NodePtr> out;
     /* `for (int i = 0; …)` 里的 `i` 归**这一层循环**（外面看不见，同名可以遮蔽）。 */
     PushScope();
+    PushOwnedScope();
     if (initId >= 0) out.push_back(LowerStmt(initId)); /* 初始化：只走一遍 */
     out.push_back(ast::Node::label(loopLabel));
     if (condId >= 0)
     {
         if (!CheckBoolCondition(condId, "for 条件"))
         {
+            g_ownedScopes.pop_back();
             PopScope();
             return Bad();
         }
@@ -5206,7 +5392,11 @@ ast::NodePtr LowerFor(int id)
     if (incId >= 0) out.push_back(LowerStmt(incId)); /* 自增：continue 也走这儿 */
     out.push_back(ast::Node::jump(loopLabel));
     out.push_back(ast::Node::label(breakLabel));
+    if (node.kids.size() > 4u) out.push_back(LowerStmt(node.kids[4]));
+    const MOwnedScope owned = g_ownedScopes.back();
+    g_ownedScopes.pop_back();
     PopScope();
+    AppendScopeDrops(owned, Memory::String(), &out);
     return ast::Node::block(out);
 }
 

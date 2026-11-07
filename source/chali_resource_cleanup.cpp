@@ -16,11 +16,18 @@ Memory::Vector<Merge> coalesce(const chali_borrow_checker::FlowGraph &graph,
 {
     using namespace chali_borrow_checker;
     Memory::Vector<Merge> result;
+    Memory::Map<int, std::size_t> occurrences;
+    for (std::size_t i = 0; i < graph.nodes.size(); ++i)
+        if (i < reachable.size() && reachable[i] && graph.nodes[i].operation >= 0
+            && (graph.nodes[i].kind == FlowNode::Drop || graph.nodes[i].kind == FlowNode::Destroy))
+            ++occurrences[graph.nodes[i].operation];
     for (std::size_t index = 0; index < graph.nodes.size(); ++index)
     {
         if (index >= states.size() || index >= reachable.size() || !reachable[index]) continue;
         const auto &node = graph.nodes[index];
         if (node.kind != FlowNode::Drop && node.kind != FlowNode::Destroy) continue;
+        // 首轮与后续迭代共用一条源码释放语句；单个副本的冗余不能删掉整条语句。
+        if (node.operation >= 0 && occurrences[node.operation] > 1u) continue;
         const auto &state = states[index];
         const auto targets = resolve(state, node.target);
         if (targets.size() != 1u) continue;

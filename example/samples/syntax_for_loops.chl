@@ -1,0 +1,107 @@
+int64 closed = 0;
+int64 deferred = 0;
+struct ForHandle : Closeable {
+    int64 id;
+    void close() { closed++; }
+}
+
+int64 finishEarly() {
+    for (ForHandle handle; ; ) {
+        handle.id = 7;
+        return handle.id;
+    }
+}
+
+ForHandle makeForHandle() { ForHandle value; return move value; }
+bool forCondition(ForHandle value, int64 index) { return index < 3; }
+void consumeFor(ForHandle value) {}
+
+int64 loopAtValueBlockEnd(bool choose) {
+    return {
+        if (choose) { yield 9; }
+        loop { yield 11; }
+    };
+}
+
+void loopAtFunctionEnd() { loop { break; } }
+
+int64 genericSum<T>(T[] values) {
+    int64 total = 0;
+    for (let i = 0; i < values.len(); i++) {
+        if (i % 2 == 1) { continue; }
+        total += cast<int64>(values[i]);
+    }
+    return total;
+}
+
+$macro COUNT_BODY(mut &out) -> stmt
+for (int64 i = 0; i < 4; i++) { out += i; }
+$end_macro
+
+void main() {
+    int64 i = 99;
+    int64 sum = 0;
+    for (int64 i = 0, j = 6; i < j; i++, j--) {
+        defer { deferred++; }
+        if (i == 1) { continue; }
+        sum += i + j;
+    }
+    assert(i == 99 && sum == 12 && deferred == 3);
+
+    int64 a = 0, b = 0;
+    for (a = 1, b = 5; a < b; a++, b--) { sum += a; }
+    assert(a == 3 && b == 3 && sum == 15);
+    for (; a < 5; ) { a++; }
+    for (;;) { a++; break; }
+    assert(a == 6);
+    a = 0;
+    for (int64 mut& reference = &a; reference < 3; ++reference) {}
+    for (int64 const& reference = &a; false; ) { assert(reference == 3); }
+    for (const int64 limit = 5; a < limit; a++) {}
+    for (List<int64> part = [1]; part.len() < 3; part.push(2)) { assert(part.len() > 0); }
+    assert(a == 5);
+    int64 steps = 0;
+    for (; steps < 4; steps++, ++steps) {}
+    assert(steps == 4);
+
+    outer: for (int64 row = 0; row < 4; row++) {
+        for (int64 col = 0; col < 4; col++) {
+            if (row == 2 && col == 1) { break outer; }
+        }
+    }
+
+    for (ForHandle handle; closed < 1; ) {
+        handle.id = 9;
+        break;
+    }
+    assert(closed == 1);
+    assert(finishEarly() == 7 && closed == 2);
+    for (ForHandle never; false; ) { assert(false); }
+    assert(closed == 3);
+    for (int64 round = 0; round < 512; round++) {
+        for (ForHandle owner; owner.id < 3; owner.id++) {
+            defer { deferred++; }
+            if (owner.id == 1) { continue; }
+        }
+    }
+    assert(closed == 515 && deferred == 1539);
+    for (int64 index = 0; forCondition(makeForHandle(), index); index++) {}
+    assert(closed == 519);
+    for (int64 index = 0; index < 3; consumeFor(makeForHandle()), index++) {}
+    assert(closed == 522);
+    int64[] values = new[5];
+    for (int64 index = 0; index < 5; index++) { values[index] = index + 1; }
+    assert(genericSum(values) == 9);
+    $COUNT_BODY(sum);
+    assert(sum == 21);
+
+    int64 loops = 0;
+    loop { loops++; if (loops == 2) { break; } }
+    loop { loops++; break; };
+    tagged: loop { loops++; break tagged; }
+    let value = loop { yield 7; };
+    assert(loops == 4 && value == 7);
+    assert(loopAtValueBlockEnd(true) == 9 && loopAtValueBlockEnd(false) == 11);
+    loopAtFunctionEnd();
+    println("for loops: scope,continue,comma,empty,labels,generic,macro,cleanup; loop semicolon optional");
+}

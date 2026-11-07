@@ -19,9 +19,9 @@ Result<bool, Error> ensureSchema(Database mut& database)
     for (String statement in statements)
     {
         let result = database.exec(statement);
-        if (!result.ok) { return Result<bool, Error>::Err(MessageError::from(result.error)); }
+        if (!result.ok) { return MessageError::from(result.error); }
     }
-    return Result<bool, Error>::Ok(true);
+    return Ok(true);
 }
 
 /** 只接受固定业务表名，客户端路径不能成为任意 SQL 标识符。 */
@@ -124,34 +124,34 @@ Result<String, Error> literal(Database mut& database, JsonValue const& body, Str
     let found = body.find(name);
     if (found.isNone())
     {
-        if (name == "user_id") { return Result<String, Error>::Ok("NULL"); }
-        return Result<String, Error>::Err(MessageError::from("缺少字段：" + name));
+        if (name == "user_id") { return Ok("NULL"); }
+        return MessageError::from("缺少字段：" + name);
     }
     let value = found.unwrap();
     if (textColumn(name))
     {
         let text = value.asString();
-        if (text.isNone()) { return Result<String, Error>::Err(MessageError::from("字段需要文本：" + name)); }
+        if (text.isNone()) { return MessageError::from("字段需要文本：" + name); }
         String item = Text::trim(text.unwrap());
         int64 maximum = 80;
         if (name == "code" || name == "teacher_no" || name == "student_no") { maximum = 32; }
         if (name == "term") { maximum = 40; }
-        if (len(item) < 1 || len(item) > maximum) { return Result<String, Error>::Err(MessageError::from("字段长度无效：" + name)); }
-        return Result<String, Error>::Ok(database.quote(item));
+        if (len(item) < 1 || len(item) > maximum) { return MessageError::from("字段长度无效：" + name); }
+        return Ok(database.quote(item));
     }
     if (name == "score")
     {
         let score = value.asFloat64();
-        if (score.isNone() || score.unwrap() < 0.0 || score.unwrap() > 100.0) { return Result<String, Error>::Err(MessageError::from("成绩必须在 0–100 范围内")); }
-        return Result<String, Error>::Ok(value.dump());
+        if (score.isNone() || score.unwrap() < 0.0 || score.unwrap() > 100.0) { return MessageError::from("成绩必须在 0–100 范围内"); }
+        return Ok(value.dump());
     }
-    if (name == "user_id" && value.isNull()) { return Result<String, Error>::Ok("NULL"); }
+    if (name == "user_id" && value.isNull()) { return Ok("NULL"); }
     let number = value.asInt();
-    if (number.isNone()) { return Result<String, Error>::Err(MessageError::from("字段需要整数：" + name)); }
+    if (number.isNone()) { return MessageError::from("字段需要整数：" + name); }
     int64 item = number.unwrap();
-    if (name == "user_id" && item == 0) { return Result<String, Error>::Ok("NULL"); }
-    if (item < 1 || (name == "age" && item > 150)) { return Result<String, Error>::Err(MessageError::from("数值范围无效：" + name)); }
-    return Result<String, Error>::Ok(item.toString());
+    if (name == "user_id" && item == 0) { return Ok("NULL"); }
+    if (item < 1 || (name == "age" && item > 150)) { return MessageError::from("数值范围无效：" + name); }
+    return Ok(item.toString());
 }
 
 /** 读取已验证 JSON 整数字段；缺失时返回零供后续关系检查拒绝。 */
@@ -207,19 +207,23 @@ Reply write(Database mut& database, String entity, User user, String method, int
     String sql = "DELETE FROM " + source + " WHERE " + condition;
     if (method != "DELETE")
     {
-        let parsed = parse(text);
-        if (parsed.isErr() || !parsed.unwrap().isObject()) { return errorReply(400, "记录必须是 JSON 对象"); }
-        let body = parsed.unwrap();
+        let body = match (parse(text)) {
+            Ok(value) => { value }
+            Err(_) => { return errorReply(400, "记录必须是 JSON 对象"); }
+        };
+        if (!body.isObject()) { return errorReply(400, "记录必须是 JSON 对象"); }
         List<String> names = fields(entity);
         String columns = "";
         String values = "";
         String updates = "";
         for (String name in names)
         {
-            let item = literal(&database, &body, name);
-            if (item.isErr()) { return errorReply(400, item.error().toString()); }
+            String item = match (literal(&database, &body, name)) {
+                Ok(value) => { value }
+                Err(error) => { return errorReply(400, error.toString()); }
+            };
             if (!columns.isEmpty()) { columns += ","; values += ","; updates += ","; }
-            columns += name; values += item.unwrap(); updates += name + "=" + item.unwrap();
+            columns += name; values += item; updates += name + "=" + item;
         }
         if (!relations(&database, entity, &body, user)) { return errorReply(403, "账号角色不匹配，或教师未获该班级与科目授权"); }
         sql = "INSERT INTO " + source + "(" + columns + ") VALUES (" + values + ")";

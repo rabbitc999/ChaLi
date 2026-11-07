@@ -1,0 +1,2 @@
+#borrow(#ret,a)
+int64 mut& f(int64 mut& a,int64 mut& b){return a;}int64 mut& outer(int64 mut& a){int64 local=1;return f(a,&local);}void main(){}

@@ -13,12 +13,8 @@ void checkWord(uint32 word, bool bigEndian) {
     float32 value = decoded.unwrap();
     List<uint8> encoded = float32ToBytes(value, bigEndian);
     assert(encoded.len() == 4);
-    {
-        int64 n = 0;
-        while (n < 4) {
- assert(encoded[n] == bytes[n]); 
-            n = n + 1;
-        }
+    for (int64 n = 0; n < 4; n = n + 1) {
+        assert(encoded[n] == bytes[n]);
     }
     uint8 fixed[6];
     fixed[4] = (uint8)77; fixed[5] = (uint8)88;
@@ -30,14 +26,10 @@ void checkWord(uint32 word, bool bigEndian) {
     assert(float32ToBytes(value, &dynamic, bigEndian));
     assert(dynamic[4] == (uint8)99);
     List<uint8> dynamicResult = float32ToBytes(bytesToFloat32(dynamic, bigEndian).unwrap(), bigEndian);
-    {
-        int64 n = 0;
-        while (n < 4) {
+    for (int64 n = 0; n < 4; n = n + 1) {
 
         assert(fixedResult[n] == bytes[n] && dynamicResult[n] == bytes[n]);
-    
-            n = n + 1;
-        }
+
     }
 }
 
@@ -61,24 +53,16 @@ void main() {
     words[6] = (uint32)4286578688; // -inf
     words[7] = (uint32)2143289344; // quiet NaN
     words[8] = (uint32)3212836864; // -1
-    {
-        int64 i = 0;
-        while (i < 9) {
+    for (int64 i = 0; i < 9; i = i + 1) {
 
         checkWord(words[i], false);
         checkWord(words[i], true);
-    
-            i = i + 1;
-        }
+
     }
     List<uint8> invalid;
     assert(bytesToFloat32(invalid).isNone());
-    {
-        int64 n = 0;
-        while (n < 3) {
- invalid.push((uint8)0); 
-            n = n + 1;
-        }
+    for (int64 n = 0; n < 3; n = n + 1) {
+        invalid.push((uint8)0);
     }
     assert(bytesToFloat32(invalid, true).isNone());
     invalid.push((uint8)0);

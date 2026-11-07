@@ -1,0 +1,2 @@
+#borrow(#ret,a)
+int64 mut& f(int64 mut& a){int64 taken=move a;return a;}void main(){}

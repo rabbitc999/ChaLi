@@ -1,0 +1,13 @@
+import generic_helpers;
+int64 helper(int64 value) { return value + 1000; }
+int64 calls = 0;
+int64 next() { calls += 1; return 3; }
+void main() {
+    int64 temporary = 100;
+    int32 a = $generic_helpers::OUTER<int32>(next());
+    int64 b = $generic_helpers::OUTER(4);
+    int16 source = 7;
+    let inferred = $generic_helpers::CONVERT(source);
+    assert(a == 13 && b == 14 && calls == 1 && temporary == 100 && inferred == 7);
+    println("generic={},{} calls={} temporary={} inferred={}", a, b, calls, temporary, inferred);
+}

@@ -1,0 +1,9 @@
+int64 mut& choose(bool flag, int64 mut& a, int64 mut& b) {
+    return if (flag) { yield &a; } else { yield &b; };
+}
+void main() {
+    int64 a = 1; int64 b = 2;
+    int64 mut& x = choose(true, &a, &b); x = 11;
+    int64 mut& y = choose(false, &a, &b); y = 22;
+    assert(a == 11 && b == 22); println("refs={},{}", a, b);
+}

@@ -205,14 +205,10 @@ struct ResultSet {
 
     /** @brief 按列名找下标，找不到给 -1。 */
     int64 columnIndex(String name) {
-        {
-            int64 i = 0;
-            while (i < len(self.columns)) {
+        for (int64 i = 0; i < len(self.columns); i = i + 1) {
 
             if (self.columns[i] == name) { return i; }
-        
-                i = i + 1;
-            }
+
         }
         return -1;
     }
@@ -254,86 +250,54 @@ struct ResultSet {
         if (self.colCount() == 0) { return format("影响 {} 行", self.affected); }
 
         List<int64> widths;
-        {
-            int64 c = 0;
-            while (c < self.colCount()) {
+        for (int64 c = 0; c < self.colCount(); c = c + 1) {
 
             int64 w = displayWidth(self.columnName(c));
             widths.push(w);
-        
-                c = c + 1;
-            }
-        }
-        {
-            int64 r = 0;
-            while (r < self.rowCount()) {
 
-            {
-                int64 c = 0;
-                while (c < self.colCount()) {
+        }
+        for (int64 r = 0; r < self.rowCount(); r = r + 1) {
+
+            for (int64 c = 0; c < self.colCount(); c = c + 1) {
 
                 int64 w = displayWidth(self.textAt(r, c));
                 if (w > widths[c]) { widths[c] = w; }
-            
-                    c = c + 1;
-                }
+
             }
-        
-                r = r + 1;
-            }
+
         }
         String bar = "+";
-        {
-            int64 c = 0;
-            while (c < self.colCount()) {
+        for (int64 c = 0; c < self.colCount(); c = c + 1) {
 
             int64 limit = widths[c] + 2;
-            {
-                int64 k = 0;
-                while (k < limit) {
- bar = bar + "-"; 
-                    k = k + 1;
-                }
+            for (int64 k = 0; k < limit; k = k + 1) {
+                bar = bar + "-";
             }
             bar = bar + "+";
-        
-                c = c + 1;
-            }
+
         }
         String out = bar + "\n";
-        {
-            int64 c = 0;
-            while (c < self.colCount()) {
+        for (int64 c = 0; c < self.colCount(); c = c + 1) {
 
             String raw = self.columnName(c);
             String cell = self.pad(raw, widths[c]);
             out = out + "| " + cell + " ";
-        
-                c = c + 1;
-            }
+
         }
         out = out + "|\n";
         out = out + bar + "\n";
-        {
-            int64 r = 0;
-            while (r < self.rowCount()) {
+        for (int64 r = 0; r < self.rowCount(); r = r + 1) {
 
-            {
-                int64 c = 0;
-                while (c < self.colCount()) {
+            for (int64 c = 0; c < self.colCount(); c = c + 1) {
 
                 String raw = self.textAt(r, c);
                 String cell = self.pad(raw, widths[c]);
                 out = out + "| " + cell + " ";
-            
-                    c = c + 1;
-                }
+
             }
             out = out + "|\n";
             out = out + bar + "\n";
-        
-                r = r + 1;
-            }
+
         }
         return out;
     }
@@ -460,23 +424,15 @@ opcode Database {
 
         int64 columns = (int64)__sqlColCount(rs);
         int64 rows = (int64)__sqlRowCount(rs);
-        {
-            int64 c = 0;
-            while (c < columns) {
+        for (int64 c = 0; c < columns; c = c + 1) {
 
             result.columns.push(__sqlColName(rs, (int32)c));
-        
-                c = c + 1;
-            }
+
         }
-        {
-            int64 r = 0;
-            while (r < rows) {
+        for (int64 r = 0; r < rows; r = r + 1) {
 
             DataRow row;
-            {
-                int64 c = 0;
-                while (c < columns) {
+            for (int64 c = 0; c < columns; c = c + 1) {
 
                 int32 kind = __sqlCellKind(rs, (int32)r, (int32)c);
                 DataCell cell;
@@ -487,14 +443,10 @@ opcode Database {
                     cell.realValue = __sqlCellReal(rs, (int32)r, (int32)c);
                 }
                 row.cells.push(cell);
-            
-                    c = c + 1;
-                }
+
             }
             result.rows.push(row);
-        
-                r = r + 1;
-            }
+
         }
         __sqlFree(rs);
         return result;
@@ -540,7 +492,7 @@ opcode Database {
             _ => { }
         }
         String sql = "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()"
-                     " AND table_name = " + name;
+        " AND table_name = " + name;
         return self.count(sql) > 0;
     }
 };
@@ -593,38 +545,38 @@ int64 displayWidth(String text) {
     return width;
 }
 
-    /** 从带模型注解的反射类型创建查询。 */
-    Result<Query,Error> query<T>() {
-        let metadata = __model<T>();
-        if (metadata.isErr()) { return Result<Query,Error>::Err(MessageError::from(metadata.error())); }
-        Query query;
-        query.model = metadata.unwrap();
-        return Result<Query,Error>::Ok(query);
-    }
-    /** 添加参数化条件；操作符编号与 ipage OperatorType 一致，默认相等。 */
-    Result<bool,Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0) {
-        let encoded = serialize<V>(&value);
-        if (encoded.isErr()) { return Result<bool,Error>::Err(MessageError::from(encoded.error())); }
-        query.filters.push("{\"field\":" + std::reflect::__serdeQuote(field) + ",\"op\":" + operation.toString() + ",\"values\":[" + encoded.unwrap() + "]}");
-        return Result<bool,Error>::Ok(true);
-    }
-    /** 添加 IN 或 NOT IN 等多参数条件。 */
-    Result<bool,Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11) {
-        let encoded = serialize<List<V>>(&values);
-        if (encoded.isErr()) { return Result<bool,Error>::Err(MessageError::from(encoded.error())); }
-        query.filters.push("{\"field\":" + std::reflect::__serdeQuote(field) + ",\"op\":" + operation.toString() + ",\"values\":" + encoded.unwrap() + "}");
-        return Result<bool,Error>::Ok(true);
-    }
+/** 从带模型注解的反射类型创建查询。 */
+Result<Query,Error> query<T>() {
+    let metadata = __model<T>();
+    if (metadata.isErr()) { return Result<Query,Error>::Err(MessageError::from(metadata.error())); }
+    Query query;
+    query.model = metadata.unwrap();
+    return Result<Query,Error>::Ok(query);
+}
+/** 添加参数化条件；操作符编号与 ipage OperatorType 一致，默认相等。 */
+Result<bool,Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0) {
+    let encoded = serialize<V>(&value);
+    if (encoded.isErr()) { return Result<bool,Error>::Err(MessageError::from(encoded.error())); }
+    query.filters.push("{\"field\":" + std::reflect::__serdeQuote(field) + ",\"op\":" + operation.toString() + ",\"values\":[" + encoded.unwrap() + "]}");
+    return Result<bool,Error>::Ok(true);
+}
+/** 添加 IN 或 NOT IN 等多参数条件。 */
+Result<bool,Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11) {
+    let encoded = serialize<List<V>>(&values);
+    if (encoded.isErr()) { return Result<bool,Error>::Err(MessageError::from(encoded.error())); }
+    query.filters.push("{\"field\":" + std::reflect::__serdeQuote(field) + ",\"op\":" + operation.toString() + ",\"values\":" + encoded.unwrap() + "}");
+    return Result<bool,Error>::Ok(true);
+}
 
-    /** 使用模型值生成参数化 INSERT。 */
-    Result<SqlStatement,Error> insert<T>(Query mut& query, T const& value) {
-        let encoded = serialize<T>(value);
-        if (encoded.isErr()) { return Result<SqlStatement,Error>::Err(MessageError::from(encoded.error())); }
-        return query.build("insert", encoded.unwrap());
-    }
-    /** 使用模型值生成参数化 UPDATE，主键不会被修改。 */
-    Result<SqlStatement,Error> update<T>(Query mut& query, T const& value) {
-        let encoded = serialize<T>(value);
-        if (encoded.isErr()) { return Result<SqlStatement,Error>::Err(MessageError::from(encoded.error())); }
-        return query.build("update", encoded.unwrap());
-    }
+/** 使用模型值生成参数化 INSERT。 */
+Result<SqlStatement,Error> insert<T>(Query mut& query, T const& value) {
+    let encoded = serialize<T>(value);
+    if (encoded.isErr()) { return Result<SqlStatement,Error>::Err(MessageError::from(encoded.error())); }
+    return query.build("insert", encoded.unwrap());
+}
+/** 使用模型值生成参数化 UPDATE，主键不会被修改。 */
+Result<SqlStatement,Error> update<T>(Query mut& query, T const& value) {
+    let encoded = serialize<T>(value);
+    if (encoded.isErr()) { return Result<SqlStatement,Error>::Err(MessageError::from(encoded.error())); }
+    return query.build("update", encoded.unwrap());
+}

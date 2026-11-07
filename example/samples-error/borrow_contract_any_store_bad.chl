@@ -1,0 +1,3 @@
+#borrow(box, [a])
+void bad(int64 mut& a,int64 mut& b) { Any box; box.set(&b); }
+void main() { int64 a=1;int64 b=2;bad(&a,&b); }

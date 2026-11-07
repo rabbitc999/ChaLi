@@ -1,0 +1,7 @@
+[package]
+name = "check_alias"
+version = "1.0.0"
+[chali]
+main = "main.chl"
+[build]
+target = "linux-arm64"

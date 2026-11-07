@@ -1,0 +1,1 @@
+enum payload ownership: closed=5120 deferred=5120 cross-module generic borrow

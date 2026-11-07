@@ -131,9 +131,7 @@ void main() {
     assert((fused.next().isNone()) == (true));
     List<int64> empty;
     assert((empty.intoIter().count()) == (0));
-    {
-        int64 round = 0;
-        while (round < 4) {
+    for (int64 round = 0; round < 4; round = round + 1) {
 
         List<int64> source; source.push(1); source.push(2); source.push(3);
         {
@@ -162,7 +160,7 @@ void main() {
         assert((map.len()) == (0));
         for (Pair<String, String> entry in entries) {
             assert((entry.first == "a" && entry.second == "one")
-                || (entry.first == "b" && entry.second == "two"));
+            || (entry.first == "b" && entry.second == "two"));
         }
         List<String> words; words.push("one"); words.push("two");
         {
@@ -176,9 +174,7 @@ void main() {
         assert(((records[0]).number) == (5));
         let text = intIter(1,4).map(label).collect();
         assert((text[2]) == ("n3"));
-    
-            round = round + 1;
-        }
+
     }
     int64 raw[3]; raw[0] = 7; raw[1] = 8; raw[2] = 9;
     assert((fromSpan<int64>(&raw[0],3).map(read).fold(0,sum)) == (24));
@@ -793,7 +789,7 @@ Option<T> last();
 obj.last();
 ```
 
-**源码**：[source/std/iter.chl:121](../../source/std/iter.chl#L121)。
+**源码**：[source/std/iter.chl:117](../../source/std/iter.chl#L117)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -832,7 +828,7 @@ bool all(bool fn(T) predicate);
 obj.all(predicate);
 ```
 
-**源码**：[source/std/iter.chl:137](../../source/std/iter.chl#L137)。
+**源码**：[source/std/iter.chl:133](../../source/std/iter.chl#L133)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -871,7 +867,7 @@ bool any(bool fn(T) predicate);
 obj.any(predicate);
 ```
 
-**源码**：[source/std/iter.chl:154](../../source/std/iter.chl#L154)。
+**源码**：[source/std/iter.chl:150](../../source/std/iter.chl#L150)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -910,7 +906,7 @@ Option<T> find(bool fn(T) predicate);
 obj.find(predicate);
 ```
 
-**源码**：[source/std/iter.chl:171](../../source/std/iter.chl#L171)。
+**源码**：[source/std/iter.chl:167](../../source/std/iter.chl#L167)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -949,7 +945,7 @@ void forEach(void fn(T) action);
 obj.forEach(action);
 ```
 
-**源码**：[source/std/iter.chl:188](../../source/std/iter.chl#L188)。
+**源码**：[source/std/iter.chl:184](../../source/std/iter.chl#L184)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -989,7 +985,7 @@ Iter<T> fromState<T,S>(S state);
 fromState<T,S>(state);
 ```
 
-**源码**：[source/std/iter.chl:210](../../source/std/iter.chl#L210)。
+**源码**：[source/std/iter.chl:206](../../source/std/iter.chl#L206)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1027,7 +1023,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:224](../../source/std/iter.chl#L224)。
+**源码**：[source/std/iter.chl:220](../../source/std/iter.chl#L220)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1065,7 +1061,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:235](../../source/std/iter.chl#L235)。
+**源码**：[source/std/iter.chl:231](../../source/std/iter.chl#L231)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1105,7 +1101,7 @@ Iter<T> fromIterator<T,S : Iterator<T>>(S source);
 fromIterator<T,S >>(source);
 ```
 
-**源码**：[source/std/iter.chl:245](../../source/std/iter.chl#L245)。
+**源码**：[source/std/iter.chl:241](../../source/std/iter.chl#L241)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1141,7 +1137,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:260](../../source/std/iter.chl#L260)。
+**源码**：[source/std/iter.chl:256](../../source/std/iter.chl#L256)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1177,7 +1173,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:272](../../source/std/iter.chl#L272)。
+**源码**：[source/std/iter.chl:268](../../source/std/iter.chl#L268)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1217,7 +1213,7 @@ Iter<T> fromList<T>(List<T> values);
 fromList(values);
 ```
 
-**源码**：[source/std/iter.chl:284](../../source/std/iter.chl#L284)。
+**源码**：[source/std/iter.chl:280](../../source/std/iter.chl#L280)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1253,7 +1249,7 @@ Option<int64> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:300](../../source/std/iter.chl#L300)。
+**源码**：[source/std/iter.chl:296](../../source/std/iter.chl#L296)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1289,7 +1285,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:317](../../source/std/iter.chl#L317)。
+**源码**：[source/std/iter.chl:313](../../source/std/iter.chl#L313)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1332,7 +1328,7 @@ Iter<int64> intIter(int64 start, int64 stop, int64 step);
 intIter(start, stop, step);
 ```
 
-**源码**：[source/std/iter.chl:351](../../source/std/iter.chl#L351)。
+**源码**：[source/std/iter.chl:347](../../source/std/iter.chl#L347)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1373,7 +1369,7 @@ Iter<int64> intIter(int64 start, int64 stop);
 intIter(start, stop);
 ```
 
-**源码**：[source/std/iter.chl:366](../../source/std/iter.chl#L366)。
+**源码**：[source/std/iter.chl:362](../../source/std/iter.chl#L362)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1409,7 +1405,7 @@ Option<U> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:378](../../source/std/iter.chl#L378)。
+**源码**：[source/std/iter.chl:374](../../source/std/iter.chl#L374)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1445,7 +1441,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:389](../../source/std/iter.chl#L389)。
+**源码**：[source/std/iter.chl:385](../../source/std/iter.chl#L385)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1484,7 +1480,7 @@ Iter<U> map<T,U>(Iter<T> source, U fn(T) callback);
 map(source, callback);
 ```
 
-**源码**：[source/std/iter.chl:401](../../source/std/iter.chl#L401)。
+**源码**：[source/std/iter.chl:397](../../source/std/iter.chl#L397)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1521,7 +1517,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:416](../../source/std/iter.chl#L416)。
+**源码**：[source/std/iter.chl:412](../../source/std/iter.chl#L412)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1557,7 +1553,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:432](../../source/std/iter.chl#L432)。
+**源码**：[source/std/iter.chl:428](../../source/std/iter.chl#L428)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1596,7 +1592,7 @@ Iter<T> filter<T>(Iter<T> source, bool fn(T) predicate);
 filter(source, predicate);
 ```
 
-**源码**：[source/std/iter.chl:445](../../source/std/iter.chl#L445)。
+**源码**：[source/std/iter.chl:441](../../source/std/iter.chl#L441)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1633,7 +1629,7 @@ Option<U> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:460](../../source/std/iter.chl#L460)。
+**源码**：[source/std/iter.chl:456](../../source/std/iter.chl#L456)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1669,7 +1665,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:477](../../source/std/iter.chl#L477)。
+**源码**：[source/std/iter.chl:473](../../source/std/iter.chl#L473)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1708,7 +1704,7 @@ Iter<U> filterMap<T,U>(Iter<T> source, Option<U> fn(T) callback);
 filterMap(source, callback);
 ```
 
-**源码**：[source/std/iter.chl:490](../../source/std/iter.chl#L490)。
+**源码**：[source/std/iter.chl:486](../../source/std/iter.chl#L486)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1744,7 +1740,7 @@ Option<U> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:506](../../source/std/iter.chl#L506)。
+**源码**：[source/std/iter.chl:502](../../source/std/iter.chl#L502)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1780,7 +1776,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:525](../../source/std/iter.chl#L525)。
+**源码**：[source/std/iter.chl:521](../../source/std/iter.chl#L521)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1819,7 +1815,7 @@ Iter<U> mapWhile<T,U>(Iter<T> source, Option<U> fn(T) callback);
 mapWhile(source, callback);
 ```
 
-**源码**：[source/std/iter.chl:538](../../source/std/iter.chl#L538)。
+**源码**：[source/std/iter.chl:534](../../source/std/iter.chl#L534)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1855,7 +1851,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:554](../../source/std/iter.chl#L554)。
+**源码**：[source/std/iter.chl:550](../../source/std/iter.chl#L550)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1891,7 +1887,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:573](../../source/std/iter.chl#L573)。
+**源码**：[source/std/iter.chl:569](../../source/std/iter.chl#L569)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1930,7 +1926,7 @@ Iter<T> takeWhile<T>(Iter<T> source, bool fn(T) predicate);
 takeWhile(source, predicate);
 ```
 
-**源码**：[source/std/iter.chl:586](../../source/std/iter.chl#L586)。
+**源码**：[source/std/iter.chl:582](../../source/std/iter.chl#L582)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -1967,7 +1963,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:602](../../source/std/iter.chl#L602)。
+**源码**：[source/std/iter.chl:598](../../source/std/iter.chl#L598)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2003,7 +1999,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:619](../../source/std/iter.chl#L619)。
+**源码**：[source/std/iter.chl:615](../../source/std/iter.chl#L615)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2042,7 +2038,7 @@ Iter<T> skipWhile<T>(Iter<T> source, bool fn(T) predicate);
 skipWhile(source, predicate);
 ```
 
-**源码**：[source/std/iter.chl:632](../../source/std/iter.chl#L632)。
+**源码**：[source/std/iter.chl:628](../../source/std/iter.chl#L628)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2078,7 +2074,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:648](../../source/std/iter.chl#L648)。
+**源码**：[source/std/iter.chl:644](../../source/std/iter.chl#L644)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2114,7 +2110,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:659](../../source/std/iter.chl#L659)。
+**源码**：[source/std/iter.chl:655](../../source/std/iter.chl#L655)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2154,7 +2150,7 @@ Iter<T> take<T>(Iter<T> source, int64 amount);
 take(source, amount);
 ```
 
-**源码**：[source/std/iter.chl:680](../../source/std/iter.chl#L680)。
+**源码**：[source/std/iter.chl:676](../../source/std/iter.chl#L676)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2190,7 +2186,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:696](../../source/std/iter.chl#L696)。
+**源码**：[source/std/iter.chl:692](../../source/std/iter.chl#L692)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2226,7 +2222,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:711](../../source/std/iter.chl#L711)。
+**源码**：[source/std/iter.chl:707](../../source/std/iter.chl#L707)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2266,7 +2262,7 @@ Iter<T> skip<T>(Iter<T> source, int64 amount);
 skip(source, amount);
 ```
 
-**源码**：[source/std/iter.chl:736](../../source/std/iter.chl#L736)。
+**源码**：[source/std/iter.chl:732](../../source/std/iter.chl#L732)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2302,7 +2298,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:753](../../source/std/iter.chl#L753)。
+**源码**：[source/std/iter.chl:749](../../source/std/iter.chl#L749)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2338,7 +2334,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:767](../../source/std/iter.chl#L767)。
+**源码**：[source/std/iter.chl:763](../../source/std/iter.chl#L763)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2377,7 +2373,7 @@ Iter<T> chain<T>(Iter<T> left, Iter<T> right);
 chain(left, right);
 ```
 
-**源码**：[source/std/iter.chl:779](../../source/std/iter.chl#L779)。
+**源码**：[source/std/iter.chl:775](../../source/std/iter.chl#L775)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2413,7 +2409,7 @@ Option<(T,U)> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:794](../../source/std/iter.chl#L794)。
+**源码**：[source/std/iter.chl:790](../../source/std/iter.chl#L790)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2449,7 +2445,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:809](../../source/std/iter.chl#L809)。
+**源码**：[source/std/iter.chl:805](../../source/std/iter.chl#L805)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2488,7 +2484,7 @@ Iter<(T,U)> zip<T,U>(Iter<T> left, Iter<U> right);
 zip(left, right);
 ```
 
-**源码**：[source/std/iter.chl:821](../../source/std/iter.chl#L821)。
+**源码**：[source/std/iter.chl:817](../../source/std/iter.chl#L817)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2524,7 +2520,7 @@ Option<(int64,T)> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:836](../../source/std/iter.chl#L836)。
+**源码**：[source/std/iter.chl:832](../../source/std/iter.chl#L832)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2560,7 +2556,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:849](../../source/std/iter.chl#L849)。
+**源码**：[source/std/iter.chl:845](../../source/std/iter.chl#L845)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2598,7 +2594,7 @@ Iter<(int64,T)> enumerate<T>(Iter<T> source);
 enumerate(source);
 ```
 
-**源码**：[source/std/iter.chl:860](../../source/std/iter.chl#L860)。
+**源码**：[source/std/iter.chl:856](../../source/std/iter.chl#L856)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2634,7 +2630,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:875](../../source/std/iter.chl#L875)。
+**源码**：[source/std/iter.chl:871](../../source/std/iter.chl#L871)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2670,7 +2666,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:886](../../source/std/iter.chl#L886)。
+**源码**：[source/std/iter.chl:882](../../source/std/iter.chl#L882)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2710,7 +2706,7 @@ Iter<T> stepBy<T>(Iter<T> source, int64 step);
 stepBy(source, step);
 ```
 
-**源码**：[source/std/iter.chl:898](../../source/std/iter.chl#L898)。
+**源码**：[source/std/iter.chl:894](../../source/std/iter.chl#L894)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2746,7 +2742,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:914](../../source/std/iter.chl#L914)。
+**源码**：[source/std/iter.chl:910](../../source/std/iter.chl#L910)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2782,7 +2778,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:928](../../source/std/iter.chl#L928)。
+**源码**：[source/std/iter.chl:924](../../source/std/iter.chl#L924)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2820,7 +2816,7 @@ Iter<T> fuse<T>(Iter<T> source);
 fuse(source);
 ```
 
-**源码**：[source/std/iter.chl:942](../../source/std/iter.chl#L942)。
+**源码**：[source/std/iter.chl:938](../../source/std/iter.chl#L938)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2856,7 +2852,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:956](../../source/std/iter.chl#L956)。
+**源码**：[source/std/iter.chl:952](../../source/std/iter.chl#L952)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2892,7 +2888,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:967](../../source/std/iter.chl#L967)。
+**源码**：[source/std/iter.chl:963](../../source/std/iter.chl#L963)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2931,7 +2927,7 @@ Iter<T> inspect<T>(Iter<T> source, void fn(T) action);
 inspect(source, action);
 ```
 
-**源码**：[source/std/iter.chl:979](../../source/std/iter.chl#L979)。
+**源码**：[source/std/iter.chl:975](../../source/std/iter.chl#L975)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -2967,7 +2963,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:995](../../source/std/iter.chl#L995)。
+**源码**：[source/std/iter.chl:991](../../source/std/iter.chl#L991)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3003,7 +2999,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:1014](../../source/std/iter.chl#L1014)。
+**源码**：[source/std/iter.chl:1010](../../source/std/iter.chl#L1010)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3041,7 +3037,7 @@ Iter<T> cycle<T>(Iter<T> source);
 cycle(source);
 ```
 
-**源码**：[source/std/iter.chl:1025](../../source/std/iter.chl#L1025)。
+**源码**：[source/std/iter.chl:1021](../../source/std/iter.chl#L1021)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3077,7 +3073,7 @@ Option<U> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:1041](../../source/std/iter.chl#L1041)。
+**源码**：[source/std/iter.chl:1037](../../source/std/iter.chl#L1037)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3113,7 +3109,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:1052](../../source/std/iter.chl#L1052)。
+**源码**：[source/std/iter.chl:1048](../../source/std/iter.chl#L1048)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3153,7 +3149,7 @@ Iter<U> scan<T,A,U>(Iter<T> source, A initial, Option<U> fn(A mut&, T) callback)
 scan<T,A,U>(source, initial, callback);
 ```
 
-**源码**：[source/std/iter.chl:1066](../../source/std/iter.chl#L1066)。
+**源码**：[source/std/iter.chl:1062](../../source/std/iter.chl#L1062)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3192,7 +3188,7 @@ List<T> collect<T>(Iter<T> source);
 collect(source);
 ```
 
-**源码**：[source/std/iter.chl:1080](../../source/std/iter.chl#L1080)。
+**源码**：[source/std/iter.chl:1076](../../source/std/iter.chl#L1076)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3233,7 +3229,7 @@ A fold<T,A>(Iter<T> source, A initial, A fn(A, T) callback);
 fold(source, initial, callback);
 ```
 
-**源码**：[source/std/iter.chl:1100](../../source/std/iter.chl#L1100)。
+**源码**：[source/std/iter.chl:1096](../../source/std/iter.chl#L1096)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3274,7 +3270,7 @@ Result<A,E> tryFold<T,A,E>(Iter<T> source, A initial, Result<A,E> fn(A, T) callb
 tryFold(source, initial, callback);
 ```
 
-**源码**：[source/std/iter.chl:1120](../../source/std/iter.chl#L1120)。
+**源码**：[source/std/iter.chl:1116](../../source/std/iter.chl#L1116)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3314,7 +3310,7 @@ Option<U> findMap<T,U>(Iter<T> source, Option<U> fn(T) callback);
 findMap(source, callback);
 ```
 
-**源码**：[source/std/iter.chl:1143](../../source/std/iter.chl#L1143)。
+**源码**：[source/std/iter.chl:1139](../../source/std/iter.chl#L1139)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3354,7 +3350,7 @@ bool sameItems<T>(Iter<T> left, Iter<T> right);
 sameItems(left, right);
 ```
 
-**源码**：[source/std/iter.chl:1164](../../source/std/iter.chl#L1164)。
+**源码**：[source/std/iter.chl:1160](../../source/std/iter.chl#L1160)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3392,7 +3388,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:1185](../../source/std/iter.chl#L1185)。
+**源码**：[source/std/iter.chl:1181](../../source/std/iter.chl#L1181)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3430,7 +3426,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:1191](../../source/std/iter.chl#L1191)。
+**源码**：[source/std/iter.chl:1187](../../source/std/iter.chl#L1187)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3468,7 +3464,7 @@ Iter<T> rev<T>(Iter<T> source);
 rev(source);
 ```
 
-**源码**：[source/std/iter.chl:1202](../../source/std/iter.chl#L1202)。
+**源码**：[source/std/iter.chl:1198](../../source/std/iter.chl#L1198)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3507,7 +3503,7 @@ rev(source);
 peekingTakeWhile(source, predicate);
 ```
 
-**源码**：[source/std/iter.chl:1225](../../source/std/iter.chl#L1225)。
+**源码**：[source/std/iter.chl:1217](../../source/std/iter.chl#L1217)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3545,7 +3541,7 @@ int64 countIter<T>(Iter<T> mut& source);
 countIter<T>(source);
 ```
 
-**源码**：[source/std/iter.chl:1244](../../source/std/iter.chl#L1244)。
+**源码**：[source/std/iter.chl:1236](../../source/std/iter.chl#L1236)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3584,7 +3580,7 @@ Option<T> nth<T>(Iter<T> mut& source, int64 index);
 nth<T>(source, index);
 ```
 
-**源码**：[source/std/iter.chl:1255](../../source/std/iter.chl#L1255)。
+**源码**：[source/std/iter.chl:1247](../../source/std/iter.chl#L1247)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3622,7 +3618,7 @@ Option<T> last<T>(Iter<T> mut& source);
 last<T>(source);
 ```
 
-**源码**：[source/std/iter.chl:1265](../../source/std/iter.chl#L1265)。
+**源码**：[source/std/iter.chl:1257](../../source/std/iter.chl#L1257)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3661,7 +3657,7 @@ bool all<T>(Iter<T> mut& source, bool fn(T) predicate);
 all<T>(source, predicate);
 ```
 
-**源码**：[source/std/iter.chl:1276](../../source/std/iter.chl#L1276)。
+**源码**：[source/std/iter.chl:1268](../../source/std/iter.chl#L1268)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3700,7 +3696,7 @@ bool any<T>(Iter<T> mut& source, bool fn(T) predicate);
 any<T>(source, predicate);
 ```
 
-**源码**：[source/std/iter.chl:1287](../../source/std/iter.chl#L1287)。
+**源码**：[source/std/iter.chl:1279](../../source/std/iter.chl#L1279)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3739,7 +3735,7 @@ Option<T> find<T>(Iter<T> mut& source, bool fn(T) predicate);
 find<T>(source, predicate);
 ```
 
-**源码**：[source/std/iter.chl:1298](../../source/std/iter.chl#L1298)。
+**源码**：[source/std/iter.chl:1290](../../source/std/iter.chl#L1290)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3778,7 +3774,7 @@ void forEach<T>(Iter<T> mut& source, void fn(T) action);
 forEach<T>(source, action);
 ```
 
-**源码**：[source/std/iter.chl:1309](../../source/std/iter.chl#L1309)。
+**源码**：[source/std/iter.chl:1301](../../source/std/iter.chl#L1301)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3816,7 +3812,7 @@ Iter<T> listIntoIter<T>(List<T> mut& source);
 listIntoIter<T>(source);
 ```
 
-**源码**：[source/std/iter.chl:1319](../../source/std/iter.chl#L1319)。
+**源码**：[source/std/iter.chl:1311](../../source/std/iter.chl#L1311)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3856,7 +3852,7 @@ Iter<int64> fromRange(std::core::__Range source);
 fromRange(source);
 ```
 
-**源码**：[source/std/iter.chl:1331](../../source/std/iter.chl#L1331)。
+**源码**：[source/std/iter.chl:1323](../../source/std/iter.chl#L1323)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3892,7 +3888,7 @@ Option<T const&> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:1372](../../source/std/iter.chl#L1372)。
+**源码**：[source/std/iter.chl:1364](../../source/std/iter.chl#L1364)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3928,7 +3924,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:1384](../../source/std/iter.chl#L1384)。
+**源码**：[source/std/iter.chl:1376](../../source/std/iter.chl#L1376)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -3964,7 +3960,7 @@ Option<T mut&> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:1396](../../source/std/iter.chl#L1396)。
+**源码**：[source/std/iter.chl:1388](../../source/std/iter.chl#L1388)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4000,7 +3996,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:1408](../../source/std/iter.chl#L1408)。
+**源码**：[source/std/iter.chl:1400](../../source/std/iter.chl#L1400)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4040,7 +4036,7 @@ Iter<T const&> listIter<T>(List<T> const& source);
 listIter<T>(source);
 ```
 
-**源码**：[source/std/iter.chl:1420](../../source/std/iter.chl#L1420)。
+**源码**：[source/std/iter.chl:1412](../../source/std/iter.chl#L1412)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4080,7 +4076,7 @@ Iter<T mut&> listIterMut<T>(List<T> mut& source);
 listIterMut<T>(source);
 ```
 
-**源码**：[source/std/iter.chl:1432](../../source/std/iter.chl#L1432)。
+**源码**：[source/std/iter.chl:1424](../../source/std/iter.chl#L1424)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4118,7 +4114,7 @@ Iter<T> setIntoIter<T>(Set<T> mut& source);
 setIntoIter<T>(source);
 ```
 
-**源码**：[source/std/iter.chl:1465](../../source/std/iter.chl#L1465)。
+**源码**：[source/std/iter.chl:1457](../../source/std/iter.chl#L1457)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4158,7 +4154,7 @@ Iter<T> setIter<T>(Set<T> const& source);
 setIter<T>(source);
 ```
 
-**源码**：[source/std/iter.chl:1485](../../source/std/iter.chl#L1485)。
+**源码**：[source/std/iter.chl:1473](../../source/std/iter.chl#L1473)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4196,7 +4192,7 @@ Iter<Pair<K,V>> mapIntoIter<K,V>(Map<K,V> mut& source);
 mapIntoIter<K,V>(source);
 ```
 
-**源码**：[source/std/iter.chl:1504](../../source/std/iter.chl#L1504)。
+**源码**：[source/std/iter.chl:1488](../../source/std/iter.chl#L1488)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4236,7 +4232,7 @@ Iter<Pair<K,V>> mapIter<K,V>(Map<K,V> const& source);
 mapIter<K,V>(source);
 ```
 
-**源码**：[source/std/iter.chl:1524](../../source/std/iter.chl#L1524)。
+**源码**：[source/std/iter.chl:1504](../../source/std/iter.chl#L1504)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4272,7 +4268,7 @@ Option<T const&> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:1547](../../source/std/iter.chl#L1547)。
+**源码**：[source/std/iter.chl:1523](../../source/std/iter.chl#L1523)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4308,7 +4304,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:1559](../../source/std/iter.chl#L1559)。
+**源码**：[source/std/iter.chl:1535](../../source/std/iter.chl#L1535)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4348,7 +4344,7 @@ Iter<T const&> fromSpan<T>(T const& source, int64 length);
 fromSpan<T>(source, length);
 ```
 
-**源码**：[source/std/iter.chl:1571](../../source/std/iter.chl#L1571)。
+**源码**：[source/std/iter.chl:1547](../../source/std/iter.chl#L1547)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4384,7 +4380,7 @@ Option<char> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:1587](../../source/std/iter.chl#L1587)。
+**源码**：[source/std/iter.chl:1563](../../source/std/iter.chl#L1563)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4420,7 +4416,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:1599](../../source/std/iter.chl#L1599)。
+**源码**：[source/std/iter.chl:1575](../../source/std/iter.chl#L1575)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4458,7 +4454,7 @@ Iter<char> chars(String source);
 chars(source);
 ```
 
-**源码**：[source/std/iter.chl:1610](../../source/std/iter.chl#L1610)。
+**源码**：[source/std/iter.chl:1586](../../source/std/iter.chl#L1586)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4494,7 +4490,7 @@ Option<T> next();
 obj.next();
 ```
 
-**源码**：[source/std/iter.chl:1623](../../source/std/iter.chl#L1623)。
+**源码**：[source/std/iter.chl:1599](../../source/std/iter.chl#L1599)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4530,7 +4526,7 @@ obj.next();
 obj.sizeHint();
 ```
 
-**源码**：[source/std/iter.chl:1630](../../source/std/iter.chl#L1630)。
+**源码**：[source/std/iter.chl:1606](../../source/std/iter.chl#L1606)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4568,7 +4564,7 @@ Iter<T> repeat<T>(T value);
 repeat(value);
 ```
 
-**源码**：[source/std/iter.chl:1640](../../source/std/iter.chl#L1640)。
+**源码**：[source/std/iter.chl:1616](../../source/std/iter.chl#L1616)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4607,7 +4603,7 @@ Map<K,List<T>> groupBy<T,K>(Iter<T> source, K fn(T) key_of);
 groupBy(source, key_of);
 ```
 
-**源码**：[source/std/iter.chl:1656](../../source/std/iter.chl#L1656)。
+**源码**：[source/std/iter.chl:1632](../../source/std/iter.chl#L1632)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。
 
@@ -4647,6 +4643,6 @@ Iter<List<T>> chunk<T>(Iter<T> source, int64 length);
 chunk(source, length);
 ```
 
-**源码**：[source/std/iter.chl:1725](../../source/std/iter.chl#L1725)。
+**源码**：[source/std/iter.chl:1701](../../source/std/iter.chl#L1701)。
 
 **完整示例**：[example/samples/iter_pipeline.chl](../../example/samples/iter_pipeline.chl)。

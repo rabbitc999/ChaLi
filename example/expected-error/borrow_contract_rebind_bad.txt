@@ -1,0 +1,1 @@
+chali: example/samples-error/borrow_contract_rebind_bad.chl 第 2 行：[CHL1211] 返回值借用了契约未声明的来源 b；当前契约为 #borrow(#ret, [a])

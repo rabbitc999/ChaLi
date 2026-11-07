@@ -1,0 +1,2 @@
+#borrow(#ret,a)
+Result<int64 mut&,MessageError> f(int64 mut& a,int64 mut& b){return Ok(a);}void main(){}

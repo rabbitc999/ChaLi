@@ -25,8 +25,10 @@ void main()
 {
     Option<StructInfo> info = getStructInfo<Point>();
     println("{}", info.isValue());
-    StructInfo s = info.unwrap();
-    println("{} {}", s.name, s.fields.len());
+    match (info) {
+        Value(description) => { println("{} {}", description.name, description.fields.len()); }
+        None => { println("类型未暴露反射信息"); }
+    }
 }
 ```
 
@@ -35,7 +37,7 @@ void main()
 program::Point 2
 ```
 
-@Reflect requests runtime metadata for Point. getStructInfo returns an Option; this registered example can unwrap it to read the name and field count. When registration is not guaranteed, inspect the Option before unwrapping.
+@Reflect requests runtime metadata for Point. getStructInfo returns an Option, and match handles metadata and absence separately. Point is registered here, so Value provides its name and field count; None handles a type without exposed metadata.
 
 ## 23.2 Expose metadata explicitly
 
@@ -83,16 +85,24 @@ struct Profile
     int64 score;
 };
 
+Result<bool, Error> updateProfile(Profile mut& profile)
+{
+    assert(setField<Profile, String>(profile, "name", "新名")?);
+    assert(getField<Profile, String>(profile, "score").isErr());
+    assert(getField<Profile, int64>(profile, "missing").isErr());
+    int64 score = getField<Profile, int64>(profile, "score")?;
+    println("{} {}", profile.name, score);
+    return Ok(true);
+}
 void main()
 {
     Profile profile;
     profile.name = "原名";
     profile.score = 80;
-    assert(setField<Profile, String>(&profile, "name", "新名").unwrap());
-    assert(getField<Profile, String>(&profile, "score").isErr());
-    assert(getField<Profile, int64>(&profile, "missing").isErr());
-    int64 score = getField<Profile, int64>(&profile, "score").unwrap();
-    println("{} {}", profile.name, score);
+    match (updateProfile(&profile)) {
+        Ok(_) => {}
+        Err(error) => { println("{}", error.toString()); }
+    }
 }
 ```
 
@@ -100,7 +110,7 @@ void main()
 新名 80
 ```
 
-Reflect exposes Profile's model information. SetField's type arguments specify the model and written value type; `&profile` supplies the object, and name selects its string field. Unwrap and assert confirm the known-success operation here, changing the name to the shown replacement.
+Reflect exposes Profile's model information. SetField's type arguments specify the model and written value type; `&profile` supplies the object, and name selects its string field. updateProfile propagates failures with ? and asserts the successful result, changing the name to the shown replacement. Main matches the result and displays a failed operation.
 
 The next queries intentionally fail: score is not String, and missing is not a field. IsErr checks both. Querying score correctly as int64 returns eighty. Only the selected field is updated; failed queries do not silently supply defaults. With unknown external input, handle Result explicitly rather than unwrapping blindly.
 
@@ -113,7 +123,7 @@ Chapter 22 uses `$std::json::Json<T>(toJson, fromJson);` and @std::json::Field t
 
 ## 23.5 Metadata and generation responsibilities
 
-Use reflection for repetitive type mappings and keep business decisions at explicit function boundaries. Chapter 25 separates field validation, related records and authorization in a database-backed application.
+Use reflection for repetitive type mappings and keep business decisions at explicit function boundaries. Chapter 29 separates field validation, related records and authorization in a database-backed application.
 
 ### Place metadata inside a complete data flow
 
@@ -152,4 +162,4 @@ Metadata still requires interpretation, querying, validation and failure handlin
 
 Runtime reflection and compile-time derivation have separate supported scopes. Host integration next makes explicit type, layout and ownership contracts even more important.
 
-Next: [Chapter 26](26-c-interop.md).
+Next: [Chapter 24](24-compiler-directives.md).

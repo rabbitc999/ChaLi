@@ -916,7 +916,7 @@ enum Option<T> : Try<T, NoneResidual>, TryMove<T, NoneResidual>, FromResidual<Op
                 Option<T>::Value(value) => { yield value; }
                 Option<T>::None => { panic("called take() without a value"); }
             }
-            loop { panic("called take() without a value"); };
+            loop { panic("called take() without a value"); }
         };
     }
 
@@ -1018,7 +1018,7 @@ enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, From
                 Result<T, E>::Ok(value) => { yield value; }
                 Result<T, E>::Err(error) => { panic("called take() without a value"); }
             }
-            loop { panic("called take() without a value"); };
+            loop { panic("called take() without a value"); }
         };
     }
 
@@ -1056,7 +1056,7 @@ enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, From
                 Result<T, E>::Ok(value) => { panic("called takeError() on Ok"); }
                 Result<T, E>::Err(error) => { yield error; }
             }
-            loop { panic("called takeError() on Ok"); };
+            loop { panic("called takeError() on Ok"); }
         };
     }
 

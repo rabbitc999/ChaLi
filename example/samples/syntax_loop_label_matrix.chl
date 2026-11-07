@@ -1,0 +1,51 @@
+int64 labelClosed = 0;
+int64 labelTrace = 0;
+struct LabelHandle : Closeable {
+    int64 id;
+    void close() { labelClosed++; }
+}
+void main() {
+    a: while (true) {
+        LabelHandle value; value.id = 1;
+        loop { break a; }
+        assert(false);
+    }
+    labelTrace += 1;
+    b: loop {
+        LabelHandle value; value.id = 2;
+        while (true) { break b; }
+        assert(false);
+    }
+    labelTrace += 2;
+    c: for (let item in range(0, 3)) {
+        LabelHandle value; value.id = 3;
+        loop { break c; }
+        assert(false);
+    }
+    labelTrace += 4;
+    d: for (int64 i = 0; i < 3; i++) {
+        LabelHandle value; value.id = 4;
+        for (let item in range(0, 3)) { break d; }
+        assert(false);
+    }
+    labelTrace += 8;
+    e: for (LabelHandle owner; ; ) {
+        owner.id = 5;
+        loop { break e; }
+        assert(false);
+    } else {
+        assert(owner.id == 5 && labelClosed == 4);
+        labelTrace += 16;
+    }
+    List<String> words = ["first", "second"];
+    f: for (let item in words) {
+        LabelHandle value; value.id = 6;
+        while (true) { break f; }
+        assert(false);
+    } else {
+        assert(item == "first" && labelClosed == 6);
+        labelTrace += 32;
+    }
+    assert(labelTrace == 63 && labelClosed == 6);
+    println("loop labels: while,loop,for-in,for,for-in else,for else; closed=6");
+}

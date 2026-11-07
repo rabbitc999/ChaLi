@@ -3,7 +3,7 @@
 1.0.8 起没有字节码宿主，回调走 `#abi` 声明 + C 动态库。C 接收签名匹配的同步跳板，
 跳板通过受检查的调用器访问原语言函数值和闭包，不将其句柄强转为机器函数指针。
 """
-from compiler_path import compiler_path
+from compiler_path import compiler_path, compiler_build_info
 import argparse
 import os
 from pathlib import Path
@@ -102,6 +102,8 @@ def main():
     env = dict(os.environ, CHALI_LANG='zh', CHALI_NO_STDIN_INPUT='1')
     cc = str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else shutil.which('clang')
     cc = os.environ.get('CHALI_LLVM_CLANG') or cc
+    static_llvm = compiler_build_info(compiler)['llvm']=='static'
+    backend = [] if static_llvm else ['--llvm',cc]
     assert cc, '找不到 C 编译器：设置 CHALI_LLVM_CLANG 或安装 clang'
 
     with tempfile.TemporaryDirectory(prefix='chali-native-callbacks-') as directory:
@@ -121,7 +123,7 @@ def main():
         demo = work / 'demo.chl'
         demo.write_text(DEMO.format(library=library.name, expected=EXPECTED.strip()), encoding='utf-8')
         exe = work / 'demo'
-        result = invoke([compiler, 'build', demo, '--out', exe, '--llvm', cc])
+        result = invoke([compiler, 'build', demo, '--out', exe, *backend])
         assert result.returncode == 0, result.stdout + result.stderr
         result = invoke([exe.with_suffix('.exe' if os.name == 'nt' else '')], cwd=work)
         assert result.returncode == 0 and result.stdout == EXPECTED and not result.stderr, result
@@ -129,7 +131,7 @@ def main():
         panic = work / 'panic.chl'
         panic.write_text(PANIC.format(library=library.name), encoding='utf-8')
         panicExe = work / 'panic'
-        result = invoke([compiler, 'build', panic, '--out', panicExe, '--llvm', cc])
+        result = invoke([compiler, 'build', panic, '--out', panicExe, *backend])
         assert result.returncode == 0, result.stdout + result.stderr
         result = invoke([panicExe.with_suffix('.exe' if os.name == 'nt' else '')], cwd=work)
         assert result.returncode != 0, result

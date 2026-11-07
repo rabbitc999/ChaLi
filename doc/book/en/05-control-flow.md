@@ -119,6 +119,38 @@ Total is initialized outside the loop so every iteration updates the same accumu
 The successive totals are 0, 1, 3, 6 and 10. Println runs once after iteration, not once per element. Moving the declaration inside would reset the accumulator each time. Whether an interval includes its upper endpoint comes from the API contract rather than an informal reading of “to five.”
 
 
+### C-style for and standalone loop
+
+Use a three-part for when initialization, condition, and update belong together. The initializer may declare loop-local variables without changing an outer variable of the same name. Continue executes the update before checking the next condition. Each part may be omitted; an empty condition means true. Initialization and update expressions may be comma-separated and execute left to right.
+
+<!-- verify-book -->
+```chali
+void main() {
+    int64 i = 99;
+    int64 total = 0;
+    for (int64 i = 0; i < 5; i++) {
+        if (i == 2) { continue; }
+        total += i;
+    } else { assert(i == 5); }
+    for (let last in range(1, 4)) {} else { assert(last == 3); }
+    for (let empty in range(0, 0)) {} else { assert(empty == 0); }
+    int64 rounds = 0;
+    loop {
+        rounds++;
+        if (rounds == 2) { break; }
+    }
+    println("{} {} {}", total, i, rounds);
+}
+```
+
+```text
+8 99 2
+```
+
+The loop skips i equal to 2 and adds 0, 1, 3 and 4, producing 8. Its local i leaves the outer 99 unchanged. A standalone loop needs no semicolon. A loop expression used in initialization, assignment, or return still follows its enclosing statement terminator. Keeping the counter in for avoids an extra standalone scope block.
+
+Both for forms may have else, and their loop variables remain in scope through that branch. C-style for exposes the final initialized state; for-in exposes the last value or its ordinary default on empty input. Copyable borrowed iterator elements are saved independently before the next iterator call can invalidate them. Handle noncopyable borrowed elements inside the body; references without a valid origin cannot be read on empty paths. Plain break enters the fallback, while value-producing yield delivers its result and skips the fallback.
+
 ## 5.4 Obtain a result from a loop
 
 A value-producing loop uses yield. An else branch handles completion without such a result. A valueless loop cannot serve as an integer expression. The example covers both a found value and a no-match path.
@@ -161,7 +193,7 @@ The while condition is false immediately, so its body never supplies its string.
 
 ## 5.5 Exit levels and cleanup
 
-Continue advances an iteration and break exits a loop. Label a loop and use `break label;` to exit it; a value exit needs a receiver. Leaving scopes triggers cleanup, covered in Chapter 8.
+Continue advances an iteration and break exits a loop. Label a loop and use `break label;` to exit it; a value exit needs a receiver. Leaving scopes triggers cleanup, covered in Chapter 9.
 
 Increment and compound assignment mutate their target. Split dependent reads and writes into ordered statements.
 
@@ -176,7 +208,7 @@ void main()
         {
             visited++;
             break outer;
-        };
+        }
         visited += 100;
     }
 
@@ -228,6 +260,6 @@ void main() {
 
 Ask when the condition is tested, where state changes and where each exit leads. For value-producing structures also ask whether every reachable path supplies a compatible result. This separates missing updates, endpoint mistakes and missing-result paths.
 
-Exits also leave scopes. Chapter 8 adds cleanup actions to these same paths once their control flow is clear.
+Exits also leave scopes. Chapter 9 adds cleanup actions to these same paths once their control flow is clear.
 
-Next: [Chapter 7](07-value-semantics.md).
+Next: [Chapter 6](06-structs.md).

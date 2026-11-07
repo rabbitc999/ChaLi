@@ -57,7 +57,7 @@ An incremented target cannot also be read or written by another operation in the
 
 ## C.4 Loops, Matching and Exits
 
-if, elif and else select branches; else if is equivalent to elif. while checks before each iteration, while loop expresses unconditional repetition.
+if, elif and else select branches; else if is equivalent to elif. while checks before each iteration, while loop expresses unconditional repetition. Standalone loop statements may omit their semicolon. `for (int64 i = 0; i < n; i++)` scopes its counter to the loop; continue runs the update first. All three parts may be empty, and initialization and update expressions support comma-ordered execution.
 
 for-in uses the iteration protocol. range excludes its upper bound; rangeEq includes it. match supports variants, constants, ranges, concrete interface types and unions. _ is an unbound wildcard.
 
@@ -189,3 +189,22 @@ Use $if, $elif, $else and $end_if inside macros for compile-time template select
 unsafe admits specified raw operations without removing type and ownership rules. Address, size, alignment and lifetime remain obligations. Raw pointers differ from safe references.
 
 #abi declares C entry points. Prepare representations according to that ABI and do not cast a language closure to a machine pointer. Exported applications still need their application-specific dynamic libraries. Consult Chapters 25–27 for concrete boundaries.
+
+## C.9 Simplified forms and chapter index
+
+These forms require sufficient name or type context and preserve type, ownership and borrow checking. Read the complete programs in the referenced chapters, then use this index to review boundaries.
+
+| Form | Conditions and boundaries | Chapters |
+| --- | --- | --- |
+| Short imported names | Unambiguous functions, constants, interfaces, enums and structs; qualify conflicts | 11 |
+| Inferred function type arguments | Actual arguments and available context determine types; declarations retain necessary parameters | 18 |
+| Short variants such as Ok, Err, Value and None | Enum context or a unique candidate determines construction and matching | 10, 14 |
+| Direct single-payload values | Known target enum and one best variant in initialization, assignment, arguments or returns; name ambiguous variants | 10, 14 |
+| #borrow(a,b) | Destination a borrows from b; #ret names a return target and lists describe multiple sources; generic and cross-module direct calls are supported | 24 |
+| Three-part for | Loop-local initialization declarations, continue through the update, optional parts and comma-ordered initialization/update expressions | 5 |
+| Else on for and for-in | Loop variables remain visible; empty input uses ordinary value defaults, invalid references cannot be read and borrowed fallback elements need a copyable snapshot | 5 |
+| Standalone loop without a semicolon | Statement, function-end and value-block-end positions; expressions retain the enclosing statement terminator | 5 |
+| Counters scoped by the loop | Avoid blocks used solely to scope counters; retain scopes needed for cleanup and borrow lifetimes | 5, 9 |
+| Target and build-option constants | $system and $cpu describe the target; -B and TOML build_option define boolean presence queried with $build[name] or a string literal | 22 |
+
+See [Appendix D](D-language-limitations.md) for implementation budgets, conservative analysis and platform boundaries.

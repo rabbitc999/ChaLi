@@ -1,0 +1,1 @@
+Result<Result<int64,MessageError>,MessageError> gen(){return Ok(Ok(7));}Result<int64,Error> bad(){return Ok(gen()?);}void main(){}

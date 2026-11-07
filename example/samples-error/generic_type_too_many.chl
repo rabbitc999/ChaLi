@@ -1,0 +1,1 @@
+struct G<T>{T value;};void main(){G<int64,String> g;}

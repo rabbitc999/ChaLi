@@ -1,0 +1,1 @@
+chali: example/samples-error/borrow_loop_freed_node.chl 第 2 行：[CHL1205] 借用来源已释放，不能继续访问：head

@@ -21,7 +21,7 @@ void main() {
                 else { k = 3 * k + 1; }
                 if (k == 1) { break; }
                 iter++;
-            };
+            }
             if (iter >= 100) { yield (n); }
             n++;
         };
@@ -29,14 +29,10 @@ void main() {
     assert(a == 27);
 
     (int32, String) pair = {
-        {
-            int32 i = 0;
-            while (i < 4) {
+        for (int32 i = 0; i < 4; i++) {
 
             if (i == 2) { yield (i, "found"); }
-        
-                i++;
-            }
+
         }
         yield (-1, "missing");
     };

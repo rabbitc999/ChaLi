@@ -47,6 +47,6 @@ Complete examples have a main function and expected output. Interactive examples
 | [29](29-student-management.md) | Student Information Management |
 | [30](30-standard-library-tour.md) | Project: Conway’s Game of Life |
 
-See [Appendix A](A-common-errors.md) for common errors, [Appendix B](B-standard-library.md) for library tasks, and [Appendix C](C-syntax-operators.md) for syntax and operators. [Installation](../../en/39-installation-packages.md) explains how to run the compiler. The Chinese edition also includes the original literary extras and a [PDF](../latex/book.pdf); this English edition contains the technical text.
+See [Appendix A](A-common-errors.md) for common errors, [Appendix B](B-standard-library.md) for library tasks, and [Appendix C](C-syntax-operators.md) for syntax and operators, and [Appendix D](D-language-limitations.md) for language and analysis limits with practical alternatives. [Installation](../../en/39-installation-packages.md) explains how to run the compiler. The Chinese edition also includes the original literary extras and a [PDF](../latex/book.pdf); this English edition contains the technical text.
 
 The organization takes inspiration from [the Rust Book's reading sequence](https://doc.rust-lang.org/book/ch00-00-introduction.html#how-to-use-this-book), alternating concepts and projects. ChaLi examples and rules are based on this repository's implementation; prior knowledge of Rust is not required.

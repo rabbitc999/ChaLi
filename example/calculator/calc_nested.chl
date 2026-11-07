@@ -77,15 +77,11 @@ Instr makeInstr(int64 op, float64 num, String text) {
 
 String renderAll<T: Describable>(List<T> items) {
     String out = "";
-    {
-        int64 i = 0;
-        while (i < items.len()) {
+    for (int64 i = 0; i < items.len(); i = i + 1) {
 
         if (i > 0) { out = out + " "; }
         out = out + items[i].describe();
-    
-            i = i + 1;
-        }
+
     }
     return out;
 }
@@ -104,17 +100,15 @@ Result<float64, String> parseNumberLexeme(String s) {
     float64 frac = 0.0;
     float64 scale = 1.0;
     int64 n = s.chars().count();
-    {
-        int64 k = 0;
-        while (k < n) {
+    for (int64 k = 0; k < n; k = k + 1) {
 
         char c = s[k];
         if (c == '.') {
-            if (seenDot) { return Result<float64, String>::Err("malformed number: two dots"); }
+            if (seenDot) { return Err("malformed number: two dots"); }
             seenDot = true;
         } else {
             int64 d = (int64)c - (int64)'0';
-            if (d < 0 || d > 9) { return Result<float64, String>::Err("malformed number digit"); }
+            if (d < 0 || d > 9) { return Err("malformed number digit"); }
             if (seenDot) {
                 scale = scale / 10.0;
                 frac = frac + (float64)d * scale;
@@ -122,11 +116,9 @@ Result<float64, String> parseNumberLexeme(String s) {
                 intPart = intPart * 10.0 + (float64)d;
             }
         }
-    
-            k = k + 1;
-        }
+
     }
-    return Result<float64, String>::Ok(intPart + frac);
+    return Ok(intPart + frac);
 }
 
 struct Lexer {
@@ -261,7 +253,7 @@ struct Parser {
             Expr right = self.parseTerm()?;
             left = Expr::EBinary(op, self.pair(left, right));
         }
-        return Result<Expr, String>::Ok(left);
+        return Ok(left);
     }
     Result<Expr, String> parseTerm() {
         Expr left = self.parseFactor()?;
@@ -271,13 +263,13 @@ struct Parser {
             Expr right = self.parseFactor()?;
             left = Expr::EBinary(op, self.pair(left, right));
         }
-        return Result<Expr, String>::Ok(left);
+        return Ok(left);
     }
     Result<Expr, String> parseFactor() {
         if (self.isOp(self.pos, "-")) {
             self.pos = self.pos + 1;
             Expr inner = self.parseFactor()?;
-            return Result<Expr, String>::Ok(Expr::EUnary("-", self.single(inner)));
+            return Ok(Expr::EUnary("-", self.single(inner)));
         }
         return self.parsePrimary();
     }
@@ -285,7 +277,7 @@ struct Parser {
         if (self.isNum(self.pos)) {
             float64 v = self.numAt(self.pos);
             self.pos = self.pos + 1;
-            return Result<Expr, String>::Ok(Expr::ENum(v));
+            return Ok(Expr::ENum(v));
         }
         if (self.isIdent(self.pos)) {
             String name = self.identAt(self.pos);
@@ -305,23 +297,23 @@ struct Parser {
                     }
                 }
                 if (!self.isRParen(self.pos)) {
-                    return Result<Expr, String>::Err("expected ')' after call arguments");
+                    return Err("expected ')' after call arguments");
                 }
                 self.pos = self.pos + 1;
-                return Result<Expr, String>::Ok(Expr::ECall(name, args));
+                return Ok(Expr::ECall(name, args));
             }
-            return Result<Expr, String>::Ok(Expr::EVar(name));
+            return Ok(Expr::EVar(name));
         }
         if (self.isLParen(self.pos)) {
             self.pos = self.pos + 1;
             Expr e = self.parseExpr()?;
             if (!self.isRParen(self.pos)) {
-                return Result<Expr, String>::Err("expected ')'");
+                return Err("expected ')'");
             }
             self.pos = self.pos + 1;
-            return Result<Expr, String>::Ok(e);
+            return Ok(e);
         }
-        return Result<Expr, String>::Err("unexpected token in expression");
+        return Err("unexpected token in expression");
     }
 
     Result<Stmt, String> parseLine() {
@@ -330,15 +322,15 @@ struct Parser {
             self.pos = self.pos + 2;
             Expr e = self.parseExpr()?;
             if (!self.isEnd(self.pos)) {
-                return Result<Stmt, String>::Err("unexpected token after assignment");
+                return Err("unexpected token after assignment");
             }
-            return Result<Stmt, String>::Ok(Stmt::StLet(name, self.single(e)));
+            return Ok(Stmt::StLet(name, self.single(e)));
         }
         Expr e = self.parseExpr()?;
         if (!self.isEnd(self.pos)) {
-            return Result<Stmt, String>::Err("unexpected token after expression");
+            return Err("unexpected token after expression");
         }
-        return Result<Stmt, String>::Ok(Stmt::StPrint(self.single(e)));
+        return Ok(Stmt::StPrint(self.single(e)));
     }
 };
 
@@ -367,14 +359,10 @@ void compileExpr(List<Instr> mut& code, Expr e) {
             code.push(makeInstr(OP_LOAD, 0.0, n));
         }
         Expr::ECall(nm, args) => {
-            {
-                int64 i = 0;
-                while (i < args.len()) {
+            for (int64 i = 0; i < args.len(); i = i + 1) {
 
                 compileExpr(code, args[i]);
-            
-                    i = i + 1;
-                }
+
             }
             code.push(makeInstr(OP_CALL, (float64)args.len(), nm));
         }
@@ -419,64 +407,56 @@ struct VM {
 
     Result<float64, String> callBuiltin(String name, int64 argc) {
         if (name == "sqrt") {
-            if (argc != 1) { return Result<float64, String>::Err("sqrt expects 1 argument"); }
+            if (argc != 1) { return Err("sqrt expects 1 argument"); }
             float64 a = self.pop();
-            if (a < 0.0) { return Result<float64, String>::Err("sqrt of negative number"); }
-            if (a == 0.0) { return Result<float64, String>::Ok(0.0); }
+            if (a < 0.0) { return Err("sqrt of negative number"); }
+            if (a == 0.0) { return Ok(0.0); }
             float64 x = a;
-            {
-                int64 k = 0;
-                while (k < 60) {
+            for (int64 k = 0; k < 60; k = k + 1) {
 
                 x = 0.5 * (x + a / x);
-            
-                    k = k + 1;
-                }
+
             }
-            return Result<float64, String>::Ok(x);
+            return Ok(x);
         }
         if (name == "abs") {
-            if (argc != 1) { return Result<float64, String>::Err("abs expects 1 argument"); }
+            if (argc != 1) { return Err("abs expects 1 argument"); }
             float64 a = self.pop();
-            if (a < 0.0) { return Result<float64, String>::Ok(0.0 - a); }
-            return Result<float64, String>::Ok(a);
+            if (a < 0.0) { return Ok(0.0 - a); }
+            return Ok(a);
         }
         if (name == "min") {
-            if (argc != 2) { return Result<float64, String>::Err("min expects 2 arguments"); }
+            if (argc != 2) { return Err("min expects 2 arguments"); }
             float64 b = self.pop();
             float64 a = self.pop();
-            if (a < b) { return Result<float64, String>::Ok(a); }
-            return Result<float64, String>::Ok(b);
+            if (a < b) { return Ok(a); }
+            return Ok(b);
         }
         if (name == "max") {
-            if (argc != 2) { return Result<float64, String>::Err("max expects 2 arguments"); }
+            if (argc != 2) { return Err("max expects 2 arguments"); }
             float64 b = self.pop();
             float64 a = self.pop();
-            if (a > b) { return Result<float64, String>::Ok(a); }
-            return Result<float64, String>::Ok(b);
+            if (a > b) { return Ok(a); }
+            return Ok(b);
         }
         if (name == "pow") {
-            if (argc != 2) { return Result<float64, String>::Err("pow expects 2 arguments"); }
+            if (argc != 2) { return Err("pow expects 2 arguments"); }
             float64 e = self.pop();
             float64 base = self.pop();
             int64 n = (int64)e;
             int64 m = n;
             if (m < 0) { m = 0 - m; }
             float64 r = 1.0;
-            {
-                int64 k = 0;
-                while (k < m) {
- r = r * base; 
-                    k = k + 1;
-                }
+            for (int64 k = 0; k < m; k = k + 1) {
+                r = r * base;
             }
             if (n < 0) {
-                if (r == 0.0) { return Result<float64, String>::Err("pow: division by zero"); }
+                if (r == 0.0) { return Err("pow: division by zero"); }
                 r = 1.0 / r;
             }
-            return Result<float64, String>::Ok(r);
+            return Ok(r);
         }
-        return Result<float64, String>::Err(format("unknown function '{}'", name));
+        return Err(format("unknown function '{}'", name));
     }
 
     Result<float64, String> run() {
@@ -488,7 +468,7 @@ struct VM {
                 self.stack.push(ins.num);
             } elif (ins.op == OP_LOAD) {
                 if (self.vars.has(ins.text) == 0) {
-                    return Result<float64, String>::Err(
+                    return Err(
                     format("undefined variable '{}'", ins.text));
                 }
                 self.stack.push(self.vars[ins.text]);
@@ -514,26 +494,26 @@ struct VM {
                 float64 b = self.pop();
                 float64 a = self.pop();
                 if (b == 0.0) {
-                    return Result<float64, String>::Err("division by zero");
+                    return Err("division by zero");
                 }
                 self.stack.push(a / b);
             } elif (ins.op == OP_CALL) {
                 Result<float64, String> r = self.callBuiltin(ins.text, (int64)ins.num);
                 match (r) {
-                    Result<float64, String>::Ok(v) => { self.stack.push(v); }
-                    Result<float64, String>::Err(e) => {
-                        return Result<float64, String>::Err(e);
+                    Ok(v) => { self.stack.push(v); }
+                    Err(e) => {
+                        return Err(e);
                     }
                 }
             } else {
                 if (self.stack.len() == 0) {
-                    return Result<float64, String>::Err("empty result stack");
+                    return Err("empty result stack");
                 }
-                return Result<float64, String>::Ok(self.stack[self.stack.len() - 1]);
+                return Ok(self.stack[self.stack.len() - 1]);
             }
         }
-        if (self.stack.len() == 0) { return Result<float64, String>::Err("no result"); }
-        return Result<float64, String>::Ok(self.stack[self.stack.len() - 1]);
+        if (self.stack.len() == 0) { return Err("no result"); }
+        return Ok(self.stack[self.stack.len() - 1]);
     }
 };
 
@@ -583,22 +563,18 @@ Result<LineReport, String> analyze(String src, Map<String, float64> mut& vars) {
 
     rep.ok = true;
     rep.detail = format("{}", value);
-    return Result<LineReport, String>::Ok(rep);
+    return Ok(rep);
 }
 
 int64 addInts(int64 a, int64 b) { return a + b; }
 
 String renderInts(List<int64> xs) {
     String out = "";
-    {
-        int64 i = 0;
-        while (i < xs.len()) {
+    for (int64 i = 0; i < xs.len(); i = i + 1) {
 
         if (i > 0) { out = out + ", "; }
         out = out + format("{}", xs[i]);
-    
-            i = i + 1;
-        }
+
     }
     return out;
 }
@@ -606,12 +582,8 @@ String renderInts(List<int64> xs) {
 void main(List<String> args) {
     List<String> program;
     if (args.len() > 0) {
-        {
-            int64 i = 0;
-            while (i < args.len()) {
- program.push(args[i]); 
-                i = i + 1;
-            }
+        for (int64 i = 0; i < args.len(); i = i + 1) {
+            program.push(args[i]);
         }
     } else {
         program.push("x = 3 + 4 * 2");
@@ -638,13 +610,11 @@ void main(List<String> args) {
     int64 errCount = 0;
     int64 totalTokens = 0;
 
-    {
-        int64 i = 0;
-        while (i < program.len()) {
+    for (int64 i = 0; i < program.len(); i = i + 1) {
 
         Result<LineReport, String> r = analyze(program[i], &vars);
         match (r) {
-            Result<LineReport, String>::Ok(rep) => {
+            Ok(rep) => {
                 okCount = okCount + 1;
                 totalTokens = totalTokens + rep.tokens;
                 okInstrs.push(rep.instrs);
@@ -653,14 +623,12 @@ void main(List<String> args) {
                 println("      tokens={} instrs={}  [{}]",
                 rep.tokens, rep.instrs, rep.disasm);
             }
-            Result<LineReport, String>::Err(msg) => {
+            Err(msg) => {
                 errCount = errCount + 1;
                 println("[{}] error {}  =>  {}", i + 1, program[i], msg);
             }
         }
-    
-            i = i + 1;
-        }
+
     }
 
     println("");
@@ -670,15 +638,11 @@ void main(List<String> args) {
         int64 totalInstr = foldValue(okInstrs, 0, addInts);
         int64 lo = okInstrs[0];
         int64 hi = okInstrs[0];
-        {
-            int64 i = 1;
-            while (i < okInstrs.len()) {
+        for (int64 i = 1; i < okInstrs.len(); i = i + 1) {
 
             if (okInstrs[i] < lo) { lo = okInstrs[i]; }
             if (okInstrs[i] > hi) { hi = okInstrs[i]; }
-        
-                i = i + 1;
-            }
+
         }
         List<int64> sorted = sortValue(okInstrs);
         println("instructions over ok lines: total={} min={} max={}", totalInstr, lo, hi);
@@ -686,26 +650,18 @@ void main(List<String> args) {
     }
 
     String nameList = "";
-    {
-        int64 i = 0;
-        while (i < names.len()) {
+    for (int64 i = 0; i < names.len(); i = i + 1) {
 
         if (i > 0) { nameList = nameList + ", "; }
         nameList = nameList + names.at(i);
-    
-            i = i + 1;
-        }
+
     }
     println("variables defined ({}): {}", names.len(), nameList);
     println("live variables in VM ({}):", vars.len());
-    {
-        int64 i = 0;
-        while (i < vars.len()) {
+    for (int64 i = 0; i < vars.len(); i = i + 1) {
 
         println("  {} = {}", vars.keyAt(i), format("{}", vars[vars.keyAt(i)]));
-    
-            i = i + 1;
-        }
+
     }
 
     List<int64> squares = intIter(1, 6)

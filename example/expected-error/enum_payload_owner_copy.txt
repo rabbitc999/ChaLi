@@ -1,0 +1,1 @@
+chali: example/samples-error/enum_payload_owner_copy.chl 第 3 行第 43 列：不可复制的枚举载荷必须显式 move 或使用拥有临时值：Handle

@@ -1,0 +1,4 @@
+int64 mut& invalid() {
+    return for (let x in range(0, 0)) {} else { &x };
+}
+void main() { println("{}", invalid()); }

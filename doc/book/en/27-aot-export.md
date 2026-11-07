@@ -30,6 +30,42 @@ Unqualified IR in this book means ChaLi quadruple IR; LLVM IR is named explicitl
 
 Checked execution helps detect the corresponding invalid accesses at runtime, while static checking rejects invalid programs before execution. Their coverage differs, and neither proves business inputs valid. Understand the actual switches before selecting unchecked and validate the release configuration itself rather than relying only on a development run.
 
+### Persisting build settings in TOML
+
+Extend the `[build]` table introduced in Chapter 11. This fragment targets Windows x64; other targets require matching runtime, SDK and linker inputs.
+
+```toml
+[build]
+target = "windows-x64"
+output = "executable"
+lto = "full"
+allocator = "malloc"
+subsystem = "console"
+build_option = ["A", "B"]
+assembly_sources = []
+assembly_includes = []
+objects = []
+libraries = []
+search_paths = ["src"]
+```
+
+| Setting | Meaning and CLI precedence |
+| --- | --- |
+| target, cpu | Supported triple or alias and CPU tuning name; explicit --target and --cpu win |
+| output | executable, llvm, object or assembly; explicit --emit-llvm, --emit-obj and --emit-asm win; run still compiles and executes |
+| lto | true, false, full, thin or off; explicit LTO options win |
+| allocator, subsystem | malloc/pool and Windows console/windows; explicit matching options win |
+| sysroot, runtime_dir | Target SDK root and runtime directory; explicit matching options win |
+| assembly_sources, assembly_includes | Assembly sources and include paths; an explicitly supplied CLI list replaces the corresponding manifest list |
+| objects, libraries | Extra objects and libraries; an explicitly supplied CLI list replaces the corresponding manifest list |
+| search_paths | Appends module and import lookup paths, resolved from the manifest directory |
+| build_option | Boolean flag names, unioned with -B definitions and queried with $build[name] |
+
+Bare library names without dots or path separators are resolved by the linker; other paths are relative to the manifest. CPU tuning does not change the target architecture reported by `$cpu`. `$system`, `$cpu` and `$build` become constants during macro expansion; see [Chapter 22](22-macros.md).
+
+The static LLVM variant uses its embedded backend and rejects `--llvm` and `[build] llvm`. External toolchain paths are supported by the external variant. A manifest cannot switch a static compiler to an external backend. Consult the [LLVM build reference](../../en/38-build.md) for the complete interface and [Chapter 11](11-modules-projects.md) for entry and search rules.
+
+
 ## 27.2 Toolchain versus application dependencies
 
 ### Standard-library algorithms, C primitives and LLVM
@@ -176,6 +212,6 @@ artifact=42
 
 Use run to observe checked native execution, then validate the actual build release configuration. Compiler LLVM components, application library dependencies and target startup are separate questions.
 
-Retain commands, source/binary identities, target conditions and business outcomes. Report object generation, linking and execution with their respective evidence. Chapter 25 applies these requirements to a complete web/database application.
+Retain commands, source/binary identities, target conditions and business outcomes. Report object generation, linking and execution with their respective evidence. Chapter 29 applies these requirements to a complete web/database application.
 
-Next: [Chapter 29](29-student-management.md).
+Next: [Chapter 28](28-http-file-server.md).

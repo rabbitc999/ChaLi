@@ -30,26 +30,22 @@ chali run example/samples/std_encoding.chl
 ```chali
 import std::encoding;
 List<uint8> bytesOf(String text){List<uint8> bytes;{
-    int64 i=0;
-    while (i<len(text)) {
-bytes.push((uint8)text[i]);
-        i=i+1;
-    }
-}return bytes;}
+        int64 i=0;
+        while (i<len(text)) {
+            bytes.push((uint8)text[i]);
+            i=i+1;
+        }
+    }return bytes;}
 void main(){
     List<String> texts;texts.push("");texts.push("f");texts.push("fo");texts.push("foo");texts.push("foob");texts.push("fooba");texts.push("foobar");
     List<String> encoded;encoded.push("");encoded.push("Zg==");encoded.push("Zm8=");encoded.push("Zm9v");encoded.push("Zm9vYg==");encoded.push("Zm9vYmE=");encoded.push("Zm9vYmFy");
-    {
-        int64 i=0;
-        while (i<texts.len()) {
+    for (int64 i=0; i<texts.len(); i=i+1) {
 
         List<uint8> bytes=bytesOf(texts[i]);
         assert(encodeBase64(bytes)==encoded[i]);
         assert(encodeHex(decodeBase64(encoded[i]).unwrap())==encodeHex(bytes));
         assert(encodeHex(decodeBase64Url(encodeBase64Url(bytes)).unwrap())==encodeHex(bytes));
-    
-            i=i+1;
-        }
+
     }
     List<uint8> binary;binary.push((uint8)0);binary.push((uint8)251);binary.push((uint8)255);
     assert(encodeHex(binary)=="00fbff" && encodeHex(binary,true)=="00FBFF");
@@ -402,6 +398,6 @@ Result<List<uint8>,Error> decodeBase64Url(String text);
 decodeBase64Url(text);
 ```
 
-**源码**：[source/std/encoding.chl:115](../../source/std/encoding.chl#L115)。
+**源码**：[source/std/encoding.chl:107](../../source/std/encoding.chl#L107)。
 
 **完整示例**：[example/samples/std_encoding.chl](../../example/samples/std_encoding.chl)。

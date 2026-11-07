@@ -1,0 +1,1 @@
+void main() { Result<String, String> value = "ambiguous"; }

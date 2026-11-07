@@ -20,6 +20,8 @@ Mutable module globals are private to their declaring module. To publish a read-
 
 Module declarations give names an owner. Import required modules and qualify names to choose declarations explicitly, especially with identically named types. Do not depend on import order to resolve ambiguity.
 
+After import, unambiguous functions, constants, interfaces, enums and structs can all use short names; the rule is not limited to functions. The module constant above may also be written DEFAULT_PORT, with config::DEFAULT_PORT used to remove ambiguity. Generic calls may still infer their arguments. Name resolution and type inference remain separate checks: a unique name does not make every argument type valid.
+
 <!-- verify-book -->
 ```chali
 inline int64 square(int64 value)
@@ -44,7 +46,43 @@ This complete runnable example contains no module or import. It illustrates a fu
 
 ## 11.3 Project configuration and commands
 
-chali.toml records the entry and project options. When opening an existing project, compare its settings with the options listed by chali help. The run command uses checked AOT, and release builds native artifacts. Chapter 27 covers targets and linker configuration.
+chali.toml records the entry and project options. When opening an existing project, compare its settings with the options listed by chali help. The run command uses checked native builds; build produces unchecked native artifacts by default. Chapter 27 covers targets and linker configuration.
+
+
+### A manifest at the project root
+
+`chali new demo` creates a project and manifest. For an existing project, create `chali.toml` at its root:
+
+```toml
+[package]
+name = "demo"
+version = "0.1.0"
+
+[chali]
+main = "src/main.chl"
+search_paths = ["src"]
+
+[build]
+build_option = ["A", "B"]
+output = "executable"
+lto = "full"
+allocator = "malloc"
+```
+
+`[package]` records the package identity, `[chali]` selects the entry and source search paths, and `[build]` records output and build settings. Relative paths are resolved from the manifest directory. With an explicit source file, the compiler searches its parent directories for `chali.toml`; without one, it searches upward from the working directory. No manifest means single-file defaults. An explicit source replaces the `main` entry while retaining its project settings.
+
+Run these commands at the project root:
+
+```sh
+chali check
+chali run
+chali build
+chali run -B EXTRA
+```
+
+The first three use the configured `main`. The last additionally defines `EXTRA`. Query manifest flags `A`, `B` and CLI flag `EXTRA` with `$build[A]`, `$build["B"]` and `$build[EXTRA]`; an undefined name yields `false`. Options express boolean presence only. They cannot carry values or cancel a manifest definition with `false`. Chapter 22 uses them in macro `$if` conditions.
+
+`search_paths` supplements both module and import lookup; `[chali] include_paths` and `import_paths` configure them separately. CLI `-I`, `--include-path` and `--import-dir` select directories; `-B` defines boolean flags. Search paths append and flag names form a union. Chapter 27 explains the distinct override rules for targets, outputs and linker inputs.
 
 ### Why the standard library can travel with the compiler
 
@@ -88,4 +126,4 @@ Record source inputs, compiler-owned assets and runtime application files separa
 
 Document the entry, configuration location, working directory, target and external libraries. Macro and reflection mechanisms retain these name and type ownership boundaries even when they generate code.
 
-Next: [Chapter 22](22-macros.md).
+Next: [Chapter 12](12-strings-text.md).

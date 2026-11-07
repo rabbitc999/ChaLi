@@ -127,7 +127,7 @@ Other entity routes are classes, grades, subjects, teachers and assignments. Err
 
 ## 29.9 Export and acceptance
 
-A native export still needs the web directory, database configuration and MySQL client dependencies. Process-local sessions are not part of a database backup; verify account links and foreign keys when backing up business data. Chapter 24 covers deployment and cross-compilation boundaries.
+A native export still needs the web directory, database configuration and MySQL client dependencies. Process-local sessions are not part of a database backup; verify account links and foreign keys when backing up business data. Chapter 27 covers deployment and cross-compilation boundaries.
 
 Acceptance uses an isolated temporary database for valid CRUD, duplicate and foreign-key rejection, role isolation, unauthorized teacher writes, session revocation and browser interactions. It closes the service and drops only that test database afterward. The entry points are [students_server.py](../../../tests/students_server.py) and [students_server_ui.py](../../../tests/students_server_ui.py).
 
@@ -172,9 +172,10 @@ Reply handle(Database mut& database, State mut& state, Request const& request)
         if (request.method != "POST") { return errorReply(405, "登录需要 POST"); }
         return login(&database, &state, request.body);
     }
-    let identity = authenticate(&database, &state, &request);
-    if (identity.isNone()) { return errorReply(401, "请登录，会话已失效或账号已更新"); }
-    let user = identity.unwrap();
+    let user = match (authenticate(&database, &state, &request)) {
+        Value(value) => { value }
+        None => { return errorReply(401, "请登录，会话已失效或账号已更新"); }
+    };
     if (request.path == "/api/auth/me" && request.method == "GET") { return jsonReply(200, userJson(user)); }
     if (request.path == "/api/auth/logout" && request.method == "POST")
     {
@@ -211,13 +212,10 @@ Next, handle identity, logout and password routes, then split the remaining API 
 ```chali
 void serve(Database mut& database, State mut& state, TcpSocket mut& peer, String page)
 {
-    let read = readRequest(peer, 10000);
-    if (read.isErr())
-    {
-        /* 空连接 / 超时是常态（浏览器预连接），安静地关掉即可。 */
-        return;
-    }
-    Request request = read.unwrap();
+    Request request = match (readRequest(peer, 10000)) {
+        Ok(value) => { value }
+        Err(_) => { return; }
+    };
     if ((request.path == "/" || request.path == "/index.html") && request.method == "GET")
     {
         let sent = sendResponse(peer, 200, "OK", "text/html; charset=utf-8", page);
@@ -250,9 +248,10 @@ The second section invokes school_api::handle, maps Reply status to reason text 
 api::Reply login(std::sql::Database mut& database, State mut& state, String body)
 {
     prune(&state);
-    let parsed = std::json::parse(body);
-    if (parsed.isErr()) { return api::errorReply(400, "登录数据必须是 JSON 对象"); }
-    let value = parsed.unwrap();
+    let value = match (std::json::parse(body)) {
+        Ok(json) => { json }
+        Err(_) => { return api::errorReply(400, "登录数据必须是 JSON 对象"); }
+    };
     String username = stringField(&value, "username");
     String password = stringField(&value, "password");
     if (username.isEmpty() || len(username) > 64 || len(password) < 1 || len(password) > 1024)
@@ -268,10 +267,12 @@ api::Reply login(std::sql::Database mut& database, State mut& state, String body
     }
     int64 now = rows.intAt(0, 9);
     if (rows.intAt(0, 8) > now) { return api::errorReply(429, "登录尝试过多，请稍后再试"); }
-    let digest = crypto::derive(password, rows.textAt(0, 5), (uint64)600000);
-    if (digest.isErr()) { return api::errorReply(503, "认证服务暂不可用"); }
+    String digest = match (crypto::derive(password, rows.textAt(0, 5), (uint64)600000)) {
+        Ok(value) => { value }
+        Err(_) => { return api::errorReply(503, "认证服务暂不可用"); }
+    };
     int64 id = rows.intAt(0, 0);
-    if (rows.intAt(0, 4) != 1 || !crypto::equalDigest(digest.unwrap(), rows.textAt(0, 6)))
+    if (rows.intAt(0, 4) != 1 || !crypto::equalDigest(digest, rows.textAt(0, 6)))
     {
         int64 attempts = rows.intAt(0, 7) + 1;
         int64 until = 0;
@@ -280,10 +281,12 @@ api::Reply login(std::sql::Database mut& database, State mut& state, String body
         return api::errorReply(401, "账号、口令无效或账号暂不可用");
     }
     if (len(state.sessions) >= 4096) { return api::errorReply(503, "会话数量已达上限"); }
-    let random = crypto::token();
-    if (random.isErr()) { return api::errorReply(503, "无法创建会话"); }
+    String random = match (crypto::token()) {
+        Ok(value) => { value }
+        Err(_) => { return api::errorReply(503, "无法创建会话"); }
+    };
     Session session;
-    session.token = random.unwrap(); session.userId = id; session.version = rows.intAt(0, 3); session.expires = std::clock::nowMs() + 1800000;
+    session.token = random; session.userId = id; session.version = rows.intAt(0, 3); session.expires = std::clock::nowMs() + 1800000;
     state.sessions.push(session);
     let reset = database.exec("UPDATE school_users SET failed_count=0,locked_until=0 WHERE id=" + id.toString());
     User user;
@@ -310,20 +313,20 @@ Option<User> authenticate(Database mut& database, State mut& state, Request cons
 {
     prune(&state);
     String token = bearer(&request);
-    if (token.isEmpty()) { return Option<User>::None; }
+    if (token.isEmpty()) { return None; }
     for (Session session in state.sessions)
     {
         if (!equalDigest(session.token, token)) { continue; }
         let rows = database.exec("SELECT id,username,role,version FROM school_users WHERE enabled=1 AND id=" + session.userId.toString());
-        if (!rows.ok || rows.rowCount() != 1 || rows.intAt(0, 3) != session.version) { return Option<User>::None; }
+        if (!rows.ok || rows.rowCount() != 1 || rows.intAt(0, 3) != session.version) { return None; }
         User user;
         user.id = rows.intAt(0, 0);
         user.username = rows.textAt(0, 1);
         user.role = rows.textAt(0, 2);
         user.version = rows.intAt(0, 3);
-        return Option<User>::Value(user);
+        return Value(user);
     }
-    return Option<User>::None;
+    return None;
 }
 ```
 
@@ -385,19 +388,23 @@ Reply write(Database mut& database, String entity, User user, String method, int
     String sql = "DELETE FROM " + source + " WHERE " + condition;
     if (method != "DELETE")
     {
-        let parsed = parse(text);
-        if (parsed.isErr() || !parsed.unwrap().isObject()) { return errorReply(400, "记录必须是 JSON 对象"); }
-        let body = parsed.unwrap();
+        let body = match (parse(text)) {
+            Ok(value) => { value }
+            Err(_) => { return errorReply(400, "记录必须是 JSON 对象"); }
+        };
+        if (!body.isObject()) { return errorReply(400, "记录必须是 JSON 对象"); }
         List<String> names = fields(entity);
         String columns = "";
         String values = "";
         String updates = "";
         for (String name in names)
         {
-            let item = literal(&database, &body, name);
-            if (item.isErr()) { return errorReply(400, item.error().toString()); }
+            String item = match (literal(&database, &body, name)) {
+                Ok(value) => { value }
+                Err(error) => { return errorReply(400, error.toString()); }
+            };
             if (!columns.isEmpty()) { columns += ","; values += ","; updates += ","; }
-            columns += name; values += item.unwrap(); updates += name + "=" + item.unwrap();
+            columns += name; values += item; updates += name + "=" + item;
         }
         if (!relations(&database, entity, &body, user)) { return errorReply(403, "账号角色不匹配，或教师未获该班级与科目授权"); }
         sql = "INSERT INTO " + source + "(" + columns + ") VALUES (" + values + ")";
@@ -442,19 +449,26 @@ Result<GradeInput, Error> parseGrade(String text)
         || input.term.isEmpty() || input.term.length() > 40
         || input.score < 0.0 || input.score > 100.0)
     {
-        return Result<GradeInput, Error>::Err(MessageError::from("成绩字段无效"));
+        return MessageError::from("成绩字段无效");
     }
-    return Result<GradeInput, Error>::Ok(input);
+    return Ok(input);
 }
 
-void main()
+Result<bool, Error> demonstrateGrade()
 {
     String text = "{\"student_id\":7,\"subject_id\":2,\"teacher_id\":3,\"term\":\"2026-1\",\"score\":92.5}";
-    GradeInput input = parseGrade(text).unwrap();
+    GradeInput input = parseGrade(text)?;
     println("{} {}", input.student, input.score);
     input.score = 101.0;
-    assert(parseGrade(input.toJson().unwrap()).isErr());
+    assert(parseGrade(input.toJson()?).isErr());
     println("拒绝无效成绩");
+    return Ok(true);
+}
+void main() {
+    match (demonstrateGrade()) {
+        Ok(_) => {}
+        Err(error) => { println("{}", error.toString()); }
+    }
 }
 ```
 

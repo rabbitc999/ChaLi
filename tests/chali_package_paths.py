@@ -10,7 +10,7 @@ COMPILER = compiler_path()
 
 
 def run(args, success=True):
-    result = subprocess.run(list(map(str, args)), cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    result = subprocess.run(list(map(str, args)), cwd=ROOT, capture_output=True, text=True, encoding="utf-8", env=dict(os.environ, CHALI_LANG="zh"))
     assert (result.returncode == 0) == success, result.stdout + result.stderr
     return result
 
@@ -69,7 +69,7 @@ commands = ['import extra;']
         for directive in ('include', 'include_once', 'import'):
             main.write_text(f'%{directive} "missing.chl"\nvoid main() {{ return; }}\n', encoding="utf-8")
             error = run(cli, False).stderr
-            assert '不支持文本包含指令' in error and 'import' in error, error
+            assert '语法错误' in error and '取余(%)' in error, error
     print("CHALI module paths and removed inclusion checks passed")
 
 

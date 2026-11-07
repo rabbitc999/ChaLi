@@ -1,0 +1,1 @@
+chali: example/samples-error/syntax_for_else_borrowed_noncopy_bad.chl 第 7 行第 5 列：for-in 的 else 保存借用元素需要可复制的值类型；不可复制元素应在循环体内处理

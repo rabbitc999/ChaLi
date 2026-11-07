@@ -1,0 +1,5 @@
+$macro ALIAS(mut &a, mut &b) -> stmt
+a += 1;
+b += a;
+$end_macro
+void main() { int64 x = 1; $ALIAS(x, x); assert(x == 4); println("alias={}", x); }

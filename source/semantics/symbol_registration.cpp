@@ -1079,6 +1079,26 @@ bool RegisterTop()
         if (!item.second.nonCopyable && StructHasInterface(item.first, "Closeable"))
             item.second.nonCopyable = true;
 
+    // 布局的扁平叶子会丢失 Closeable 字段的类型身份，沿具名字段传递不可复制属性。
+    bool changedNonCopyable = true;
+    while (changedNonCopyable)
+    {
+        changedNonCopyable = false;
+        for (auto &item : g_structs)
+        {
+            if (item.second.nonCopyable) continue;
+            for (const auto &field : item.second.fields)
+            {
+                auto type = field.type;
+                while (type && type->kind == MType::Array) type = type->elem;
+                if (!TypeNonCopyable(type)) continue;
+                item.second.nonCopyable = true;
+                changedNonCopyable = true;
+                break;
+            }
+        }
+    }
+
     // Copy 是显式复制承诺；不可复制类型不能通过直接或继承接口重新声明该能力。
     for (const auto &item : g_structs)
         if (TypeNonCopyable(NamedType(item.first)))

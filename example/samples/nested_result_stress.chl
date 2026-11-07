@@ -1,0 +1,106 @@
+int64 generated = 0;
+int64 closed = 0;
+int64 deferred = 0;
+struct Guard : Closeable {
+    void close() { closed += 1; }
+}
+Result<Result<String, MessageError>, MessageError> gen(int64 kind) {
+    Guard guard;
+    generated += 1;
+    return match(kind) {
+        1 => { Ok(Ok("type1")) }
+        2 => { Ok(Err(MessageError::from("type2"))) }
+        _ => { Err(MessageError::from("type3")) }
+    };
+}
+Result<String, Error> direct(int64 kind) {
+    Guard guard;
+    defer { deferred += 1; }
+    return Ok((gen(kind + 1)?)?);
+}
+$macro FORWARD(value:expr) -> expr
+value
+$end_macro
+Result<String, Error> macroRun(int64 kind) {
+    Guard guard;
+    defer { deferred += 1; }
+    return Ok($FORWARD((gen(kind + 1)?)?));
+}
+Result<T, Error> flatten<T>(Result<Result<T, MessageError>, MessageError> value) {
+    Guard guard;
+    defer { deferred += 1; }
+    return Ok((value?)?);
+}
+Result<String, Error> genericRun(int64 kind) {
+    return flatten(gen(kind + 1));
+}
+Result<Result<Result<String, MessageError>, MessageError>, MessageError> deep(int64 kind) {
+    Guard guard;
+    generated += 1;
+    if (kind == 0) { return Err(MessageError::from("outer错误")); }
+    if (kind == 1) { return Ok(Err(MessageError::from("middle错误"))); }
+    if (kind == 2) { return Ok(Ok(Err(MessageError::from("inner错误")))); }
+    return Ok(Ok(Ok("deep成功")));
+}
+Result<String, Error> deepRun(int64 kind) {
+    Guard guard;
+    defer { deferred += 1; }
+    return Ok(((deep(kind)?)?)?);
+}
+void verify(Result<String, Error> value, int64 kind) {
+    match(value) {
+        Ok(text) => { assert(kind == 0 && text == "type1"); }
+        MessageError(text) => {
+            assert(kind != 0);
+            if (kind == 1) { assert(text.toString() == "type2"); }
+            else { assert(text.toString() == "type3"); }
+        }
+        Err(_) => { assert(false); }
+    }
+}
+void verifyDeep(Result<String, Error> value, int64 kind) {
+    match(value) {
+        Ok(text) => { assert(kind == 3 && text == "deep成功"); }
+        MessageError(text) => {
+            if (kind == 0) { assert(text.toString() == "outer错误"); }
+            else if (kind == 1) { assert(text.toString() == "middle错误"); }
+            else { assert(kind == 2 && text.toString() == "inner错误"); }
+        }
+        Err(_) => { assert(false); }
+    }
+}
+struct OtherError : Error {
+    int64 code;
+    String toString() { assert(self.code == 9); return "Other=9"; }
+}
+Result<Result<String, MessageError>, OtherError> mixed(int64 kind) {
+    if (kind == 0) { OtherError error; error.code = 9; return Err(error); }
+    if (kind == 1) { return Ok(Err(MessageError::from("mixed-inner"))); }
+    return Ok(Ok("mixed-ok"));
+}
+Result<String, Error> mixedRun(int64 kind) {
+    return Ok((mixed(kind)?)?);
+}
+void main() {
+    for (int64 kind in range(0, 3)) {
+        match(mixedRun(kind)) {
+            Ok(text) => { assert(kind == 2 && text == "mixed-ok"); }
+            MessageError(error) => { assert(kind == 1 && error.toString() == "mixed-inner"); }
+            OtherError(error) => { assert(kind == 0 && error.code == 9); }
+            Err(_) => { assert(false); }
+        }
+    }
+    let callback = Result<String, Error> fn(int64 kind) { return direct(kind); };
+    for (int64 i in range(0, 2000)) {
+        int64 kind = i % 5;
+        verify(direct(kind), kind);
+        verify(macroRun(kind), kind);
+        verify(genericRun(kind), kind);
+        verify(callback(kind), kind);
+        verifyDeep(deepRun(i % 4), i % 4);
+    }
+    assert(generated == 10000);
+    assert(closed == 20000);
+    assert(deferred == 10000);
+    println("nested Result: calls={} closed={} deferred={}", generated, closed, deferred);
+}

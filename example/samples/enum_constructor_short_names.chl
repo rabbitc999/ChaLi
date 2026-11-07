@@ -1,0 +1,30 @@
+enum Left { Value(int64 number), None }
+enum Right { Value(int64 number), None }
+
+Result<T, Error> wrap<T>(T value) { return Ok(value); }
+
+void main() {
+    Left left = Value(11);
+    Right right = Value(22);
+    Option<Left> present = Value(left);
+    Option<Right> missing = None;
+    Result<Right, Error> success = Ok(Value(33));
+    Result<Result<int64, MessageError>, Error> nested = Ok(Ok(44));
+    Result<int64, Error> failure = Err(MessageError::from("expected"));
+    assert(present.isValue() && missing.isNone());
+    assert(nested.unwrap().unwrap() == 44 && failure.isErr());
+    assert(wrap((int64)55).unwrap() == 55);
+    match (left) {
+        Value(number) => { assert(number == 11); }
+        None => { assert(false); }
+    }
+    match (right) {
+        Value(number) => { assert(number == 22); }
+        None => { assert(false); }
+    }
+    match (success.unwrap()) {
+        Value(number) => { assert(number == 33); }
+        None => { assert(false); }
+    }
+    println("enum constructors: contextual short names OK");
+}

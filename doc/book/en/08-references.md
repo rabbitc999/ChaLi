@@ -96,7 +96,7 @@ void main() {
 
 ## 8.5 Choose a parameter form
 
-Small copyable values can be passed by value. Use a reference when accessing an existing object and make mutation explicit. An owning return transfers a value to the caller; a reference return continues borrowing a source. Chapter 8 connects this distinction with cleanup.
+Small copyable values can be passed by value. Use a reference when accessing an existing object and make mutation explicit. An owning return transfers a value to the caller; a reference return continues borrowing a source. Chapter 9 connects this distinction with cleanup.
 
 ### Summary
 

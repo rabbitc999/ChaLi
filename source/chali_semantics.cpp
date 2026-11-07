@@ -8,6 +8,7 @@
 #endif
 #include "chali_incremental.hpp"
 #include "chali_aot.hpp"
+#include "chali_aot_target.hpp"
 #include "chali_digest.hpp"
 #include "json/json.hpp"
 #include <cctype>
@@ -1819,6 +1820,17 @@ int M_For(int init, int cond, int inc, int body)
     return id;
 }
 /**
+ * @brief 为 for 或 for-in 附加共享循环变量作用域的后备分支。
+ * @param loop 已建立的循环节点。
+ * @param fallback 无带值退出时执行的后备分支。
+ * @return 保留原身份的循环节点。
+ */
+int M_LoopElse(int loop, int fallback)
+{
+    g_nodes[static_cast<std::size_t>(loop)].kids.push_back(fallback);
+    return loop;
+}
+/**
  * @brief 构造并登记迭代循环。
  * @param typeId 类型池中的类型编号。
  * @param nameId 名称池中的名称编号。
@@ -3304,6 +3316,7 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
             // 独立借用检查阶段：语义仅记录事实，全部单态化完成后才执行规则。
             for (const auto &diagnostic : chali_borrow_checker::check(g_borrowFacts))
                 AddDiagnostic(diagnostic.message, diagnostic.line);
+            ResolveBorrowCallEffects();
             for (const auto &flow : g_borrowFlows)
                 for (const auto &diagnostic : chali_borrow_checker::checkFlow(flow))
                     AddDiagnostic(diagnostic.message, diagnostic.line);

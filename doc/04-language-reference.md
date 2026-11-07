@@ -504,6 +504,8 @@ match (res) // Result<A, B>；A、B 是接口，E、F 实现 B
 
 单接口载荷还可写 `Err::IoError(e)`，等价于 `Err(IoError e)`；无绑定形式为 `Err::IoError(_)`。如果载荷类型能唯一确定标签且不与枚举变体名称冲突，还可省略标签写 `IoError(e)`。存在歧义时必须显式写标签。语法糖只适用于单载荷：双／多载荷使用 `Pair(A a, B b)`、`Many(A a, B b, text, count)`；非接口载荷可以直接绑定变量，接口载荷只需在按动态类型筛选时标注类型。
 
+类型模式 `MessageError(error)` 绑定的是具体的 `MessageError` 对象，不是自动拆出其字符串字段；可调用 `error.toString()` 读取文本。对 `Result<Result<T,E1>,E2>`，每个 `?` 只展开一层，`Ok((value?)?)` 才会传播两层错误。若目标载荷是 `String`，普通隐式文本转换仍然适用：`Ok(value?)` 可以把剩下的内层 `Result` 变成类似 `"Err(inner)"` 的成功字符串，这不等于传播内层错误。需要检查两层失败时，应明确保留两次 `?`。可运行对照见[嵌套 Result 压力测试](../tests/chali_nested_result_stress.py)。
+
 绑定变量后再加条件，用 `if`：
 
 ```chali
@@ -523,6 +525,28 @@ kind(Choice::Value("bad"))  = 0
 ```
 
 ---
+
+
+### 根据目标类型自动包装枚举载荷
+
+目标类型明确时，初始化、赋值、实参和返回值允许直接使用单载荷变体的载荷。例如：
+
+```chali
+Result<String, Error> failure() {
+    return MessageError::from("failed");
+}
+void main() {
+    Option<int64> value = (int64)7;
+    value = (int64)9;
+    Result<String, Error> result = MessageError::from("initial");
+    result = "ready";
+}
+```
+
+这分别补成 `Err(...)`、`Value(...)` 或 `Ok(...)`，同样适用于自定义枚举。已是目标枚举的表达式直接传递，不重复包装。选择时优先精确类型，再考虑兼容引用、接口和普通隐式转换；通用字符串格式化的优先级最低，因此错误对象传给 `Result<String, Error>` 会进入 `Err`。最佳候选相同时拒绝，例如 `Result<String, String> result = "ambiguous";` 必须明确写 `Ok` 或 `Err`。无载荷、多载荷变体不参与；不会凭空构造多个实参。循环的递归枚举转换不展开。
+
+目标枚举及其泛型实参必须已确定；这项糖不替代类型参数推导，也不放宽数值窄化、资源移动、引用来源或 `#borrow` 规则。需要移动的资源仍明确写 `move`，局部引用不能借自动包装逃逸。没有目标类型的 `let` 不会任意猜测外层枚举。显式构造器仍用于表达有意的成功／失败、区分歧义和控制多层嵌套。完整用例见[枚举自动包装样例](../example/samples/enum_payload_wrapping.chl)。
+
 
 ## 8. 接口与运行期多态
 
@@ -612,15 +636,9 @@ void main() {
     }
     println("loop={}", n);
     int64 total = 0;
-    {
-        int64 k = 0;
-        while (k < 5) {
-
-        if (k == 1) { { k = k + 1; continue; } }
-        total = total + k;
-
-            k = k + 1;
-        }
+    for (int64 k = 0; k < 5; k++) {
+        if (k == 1) { continue; }
+        total += k;
     }
     println("for={}", total);
 }
@@ -638,10 +656,13 @@ for=9
 | `while (cond) { }` | 先判断后执行 |
 | `loop { … yield v; }` | 无限循环，`yield` 交出结果 |
 | `for (T x in c) { }` | 遍历容器/迭代器 |
+| `for (int64 i = 0; i < n; i++) { }` | 初始化声明限于循环作用域；continue 执行更新后再检查条件，三段可空 |
 | `break` / `continue` / `return` | 跳出 / 继续 / 返回 |
 
 > `loop { … }` 是**表达式**；写在语句位置时不补分号，被变量定义、赋值、实参或返回值接走时
 > 按外层语句收尾（`int64 v = loop { … };`）。
+
+两种 for 都支持 else，循环变量的作用域延续到 else 结束。三段式可读取初始化变量的最终状态；for-in 可读取最后一个元素，空输入使用普通值类型默认值。借用迭代器会保存可复制元素的独立副本，避免 iterator 下一次调用使旧元素失效。不可复制的借用元素应在循环体内处理；无法确定有效来源的引用不能在空输入路径读取。普通 break 进入后备分支，带值 yield 直接交出结果并跳过 else。
 
 ---
 

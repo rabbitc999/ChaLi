@@ -1,0 +1,88 @@
+import std::iter;
+import std::macro;
+enum Choice { Number(int64 value), Text(String value), Empty }
+enum Failure { IoError(String text), Other }
+enum Packet {
+    Empty, Text(String value);
+    $std::macro::Equal<Packet>(leftEqual);
+    $std::macro::Hash<Packet>(hash);
+    $std::macro::Clone<Packet>(clone);
+}
+int64 overloaded(Option<int64> value) { return read(value); }
+int64 overloaded(bool value) { return -1; }
+Choice identity(Choice const& value) { return value; }
+int64 evaluations = 0;
+int64 nextValue() { evaluations += 1; return 73; }
+Result<String, Error> fail() { return MessageError::from("failure"); }
+Result<String, Failure> failCustom() { return IoError("custom"); }
+Option<T> optional<T>(T value) { return value; }
+Result<T, Error> genericResult<T>(T value) { return value; }
+Result<T, MessageError> required<T>(Option<T> value) {
+    match(value) {
+        Value(item) => { return Ok(item); }
+        None => {
+            MessageError error = MessageError::from("missing");
+            return Err(error);
+        }
+    }
+}
+int64 read(Option<int64> value) {
+    return match(value) { Value(number) => { number } None => { -1 } };
+}
+struct Holder { Option<int64> value; }
+Result<int64, Error> branch(int64 kind) {
+    return match(kind) { 1 => { (int64)17 } _ => { MessageError::from("branch") } };
+}
+Option<int64> conditional(bool flag) {
+    return if(flag) { (int64)5 } else { None };
+}
+void main() {
+    Result<String, Error> result = MessageError::from("initial");
+    assert(result.isErr());
+    result = "success";
+    assert(result.isOk());
+    result = MessageError::from("assigned");
+    assert(result.isErr() && fail().isErr());
+    match(failCustom()) { Err(error) => { match(error) { IoError(text) => { assert(text == "custom"); } _ => { assert(false); } } } _ => { assert(false); } }
+    Choice number = (int64)42;
+    Choice text = "text";
+    Choice copied = identity(&number);
+    match(copied) { Number(value) => { assert(value == 42); } _ => { assert(false); } }
+    match(number) { Number(value) => { assert(value == 42); } _ => { assert(false); } }
+    match(text) { Text(value) => { assert(value == "text"); } _ => { assert(false); } }
+    Option<int64> present = nextValue();
+    Option<int64> same = present;
+    assert(evaluations == 1 && read(same) == 73 && read((int64)19) == 19);
+    assert(read(optional((int64)27)) == 27);
+    Option<Option<int64>> nested = (int64)63;
+    match(nested) { Value(inner) => { assert(read(inner) == 63); } None => { assert(false); } }
+    assert(branch(1).isOk() && branch(0).isErr());
+    assert(read(conditional(true)) == 5 && conditional(false).isNone());
+    List<Option<int64>> values = [(int64)1, (int64)2];
+    values.push((int64)3);
+    assert(read(values[0]) == 1 && read(values[2]) == 3);
+    Option<int64> array[2];
+    array[0] = (int64)91;
+    assert(read(array[0]) == 91);
+    Packet first = Text("value");
+    Packet second = first.clone();
+    assert(!(first == Packet::Empty) && first == second);
+    assert(first.hash(first) == second.hash(second));
+    assert(overloaded((int64)29) == 29 && overloaded(true) == -1);
+    assert(genericResult((int64)8).isOk());
+    assert(genericResult(2.5).isOk() && genericResult("generic").isOk());
+    assert(genericResult(MessageError::from("success payload")).isOk());
+    Option<MessageError> absent = None;
+    Option<MessageError> presentError = MessageError::from("payload");
+    assert(required(absent).isErr() && required(presentError).isOk());
+    Holder holder;
+    holder.value = (int64)31;
+    assert(read(holder.value) == 31);
+    for (int64 i in intIter(0, 2048)) {
+        result = MessageError::from("loop");
+        assert(result.isErr());
+        present = i;
+        assert(read(present) == i);
+    }
+    println("enum payload wrapping: assignments=2048 once=1 generic,custom,Option,Result");
+}

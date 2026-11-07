@@ -1,0 +1,4 @@
+import syntax_helpers;
+#borrow(refs, [a])
+void bad(int64 mut& a,int64 mut& b) { List<int64 mut&> refs; append(&refs,b); }
+void main() { int64 a=1;int64 b=2;bad(&a,&b); }

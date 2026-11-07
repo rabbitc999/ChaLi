@@ -1,0 +1,6 @@
+void main() {
+    int64 owner = 1;
+    int64 const& output = &owner;
+    for (let x in range(0, 3)) {} else { output = &x; }
+    println("{}", output);
+}

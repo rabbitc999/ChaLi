@@ -1,0 +1,1 @@
+chali: example/samples-error/enum_payload_ambiguous.chl 第 2 行第 1 列：枚举自动包装存在歧义，请显式指定变体：Both

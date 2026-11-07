@@ -11,7 +11,10 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     """同时检查定义与未定义引用，防止旧命名空间残留在静态对象中。"""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--build-root', type=Path, default=Path(os.environ.get('CHALI_BUILD_ROOT', 'build')))
+    static_option = os.environ.get('CHALI_STATIC_LLVM')
+    static = static_option == '1' or (static_option is None and os.name == 'nt' and (ROOT / 'build/dependencies/llvm/static-sdk/bin/g++.exe').exists())
+    default_build = ROOT / ('build/llvm-static-gcc16' if static else 'build')
+    parser.add_argument('--build-root', type=Path, default=Path(os.environ.get('CHALI_BUILD_ROOT', str(default_build))))
     parser.add_argument('--nm', default=os.environ.get('NM', 'nm'))
     args = parser.parse_args()
     build = args.build_root.resolve()

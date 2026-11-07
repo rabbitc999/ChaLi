@@ -1,0 +1,4 @@
+struct Handle : Closeable { int64 id; void close() {} }
+struct Inner { Handle value; }
+struct Outer { Inner value; }
+void main() { Outer first; Outer second = first; }

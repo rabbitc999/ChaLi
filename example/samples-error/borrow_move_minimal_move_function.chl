@@ -1,0 +1,12 @@
+struct Handle : Closeable {
+    int64 id;
+    void close() { println("close={}", self.id); }
+}
+void consume(Handle value) { println("consume={}", value.id); }
+void take(Handle mut& x) { consume(move x); }
+void main() {
+    Handle h;
+    h.id = 7;
+    take(&h);
+    println("after_move={}", h.id);
+}

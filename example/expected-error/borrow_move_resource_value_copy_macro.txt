@@ -1,0 +1,1 @@
+chali: example/samples-error/borrow_move_resource_value_copy_macro.chl 第 10 行第 51 列：不可复制的值禁止复制：Handle（实现 Closeable 或声明了 #NonCopyable），请显式 move 或改用引用

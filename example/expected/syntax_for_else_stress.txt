@@ -1,0 +1,1 @@
+for else stress: iterations=1024 closed=3072 deferred=1024 cross-module generic,macro,nested types,closures

@@ -1,0 +1,4 @@
+void main() {
+    for (int64 i = 0; i < 3; i++) {} else { println("{}", i); }
+    println("{}", i);
+}

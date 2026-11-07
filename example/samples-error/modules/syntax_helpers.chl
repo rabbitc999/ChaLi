@@ -1,0 +1,12 @@
+module syntax_helpers;
+#borrow(#ret, [source])
+T mut& reference<T>(T mut& source) { return source; }
+T identity<T>(T value) { return value; }
+#borrow(#ret, [first])
+T mut& structural<T>(T mut& first, T mut& second, bool flag) {
+    T mut& chosen = first;
+    if (flag) { chosen = &second; return first; }
+    return chosen;
+}
+#borrow(out, [source])
+void append<T>(List<T mut&> mut& out, T mut& source) { out.push(source); }

@@ -21,9 +21,7 @@ Result<List<List<String>>,Error> parseCsv(String text, char delimiter=',') {
     List<List<String>> rows; List<String> row; String field="";
     bool quoted=false; bool afterQuote=false; bool started=false;
     int64 line=1; int64 column=1; int64 quoteLine=1; int64 quoteColumn=1;
-    {
-        int64 i=0;
-        while (i<input.len()) {
+    for (int64 i=0; i<input.len(); i=i+1) {
 
         char value=(char)input[i];
         if (quoted) {
@@ -50,9 +48,7 @@ Result<List<List<String>>,Error> parseCsv(String text, char delimiter=',') {
             else { field=field+format("{}",value); started=true; }
         }
         if (value=='\n') { line=line+1; column=1; } else { column=column+1; }
-    
-            i=i+1;
-        }
+
     }
     if (quoted) { return Result<List<List<String>>,Error>::Err(csvError(quoteLine,quoteColumn,"unterminated quoted field")); }
     if (started || afterQuote || row.len()>0) { row.push(field); rows.push(row); }
@@ -66,35 +62,23 @@ Result<String,Error> writeCsv(List<List<String>> rows, char delimiter=',') {
     String result="";
     for (List<String> row in rows) {
         if (row.len()==0) { return Result<String,Error>::Err(csvError(1,1,"record must contain a field")); }
-        {
-            int64 i=0;
-            while (i<row.len()) {
+        for (int64 i=0; i<row.len(); i=i+1) {
 
             if (i>0) { result=result+format("{}",delimiter); }
             String field=row[i]; List<uint8> bytes=stringBytes(field); bool quote=bytes.len()==0 && row.len()==1;
-            {
-                int64 j=0;
-                while (j<bytes.len()) {
+            for (int64 j=0; j<bytes.len(); j=j+1) {
 
                 if ((char)bytes[j]==delimiter || (char)bytes[j]=='"' || (char)bytes[j]=='\r' || (char)bytes[j]=='\n') { quote=true; }
-            
-                    j=j+1;
-                }
+
             }
             if (quote) { result=result+"\""; }
-            {
-                int64 j=0;
-                while (j<bytes.len()) {
+            for (int64 j=0; j<bytes.len(); j=j+1) {
 
                 result=result+format("{}",(char)bytes[j]); if ((char)bytes[j]=='"') { result=result+"\""; }
-            
-                    j=j+1;
-                }
+
             }
             if (quote) { result=result+"\""; }
-        
-                i=i+1;
-            }
+
         }
         result=result+"\n";
     }

@@ -36,7 +36,7 @@ These are semantic errors. Plain text and JSON diagnostics retain the original s
 
 ```sh
 chali new demo name demo
-chali test tests backend interpret
+chali test tests
 chali fmt check src
 chali deps lock project . offline
 chali man List
@@ -45,7 +45,7 @@ chali gen compiler out build/compiler
 chali clear out build/compiler
 ```
 
-The generator creates standalone compiler projects. Hosts integrate through the shared runtime, host registries and the native AOT entry points.
+The generator creates standalone compiler projects. Hosts integrate through the shared runtime, C registration boundary, and native build entry points.
 
 Reflection is a fixed, non-trimmable part of the language: the front end and the runtime always build it in and compilation always runs the full reflection pass; `--no-reflection` only decides whether this artifact carries reflection metadata and reduces no workload. Quadruples are not optimized internally at all — every optimization is left to LLVM, and native release builds default to O3, LTO and dead-code elimination. `--memory-size` and `--step-limit` configure runtime resource budgets; isolated threads are on by default and `--no-threads` turns them off.
 
@@ -216,9 +216,9 @@ chali asm native/add.s --target linux-x64 --out build/add.o
 chali build main.chl --asm native/add.s --asm-include native/include --out build/app
 ```
 
-`asm` accepts one `.s` file and an exact output path. Without `--out`, it replaces the input suffix with `.obj` for Windows and `.o` for Linux. `--target`, `--cpu`, `--debug`, `-I DIR` / `-IDIR`, `--include-path DIR` and `--llvm CLANG` are supported. Target and CPU must match the source instructions. GAS-compatible LLVM syntax is used; `.S` preprocessing and NASM/MASM are not supported. Include search adds the source directory before the explicitly listed directories. Input files are limited to 64 MiB; this is a compiler tool, not an untrusted-code sandbox.
+`asm` accepts one `.s` file and an exact output path. Without `--out`, it replaces the input suffix with `.obj` for Windows and `.o` for Linux. `--target`, `--cpu`, `--debug`, `-I DIR` / `-IDIR`, `--include-path DIR` and the external-only `--llvm CLANG` are supported. Target and CPU must match the source instructions. GAS-compatible LLVM syntax is used; `.S` preprocessing and NASM/MASM are not supported. Include search adds the source directory before the explicitly listed directories. Input files are limited to 64 MiB; this is a compiler tool, not an untrusted-code sandbox.
 
-The static variant uses LLVM MC in process without clang; explicit `--llvm` selects the external integrated assembler. Objects are first produced in a private workspace and published only after successful assembly. A failed assembly preserves an existing output and cannot overwrite its own primary input. The output parent directory must exist. Source/include diagnostics retain their original positions.
+The static variant uses LLVM MC in process without clang and rejects `--llvm`; the external variant may use this option to select its integrated assembler. Objects are first produced in a private workspace and published only after successful assembly. A failed assembly preserves an existing output and cannot overwrite its own primary input. The output parent directory must exist. Source/include diagnostics retain their original positions.
 
 AOT accepts repeated `--asm FILE.s` and `--asm-include DIR` options. Every object uses the same target and CPU as the language unit and participates in the final link. Use the established C ABI declaration to reference an assembly symbol; the assembly must follow that target's calling convention. These inputs require executable/shared-library output and cannot be combined with `--emit-asm`, `--emit-obj` or `--emit-llvm`. Assembling a cross-target object does not verify executable deployment on that target.
 
@@ -235,10 +235,20 @@ chali link build/public.o --shared --export public_entry --out build/example.dll
 chali link build/start.o --target linux-arm64 --no-runtime --entry _start --out build/app
 ```
 
-`ar` writes deterministic, indexed, self-contained archives from zero or more objects of the selected target. Timestamps, UID and GID are fixed. Windows `.lib` uses COFF archives; other suffixes use GNU ar format. Thin and nested archives are rejected. `--out` is an exact filename and its parent must exist. The static variant uses LLVM ArchiveWriter. The external variant finds llvm-ar beside clang or through `CHALI_LLVM_AR`; `--llvm LLVM-AR` selects an explicit archiver.
+`ar` writes deterministic, indexed, self-contained archives from zero or more objects of the selected target. Timestamps, UID and GID are fixed. Windows `.lib` uses COFF archives; other suffixes use GNU ar format. Thin and nested archives are rejected. `--out` is an exact filename and its parent must exist. The static variant uses LLVM ArchiveWriter. The external variant finds llvm-ar beside clang or through `CHALI_LLVM_AR`; `--llvm LLVM-AR` selects an explicit archiver in the external variant; static variants reject this option.
 
-`link` accepts multiple objects/archives and supports `--target`, `--shared`, repeated `--export SYMBOL`, `--entry SYMBOL`, `--debug`, `-L DIR` / `-LDIR` / `--library-path DIR`, repeated `--library NAME`, `--sysroot`, `--runtime-dir` and `--llvm CLANG`. Entry/export names are raw object symbols. Inputs enter one link group in their supplied order. Archives extract members on demand and are rescanned for cyclic references; unresolved symbols in unextracted members are irrelevant. LLD diagnoses duplicate definitions and referenced missing symbols. Shared libraries expose only explicit exports and hide other symbols. Arbitrary raw linker flags are not forwarded.
+`link` accepts multiple objects/archives and supports `--target`, `--shared`, repeated `--export SYMBOL`, `--entry SYMBOL`, `--debug`, `-L DIR` / `-LDIR` / `--library-path DIR`, repeated `--library NAME`, `--sysroot`, `--runtime-dir` and the external-only `--llvm CLANG`. Entry/export names are raw object symbols. Inputs enter one link group in their supplied order. Archives extract members on demand and are rescanned for cyclic references; unresolved symbols in unextracted members are irrelevant. LLD diagnoses duplicate definitions and referenced missing symbols. Shared libraries expose only explicit exports and hide other symbols. Arbitrary raw linker flags are not forwarded.
 
 The static Windows x64 variant uses embedded LLD, CRT and ChaLi runtime assets without external clang. The external variant requires matching clang/LLD and the applicable system toolchain. Full cross-target linking requires a target runtime and SDK. Explicit `--no-runtime` omits CRT and the ChaLi runtime for programs supplying their own entry and dependencies. Embedded LLD can link such inputs for the supported Linux x64/ARM64 targets; successful generation is distinct from execution on the target. Ordinary standalone C programs may use default runtime linkage; unreferenced archive members are omitted.
 
 Input checks cover object format, width, architecture and archive-member bounds; LLVM/LLD performs the final symbol, section and relocation validation. These tools are not an untrusted-code sandbox. Output is generated in a private workspace and published only on success. Failures preserve an existing output, and output cannot overwrite an input. Callers must check the exit status rather than treat an old output as evidence of a successful link.
+
+## Samples and the full test gate
+
+`sh check.sh` runs every successful and failing sample, comparing output and diagnostics. `sh ci.sh --full --jobs 4` runs the complete release gate, including builds, samples, native and C ABI checks, generics, borrowing, documentation, generator exports, and the real editor host. The full gate includes editor and native debug tests and writes a VSIX matching the actual compiler variant under `dist/ci/`; Node.js, npm, VSCode, and GDB are required. Set `CHALI_STATIC_LLVM=1` for a static LLVM build. Missing dependencies or graphical hosts, failed builds, and skipped tests must be reported rather than counted as passes.
+
+Keep standalone language regressions in `example/samples/` with output in `example/expected/`. Rejected programs belong in `example/samples-error/`, with their first diagnostic line in `example/expected-error/`; sample discovery is automatic. Prefer these source files over duplicating programs inside Python strings. Python drivers remain for multiple build modes, detailed diagnostics, temporary module projects, host interaction, and dynamically scaled tests.
+
+Current programs include `generic_borrow_control_flow.chl`, `borrow_contract_pressure.chl`, `nested_result.chl`, and `nested_result_stress.chl`. Successful and rejected `borrow_contract_*` / `borrow_move_*` pairs exercise contracts, generic instances, control flow, reference moves, and cleanup. The nested Result driver also checks propagation and close counts in checked and unchecked builds.
+
+Run `python tests/chali_syntax_semantic_stress.py` for complex syntax/semantics. Programs live in normal/error examples; the driver handles formatting round trips, both native modes, independent oracles and bounded process execution. [Analysis order and known limitations](34-compiler-safety.md) distinguish designed rejection, conservative precision limits and defects.

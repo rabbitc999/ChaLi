@@ -1,0 +1,5 @@
+void main() {
+    assert($build[A]);
+    assert($build[B]);
+    println("book toml ok");
+}

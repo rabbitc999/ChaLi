@@ -1,0 +1,1 @@
+chali: example/samples-error/enum_payload_wrong_numeric.chl 第 1 行第 1 列：不能隐式转换：int64 -> Option__uint8（请显式强转）

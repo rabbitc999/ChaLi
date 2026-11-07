@@ -504,6 +504,8 @@ Memory::String StructNameOf(const std::shared_ptr<MType> &type);
 bool SameType(const std::shared_ptr<MType> &left, const std::shared_ptr<MType> &right);
 bool Acceptable(const std::shared_ptr<MType> &param, const std::shared_ptr<MType> &argument,
                 bool widening);
+const MEnumVariantDef *ChooseImplicitEnumVariant(const std::shared_ptr<MType> &target,
+                                                const std::shared_ptr<MType> &source, bool *ambiguous);
 /**
  * @brief 查询已声明的直接转换，不进行隐式转换链推导。
  */
@@ -857,9 +859,9 @@ ast::NodePtr FunctionPointerValue(const Memory::String &label)
             return ast::Node::i(0);
         }
     for (const auto &declaration : g_functionDecls)
-        if (declaration.label == label && declaration.external && chali_lifetime::g_directiveNodes.count(declaration.declarationId))
+        if (declaration.label == label && chali_lifetime::g_directiveNodes.count(declaration.declarationId))
         {
-            Fail("带生命周期契约的外部函数须直接调用，当前函数值类型不能保留该契约：" + label);
+            Fail("[CHL1210] 带生命周期契约的函数须直接调用，当前函数值类型不能保留该契约：" + label);
             return ast::Node::i(0);
         }
     for (const auto &declaration : g_functionDecls)

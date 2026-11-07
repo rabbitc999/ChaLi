@@ -65,16 +65,12 @@ inline String __pathNormalize(String path)
     String result = prefix;
     if (absolute) { result = result + "/"; }
     bool needsSlash = len(prefix) > 0 && !absolute;
-    {
-        int64 index = 0;
-        while (index < parts.len()) {
+    for (int64 index = 0; index < parts.len(); index = index + 1) {
 
         if (needsSlash) { result = result + "/"; }
         result = result + parts[index];
         needsSlash = true;
-    
-            index = index + 1;
-        }
+
     }
     if (len(result) == 0) { return "."; }
     return result;

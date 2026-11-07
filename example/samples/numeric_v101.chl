@@ -1,7 +1,7 @@
 // v1.0.1：字面量类型、无符号转换、窄整数位运算与 loop 返回路径。
 int64 fromLoop() { loop { return 42; }; }
 int64 nestedLoop(bool stop) {
-    loop { if (stop) { return 7; } else { continue; } };
+    loop { if (stop) { return 7; } else { continue; } }
 }
 float32 identity32(float32 value) { return value; }
 uint64 maximumValue() { return 0xFFFFFFFFFFFFFFFF; }

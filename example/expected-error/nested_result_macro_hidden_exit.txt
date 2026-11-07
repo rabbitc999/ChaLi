@@ -1,0 +1,1 @@
+chali: example/samples-error/nested_result_macro_hidden_exit.chl 第 4 行第 77 列：expr 宏模板不能把控制流转移到调用方；请使用 stmt 宏，或由调用方显式传入控制片段

@@ -1,0 +1,18 @@
+struct Fixed { int64 marker; }
+struct Pair<A, B> { A first; B second; }
+struct Outer<T> { Pair<Pair<T, Fixed>, String> nested; }
+
+T read<T>(Pair<Pair<T, Fixed>, String> value) {
+    return value.first.first;
+}
+
+void main() {
+    Outer<String> text;
+    text.nested.first.first = "nested";
+    text.nested.second = "tail";
+    assert(read(text.nested) == "nested");
+    Outer<int64> number;
+    number.nested.first.first = 42;
+    assert(read(number.nested) == 42);
+    println("nested generic inference: String,int64");
+}

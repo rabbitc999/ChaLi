@@ -102,7 +102,7 @@ bool HasDestructorNow(const Memory::String &emitted)
 {
     for (const MOwnedScope &scope : g_ownedScopes)
         for (const MOwnedScope::Destructor &item : scope.destructors)
-            if (item.name == emitted && (item.drop || item.close || item.aggregate)) return true;
+            if (item.name == emitted && (item.drop || item.close || item.aggregate || StructNeedsDestruction(item.owner))) return true;
     return false;
 }
 

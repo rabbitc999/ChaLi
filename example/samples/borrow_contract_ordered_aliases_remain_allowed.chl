@@ -1,0 +1,2 @@
+#borrow(x,a)
+void f(int64 mut& a){int64 mut& x=a;int64 mut& y=a;x+=1;assert(y==a);}void main(){int64 a=1;f(&a);}

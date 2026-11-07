@@ -1052,7 +1052,8 @@ bool IsFreshAggregate(int exprId)
     if (node.kind == MNode::Call || node.kind == MNode::Tuple || node.kind == MNode::Loop || node.kind == MNode::Range) return true;
     /* 运算符重载（`a + b` / `-a`）就是方法调用：返回值是调用点当场造出来的新值。 */
     if (node.kind == MNode::Bin || node.kind == MNode::Un) return true;
-    if (node.kind == MNode::EnumCtor) return node.type2 == 1; /* 静态工厂 */
+    if (node.kind == MNode::EnumCtor)
+        return node.type2 == 1 || FindEnumVariant(node.s, node.s2) != nullptr;
     if (node.kind == MNode::Cast)
         return !node.kids.empty() && (HasDeclaredConversion(ExprType(node.kids[0]), T(node.type), true) || IsFreshAggregate(node.kids[0]));
     return false;

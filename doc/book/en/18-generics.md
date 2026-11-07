@@ -327,13 +327,13 @@ enum Step: Try<int64, NoneResidual>
     {
         match (self)
         {
-            Step::Value(value) =>
+            Value(value) =>
             {
-                return TryBranch<int64, NoneResidual>::Continue(value);
+                return Continue(value);
             }
-            Step::Empty =>
+            Empty =>
             {
-                return TryBranch<int64, NoneResidual>::Break(NoneResidual::None);
+                return Break(None);
             }
         }
         panic("unreachable");
@@ -342,11 +342,14 @@ enum Step: Try<int64, NoneResidual>
 Option<int64> addOne(Step step)
 {
     int64 value = step?;
-    return Option<int64>::Value(value + 1);
+    return Value(value + 1);
 }
 void main()
 {
-    println("{} {}", addOne(Step::Value(4)).unwrap(), addOne(Step::Empty).isNone());
+    match (addOne(Value(4))) {
+        Value(next) => { println("{} {}", next, addOne(Empty).isNone()); }
+        None => { println("no next value"); }
+    }
 }
 ```
 

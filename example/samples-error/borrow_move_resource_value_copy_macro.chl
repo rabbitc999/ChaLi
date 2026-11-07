@@ -1,0 +1,10 @@
+int64 closed = 0;
+struct Handle : Closeable {
+    int64 id;
+    void close() { closed = closed * 10 + self.id; }
+}
+void consume(Handle value) { assert(value.id > 0); }
+$macro ID(x: value) -> expr
+x
+$end_macro
+void main() { Handle h; h.id = 1; Handle second = $ID(h); }

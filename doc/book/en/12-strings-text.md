@@ -135,7 +135,7 @@ Named defines toString to join a fixed prefix with self.name. Setting name to Ch
 
 ## 12.5 Appending, buffers and safe output
 
-Repeated appends depend on copies, temporaries and capacity growth. String can reuse allocated buffers; shortening does not imply freeing capacity. Optimizations must preserve observable copy and borrow behavior. Chapter 24 distinguishes compiler settings, and Chapter 25 uses textContent to display user data without interpreting names as HTML.
+Repeated appends depend on copies, temporaries and capacity growth. String can reuse allocated buffers; shortening does not imply freeing capacity. Optimizations must preserve observable copy and borrow behavior. Chapter 24 distinguishes compiler settings, and Chapter 29 uses textContent to display user data without interpreting names as HTML.
 
 ### Construct formatted text first
 
@@ -159,4 +159,4 @@ Decide whether text is for display or exchange before choosing interpolation, to
 
 External text may still be malformed or violate business rules. Error handling and the final project place parsing, field validation, SQL quoting and page display at their respective boundaries.
 
-Next: [Chapter 17](17-interfaces.md).
+Next: [Chapter 13](13-collections.md).

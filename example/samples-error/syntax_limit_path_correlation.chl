@@ -1,0 +1,8 @@
+#borrow(#ret, [first])
+int64 mut& correlated(int64 mut& first, int64 mut& second, bool flag) {
+    int64 mut& chosen = first;
+    if (flag) { chosen = &second; }
+    if (!flag) { return chosen; }
+    return first;
+}
+void main() { int64 a = 1; int64 b = 2; println("{}", correlated(&a, &b, false)); }

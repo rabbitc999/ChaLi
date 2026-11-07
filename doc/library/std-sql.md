@@ -786,7 +786,7 @@ DataCell at(int64 row, int64 column);
 obj.at(row, column);
 ```
 
-**源码**：[source/std/sql.chl:220](../../source/std/sql.chl#L220)。
+**源码**：[source/std/sql.chl:216](../../source/std/sql.chl#L216)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -825,7 +825,7 @@ String textAt(int64 row, int64 column);
 obj.textAt(row, column);
 ```
 
-**源码**：[source/std/sql.chl:221](../../source/std/sql.chl#L221)。
+**源码**：[source/std/sql.chl:217](../../source/std/sql.chl#L217)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -864,7 +864,7 @@ int64 intAt(int64 row, int64 column);
 obj.intAt(row, column);
 ```
 
-**源码**：[source/std/sql.chl:222](../../source/std/sql.chl#L222)。
+**源码**：[source/std/sql.chl:218](../../source/std/sql.chl#L218)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -903,7 +903,7 @@ float64 realAt(int64 row, int64 column);
 obj.realAt(row, column);
 ```
 
-**源码**：[source/std/sql.chl:223](../../source/std/sql.chl#L223)。
+**源码**：[source/std/sql.chl:219](../../source/std/sql.chl#L219)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -941,7 +941,7 @@ String scalar();
 obj.scalar();
 ```
 
-**源码**：[source/std/sql.chl:226](../../source/std/sql.chl#L226)。
+**源码**：[source/std/sql.chl:222](../../source/std/sql.chl#L222)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -979,7 +979,7 @@ int64 count();
 obj.count();
 ```
 
-**源码**：[source/std/sql.chl:232](../../source/std/sql.chl#L232)。
+**源码**：[source/std/sql.chl:228](../../source/std/sql.chl#L228)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1020,7 +1020,7 @@ String pad(String text, int64 width);
 obj.pad(text, width);
 ```
 
-**源码**：[source/std/sql.chl:238](../../source/std/sql.chl#L238)。
+**源码**：[source/std/sql.chl:234](../../source/std/sql.chl#L234)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1058,7 +1058,7 @@ String render();
 obj.render();
 ```
 
-**源码**：[source/std/sql.chl:252](../../source/std/sql.chl#L252)。
+**源码**：[source/std/sql.chl:248](../../source/std/sql.chl#L248)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1102,7 +1102,7 @@ static Database mysql(String host, String user, String password, String database
 Database::mysql(host, user, password, database, port);
 ```
 
-**源码**：[source/std/sql.chl:359](../../source/std/sql.chl#L359)。
+**源码**：[source/std/sql.chl:323](../../source/std/sql.chl#L323)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1142,7 +1142,7 @@ static Database sqlite(String path);
 Database::sqlite(path);
 ```
 
-**源码**：[source/std/sql.chl:363](../../source/std/sql.chl#L363)。
+**源码**：[source/std/sql.chl:327](../../source/std/sql.chl#L327)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1182,7 +1182,7 @@ static Database postgres(String options);
 Database::postgres(options);
 ```
 
-**源码**：[source/std/sql.chl:365](../../source/std/sql.chl#L365)。
+**源码**：[source/std/sql.chl:329](../../source/std/sql.chl#L329)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1222,7 +1222,7 @@ static Database odbc(String options);
 Database::odbc(options);
 ```
 
-**源码**：[source/std/sql.chl:367](../../source/std/sql.chl#L367)。
+**源码**：[source/std/sql.chl:331](../../source/std/sql.chl#L331)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1262,7 +1262,7 @@ static Database sqlServer(String options);
 Database::sqlServer(options);
 ```
 
-**源码**：[source/std/sql.chl:369](../../source/std/sql.chl#L369)。
+**源码**：[source/std/sql.chl:333](../../source/std/sql.chl#L333)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1298,7 +1298,7 @@ Driver driver();
 obj.driver();
 ```
 
-**源码**：[source/std/sql.chl:371](../../source/std/sql.chl#L371)。
+**源码**：[source/std/sql.chl:335](../../source/std/sql.chl#L335)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1338,7 +1338,7 @@ String quote(String text);
 obj.quote(text);
 ```
 
-**源码**：[source/std/sql.chl:382](../../source/std/sql.chl#L382)。
+**源码**：[source/std/sql.chl:346](../../source/std/sql.chl#L346)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1376,7 +1376,7 @@ String backendName();
 obj.backendName();
 ```
 
-**源码**：[source/std/sql.chl:392](../../source/std/sql.chl#L392)。
+**源码**：[source/std/sql.chl:356](../../source/std/sql.chl#L356)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1419,7 +1419,7 @@ static Database mysql(String host, String user, String password, String database
 Database::mysql(host, user, password, database);
 ```
 
-**源码**：[source/std/sql.chl:405](../../source/std/sql.chl#L405)。
+**源码**：[source/std/sql.chl:369](../../source/std/sql.chl#L369)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1463,7 +1463,7 @@ static Database maria(String host, String user, String password, String database
 Database::maria(host, user, password, database, port);
 ```
 
-**源码**：[source/std/sql.chl:410](../../source/std/sql.chl#L410)。
+**源码**：[source/std/sql.chl:374](../../source/std/sql.chl#L374)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1503,7 +1503,7 @@ static Database local(String database);
 Database::local(database);
 ```
 
-**源码**：[source/std/sql.chl:415](../../source/std/sql.chl#L415)。
+**源码**：[source/std/sql.chl:379](../../source/std/sql.chl#L379)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1539,7 +1539,7 @@ bool isOpen();
 obj.isOpen();
 ```
 
-**源码**：[source/std/sql.chl:419](../../source/std/sql.chl#L419)。
+**源码**：[source/std/sql.chl:383](../../source/std/sql.chl#L383)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1575,7 +1575,7 @@ String lastError();
 obj.lastError();
 ```
 
-**源码**：[source/std/sql.chl:420](../../source/std/sql.chl#L420)。
+**源码**：[source/std/sql.chl:384](../../source/std/sql.chl#L384)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1611,7 +1611,7 @@ int64 affectedRows();
 obj.affectedRows();
 ```
 
-**源码**：[source/std/sql.chl:421](../../source/std/sql.chl#L421)。
+**源码**：[source/std/sql.chl:385](../../source/std/sql.chl#L385)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1649,7 +1649,7 @@ void close();
 obj.close();
 ```
 
-**源码**：[source/std/sql.chl:424](../../source/std/sql.chl#L424)。
+**源码**：[source/std/sql.chl:388](../../source/std/sql.chl#L388)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1689,7 +1689,7 @@ ResultSet exec(String sql);
 obj.exec(sql);
 ```
 
-**源码**：[source/std/sql.chl:431](../../source/std/sql.chl#L431)。
+**源码**：[source/std/sql.chl:395](../../source/std/sql.chl#L395)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1729,7 +1729,7 @@ ResultSet exec(SqlStatement statement);
 obj.exec(statement);
 ```
 
-**源码**：[source/std/sql.chl:436](../../source/std/sql.chl#L436)。
+**源码**：[source/std/sql.chl:400](../../source/std/sql.chl#L400)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1769,7 +1769,7 @@ bool execOk(String sql);
 obj.execOk(sql);
 ```
 
-**源码**：[source/std/sql.chl:504](../../source/std/sql.chl#L504)。
+**源码**：[source/std/sql.chl:456](../../source/std/sql.chl#L456)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1809,7 +1809,7 @@ String scalar(String sql);
 obj.scalar(sql);
 ```
 
-**源码**：[source/std/sql.chl:510](../../source/std/sql.chl#L510)。
+**源码**：[source/std/sql.chl:462](../../source/std/sql.chl#L462)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1849,7 +1849,7 @@ int64 count(String sql);
 obj.count(sql);
 ```
 
-**源码**：[source/std/sql.chl:517](../../source/std/sql.chl#L517)。
+**源码**：[source/std/sql.chl:469](../../source/std/sql.chl#L469)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1889,7 +1889,7 @@ bool hasTable(String tableName);
 obj.hasTable(tableName);
 ```
 
-**源码**：[source/std/sql.chl:524](../../source/std/sql.chl#L524)。
+**源码**：[source/std/sql.chl:476](../../source/std/sql.chl#L476)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1930,7 +1930,7 @@ String quote(String text, bool escapeBackslash);
 quote(text, escapeBackslash);
 ```
 
-**源码**：[source/std/sql.chl:551](../../source/std/sql.chl#L551)。
+**源码**：[source/std/sql.chl:503](../../source/std/sql.chl#L503)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -1970,7 +1970,7 @@ String quote(String text);
 quote(text);
 ```
 
-**源码**：[source/std/sql.chl:574](../../source/std/sql.chl#L574)。
+**源码**：[source/std/sql.chl:526](../../source/std/sql.chl#L526)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -2010,7 +2010,7 @@ String intLiteral(int64 value);
 intLiteral(value);
 ```
 
-**源码**：[source/std/sql.chl:577](../../source/std/sql.chl#L577)。
+**源码**：[source/std/sql.chl:529](../../source/std/sql.chl#L529)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -2050,7 +2050,7 @@ String realLiteral(float64 value);
 realLiteral(value);
 ```
 
-**源码**：[source/std/sql.chl:580](../../source/std/sql.chl#L580)。
+**源码**：[source/std/sql.chl:532](../../source/std/sql.chl#L532)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -2090,7 +2090,7 @@ int64 displayWidth(String text);
 displayWidth(text);
 ```
 
-**源码**：[source/std/sql.chl:583](../../source/std/sql.chl#L583)。
+**源码**：[source/std/sql.chl:535](../../source/std/sql.chl#L535)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -2128,7 +2128,7 @@ Result<Query,Error> query<T>();
 query<T>();
 ```
 
-**源码**：[source/std/sql.chl:597](../../source/std/sql.chl#L597)。
+**源码**：[source/std/sql.chl:549](../../source/std/sql.chl#L549)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -2171,7 +2171,7 @@ Result<bool,Error> filter<V>(Query mut& query, String field, V value, int64 oper
 filter<V>(query, field, value, operation);
 ```
 
-**源码**：[source/std/sql.chl:605](../../source/std/sql.chl#L605)。
+**源码**：[source/std/sql.chl:557](../../source/std/sql.chl#L557)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -2214,7 +2214,7 @@ Result<bool,Error> filterMany<V>(Query mut& query, String field, List<V> values,
 filterMany<V>(query, field, values, operation);
 ```
 
-**源码**：[source/std/sql.chl:612](../../source/std/sql.chl#L612)。
+**源码**：[source/std/sql.chl:564](../../source/std/sql.chl#L564)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -2255,7 +2255,7 @@ Result<SqlStatement,Error> insert<T>(Query mut& query, T const& value);
 insert<T>(query, value);
 ```
 
-**源码**：[source/std/sql.chl:620](../../source/std/sql.chl#L620)。
+**源码**：[source/std/sql.chl:572](../../source/std/sql.chl#L572)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。
 
@@ -2296,6 +2296,6 @@ Result<SqlStatement,Error> update<T>(Query mut& query, T const& value);
 update<T>(query, value);
 ```
 
-**源码**：[source/std/sql.chl:626](../../source/std/sql.chl#L626)。
+**源码**：[source/std/sql.chl:578](../../source/std/sql.chl#L578)。
 
 **完整示例**：[doc/examples/library/sqlite.chl](../../doc/examples/library/sqlite.chl)。

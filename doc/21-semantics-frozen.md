@@ -55,7 +55,7 @@ IR 指四元式。日常构建、运行和部署使用 LLVM `O3` 加完整 LTO�
 
 ## 循环、区间与集合字面量
 
-循环结构为 `while`、`loop` 和 `for (... in ...)`。`for-in` / `while` 的值表达式必须包含 `else`，以 `yield` 产生结果；仅含一个值的分支可省略分号。无结果结束或普通 `break` 进入后备分支，`continue` 继续下一轮。
+循环结构为 `while`、`loop`、`for (... in ...)` 和三段式 `for (init; condition; update)`。三段式初始化声明只在循环中可见，continue 先执行更新段；独立 loop 可省略分号。两种 for 的 else 保留循环变量作用域，for-in 的空输入使用普通值默认值；无有效来源的引用不得读取，借用元素的后备副本要求可复制。`for-in` / `while` 的值表达式必须包含 `else`，以 `yield` 产生结果；仅含一个值的分支可省略分号。无结果结束或普通 `break` 进入后备分支，`continue` 继续下一轮。
 
 `std::core::range<T>(a, b)` 为左闭右开，`rangeEq<T>(a, b)` 为闭区间。整数和 char 直接支持；其他类型实现 `NextValue<T>`，契约为 `Option<T> nextValue(T end, bool inclusive)`。`match` 区间仅支持整数和 char，普通自定义值模式使用 `Equal<T>`。
 

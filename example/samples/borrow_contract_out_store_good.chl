@@ -1,0 +1,2 @@
+struct View{int64 mut& p;};#borrow(out,b)
+void fill(View mut& out,int64 mut& b){out.p=&b;}void main(){int64 b=1;View v;fill(&v,&b);assert(v.p==1);}

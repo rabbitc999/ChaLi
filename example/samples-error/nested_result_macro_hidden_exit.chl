@@ -1,0 +1,4 @@
+$macro BAD(x:expr) -> expr
+x?
+$end_macro
+Result<int64,MessageError> f(){Result<int64,MessageError> x=Ok(1);return Ok($BAD(x));}void main(){}

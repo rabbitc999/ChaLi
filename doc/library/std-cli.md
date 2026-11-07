@@ -367,7 +367,7 @@ String help();
 obj.help();
 ```
 
-**源码**：[source/std/cli.chl:67](../../source/std/cli.chl#L67)。
+**源码**：[source/std/cli.chl:63](../../source/std/cli.chl#L63)。
 
 **完整示例**：[example/samples/std_cli.chl](../../example/samples/std_cli.chl)。
 
@@ -405,6 +405,6 @@ Result<CliArguments,Error> parse(List<String> arguments);
 obj.parse(arguments);
 ```
 
-**源码**：[source/std/cli.chl:81](../../source/std/cli.chl#L81)。
+**源码**：[source/std/cli.chl:77](../../source/std/cli.chl#L77)。
 
 **完整示例**：[example/samples/std_cli.chl](../../example/samples/std_cli.chl)。

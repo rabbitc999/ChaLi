@@ -1,4 +1,64 @@
 /**
+ * @brief 将目标平台与构建标志宏替换为普通常量，供编译期分支及运行时表达式共用。
+ * @param id 当前 AST 节点。
+ * @param error 接收无效参数或下标的诊断。
+ * @return 是环境内建宏时返回真，包括带诊断的调用。
+ */
+bool ExpandAstMacroEnvironment(int id, Memory::String &error)
+{
+    auto &node = g_nodes[id];
+    const bool indexed = node.kind == MNode::Index && node.kids.size() == 2 && N(node.kids[0]).kind == MNode::MacroCall && N(node.kids[0]).s == "build";
+    const int callId = indexed ? node.kids[0] : id;
+    const auto call = N(callId);
+    if (call.kind != MNode::MacroCall || (call.s != "system" && call.s != "cpu" && call.s != "build")) return false;
+    if (call.kids.size() != 1 || (call.s != "build" && call.kids[0] >= 0))
+    {
+        error = "目标与构建标志内建宏不接受调用参数或泛型参数";
+        return true;
+    }
+    if (call.s == "build")
+    {
+        int keyId = indexed ? node.kids[1] : -1;
+        if (!indexed && call.kids[0] >= 0)
+        {
+            const auto groups = N(call.kids[0]);
+            if (groups.kind == MNode::MacroArguments && groups.kids.size() == 1)
+            {
+                const auto group = N(groups.kids[0]);
+                if (group.kind == MNode::MacroArgumentGroup && group.i == '[' && group.kids.size() == 1)
+                {
+                    const auto argument = N(group.kids[0]);
+                    if (argument.kind == MNode::MacroArgument && !argument.kids.empty()) keyId = argument.kids[0];
+                }
+            }
+        }
+        if (keyId < 0) { error = "$build 需要单个字符串或名称下标，例如 $build[DEBUG]"; return true; }
+        const auto key = N(keyId);
+        Memory::String name;
+        if (key.kind == MNode::Var) name = key.s;
+        else if (key.kind == MNode::Str)
+        {
+            std::string decoded, problem;
+            if (!chali_literal::decodeString(std::string_view(key.s.data(), key.s.size()), decoded, problem))
+            { error = Memory::String(problem.c_str()); return true; }
+            name = Memory::String(decoded.data(), decoded.size());
+        }
+        else { error = "$build 下标只接受字符串字面量或标志名称"; return true; }
+        if (!chali_build::validBuildOption(name)) { error = "$build 标志名称无效，不支持赋值"; return true; }
+        node.kind = MNode::Bool;
+        node.i = chali_build::macroEnvironment().flags.count(name) != 0;
+        node.s.clear();
+    }
+    else
+    {
+        node.kind = MNode::Str;
+        node.s = chali_build::targetMacroName(call.s == "cpu");
+    }
+    node.kids.clear();
+    return true;
+}
+
+/**
  * @brief 将字段访问宏转换为普通成员 AST，保留对象的借用与访问检查。
  * @param id 待处理的宏调用。
  * @return 非成员宏或转换成功时返回真。
@@ -174,10 +234,13 @@ bool MatchMacroType(const std::shared_ptr<const MType> &actual, const std::share
         auto concrete = Memory::makeShared<MType>(*actual);
         if (concrete->unresolvedName && !ResolveImportedTypeNames(false, concrete)) return false;
         if (!ResolveAstGenericType(concrete)) return false;
-        // 成员宏展开早于 opcode 登记，具名字段可能仍保留临时 Struct 类别。
-        const bool samePendingOpcode = concrete->unresolvedName && concrete->kind == MType::Struct
-            && pattern->kind == MType::Opcode && concrete->name == pattern->name;
-        matches = samePendingOpcode || TypeKey(concrete) == TypeKey(pattern);
+        // 同一公开 opcode 在早期签名中可表现为句柄，在聚合登记后表现为 Struct。
+        // 元数据比较使用声明身份，仍以完整名称隔离用户同名类型和内部 $opcode。
+        const bool sameOpcode = concrete->name == pattern->name
+            && ((concrete->kind == MType::Struct && pattern->kind == MType::Opcode)
+                || (concrete->kind == MType::Opcode && pattern->kind == MType::Struct))
+            && (concrete->unresolvedName || pattern->unresolvedName || g_opcodeTypes.count(concrete->name));
+        matches = sameOpcode || TypeKey(concrete) == TypeKey(pattern);
         return true;
     }
 
@@ -240,6 +303,8 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
     visit = [&](int id, std::size_t depth, bool constant) {
         if (id < 0) return true;
         if (depth >= 256 || !budget--) return Fail("宏编译期控制超过深度或规模预算");
+        Memory::String environmentError;
+        if (ExpandAstMacroEnvironment(id, environmentError)) return environmentError.empty() || Fail(environmentError);
         const auto node = N(id);
         if (node.kind == MNode::MacroTemplate && node.kids.size() == 2) statementLists.insert(node.kids[0]);
         if (node.kind == MNode::Block && node.i >= 0) statementLists.insert(static_cast<int>(node.i));

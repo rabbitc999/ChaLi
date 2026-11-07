@@ -1,0 +1,1 @@
+chali: example/samples-error/nested_result_wrong_error_type.chl 第 1 行第 1 列：无法传播 std::core::ErrorResidual<int64>：返回类型 std::core::Result<std::core::String,std::core::Error> 未实现匹配的 FromResidual<F,R>

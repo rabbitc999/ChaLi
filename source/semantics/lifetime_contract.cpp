@@ -1,3 +1,11 @@
+/**
+ * @brief 在调用点核对输出借用的实参寿命。
+ * @param callId 调用节点。
+ * @param symbol 函数名。
+ * @param arguments 实参节点。
+ * @param line 调用行。
+ */
+void CheckLifetimeBorrowArguments(int callId, const Memory::String &symbol, const Memory::Vector<int> &arguments, std::size_t line);
 /* ---------- 显式生命周期契约：#borrow / #static ---------- */
 /**
  * @brief 一个函数的显式生命周期契约。
@@ -189,6 +197,8 @@ Memory::Set<int> g_lifetimeCheckedCalls;
 void CheckLifetimeStaticArguments(int callId, const Memory::String &symbol,
                                   const Memory::Vector<int> &arguments, std::size_t line)
 {
+    CheckLifetimeBorrowArguments(callId, symbol, arguments, line);
+
     const auto label = LifetimeCallSymbol(callId);
     const auto signature = g_funcs.find(label);
     const auto count = signature == g_funcs.end() ? 0u : (!signature->second.params.empty() && signature->second.params.back().variadic ? arguments.size() : signature->second.params.size());
@@ -316,6 +326,8 @@ Memory::String LifetimeContractText(const Memory::String &target, const Memory::
  */
 void CheckLifetimeReturn(int value, std::size_t line)
 {
+    if (g_borrowFlowCapture) return;
+
     /* 契约的来源本身写错了时只报来源那一条：返回检查的建议里会带着不存在的名字。 */
     if (!g_lifetimeCurrent || !g_lifetimeCurrent->hasRet || g_lifetimeCurrent->retInvalid || value < 0) return;
     Memory::Set<Memory::String> origins;
@@ -351,6 +363,8 @@ void CheckLifetimeReturn(int value, std::size_t line)
  */
 void CheckLifetimeStore(int target, int value, std::size_t line)
 {
+    if (g_borrowFlowCapture) return;
+
     if (!g_lifetimeCurrent || target < 0) return;
     /* 契约里写的是源码名，降级改名（重名时加 $序号）后的名字对不上，一律按源码名查。 */
     const int rootId = LifetimeRootVarId(target);

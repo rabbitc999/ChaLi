@@ -100,17 +100,13 @@ struct Iter<T> : Iterator<T> {
      */
     Option<T> nth(int64 index) {
         assert(index >= 0, "nth 下标不能为负数");
-        {
-            int64 i = 0;
-            while (i < index) {
+        for (int64 i = 0; i < index; i = i + 1) {
 
             Option<T> item = self.next();
             if (item.isNone()) {
                 return Option<T>::None;
             }
-        
-                i = i + 1;
-            }
+
         }
         return self.next();
     }
@@ -1203,14 +1199,10 @@ Iter<T> rev<T>(Iter<T> source) {
     List<T> values = collect<T>(source);
     IterBufferState<T> state;
     state.anchor = source.state;
-    {
-        int64 i = values.len();
-        while (i > 0) {
+    for (int64 i = values.len(); i > 0; i = i - 1) {
 
         state.values.push(values[i - 1]);
-    
-            i = i - 1;
-        }
+
     }
     return fromState<T,IterBufferState<T> >(state);
 }
@@ -1465,14 +1457,10 @@ Map<K,V> __iterTakeMap<K,V>(Map<K,V> mut& source);
 Iter<T> setIntoIter<T>(Set<T> mut& source) {
     Set<T> owned = __iterTakeSet<T>(source);
     IterListState<T> state;
-    {
-        int64 i = 0;
-        while (i < owned.len()) {
+    for (int64 i = 0; i < owned.len(); i = i + 1) {
 
         state.values.push(owned.at(i));
-    
-            i = i + 1;
-        }
+
     }
     return fromState<T,IterListState<T> >(state);
 }
@@ -1484,14 +1472,10 @@ Iter<T> setIntoIter<T>(Set<T> mut& source) {
  */
 Iter<T> setIter<T>(Set<T> const& source) {
     IterListState<T> state;
-    {
-        int64 i = 0;
-        while (i < source.len()) {
+    for (int64 i = 0; i < source.len(); i = i + 1) {
 
         state.values.push(source.at(i));
-    
-            i = i + 1;
-        }
+
     }
     return fromState<T,IterListState<T> >(state);
 }
@@ -1504,14 +1488,10 @@ Iter<T> setIter<T>(Set<T> const& source) {
 Iter<Pair<K,V>> mapIntoIter<K,V>(Map<K,V> mut& source) {
     Map<K,V> owned = __iterTakeMap<K,V>(source);
     IterListState<Pair<K,V>> state;
-    {
-        int64 i = 0;
-        while (i < owned.len()) {
+    for (int64 i = 0; i < owned.len(); i = i + 1) {
 
         state.values.push(Pair<K,V>::create(owned.keyAt(i), owned.valAt(i)));
-    
-            i = i + 1;
-        }
+
     }
     return fromState<Pair<K,V>,IterListState<Pair<K,V>> >(state);
 }
@@ -1523,14 +1503,10 @@ Iter<Pair<K,V>> mapIntoIter<K,V>(Map<K,V> mut& source) {
  */
 Iter<Pair<K,V>> mapIter<K,V>(Map<K,V> const& source) {
     IterListState<Pair<K,V>> state;
-    {
-        int64 i = 0;
-        while (i < source.len()) {
+    for (int64 i = 0; i < source.len(); i = i + 1) {
 
         state.values.push(Pair<K,V>::create(source.keyAt(i), source.valAt(i)));
-    
-            i = i + 1;
-        }
+
     }
     return fromState<Pair<K,V>,IterListState<Pair<K,V>> >(state);
 }

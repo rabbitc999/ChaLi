@@ -632,6 +632,13 @@ int M_Case(int value, int stmts);
 int M_Range(int lo, int hi, int loClosed, int hiClosed);
 int M_For(int init, int cond, int inc, int body);
 /**
+ * @brief 为循环附加共享变量作用域的后备分支。
+ * @param loop for 或 for-in 节点。
+ * @param fallback 后备分支。
+ * @return 原循环节点。
+ */
+int M_LoopElse(int loop, int fallback);
+/**
  * `foreach ([T] v in source) { ... }`；typeId=-1 表示按 Iterator<R> 推导。
  */
 int M_Foreach(int typeId, int nameId, int inNameId, int source, int body);

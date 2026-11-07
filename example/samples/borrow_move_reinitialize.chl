@@ -1,0 +1,21 @@
+int64 closes = 0;
+struct Handle : Closeable {
+    int64 id;
+    void close() { closes += 1; }
+}
+void consume<T>(T mut& value) {
+    T taken = move value;
+}
+void main() {
+    {
+        Handle owner;
+        owner.id = 7;
+        consume(&owner);
+        Handle replacement;
+        replacement.id = 9;
+        owner = move replacement;
+        assert(owner.id == 9 && closes == 1);
+    }
+    assert(closes == 2);
+    println("move reinitialize: closes=2");
+}

@@ -39,6 +39,12 @@ def main():
             continue
         text=(ROOT/'doc/book'/chapter['zh']).read_text(encoding='utf-8')
         translated=(ROOT/'doc/book/en'/chapter['en']).read_text(encoding='utf-8')
+        if chapter['id'] < len(chapters):
+            following=chapters[chapter['id']]
+            for content,label,expected in ((text,'下一章',following['zh']),
+                                           (translated,'Next',following['en'])):
+                links=re.findall(r'^'+label+r'[:：]\s*\[[^\]]+\]\(([^)]+)\)',content,re.M)
+                assert all(link==expected for link in links),('下一章导航过时',chapter['zh'],links,expected)
         for name, content in ((chapter['zh'], text), (chapter['en'], translated)):
             assert not re.search(r'^#{2,4} .*?(?:习题|参考解答|Exercises|Answers and checks)\s*$', content, re.M), name
             assert len(PROGRAM_MARKER.findall(content)) == len(PROGRAM.findall(content)), ('样例缺少输出块', name)

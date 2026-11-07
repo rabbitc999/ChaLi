@@ -1,0 +1,1 @@
+语法错误：example/samples-error/syntax_limit_do_while.chl 第 1 行第 31 列：期望 标识符 / MACRO_END / MACRO_BODY / MACRO_ELSE 等 68 个之一，实际是 左花括号({)

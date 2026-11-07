@@ -1,0 +1,2 @@
+enum Pair { Values(int64 a, int64 b), Empty }
+void main() { Pair value = (int64)1; }

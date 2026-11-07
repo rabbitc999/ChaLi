@@ -834,6 +834,24 @@ _MESSAGES = {
   ],
   "  build          发布构建，默认 unchecked（--target、--emit-llvm、--emit-obj、--emit-asm、--shared、--export）\n": [
     "  build          Release build, unchecked by default (--target, --emit-llvm, --emit-obj, --emit-asm, --shared, --export)\n"
+  ],
+  "  -B 名称                定义布尔构建标志，可重复；$build[名称] 查询\n": [
+    "  -B NAME                Define a boolean build flag; query with $build[NAME]\n"
+  ],
+  "chali: -B 只接受非空布尔标志名称，不支持赋值。\n": [
+    "chali: -B requires a nonempty boolean flag name without a value.\n"
+  ],
+  "目标与构建标志内建宏不接受调用参数或泛型参数": [
+    "Target and build-option builtins do not accept call or generic arguments"
+  ],
+  "$build 需要单个字符串或名称下标，例如 $build[DEBUG]": [
+    "$build requires one literal string or name index, such as $build[DEBUG]"
+  ],
+  "$build 下标只接受字符串字面量或标志名称": [
+    "$build indices must be string literals or flag names"
+  ],
+  "$build 标志名称无效，不支持赋值": [
+    "Invalid $build flag name; values are not supported"
   ]
 }
 # CHALI_CATALOG_END

@@ -64,9 +64,9 @@ The `[build]` table accepts `allocator = "malloc"` or `allocator = "pool"`; expl
 | `make` or `make CHALI_STATIC_LLVM=0` | External LLVM clang under `library/llvm/` | `llvm-external` |
 | `make llvm-static` | Statically linked LLVM optimization, x64 code generation and LLD, with embedded CRT link assets; no clang or LLVM DLL required | `llvm-static` |
 
-The first static build runs [setup_static.py](../../library/llvm/setup_static.py), downloads pinned LLVM sources, verifies SHA-256 and incrementally builds the SDK under `library/llvm/`. With an existing SDK, use `make CHALI_STATIC_LLVM=1`. Windows x64 compiler outputs are named `chali-1.0.0-llvm-static-windows-x64.exe` and `chali-1.0.0-llvm-external-windows-x64.exe`; the version is read from `VERSION`. `CHALI_LLVM_SDK` selects an SDK with the same C++ ABI. The validated static distribution targets Windows x64. Static variants use the built-in backend. Their `run`, `build`, `asm`, `ar`, and `link` commands reject `--llvm` with exit code 2; project `[build].llvm` is also rejected. Use the `llvm-external` variant to select external tools. LLVM module export requires no code generation tools in either variant.
+The first static build runs [setup_static.py](../../library/llvm/setup_static.py), downloads pinned prebuilt LLVM/LLD development libraries and the matching GCC, verifies SHA-256, and installs them into an isolated SDK directory. With an existing SDK, use `make CHALI_STATIC_LLVM=1`. Windows x64 compiler outputs are named `chali-1.0.0-llvm-static-windows-x64.exe` and `chali-1.0.0-llvm-external-windows-x64.exe`; the version is read from `VERSION`. `CHALI_LLVM_SDK` selects an SDK with the same C++ ABI. The validated static distribution targets Windows x64. Static variants use the built-in backend. Their `run`, `build`, `asm`, `ar`, and `link` commands reject `--llvm` with exit code 2; project `[build].llvm` is also rejected. Use the `llvm-external` variant to select external tools. LLVM module export requires no code generation tools in either variant.
 
-`python tools/release_variants.py` builds and validates both program and plugin variants in sequence. Release ZIPs are placed in `dist/llvm-static/` and `dist/llvm-external/`. Both plugins retain their independent 1.0.0 version; VSIX filenames use `-llvm-static` and `-llvm-external` suffixes. They are alternative builds of the same extension. To package one, run `npm run package -- --llvm-variant static --compiler COMPILER_PATH` in `vscode/`, or replace static with external. The script creates local artifacts; remote publication requires an explicit action.
+`python tools/release_variants.py` builds and validates both program and plugin variants in sequence. Release ZIPs are placed in `dist/llvm-static/` and `dist/llvm-external/`. Plugin versions match the compiler version in `VERSION`; VSIX filenames use `-llvm-static` and `-llvm-external` suffixes. They are alternative builds of the same extension. To package one, run `npm run package -- --llvm-variant static --compiler COMPILER_PATH` in `vscode/`, or replace static with external. The script creates local artifacts; remote publication requires an explicit action.
 
 Program code is emitted directly as LLVM instructions, basic blocks and global storage. The hand-written [AOT runtime](../../source/aot/runtime.c) is compiled into platform modules during maintenance using the pinned LLVM version and embedded in the compiler. `sh tools/build_aot_runtime.sh --check` verifies synchronization. Runtime layouts cover Windows x64 and Linux x64; the bundled executable toolchain targets Windows x64. Linux x64 build hosts require their native LLVM clang and system linker environment.
 
@@ -179,3 +179,63 @@ chali link build/start.o --target linux-arm64 --no-runtime --entry _start --out 
 The static Windows x64 variant uses embedded LLD, CRT and ChaLi runtime assets without external clang. The external variant requires matching clang/LLD and the applicable system toolchain. Full cross-target linking requires a target runtime and SDK. Explicit `--no-runtime` omits CRT and the ChaLi runtime for programs supplying their own entry and dependencies. Embedded LLD can link such inputs for the supported Linux x64/ARM64 targets; successful generation is distinct from execution on the target. Ordinary standalone C programs may use default runtime linkage; unreferenced archive members are omitted.
 
 Input checks cover object format, width, architecture and archive-member bounds; LLVM/LLD performs the final symbol, section and relocation validation. These tools are not an untrusted-code sandbox. Output is generated in a private workspace and published only on success. Failures preserve an existing output, and output cannot overwrite an input. Callers must check the exit status rather than treat an old output as evidence of a successful link.
+
+
+### Target platform and boolean build options
+
+`$system` and `$cpu` are bare string constants describing the target program's operating system and architecture. Windows, macOS and Linux use `"win"`, `"mac"` and `"linux"`; common architecture names are `"amd64"`, `"arm64"` and `"arm32"`. Cross builds use the selected target rather than the compiler host. CPU tuning through `--cpu` does not change the architecture macro. Name normalization does not add native output targets; consult the LLVM build chapter for supported targets.
+
+```csharp
+void main() {
+    println("system={}, cpu={}", $system, $cpu);
+    println("A={}, B={}", $build[A], $build["B"]);
+}
+```
+
+`chali run main.chl -B A -BB` defines both names. A project can also declare:
+
+```toml
+[build]
+build_option = ["A", "B"]
+```
+
+CLI and manifest names form a union. Names are case sensitive; duplicates have no additional effect. `$build[A]` and `$build["A"]` are equivalent: the bare name is a literal flag name, not a variable lookup. Defined names yield `true`, undefined names yield `false`. Values such as `-BA=false`, numbers and strings are unsupported. Names must be nonempty and contain only ASCII letters, digits, underscores, dots or hyphens; quote names containing dots or hyphens.
+
+Inside macro templates, use `$if $build[A]`, `$else`, `$end_if` or `$if ($system == "win")` to select code. Ordinary expressions can read the same constants. `$build` accepts a literal name or string, not a computed runtime key. `-I` keeps its module-search-directory meaning.
+
+
+
+### Persisting build settings in TOML
+
+Extend the `[build]` table introduced in Chapter 11. This fragment targets Windows x64; other targets require matching runtime, SDK and linker inputs.
+
+```toml
+[build]
+target = "windows-x64"
+output = "executable"
+lto = "full"
+allocator = "malloc"
+subsystem = "console"
+build_option = ["A", "B"]
+assembly_sources = []
+assembly_includes = []
+objects = []
+libraries = []
+search_paths = ["src"]
+```
+
+| Setting | Meaning and CLI precedence |
+| --- | --- |
+| target, cpu | Supported triple or alias and CPU tuning name; explicit --target and --cpu win |
+| output | executable, llvm, object or assembly; explicit --emit-llvm, --emit-obj and --emit-asm win; run still compiles and executes |
+| lto | true, false, full, thin or off; explicit LTO options win |
+| allocator, subsystem | malloc/pool and Windows console/windows; explicit matching options win |
+| sysroot, runtime_dir | Target SDK root and runtime directory; explicit matching options win |
+| assembly_sources, assembly_includes | Assembly sources and include paths; an explicitly supplied CLI list replaces the corresponding manifest list |
+| objects, libraries | Extra objects and libraries; an explicitly supplied CLI list replaces the corresponding manifest list |
+| search_paths | Appends module and import lookup paths, resolved from the manifest directory |
+| build_option | Boolean flag names, unioned with -B definitions and queried with $build[name] |
+
+Bare library names without dots or path separators are resolved by the linker; other paths are relative to the manifest. CPU tuning does not change the target architecture reported by `$cpu`. `$system`, `$cpu` and `$build` become constants during macro expansion; see [Chapter 22](../book/en/22-macros.md).
+
+The static LLVM variant uses its embedded backend and rejects `--llvm` and `[build] llvm`. External toolchain paths are supported by the external variant. A manifest cannot switch a static compiler to an external backend. Consult the [LLVM build reference](38-build.md) for the complete interface and [Chapter 11](../book/en/11-modules-projects.md) for entry and search rules.

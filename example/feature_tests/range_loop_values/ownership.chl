@@ -1,0 +1,14 @@
+import std::io;
+void main() {
+    List<String> source = ["first", "second"];
+    String selected = for (let item in source) { item } else { "none" };
+    source[0] = "changed";
+    assert(selected == "first");
+    File first = for (let item in range(0, 1)) { File::new("owned.txt", "w") } else { File::new("owned.txt", "w") };
+    File finalOwner = move first;
+    assert(fileWrite(&finalOwner, "moved") == 5);
+    fileClose(&finalOwner);
+    File fallback = while (false) { File::new("owned.txt", "w") } else { File::new("owned.txt", "r") };
+    assert(fileRead(&fallback) == "moved");
+    println("loop ownership ok");
+}

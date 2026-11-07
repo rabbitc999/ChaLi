@@ -1,0 +1,1 @@
+chali: example/samples-error/borrow_move_loop_move_macro.chl 第 10 行：[CHL1205] 借用来源已移动或销毁，不能继续访问（源对象已经销毁）：表达式

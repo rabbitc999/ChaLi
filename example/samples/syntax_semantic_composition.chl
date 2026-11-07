@@ -1,0 +1,62 @@
+import syntax_helpers;
+struct CallbackBox<F> { F value; }
+T invokeBox<T>(CallbackBox<T fn(T)> callback, T value) { return callback.value(value); }
+int64 increment(int64 value) { return value + 1; }
+int64 doubled(int64 value) { return value * 2; }
+T fn(T) compose<T>(T fn(T) first, T fn(T) second) { return fn copy(T value) { first(second(value)) }; }
+$macro ID(value:expr) -> expr
+value
+$end_macro
+int64 cleanups = 0;
+int64 effects = 0;
+bool tick() { effects += 1; return true; }
+Result<Result<int64, MessageError>, MessageError> nested(int64 value) {
+    if (value % 5 == 0) { return MessageError::from("outer"); }
+    if (value % 3 == 0) { return Ok(Err(MessageError::from("inner"))); }
+    return Ok(Ok(value * 2));
+}
+Result<int64, Error> compute(int64 value) {
+    defer { cleanups += 1; }
+    int64 number = (nested($ID(value))?)?;
+    return match(number % 2) { 0 => { number + 1 } _ => { number + 2 } };
+}
+void main() {
+    CallbackBox<int64 fn(int64)> callback;
+    callback.value = increment;
+    assert(invokeBox(callback, (int64)3) == 4);
+    let combined = compose(increment, doubled);
+    assert(combined(3) == 7);
+    Result<Option<CallbackBox<int64 fn(int64)>>, Error> wrapped = callback;
+    match(wrapped) {
+        Ok(option) => { match(option) {
+                Value(box) => { assert(invokeBox(box, (int64)6) == 7); }
+                None => { assert(false); }
+            } }
+        Err(_) => { assert(false); }
+    }
+    int64 first = 3;
+    int64 second = 4;
+    assert(structural(&first, &second, true) == 3 && structural(&first, &second, false) == 3);
+    int64 original = 9;
+    int64 mut& alias = reference(&original);
+    alias += 1;
+    assert(original == 10 && identity(callback).value(4) == 5);
+    let (left, right) = (invokeBox(callback, (int64)3), (int64)8);
+    assert(left + right == 12);
+    String tokens = "$macro X<T> >> && { } /* 字符串里的标点 */";
+    assert(tokens.length() > 20 && !false);
+    int64 number = 3;
+    assert(number < 8 && number > 1 && ((number << 2) >> 1) == 6);
+    assert(!(false && tick()) && (true || tick()) && effects == 0);
+    int64 total = 0;
+    int64 errors = 0;
+    for (int64 i in range(0, 512)) {
+        match(compute(i)) {
+            Ok(value) => { total += value; }
+            MessageError(error) => { assert(error.toString() == "outer" || error.toString() == "inner"); errors += 1; }
+            Err(_) => { assert(false); }
+        }
+    }
+    assert(cleanups == 512);
+    println("syntax composition: total={} errors={} cleanups={}", total, errors, cleanups);
+}

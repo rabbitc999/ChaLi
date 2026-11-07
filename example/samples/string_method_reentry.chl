@@ -13,16 +13,16 @@ struct Headers {
             int64 i = 0;
             while (i < len(lines)) {
 
-            String line = "";
-            line = line + lines[i];
-            int64 colon = Text::find(line, ":");
-            if (colon < 0) { { i = i + 1; continue; } }
-            String key = Text::toLower(line[0:colon]);
-            if (key == wanted) {
-                String value = line[(colon + 1):];
-                return Text::trim(value);
-            }
-        
+                String line = "";
+                line = line + lines[i];
+                int64 colon = Text::find(line, ":");
+                if (colon < 0) { { i = i + 1; continue; } }
+                String key = Text::toLower(line[0:colon]);
+                if (key == wanted) {
+                    String value = line[(colon + 1):];
+                    return Text::trim(value);
+                }
+
                 i = i + 1;
             }
         }
@@ -43,29 +43,21 @@ void main() {
     HttpResponse response;
     response.headers = "Content-Length: 5\r\ninvalid\r\nContent-Type: text/plain\r\n";
     println("{} {}", response.header("Content-Length"), response.header("content-type"));
-    {
-        int64 i = 0;
-        while (i < 12) {
+    for (int64 i = 0; i < 12; i = i + 1) {
 
         assert(response.header("content-type") == "text/plain");
         assert(response.header("missing") == "");
-    
-            i = i + 1;
-        }
+
     }
     assert(response.headers == "Content-Length: 5\r\ninvalid\r\nContent-Type: text/plain\r\n");
     /* 第一轮的临时地址在第二轮分配给 guard，自动清理必须清掉旧槽。 */
-    {
-        int64 i = 0;
-        while (i < 3) {
+    for (int64 i = 0; i < 3; i = i + 1) {
 
         String first = "";
         String guard = "";
         if (i > 0) { guard = "kept"; }
         println("{}", Text::toLower("VALUE"));
         if (i > 0) { assert(guard == "kept"); }
-    
-            i = i + 1;
-        }
+
     }
 }

@@ -34,12 +34,8 @@ void main() {
     bool ready = true || (++i > 0);
     assert(ready && i == 9);
     int64 total = 0;
-    {
-        int64 n = 0;
-        while (n < 4) {
- total += n; 
-            n++;
-        }
+    for (int64 n = 0; n < 4; n++) {
+        total += n;
     }
     assert(total == 6);
     int64 data[2]; data[0] = 10;
@@ -83,20 +79,20 @@ void main() {
         int64 round = 0;
         while (round < 4) {
 
-        BigInteger big = BigInteger("100000000000000000000");
-        BigInteger before = big++;
-        assert(before == BigInteger("100000000000000000000"));
-        assert(big == BigInteger("100000000000000000001"));
-        BigInteger after = --big;
-        assert(after == before && big == before);
-        BigDecimal decimal = BigDecimal("1.5");
-        BigDecimal oldDecimal = decimal--;
-        assert(oldDecimal == BigDecimal("1.5") && decimal == BigDecimal("0.5"));
-        ++decimal;
-        assert(decimal == oldDecimal);
-        bool noUpdate = false && (big++ > before);
-        assert(!noUpdate && big == before);
-    
+            BigInteger big = BigInteger("100000000000000000000");
+            BigInteger before = big++;
+            assert(before == BigInteger("100000000000000000000"));
+            assert(big == BigInteger("100000000000000000001"));
+            BigInteger after = --big;
+            assert(after == before && big == before);
+            BigDecimal decimal = BigDecimal("1.5");
+            BigDecimal oldDecimal = decimal--;
+            assert(oldDecimal == BigDecimal("1.5") && decimal == BigDecimal("0.5"));
+            ++decimal;
+            assert(decimal == oldDecimal);
+            bool noUpdate = false && (big++ > before);
+            assert(!noUpdate && big == before);
+
             ++round;
         }
     }

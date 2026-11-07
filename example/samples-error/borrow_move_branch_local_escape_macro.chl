@@ -1,0 +1,8 @@
+$macro SELECT(c: value, a: expr, b: expr) -> expr
+if (c) { yield a; } else { yield b; }
+$end_macro
+int64 mut& choose(bool flag, int64 mut& outer) {
+    int64 local = 9;
+    return $SELECT(flag, &outer, &local);
+}
+void main() { int64 n = 1; int64 mut& r = choose(false, &n); println("{}", r); }

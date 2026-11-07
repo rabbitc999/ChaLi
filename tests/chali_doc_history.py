@@ -16,6 +16,11 @@ EXCLUDED_PARTS = (
 
 # （正则，说明）。命中即失败；例外行必须整行包含对应豁免子串。
 RULES = (
+    (r"分别检查旧解释后端和 LLVM 构建|checks compilation, execution and an independent expected result for historical interpreter", "当前代表测试使用 checked／unchecked 原生路径；历史测量须单独标明版本", ()),
+    (r'std::iter::range\b', '整数迭代工厂已更名为 std::iter::intIter', ()),
+    (r'38-aot\.md', 'LLVM 构建参考页已更名为 38-build.md', ()),
+    (r'显式 `--llvm` 使用外置集成汇编器|explicit `--llvm` selects the external integrated assembler',
+     '静态编译器拒绝 --llvm，外置工具选择只适用于外置变体', ()),
     (r'\bv?[0-9]+\[[0-9]+\]\.[0-9]+\b', '版本号保留点号分隔，不得被元组下标迁移改成中括号', ()),
     (r'\b(?:pair|pairs|tuple|info|value|hint)\.[0-9]+\b', '元组按位置访问使用编译期常量下标 [0]、[1]，不使用点号序号', ()),
     (r'解释执行', '运行已改为 checked AOT 编译执行，不得再写「解释执行」',
@@ -70,6 +75,9 @@ def main():
     skill = ROOT / 'skills/chali-programming/SKILL.md'
     bundledSkill = ROOT / 'vscode/skills/chali-programming/SKILL.md'
     assert skill.read_text(encoding='utf-8') == bundledSkill.read_text(encoding='utf-8'), '仓库与 VS Code 的编程 SKILL 不一致'
+    option_program=next(code for code in re.findall(r'```chali\n(.*?)```',skill.read_text(encoding='utf-8'),re.S)
+                        if 'Option<int64> look(' in code)
+    assert option_program.strip()==(ROOT/'example/samples/skill_option_result.chl').read_text(encoding='utf-8').strip(), '编程指南的短名示例与可运行样例不一致'
     print('历史表述门禁通过：当前 Markdown 无已登记的旧语法与执行方式残留，两份编程 SKILL 一致。')
 
 

@@ -356,6 +356,7 @@ void ResetState()
     g_warnings.clear();
     g_borrowFacts.clear();
     g_borrowFlows.clear();
+    g_borrowFunctionFlows.clear();
     g_borrowFlowCapture = nullptr;
     // 契约中的形参下标属于本轮节点和签名，不能沿用上一轮单态化登记结果。
     g_lifetimeContracts.clear();

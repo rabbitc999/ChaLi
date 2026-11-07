@@ -1,0 +1,1 @@
+chali: example/samples-error/generic_type_string_shadow_clone.chl 第 5 行第 5 列：struct program::String 没有方法 clone

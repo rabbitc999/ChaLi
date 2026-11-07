@@ -1,0 +1,1 @@
+chali: example/samples-error/borrow_move_branch_local_escape_macro.chl 第 6 行：[CHL1204] 返回值中的引用不能超过局部来源的生命周期（int64 mut&，所属类型 ，来源 表达式）

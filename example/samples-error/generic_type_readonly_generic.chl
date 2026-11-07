@@ -1,0 +1,1 @@
+struct G<T>{T value;};void change<T>(G<T> const& g){g.value=1;}void main(){G<int64> g;change(&g);}

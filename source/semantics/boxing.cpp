@@ -1075,6 +1075,7 @@ ast::NodePtr LowerCall(int id)
                     return Bad();
                 }
                 RecordBorrowStore(receiverId, argIds[0]);
+                if (HasBorrowedValue(ExprType(argIds[0]))) CaptureBorrowStore(receiverId, argIds[0], false);
                 /* 注意：这里返回的是**裸调用**（不再套 `exprStmt`）—— 语句那一层
                  * （`LowerStmt` 的 ExprStmt）会统一套一次；套两次的话内层那个
                  * `ExprStmt` 节点在 codegen 里没人认，整条语句会**静默消失**。 */
@@ -1236,9 +1237,8 @@ ast::NodePtr LowerCall(int id)
                 Fail(Describe(baseType) + "." + methodName + " 需要 " + Memory::toString(method->arity) + " 个参数，给了 " + Memory::toString(argIds.size()) + " 个");
                 return Bad();
             }
-            if (methodName == "push" || methodName == "insert" || methodName == "add" || methodName == "put")
-                for (const int argument : argIds)
-                    RecordBorrowStore(receiverId, argument, true);
+            const bool storesValue = methodName == "push" || methodName == "insert" || methodName == "add"
+                                     || methodName == "put";
             const bool elementText = baseType->elem && IsStandardOpcode(baseType->elem, "String");
             const bool valueText =
                 baseType->elem2 ? (IsStandardOpcode(baseType->elem2, "String")) : elementText;
@@ -1266,12 +1266,14 @@ ast::NodePtr LowerCall(int id)
                     if (!CheckContainerArgument(baseType->elem, argIds[0],
                                                 methodName + " 的元素/键",
                                                 methodName == "push" || methodName == "add" || methodName == "put")) return Bad();
+                    if (storesValue && HasBorrowedValue(baseType->elem)) RecordBorrowStore(receiverId, argIds[0], true);
                     names.emplace_back("__chali_k");
                     values.push_back(ContainerStoreValue(argIds[0], baseType->elem, &post));
                     break;
                 case 'w':
                     if (!CheckContainerArgument(secondType, argIds[1],
                                                 methodName + " 的值", true)) return Bad();
+                    if (storesValue && HasBorrowedValue(secondType)) RecordBorrowStore(receiverId, argIds[1], true);
                     names.emplace_back("__chali_x");
                     values.push_back(ContainerStoreValue(argIds[1], secondType, &post));
                     break;
@@ -2233,6 +2235,12 @@ ast::NodePtr LowerEnumCtor(int id)
     for (std::size_t index = 0; index < variant->payloads.size(); ++index)
     {
         const MEnumPayload &payload = variant->payloads[index];
+        const int valueId = node.kids[index];
+        const bool ownedPayload = payload.type->kind == MType::Struct
+                                      ? IsOwnedAggregateTemporary(valueId) || IsImplicitConversionValue(valueId, payload.type)
+                                      : IsFreshValue(valueId);
+        if (HasNonCopyableValue(payload.type) && !ownedPayload)
+            return Fail("不可复制的枚举载荷必须显式 move 或使用拥有临时值：" + Describe(payload.type)), Bad();
         parameterNames.push_back(EnumPayloadParameterName(node.s, node.s2, index));
         ast::NodePtr argument = LowerValueForType(node.kids[index], payload.type);
         if (payload.type->kind == MType::Struct && AggregateNeedsDeepCopy(payload.type) && IsFreshAggregate(node.kids[index]))
@@ -3319,7 +3327,7 @@ ast::NodePtr LowerStmtImpl(int id)
 {
     if (id < 0) return nullptr;
     const MNode &node = N(id);
-    if (!node.s2.empty() && (node.kind == MNode::While || node.kind == MNode::Foreach || node.kind == MNode::Loop)
+    if (!node.s2.empty() && (node.kind == MNode::While || node.kind == MNode::For || node.kind == MNode::Foreach || node.kind == MNode::Loop)
         && FindNamedLoopContext(node))
         return Fail("活动循环标签重复：" + node.s2), Bad();
     switch (node.kind)
@@ -3479,6 +3487,20 @@ ast::NodePtr LowerStmtImpl(int id)
     case MNode::Foreach:
         return LowerForeach(id);
     case MNode::Loop:
+        if (node.s.empty() && FindBreakContext(true) == nullptr && LoopValueType(id)->kind != MType::Void)
+        {
+            // 两种语句拼写共用完整表达式清理，丢弃的拥有值也必须关闭／析构。
+            const auto source = node;
+            const int statement = M_ExprStmt(id);
+            auto &wrapper = g_nodes[statement];
+            wrapper.module = source.module;
+            wrapper.sourceLine = source.sourceLine;
+            wrapper.sourceColumn = source.sourceColumn;
+            wrapper.expansionLine = source.expansionLine;
+            wrapper.expansionColumn = source.expansionColumn;
+            wrapper.macroExpansion = source.macroExpansion;
+            return LowerStmt(statement);
+        }
         return LowerLoop(id, nullptr);
     case MNode::Switch:
         return LowerSwitch(id);
@@ -3724,9 +3746,9 @@ bool PickOverload(const Memory::Vector<Memory::String> &candidates,
                   const Memory::Vector<std::shared_ptr<MType>> &args, Memory::String *label,
                   Memory::String *reason)
 {
-    for (int tier = 0; tier < 2; ++tier)
+    for (int tier = 0; tier < 3; ++tier)
     {
-        const bool widening = (tier == 1);
+        const bool widening = (tier >= 1);
         Memory::Vector<Memory::String> matched;
         for (const Memory::String &candidate : candidates)
         {
@@ -3741,12 +3763,24 @@ bool PickOverload(const Memory::Vector<Memory::String> &candidates,
             for (std::size_t index = 0; index < fixed && index < args.size() && ok; ++index)
             {
                 ok = Acceptable(params[index].type, args[index], widening);
+                if (!ok && tier == 2)
+                {
+                    bool ambiguous = false;
+                    ok = ChooseImplicitEnumVariant(params[index].type, args[index], &ambiguous) != nullptr;
+                }
             }
             if (variadic)
             {
                 const std::shared_ptr<MType> element = params.back().type->elem;
                 for (std::size_t index = fixed; index < args.size() && ok; ++index)
+                {
                     ok = Acceptable(element, args[index], widening);
+                    if (!ok && tier == 2)
+                    {
+                        bool ambiguous = false;
+                        ok = ChooseImplicitEnumVariant(element, args[index], &ambiguous) != nullptr;
+                    }
+                }
             }
             if (ok) matched.push_back(candidate);
         }
@@ -4083,9 +4117,11 @@ bool ValidateReturnForms(int statementId, const std::shared_ptr<MType> &result)
     case MNode::DoWhile:
         return ValidateReturnForms(statement.kids[0], result);
     case MNode::For:
-        return ValidateReturnForms(statement.kids[3], result);
+        return ValidateReturnForms(statement.kids[3], result)
+               && (statement.kids.size() <= 4u || ValidateReturnForms(statement.kids[4], result));
     case MNode::Foreach:
-        return ValidateReturnForms(statement.kids[1], result);
+        return ValidateReturnForms(statement.kids[1], result)
+               && (statement.kids.size() <= 2u || ValidateReturnForms(statement.kids[2], result));
     case MNode::Loop:
         return ValidateReturnForms(statement.kids[0], result);
     case MNode::Switch:
@@ -4271,7 +4307,13 @@ int StatementReturnFlowImpl(int statementId, bool transparentLoops, Memory::Set<
                 exits->insert(exit);
         }
         const int propagated = body & (FlowReturn | (transparentLoops ? FlowValueEscape : 0));
-        if (statement.kind == MNode::While || statement.kind == MNode::For || statement.kind == MNode::Foreach)
+        const int fallback = statement.kind == MNode::For && statement.kids.size() > 4u ? statement.kids[4] :
+                             statement.kind == MNode::Foreach && statement.kids.size() > 2u ? statement.kids[2] : -1;
+        if (fallback >= 0)
+            return propagated | StatementReturnFlowImpl(fallback, transparentLoops, exits);
+        const bool infiniteFor = statement.kind == MNode::For
+                                 && (statement.kids[1] < 0 || (N(statement.kids[1]).kind == MNode::Bool && N(statement.kids[1]).i));
+        if (statement.kind == MNode::While || (statement.kind == MNode::For && !infiniteFor) || statement.kind == MNode::Foreach)
             return FlowNext | propagated;
         const int normal = FlowEscape | (transparentLoops ? 0 : FlowValueEscape) | (statement.kind == MNode::DoWhile ? FlowNext | FlowContinue : 0);
         return propagated | ((body & normal) ? FlowNext : 0);
@@ -4769,6 +4811,15 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
     g_cleanupItems.clear();
     g_cleanupBase = g_ownedScopes.size();
     MBorrowFlowCapture borrowCapture;
+    for (const auto &param : params)
+    {
+        const auto variable = g_scope.back().find(param.bindingKey.empty() ? param.source : param.bindingKey);
+        if (variable != g_scope.back().end())
+        {
+            borrowCapture.parameters[param.source] = variable->second.emitted;
+            borrowCapture.parameterTypes[param.source] = variable->second.type;
+        }
+    }
     auto *savedBorrowCapture = g_borrowFlowCapture;
     struct RestoreBorrowCapture
     {
@@ -4783,7 +4834,11 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
     if (g_error.empty() && result && result->kind != MType::Void
         && (StatementReturnFlow(bodyId) & (FlowNext | FlowEscape | FlowContinue | FlowValueEscape)) != 0)
         Fail("返回类型为 " + Describe(result) + " 的函数 " + name + " 不是所有路径都有 return");
-    FinishBorrowFlow(bodyId, borrowCapture);
+    Memory::Vector<Memory::String> borrowParameters;
+    if (!owner.empty()) borrowParameters.push_back("self:" + owner);
+    for (const auto &param : params)
+        borrowParameters.push_back(param.type && HasBorrowedValue(param.type) ? borrowCapture.parameters.at(param.source) : Memory::String());
+    FinishBorrowFlow(bodyId, borrowCapture, owner.empty() ? name : owner + "." + name, borrowParameters);
     /* 名字核对必须赶在 PopScope 之前：局部变量只在这时候还在作用域里。 */
     ValidateLifetimeCurrent();
     if (!owner.empty() && (name == "drop" || name == owner + ".drop") && StructHasInterface(owner, "Drop"))

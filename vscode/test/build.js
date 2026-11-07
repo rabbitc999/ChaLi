@@ -7,12 +7,22 @@ const path = require('node:path');
 const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 const { buildArguments, registerBuild } = require('../src/build');
+const { variantManifest } = require('../src/llvmConfiguration');
 
 /** 执行真实构建并核对原生产物及各失败分支。 */
 async function main() {
   const root = path.resolve(__dirname, '../..');
   const compiler = path.resolve(process.env.CHALI_BIN || path.join(root, process.platform === 'win32' ? 'ChaLi.exe' : 'chali'));
   const directory = fs.mkdtempSync(path.join(require('./projectTemp').root, 'chali build space '));
+  const buildInfo = spawnSync(compiler, ['--build-info'], { encoding: 'utf8', windowsHide: true });
+  assert.equal(buildInfo.status, 0, buildInfo.stderr);
+  const extensionPath = path.join(directory, 'extension');
+  fs.mkdirSync(extensionPath);
+  fs.mkdirSync(path.join(extensionPath, 'bin'));
+  fs.writeFileSync(path.join(extensionPath, 'bin/chali-build-info.json'), buildInfo.stdout);
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'vscode/package.json'), 'utf8'));
+  fs.writeFileSync(path.join(extensionPath, 'package.json'),
+    JSON.stringify(variantManifest(manifest, JSON.parse(buildInfo.stdout).llvm)));
   const source = path.join(directory, 'hello & 中文.chl');
   fs.writeFileSync(source, 'void main() { println("build {}", 42); }\n');
   const commands = new Map(); const errors = []; const messages = []; const logs = [];
@@ -22,7 +32,7 @@ async function main() {
   const settings = { 'build.outputDirectory': 'output & space', 'build.llvmPath': process.env.CHALI_LLVM_CLANG || (process.platform === 'win32'
     ? path.join(root, 'build/dependencies/llvm/toolchain/bin/clang.exe') : ''), 'build.checked': true };
   const disposable = { dispose() {} };
-  const context = { extensionPath: path.join(root, 'vscode'), subscriptions: [] };
+  const context = { extensionPath, subscriptions: [] };
   const vscode = {
     Uri: { file: uri }, ProgressLocation: { Notification: 1 },
     commands: { registerCommand(name, callback) { commands.set(name, callback); return disposable; }, async executeCommand() {} },

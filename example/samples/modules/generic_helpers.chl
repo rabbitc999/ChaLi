@@ -1,0 +1,14 @@
+module generic_helpers;
+int64 helper(int64 value) { return value + 10; }
+$macro CONVERT<T:x>(x: value) -> expr
+cast<T>(x)
+$end_macro
+$macro INNER<T>(x: value) -> expr
+{ T temporary = cast<T>(helper(x)); yield temporary; }
+$end_macro
+$macro OUTER<T>(x: value) -> expr
+$INNER<T>(x)
+$end_macro
+$macro RECORD<T>(name:ident) -> item
+struct name { T value; }
+$end_macro

@@ -1,0 +1,89 @@
+int64 elseCloses = 0;
+int64 elseTrace = 0;
+struct ElseHandle : Closeable {
+    int64 id;
+    void close() { elseCloses++; }
+}
+struct ElseValues : Iterator<ElseHandle> {
+    int64 count;
+    Option<ElseHandle> iterator(int64 index) {
+        if (index >= self.count) { return None; }
+        ElseHandle value; value.id = index + 1;
+        return Value(move value);
+    }
+}
+struct ElseText : Iterator<String const&> {
+    String text;
+    int64 count;
+    Option<String const&> iterator(int64 index) {
+        if (index >= self.count) { self.text = "expired"; return None; }
+        self.text = format("item{}", index);
+        return Value(&self.text);
+    }
+}
+T lastAfterLoop<T>(List<T> items) {
+    return for (let x in items) {} else { x };
+}
+int64 countAfterLoop(int64 size) {
+    for (int64 i = 0; i < size; i++) {} else { return i; }
+}
+
+$macro LOOP_END(mut &out) -> stmt
+for (int64 i = 0; i < 4; i++) {} else { out = i; }
+$end_macro
+
+void main() {
+    assert(countAfterLoop(5) == 5 && countAfterLoop(0) == 0);
+    let completed = for (let i = 0; i < 4; i++) {} else { i };
+    assert(completed == 4);
+    for (int64 first = 2, last = 8; first < last; first++, last--) {}
+    else { assert(first == 5 && last == 5); }
+    for (int64 i = 7; false; i++) { assert(false); }
+    else { assert(i == 7); }
+    for (int64 x in range(3, 9)) { if (x == 5) { break; } }
+    else { assert(x == 5); }
+    for (let x in range(3, 3)) { assert(false); }
+    else { assert(x == 0); }
+
+    int64 numbers[3]; numbers[0] = 4; numbers[1] = 5; numbers[2] = 6;
+    for (let x in numbers) { if (x == 5) { continue; } }
+    else { assert(x == 6); }
+    int64[] emptyNumbers = new[0];
+    for (let x in emptyNumbers) { assert(false); }
+    else { assert(x == 0); }
+    List<String> words = ["a", "b", "last"];
+    assert(lastAfterLoop(words) == "last");
+    List<String> emptyWords;
+    assert(lastAfterLoop(emptyWords) == "");
+    List<float64> fractions = [1.5, 2.5];
+    assert(lastAfterLoop(fractions) == 2.5);
+    List<float64> emptyFractions;
+    assert(lastAfterLoop(emptyFractions) == 0.0);
+
+    ElseText text; text.count = 3;
+    for (let x in text) {} else { assert(x == "item2"); }
+    assert(text.text == "expired");
+
+    ElseValues resources; resources.count = 3;
+    for (let value in resources) {} else {
+        assert(value.id == 3 && elseCloses == 2);
+    }
+    assert(elseCloses == 3);
+    ElseValues emptyResources;
+    for (let value in emptyResources) {} else { assert(value.id == 0); }
+    assert(elseCloses == 4);
+
+    for (ElseHandle owner; false; ) {} else {
+        owner.id = 42;
+        assert(elseCloses == 4);
+    }
+    assert(elseCloses == 5);
+    let found = for (let x in range(0, 5)) {
+        if (x == 2) { yield x; }
+    } else { elseTrace++; yield x; };
+    assert(found == 2 && elseTrace == 0);
+    int64 macroResult = 0;
+    $LOOP_END(macroResult);
+    assert(macroResult == 4);
+    println("for else: initialized,last,default,reference snapshot,generic,macro,resource cleanup");
+}

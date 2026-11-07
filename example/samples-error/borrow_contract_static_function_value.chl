@@ -1,0 +1,2 @@
+#static(a)
+void f(int64 const& a){}void main(){let callback=f;int64 local=1;callback(&local);}

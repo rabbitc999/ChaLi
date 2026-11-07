@@ -1,0 +1,63 @@
+int64 closed = 0;
+struct Link<T> : Closeable {
+    T value;
+    Option<Link<T> mut&> next;
+    void close() { closed += 1; }
+}
+Option<Link<T> mut&> make<T>(T seed, int64 count) {
+    Option<Link<T> mut&> head = None;
+    for (int64 i in range(0, count)) {
+        Link<T> mut& node = new Link<T>;
+        node.value = seed;
+        node.next = head;
+        head = Value(node);
+    }
+    return head;
+}
+int64 count<T>(Option<Link<T> mut&> head) {
+    int64 result = 0;
+    Option<Link<T> mut&> cursor = head;
+    while (cursor.isValue()) {
+        Link<T> mut& node = cursor.unwrap();
+        result += 1;
+        cursor = node.next;
+    }
+    return result;
+}
+void clearWhile<T>(Option<Link<T> mut&> head) {
+    Option<Link<T> mut&> cursor = head;
+    while (cursor.isValue()) {
+        Link<T> mut& node = cursor.unwrap();
+        cursor = node.next;
+        node.drop();
+    }
+}
+void clearFor<T>(Option<Link<T> mut&> head) {
+    Option<Link<T> mut&> cursor = head;
+    for (int64 step in range(0, count(head))) {
+        Link<T> mut& node = cursor.unwrap();
+        cursor = node.next;
+        node.drop();
+    }
+}
+void clearLoop<T>(Option<Link<T> mut&> head) {
+    Option<Link<T> mut&> cursor = head;
+    if (cursor.isNone()) { return; }
+    loop {
+        Link<T> mut& node = cursor.unwrap();
+        cursor = node.next;
+        node.drop();
+        if (cursor.isNone()) { break; }
+    }
+}
+void main() {
+    let integers = make((int64)7, 128);
+    let reals = make(2.5, 128);
+    let texts = make("owned 字符串", 128);
+    assert(count(integers) == 128 && count(reals) == 128 && count(texts) == 128);
+    clearWhile(integers);
+    clearFor(reals);
+    clearLoop(texts);
+    assert(closed == 384);
+    println("heap traversal: while,for,loop types=int64,float64,String closed=384");
+}

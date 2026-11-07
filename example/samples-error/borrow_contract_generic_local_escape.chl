@@ -1,0 +1,2 @@
+#borrow(#ret,a)
+T mut& f<T>(T mut& a){T local=a;return &local;}void main(){int64 a=1;f(&a);}

@@ -1,0 +1,6 @@
+module build_option_flags;
+$macro ENABLED() -> expr
+$build[A]
+$end_macro
+String targetSystem() { return $system; }
+String targetCpu() { return $cpu; }

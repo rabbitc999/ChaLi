@@ -1,0 +1,2 @@
+#borrow(out,b)
+T f<T>(T mut& a,T mut& b){T mut& out=a;return out;}void main(){int64 a=1;int64 b=2;f(&a,&b);}

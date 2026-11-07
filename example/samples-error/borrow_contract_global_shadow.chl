@@ -1,0 +1,2 @@
+int64 global=1;#borrow(#ret,a)
+int64 mut& f(int64 mut& a){int64 global=2;return &global;}void main(){}

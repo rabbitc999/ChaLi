@@ -1,0 +1,25 @@
+import std::macro;
+int64 customClones = 0;
+struct String : Clone<String> {
+    int64 code;
+    String clone() {
+        customClones += 1;
+        return self;
+    }
+}
+struct Box<T> {
+    T value;
+    $std::macro::Clone<Box<T>>(clone);
+}
+void main() {
+    Box<String> custom;
+    custom.value.code = 23;
+    let customCopy = custom.clone();
+    assert(customCopy.value.code == 23 && customClones == 1);
+    Box<std::core::String> standard;
+    standard.value = "kept";
+    let standardCopy = standard.clone();
+    standard.value = "changed";
+    assert(standardCopy.value == "kept" && customClones == 1);
+    println("generic clone: nominal String and core String remain distinct");
+}

@@ -277,8 +277,8 @@ $end_macro
 void main()
 {
     int64 x = 100;
-    Pair pair = Pair::Values(7, 8);
-    int64 total = $SELECT(pair, Pair::Values(x, y), { yield x + y; });
+    Pair pair = Values(7, 8);
+    int64 total = $SELECT(pair, Values(x, y), { yield x + y; });
     println("{} {}", total, x);
 }
 ```
@@ -430,8 +430,11 @@ String jsonText(String value) {
     String digits = "0123456789abcdef";
     int64 start = 0;
     int64 i = 0;
-    while (i < value.length()) {
-        int64 byte = (int64)value.byteAt(i).unwrap();
+    bytes: while (i < value.length()) {
+        int64 byte = match (value.byteAt(i)) {
+            Value(item) => { (int64)item }
+            None => { break bytes; }
+        };
         if (byte < 32 || byte == 34 || byte == 92) {
             result += value.slice(start, i);
             if (byte == 34) { result += "\\\""; }
@@ -504,7 +507,28 @@ struct Root {
     Set<int64> emptySet;
     Map<String, bool> emptyMap;
 }
-void main() {
+Result<T, MessageError> requireValue<T>(Option<T> value, String description) {
+    match (value) {
+        Value(item) => { return Ok(item); }
+        None => {
+            MessageError error = MessageError::from(description);
+            return Err(error);
+        }
+    }
+}
+Result<bool, Error> verifyJson(String encoded) {
+    let parsed = parse(encoded)?;
+    let items = requireValue(parsed.find("items"), "missing items")?;
+    let names = requireValue(parsed.find("byName"), "missing byName")?;
+    let bucket = requireValue(names.find("b\"ox"), "missing bucket")?;
+    let item = requireValue(items.at(1), "missing item")?;
+    assert(requireValue(item.asInt(), "item must be int")? == 8);
+    let leaf = requireValue(bucket.at(0), "missing leaf")?;
+    let count = requireValue(leaf.find("count"), "missing count")?;
+    assert(requireValue(count.asInt(), "count must be int")? == 42);
+    return Ok(true);
+}
+Result<bool, Error> demonstrateJson() {
     Root value;
     value.middle.inner.count = 42;
     value.middle.inner.text = "a\"\\\n";
@@ -517,19 +541,26 @@ void main() {
     bucket.push(value.middle.inner);
     value.byName.put("b\"ox", bucket);
     String encoded = $JSON_VALUE(Root)[value];
-    let parsed = parse(encoded).unwrap();
-    let parsedItems = parsed.find("items").unwrap();
-    let parsedBucket = parsed.find("byName").unwrap().find("b\"ox").unwrap();
-    assert(parsedItems.at(1).unwrap().asInt().unwrap() == 8);
-    assert(parsedBucket.at(0).unwrap().find("count").unwrap().asInt().unwrap() == 42);
+    assert(verifyJson(encoded)?);
     println("{}", encoded);
     assert(value.items.len() == 2 && value.unique.len() == 1 && value.byName.len() == 1);
+    return Ok(true);
+}
+void main() {
+    match (demonstrateJson()) {
+        Ok(_) => {}
+        Err(error) => { println("{}", error.toString()); }
+    }
 }
 ```
 
 ```text
 {"middle":{"inner":{"count":42,"text":"a\"\\\u000a","enabled":true,"empty":{}}},"items":[5,8],"unique":["only"],"byName":{"b\"ox":[{"count":42,"text":"a\"\\\u000a","enabled":true,"empty":{}}]},"emptyList":[],"emptySet":[],"emptyMap":{}}
 ```
+
+This general helper keeps Err(error): T can itself be MessageError, making the success and error payload types identical. The explicit variant selects failure in that case. Naming the error avoids nested constructors; other error returns can still use a direct payload when the target has a unique best match.
+
+requireValue maps a missing required field to MessageError, and verifyJson uses ? to propagate parsing, missing-field, and type failures. Option and Result carry different residual states, so mapping absence requires an explicit application error. Main matches the final result.
 
 Field names, map keys, and string values share one escaping function for quotes, backslashes, and control bytes. List preserves element order, and Set follows its iteration order. Map keys must be String.
 
@@ -875,6 +906,31 @@ MAKE concatenates identifier fragments into itemCount, resolving to the global v
 
 $module gives the module name. $file and $line provide source information for diagnostics. Paths vary across machines, so do not freeze a local absolute path as portable expected output. Follow source mappings through nested expansion rather than treating preview line numbers as original source positions.
 
+
+### Target platform and boolean build options
+
+`$system` and `$cpu` are bare string constants describing the target program's operating system and architecture. Windows, macOS and Linux use `"win"`, `"mac"` and `"linux"`; common architecture names are `"amd64"`, `"arm64"` and `"arm32"`. Cross builds use the selected target rather than the compiler host. CPU tuning through `--cpu` does not change the architecture macro. Name normalization does not add native output targets; consult the LLVM build chapter for supported targets.
+
+```csharp
+void main() {
+    println("system={}, cpu={}", $system, $cpu);
+    println("A={}, B={}", $build[A], $build["B"]);
+}
+```
+
+`chali run main.chl -B A -BB` defines both names. A project can also declare:
+
+```toml
+[build]
+build_option = ["A", "B"]
+```
+
+CLI and manifest names form a union. Names are case sensitive; duplicates have no additional effect. `$build[A]` and `$build["A"]` are equivalent: the bare name is a literal flag name, not a variable lookup. Defined names yield `true`, undefined names yield `false`. Values such as `-BA=false`, numbers and strings are unsupported. Names must be nonempty and contain only ASCII letters, digits, underscores, dots or hyphens; quote names containing dots or hyphens.
+
+Inside macro templates, use `$if $build[A]`, `$else`, `$end_if` or `$if ($system == "win")` to select code. Ordinary expressions can read the same constants. `$build` accepts a literal name or string, not a computed runtime key. `-I` keeps its module-search-directory meaning.
+
+See [Chapter 11](11-modules-projects.md) for the complete manifest context and [Chapter 27](27-aot-export.md) for target and link settings.
+
 ## 22.19 Selecting Templates by Syntax or Text
 
 <!-- verify-book -->
@@ -1057,7 +1113,7 @@ void main()
     reading.sensor = "温度";
     reading.value = 23;
     println("{}", reading.debug());
-    Event event = Event::Updated(reading, true);
+    Event event = Updated(reading, true);
     println("{}", event.debug());
 }
 ```
@@ -1200,7 +1256,10 @@ void main()
     profile.id = 7;
     profile.name = "Ada";
     profile.secret = "internal";
-    println("{}", profile.toJson().unwrap());
+    match (profile.toJson()) {
+        Ok(encoded) => { println("{}", encoded); }
+        Err(error) => { println("{}", error.toString()); return; }
+    }
 
     let decoded = Profile::fromJson("{\"student_id\":7,\"name\":\"Ada\"}");
     match (decoded)

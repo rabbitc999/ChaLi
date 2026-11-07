@@ -379,11 +379,12 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
     }
     if (node.kind == MNode::Foreach)
     {
-        if (node.kids.size() != 2) throw std::runtime_error("宏体遍历循环结构无效");
+        if (node.kids.size() < 2u || node.kids.size() > 3u) throw std::runtime_error("宏体遍历循环结构无效");
         visit(node.kids[0], scope, depth + 1);
         scope = resolver_.createScope(scope);
         declare(id, scope);
         visit(node.kids[1], scope, depth + 1);
+        if (node.kids.size() > 2u) visit(node.kids[2], scope, depth + 1);
         return;
     }
     const bool declarationGroup = node.kind == MNode::Declare && node.kids.size() == 1 && node.kids[0] >= 0 && nodes_[node.kids[0]].kind == MNode::List;

@@ -1,0 +1,5 @@
+enum Left { Value(int64 number) }
+enum Right { Value(int64 number) }
+void main() {
+    let unknown = Value(1);
+}
