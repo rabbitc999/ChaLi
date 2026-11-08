@@ -111,28 +111,6 @@ sh gen.sh          # regenerate the front end from chali.gram with IELR (needs t
 repository root as `./ParseEngine[.exe]`; it also works if it stays in a neighboring ParseEngine
 checkout (`gen.sh` looks for `../ParseEngine/build/bin/` automatically).
 
-### Building with annotations and reflection
-
-The default toolchain build includes annotation and reflection support in both the front end
-and the native runtime:
-
-```sh
-make                # defaults to CHALI_WITH_REFLECTION=1 STACKVM_WITH_REFLECTION=1
-make reflection     # retained as an explicit enable target
-```
-
-Reflection is a fixed part of the language and is **not trimmable**: `CHALI_WITH_REFLECTION` and
-`STACKVM_WITH_REFLECTION` are pinned to `1` (unlike the `NO_CHALI_*` trim options these are not
-switches), so the reflection front end and runtime are always built in and compilation always runs
-the full reflection pass.
-
-Source compilation emits reflection metadata and its artifact feature flag by default;
-`--no-reflection` omits that metadata and rejects annotations/reflection use in the program. It
-decides this artifact only and reduces no compiler workload (metadata and query-source generation
-still run). Use `--no-reflection` when targeting a board runtime without reflection support.
-`make` pins both macros to 1; only a hand-written `-D` build can turn reflection off, and that path
-exists solely to validate the compiler itself — it is not a supported trim configuration.
-
 ## Quick usage
 
 ```sh
