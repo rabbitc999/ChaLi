@@ -30926,7 +30926,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": true
     },
@@ -30951,7 +30951,7 @@
       "documentation": "由实现者将当前值转换为文本，Formattable 重载接收 style。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -30976,7 +30976,7 @@
       "documentation": "返回 ReflectValue 当前载荷的精确类型 ID。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31001,7 +31001,7 @@
       "documentation": "精确提取 Bool 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31026,7 +31026,7 @@
       "documentation": "精确提取 Char 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31051,7 +31051,7 @@
       "documentation": "精确提取 I8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31076,7 +31076,7 @@
       "documentation": "精确提取 I16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31101,7 +31101,7 @@
       "documentation": "精确提取 I32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31126,7 +31126,7 @@
       "documentation": "精确提取 I64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31151,7 +31151,7 @@
       "documentation": "精确提取 U8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31176,7 +31176,7 @@
       "documentation": "精确提取 U16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31201,7 +31201,7 @@
       "documentation": "精确提取 U32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31226,7 +31226,7 @@
       "documentation": "精确提取 U64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31251,7 +31251,7 @@
       "documentation": "精确提取 F32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31276,7 +31276,7 @@
       "documentation": "精确提取 F64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31301,7 +31301,7 @@
       "documentation": "精确提取 Text 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31333,7 +31333,7 @@
       "documentation": "按名称查找函数元数据，未找到时 None。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31365,7 +31365,7 @@
       "documentation": "按名称查找注解定义元数据。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31390,7 +31390,7 @@
       "documentation": "取得具体 T 的类型 ID。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31417,7 +31417,7 @@
       "documentation": "取得接口 I 的类型 ID。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31442,7 +31442,7 @@
       "documentation": "读取具体结构体的布局和成员元数据。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31469,7 +31469,7 @@
       "documentation": "读取枚举变体及成员元数据。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31494,7 +31494,7 @@
       "documentation": "读取接口方法及实现关系元数据。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31526,7 +31526,7 @@
       "documentation": "判断 T 是否实现给定接口 ID。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31551,7 +31551,7 @@
       "documentation": "取得类型上的注解列表。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31583,7 +31583,7 @@
       "documentation": "按字段名取得字段注解。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31615,7 +31615,7 @@
       "documentation": "按函数名取得函数注解。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31647,7 +31647,7 @@
       "documentation": "按方法名取得方法注解。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31679,7 +31679,7 @@
       "documentation": "按静态成员名取得注解。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31717,7 +31717,7 @@
       "documentation": "按名称动态调用函数，返回封闭值或 ReflectError。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31761,7 +31761,7 @@
       "documentation": "通过可写接收者动态调用实例方法。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31805,7 +31805,7 @@
       "documentation": "通过只读接收者动态调用允许的实例方法。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31843,7 +31843,7 @@
       "documentation": "动态调用 T 的静态方法。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31887,7 +31887,7 @@
       "documentation": "通过可写枚举接收者动态调用方法。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31931,7 +31931,7 @@
       "documentation": "通过只读枚举接收者动态调用方法。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -31969,7 +31969,7 @@
       "documentation": "动态调用枚举的静态方法。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32001,7 +32001,7 @@
       "documentation": "动态调用 T 的构造函数，返回 T 或错误。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32039,7 +32039,7 @@
       "documentation": "按字段名读取精确类型的独立值。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32083,7 +32083,7 @@
       "documentation": "按字段名写入精确类型的值。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32127,7 +32127,7 @@
       "documentation": "通过可写接口接收者动态调用方法。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32171,7 +32171,7 @@
       "documentation": "通过只读接口接收者动态调用方法。"
     },
     "errors": {
-      "documentation": "类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
