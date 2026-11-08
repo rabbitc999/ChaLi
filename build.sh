@@ -2,14 +2,14 @@
 # chali/build.sh —— 一键构建与打包。
 #
 # 用法（在本目录跑）：
-#   sh build.sh              生成解析器 → 构建主程序 → 按环境打包插件与书稿
+#   sh build.sh              生成解析器 → 构建静态 LLVM 编译器 → 按环境打包插件与书稿
 #   sh build.sh --no-gen     跳过文法生成，直接用现有解析器构建
 #   sh build.sh --jobs 4     指定并行度（默认取 CPU 核数）
 #   sh build.sh --help
 #
 # 四个阶段：
 #   1. gen.sh 生成解析器 / 驱动 / 工程文件。
-#   2. 构建主程序，产物落到 dist/。
+#   2. 以 CHALI_STATIC_LLVM=1 构建静态 LLVM 主程序，产物落到 dist/。
 #   3. 环境检测：npm 决定是否打 VSCode 插件，latexmk / pdflatex 决定是否编书稿；
 #      缺哪个就打印提示跳过，**不中断构建**。
 #   4. 统一整理到 dist/，命名规范 chali-<组件>-<平台>-<架构>.<扩展名>：
@@ -105,6 +105,11 @@ for candidate in python3 python py; do
 done
 
 echo "== 1/4 生成解析器 =="
+echo "准备静态 LLVM SDK..."
+"${py:-python3}" library/llvm/setup_static.py --jobs "$jobs" || {
+    echo "静态 LLVM SDK 准备失败，构建中止" >&2
+    exit 1
+}
 if [ "$run_gen" -eq 1 ]; then
     sh gen.sh || { echo "文法生成失败，构建中止" >&2; exit 1; }
 else
@@ -112,20 +117,18 @@ else
 fi
 
 echo "== 2/4 构建主程序（-j$jobs）=="
-"$make_cmd" -j"$jobs" || { echo "构建失败" >&2; exit 1; }
+# 静态 LLVM 变体只支持已准备好的 Windows x64 SDK；该变量同时让
+# tools/compiler_path.py 和 VSCode 打包流程选择同一份静态编译器产物。
+export CHALI_STATIC_LLVM=1
+"$make_cmd" CHALI_STATIC_LLVM=1 -j"$jobs" || { echo "构建失败" >&2; exit 1; }
 # 产物名带版本与 LLVM 链接方式（见 tools/compiler_path.py），与 ci.sh 取同一份口径，
-# 不要另猜一个固定文件名：Windows 的正式产物是 chali-<版本>-llvm-external-windows-x64.exe。
+# 不要另猜一个固定文件名：Windows 的正式产物是 chali-<版本>-llvm-static-windows-x64.exe。
 built=''
 if [ -n "${py:-}" ]; then
     built=$("$py" tools/compiler_path.py 2>/dev/null) || built=''
 fi
 [ -n "$built" ] || built="$root/chali$exe"
 [ -f "$built" ] || { echo "构建结束但没有找到 ChaLi 可执行文件（$built）" >&2; exit 1; }
-
-cli="chali-$os-$arch$exe"
-cp "$built" "$dist/$cli"
-chmod +x "$dist/$cli" 2>/dev/null
-echo "已产出：dist/$cli"
 
 echo "== 3/4 环境检测 =="
 have npm && echo "npm：有（打包 VSCode 插件）" || echo "npm：无（跳过 VSCode 插件）"
@@ -138,13 +141,10 @@ fi
 echo "== 4/4 打包 =="
 # VSCode 插件：内嵌编译器 → 清单自检 → vsce package（测试在 ci.sh 里跑，这里跳过）。
 if have npm; then
-    if (cd "$root/vscode" && npm run package -- --skip-tests --out "$dist"); then
-        for vsix in "$dist"/chali-editor-*.vsix; do
-            [ -f "$vsix" ] || continue
-            mv "$vsix" "$dist/chali-vscode-$os-$arch.vsix"
-        done
-        if [ -f "$dist/chali-vscode-$os-$arch.vsix" ]; then
-            echo "已产出：dist/chali-vscode-$os-$arch.vsix"
+    if (cd "$root/vscode" && npm run package -- --skip-tests --llvm-variant static --compiler "$root/$(basename "$built")" --out "$dist"); then
+        vsix=$(ls -1 "$dist"/chali-editor-*-llvm-static.vsix 2>/dev/null | head -n 1)
+        if [ -n "$vsix" ] && [ -f "$vsix" ]; then
+            echo "已产出：$vsix"
         else
             echo "插件打包没有产出 .vsix，已跳过" >&2
         fi
@@ -184,27 +184,49 @@ else
     echo "跳过书稿：未找到 latexmk / pdflatex"
 fi
 
-# 汇总压缩包：把上面产出的组件打成一个 zip（自身不进包）。
-zip_name="chali-bundle-$os-$arch.zip"
-rm -f "$dist/$zip_name"
-members=''
-for f in "$dist/chali-$os-$arch$exe" "$dist/chali-vscode-$os-$arch.vsix" "$dist/chali-book.pdf"; do
-    [ -f "$f" ] && members="$members $(basename "$f")"
-done
-if [ -n "$members" ]; then
-    if [ -n "$py" ]; then
-        # shellcheck disable=SC2086
-        (cd "$dist" && "$py" -c 'import sys, zipfile
-name = sys.argv[1]
-with zipfile.ZipFile(name, "w", zipfile.ZIP_DEFLATED) as archive:
-    for member in sys.argv[2:]:
-        archive.write(member, member)' "$zip_name" $members) && echo "已产出：dist/$zip_name" || echo "压缩包生成失败，已跳过" >&2
-    elif have zip; then
-        # shellcheck disable=SC2086
-        (cd "$dist" && zip -q "$zip_name" $members) && echo "已产出：dist/$zip_name" || echo "压缩包生成失败，已跳过" >&2
+# 静态发行包：命令行包与 VS Code 包分开，另附发行说明和校验清单。
+if [ -n "$py" ]; then
+    version=$(tr -d '\r\n' < "$root/VERSION")
+    release_notes="$dist/ChaLi-$version-release-notes.md"
+    cp "$root/CHANGELOG.md" "$release_notes"
+    cli_zip="$dist/chali-$version-llvm-static-windows-x64.zip"
+    vscode_zip="$dist/chali-$version-llvm-static-windows-x64-vscode.zip"
+    if [ -n "${vsix:-}" ] && [ -f "$vsix" ]; then
+        "$py" - "$dist" "$cli_zip" "$vscode_zip" "$release_notes" "$built" "$vsix" "$root" <<'PY'
+import hashlib, pathlib, sys, zipfile
+dist, cli_zip, vscode_zip, notes, binary, vsix, root = map(pathlib.Path, sys.argv[1:])
+def add(archive, source, name):
+    archive.write(source, name)
+with zipfile.ZipFile(cli_zip, 'w', zipfile.ZIP_DEFLATED) as archive:
+    add(archive, binary, binary.name)
+    add(archive, pathlib.Path(notes), pathlib.Path(notes).name)
+    add(archive, pathlib.Path(root) / 'doc/book/latex/book.pdf', 'ChaLi-book.pdf')
+    add(archive, pathlib.Path(root) / 'LICENSE', 'LICENSE')
+    add(archive, pathlib.Path(root) / 'NOTICE', 'NOTICE')
+    add(archive, pathlib.Path(root) / 'VERSION', 'VERSION')
+    for sample in sorted((pathlib.Path(root) / 'example/samples').glob('*.chl')):
+        add(archive, sample, 'examples/' + sample.name)
+    for license_file in sorted((pathlib.Path(root) / 'licenses').glob('*/LICENSE')):
+        add(archive, license_file, 'licenses/' + license_file.parent.name + '/LICENSE')
+with zipfile.ZipFile(vscode_zip, 'w', zipfile.ZIP_DEFLATED) as archive:
+    add(archive, vsix, vsix.name)
+    add(archive, pathlib.Path(notes), pathlib.Path(notes).name)
+    add(archive, pathlib.Path(root) / 'LICENSE', 'LICENSE')
+    add(archive, pathlib.Path(root) / 'NOTICE', 'NOTICE')
+book = dist / 'chali-book.pdf'
+checks = [cli_zip, vscode_zip, pathlib.Path(notes), book]
+(dist / 'SHA256SUMS.txt').write_text(''.join(hashlib.sha256(path.read_bytes()).hexdigest() + '  ' + path.name + '\n' for path in checks), encoding='utf-8')
+PY
+        echo "已产出：$cli_zip"
+        echo "已产出：$vscode_zip"
+        echo "已产出：$release_notes"
+        echo "已产出：$dist/SHA256SUMS.txt"
     else
-        echo "跳过压缩包：未找到 python / zip" >&2
+        echo "未找到静态 VSIX，发行包生成中止" >&2
+        exit 1
     fi
+else
+    echo "跳过发行包：未找到 python" >&2
 fi
 
 echo
