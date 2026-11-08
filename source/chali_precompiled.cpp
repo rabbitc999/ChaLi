@@ -26,11 +26,7 @@ struct StandardModuleEntry
     std::uint64_t checksum;
 };
 constexpr std::size_t kPackageHeaderSize = 64;
-#if defined(CHALI_WITH_REFLECTION) && CHALI_WITH_REFLECTION
 constexpr std::uint64_t kPackageFeatures = 1;
-#else
-constexpr std::uint64_t kPackageFeatures = 0;
-#endif
 #if __has_include("chali_precompiled_data.inc")
 #include "chali_precompiled_data.inc"
 #else

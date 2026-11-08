@@ -4,21 +4,15 @@
 **English** · [简体中文](README.md)
 <!-- END LANGUAGE NAVIGATION -->
 
-ChaLi is a statically typed language with observable value semantics, explicit borrowing and moves, and scope-based resource cleanup. Its type, ownership and runtime rules are defined by the language. Supported hosts, export targets and external-library requirements are documented separately.
+ChaLi is a statically typed language that compiles to native code. Assignment, argument passing and return copy values by default; sharing requires an explicit reference (`T const&` read-only, `T mut&` writable) or a move, and the language has no pointers or address arithmetic. There is no GC: resources are released deterministically when they leave scope.
 
-The ChaLi compiler's front end is generated from this repository's `source/chali.gram` by
-[ParseEngine](https://github.com/rabbitc999/ParseEngine). It generates LLVM IR directly from the semantically checked AST and compiles native code through LLVM build. run uses checked compilation and execution; build defaults to unchecked export.
+Name, type, generic, borrow and lifetime checks all run at compile time, and hygienic macros expand during semantic analysis. Any retains concrete type information; generics and inheritance match on concrete types, known calls may be devirtualized or inlined, and copies may be removed when behavior is preserved.
 
-The latest [ParseEngine repository](https://github.com/rabbitc999/ParseEngine) supports generating parsers written in ChaLi (`--lang chali`) in five modes: **LL(1), SLR(1), LALR(1), LR(1), and IELR(1)**, selected with `--mode ll1`, `slr`, `lalr`, `lr1`, or `ielr`, respectively. The generated `parser.chl` can be run or built with ChaLi. This repository's compiler front end uses the C++17 output target with IELR(1), as configured in `gen.sh`.
-
-> This is the English edition. The Chinese edition is the default and is the one maintained first —
-> see [中文 README](README.md). Where the two disagree, the Chinese one wins.
-
-See [current capabilities](doc/en/17-capabilities.md) for implemented features, defaults and platform limits; read the current version from [`VERSION`](VERSION).
+The standard library provides containers, iterators, JSON/TOML, regex, paths and processes, networking, SQL, linear algebra, concurrency and more. See [Standard library overview](doc/en/07-stdlib-overview.md).
 
 ## Name and capability references
 
-The five letters in ChaLi refer to the language features below. The language name capitalizes C and L.
+The five letters in ChaLi each name a language feature (C and L are capitalized):
 
 | Letter | Meaning | Language feature |
 | --- | --- | --- |
@@ -32,7 +26,7 @@ See [naming and related capabilities](doc/en/37-name-freeze.md) for references a
 
 ## Compilation
 
-Module loading and source mapping precede the generated parser. Hygienic AST macros expand during semantic analysis alongside type inference. After name, type, generic and borrow checks, the C++ backend generates LLVM IR directly from the checked AST; LLVM optimizes it and generates native code. Normal run and native build paths skip quadruple generation, serialization and assembly.
+Module loading and source mapping precede the generated parser. Hygienic AST macros expand during semantic analysis. After name, type, generic and borrow checks, the C++ backend generates LLVM IR directly from the checked AST; LLVM optimizes it and generates native code. Normal run and native build paths skip quadruple generation, serialization and assembly.
 
 ![ChaLi compilation: module loading, parsing, semantic macro expansion, borrow checks, checked AST and LLVM Build](doc/images/chali-compilation-en.png)
 
@@ -50,7 +44,7 @@ The generated application needs no LLVM DLL. Ship application-specific C ABI dyn
 
 ## Documentation
 
-[Current capabilities and limits](doc/en/17-capabilities.md) describe implementation, defaults and platform contracts.
+> This is the English edition. The Chinese edition is maintained first and takes precedence where the two differ. See [中文 README](README.md).
 
 The [library API reference](doc/library/README.md) (Chinese) covers the module list with signatures, overloads, parameters, return values, error contracts and runnable examples.
 
@@ -75,7 +69,7 @@ Companion resources:
 - [`doc/examples/`](doc/examples/) — examples that need a companion project layout (ABI, SQLite).
 - [Full grammar reference (EBNF)](doc/14-grammar-ebnf.md) — the authoritative form of the grammar.
 
-The Chinese and English technical text keep corresponding code examples, including comments. The book and selected guides have executable verification scripts; reports identify the compiler, commands and checks actually run. The [English book](doc/book/en/README.md) contains technical chapters and appendices without the Chinese literary extras.
+The [English book](doc/book/en/README.md) has the technical chapters and appendices without the Chinese literary extras.
 
 ## Build
 
@@ -111,6 +105,10 @@ sh gen.sh          # regenerate the front end from chali.gram with IELR (needs t
 repository root as `./ParseEngine[.exe]`; it also works if it stays in a neighboring ParseEngine
 checkout (`gen.sh` looks for `../ParseEngine/build/bin/` automatically).
 
+Generated parser sources, headers and reports are in `source/`. Object files and the parser archive are in `build/chali-frontend/`; the repository root stays clear.
+
+SQLite and miniz are downloaded at build time at pinned versions, with no copies in the source tree. See [build dependencies](doc/en/42-build-dependencies.md).
+
 ## Quick usage
 
 ```sh
@@ -118,13 +116,11 @@ checkout (`gen.sh` looks for `../ParseEngine/build/bin/` automatically).
 ./chali new  hello-chali                       # create a new application project
 ```
 
-`chali` is the single toolchain entry point: front end, both C/C++ export tiers, project generation
-and cleanup all live in the same program. See [Toolchain](doc/en/09-toolchain.md) for the remaining
-subcommands and `--mode`.
+`chali` is the single toolchain entry point: front end, both C/C++ export tiers, project generation and cleanup are all in the same program. See [Toolchain](doc/en/09-toolchain.md) for the remaining subcommands and `--mode`.
 
 ### Debugging
 
-VS Code uses GDB/MI to debug a native program with DWARF source locations and variables. Source breakpoints, continue, step in/over/out, stack frames, parameters, locals and expressions are supported. Development debugging retains symbols at O0; `--debug-optimized` or VSCode `debugMode: "optimized"` retains DWARF with O3/LTO and inline frames. Normal release builds retain highest optimization. See [build debugging](doc/en/43-native-debugging.md).
+VS Code uses GDB/MI to debug a native program with DWARF source locations and variables. It supports source breakpoints, continue and step in/over/out, plus stack frames, parameters, locals and expressions. Development debugging retains symbols at O0; `--debug-optimized` or VSCode `debugMode: "optimized"` retains DWARF with O3/LTO and inline frames. Normal release builds retain highest optimization. See [build debugging](doc/en/43-native-debugging.md).
 
 ### Diagnostics
 
@@ -152,8 +148,8 @@ syntax error: example/samples-error/syntax_extern_impl_removed.chl line 2 col 8:
   expected one of identifier / constant(const) / mutable(mut) / new(new) (17 candidates), found impl(impl)
   ```
 
-  Semantic errors (type mismatch, undefined symbol, …) are still Chinese for now — those messages
-  live in the compiler core, not in the diagnostic presentation layer.
+  Semantic errors (type mismatch, undefined symbol, …) are still Chinese for now: those messages
+  are in the compiler core, not in the diagnostic presentation layer.
 
 ## Language tour
 
@@ -174,7 +170,7 @@ Value semantics is the default: assignment, argument passing and return all copy
 by taking a reference (`T const&` read-only, `T mut&` writable), and there are no pointers and no
 address arithmetic. There is no GC, so resources are released deterministically when they leave
 scope. The standard library ships containers, iterators, JSON/TOML, regex, paths and processes,
-networking, SQL, linear algebra, concurrency and more — see
+networking, SQL, linear algebra, concurrency and more. See
 [Standard library overview](doc/en/07-stdlib-overview.md).
 
 ## Configuration
@@ -196,7 +192,7 @@ default.
 
 ## Linux deployment
 
-Desktop and embedded Linux use ordinary operating-system hosts and the same runtime core. Build the compiler and native dependencies for the target architecture; deploy the generated native application, its dynamic dependencies and resource files.
+Desktop and embedded Linux use the same operating-system host and runtime core. Build the compiler and native dependencies for the target architecture; deploy the generated native application, its dynamic dependencies and resource files.
 The runtime services required by standard modules are linked into the application.
 See [deployment](doc/en/06-deployment.md).
 
@@ -225,13 +221,14 @@ chali/
 └── sql-chali/                      minimal SQL usage example
 ```
 
-Full details live in the README of each directory and in the [documentation](#documentation)
-section above.
+## Sources and boundaries
+
+The compiler front end is generated from this repository's `source/chali.gram` by [ParseEngine](https://github.com/rabbitc999/ParseEngine); it emits LLVM IR directly from the checked AST and LLVM builds the native program.
+
+[The ParseEngine repository](https://github.com/rabbitc999/ParseEngine) supports generating parsers written in ChaLi (`--lang chali`) in five modes: **LL(1), SLR(1), LALR(1), LR(1), and IELR(1)**, selected with `--mode ll1`, `slr`, `lalr`, `lr1`, or `ielr`, respectively. The generated `parser.chl` can be run or built with ChaLi. This repository's compiler front end uses the C++17 output target with IELR(1), as configured in `gen.sh`.
+
+Type, ownership and runtime rules are defined by the language; supported hosts, export targets and external-library requirements are checked separately. See [current capabilities](doc/en/17-capabilities.md) for implemented features, defaults and platform limits. The current version is in [`VERSION`](VERSION).
 
 ## License
 
 Apache License 2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE).
-
-Generated parser sources, headers and reports live in `source/`. Object files and the parser archive live in `build/chali-frontend/`, keeping the repository root clear.
-
-SQLite and miniz are downloaded as pinned build dependencies instead of being vendored; see [build dependencies](doc/en/42-build-dependencies.md).

@@ -16,17 +16,6 @@
 #include <vector>
 
 /**
- * @def STACKVM_WITH_REFLECTION
- * @brief 是否编入注解与反射运行时支持；默认关闭，只允许 0 或 1。
- */
-#ifndef STACKVM_WITH_REFLECTION
-#define STACKVM_WITH_REFLECTION 0
-#endif
-#if STACKVM_WITH_REFLECTION != 0 && STACKVM_WITH_REFLECTION != 1
-#error STACKVM_WITH_REFLECTION must be 0 or 1
-#endif
-
-/**
  * @def STACKVM_WITH_ALLOCATION_GUARDS
  * @brief 默认校验完整访问范围属于活跃分配。
  * 分配器自身的底层边界检查不受此宏影响。

@@ -14,7 +14,7 @@
 | LLVM IR | `chali build app.chl --emit-llvm --out build/app` | `build/app.ll`，直接从 AST 生成 |
 | 宿主嵌入 | `#export` / `--shared` | 动态库与 C 头文件，由宿主直接调用 |
 
-`run` 保留边界与存活检查，`build` 默认 unchecked；两者都能用 `--checked` / `--unchecked` 改过来。反射是语言的固定组成，不可裁剪。
+`run` 保留边界与存活检查，`build` 默认 unchecked；两者都能用 `--checked` / `--unchecked` 改过来。
 
 ## 中间产物放哪
 

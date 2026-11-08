@@ -3,16 +3,7 @@ namespace chali_build
 struct ExternFunction;
 }
 namespace ast { struct Program; }
-/**
- * @def CHALI_WITH_REFLECTION
- * @brief 是否编入注解与反射前端支持；默认关闭，单次编译还需 --reflection。
- */
-#ifndef CHALI_WITH_REFLECTION
-#define CHALI_WITH_REFLECTION 0
-#endif
-#if CHALI_WITH_REFLECTION != 0 && CHALI_WITH_REFLECTION != 1
-#error CHALI_WITH_REFLECTION must be 0 or 1
-#endif
+
 #include "chali_runtime_allocator.hpp"
 #include "chali_borrow_checker.hpp"
 #include "allocator/chali_allocator.hpp"

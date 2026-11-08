@@ -2927,13 +2927,9 @@ bool M_SetReflectionEnabled(bool enabled)
 {
     g_reflectionEnabled = false;
     if (!enabled) return true;
-#if CHALI_WITH_REFLECTION
     if ((runtime::supportedProgramFeatures() & runtime::kFeatureReflection) == 0) return false;
     g_reflectionEnabled = true;
     return true;
-#else
-    return false;
-#endif
 }
 /**
  * @brief 获取首条语义错误的预处理行号。

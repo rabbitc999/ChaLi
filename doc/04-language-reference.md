@@ -799,17 +799,6 @@ int64 health() { return 200; }
 - 注解可贴在结构体、接口、枚举、字段、方法、构造器、函数上。
 - 运行期可查询声明上的注解、按名调用函数、做接口分派。
 
-**构建要求**：反射是语言的固定组成，**不可裁剪** —— 根目录工具链固定编入
-`CHALI_WITH_REFLECTION=1` 与 `STACKVM_WITH_REFLECTION=1`，反射前端与运行时始终存在，
-编译流程也始终执行完整的反射处理。
-
-- `--reflection` 显式要求本次产物写入反射元数据（缺省即开启）。
-- `--no-reflection` 不写反射元数据；关闭后使用注解或反射会被拒绝。它只影响这次的产物，
-  不减少编译期工作量。
-- 两项宏置 0 的构建只用于验证编译器自身，不是受支持的裁剪配置。
-
-反射产物要求目标运行时编入反射；目标运行时没有反射支持时，编译源程序须使用 `--no-reflection`。反射当前的签名及动态调用边界见[反射说明](19-reflection.md)。
-
 完整例子见 [`example/reflection/`](../example/reflection/)（`annotations.chl`、`calls.chl`、`dispatch.chl`、`queries.chl`）。
 
 ---

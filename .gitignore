@@ -38,6 +38,9 @@ __pycache__/
 # 驱动默认的产物前缀也在这里（build/chali_out.*），中间产物不混进源码目录。
 /build/
 
+# VSCODE 编辑器
+/.vscode/
+
 # 测试与验证的输出（Python / C++ 结果文件），按约定落在这里备查，不进版本库。
 /Result/
 

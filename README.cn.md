@@ -1,20 +1,18 @@
-# ChaLi 语言
+# ChaLi 语言 （中文名称：茶理）
 
 <!-- LANGUAGE NAVIGATION -->
 [English](README.en.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->
 
-ChaLi 是一门静态类型语言，提供可观察的值语义、显式借用与移动，以及按作用域清理资源的机制。类型、所有权和运行期规则由语言定义；宿主平台、导出目标与外部库要求分别核对。
+ChaLi 是静态类型语言，编译到原生程序。赋值、传参和返回默认复制值，共享要显式取引用（`T const&` 只读、`T mut&` 可写）或移动；语言里没有指针，也没有地址算术。没有 GC，资源在离开作用域时确定性释放。
 
-ChaLi 编译器由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成前端，从已检查的 AST 直接生成 LLVM IR，再通过 LLVM 构建生成原生程序。run 使用 checked 编译执行，build 默认 unchecked 导出。
+名称、类型、泛型、独立借用和存活范围都在编译期检查，卫生宏在语义分析阶段展开；Any 保留具体类型信息，泛型与继承按具体类型匹配，已知调用可静态化或内联，行为不变时复制可以消除。
 
-最新的 [ParseEngine 仓库](https://github.com/rabbitc999/ParseEngine) 支持以五种模式生成用 ChaLi（`--lang chali`）编写的解析器：**LL(1)、SLR(1)、LALR(1)、LR(1) 和 IELR(1)**，分别通过 `--mode ll1`、`slr`、`lalr`、`lr1` 或 `ielr` 选择。生成的 `parser.chl` 可以用 ChaLi 运行或构建。该仓库的编译器前端使用 C++17 输出目标并采用 IELR(1)，配置见 `gen.sh`。
-
-当前已实现能力、默认配置与平台边界统一见[能力说明](doc/17-capabilities.md)，版本以 [`VERSION`](VERSION) 为准。
+标准库提供容器、迭代器、JSON/TOML、正则、路径与进程、网络、SQL、线性代数、并发等模块，见 [标准库概览](doc/07-stdlib-overview.md)。
 
 ## 名称与能力入口
 
-ChaLi 的五个字母分别代表以下语言特性。语言名中 C 与 L 大写。
+ChaLi 五个字母各对应一项语言特性，C 与 L 大写：
 
 | 字母 | 英文含义 | 对应特性 |
 | --- | --- | --- |
@@ -24,11 +22,11 @@ ChaLi 的五个字母分别代表以下语言特性。语言名中 C 与 L 大�
 | **L** | **Lifetime** | 静态检查来源和存活范围；unsafe 与外部代码另有前提 |
 | **i** | **Interface** | 泛型、继承与具体类型匹配；已知调用可静态化或内联 |
 
-名称写法、相关参考与验证入口见[名称与相关能力](doc/37-name-freeze.md)。
+名称写法和验证入口见[名称与相关能力](doc/37-name-freeze.md)。
 
 ## 编译过程
 
-模块加载与来源映射之后，文法生成的前端构建 AST；卫生宏在语义分析期间展开，并与类型推导配合。名称、类型、泛型和独立借用检查完成后，直接遍历 AST 生成 LLVM IR，由 LLVM 优化并生成原生代码。
+文法生成的前端先做模块加载与来源映射，构建 AST；卫生宏在语义分析阶段展开。名称、类型、泛型和独立借用检查完成后，直接遍历 AST 生成 LLVM IR，由 LLVM 优化并生成原生代码。
 正常运行与导出跳过 ChaLi 四元式的生成、写盘、重读与组装。
 
 ![ChaLi 编译流程：源码、模块加载、解析、语义期宏展开、借用检查、已检查 AST 与 LLVM Build](doc/images/chali-compilation.png)
@@ -39,7 +37,7 @@ ChaLi 的五个字母分别代表以下语言特性。语言名中 C 与 L 大�
 
 ![ChaLi 发布构建流程：已检查 AST、LLVM IR、内置或外置 LLVM、目标链接与交付](doc/images/chali-aot.png)
 
-生成的应用无需 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。当前支持范围和完整选项见 [LLVM 构建](doc/38-build.md)，逐步操作见书稿[第 27 章 发布构建](doc/book/27-AOT导出.md)。
+生成的应用无需 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。完整选项见 [LLVM 构建](doc/38-build.md)，逐步操作见书稿[第 27 章 发布构建](doc/book/27-AOT导出.md)。
 
 ## 运行过程
 
@@ -65,16 +63,14 @@ ChaLi 的五个字母分别代表以下语言特性。语言名中 C 与 L 大�
 
 **英文版**：[`doc/en/`](doc/en/README.en.md) 维护对应的功能说明；未提供完整译文的底层规格从英文入口链接中文版。
 
-- 中文说明优先维护，中英文共有的代码片段保持一致。
-- 当前能力与默认配置见中英文能力页；标准库目录以 API 索引为准。
-- 本文件、`README.en.md` 和 `doc/README.md` 提供语言切换入口。
+中文版优先维护，中英文共有的代码片段保持一致；标准库目录以 API 索引为准。
 
 配套资源：
 
-- [`example/samples/`](example/samples/) —— 可运行的正式样例，标准输出在 [`example/expected/`](example/expected/)。
-- [`example/samples-error/`](example/samples-error/) —— 预期报错的样例，诊断文本在 [`example/expected-error/`](example/expected-error/)。
-- [`doc/examples/`](doc/examples/) —— 需要配套工程布局的示例（ABI、SQLite）。
-- [完整语法参考（EBNF）](doc/14-grammar-ebnf.md) —— 文法的权威形式。
+- [`example/samples/`](example/samples/)：可运行的正式样例，标准输出在 [`example/expected/`](example/expected/)。
+- [`example/samples-error/`](example/samples-error/)：预期报错的样例，诊断文本在 [`example/expected-error/`](example/expected-error/)。
+- [`doc/examples/`](doc/examples/)：需要配套工程布局的示例（ABI、SQLite）。
+- [完整语法参考（EBNF）](doc/14-grammar-ebnf.md)：文法的权威形式。
 
 ## 构建
 
@@ -106,6 +102,8 @@ sh gen.sh          # 用 IELR 从 chali.gram 重新生成前端（需要 [ParseE
 `gen.sh` 需要一份 ParseEngine 文法生成器。最省事是把它放到项目根目录 `./ParseEngine[.exe]`；
 也可以让它待在旁边的 ParseEngine 仓库里（`gen.sh` 会自动找 `../ParseEngine/build/bin/`）。
 
+解析器生成源码、头文件与报告统一位于 `source/`；对象文件与解析器静态库位于 `build/chali-frontend/`，不会散落到仓库根目录。SQLite 与 miniz 在构建时按锁定版本下载，不在源码树保存副本，见[在线构建依赖](doc/42-build-dependencies.md)。
+
 ## 快速使用
 
 ```sh
@@ -117,7 +115,7 @@ sh gen.sh          # 用 IELR 从 chali.gram 重新生成前端（需要 [ParseE
 
 ### 调试
 
-VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的 原生程序，支持源码断点、继续、单步进入／越过／跳出、调用栈、参数、局部变量和表达式。开发调试保留符号并使用 O0；`--debug-optimized` 或 VSCode 的 `debugMode: "optimized"` 保留 DWARF 并使用 O3／LTO，支持内联调用帧。普通发布构建仍使用最高优化。见[构建调试](doc/43-native-debugging.md)。
+VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的原生程序，支持源码断点、继续、单步进入／越过／跳出，以及调用栈、参数、局部变量和表达式。开发调试保留符号并使用 O0；`--debug-optimized` 或 VSCode 的 `debugMode: "optimized"` 保留 DWARF 并使用 O3／LTO，支持内联调用帧。普通发布构建仍使用最高优化。见[构建调试](doc/43-native-debugging.md)。
 
 ### 报错
 
@@ -139,7 +137,7 @@ VS Code 通过 GDB/MI 调试带 DWARF 源码行与变量信息的 原生程序�
   expected one of identifier / constant(const) / mutable(mut) / new(new) (17 candidates), found impl(impl)
   ```
 
-  语义错误（类型不匹配、未定义符号等）目前仍是中文——那些文案写在编译器核心里，
+  语义错误（类型不匹配、未定义符号等）目前仍是中文：那些文案写在编译器核心里，
   不在报错呈现层。
 
 ## 语言速览
@@ -157,7 +155,7 @@ void main() {
 }
 ```
 
-值语义是默认：赋值、传参、返回都复制；要共享就显式取引用（`T const&` 只读、`T mut&` 可写），没有指针与地址算术。没有 GC，资源在离开作用域时确定性释放。标准库自带容器、迭代器、JSON/TOML、正则、路径与进程、网络、SQL、线性代数、并发等，详情见 [标准库概览](doc/07-stdlib-overview.md)。
+值语义是默认：赋值、传参、返回都复制；要共享就显式取引用（`T const&` 只读、`T mut&` 可写），没有指针与地址算术。没有 GC，资源在离开作用域时确定性释放。标准库提供容器、迭代器、JSON/TOML、正则、路径与进程、网络、SQL、线性代数、并发等，见 [标准库概览](doc/07-stdlib-overview.md)。
 
 ## 配置
 
@@ -175,9 +173,9 @@ main = "src/main.chl"
 
 ## Linux 部署
 
-桌面和嵌入式 Linux 共用普通操作系统宿主与运行时核心。编译器及原生依赖按目标架构构建，
+桌面和嵌入式 Linux 共用同一套操作系统宿主与运行时核心。编译器及原生依赖按目标架构构建，
 部署生成的原生应用及其动态依赖、资源文件。标准模块需要的运行时服务链接到应用中。
-详细流程见[部署说明](doc/06-deployment.md)。
+见[部署说明](doc/06-deployment.md)。
 
 ## 目录结构
 
@@ -204,12 +202,14 @@ chali/
 └── sql-chali/                      SQL 最小用法示例
 ```
 
-完整说明见对应目录下的 README 与上面的[文档](#文档)章节。
+## 来源与边界
+
+编译器前端由本仓库的 `source/chali.gram` 经 [ParseEngine](https://github.com/rabbitc999/ParseEngine) 生成，从已检查的 AST 直接生成 LLVM IR，再由 LLVM 构建出原生程序。
+
+[ParseEngine 仓库](https://github.com/rabbitc999/ParseEngine) 支持以五种模式生成用 ChaLi（`--lang chali`）编写的解析器：**LL(1)、SLR(1)、LALR(1)、LR(1) 和 IELR(1)**，分别通过 `--mode ll1`、`slr`、`lalr`、`lr1` 或 `ielr` 选择。生成的 `parser.chl` 可以用 ChaLi 运行或构建。该仓库的编译器前端使用 C++17 输出目标并采用 IELR(1)，配置见 `gen.sh`。
+
+类型、所有权和运行期规则由语言定义；宿主平台、导出目标与外部库要求另行核对。已实现能力、默认配置与平台边界见[能力说明](doc/17-capabilities.md)，版本号以 [`VERSION`](VERSION) 为准。
 
 ## 许可证
 
 Apache License 2.0，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。
-
-解析器生成源码、头文件与报告统一位于 `source/`；对象文件与解析器静态库位于 `build/chali-frontend/`，不会散落到仓库根目录。
-
-SQLite 与 miniz 在构建时按锁定版本下载，不在源码树保存副本，详见[在线构建依赖](doc/42-build-dependencies.md)。

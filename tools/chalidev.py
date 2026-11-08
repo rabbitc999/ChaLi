@@ -154,12 +154,6 @@ _MESSAGES = {
   "  --hard-realtime        禁止整个编译单元使用反射\n": [
     "  --hard-realtime        Forbid reflection throughout the compilation unit\n"
   ],
-  "  --reflection           写入反射元数据（缺省已写入；反射不可裁剪）\n": [
-    "  --reflection           Write reflection metadata (default; reflection is not trimmable)\n"
-  ],
-  "  --no-reflection        不写反射元数据（反射不可裁剪，编译期处理照常）\n": [
-    "  --no-reflection        Omit reflection metadata (reflection is not trimmable; still processed)\n"
-  ],
   "  --diagnostics=json     检查并输出稳定 JSON 诊断\n": [
     "  --diagnostics=json     Check and emit structured JSON diagnostics\n"
   ],

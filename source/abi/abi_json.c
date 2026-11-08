@@ -141,11 +141,7 @@ static void json_entry(ChaliAbiFrame *frame, JsonOperation operation)
     size_t length = 0;
     if (operation == Compiled)
     {
-#if CHALI_WITH_REFLECTION && STACKVM_WITH_REFLECTION
         chali_abi_return_integer(frame, 1);
-#else
-        chali_abi_return_integer(frame, 0);
-#endif
         return;
     }
     if (operation == FormatFloat || operation == Finite)

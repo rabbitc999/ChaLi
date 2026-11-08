@@ -14,8 +14,6 @@ Normal run and build generate LLVM code directly from the semantically checked A
 | LLVM IR | `chali build app.chl --emit-llvm --out build/app` | `build/app.ll`, generated directly from the AST |
 | Host embedding | `#export` / `--shared` | Shared library plus a C header the host calls directly |
 
-`run` keeps bounds and liveness checks, `build` defaults to unchecked; `--checked` / `--unchecked` switch either way. Reflection is a fixed part of the language and cannot be trimmed.
-
 ## Where intermediate files go
 
 Without `--out`, compiler intermediates (`.ll`, the ABI header, LLVM compilation logs) land in a unique `.chali/build-ID/` directory next to the source file; standard input uses the current directory. Each build has its own subdirectory, and `.chali/` is marked hidden on Windows:

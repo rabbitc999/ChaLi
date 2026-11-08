@@ -803,15 +803,6 @@ int64 health() { return 200; }
 - At run time you can query annotations on declarations, call functions by name, and dispatch
   through interfaces.
 
-**Build requirement**: reflection is a fixed part of the language and is **not trimmable** — the root
-toolchain pins `CHALI_WITH_REFLECTION=1` and `STACKVM_WITH_REFLECTION=1`, the reflection front end and
-runtime are always present, and compilation always runs the full reflection pass. `--reflection`
-explicitly asks the artifact to carry reflection metadata (it is on by default); `--no-reflection`
-omits that metadata and rejects annotations/reflection use. It affects that artifact only and reduces
-no compiler workload. Builds that set both macros to 0 exist only to validate the compiler itself and
-are not a supported trim configuration. Generated compiler projects and embedded Linux hosts pin
-reflection the same way.
-
 Reflection artifacts require a capable target runtime. Compile explicitly with `--no-reflection` for
 a runtime built without reflection. Dynamic-call and signature limits are specified in the [reflection document](../19-reflection.md).
 

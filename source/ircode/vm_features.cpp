@@ -13,11 +13,7 @@ using namespace runtimeDetail;
  */
 std::uint32_t supportedProgramFeatures()
 {
-#if STACKVM_WITH_REFLECTION
     return kFeatureReflection | kFeatureByteMemory | kFeatureBulkMemory;
-#else
-    return kFeatureByteMemory | kFeatureBulkMemory;
-#endif
 }
 
 /**

@@ -76,20 +76,6 @@ synchronous call. Owned strings, temporary buffers and records use their respect
 `chali_abi_tracked_temporary` joins aggregate storage to the runtime cleanup queue; early release removes its entry.
 See [host integration](08-host-integration.md) and the [callback example](../../example/native-callbacks/README.md).
 
-
-**Reflection is a fixed part of the language and is not trimmable.** The root toolchain pins
-`CHALI_WITH_REFLECTION=1` and `STACKVM_WITH_REFLECTION=1` (unlike the `NO_CHALI_*` trim options these
-two are not switches), so the reflection front end and runtime are always built in and compilation
-always runs the full reflection pass. `--no-reflection` and `--hard-realtime` only decide whether
-**the program being compiled** may use annotations/reflection and whether the artifact carries
-reflection metadata; they change neither the compiler's composition nor its workload (metadata and
-query-source generation still run). Generated compiler projects enable both reflection CMake options
-by default (`ON`); disabling them is only for capability compatibility checks, not a supported language
-trim configuration. Reflection supports annotations, explicitly exposed
-metadata and restricted dynamic calls; it does not create arbitrary runtime types or offer general field
-writes and arbitrary resource-value invocation. It carries no hard-real-time guarantee.
-See the [reflection specification](../19-reflection.md).
-
 ## Libraries, embedded Linux and tools
 
 Libraries cover containers/algorithms, iterators, math, numerical methods, text/encoding, JSON/TOML/CSV,
