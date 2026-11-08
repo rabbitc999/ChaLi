@@ -4,7 +4,7 @@
  *
  * 浮点 → 文本的完整规则（去尾随零、孤立小数点）在 std/core.chl 的 ChaLi 函数
  * `__std_str_of_flt` 里实现；本模块只保留不可约的格式化核心 `__std_str_fixed`：
- * 按 `%.*f` 输出固定小数位文本。AOT 直连降级时由生成代码直接调用 libc snprintf，
+ * 按 `%.*f` 输出固定小数位文本。BUILD 直连降级时由生成代码直接调用 libc snprintf，
  * 不经过本表。
  */
 #include "chali_abi_internal.h"
@@ -55,5 +55,5 @@ const ChaliAbiRecord *abi_string_records(size_t *count)
     return kRecords;
 }
 
-#define CHALI_AOT_BIND_MODULE string
+#define CHALI_BUILD_BIND_MODULE string
 #include "aot_bind_module.h"

@@ -37,7 +37,7 @@ static int64_t now_ns(void)
 #endif
 }
 
-#ifdef CHALI_FEATURE_AOT
+#ifdef CHALI_FEATURE_BUILD
 void chali_init(void);
 void chali_finish(void);
 #endif
@@ -49,7 +49,7 @@ void chali_finish(void);
  */
 int main(int argc, char **argv)
 {
-#ifdef CHALI_FEATURE_AOT
+#ifdef CHALI_FEATURE_BUILD
     chali_init();
 #endif
     feature_setup();
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     {
         for (int64_t seed = 0; seed < 5; ++seed)
             printf("value %lld %lld\n", (long long)seed, (long long)kernel(seed));
-#ifdef CHALI_FEATURE_AOT
+#ifdef CHALI_FEATURE_BUILD
         chali_finish();
 #endif
         return 0;
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
         printf("rep %lld\n", (long long)elapsed);
     }
     printf("sink %lld\n", (long long)sink);
-#ifdef CHALI_FEATURE_AOT
+#ifdef CHALI_FEATURE_BUILD
     chali_finish();
 #endif
     return 0;

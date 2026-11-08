@@ -29,7 +29,7 @@ namespace runtime::runtimeDetail
  * 同一个堆可能被并发触发分配与释放）。只读查询不加锁——堆按 `run()` / 线程独占，
  * 契约是"读的时候没有并发写"。
  */
-#if STACKVM_WITH_DEFAULT_HEAP
+#if RUNTIME_WITH_DEFAULT_HEAP
 class Heap final : public HeapAllocator
 {
 public:
@@ -274,7 +274,7 @@ private:
     std::size_t peak_ = 0u;                    ///< 峰值。
     mutable std::mutex mutex_;                 ///< 串行化 allocate / release。
 };
-#else /* !STACKVM_WITH_DEFAULT_HEAP */
+#else /* !RUNTIME_WITH_DEFAULT_HEAP */
 /**
  * @brief 关闭默认字节堆时使用的空堆：**所有分配都失败**，统计恒为 0。
  *

@@ -92,7 +92,7 @@ static std::size_t restoreArchives(const char *asset, const std::filesystem::pat
 bool RuntimeAssets::restore(Memory::Vector<Memory::String> *diagnostics)
 {
     if (restoreArchives("aot/host_assets.txt", root, nullptr) >= 4) return true;
-    if (diagnostics) diagnostics->push_back("AOT：缺少或无法恢复共享原生服务资产");
+    if (diagnostics) diagnostics->push_back("BUILD：缺少或无法恢复共享原生服务资产");
     return false;
 }
 
@@ -109,7 +109,7 @@ bool RuntimeAssets::prepareNative(const Memory::Set<Memory::String> &libraries, 
     const auto append = [&](const char *name) {
         const auto asset = Memory::String("aot/native_") + hostTarget() + "_" + name + ".txt";
         if (restoreArchives(asset.c_str(), root, &link)) return true;
-        if (diagnostics) diagnostics->push_back(Memory::String("AOT：此编译器缺少内置原生归档 ") + name +
+        if (diagnostics) diagnostics->push_back(Memory::String("BUILD：此编译器缺少内置原生归档 ") + name +
             "；请先构建 native-extensions 并重编译 ChaLi");
         return false;
     };
@@ -159,7 +159,7 @@ bool RuntimeAssets::prepareAbi(const Memory::String &source, Memory::String *obj
     const std::string compiler = configured && *configured ? configured : "g++";
     const std::vector<std::string> arguments{compiler, "-std=c++17", "-O2", "-fPIC", "-ffunction-sections", "-fdata-sections", "-DCHALI_CUSTOM_ALLOCATOR=1",
         "-DCHALI_WITH_REFLECTION=" + std::to_string(CHALI_WITH_REFLECTION),
-        "-DSTACKVM_WITH_REFLECTION=" + std::to_string(STACKVM_WITH_REFLECTION),
+        "-DRUNTIME_WITH_REFLECTION=" + std::to_string(RUNTIME_WITH_REFLECTION),
         "-I" + root.u8string(), "-I" + (root / "allocator").u8string(), "-I" + (root / "ircode").u8string(),
         "-I" + (root / "stackvm").u8string(), "-c", cpp.u8string(), "-o", target.u8string()};
     std::string toolDiagnostic;
@@ -168,7 +168,7 @@ bool RuntimeAssets::prepareAbi(const Memory::String &source, Memory::String *obj
     {
         if (diagnostics)
         {
-            diagnostics->push_back("AOT：复杂 ABI 宿主封送编译失败；可用 CHALI_ABI_CXX 指定同位数 C++ 编译器");
+            diagnostics->push_back("BUILD：复杂 ABI 宿主封送编译失败；可用 CHALI_ABI_CXX 指定同位数 C++ 编译器");
             diagnostics->push_back(Memory::String(toolDiagnostic.c_str()));
         }
         return false;

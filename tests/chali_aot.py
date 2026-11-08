@@ -1,12 +1,12 @@
-"""验证 AOT 后端：语义树 → LLVM IR → 原生产物，输出与 checked AOT 的 run 路径逐行一致。
+"""验证 BUILD 后端：语义树 → LLVM IR → 原生产物，输出与 checked BUILD 的 run 路径逐行一致。
 
 覆盖五件事：
 
 1. `chali build` 编出的 exe 与 `chali run` 的 stdout 一致；
 2. 显式 `--checked` 保留越界及指针检查，并核对 unchecked 导出路径；
 3. `--emit-llvm` 只出 LLVM 模块，不调编译器；
-4. **AOT 调外部 C**：`abi` 块声明的函数在产物里变成 extern 调用并链接动态库；
-5. **外部 C 调 AOT**：`--shared --export` 出动态库与头文件，C 驱动能调进去。
+4. **BUILD 调外部 C**：`abi` 块声明的函数在产物里变成 extern 调用并链接动态库；
+5. **外部 C 调 BUILD**：`--shared --export` 出动态库与头文件，C 驱动能调进去。
 """
 from compiler_path import compiler_path, compiler_build_info
 import argparse
@@ -81,7 +81,7 @@ int main(void)
 
 
 def main():
-    """跑 AOT 后端回归。"""
+    """跑 BUILD 后端回归。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     options = parser.parse_args()
@@ -102,23 +102,23 @@ def main():
             return subprocess.run(list(map(str, command)), cwd=cwd or ROOT, env=env, capture_output=True,
                                   text=True, encoding='utf-8', errors='replace', timeout=300, **kwargs)
 
-        # 1) 导出产物与 checked AOT 的 run 路径一致。
+        # 1) 导出产物与 checked BUILD 的 run 路径一致。
         expected = (ROOT / 'example/expected/aot_basic.txt').read_text(encoding='utf-8')
         sample = ROOT / 'example/samples/aot_basic.chl'
         result = invoke([compiler, 'run', sample])
         assert (result.returncode, result.stdout, result.stderr) == (0, expected, ''), result
-        print('[通过] aot_basic checked AOT 运行', flush=True)
+        print('[通过] aot_basic checked BUILD 运行', flush=True)
         if cc is None:
-            print('[跳过] 没有 C 编译器，AOT 产物相关检查不跑', flush=True)
+            print('[跳过] 没有 C 编译器，BUILD 产物相关检查不跑', flush=True)
             return
         exe = work / 'aot_basic'
         result = invoke([compiler, 'build', sample, '--out', exe, *backend])
         assert result.returncode == 0, (result.stdout, result.stderr)
         product = exe.with_suffix('.exe' if os.name == 'nt' else '')
-        assert product.exists(), 'AOT 没产出可执行文件'
+        assert product.exists(), 'BUILD 没产出可执行文件'
         result = invoke([product])
         assert (result.returncode, result.stdout) == (0, expected), result
-        print('[通过] aot_basic AOT 产物与 run 输出逐行一致', flush=True)
+        print('[通过] aot_basic BUILD 产物与 run 输出逐行一致', flush=True)
 
         # 2) aot 默认 unchecked，显式 checked 路径保留运行时检查。
         opened = (exe.with_suffix('.ll')).read_text(encoding='utf-8')
@@ -145,7 +145,7 @@ def main():
         assert 'checks: on' in unchecked
         # 运行时里本来就定义着 `chali_bounds`，所以比的是**调用点**的条数
         assert opened.count('@chali_check(') < unchecked.count('@chali_check('), '--checked 应该多出检查调用'
-        print('[通过] AOT 默认 unchecked，显式 --checked 增加检查', flush=True)
+        print('[通过] BUILD 默认 unchecked，显式 --checked 增加检查', flush=True)
 
         # 3) `--emit-llvm` 只出 LLVM 模块
         emit_only = work / 'aot_emit'
@@ -170,7 +170,7 @@ def main():
         assert result.returncode != 0 and '找不到要导出的函数' in result.stderr, result
 
 
-        # 4) AOT 调外部 C：abi 块 → extern 调用 + 链接动态库
+        # 4) BUILD 调外部 C：abi 块 → extern 调用 + 链接动态库
         native = work / 'native.c'
         native.write_text(NATIVE_C, encoding='utf-8')
         library = work / ('native.dll' if os.name == 'nt' else 'native.so')
@@ -193,9 +193,9 @@ def main():
         assert 'declare i32 @"aot_add"(' not in abi_llvm, '动态库调用不能退回无路径的裸导入'
         result = invoke([abi_exe.with_suffix('.exe' if os.name == 'nt' else '')])
         assert result.returncode == 0 and result.stdout == expected_abi, result
-        print('[通过] AOT 产物调用外部 C 函数', flush=True)
+        print('[通过] BUILD 产物调用外部 C 函数', flush=True)
 
-        # 5) 外部 C 调 AOT：--shared --export 出动态库与带形参的头文件
+        # 5) 外部 C 调 BUILD：--shared --export 出动态库与带形参的头文件
         exported = work / 'exported.chl'
         exported.write_text(EXPORT_SOURCE, encoding='utf-8')
         shared = work / 'exported'
@@ -222,7 +222,7 @@ def main():
         assert build.returncode == 0, build.stderr
         result = subprocess.run([str(driver_exe)], capture_output=True, text=True, timeout=120)
         assert result.stdout.strip() == 'c -> aot: 42', result
-        print('[通过] 外部 C 调用 AOT 导出的函数', flush=True)
+        print('[通过] 外部 C 调用 BUILD 导出的函数', flush=True)
 
         named = work / 'named.chl'
         named.write_text('''#export("named_add")

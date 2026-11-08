@@ -95,7 +95,7 @@ def main():
                                        ('armv7-unknown-linux-gnueabi', 1), ('armv7-unknown-linux-gnueabihf', 2)):
                 run(args.clang, '--target=' + target, '-ffreestanding', '-std=c11',
                     '-DEXPECTED_CC=' + str(convention), *common, '-fsyntax-only', cross)
-            print('Six target C header checks including ARM32 float ABI passed; this does not validate target AOT execution')
+            print('Six target C header checks including ARM32 float ABI passed; this does not validate target BUILD execution')
         else:
             print('clang unavailable: cross-target header checks not run')
     print('C11/C++17 interoperability and incompatible packing rejection passed')

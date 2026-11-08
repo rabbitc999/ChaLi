@@ -2,7 +2,7 @@
 #define CHALI_EVENT_SERVICE_HPP
 #include "stackvm.hpp"
 #include <atomic>
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
 #include <chrono>
 #include <condition_variable>
 #include <deque>
@@ -17,7 +17,7 @@ namespace runtime
 struct ExecutionControl
 { std::atomic<bool> requested{ false }; };
 }  // namespace runtime
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
 namespace runtime
 {
 /**

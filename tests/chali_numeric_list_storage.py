@@ -42,8 +42,8 @@ def main():
     unit = work / ('unit.exe' if os.name == 'nt' else 'unit')
     libraries=[build/'chali-ircode-aot-core/libstackvm.a',build/'chali-host-records/librecords.a']
     flags=['-std=c++17','-O2','-pthread','-ffunction-sections','-fdata-sections',
-           '-DSTACKVM_AOT_ONLY=1','-DCHALI_CUSTOM_ALLOCATOR=1','-DCHALI_WITH_REFLECTION=1',
-           '-DSTACKVM_WITH_REFLECTION=1','-Isource','-Isource/ircode','-Ilibrary','-I.']
+           '-DRUNTIME_BUILD_ONLY=1','-DCHALI_CUSTOM_ALLOCATOR=1','-DCHALI_WITH_REFLECTION=1',
+           '-DRUNTIME_WITH_REFLECTION=1','-Isource','-Isource/ircode','-Ilibrary','-I.']
     if sysroot:flags+=['--sysroot='+str(sysroot.resolve())]
     windows=['-static','-fuse-ld=lld','-lwinhttp','-lws2_32','-lbcrypt','-lcrypt32'] if os.name=='nt' else ['-ldl']
     execute([cxx,*flags,ROOT/'tests/chali_numeric_list_storage.cpp',ROOT/'source/allocator/system_arena.cpp',

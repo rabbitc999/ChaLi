@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(chali_xml LANGUAGES C)
-option(CHALI_NATIVE_STATIC "Build native archives for the embedded AOT linker" OFF)
+option(CHALI_NATIVE_STATIC "Build native archives for the embedded BUILD linker" OFF)
 include(FetchContent)
 set(EXPAT_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 set(EXPAT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)

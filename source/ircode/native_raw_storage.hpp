@@ -16,7 +16,7 @@ namespace runtime::runtimeDetail
 Slot rawStorage(NativeContext &ctx, const Memory::Vector<Slot> &args);
 
 /**
- * @brief 供 运行时 和 AOT 直接调用的原始存储标量内核，避免参数向量和注册表分派。
+ * @brief 供 运行时 和 BUILD 直接调用的原始存储标量内核，避免参数向量和注册表分派。
  * @param ctx 活跃执行上下文。
  * @param op 操作编号。
  * @param handle 分配句柄或目标地址。

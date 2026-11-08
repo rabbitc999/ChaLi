@@ -888,7 +888,7 @@ int M_AbiDeclaration(int convention, int declaration);
  */
 int M_AbiImport(int convention, int library, int symbol, int declaration);
 /**
- * @brief 配置当前编译是否生成允许无 main 的 AOT 动态库。
+ * @brief 配置当前编译是否生成允许无 main 的 BUILD 动态库。
  * @param enabled 为 true 时生成独立初始化和清理入口。
  */
 void M_SetSharedLibrary(bool enabled);
@@ -1127,7 +1127,7 @@ void M_SetProgram(int topList);
 /**
  * @brief 语义检查与 AST 降级，供原生 LLVM 后端直接访问。
  * @param moduleName 显式兼容导出的模块名称。
- * @param outPrefix 显式兼容导出的产物前缀，正常 AOT 不在此处写出中间文件。
+ * @param outPrefix 显式兼容导出的产物前缀，正常 BUILD 不在此处写出中间文件。
  * @param run 兼容调用方的语义绑定开关，不在此处执行程序。
  * @param emitBinary 非 0 时把四元式三件套写到 `<前缀>`。
  * @param inputText  已废弃：输入一律来自标准输入；传空指针即可。

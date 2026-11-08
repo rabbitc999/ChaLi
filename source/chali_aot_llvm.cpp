@@ -45,7 +45,7 @@ namespace chali_build::builtin
 namespace
 {
 /**
- * @brief 单次 AOT 链接的私有资产目录，退出作用域时删除本次创建的内容。
+ * @brief 单次 BUILD 链接的私有资产目录，退出作用域时删除本次创建的内容。
  */
 struct LinkerAssets
 {
@@ -132,7 +132,7 @@ bool writeBitcode(LLVMModuleRef program, const Memory::String &path, bool thin, 
     stream.close();
     if (stream.has_error())
     {
-        if (diagnostics) diagnostics->push_back("AOT：写入 ThinLTO 模块失败");
+        if (diagnostics) diagnostics->push_back("BUILD：写入 ThinLTO 模块失败");
         stream.clear_error();
         return false;
     }
@@ -360,7 +360,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
         {
             failed = LLVMParseBitcodeInContext2(context, buffer, &program) != 0;
             LLVMDisposeMemoryBuffer(buffer);
-            if (failed && diagnostics) diagnostics->push_back("AOT：LLVM 无法解析已选择的 bitcode 模块");
+            if (failed && diagnostics) diagnostics->push_back("BUILD：LLVM 无法解析已选择的 bitcode 模块");
         }
         else
             failed = LLVMParseIRInContext(context, buffer, &program, &message) != 0;
@@ -426,7 +426,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
         else
         {
             failed = !writeBitcode(program, object.c_str(), request.options.thinLto, diagnostics);
-            if (failed && diagnostics) diagnostics->push_back("AOT：无法写入链接时优化的 LLVM bitcode");
+            if (failed && diagnostics) diagnostics->push_back("BUILD：无法写入链接时优化的 LLVM bitcode");
         }
     }
     if (message)
@@ -443,7 +443,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     LinkerAssets assets;
     if (!assets.restore())
     {
-        if (diagnostics) diagnostics->push_back("AOT：无法恢复内嵌 CRT 链接资产");
+        if (diagnostics) diagnostics->push_back("BUILD：无法恢复内嵌 CRT 链接资产");
         return 1;
     }
     RuntimeAssets runtimeAssets;
@@ -488,7 +488,7 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     (void)module;
     (void)source;
     (void)product;
-    if (diagnostics) diagnostics->push_back("AOT：此构建未静态链接 LLVM");
+    if (diagnostics) diagnostics->push_back("BUILD：此构建未静态链接 LLVM");
     return 1;
 #endif
 }

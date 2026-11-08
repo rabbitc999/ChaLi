@@ -24,7 +24,7 @@ def main():
     environment=dict(os.environ,PATH=str(compiler.parent)+os.pathsep+os.environ.get('PATH',''))
     with tempfile.TemporaryDirectory(prefix='generator-assets-') as directory:
         work=Path(directory);output=work/('assets.exe' if os.name=='nt' else 'assets')
-        flags=['-std=c++17','-O1','-DCHALI_CUSTOM_ALLOCATOR=1','-DSTACKVM_AOT_ONLY=1','-DSTACKVM_WITH_REFLECTION=1','-DCHALI_WITH_REFLECTION=1','-I'+str(ROOT/'source'),'-I'+str(ROOT/'library'),'-pthread']
+        flags=['-std=c++17','-O1','-DCHALI_CUSTOM_ALLOCATOR=1','-DRUNTIME_BUILD_ONLY=1','-DRUNTIME_WITH_REFLECTION=1','-DCHALI_WITH_REFLECTION=1','-I'+str(ROOT/'source'),'-I'+str(ROOT/'library'),'-pthread']
         if args.sysroot or use_sdk:flags+=['--sysroot='+str((args.sysroot or sdk).resolve())]
         command=[str(compiler),*flags,ROOT/'tests/chali_generator_assets.cpp',ROOT/'source/allocator/system_arena.cpp',
                  '-Wl,--gc-sections','-Wl,--start-group',build/'chali-frontend/libparser.a',

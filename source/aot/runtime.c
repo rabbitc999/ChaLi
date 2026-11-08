@@ -1,5 +1,5 @@
 
-/* ---- ChaLi AOT 运行时（产物自带，可独立运行） ---- */
+/* ---- ChaLi BUILD 运行时（产物自带，可独立运行） ---- */
 #ifdef _WIN32
 #include <stdio.h>
 #include <stdlib.h>
@@ -110,7 +110,7 @@ void chali_init(void)
 }
 
 /**
- * @brief 刷新输出并释放 AOT 运行时的整块内存。
+ * @brief 刷新输出并释放 BUILD 运行时的整块内存。
  */
 void chali_finish(void)
 {

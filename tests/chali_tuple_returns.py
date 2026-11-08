@@ -8,7 +8,7 @@ from project_temp import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 
 def main():
-    """用 checked run 与 unchecked AOT 验证元组下标和值语义。"""
+    """用 checked run 与 unchecked BUILD 验证元组下标和值语义。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     compiler = parser.parse_args().chali.resolve()

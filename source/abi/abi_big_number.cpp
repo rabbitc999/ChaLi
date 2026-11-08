@@ -5,20 +5,20 @@
 #include <cstring>
 #include <limits>
 #include <type_traits>
-#ifndef STACKVM_WITH_BIGINT
-#define STACKVM_WITH_BIGINT 1
+#ifndef RUNTIME_WITH_BIGINT
+#define RUNTIME_WITH_BIGINT 1
 #endif
-#ifndef STACKVM_WITH_BIGFLOAT
-#define STACKVM_WITH_BIGFLOAT STACKVM_WITH_BIGINT
+#ifndef RUNTIME_WITH_BIGFLOAT
+#define RUNTIME_WITH_BIGFLOAT RUNTIME_WITH_BIGINT
 #endif
-#if STACKVM_WITH_BIGFLOAT && !STACKVM_WITH_BIGINT
+#if RUNTIME_WITH_BIGFLOAT && !RUNTIME_WITH_BIGINT
 #error "numeric glue requires the integer backend for decimal arithmetic"
 #endif
 
-#if STACKVM_WITH_BIGINT
+#if RUNTIME_WITH_BIGINT
 #include "bigint.hpp"
 #endif
-#if STACKVM_WITH_BIGFLOAT
+#if RUNTIME_WITH_BIGFLOAT
 #include "bigfloat.hpp"
 #include "bigfloat_math.hpp"
 #endif
@@ -97,7 +97,7 @@ bool takeInput(const ChaliAbiFrame *frame, Memory::String &text, uint64_t *posit
     }
 }
 
-#if STACKVM_WITH_BIGINT
+#if RUNTIME_WITH_BIGINT
 /**
  * @brief 胶水独占的大数记录，复制构造产生独立数值。
  */
@@ -151,7 +151,7 @@ BigIntRecord *bigIntRecord(ChaliAbiFrame *ctx, int64_t handle, const char *who)
 }
 
 #endif
-#if STACKVM_WITH_BIGFLOAT
+#if RUNTIME_WITH_BIGFLOAT
 /**
  * @brief 胶水独占的大数记录，复制构造产生独立数值。
  */
@@ -206,7 +206,7 @@ BigFloatRecord *bigFloatRecord(ChaliAbiFrame *ctx, int64_t handle, const char *w
 }
 
 #endif
-#if !STACKVM_WITH_BIGINT
+#if !RUNTIME_WITH_BIGINT
 /**
  * @brief 为未编入大整数胶水的构建返回原始裁剪诊断。
  * @param ctx 本次调用状态。
@@ -214,11 +214,11 @@ BigFloatRecord *bigFloatRecord(ChaliAbiFrame *ctx, int64_t handle, const char *w
  */
 inline int64_t bigIntDisabled(ChaliAbiFrame *ctx)
 {
-    chali_abi_fail(ctx, (Memory::String("这个构建没有把大整数编进来（附加功能）：用 STACKVM_WITH_BIGINT=1 重建宿主胶水")).c_str());
+    chali_abi_fail(ctx, (Memory::String("这个构建没有把大整数编进来（附加功能）：用 RUNTIME_WITH_BIGINT=1 重建宿主胶水")).c_str());
     return (0);
 }
 #endif
-#if STACKVM_WITH_BIGINT
+#if RUNTIME_WITH_BIGINT
 
 /**
  * @brief 收下一个算好的大整数（并返回它的句柄）。
@@ -726,48 +726,48 @@ inline int64_t readBigInt(ChaliAbiFrame *ctx)
     return nativeNewBigInt(ctx, value);
 }
 
-#else /* !STACKVM_WITH_BIGINT：大整数没编进来，这几个名字都指向"一句人话" */
+#else /* !RUNTIME_WITH_BIGINT：大整数没编进来，这几个名字都指向"一句人话" */
 
 /* 名字照样在表里（调用点不用改），但一调就报"这个构建没有把大整数编进来" ——
  * 比"函数入口不存在"清楚得多。 */
-#define STACKVM_BINT_STUB(name) \
+#define RUNTIME_BINT_STUB(name) \
     int64_t name(ChaliAbiFrame *cx) { return bigIntDisabled(cx); }
 
-STACKVM_BINT_STUB(bintFromInt)
-STACKVM_BINT_STUB(bintFromUInt)
-STACKVM_BINT_STUB(bintFromStr)
-STACKVM_BINT_STUB(bintFromFloat)
-STACKVM_BINT_STUB(bintAdd)
-STACKVM_BINT_STUB(bintSub)
-STACKVM_BINT_STUB(bintMul)
-STACKVM_BINT_STUB(bintDiv)
-STACKVM_BINT_STUB(bintMod)
-STACKVM_BINT_STUB(bintNeg)
-STACKVM_BINT_STUB(bintCmp)
-STACKVM_BINT_STUB(bintToStr)
-STACKVM_BINT_STUB(bintToInt)
-STACKVM_BINT_STUB(bintToFloat)
-STACKVM_BINT_STUB(bintPow)
-STACKVM_BINT_STUB(bintPowMod)
-STACKVM_BINT_STUB(bintGcd)
-STACKVM_BINT_STUB(bintLcm)
-STACKVM_BINT_STUB(bintModNonNeg)
-STACKVM_BINT_STUB(bintModInverse)
-STACKVM_BINT_STUB(bintIsProbablePrime)
-STACKVM_BINT_STUB(bintNextProbablePrime)
-STACKVM_BINT_STUB(bintBitLength)
-STACKVM_BINT_STUB(bintBitAnd)
-STACKVM_BINT_STUB(bintBitOr)
-STACKVM_BINT_STUB(bintBitXor)
-STACKVM_BINT_STUB(bintToStrRadix)
-STACKVM_BINT_STUB(bintIRoot)
-STACKVM_BINT_STUB(readBigInt)
+RUNTIME_BINT_STUB(bintFromInt)
+RUNTIME_BINT_STUB(bintFromUInt)
+RUNTIME_BINT_STUB(bintFromStr)
+RUNTIME_BINT_STUB(bintFromFloat)
+RUNTIME_BINT_STUB(bintAdd)
+RUNTIME_BINT_STUB(bintSub)
+RUNTIME_BINT_STUB(bintMul)
+RUNTIME_BINT_STUB(bintDiv)
+RUNTIME_BINT_STUB(bintMod)
+RUNTIME_BINT_STUB(bintNeg)
+RUNTIME_BINT_STUB(bintCmp)
+RUNTIME_BINT_STUB(bintToStr)
+RUNTIME_BINT_STUB(bintToInt)
+RUNTIME_BINT_STUB(bintToFloat)
+RUNTIME_BINT_STUB(bintPow)
+RUNTIME_BINT_STUB(bintPowMod)
+RUNTIME_BINT_STUB(bintGcd)
+RUNTIME_BINT_STUB(bintLcm)
+RUNTIME_BINT_STUB(bintModNonNeg)
+RUNTIME_BINT_STUB(bintModInverse)
+RUNTIME_BINT_STUB(bintIsProbablePrime)
+RUNTIME_BINT_STUB(bintNextProbablePrime)
+RUNTIME_BINT_STUB(bintBitLength)
+RUNTIME_BINT_STUB(bintBitAnd)
+RUNTIME_BINT_STUB(bintBitOr)
+RUNTIME_BINT_STUB(bintBitXor)
+RUNTIME_BINT_STUB(bintToStrRadix)
+RUNTIME_BINT_STUB(bintIRoot)
+RUNTIME_BINT_STUB(readBigInt)
 
-#undef STACKVM_BINT_STUB
+#undef RUNTIME_BINT_STUB
 
-#endif /* STACKVM_WITH_BIGINT */
+#endif /* RUNTIME_WITH_BIGINT */
 
-#if STACKVM_WITH_BIGFLOAT
+#if RUNTIME_WITH_BIGFLOAT
 
 /**
  * @brief 在对象存储中创建大浮点数对象。
@@ -1256,39 +1256,39 @@ int64_t bfloatPi(ChaliAbiFrame *ctx)
  */
 inline int64_t bigFloatDisabled(ChaliAbiFrame *ctx)
 {
-    chali_abi_fail(ctx, (Memory::String("这个构建没有把大浮点数编进来：用 STACKVM_WITH_BIGFLOAT=1 重建运行时")).c_str());
+    chali_abi_fail(ctx, (Memory::String("这个构建没有把大浮点数编进来：用 RUNTIME_WITH_BIGFLOAT=1 重建运行时")).c_str());
     return (0);
 }
-#define STACKVM_BFLOAT_STUB(name) \
+#define RUNTIME_BFLOAT_STUB(name) \
     int64_t name(ChaliAbiFrame *c) { return bigFloatDisabled(c); }
-STACKVM_BFLOAT_STUB(bfloatFromInt)
-STACKVM_BFLOAT_STUB(bfloatFromUInt)
-STACKVM_BFLOAT_STUB(bfloatFromFloat)
-STACKVM_BFLOAT_STUB(bfloatFromStr)
-STACKVM_BFLOAT_STUB(bfloatFromBigInt)
-STACKVM_BFLOAT_STUB(bfloatAdd)
-STACKVM_BFLOAT_STUB(bfloatSub)
-STACKVM_BFLOAT_STUB(bfloatMul)
-STACKVM_BFLOAT_STUB(bfloatDiv)
-STACKVM_BFLOAT_STUB(bfloatNeg)
-STACKVM_BFLOAT_STUB(bfloatCmp)
-STACKVM_BFLOAT_STUB(bfloatToStr)
-STACKVM_BFLOAT_STUB(bfloatToInt)
-STACKVM_BFLOAT_STUB(bfloatToFloat)
-STACKVM_BFLOAT_STUB(bfloatSetValuePrecision)
-STACKVM_BFLOAT_STUB(bfloatSerializationPrecision)
-STACKVM_BFLOAT_STUB(bfloatPow)
-STACKVM_BFLOAT_STUB(bfloatAbs)
-STACKVM_BFLOAT_STUB(bfloatIsInteger)
-STACKVM_BFLOAT_STUB(bfloatFloor)
-STACKVM_BFLOAT_STUB(bfloatCeil)
-STACKVM_BFLOAT_STUB(bfloatTrunc)
-STACKVM_BFLOAT_STUB(bfloatSqrt)
-STACKVM_BFLOAT_STUB(bfloatRoot)
-STACKVM_BFLOAT_STUB(readBigFloat)
-STACKVM_BFLOAT_STUB(bfloatMath)
-STACKVM_BFLOAT_STUB(bfloatPi)
-#undef STACKVM_BFLOAT_STUB
+RUNTIME_BFLOAT_STUB(bfloatFromInt)
+RUNTIME_BFLOAT_STUB(bfloatFromUInt)
+RUNTIME_BFLOAT_STUB(bfloatFromFloat)
+RUNTIME_BFLOAT_STUB(bfloatFromStr)
+RUNTIME_BFLOAT_STUB(bfloatFromBigInt)
+RUNTIME_BFLOAT_STUB(bfloatAdd)
+RUNTIME_BFLOAT_STUB(bfloatSub)
+RUNTIME_BFLOAT_STUB(bfloatMul)
+RUNTIME_BFLOAT_STUB(bfloatDiv)
+RUNTIME_BFLOAT_STUB(bfloatNeg)
+RUNTIME_BFLOAT_STUB(bfloatCmp)
+RUNTIME_BFLOAT_STUB(bfloatToStr)
+RUNTIME_BFLOAT_STUB(bfloatToInt)
+RUNTIME_BFLOAT_STUB(bfloatToFloat)
+RUNTIME_BFLOAT_STUB(bfloatSetValuePrecision)
+RUNTIME_BFLOAT_STUB(bfloatSerializationPrecision)
+RUNTIME_BFLOAT_STUB(bfloatPow)
+RUNTIME_BFLOAT_STUB(bfloatAbs)
+RUNTIME_BFLOAT_STUB(bfloatIsInteger)
+RUNTIME_BFLOAT_STUB(bfloatFloor)
+RUNTIME_BFLOAT_STUB(bfloatCeil)
+RUNTIME_BFLOAT_STUB(bfloatTrunc)
+RUNTIME_BFLOAT_STUB(bfloatSqrt)
+RUNTIME_BFLOAT_STUB(bfloatRoot)
+RUNTIME_BFLOAT_STUB(readBigFloat)
+RUNTIME_BFLOAT_STUB(bfloatMath)
+RUNTIME_BFLOAT_STUB(bfloatPi)
+#undef RUNTIME_BFLOAT_STUB
 
 #endif
 
@@ -1299,10 +1299,10 @@ STACKVM_BFLOAT_STUB(bfloatPi)
 template <bool Decimal>
 int64_t copyNumber(ChaliAbiFrame *frame)
 {
-#if STACKVM_WITH_BIGINT
+#if RUNTIME_WITH_BIGINT
     if constexpr (!Decimal) return chali_abi_record_clone(frame, integerArgument(frame, 0), "BigInteger", cloneBigIntRecord);
 #endif
-#if STACKVM_WITH_BIGFLOAT
+#if RUNTIME_WITH_BIGFLOAT
     if constexpr (Decimal) return chali_abi_record_clone(frame, integerArgument(frame, 0), "BigDecimal", cloneBigFloatRecord);
 #endif
     chali_abi_fail(frame, "数值后端未编入");
@@ -1413,5 +1413,5 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_big_number_records(size_t *c
     return records;
 }
 
-#define CHALI_AOT_BIND_MODULE big_number
+#define CHALI_BUILD_BIND_MODULE big_number
 #include "aot_bind_module.h"

@@ -29,8 +29,8 @@ def main():
         includes = ('source', 'library', 'source/preprocess', 'source/ast', 'source/ircode',
                     'source/console', 'source/lztext', 'source/bignum', 'source/json')
         command = [options.cxx, '-std=c++17', '-O2', '-pthread', '-ffunction-sections', '-fdata-sections',
-                   '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1',
-                   '-DSTACKVM_AOT_ONLY=1', *['-I' + name for name in includes],
+                   '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1', '-DRUNTIME_WITH_REFLECTION=1',
+                   '-DRUNTIME_BUILD_ONLY=1', *['-I' + name for name in includes],
                    'tests/chali_standard_unit.cpp', str(build/'chali-frontend/libparser.a'),
                    str(build/'chali-runtime/libast.a'), '-Wl,--start-group',
                    str(build/'chali-ircode-aot-core/libstackvm.a'), str(build/'chali-host-records/librecords.a'),

@@ -403,6 +403,6 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_toml_records(size_t *count)
     return records;
 }
 #ifndef GLUE_NO_STD_TOML
-#define CHALI_AOT_BIND_MODULE toml
+#define CHALI_BUILD_BIND_MODULE toml
 #include "aot_bind_module.h"
 #endif

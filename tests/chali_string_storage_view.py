@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    """两种分配器、三种读取路径，比较 checked run 与 unchecked AOT。"""
+    """两种分配器、三种读取路径，比较 checked run 与 unchecked BUILD。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     compiler = parser.parse_args().chali.resolve()
@@ -22,12 +22,12 @@ def main():
         expected = None
         for mode in ('host', 'view', 'cache-off'):
             env = dict(os.environ, CHALI_LANG='zh')
-            env.pop('CHALI_NO_AOT_STRING_STORAGE_VIEW', None)
-            env.pop('CHALI_NO_AOT_ADDRESS_CACHE', None)
+            env.pop('CHALI_NO_BUILD_STRING_STORAGE_VIEW', None)
+            env.pop('CHALI_NO_BUILD_ADDRESS_CACHE', None)
             if mode == 'host':
-                env['CHALI_NO_AOT_STRING_STORAGE_VIEW'] = '1'
+                env['CHALI_NO_BUILD_STRING_STORAGE_VIEW'] = '1'
             if mode == 'cache-off':
-                env['CHALI_NO_AOT_ADDRESS_CACHE'] = '1'
+                env['CHALI_NO_BUILD_ADDRESS_CACHE'] = '1'
             label = allocator + '-' + mode
 
             def execute(command, suffix, success=True):

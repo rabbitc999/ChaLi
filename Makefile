@@ -77,7 +77,7 @@ all: stdlib-embedded
 tmp:
 	python -c "from pathlib import Path; Path('tmp').mkdir(parents=True, exist_ok=True)"
 
-# AOT 的 LLVM 工具及静态 SDK 从锁定上游在线准备，下载缓存不入库。
+# BUILD 的 LLVM 工具及静态 SDK 从锁定上游在线准备，下载缓存不入库。
 llvm:
 	python library/llvm/setup.py
 
@@ -101,7 +101,7 @@ $(LIB): $(LIB_OBJS) | $(FRONTEND_BUILD)
 	$(AR) $(ARFLAGS) $@ $^
 
 $(TARGET): $(DEMO_OBJS) $(LIB)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(DEMO_OBJS) $(LIB) $(LDLIBS) $(CHALI_AOT_LDLIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(DEMO_OBJS) $(LIB) $(LDLIBS) $(CHALI_BUILD_LDLIBS)
 
 $(FRONTEND_BUILD): | tmp
 ifeq ($(OS),Windows_NT)
@@ -116,12 +116,8 @@ $(FRONTEND_BUILD)/%.o: source/%.cpp $(HDRS) | $(FRONTEND_BUILD)
 $(FRONTEND_BUILD)/lztext.o: source/lztext/lztext.cpp $(HDRS) | $(FRONTEND_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 
-
-# 反射是语言的固定组成、不可裁剪：前端（CHALI_WITH_REFLECTION）与运行时
-# （STACKVM_WITH_REFLECTION）由 features.mk 钉死为 1，本目标只是同义的显式入口。
-# 单次源码编译的 --no-reflection 只决定产物写不写反射元数据，不减少编译期工作量。
 reflection:
-	$(MAKE) CHALI_WITH_REFLECTION=1 STACKVM_WITH_REFLECTION=1
+	$(MAKE) CHALI_WITH_REFLECTION=1 RUNTIME_WITH_REFLECTION=1
 
 run: $(TARGET)
 	./$(TARGET) $(ARGS)
@@ -140,7 +136,7 @@ override CXXFLAGS += $(CHALI_TRIM_FLAGS)
 # 阶段编译器与发行文件分开：生成资产失败时不覆盖已经交付的编译器。
 CHALI_STDLIB_BOOTSTRAP := $(FRONTEND_BUILD)/chali-stdlib-bootstrap$(suffix $(TARGET))
 $(CHALI_STDLIB_BOOTSTRAP): $(DEMO_OBJS) $(LIB) $(AST_LIB) $(VM_LIB) $(HOST_LIB) $(PP_LIB)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(DEMO_OBJS) $(LIB) $(LDLIBS) $(CHALI_AOT_LDLIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(DEMO_OBJS) $(LIB) $(LDLIBS) $(CHALI_BUILD_LDLIBS)
 
 # 先链接独立阶段编译器，再生成确定性核心单元，最后构建发行编译器。
 .PHONY: stdlib-embedded

@@ -1,4 +1,4 @@
-"""核对后端所有权优化的结果、独立副本、回退及可选 AOT 计数。"""
+"""核对后端所有权优化的结果、独立副本、回退及可选 BUILD 计数。"""
 from pathlib import Path
 import argparse
 from collections import Counter
@@ -10,8 +10,8 @@ from compiler_path import compiler_path
 from project_temp import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-DISABLE = dict(CHALI_NO_AOT_ADDRESS_CACHE='1', CHALI_NO_AOT_BULK_COPY='1',
-               CHALI_NO_AOT_INLINE_HINT='1', CHALI_NO_AOT_DIRECT_CALLS='1', CHALI_NO_ARRAY_COPY_BULK='1')
+DISABLE = dict(CHALI_NO_BUILD_ADDRESS_CACHE='1', CHALI_NO_BUILD_BULK_COPY='1',
+               CHALI_NO_BUILD_INLINE_HINT='1', CHALI_NO_BUILD_DIRECT_CALLS='1', CHALI_NO_ARRAY_COPY_BULK='1')
 ENABLED = dict()
 
 
@@ -37,7 +37,7 @@ def main():
         assert all(p.is_file() for p in libraries), '先构建匹配工具链的后端归档'
         unit = work / ('unit.exe' if os.name == 'nt' else 'unit')
         command = [str(cxx), '-std=c++17', '-O2', '-pthread', '-ffunction-sections', '-fdata-sections',
-                   '-DCHALI_CUSTOM_ALLOCATOR=1', '-DSTACKVM_AOT_ONLY=1', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1',
+                   '-DCHALI_CUSTOM_ALLOCATOR=1', '-DRUNTIME_BUILD_ONLY=1', '-DCHALI_WITH_REFLECTION=1', '-DRUNTIME_WITH_REFLECTION=1',
                    '-I'+str(ROOT), '-I'+str(ROOT/'source'), '-I'+str(ROOT/'library'), '-I'+str(ROOT/'source/preprocess'),
                    '-I'+str(ROOT/'source/ircode'), '-I'+str(ROOT/'source/ast'),
                    str(ROOT/'tests/backend_ownership_test.cpp'), str(ROOT/'source/allocator/system_arena.cpp'), '-Wl,--gc-sections',

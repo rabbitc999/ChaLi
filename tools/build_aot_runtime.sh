@@ -1,5 +1,5 @@
 #!/bin/sh
-# 使用固定 LLVM 直接生成 AOT 运行时模块；无需 Python。
+# 使用固定 LLVM 直接生成 BUILD 运行时模块；无需 Python。
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
@@ -49,4 +49,4 @@ for platform in windows linux linux_arm64; do
         cp "$output" "$target"
     fi
 done
-if [ "$check" -eq 1 ]; then echo 'AOT 运行时 LLVM 模块已核对'; else echo 'AOT 运行时 LLVM 模块已生成'; fi
+if [ "$check" -eq 1 ]; then echo 'BUILD 运行时 LLVM 模块已核对'; else echo 'BUILD 运行时 LLVM 模块已生成'; fi

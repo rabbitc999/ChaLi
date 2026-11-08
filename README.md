@@ -37,7 +37,7 @@ ChaLi 五个字母各对应一项语言特性，C 与 L 大写：
 
 ![ChaLi 发布构建流程：已检查 AST、LLVM IR、内置或外置 LLVM、目标链接与交付](doc/images/chali-aot.png)
 
-生成的应用无需 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。完整选项见 [LLVM 构建](doc/38-build.md)，逐步操作见书稿[第 27 章 发布构建](doc/book/27-AOT导出.md)。
+生成的应用无需 LLVM DLL；应用自身使用的 C ABI 动态库按链接约定交付。完整选项见 [LLVM 构建](doc/38-build.md)，逐步操作见书稿[第 27 章 发布构建](doc/book/27-BUILD导出.md)。
 
 ## 运行过程
 

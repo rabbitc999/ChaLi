@@ -1,4 +1,4 @@
-"""分离缺陷发现与修复：记录三类 75 项 checked/unchecked AOT 代表测试，不在运行中修改实现。"""
+"""分离缺陷发现与修复：记录三类 75 项 checked/unchecked BUILD 代表测试，不在运行中修改实现。"""
 from compiler_path import compiler_path
 from compiler_limits_cases import catalog, ROOT
 from project_temp import tempfile
@@ -138,7 +138,7 @@ def main():
                   version=version, llvm=llvm_version, host=platform.platform(), jobs=options.jobs,
                   harness_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                   catalog_sha256=hashlib.sha256(json.dumps(cases, sort_keys=True, ensure_ascii=False).encode()).hexdigest(),
-                  optimization='LLVM AOT：checked 为 default<O3>+运行期检查，unchecked 为 default<O3>；反射编入', cases=[])
+                  optimization='LLVM BUILD：checked 为 default<O3>+运行期检查，unchecked 为 default<O3>；反射编入', cases=[])
     print('发现报告目录：' + str(root), flush=True)
     with ThreadPoolExecutor(max_workers=options.jobs) as pool:
         # 迭代器流水线的多个特化集中消耗 CPU，先单独执行，保留原有编译时限。

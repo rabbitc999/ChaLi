@@ -1,5 +1,5 @@
 /* ---------- 产物 ---------- */
-/* AOT 只需要这一份接口：把 `abi` 外部函数交给它时用它的数据结构。 */
+/* BUILD 只需要这一份接口：把 `abi` 外部函数交给它时用它的数据结构。 */
 #include "chali_aot.hpp"
 
 /**
@@ -235,7 +235,7 @@ Memory::String AbiGlueSource(const Memory::Set<Memory::String> *reachableBuiltin
 }
 
 /**
- * @brief 将前端 C++ ABI 类型规范化为 AOT 接口使用的 C ABI 类型描述。
+ * @brief 将前端 C++ ABI 类型规范化为 BUILD 接口使用的 C ABI 类型描述。
  * @param abiType `CAbiType` 给出的名字（`std::int64_t` / `double` / `const char *` …）。
  * @return C ABI 类型拼写，由 LLVM 降低器转换成 LLVM 类型；未知类型按 long long 兜底。
  */
@@ -257,8 +257,8 @@ static Memory::String BuildCType(const Memory::String &abiType)
 /**
  * @brief 收集外部函数的符号、ABI 签名及链接库，供 LLVM 降低器生成声明和调用。
  *
- * 这是"AOT 支持外部 C 调用"的源头：运行时 那条路在运行期 `dlopen` 这些符号，
- * AOT 将它们转换为 LLVM 函数声明与链接参数，产物直接调用外部符号。
+ * 这是"BUILD 支持外部 C 调用"的源头：运行时 那条路在运行期 `dlopen` 这些符号，
+ * BUILD 将它们转换为 LLVM 函数声明与链接参数，产物直接调用外部符号。
  * @return 按声明顺序排列的外部函数清单。
  */
 Memory::Vector<::chali_build::ExternFunction> ChaliBuildAbiExterns()
@@ -281,7 +281,7 @@ Memory::Vector<::chali_build::ExternFunction> ChaliBuildAbiExterns()
     return out;
 }
 
-/* 把上面这个函数挂给 AOT：它自己是独立模块，不能反向 include 前端，
+/* 把上面这个函数挂给 BUILD：它自己是独立模块，不能反向 include 前端，
  * 所以由前端在静态初始化时注入一次取 abi 声明的办法。 */
 /**
  * @brief 为不能按标量直接调用的 ABI 声明生成统一宿主封送绑定。

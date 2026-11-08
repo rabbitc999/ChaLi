@@ -229,6 +229,6 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_scalar_records(size_t *count
 }
 
 #ifndef GLUE_NO_STD_LINALG
-#define CHALI_AOT_BIND_MODULE linalg
+#define CHALI_BUILD_BIND_MODULE linalg
 #include "aot_bind_module.h"
 #endif

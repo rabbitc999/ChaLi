@@ -7,7 +7,7 @@ import re
 
 
 def main():
-    """只发协议请求，同时核对悬停和补全，不调用 run 或 AOT。"""
+    """只发协议请求，同时核对悬停和补全，不调用 run 或 BUILD。"""
     cases = [
         ('int32 seed = 1; let target = fn() { seed };', 'int32 fn()'),
         ('int32 seed = 1; { bool seed = true; let target = fn() { seed }; target; }', 'bool fn()'),

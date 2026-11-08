@@ -39,8 +39,8 @@ def main():
     libraries = [build/p for p in ('chali-ircode-aot-core/libstackvm.a','chali-host-records/librecords.a',
                                    'chali-runtime/libast.a','chali-runtime/libpreprocess.a')]
     execute([cxx,*options,'-std=c++17','-O2','-pthread','-ffunction-sections','-fdata-sections',
-             '-DSTACKVM_AOT_ONLY=1','-DCHALI_CUSTOM_ALLOCATOR=1','-DCHALI_WITH_REFLECTION=1',
-             '-DSTACKVM_WITH_REFLECTION=1','-Isource','-Ilibrary','-I.',
+             '-DRUNTIME_BUILD_ONLY=1','-DCHALI_CUSTOM_ALLOCATOR=1','-DCHALI_WITH_REFLECTION=1',
+             '-DRUNTIME_WITH_REFLECTION=1','-Isource','-Ilibrary','-I.',
              ROOT/'tests/chali_object_construction_scalar.cpp',ROOT/'source/allocator/system_arena.cpp',
              '-Wl,--gc-sections','-Wl,--start-group',*libraries,'-Wl,--end-group',
              *(['-lwinhttp'] if os.name == 'nt' else []),'-o',unit],'compile-unit',
@@ -50,9 +50,9 @@ def main():
                 ('aot_interface_wrapper_reentry','interface binding reentry OK\n')]
     modes = [(allocator,fallback,False) for allocator in ('malloc','pool') for fallback in (False,True)]
     modes.append(('malloc',False,True))
-    env.pop('CHALI_NO_AOT_OBJECT_CONSTRUCTION_SCALARS',None)
+    env.pop('CHALI_NO_BUILD_OBJECT_CONSTRUCTION_SCALARS',None)
     for allocator,fallback,steps in modes:
-        extra = {'CHALI_NO_AOT_OBJECT_CONSTRUCTION_SCALARS':'1'} if fallback else {}
+        extra = {'CHALI_NO_BUILD_OBJECT_CONSTRUCTION_SCALARS':'1'} if fallback else {}
         for fixture,expected in fixtures:
             label = fixture+'-'+allocator+('-generic' if fallback else '-scalar')+('-steps' if steps else '')
             source = ROOT/'tests/fixtures'/(fixture+'.chl')

@@ -1,4 +1,4 @@
-"""AOT 下验证集合传参、返回值与复制语义，并确认标准集合胶水随产物静态链接。"""
+"""BUILD 下验证集合传参、返回值与复制语义，并确认标准集合胶水随产物静态链接。"""
 from compiler_path import compiler_path
 from pathlib import Path
 import argparse
@@ -66,7 +66,7 @@ def main():
         assert not result.stderr, result.stderr
         checked = run(compiler, 'run', source, '--out', work / 'checked')
         assert checked.stdout == EXPECTED, checked.stdout
-    print('AOT collection values: parameters, returns and copies passed')
+    print('BUILD collection values: parameters, returns and copies passed')
 
 
 if __name__ == '__main__':

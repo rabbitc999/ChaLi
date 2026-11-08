@@ -17,7 +17,7 @@ def run_native(cxx, work, sanitize):
     for pattern in ['source/bignum/bigint*.cpp', 'source/bignum/bigfloat*.cpp', 'source/ast/ast*.cpp']:
         sources.extend(sorted(ROOT.glob(pattern)))
     sources += [ROOT / name for name in ['source/json/json.cpp', 'source/toml/toml.cpp', 'source/toml/toml_source.cpp']]
-    flags = ['-std=c++17', '-O1' if sanitize else '-O2', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1']
+    flags = ['-std=c++17', '-O1' if sanitize else '-O2', '-DCHALI_WITH_REFLECTION=1', '-DRUNTIME_WITH_REFLECTION=1']
     sanitizer_flags = ['-g', '-fsanitize=address,undefined,float-cast-overflow', '-fno-omit-frame-pointer', '-no-pie'] if sanitize else []
     flags += sanitizer_flags
     kernel = compile_c_kernel(work / 'numeric-kernel', extra_flags=sanitizer_flags)

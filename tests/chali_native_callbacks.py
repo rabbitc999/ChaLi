@@ -1,4 +1,4 @@
-"""用 C 宿主验证 AOT 同步回调：具名函数、闭包捕获、标量/引用参数、重入与 panic 传播。
+"""用 C 宿主验证 BUILD 同步回调：具名函数、闭包捕获、标量/引用参数、重入与 panic 传播。
 
 1.0.8 起没有字节码宿主，回调走 `#abi` 声明 + C 动态库。C 接收签名匹配的同步跳板，
 跳板通过受检查的调用器访问原语言函数值和闭包，不将其句柄强转为机器函数指针。
@@ -137,7 +137,7 @@ def main():
         assert result.returncode != 0, result
         assert 'ChaLi callback panic' in result.stderr, result.stderr
         assert 'unexpected callback success' not in result.stdout, result.stdout
-    print('AOT sync callbacks: named, inline, copy/move capture, float32/bool/void, mut&, higher-order, reentry and panic passed')
+    print('BUILD sync callbacks: named, inline, copy/move capture, float32/bool/void, mut&, higher-order, reentry and panic passed')
 
 
 if __name__ == '__main__':

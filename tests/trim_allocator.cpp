@@ -11,10 +11,10 @@
 int main()
 {
 #ifdef NO_CHALI_BIG_INT
-    static_assert(!STACKVM_WITH_BIGINT && !STACKVM_WITH_BIGFLOAT);
+    static_assert(!RUNTIME_WITH_BIGINT && !RUNTIME_WITH_BIGFLOAT);
 #endif
 #ifdef NO_CHALI_BIG_FLOAT
-    static_assert(!STACKVM_WITH_BIGFLOAT);
+    static_assert(!RUNTIME_WITH_BIGFLOAT);
 #endif
 #ifdef NO_CHALI_DEFAULT_POOL
     bool rejected = false;

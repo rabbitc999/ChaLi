@@ -26,7 +26,7 @@ std::optional<bool> Machine::callTransferService(runtimeDetail::ConcurrentCallSt
     auto &assign = state.assign;
     auto &fail = state.fail;
     auto &checkExecution = state.checkExecution;
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     auto &receivedEvent = state.receivedEvent;
     /**
      * @brief 在并发等待时继续观察取消、失败与截止时间。
@@ -39,7 +39,7 @@ std::optional<bool> Machine::callTransferService(runtimeDetail::ConcurrentCallSt
         state.wait(guard, ready, deadline);
     };
 #endif
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     if (typedCreate || name == "__std_channel_send" || name == "__std_mail_send" || name == "__std_channel_take")
     {
         const bool take = name == "__std_channel_take";

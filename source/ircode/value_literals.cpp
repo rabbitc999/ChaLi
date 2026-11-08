@@ -223,11 +223,11 @@ double normalizeFloat(double value, int bits)
  * 同一个堆可能被并发触发分配与释放）。只读查询不加锁——堆按 `run()` / 线程独占，
  * 契约是"读的时候没有并发写"。
  */
-#if STACKVM_WITH_DEFAULT_HEAP
+#if RUNTIME_WITH_DEFAULT_HEAP
 
-#else /* !STACKVM_WITH_DEFAULT_HEAP */
+#else /* !RUNTIME_WITH_DEFAULT_HEAP */
 
-#endif /* STACKVM_WITH_DEFAULT_HEAP */
+#endif /* RUNTIME_WITH_DEFAULT_HEAP */
 
 /* ---------------------------------------------------------------------------
  *  内部 C++ 运行时：字符串 / 格式化

@@ -81,7 +81,7 @@ Memory::String MacroDiagnosticDisplay(const Memory::String &message, bool full)
 }
 
 /**
- * @brief 注册与 AOT 共享的标准库和演示宿主接口。
+ * @brief 注册与 BUILD 共享的标准库和演示宿主接口。
  * @param registry 接收函数绑定的宿主注册表。
  * @return 无。
  */
@@ -130,7 +130,7 @@ void PrintUsage(std::FILE *out)
              "\n",
              "统一工具链：AST 直接生成 LLVM，支持原生运行与交叉目标代码生成。\n",
              "场景指令（运行方式也可用 --mode 指定）：\n",
-             "  run|interpret  checked AOT 编译执行（缺省）；直接传入文件时，其后全为程序参数\n",
+             "  run|interpret  checked BUILD 编译执行（缺省）；直接传入文件时，其后全为程序参数\n",
              "  check FILE [json]    仅检查，可输出 JSON 诊断\n",
              "  help                 显示帮助\n",
              "  lib            库包工具：template、pack、inspect、lock\n"
@@ -816,7 +816,7 @@ try
     {
         /* 默认开启只是"能用就用"：宿主没编入支持时静默关掉，不能让每个程序都失败。
          * 显式 `--reflection` 才按硬要求处理，报出缺哪个编译宏。 */
-        const char *message = CHALI_TEXT("--reflection 需要 CHALI_WITH_REFLECTION=1 且运行时 STACKVM_WITH_REFLECTION=1");
+        const char *message = CHALI_TEXT("--reflection 需要 CHALI_WITH_REFLECTION=1 且运行时 RUNTIME_WITH_REFLECTION=1");
         if (jsonDiagnostics)
             chali_diagnostics::report("CHL1102", message, path ? path : "<命令行>");
         else

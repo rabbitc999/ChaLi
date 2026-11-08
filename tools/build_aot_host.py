@@ -1,4 +1,4 @@
-"""把共享原生运行时与链接依赖固化为当前宿主的 AOT 构建资产。"""
+"""把共享原生运行时与链接依赖固化为当前宿主的 BUILD 构建资产。"""
 import argparse
 import os
 from pathlib import Path
@@ -32,7 +32,7 @@ def main():
     for name in names:
         path = Path(subprocess.check_output([args.cxx, '-print-file-name=' + name], text=True).strip())
         if not path.is_file():
-            raise SystemExit('找不到 AOT 原生链接依赖：' + name)
+            raise SystemExit('找不到 BUILD 原生链接依赖：' + name)
         packed_name = 'gcc_' + name if name in {'libmingw32.a', 'libmingwex.a', 'libmoldname.a'} else name
         libraries.append((packed_name, path))
     cache = AssetCache('aot-host', dict(libraries, **{
@@ -40,7 +40,7 @@ def main():
         **{f'object:{index}': path for index, path in enumerate(dependencies)},
     }))
     if cache.valid([output]):
-        print('AOT 原生服务资产 SHA256 相同，跳过生成。')
+        print('BUILD 原生服务资产 SHA256 相同，跳过生成。')
         return
     with tempfile.TemporaryDirectory(prefix="chali-aot-host-") as directory:
         archive = Path(directory) / "libchali_aot_host.a"
@@ -62,7 +62,7 @@ def main():
         if not output.exists() or output.read_text(encoding="ascii") != text:
             output.write_text(text, encoding="ascii")
         cache.save([output])
-    print(f"AOT 原生服务资产：{len(entries)} 个链接文件")
+    print(f"BUILD 原生服务资产：{len(entries)} 个链接文件")
 
 
 if __name__ == "__main__":

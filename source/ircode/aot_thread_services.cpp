@@ -1,6 +1,6 @@
 /**
  * @file aot_thread_services.cpp
- * @brief 独立的跨平台 AOT 线程服务，复用标准 C++ 线程、消息与事件实现。
+ * @brief 独立的跨平台 BUILD 线程服务，复用标准 C++ 线程、消息与事件实现。
  */
 #include "aot_thread_services.hpp"
 #include "../allocator/c_heap_allocator.hpp"
@@ -219,7 +219,7 @@ extern "C" const ChaliThreadServices *chali_build_thread_services()
  * @brief 为尚未生成服务选择函数的旧对象提供完整线程服务。
  * @return 完整服务表；新模块以强符号覆盖此兼容选择。
  */
-extern "C" __attribute__((weak)) CHALI_AOT_SERVICE_LOCAL const ChaliThreadServices *chali_program_thread_services()
+extern "C" __attribute__((weak)) CHALI_BUILD_SERVICE_LOCAL const ChaliThreadServices *chali_program_thread_services()
 {
     return chali_build_thread_services();
 }

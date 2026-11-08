@@ -108,7 +108,7 @@ struct RunResult
     SourceLocation failureLocation;         ///< 出错（或被调试器中止）处对应的源码位置。
     /**
      * 出错处的源码级调用栈，从外到内；最后一帧是出错函数。
-     * STACKVM_WITH_PANIC_TRACE=1 时自动记录；无调试表则提供函数符号及指令位置。
+     * RUNTIME_WITH_PANIC_TRACE=1 时自动记录；无调试表则提供函数符号及指令位置。
      */
     Memory::Vector<DebugFrame> sourceTrace;
 };

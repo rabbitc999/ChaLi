@@ -131,7 +131,7 @@ def main():
         if missing:
             raise AssertionError(f"compiler export is incomplete: {missing}")
         cmake = (compiler / "CMakeLists.txt").read_text(encoding="utf-8")
-        for option in ("CHALI_WITH_REFLECTION", "STACKVM_WITH_REFLECTION"):
+        for option in ("CHALI_WITH_REFLECTION", "RUNTIME_WITH_REFLECTION"):
             if not any(line.startswith(f"option({option} ") and line.endswith(" ON)")
                        for line in cmake.splitlines()):
                 raise AssertionError(f"exported compiler must enable {option} by default")
@@ -143,7 +143,7 @@ def main():
             raise AssertionError("compiler core.chl does not match the referenced language library")
         assert not (compiler / "utils.chl").exists()
         assert not (compiler / "reflect.chl").exists()
-        # 导出后构建完整编译器并运行 checked AOT/TOML，检查独立单元、相对 include 及静态库链接。
+        # 导出后构建完整编译器并运行 checked BUILD/TOML，检查独立单元、相对 include 及静态库链接。
         build = compiler / "build"
         configure = ["cmake", "-S", str(compiler), "-B", str(build), "-DCMAKE_BUILD_TYPE=Release"]
         if os.name == "nt":
@@ -185,19 +185,19 @@ def main():
                          '    assert(($interfaces<Box<int64>>())[0].associatedTypes[0].type.name=="int64");\n'
                          '    assert(($fields<Box<int64>>())[0].sourceLine>0);\n'
                          '    int64 visits=0;loop{visits+=1;$Escape({break;});visits+=100;break;}assert(visits==1);\n'
-                         '    println("exported compiler AOT/TOML OK");\n}\n', encoding="utf-8")
+                         '    println("exported compiler BUILD/TOML OK");\n}\n', encoding="utf-8")
         result = subprocess.run([str(build / exported_compiler), "run", str(probe), "--quiet", "--out", str(WORK / "export_probe")],
                                 cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
-        assert result.returncode == 0 and result.stdout == "exported compiler AOT/TOML OK\n" and not result.stderr, result
+        assert result.returncode == 0 and result.stdout == "exported compiler BUILD/TOML OK\n" and not result.stderr, result
         aot_probe = WORK / "aot_probe.chl"
-        aot_probe.write_text('void main()\n{\n    println("exported AOT entry OK");\n}\n', encoding="utf-8")
+        aot_probe.write_text('void main()\n{\n    println("exported BUILD entry OK");\n}\n', encoding="utf-8")
         aot_prefix = WORK / "aot_probe"
         result = subprocess.run([str(build / exported_compiler), "build", str(aot_probe), "--quiet", "--emit-llvm", "--out", str(aot_prefix)],
                                 cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
         assert result.returncode == 0 and aot_prefix.with_suffix(".ll").is_file(), result
 
         for sample in ("cas", "math_generic", "string_methods", "opcode_value_semantics", "std_red_black_delete", "c_api_host"):
-            # 全量红黑树混合负载以 AOT 验证导出编译器；VM 全量另由运行时回归执行。
+            # 全量红黑树混合负载以 BUILD 验证导出编译器；VM 全量另由运行时回归执行。
             native = sample == "std_red_black_delete"
             target = WORK / (sample + "-aot")
             arguments = [str(build / exported_compiler), "build" if native else "run",

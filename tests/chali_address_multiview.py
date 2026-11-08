@@ -71,15 +71,15 @@ def main():
         for mode in ('multi', 'round-robin', 'single', 'off'):
             label = allocator + '-' + mode
             env = dict(os.environ)
-            env.pop('CHALI_NO_AOT_ADDRESS_CACHE', None)
-            env.pop('CHALI_NO_AOT_MULTI_ADDRESS_CACHE', None)
-            env.pop('CHALI_NO_AOT_ADDRESS_PROMOTION', None)
+            env.pop('CHALI_NO_BUILD_ADDRESS_CACHE', None)
+            env.pop('CHALI_NO_BUILD_MULTI_ADDRESS_CACHE', None)
+            env.pop('CHALI_NO_BUILD_ADDRESS_PROMOTION', None)
             if mode == 'round-robin':
-                env['CHALI_NO_AOT_ADDRESS_PROMOTION'] = '1'
+                env['CHALI_NO_BUILD_ADDRESS_PROMOTION'] = '1'
             if mode == 'single':
-                env['CHALI_NO_AOT_MULTI_ADDRESS_CACHE'] = '1'
+                env['CHALI_NO_BUILD_MULTI_ADDRESS_CACHE'] = '1'
             if mode == 'off':
-                env['CHALI_NO_AOT_ADDRESS_CACHE'] = '1'
+                env['CHALI_NO_BUILD_ADDRESS_CACHE'] = '1'
 
             def execute(command, suffix):
                 """保存每一步返回值和输出，执行失败立即保留现场。"""

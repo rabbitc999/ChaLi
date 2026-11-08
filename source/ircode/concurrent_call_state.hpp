@@ -24,7 +24,7 @@ struct ConcurrentCallState
     Memory::Function<void(const Memory::String &)> fail;
     Memory::Function<void(const char *, std::size_t)> emitText;
     Memory::Function<void()> &checkExecution;
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     RuntimeEvent &receivedEvent;
     Memory::Function<void(const Memory::String &, const RunResult &)> failFromThread;
     Memory::Function<void(std::unique_lock<std::mutex> &, const Memory::Function<bool()> &, std::chrono::steady_clock::time_point)> wait;

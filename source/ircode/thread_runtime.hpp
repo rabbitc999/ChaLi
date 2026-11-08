@@ -8,11 +8,11 @@
 namespace runtime
 {
 using runtimeDetail::TransferPacket;
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
 /**
  * @brief 线程运行时：每个隔离宿主线程一个 运行时，消息在它们之间复制传递。
  *
- * 裁剪配置（`STACKVM_WITH_THREADS=0`）整段裁掉：不编 C 线程服务 /
+ * 裁剪配置（`RUNTIME_WITH_THREADS=0`）整段裁掉：不编 C 线程服务 /
  * `std::mutex` / `std::condition_variable`，`std::thread::*` 与
  * `std::concurrency::Shared` 走"函数入口不存在"的普通错误。
  */
@@ -54,7 +54,7 @@ struct ThreadRuntime
     std::atomic<bool> panicked{ false };  ///< 发布快照后置位，所有 运行时 安全点检查。
     Memory::String panicError;
     std::size_t panicThread = 0;
-#if STACKVM_WITH_PANIC_TRACE
+#if RUNTIME_WITH_PANIC_TRACE
     Memory::Vector<DebugFrame> panicTrace;
     SourceLocation panicLocation;
 #endif
@@ -88,11 +88,11 @@ struct SharedRuntime
     std::int64_t next = 1;
     Memory::Map<std::int64_t, std::shared_ptr<TransferPacket>> values;
 };
-#endif /* STACKVM_WITH_THREADS */
+#endif /* RUNTIME_WITH_THREADS */
 
 namespace runtimeDetail
 {
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
 /**
  * @brief 将非负毫秒等待转换为饱和截止时间；负一表示无限。
  * @param millis 等待预算。

@@ -29,8 +29,8 @@ target_include_directories(chali_standard_records PUBLIC
     .. ../../library ../../source/ircode ../../source/bignum ../../source/runtime_c ../../library/caspp/include
     "${CHALI_SQLITE_DIR}" "${CHALI_MINIZ_DIR}" "${CHALI_YYJSON_DIR}/src" "${CHALI_TOMLC17_DIR}/src")
 target_compile_definitions(chali_standard_records PUBLIC CHALI_CUSTOM_ALLOCATOR=1
-    CHALI_WITH_REFLECTION=$<BOOL:${STACKVM_WITH_REFLECTION}>
-    STACKVM_WITH_REFLECTION=$<BOOL:${STACKVM_WITH_REFLECTION}>)
+    CHALI_WITH_REFLECTION=$<BOOL:${RUNTIME_WITH_REFLECTION}>
+    RUNTIME_WITH_REFLECTION=$<BOOL:${RUNTIME_WITH_REFLECTION}>)
 
 # 与使用这些记录的 运行时 保持相同的预算与功能宏。
 target_compile_definitions(chali_standard_records PUBLIC

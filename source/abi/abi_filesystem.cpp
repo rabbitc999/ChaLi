@@ -305,6 +305,6 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_filesystem_records(size_t *c
 }
 
 #ifndef GLUE_NO_STD_FILESYSTEM
-#define CHALI_AOT_BIND_MODULE filesystem
+#define CHALI_BUILD_BIND_MODULE filesystem
 #include "aot_bind_module.h"
 #endif

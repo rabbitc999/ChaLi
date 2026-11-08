@@ -1,4 +1,4 @@
-"""验证全部数值类型求解、数组互转、列迭代及真实 checked／unchecked AOT。"""
+"""验证全部数值类型求解、数组互转、列迭代及真实 checked／unchecked BUILD。"""
 from pathlib import Path
 import argparse
 import os

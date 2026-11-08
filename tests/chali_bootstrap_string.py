@@ -1,4 +1,4 @@
-"""验证默认 String 自举的值语义、边界诊断及 VM/AOT 一致性。"""
+"""验证默认 String 自举的值语义、边界诊断及 VM/BUILD 一致性。"""
 from compiler_path import compiler_path
 from project_temp import tempfile
 from pathlib import Path
@@ -59,7 +59,7 @@ def main():
                 assert obsolete not in llvm, (obsolete, work)
             assert 'llvm.memcpy' in llvm, work
         results.append(dict(case=name, vm='passed', aot='passed'))
-        print(name, 'VM/AOT passed', flush=True)
+        print(name, 'VM/BUILD passed', flush=True)
     (work / 'results.json').write_text(json.dumps(results, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print('default String bootstrap checks passed; logs:', work)
 

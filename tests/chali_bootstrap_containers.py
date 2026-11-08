@@ -91,7 +91,7 @@ void main() {
 
 
 def main():
-    """分别在 VM 和独立 AOT 程序中执行同一交叉检查。"""
+    """分别在 VM 和独立 BUILD 程序中执行同一交叉检查。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     backend_group = parser.add_mutually_exclusive_group()

@@ -1,4 +1,4 @@
-"""核对 AOT 可达常量裁剪、稀疏初始化、布局与程序体积。"""
+"""核对 BUILD 可达常量裁剪、稀疏初始化、布局与程序体积。"""
 from pathlib import Path
 import argparse
 import hashlib
@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    """对同源程序执行 VM、完整映像 AOT、默认 AOT，并保留体积和摘要。"""
+    """对同源程序执行 VM、完整映像 BUILD、默认 BUILD，并保留体积和摘要。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     parser.add_argument('--baseline', type=Path)
@@ -24,9 +24,9 @@ def main():
     work = Path(tempfile.mkdtemp(prefix='aot-data-'))
     env = dict(os.environ)
     env.setdefault('CHALI_LLVM_CLANG', str(ROOT / 'build/dependencies/llvm/toolchain/bin/clang.exe') if os.name == 'nt' else 'clang')
-    env.pop('CHALI_AOT_KEEP_DATA', None)
+    env.pop('CHALI_BUILD_KEEP_DATA', None)
     report = {'version': (ROOT / 'VERSION').read_text().strip(), 'platform': platform.platform(),
-              'configuration': 'external LLVM; default optimization and reflection; explicit --checked for all AOT variants',
+              'configuration': 'external LLVM; default optimization and reflection; explicit --checked for all BUILD variants',
               'compiler_sha256': hashlib.sha256(compiler.read_bytes()).hexdigest(), 'work': str(work), 'cases': {}}
     if args.baseline:
         report['baseline_sha256'] = hashlib.sha256(args.baseline.read_bytes()).hexdigest()
@@ -57,7 +57,7 @@ def main():
         if expected is None:
             expected = virtual.stdout
         assert virtual.stdout == expected, (name, virtual.stdout, expected)
-        variants = [('full', compiler, dict(env, CHALI_AOT_KEEP_DATA='1')), ('sparse', compiler, env)]
+        variants = [('full', compiler, dict(env, CHALI_BUILD_KEEP_DATA='1')), ('sparse', compiler, env)]
         if args.baseline:
             variants.insert(0, ('baseline', args.baseline.resolve(), env))
         for label, binary, execution_env in variants:
@@ -69,7 +69,7 @@ def main():
             llvm = prefix.with_suffix('.ll').read_text(encoding='utf-8')
             image = re.search(r'@chali_data_image = constant \[(\d+) x i8\]', llvm)
             layout = re.search(r'@chali_data_layout = constant \[(\d+) x i8\]', llvm)
-            entry['results'][label] = {'exe_bytes': product.stat().st_size, 'image_bytes': int(image[1]), 'layout_bytes': int(layout[1]), 'sha256': hashlib.sha256(product.read_bytes()).hexdigest(), 'stdout': output.stdout, 'image_summary': re.findall(r'^; AOT data image:.*$', llvm, re.M)}
+            entry['results'][label] = {'exe_bytes': product.stat().st_size, 'image_bytes': int(image[1]), 'layout_bytes': int(layout[1]), 'sha256': hashlib.sha256(product.read_bytes()).hexdigest(), 'stdout': output.stdout, 'image_summary': re.findall(r'^; BUILD data image:.*$', llvm, re.M)}
             if name == 'unused_literal' and label == 'sparse':
                 dead = ''.join('\\%02X' % byte for byte in b'DEAD_POOL_SENTINEL_')
                 assert dead not in llvm, 'unreachable literal remains in LLVM pool'
@@ -82,7 +82,7 @@ def main():
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         print(name, {key: value['exe_bytes'] for key, value in entry['results'].items()}, flush=True)
-    print('AOT sparse data checks passed:', args.out)
+    print('BUILD sparse data checks passed:', args.out)
 
 
 if __name__ == '__main__':

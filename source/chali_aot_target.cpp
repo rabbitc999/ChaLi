@@ -110,7 +110,7 @@ bool describeTarget(const Memory::String &requested, TargetInfo &target, Memory:
     }
     else
     {
-        if (error) *error = "AOT：没有登记的目标运行时：" + triple + "；支持 windows-x64、linux-x64、linux-arm64";
+        if (error) *error = "BUILD：没有登记的目标运行时：" + triple + "；支持 windows-x64、linux-x64、linux-arm64";
         return false;
     }
     return true;

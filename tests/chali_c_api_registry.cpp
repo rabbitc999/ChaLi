@@ -211,7 +211,7 @@ void standardModules()
     assert(chali_abi_register_tables(registry, missing, 1, &error) == ChaliAbiInvalidArgument);
     assert(chali_abi_bind_standard(registry, &error) == ChaliAbiOk);
 #define CHALI_STANDARD_ONLY
-#define CHALI_AOT_MODULE(moduleName, ...) \
+#define CHALI_BUILD_MODULE(moduleName, ...) \
     { \
         const ChaliAbiModule modules[] = {__VA_ARGS__}; \
         for (auto module : modules) \
@@ -228,7 +228,7 @@ void standardModules()
         } \
     }
 #include "abi/aot_modules.inc"
-#undef CHALI_AOT_MODULE
+#undef CHALI_BUILD_MODULE
 #undef CHALI_STANDARD_ONLY
     size_t count = 0;
     const auto *demo = abi_demo_records(&count);

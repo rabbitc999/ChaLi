@@ -70,7 +70,7 @@ void main(List<String> args) {
     dead = ''.join('\\%02X' % byte for byte in b'UNREACHABLE_CALLBACK_SENTINEL')
     assert dead not in llvm and not re.search(r'define[^\n]*dead_target\(', llvm)
     assert not re.search(r'constant \[1024 x i64\]', llvm)
-    report['image_summary'] = re.findall(r'^; AOT data image:.*$', llvm, re.M)
+    report['image_summary'] = re.findall(r'^; BUILD data image:.*$', llvm, re.M)
     report['native_bytes'] = product.stat().st_size
     report['llvm_bytes'] = prefix.with_suffix('.ll').stat().st_size
     if args.baseline:

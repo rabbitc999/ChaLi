@@ -412,7 +412,7 @@ bool mapCallbackKey(State &ctx, const ObjectKey &key, Slot *out, Memory::Vector<
 Slot hashedStorageOperation(State &state,int operation,const Arguments &arguments);
 
 /**
- * @brief 复用 Map/Set 的创建、长度及按槽读取边界，供 AOT 标量桥接。
+ * @brief 复用 Map/Set 的创建、长度及按槽读取边界，供 BUILD 标量桥接。
  * @param state 当前封送及所有权上下文。
  * @param operation 元数据原语编号，十二至二十。
  * @param arguments 原语实参。

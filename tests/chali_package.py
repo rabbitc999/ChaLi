@@ -82,7 +82,7 @@ def main():
         binary = work / 'binary'
 
         def product(prefix):
-            """返回 AOT 导出产物路径（Windows 带 .exe）。"""
+            """返回 BUILD 导出产物路径（Windows 带 .exe）。"""
             return Path(str(prefix) + ('.exe' if os.name == 'nt' else ''))
 
         # 项目 `debug = true` 等价于命令行 `--debug`：不裁剪符号、降低优化级别，产物更大。

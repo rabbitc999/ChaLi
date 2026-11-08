@@ -9,7 +9,7 @@ endif
 CFLAGS += -Isource -O2 -DNDEBUG -ffunction-sections -fdata-sections
 CFLAGS += $(CHALI_TRIM_FLAGS)
 
-# Linux 安装包的宿主对象还会进入 clang 链接的 AOT PIE。
+# Linux 安装包的宿主对象还会进入 clang 链接的 BUILD PIE。
 ifeq ($(CHALI_RELEASE_PIC),1)
 CFLAGS += -fPIC
 override CXXFLAGS += -fPIC
@@ -70,7 +70,7 @@ CHALI_INCLUDES := -I$(CHALI_SOURCE_DIR) -I$(CHALI_LIBRARY_DIR) \
     -I$(CHALI_SOURCE_DIR)/allocator -I$(CHALI_SOURCE_DIR)/lsp \
     -I$(CHALI_SOURCE_DIR)/bignum -I$(CHALI_SOURCE_DIR)/json -I$(CHALI_SOURCE_DIR)/toml \
     -I$(CHALI_DEPENDENCY_DIR)/sqlite -I$(CHALI_DEPENDENCY_DIR)/miniz -I$(CHALI_SOURCE_DIR)/console -I$(CHALI_SOURCE_DIR)/lztext
-override CXXFLAGS += -DSTACKVM_AOT_ONLY=1 -DCHALI_CUSTOM_ALLOCATOR=1 -pthread $(CHALI_INCLUDES) -I$(AST_DIR) -I$(VM_DIR) -I$(PP_DIR)
+override CXXFLAGS += -DRUNTIME_BUILD_ONLY=1 -DCHALI_CUSTOM_ALLOCATOR=1 -pthread $(CHALI_INCLUDES) -I$(AST_DIR) -I$(VM_DIR) -I$(PP_DIR)
 
 # ---- 统一工具链：chali 同时是前端 / VM / 工程生成器 ----
 # `$(FRONTEND_BUILD)/chali_main.o` 只提供 `chali_main_entry`，真正的 main 在 chali_tool.cpp；
@@ -306,7 +306,7 @@ $(CHALI_FRONTEND_MODULE_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.jso
 CHALI_STATIC_LLVM ?= 0
 CHALI_LLVM_SDK ?= build/dependencies/llvm/static-sdk
 $(CHALI_BUILD_ROOT)/chali-native/llvmLinkMode.json: config-force
-	$(PYTHON) tools/write_build_config.py $@ "$(CHALI_STATIC_LLVM)" "$(CHALI_LLVM_SDK)" "$(CHALI_AOT_LDLIBS)"
+	$(PYTHON) tools/write_build_config.py $@ "$(CHALI_STATIC_LLVM)" "$(CHALI_LLVM_SDK)" "$(CHALI_BUILD_LDLIBS)"
 $(TARGET): $(CHALI_BUILD_ROOT)/chali-native/llvmLinkMode.json
 ifeq ($(CHALI_STATIC_LLVM),1)
 ifneq ($(OS),Windows_NT)
@@ -329,7 +329,7 @@ $(TARGET): $(CHALI_LLVM_IMPORT_OBJ)
 $(CHALI_LLVM_IMPORT_OBJ): tools/llvm_static_imports.cpp | $(CHALI_BUILD_ROOT)/chali-native
 	$(CXX) $(CXXFLAGS) -I$(CHALI_LLVM_SDK)/include/libxml2 -MMD -MP -c $< -o $@
 $(TARGET): $(CHALI_LLVM_STATIC_OBJ)
-CHALI_AOT_LDLIBS := -L$(CHALI_LLVM_SDK)/lib -Wl,--start-group -llldMinGW -llldCOFF -llldELF -llldCommon $(CHALI_LLVM_LIBS) $(CHALI_LLVM_SYSTEM_LIBS) -Wl,--end-group
+CHALI_BUILD_LDLIBS := -L$(CHALI_LLVM_SDK)/lib -Wl,--start-group -llldMinGW -llldCOFF -llldELF -llldCommon $(CHALI_LLVM_LIBS) $(CHALI_LLVM_SYSTEM_LIBS) -Wl,--end-group
 $(CHALI_LLVM_STATIC_OBJ): source/chali_aot_llvm.cpp source/chali_aot_llvm.hpp source/chali_aot.hpp $(CHALI_LLVM_CONFIG) | $(CHALI_BUILD_ROOT)/chali-native
 	$(CXX) $(CXXFLAGS) -DCHALI_STATIC_LLVM=1 -DLLVM_BUILD_STATIC -I$(CHALI_LLVM_SDK)/include -Ilibrary -MMD -MP -c $< -o $@
 -include $(CHALI_BUILD_ROOT)/chali-native/chali_aot_llvm_static.d
@@ -388,25 +388,25 @@ $(CHALI_STDLIB_OBJ): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
 -include $(wildcard $(EMBEDDED_LSP_BUILD)/*.d)
 
-# AOT 复用共享原生服务；先构建静态库资产，再嵌入编译器，首次克隆同样自动完成。
-CHALI_AOT_HOST_BUILD := $(CHALI_BUILD_ROOT)/chali-aot-host
-CHALI_AOT_HOST_OBJECT := $(CHALI_AOT_HOST_BUILD)/native_runtime.o
-CHALI_AOT_SYSTEM_OBJECT := $(CHALI_AOT_HOST_BUILD)/system_arena.o
-CHALI_AOT_PROFILE_OBJECT := $(CHALI_AOT_HOST_BUILD)/backend_profile.o
-$(CHALI_AOT_PROFILE_OBJECT): source/aot/backend_profile.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
+# BUILD 复用共享原生服务；先构建静态库资产，再嵌入编译器，首次克隆同样自动完成。
+CHALI_BUILD_HOST_BUILD := $(CHALI_BUILD_ROOT)/chali-aot-host
+CHALI_BUILD_HOST_OBJECT := $(CHALI_BUILD_HOST_BUILD)/native_runtime.o
+CHALI_BUILD_SYSTEM_OBJECT := $(CHALI_BUILD_HOST_BUILD)/system_arena.o
+CHALI_BUILD_PROFILE_OBJECT := $(CHALI_BUILD_HOST_BUILD)/backend_profile.o
+$(CHALI_BUILD_PROFILE_OBJECT): source/aot/backend_profile.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
-$(CHALI_AOT_HOST_OBJECT): source/aot/native_runtime.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
+$(CHALI_BUILD_HOST_OBJECT): source/aot/native_runtime.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
-$(CHALI_AOT_SYSTEM_OBJECT): source/allocator/system_arena.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
+$(CHALI_BUILD_SYSTEM_OBJECT): source/allocator/system_arena.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
--include $(CHALI_AOT_HOST_BUILD)/native_runtime.d
--include $(CHALI_AOT_HOST_BUILD)/backend_profile.d
--include $(CHALI_AOT_HOST_BUILD)/system_arena.d
-$(CHALI_AOT_HOST_BUILD)/assets.txt: $(CHALI_AOT_HOST_OBJECT) $(CHALI_AOT_PROFILE_OBJECT) $(CHALI_AOT_SYSTEM_OBJECT) $(VM_LIB) $(HOST_LIB) tools/build_aot_host.py tools/embedded_asset_cache.py
-	$(PYTHON) tools/build_aot_host.py --build-root "$(CHALI_BUILD_ROOT)" --cxx "$(CXX)" --ar "$(AR)" --object $(CHALI_AOT_HOST_OBJECT) --object $(CHALI_AOT_PROFILE_OBJECT) --object $(CHALI_AOT_SYSTEM_OBJECT) --output $@
+-include $(CHALI_BUILD_HOST_BUILD)/native_runtime.d
+-include $(CHALI_BUILD_HOST_BUILD)/backend_profile.d
+-include $(CHALI_BUILD_HOST_BUILD)/system_arena.d
+$(CHALI_BUILD_HOST_BUILD)/assets.txt: $(CHALI_BUILD_HOST_OBJECT) $(CHALI_BUILD_PROFILE_OBJECT) $(CHALI_BUILD_SYSTEM_OBJECT) $(VM_LIB) $(HOST_LIB) tools/build_aot_host.py tools/embedded_asset_cache.py
+	$(PYTHON) tools/build_aot_host.py --build-root "$(CHALI_BUILD_ROOT)" --cxx "$(CXX)" --ar "$(AR)" --object $(CHALI_BUILD_HOST_OBJECT) --object $(CHALI_BUILD_PROFILE_OBJECT) --object $(CHALI_BUILD_SYSTEM_OBJECT) --output $@
 
 # 更新标准库或胶水实现时只刷新单个内嵌资产对象，不重编宿主入口。
 CHALI_EMBED_INPUTS := $(shell $(PYTHON) tools/embed_stdlib.py --build-root "$(CHALI_BUILD_ROOT)" --dependencies)

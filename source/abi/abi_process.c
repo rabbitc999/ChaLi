@@ -195,6 +195,6 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_process_records(size_t *count)
 }
 
 #ifndef GLUE_NO_STD_PROCESS
-#define CHALI_AOT_BIND_MODULE process
+#define CHALI_BUILD_BIND_MODULE process
 #include "aot_bind_module.h"
 #endif

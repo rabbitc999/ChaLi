@@ -16,7 +16,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='chali-man-') as directory:
         work=Path(directory)
         compiler=work/COMPILER.name;shutil.copy2(COMPILER,compiler)
-        # 复制出的独立编译器找不到 build/dependencies/llvm 工具链：示例执行需要 AOT 链接，
+        # 复制出的独立编译器找不到 build/dependencies/llvm 工具链：示例执行需要 BUILD 链接，
         # 显式把 clang 交给它；查询本身仍然不读取仓库。
         clang=ROOT/'build/dependencies/llvm/toolchain/bin'/('clang.exe' if os.name=='nt' else 'clang')
         env=dict(os.environ,CHALI_PYTHON='__missing_python__',CHALI_LANG='zh',NO_COLOR='1',
@@ -54,7 +54,7 @@ def main():
         chapter=query('book','1')['chapter']
         assert chapter['content']==(ROOT/'doc/book/01-第一个程序.md').read_text(encoding='utf-8')
         aot_chapter=query('book','27')['chapter']
-        assert aot_chapter['content']==(ROOT/'doc/book/27-AOT导出.md').read_text(encoding='utf-8')
+        assert aot_chapter['content']==(ROOT/'doc/book/27-BUILD导出.md').read_text(encoding='utf-8')
         rendered=run('book','27').stdout
         assert '[图片](images/chali-aot.png)' in rendered,rendered
         assert query('book','6')['chapter']['id']=='06'

@@ -513,6 +513,6 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_json_records(size_t *count)
 }
 
 #ifndef GLUE_NO_STD_JSON
-#define CHALI_AOT_BIND_MODULE json
+#define CHALI_BUILD_BIND_MODULE json
 #include "aot_bind_module.h"
 #endif

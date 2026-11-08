@@ -126,7 +126,7 @@ def main():
         unit = directory / ('annotation-unit.exe' if os.name == 'nt' else 'annotation-unit')
         build = args.build_root.resolve()
         command = [args.cxx, '-std=c++17', '-O1', '-pthread', '-ffunction-sections', '-fdata-sections',
-                   '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1', '-DSTACKVM_AOT_ONLY=1',
+                   '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1', '-DRUNTIME_WITH_REFLECTION=1', '-DRUNTIME_BUILD_ONLY=1',
                    '-I' + str(ROOT), '-I' + str(ROOT / 'source'), '-I' + str(ROOT / 'library'), '-I' + str(ROOT / 'source/ast'),
                    '-I' + str(ROOT / 'source/ircode'), '-I' + str(ROOT / 'source/preprocess'),
                    ROOT / 'tests/chali_annotations_test.cpp', ROOT / 'source/json/json.cpp',

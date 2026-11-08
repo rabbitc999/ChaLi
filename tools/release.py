@@ -94,7 +94,7 @@ def verify_assets(root, binary, vsix, version, windows, env=None, build_root=Non
     if not pdf.read_bytes().startswith(b'%PDF-'):
         raise ValueError('书本 PDF 无效')
     config = ((Path(build_root) if build_root else root / 'build') / 'chali-runtime/buildConfig.json').read_text(encoding='utf-8')
-    for flag in ('CHALI_WITH_REFLECTION=1', 'STACKVM_WITH_REFLECTION=1'):
+    for flag in ('CHALI_WITH_REFLECTION=1', 'RUNTIME_WITH_REFLECTION=1'):
         if flag not in config:
             raise ValueError('发布构建必须同时启用前端与运行时反射：' + flag)
     if windows:
@@ -224,7 +224,7 @@ def main(argv=None):
             run(['sh', 'ci.sh'], env=env)
         run(['sh', 'gen.sh'], env=env)
         command = ['make', '-j' + str(args.jobs), '-W', 'source/chali_main.cpp', 'TARGET=' + binary.name,
-                   'CHALI_WITH_REFLECTION=1', 'STACKVM_WITH_REFLECTION=1']
+                   'CHALI_WITH_REFLECTION=1', 'RUNTIME_WITH_REFLECTION=1']
         if windows:
             command += ['LDFLAGS=-Wl,--gc-sections -s -static -static-libgcc -static-libstdc++']
         run(['sh', '-c', 'exec "$@"', 'chali-release', *command] if windows else command, env=env)

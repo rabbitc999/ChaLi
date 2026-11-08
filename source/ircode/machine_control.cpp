@@ -17,7 +17,7 @@ Machine::Machine(bool trace) : control_(Memory::makeShared<ExecutionControl>()),
  * @brief 设置协作停止请求，执行与等待安全点将观察此原子标志。
  */
 void Machine::requestStop() { control_->requested.store(true, std::memory_order_release); }
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
 /**
  * @brief 返回当前运行的弱引用投递器，不捕获 Machine 裸指针。
  * @return 运行结束后稳定返回关闭状态的投递器。

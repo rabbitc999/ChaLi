@@ -14,7 +14,7 @@ import std::reflect;
 
 ## 公共约定与错误边界
 
-要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 STACKVM_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。
+要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。
 
 ## 参考代码
 

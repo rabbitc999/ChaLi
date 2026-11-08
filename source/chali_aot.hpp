@@ -40,14 +40,14 @@ bool usesDynamicAbiLibrary(const ExternFunction &function);
 bool isDirectLinkLibrary(const Memory::String &library);
 
 /**
- * @brief 识别需由 AOT 链接器提供的内置 C 服务。
+ * @brief 识别需由 BUILD 链接器提供的内置 C 服务。
  * @param library ABI 库标识。
  * @return GUI、音频或 XML 的保留标识为真。
  */
 bool isBuiltinNativeLibrary(const Memory::String &library);
 
 /**
- * @brief AOT 输出的形态与开关。
+ * @brief BUILD 输出的形态与开关。
  */
 struct Options
 {
@@ -79,11 +79,11 @@ struct Options
 };
 
 /**
- * @brief 一次 AOT 编译的全部输入。
+ * @brief 一次 BUILD 编译的全部输入。
  */
 struct Request
 {
-    const ast::Program *syntax = nullptr;      ///< 语义检查后的 AST；正常运行和 AOT 直接消费此树。
+    const ast::Program *syntax = nullptr;      ///< 语义检查后的 AST；正常运行和 BUILD 直接消费此树。
     const runtime::QuadFile *quads = nullptr;   ///< 独立库调用方的兼容四元式输入；正常编译为空。
     const runtime::Program *program = nullptr;  ///< 兼容组装结果；AST 路径不需要它。
     Memory::String dataBytes;                   ///< `.data.bin` 原始字节。
@@ -108,7 +108,7 @@ int executeNative(const Options &options, const Memory::Vector<Memory::String> &
  * @brief 取当前编译单元里 `#abi("C", "库", "符号")` 声明的外部 C 函数。
  *
  * 由前端（`source/semantics/artifacts.cpp`）注入，提供函数声明表与 C ABI 类型映射；
- * AOT 这边只消费结果，不反过来依赖前端，这样 `chali_aot` 始终是个干净的独立模块。
+ * BUILD 这边只消费结果，不反过来依赖前端，这样 `chali_aot` 始终是个干净的独立模块。
  * @return 外部函数清单；未登记提供方时返回空表。
  */
 [[nodiscard]] Memory::Vector<ExternFunction> collectAbiExterns();

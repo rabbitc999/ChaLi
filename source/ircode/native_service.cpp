@@ -14,7 +14,7 @@ using namespace runtimeDetail;
  */
 std::optional<NativeValue> Machine::nativeThreadArgument(NativeContext &context)
 {
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     if (threadRuntime_)
     {
         const auto packet = threadRuntime_->workers.at(threadId_)->initial;
@@ -38,7 +38,7 @@ std::optional<NativeValue> Machine::nativeThreadArgument(NativeContext &context)
 void Machine::checkNativeExecution(NativeContext &context)
 {
     if (control_->requested.load(std::memory_order_acquire) && context.error.empty()) context.error = "执行已取消";
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     if (threadRuntime_ && threadRuntime_->panicked.load(std::memory_order_acquire) && context.error.empty())
         context.error = threadRuntime_->panicError;
 #endif
@@ -59,7 +59,7 @@ std::optional<NativeValue> Machine::invokeNativeService(const Program &program, 
     data_ = const_cast<DataArea *>(context.data);
     context.machine = this;
     context.threadId = threadId_;
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     if (!events_) events_ = Memory::makeShared<EventQueue>();
     if (!sharedRuntime_) sharedRuntime_ = Memory::makeShared<SharedRuntime>();
     if (threadsEnabled_ && !threadRuntime_)
@@ -83,7 +83,7 @@ std::optional<NativeValue> Machine::invokeNativeService(const Program &program, 
         if (context.textSink) context.textSink(context.textSinkUser, bytes, size);
         if (context.text && (!context.textKeep || *context.textKeep)) context.text->append(bytes, size);
     };
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     const auto wait = [&](std::unique_lock<std::mutex> &guard, const Memory::Function<bool()> &ready,
                           std::chrono::steady_clock::time_point deadline) {
         while (!ready() && std::chrono::steady_clock::now() < deadline)
@@ -98,7 +98,7 @@ std::optional<NativeValue> Machine::invokeNativeService(const Program &program, 
 #endif
     ConcurrentCallState state{ program, pending, *context.heap, *context.objects, result, callbackDepth, 0,
                                [&](const Memory::String &, const Slot &value) { returned = value; }, fail, emit, check
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
                                ,
                                nativeReceivedEvent_, [&](const Memory::String &error, const RunResult &) { fail(error); }, wait
 #endif
@@ -119,7 +119,7 @@ std::optional<NativeValue> Machine::invokeNativeService(const Program &program, 
  */
 void Machine::finishNativeServices(NativeContext &context)
 {
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     if (threadId_ == 0 && threadRuntime_)
     {
         {

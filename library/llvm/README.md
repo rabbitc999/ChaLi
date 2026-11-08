@@ -18,7 +18,7 @@ make CHALI_STATIC_LLVM=1 -j4
 
 SDK 安装到 `build/dependencies/llvm/static-sdk/`。静态构建自动使用该目录的 `gcc.exe`、`g++.exe` 和 `ar.exe`，显式设置 sysroot 并使用 SDK 的 LLD 链接器，全部中间对象隔离到 `build/llvm-static-gcc16/`。不要将旧 GCC 对象或 MSVC SDK 与该 SDK 混用。CMake 导出工程须在独立目录使用 SDK 的 `bin/gcc.exe`、`bin/g++.exe` 配置，并设置 `CHALI_STATIC_LLVM=ON` 和 `CHALI_LLVM_SDK`。
 
-安装完成后校验全部安装文件、运行 llvm-config 和 GCC、确认真实 `.a` 静态库，再静态链接并运行一个同时引用 LLVM C API 与 LLD MinGW 驱动的最小程序。探测程序在不含 SDK 的 PATH 下运行，防止把依赖第三方 DLL 的结果误判为完整静态链接。锁定的 LLD 包包含多目标支持，链接其所需的 LLVM target 组件；这不代表 ChaLi 已支持其他 AOT 架构。
+安装完成后校验全部安装文件、运行 llvm-config 和 GCC、确认真实 `.a` 静态库，再静态链接并运行一个同时引用 LLVM C API 与 LLD MinGW 驱动的最小程序。探测程序在不含 SDK 的 PATH 下运行，防止把依赖第三方 DLL 的结果误判为完整静态链接。锁定的 LLD 包包含多目标支持，链接其所需的 LLVM target 组件；这不代表 ChaLi 已支持其他 BUILD 架构。
 
 MSYS2 预编译 LLVM 的 WindowsManifest 对象以 dllimport 声明 libxml2，项目通过 [llvm_static_imports.cpp](../../tools/llvm_static_imports.cpp) 提供类型一致、指向静态 libxml2 符号的导入地址槽；不加载 DLL，也不修改 SDK 二进制。zstd 和 libxml2 的依赖选择静态库。
 
@@ -36,9 +36,9 @@ make llvm-static                      # 自动准备 SDK 后构建
 python tools/fetch_llvm_toolchain.py
 ```
 
-从 [llvm-mingw 20261020](https://github.com/mstorsjo/llvm-mingw/releases/tag/20261020) 下载 LLVM **23.1.4**，核对 [manifest.json](manifest.json) 的固定上游 SHA-256，再安装 AOT 所需的 clang、LLD、compiler-rt 与 Windows x64 CRT 文件到 `build/dependencies/llvm/toolchain/`。兼容入口是 `python library/llvm/setup.py`；`--offline` 仅使用已有校验通过的下载缓存。
+从 [llvm-mingw 20261020](https://github.com/mstorsjo/llvm-mingw/releases/tag/20261020) 下载 LLVM **23.1.4**，核对 [manifest.json](manifest.json) 的固定上游 SHA-256，再安装 BUILD 所需的 clang、LLD、compiler-rt 与 Windows x64 CRT 文件到 `build/dependencies/llvm/toolchain/`。兼容入口是 `python library/llvm/setup.py`；`--offline` 仅使用已有校验通过的下载缓存。
 
-外置 AOT 默认查找该缓存，也可使用 `--llvm` 或 `CHALI_LLVM_CLANG` 指定工具。只导出 LLVM IR 不需要 clang；`run` 和生成原生程序需要可用后端。
+外置 BUILD 默认查找该缓存，也可使用 `--llvm` 或 `CHALI_LLVM_CLANG` 指定工具。只导出 LLVM IR 不需要 clang；`run` 和生成原生程序需要可用后端。
 
 下载临时文件仅写入仓库根 `tmp/`。每轮生成和验证结束、转存所需证据后，运行 `pwsh -File tools/clean_tmp.ps1`；清理不会删除 `build/downloads/` 或已安装依赖。
 
@@ -64,4 +64,4 @@ python tools/fetch_llvm_toolchain.py --platform macos-arm64
 
 Linux/macOS 归档来自 [LLVM 23.1.4 官方发布](https://github.com/llvm/llvm-project/releases/tag/llvmorg-23.1.4)，URL、长度和 SHA-256 固定在 manifest.json，不在安装时追踪 latest。保留执行权限及安全的包内链接；只在匹配宿主执行 clang 版本探测。对应系统仍须满足官方包的系统运行库和平台 SDK 要求。本轮仅在 Windows x64 实际执行下载和工具验证，其他平台只检查了选择逻辑和固定发布元数据。
 
-当前静态 SDK 自动下载与匹配 GCC 构建方案限定 Windows x64；其他平台下载能力不代表静态后端、跨架构 AOT 或 macOS 运行时已经验收。没有锁定分发的平台会明确报错，可通过 `CHALI_LLVM_CLANG` 指定系统 LLVM。
+当前静态 SDK 自动下载与匹配 GCC 构建方案限定 Windows x64；其他平台下载能力不代表静态后端、跨架构 BUILD 或 macOS 运行时已经验收。没有锁定分发的平台会明确报错，可通过 `CHALI_LLVM_CLANG` 指定系统 LLVM。

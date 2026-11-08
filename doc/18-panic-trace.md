@@ -32,7 +32,7 @@ build/work/chali/chali run chali/example/samples-error/assert_failure.chl --debu
 | --- | --- | --- |
 | `chali build: panic：<消息>` | 用户 `std::core::panic` 的文本或运行期检查生成的文本 | 永远有 |
 | `出错位置：文件:行（函数）` | 前端写进 `.quad` 的 `# chali-source` 元数据，随产物一起编入 | 四元式没有来源元数据时退化为四元式行号 |
-| `调用栈（内 → 外）` | 运行期帧采集，受 `STACKVM_WITH_PANIC_TRACE` 控制 | 关闭该宏时只剩前两行 |
+| `调用栈（内 → 外）` | 运行期帧采集，受 `RUNTIME_WITH_PANIC_TRACE` 控制 | 关闭该宏时只剩前两行 |
 
 一次真实的默认构建输出：
 
@@ -60,12 +60,12 @@ chali build: panic：nested failure
 
 ## 运行期帧采集
 
-`STACKVM_WITH_PANIC_TRACE` 是编译运行期库时的宏，默认 `1`：
+`RUNTIME_WITH_PANIC_TRACE` 是编译运行期库时的宏，默认 `1`：
 
 | 配置 | 消息 | 位置 | 自动调用栈 |
 | --- | --- | --- | --- |
-| 默认（`STACKVM_WITH_PANIC_TRACE=1`） | 保留 | 保留 | 按真实机器帧记录 |
-| `-DSTACKVM_WITH_PANIC_TRACE=0` 或 `-DNO_CHALI_PANIC_TRACE` | 保留 | 保留 | 关闭采集 |
+| 默认（`RUNTIME_WITH_PANIC_TRACE=1`） | 保留 | 保留 | 按真实机器帧记录 |
+| `-DRUNTIME_WITH_PANIC_TRACE=0` 或 `-DNO_CHALI_PANIC_TRACE` | 保留 | 保留 | 关闭采集 |
 
 ```sh
 # 关掉帧采集重新构建编译器（运行期随编译器一起编进去）

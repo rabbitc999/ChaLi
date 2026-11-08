@@ -1,6 +1,6 @@
 /**
  * @file native_raw_storage.cpp
- * @brief 运行时 与 AOT 共用的原始存储状态，不改变普通引用的存活验证。
+ * @brief 运行时 与 BUILD 共用的原始存储状态，不改变普通引用的存活验证。
  */
 #include "runtime_internal.hpp"
 
@@ -55,7 +55,7 @@ bool rawMemoryView(NativeContext &ctx, std::int64_t operation, std::int64_t dest
         const auto at = static_cast<std::size_t>(address);
         if (ctx.data && at < ctx.data->binary.size())
             return count <= ctx.data->binary.size() - at ? const_cast<unsigned char *>(ctx.data->binary.data()) + at : nullptr;
-#if STACKVM_WITH_DEFAULT_HEAP
+#if RUNTIME_WITH_DEFAULT_HEAP
         auto *heap = dynamic_cast<Heap *>(ctx.heap);
         return heap ? heap->borrowBytes(at, count) : nullptr;
 #else
@@ -106,7 +106,7 @@ Slot rawStorageOperation(NativeContext &ctx, std::int64_t op, std::int64_t handl
     }
     if (op == 0)
     {
-#if !STACKVM_WITH_DEFAULT_HEAP
+#if !RUNTIME_WITH_DEFAULT_HEAP
         return fail("原始存储需要支持对齐视图的默认字节堆");
 #else
         if (index < 0 || value <= 0 || alignment <= 0 || alignment > 16 || (alignment & (alignment - 1)) != 0

@@ -29,7 +29,7 @@ struct Project
      */
     bool debug = false;
     /**
-     * `[chali] run`：项目默认运行方式，缺省 `"run"`，使用 checked AOT。
+     * `[chali] run`：项目默认运行方式，缺省 `"run"`，使用 checked BUILD。
      * 命令行子命令或 `--mode` 覆盖它；svmb 导出已删除。
      * 旧 interpret 与 aot 配置归一化为原生运行，不再解释执行。
      */

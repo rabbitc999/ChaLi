@@ -1,6 +1,6 @@
 'use strict';
 
-/** 使用真实 GDB 验证 AOT 断点、单步、调用栈、变量和表达式。 */
+/** 使用真实 GDB 验证 BUILD 断点、单步、调用栈、变量和表达式。 */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');

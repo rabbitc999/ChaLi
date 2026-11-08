@@ -22,9 +22,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/runtime/aot_sources.txt")
-file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/runtime/aot_sources.txt" STACKVM_CORE_SOURCES)
-list(TRANSFORM STACKVM_CORE_SOURCES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/runtime/")
-add_library(chali_vm_core STATIC ${STACKVM_CORE_SOURCES})
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/runtime/aot_sources.txt" RUNTIME_CORE_SOURCES)
+list(TRANSFORM RUNTIME_CORE_SOURCES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/runtime/")
+add_library(chali_vm_core STATIC ${RUNTIME_CORE_SOURCES})
 file(GLOB CHALI_ABI_SOURCES CONFIGURE_DEPENDS abi/*.c abi/*.cpp)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/caspp/core_sources.txt")
 file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/caspp/core_sources.txt" CHALI_CAS_SOURCES)
@@ -47,15 +47,15 @@ set_source_files_properties("${CHALI_MINIZ_DIR}/miniz_tinfl.c" PROPERTIES
 
 # 反射的前端与运行时默认同时编入；单次编译使用 --no-reflection 关闭。
 option(CHALI_WITH_REFLECTION "启用注解与反射前端支持" ON)
-option(STACKVM_WITH_REFLECTION "启用注解与反射运行时支持" ON)
+option(RUNTIME_WITH_REFLECTION "启用注解与反射运行时支持" ON)
 foreach(target chali_vm_core chali_host_records chali_runtime)
     add_dependencies(${target} chali_dependencies_check)
     target_include_directories(${target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/runtime
         ${CMAKE_CURRENT_SOURCE_DIR}/json ${CMAKE_CURRENT_SOURCE_DIR}/toml ${CMAKE_CURRENT_SOURCE_DIR}/runtime_c ${CMAKE_CURRENT_SOURCE_DIR}/caspp/include
         "${CHALI_SQLITE_DIR}" "${CHALI_MINIZ_DIR}" "${CHALI_YYJSON_DIR}/src" "${CHALI_TOMLC17_DIR}/src")
-    target_compile_definitions(${target} PUBLIC STACKVM_AOT_ONLY=1 CHALI_CUSTOM_ALLOCATOR=1
+    target_compile_definitions(${target} PUBLIC RUNTIME_BUILD_ONLY=1 CHALI_CUSTOM_ALLOCATOR=1
         CHALI_WITH_REFLECTION=$<BOOL:${CHALI_WITH_REFLECTION}>
-        STACKVM_WITH_REFLECTION=$<BOOL:${STACKVM_WITH_REFLECTION}>)
+        RUNTIME_WITH_REFLECTION=$<BOOL:${RUNTIME_WITH_REFLECTION}>)
 endforeach()
 
 # 裁剪定义 PUBLIC 传播到前端和运行时，避免配置不一致。

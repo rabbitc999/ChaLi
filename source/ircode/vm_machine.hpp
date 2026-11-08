@@ -16,7 +16,7 @@ struct TransferPacket;
 struct NativeContext;
 }  // namespace runtimeDetail
 /**
- * @brief AOT 宿主服务配置；保留 Machine 类型名供既有 C++ 胶水使用。
+ * @brief BUILD 宿主服务配置；保留 Machine 类型名供既有 C++ 胶水使用。
  */
 class Machine
 {
@@ -61,7 +61,7 @@ public:
      * @brief 从任意宿主线程请求本运行时协作停止，在下一安全点生效。
      */
     void requestStop();
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     /**
      * @brief 取得当前运行的有界宿主事件投递器，运行结束后返回关闭状态。
      * @return 不捕获运行时裸地址的线程安全投递器。
@@ -93,7 +93,7 @@ public:
      */
     void setHeapAllocator(HeapAllocator *allocator) { heapAllocator_ = allocator; }
 
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     /**
      * @brief 为隔离子线程创建独立字节堆。
      * @param factory 继承到子线程的堆工厂。
@@ -184,7 +184,7 @@ public:
         outputKeepText_ = keepText;
     }
 
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     /**
      * @brief 允许程序创建独立 运行时 线程。
      * @param enabled 是否允许创建线程。
@@ -309,7 +309,7 @@ private:
     std::optional<bool> callThreadService(runtimeDetail::ConcurrentCallState &state, const Memory::String &name, const Memory::String &returnDest, std::shared_ptr<runtimeDetail::TransferPacket> &startupPacket, bool typedCreate);
 
     std::shared_ptr<ExecutionControl> control_;
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     std::shared_ptr<EventQueue> events_;
     RuntimeEvent nativeReceivedEvent_;  ///< 原生服务逐次调用之间保留最近接收的事件。
 #endif
@@ -322,7 +322,7 @@ private:
     DataArea *data_ = nullptr;                        ///< 可选的数据区。
     const NativeRegistry *nativeRegistry_ = nullptr;  ///< 可选的 C++ 胶水函数表。
     HeapAllocator *heapAllocator_ = nullptr;          ///< 可选的自定义 运行时 字节堆。
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     Memory::Function<Memory::UniquePtr<HeapAllocator>()> threadHeapFactory_;
 #endif
     bool registerExecution_ = true;  ///< 默认使用新寄存器分派核心。
@@ -333,7 +333,7 @@ private:
     std::size_t stackLimit_ = 0u;                      ///< 每个执行上下文的求值栈槽数上限；0 表示不限制。
     const NativeServices *hostServices_ = nullptr;     ///< 宿主注入的通用不透明服务。
     Memory::Vector<Memory::String> programArguments_;  ///< 传给语言入口的命令行参数。
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     bool threadsEnabled_ = true;
     std::shared_ptr<ThreadRuntime> threadRuntime_;
     std::shared_ptr<SharedRuntime> sharedRuntime_;

@@ -9,7 +9,7 @@ def main():
     directory = root / 'source/ircode'
     forbidden = re.compile(r'\b(?:FileApi|FileHandle|BigInt|BigFloat|BigInteger|BigDecimal)\b|'
                            r'__std_(?:file|bint|bfloat|vec|set|map)|"__std_str_(?:lit|join|sub|of_int|of_flt|cmp|pos)"|ObjectKind::(?:File|Process|Vector|Set|Map|IteratorLease)|'
-                           r'STACKVM_WITH_BIG(?:INT|FLOAT)|\bbignum\b|'
+                           r'RUNTIME_WITH_BIG(?:INT|FLOAT)|\bbignum\b|'
                            r'\b(?:makeList|readList|listPush|listPushStruct|readListStruct|makeMap|readMap|mapSet|makeSet|readSet|setInsert)\s*\(')
     sources = [*[directory / name for name in (directory / "core_sources.txt").read_text().splitlines()], *sorted(directory.glob("*.hpp"))]
     failures = []

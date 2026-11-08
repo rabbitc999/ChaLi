@@ -50,9 +50,9 @@ Memory::String astDataLiteral(const ast::NodePtr &node, const ast::TypePtr &type
  */
 Text astAddressPrimitive()
 {
-    const auto *disabled = std::getenv("CHALI_NO_AOT_MULTI_ADDRESS_CACHE");
+    const auto *disabled = std::getenv("CHALI_NO_BUILD_MULTI_ADDRESS_CACHE");
     const unsigned entries = disabled && *disabled ? 1u : 4u;
-    const auto *disablePromotion = std::getenv("CHALI_NO_AOT_ADDRESS_PROMOTION");
+    const auto *disablePromotion = std::getenv("CHALI_NO_BUILD_ADDRESS_PROMOTION");
     const bool promotion = entries > 1u && !(disablePromotion && *disablePromotion);
     Text result = R"LLVM(
 @chali_address_view = internal thread_local global { i64, i64, ptr, ptr, i64 } zeroinitializer
@@ -179,7 +179,7 @@ slow:
  */
 Text astStringStoragePrimitive()
 {
-    const auto *disabled = std::getenv("CHALI_NO_AOT_MULTI_ADDRESS_CACHE");
+    const auto *disabled = std::getenv("CHALI_NO_BUILD_MULTI_ADDRESS_CACHE");
     const unsigned entries = disabled && *disabled ? 1u : 4u;
     // 宿主数据区视图始终从逻辑零开始；堆分配视图使用实际分配首。
     Text result = R"LLVM(
@@ -409,7 +409,7 @@ void prepareAst(Request &request, Translator &state)
         state.functionByLabel[textOf(target.label)] = state.functions.size();
         state.functions.push_back(std::move(target));
     }
-    if (!request.options.shared && !state.functionByLabel.count("main")) state.fail("AOT：找不到入口 main");
+    if (!request.options.shared && !state.functionByLabel.count("main")) state.fail("BUILD：找不到入口 main");
     std::vector<std::string> pending;
     pending = { "main", "__chali_library_init", "__chali_library_finish" };
     for (const auto &name : request.options.exports) pending.push_back(textOf(name));

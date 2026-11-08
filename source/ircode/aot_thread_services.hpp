@@ -1,6 +1,6 @@
 /**
  * @file aot_thread_services.hpp
- * @brief AOT 按需接入的线程、消息与事件服务契约。
+ * @brief BUILD 按需接入的线程、消息与事件服务契约。
  */
 #pragma once
 #include "runtime_internal.hpp"
@@ -24,11 +24,11 @@ struct NativeThreadState
     bool nativeCleanup;
 };
 #if defined(_WIN32)
-#define CHALI_AOT_SERVICE_LOCAL
+#define CHALI_BUILD_SERVICE_LOCAL
 #else
-#define CHALI_AOT_SERVICE_LOCAL __attribute__((visibility("hidden")))
+#define CHALI_BUILD_SERVICE_LOCAL __attribute__((visibility("hidden")))
 #endif
-extern thread_local NativeThreadState nativeThreadState CHALI_AOT_SERVICE_LOCAL;
+extern thread_local NativeThreadState nativeThreadState CHALI_BUILD_SERVICE_LOCAL;
 
 
 /**

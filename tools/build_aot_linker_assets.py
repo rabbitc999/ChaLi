@@ -21,7 +21,7 @@ def main():
     target = ROOT / 'source/aot/linker_assets.txt'
     cache = AssetCache('aot-linker', dict(entries, **{'generator': Path(__file__)}))
     if cache.valid([target]):
-        print('AOT 链接资产 SHA256 相同，跳过生成。')
+        print('BUILD 链接资产 SHA256 相同，跳过生成。')
         return
     lines = []
     for name, path in entries:
@@ -32,12 +32,12 @@ def main():
         lines.append(f'{name} {len(data)} {packed.hex()}\n')
     text = ''.join(lines)
     if args.check:
-        assert target.read_text(encoding='ascii') == text, 'AOT 链接资产不同步'
+        assert target.read_text(encoding='ascii') == text, 'BUILD 链接资产不同步'
     else:
         if not target.exists() or target.read_text(encoding='ascii') != text:
             target.write_text(text, encoding='ascii')
     cache.save([target])
-    print(f'AOT 链接资产已核对：{len(entries)} 个文件' if args.check else f'AOT 链接资产已生成：{len(entries)} 个文件')
+    print(f'BUILD 链接资产已核对：{len(entries)} 个文件' if args.check else f'BUILD 链接资产已生成：{len(entries)} 个文件')
 
 
 if __name__ == '__main__':

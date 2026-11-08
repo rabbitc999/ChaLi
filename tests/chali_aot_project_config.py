@@ -1,4 +1,4 @@
-"""验证工程 AOT 汇编、对象、库、搜索路径、库锁、LTO 与命令行覆盖。"""
+"""验证工程 BUILD 汇编、对象、库、搜索路径、库锁、LTO 与命令行覆盖。"""
 
 import argparse
 import os
@@ -97,7 +97,7 @@ def main():
         executable = project / "build" / ("with-object.exe" if os.name == "nt" else "with-object")
         output = subprocess.run([str(executable)], cwd=project, capture_output=True, text=True, encoding="utf-8", timeout=60)
         assert output.returncode == 0 and output.stdout.strip() == "42", (output.returncode, output.stdout, output.stderr)
-    print("工程 AOT 配置：汇编、对象、搜索路径、库、LTO 与命令行覆盖通过")
+    print("工程 BUILD 配置：汇编、对象、搜索路径、库、LTO 与命令行覆盖通过")
 
 
 if __name__ == "__main__":

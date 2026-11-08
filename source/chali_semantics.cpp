@@ -3234,7 +3234,7 @@ const ast::Program *M_BuildSyntax() { return g_buildSyntax.get(); }
 /**
  * @brief 完成语义检查和所有权展开，保留供 LLVM 直接访问的 AST。
  * @param moduleName 仅用于显式兼容导出的模块名称。
- * @param outPrefix 显式兼容导出的文件前缀；正常 AOT 不使用它生成四元式。
+ * @param outPrefix 显式兼容导出的文件前缀；正常 BUILD 不使用它生成四元式。
  * @param run 兼容调用方的语义绑定开关，不在此处执行程序。
  * @param emitBinary 非零时额外生成独立 AST 库的兼容四元式产物。
  * @param inputText 已废弃，标准输入由原生程序读取。

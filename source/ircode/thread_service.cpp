@@ -28,7 +28,7 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
     auto &assign = state.assign;
     auto &fail = state.fail;
     auto &emitText = state.emitText;
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     auto &failFromThread = state.failFromThread;
     /**
      * @brief 在并发等待时继续观察取消、失败与截止时间。
@@ -41,7 +41,7 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
         state.wait(guard, ready, deadline);
     };
 #endif
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     if (name.rfind("std::thread::", 0u) == 0u || typedCreate)
     {
         const bool resultWait = name == "std::thread::__waitResult";
@@ -152,7 +152,7 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
                         child.parentThreadId_ = parentId;
                         child.entryLabel_ = label;
                         child.nativeThreadEntry_ = nativeEntry;
-                        if (!nativeEntry) throw std::runtime_error("原生线程缺少 AOT 执行入口");
+                        if (!nativeEntry) throw std::runtime_error("原生线程缺少 BUILD 执行入口");
                         childResult = nativeEntry(child, snapshot, label);
                     } catch (const std::exception &error)
                     {
@@ -357,7 +357,7 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
             assign(returnDest, Slot::fromInt(1));
         return true;
     }
-#endif /* STACKVM_WITH_THREADS */
+#endif /* RUNTIME_WITH_THREADS */
 
     return std::nullopt;
 }

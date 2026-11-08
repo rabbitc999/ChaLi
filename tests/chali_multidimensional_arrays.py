@@ -40,7 +40,7 @@ def main():
             result = subprocess.run(command, cwd=ROOT, env=env, capture_output=True,
                                     text=True, encoding='utf-8', timeout=300)
             if backend == 'build':
-                assert result.returncode == 0, (stem, 'AOT 编译', result.stdout, result.stderr)
+                assert result.returncode == 0, (stem, 'BUILD 编译', result.stdout, result.stderr)
                 result = subprocess.run([str(target)], cwd=ROOT, env=env, capture_output=True,
                                         text=True, encoding='utf-8', timeout=90)
             return result

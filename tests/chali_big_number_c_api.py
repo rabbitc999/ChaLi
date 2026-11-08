@@ -1,4 +1,4 @@
-"""验证大数 C 入口的数值、拥有值、输入及四种 AOT 配置。"""
+"""验证大数 C 入口的数值、拥有值、输入及四种 BUILD 配置。"""
 from compiler_path import compiler_path
 from project_temp import tempfile
 from pathlib import Path

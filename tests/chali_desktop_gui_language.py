@@ -17,7 +17,7 @@ def verify(result, label, expected):
 
 
 def main():
-    """生成匹配模块与真实 PNG 资源，再分别执行 checked run 和 AOT。"""
+    """生成匹配模块与真实 PNG 资源，再分别执行 checked run 和 BUILD。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--library', type=Path, required=True, help='CHALI_GUI_TESTING=ON 的测试 DLL')

@@ -17,7 +17,7 @@ def main():
     parser.add_argument('--package-only', action='store_true')
     parser.add_argument('--external-build-root', type=Path, help='外置 LLVM 的实际隔离构建目录')
     parser.add_argument('--static-build-root', type=Path, help='静态 LLVM 的实际隔离构建目录')
-    parser.add_argument('--skip-tests', action='store_true', help='按授权跳过 AOT 与 VS Code 回归，仅构建并核对产物')
+    parser.add_argument('--skip-tests', action='store_true', help='按授权跳过 BUILD 与 VS Code 回归，仅构建并核对产物')
     args = parser.parse_args()
     if os.name != 'nt' or args.jobs < 1:
         parser.error('当前双变体发布已验收目标为 Windows x64；jobs 必须大于零')

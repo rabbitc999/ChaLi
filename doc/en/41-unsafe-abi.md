@@ -104,11 +104,11 @@ Imports retain synchronous callback and return-ownership adapters; release funct
 
 The LLVM backend selects standard-library host modules from reachable native calls. The linker then collects unused function sections within selected modules. An unused source import does not force all its host code into the executable. Exports, reflection, callbacks and initialization/cleanup retain their reachability roots.
 
-The external LLVM path defaults to O3 and full LTO, eliminating unreachable LLVM definitions during linking before section collection and symbol stripping. The static LLVM path is configured for O3, global dead-code elimination and LTO; release reports identify the platforms actually validated. `CHALI_AOT_FULL_STDLIB=1` forces selection of every standard host module for same-version comparisons.
+The external LLVM path defaults to O3 and full LTO, eliminating unreachable LLVM definitions during linking before section collection and symbol stripping. The static LLVM path is configured for O3, global dead-code elimination and LTO; release reports identify the platforms actually validated. `CHALI_BUILD_FULL_STDLIB=1` forces selection of every standard host module for same-version comparisons.
 
 On MinGW, the CAS 64 MiB zero-initialized backing pool occupies BSS instead of embedding the entire zero buffer in the file. Runtime pool capacity remains unchanged. File size and runtime memory use are separate measurements.
 
-The native data image retains only data referenced by `addr` in reachable functions and records needed by function values, removing unreachable initializers and layout entries. Startup zeroes the logical image and copies nonzero segments; identical payloads share file storage. Binary layouts use an explicit byte length, supporting empty tables and embedded zero bytes. Logical addresses, object identity, array length headers and the heap boundary remain unchanged, so a smaller file does not imply a smaller runtime data area. `CHALI_AOT_KEEP_DATA=1` retains the complete image and layout for debugging comparisons.
+The native data image retains only data referenced by `addr` in reachable functions and records needed by function values, removing unreachable initializers and layout entries. Startup zeroes the logical image and copies nonzero segments; identical payloads share file storage. Binary layouts use an explicit byte length, supporting empty tables and embedded zero bytes. Logical addresses, object identity, array length headers and the heap boundary remain unchanged, so a smaller file does not imply a smaller runtime data area. `CHALI_BUILD_KEEP_DATA=1` retains the complete image and layout for debugging comparisons.
 
 ## C frames for host entries
 

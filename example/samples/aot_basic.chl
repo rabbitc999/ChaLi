@@ -1,10 +1,10 @@
 /* aot_basic.chl —— `chali build` 的冒烟样例。
  *
- * AOT 走的是「四元式 → LLVM 中间表示 → LLVM 原生产物」这条路，产物不带字节码、不链接虚拟机，
+ * BUILD 走的是「四元式 → LLVM 中间表示 → LLVM 原生产物」这条路，产物不带字节码、不链接虚拟机，
  * 所以样例只覆盖这一版翻译器真正支持的构造：整数与浮点算术、函数调用与递归、
  * if / else、while、数组、字符串、格式化输出。
  *
- * 解释执行（`chali run`）与 AOT 产物（`chali build` 编出的 exe）的 stdout 必须逐行一致。
+ * 解释执行（`chali run`）与 BUILD 产物（`chali build` 编出的 exe）的 stdout 必须逐行一致。
  */
 
 int64 fib(int64 n) {

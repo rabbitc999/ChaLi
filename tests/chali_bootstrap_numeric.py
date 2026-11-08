@@ -1,4 +1,4 @@
-"""核对自举 IEEE754、裸指针视图与 AOT 位转换指令。"""
+"""核对自举 IEEE754、裸指针视图与 BUILD 位转换指令。"""
 from compiler_path import compiler_path
 from project_temp import tempfile
 from pathlib import Path
@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    """执行相同 VM/AOT 样本，保留输出、编译器摘要及优化 LLVM IR。"""
+    """执行相同 VM/BUILD 样本，保留输出、编译器摘要及优化 LLVM IR。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     options = parser.parse_args()
@@ -51,7 +51,7 @@ def main():
     result = dict(compiler=str(compiler), compiler_sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(),
                   vm='passed', aot='passed', optimized_bitcasts='passed', conversion_calls='eliminated')
     (work / 'results.json').write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
-    print('bootstrap numeric VM/AOT and LLVM checks passed; logs:', work)
+    print('bootstrap numeric VM/BUILD and LLVM checks passed; logs:', work)
 
 
 if __name__ == '__main__':

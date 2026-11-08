@@ -149,7 +149,7 @@ chali run doc/examples/library/sqlite.chl
 
 在目标机器上用 `chali build` 生成原生可执行文件，静态链接运行时，交付时只需二进制本身
 （用了 `#abi` 外部库再带上动态库）。交叉编译、资源预算与执行边界见
-[部署说明](06-deployment.md)及[书稿原生产物部署章节](book/27-AOT导出.md)。
+[部署说明](06-deployment.md)及[书稿原生产物部署章节](book/27-BUILD导出.md)。
 
 ### 6.2 编辑器语言服务器与 VS Code 插件
 

@@ -1,4 +1,4 @@
-"""汇总显式启用的 AOT 所有权操作计数，按类别和四元式位置展示。"""
+"""汇总显式启用的 BUILD 所有权操作计数，按类别和四元式位置展示。"""
 from pathlib import Path
 import argparse
 from collections import Counter

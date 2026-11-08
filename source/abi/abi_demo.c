@@ -7,7 +7,7 @@
 #include <limits.h>
 #include <string.h>
 #include <stdlib.h>
-/** @brief 编译器与 AOT 共用的演示操作。 */
+/** @brief 编译器与 BUILD 共用的演示操作。 */
 enum Operation
 {
     CounterFrom,
@@ -813,5 +813,5 @@ int CHALI_ABI_CALL abi_demo_declarations_used(const char *source, size_t length)
     return 0;
 }
 
-#define CHALI_AOT_BIND_MODULE demo
+#define CHALI_BUILD_BIND_MODULE demo
 #include "aot_bind_module.h"

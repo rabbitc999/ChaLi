@@ -100,6 +100,6 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_serialization_records(size_t *count)
     return records;
 }
 #ifndef GLUE_NO_STD_JSON
-#define CHALI_AOT_BIND_MODULE serialization
+#define CHALI_BUILD_BIND_MODULE serialization
 #include "aot_bind_module.h"
 #endif

@@ -1,6 +1,6 @@
 'use strict';
 
-/** ChaLi 原生调试工厂：启动 Node DAP 适配器，通过 GDB 调试带 DWARF 的 AOT 程序。 */
+/** ChaLi 原生调试工厂：启动 Node DAP 适配器，通过 GDB 调试带 DWARF 的 BUILD 程序。 */
 
 const vscode = require('vscode');
 const path = require('node:path');
@@ -34,7 +34,7 @@ function registerDebugger(context, deps) {
       const build = await run(compiler, ['--build-info'], { cwd: folder, windowsHide: true, timeout: 10000, maxBuffer: 1048576 });
       const debuggerInfo = await run(gdb, ['--version'], { cwd: folder, windowsHide: true, timeout: 10000, maxBuffer: 1048576 });
       const version = JSON.parse(build.stdout);
-      if (version.execution !== 'aot') throw new Error('当前编译器未提供原生 AOT');
+      if (version.execution !== 'aot') throw new Error('当前编译器未提供原生 BUILD');
       deps.logLine(`调试环境：${compiler}\n${build.stdout}\n${gdb}\n${debuggerInfo.stdout}`);
       void vscode.window.showInformationMessage(`ChaLi ${version.version} (${version.llvm})；${debuggerInfo.stdout.split(/\r?\n/)[0]}`);
     } catch (error) { void vscode.window.showErrorMessage('ChaLi 调试环境：' + error.message); }
@@ -143,7 +143,7 @@ function registerDebugger(context, deps) {
 
       // 工作目录取源文件所在目录：调试表里记的是相对路径，两边一致才对得上断点。
       const cwd = session.configuration.cwd || path.dirname(program);
-      deps.logLine(`调试：${resolved.chali} AOT / GDB（工作目录 ${cwd}）`);
+      deps.logLine(`调试：${resolved.chali} BUILD / GDB（工作目录 ${cwd}）`);
       return new vscode.DebugAdapterExecutable(process.execPath, [adapter, resolved.chali], { cwd, env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' } });
     },
   };

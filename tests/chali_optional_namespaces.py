@@ -152,7 +152,7 @@ def embedded(args):
             0, 'std::gui/std::audio/std::xml installed modules passed', ''), checked
     if args.evidence:
         args.evidence.write_text(json.dumps(results, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print('Embedded native modules passed (AOT and checked run)', flush=True)
+    print('Embedded native modules passed (BUILD and checked run)', flush=True)
 
 
 def main():

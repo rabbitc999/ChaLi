@@ -136,7 +136,7 @@ QuadFile parseQuads(std::string_view text, Memory::String label)
  */
 QuadFile loadQuadFile(const Memory::String &path)
 {
-#if STACKVM_WITH_HOST_IO
+#if RUNTIME_WITH_HOST_IO
 
     std::ifstream stream(Memory::u8path(path), std::ios::binary);
     if (!stream)

@@ -34,7 +34,7 @@ bool validBuildOption(const Memory::String &name);
 Memory::String targetMacroName(bool cpu);
 
 /**
- * @brief 一个已经验证的六十四位小端 AOT 目标。
+ * @brief 一个已经验证的六十四位小端 BUILD 目标。
  */
 struct TargetInfo
 {

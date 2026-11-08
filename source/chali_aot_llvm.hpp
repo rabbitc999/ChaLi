@@ -28,7 +28,7 @@ int link(const chali_linker::Request &request, const Memory::String &product, Me
 
 /**
  * @brief 使用进程内 LLVM 优化并生成对象，再使用进程内 LLD 链接。
- * @param request AOT 编译选项及额外链接库。
+ * @param request BUILD 编译选项及额外链接库。
  * @param module LLVM 模块的产物路径，用于链接期产物命名。
  * @param source 直接生成的 LLVM 代码，静态后端直接从内存解析。
  * @param product 目标可执行文件或共享库路径。

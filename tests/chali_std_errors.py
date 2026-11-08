@@ -1,4 +1,4 @@
-"""验证标准库公开 Result 的错误协议、结构化载荷和 VM 传播行为，不运行 AOT。"""
+"""验证标准库公开 Result 的错误协议、结构化载荷和 VM 传播行为，不运行 BUILD。"""
 from compiler_path import compiler_path
 import argparse
 import os
@@ -71,7 +71,7 @@ ERROR_VALUES = {
 
 
 def main():
-    """用默认 checked AOT 配置验证统一错误接口，并检查公开类型契约。"""
+    """用默认 checked BUILD 配置验证统一错误接口，并检查公开类型契约。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--chali", type=Path, default=compiler_path())
     args = parser.parse_args()

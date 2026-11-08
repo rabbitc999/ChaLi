@@ -2355,6 +2355,6 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_sql_records(size_t *count)
 }
 
 #ifndef GLUE_NO_STD_SQL
-#define CHALI_AOT_BIND_MODULE sql
+#define CHALI_BUILD_BIND_MODULE sql
 #include "aot_bind_module.h"
 #endif

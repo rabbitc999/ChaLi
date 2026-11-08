@@ -30,7 +30,7 @@ def main():
                 target=work/f'{allocator}-{checks}.exe';run([compiler,'build',SOURCE,'--allocator',allocator,'--'+checks,'--out',target]);result=run([target]);assert result.stdout==expected and not result.stderr,(allocator,checks,result.stdout,result.stderr);print(f'{allocator}/{checks}: shared aliases, payloads, threads, atomics and timers match baseline')
         for name in SAMPLES:
             result=run([compiler,'run',ROOT/f'example/samples/{name}.chl','--out',work/name]);expected_sample=(ROOT/f'example/expected/{name}.txt').read_text(encoding='utf-8');assert result.stdout==expected_sample and not result.stderr,(name,result.stdout,result.stderr);print(name+' passed')
-        result=run([compiler,'run',SOURCE,'--out',work/'no-raw'],{'CHALI_NO_AOT_RAW_INTRINSICS':'1'});assert result.stdout==expected and not result.stderr,result
+        result=run([compiler,'run',SOURCE,'--out',work/'no-raw'],{'CHALI_NO_BUILD_RAW_INTRINSICS':'1'});assert result.stdout==expected and not result.stderr,result
         prefix=work/'lowering';run([compiler,'build',SOURCE,'--emit-llvm','--out',prefix]);llvm=prefix.with_suffix('.ll').read_text(encoding='utf-8');assert 'chali_std_bind_reference' not in llvm
         for name in ('__referenceNew','__referenceId','__referenceFrom','__referenceCopy','__referenceDrop','__emptySource'):
             assert ('c"std::concurrency::'+name+'\\00"') not in llvm and ('c"std::event::'+name+'\\00"') not in llvm,name

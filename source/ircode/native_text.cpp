@@ -77,7 +77,7 @@ Slot strStorageKind(NativeContext &ctx, const Memory::Vector<Slot> &args)
 Slot bufferMaxBytes(NativeContext &ctx, const Memory::Vector<Slot> &args)
 {
     (void)args;
-#if STACKVM_WITH_DEFAULT_HEAP
+#if RUNTIME_WITH_DEFAULT_HEAP
     if (const auto *heap = dynamic_cast<const Heap *>(ctx.heap))
         return Slot::fromInt(static_cast<std::int64_t>(std::min<std::size_t>(heap->maximumAllocationBytes(), INT64_MAX)));
 #endif

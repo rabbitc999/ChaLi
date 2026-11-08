@@ -39,8 +39,8 @@ def main():
                                     capture_output=True, encoding='utf-8', errors='replace', timeout=180)
             assert result.returncode == 0, (command, result.stdout, result.stderr)
             return result.stdout
-        flags = ['-O1', '-g', '-DCHALI_CUSTOM_ALLOCATOR=1', '-DSTACKVM_AOT_ONLY=1',
-                 '-DSTACKVM_WITH_REFLECTION=1', '-DCHALI_WITH_REFLECTION=1',
+        flags = ['-O1', '-g', '-DCHALI_CUSTOM_ALLOCATOR=1', '-DRUNTIME_BUILD_ONLY=1',
+                 '-DRUNTIME_WITH_REFLECTION=1', '-DCHALI_WITH_REFLECTION=1',
                  '-I' + str(ROOT / 'source'), '-I' + str(ROOT / 'source/abi'),
                  '-I' + str(ROOT / 'source/ircode'), '-I' + str(ROOT / 'library')]
         if args.sysroot:

@@ -275,7 +275,7 @@ struct Function
 };
 
 /**
- * @brief 一次 AOT 翻译的全部中间状态。
+ * @brief 一次 BUILD 翻译的全部中间状态。
  */
 struct Translator
 {
@@ -316,7 +316,7 @@ struct Translator
     bool objectCopyScalars = true;                                ///< 对象复制复用标量入口，不构造通用实参向量。
     bool dataSnapshots = true;                                    ///< 无不透明调用的循环在函数帧内保存数据区基址。
     bool stringStorageViews = true;                               ///< 通过已验证堆视图读取拥有型字符串描述符。
-    bool inlineHints = true;                                      ///< 为适用的极小内部 AOT 函数提供原生内联提示。
+    bool inlineHints = true;                                      ///< 为适用的极小内部 BUILD 函数提供原生内联提示。
     bool directFunctionValues = true;                             ///< 只将直线路径内已知的无环境函数值改为直接调用。
     bool rawIntrinsics = true;                                    ///< 将原始存储调用直接连接标量内核，内联小型指针包装。
     std::map<std::size_t, Memory::String> functionAddresses;      ///< 不可变函数标签数据地址到原入口。
@@ -332,45 +332,45 @@ struct Translator
 
     /**
      * @brief 保存本次 AST 或四元式兼容请求和诊断输出。
-     * @param in 本次 AOT 请求。
+     * @param in 本次 BUILD 请求。
      * @param out 可选的诊断容器。
      */
     explicit Translator(const Request &in, Memory::Vector<Memory::String> *out) : request(in), diagnostics(out), debugInfo(in.options.debugOptimized)
     {
         Memory::String targetError;
         if (!describeTarget(request.options.target, target, &targetError)) fail(targetError);
-        if (!request.options.allocator.empty() && request.options.allocator != "malloc" && request.options.allocator != "pool") fail("AOT：--allocator 只接受 malloc 或 pool");
+        if (!request.options.allocator.empty() && request.options.allocator != "malloc" && request.options.allocator != "pool") fail("BUILD：--allocator 只接受 malloc 或 pool");
         stepChecks = request.options.stepLimit != 0u;
         const auto *flag = std::getenv("CHALI_BACKEND_PROFILE");
         profileOwnership = flag && *flag && std::strcmp(flag, "0") != 0;
-        const auto *cache = std::getenv("CHALI_NO_AOT_ADDRESS_CACHE");
+        const auto *cache = std::getenv("CHALI_NO_BUILD_ADDRESS_CACHE");
         cacheAddresses = !(cache && *cache);
-        const char *scalars = std::getenv("CHALI_NO_AOT_COLLECTION_SCALARS");
+        const char *scalars = std::getenv("CHALI_NO_BUILD_COLLECTION_SCALARS");
         collectionScalars = !(scalars && *scalars);
-        const auto *listAppend = std::getenv("CHALI_NO_AOT_NUMERIC_LIST_APPEND");
+        const auto *listAppend = std::getenv("CHALI_NO_BUILD_NUMERIC_LIST_APPEND");
         numericListAppend = !(listAppend && *listAppend) && !request.options.debug;
-        const auto *listViews = std::getenv("CHALI_NO_AOT_NUMERIC_LIST_VIEWS");
+        const auto *listViews = std::getenv("CHALI_NO_BUILD_NUMERIC_LIST_VIEWS");
         numericListViews = !(listViews && *listViews) && !request.options.debug;
-        const char *references = std::getenv("CHALI_NO_AOT_REFERENCE_PRIMITIVES");
+        const char *references = std::getenv("CHALI_NO_BUILD_REFERENCE_PRIMITIVES");
         referencePrimitives = !(references && *references);
-        const auto *objects = std::getenv("CHALI_NO_AOT_OBJECT_SCALARS");
+        const auto *objects = std::getenv("CHALI_NO_BUILD_OBJECT_SCALARS");
         objectScalars = !(objects && *objects);
-        const auto *construction = std::getenv("CHALI_NO_AOT_OBJECT_CONSTRUCTION_SCALARS");
+        const auto *construction = std::getenv("CHALI_NO_BUILD_OBJECT_CONSTRUCTION_SCALARS");
         objectConstructionScalars = !(construction && *construction);
-        const auto *objectCopies = std::getenv("CHALI_NO_AOT_OBJECT_COPY_SCALAR");
+        const auto *objectCopies = std::getenv("CHALI_NO_BUILD_OBJECT_COPY_SCALAR");
         objectCopyScalars = !(objectCopies && *objectCopies);
-        const auto *data = std::getenv("CHALI_NO_AOT_DATA_SNAPSHOT");
+        const auto *data = std::getenv("CHALI_NO_BUILD_DATA_SNAPSHOT");
         dataSnapshots = !(data && *data);
-        const auto *stringViews = std::getenv("CHALI_NO_AOT_STRING_STORAGE_VIEW");
+        const auto *stringViews = std::getenv("CHALI_NO_BUILD_STRING_STORAGE_VIEW");
         stringStorageViews = !(stringViews && *stringViews);
-        const auto *bulk = std::getenv("CHALI_NO_AOT_BULK_COPY");
+        const auto *bulk = std::getenv("CHALI_NO_BUILD_BULK_COPY");
         bulkCopies = !(bulk && *bulk);
-        const auto *hint = std::getenv("CHALI_NO_AOT_INLINE_HINT");
+        const auto *hint = std::getenv("CHALI_NO_BUILD_INLINE_HINT");
         inlineHints = !(hint && *hint);
         if (request.options.debug && !request.options.debugOptimized) inlineHints = false;
-        const auto *direct = std::getenv("CHALI_NO_AOT_DIRECT_CALLS");
+        const auto *direct = std::getenv("CHALI_NO_BUILD_DIRECT_CALLS");
         directFunctionValues = !(direct && *direct);
-        const auto *raw = std::getenv("CHALI_NO_AOT_RAW_INTRINSICS");
+        const auto *raw = std::getenv("CHALI_NO_BUILD_RAW_INTRINSICS");
         rawIntrinsics = !(raw && *raw);
     }
 
@@ -493,7 +493,7 @@ void loadLayout(Translator &state)
     Memory::Vector<runtime::LayoutRow> rows;
     if (!runtime::decodeDataLayout(state.request.dataLayout, rows))
     {
-        state.fail("AOT：读不懂数据区布局");
+        state.fail("BUILD：读不懂数据区布局");
         return;
     }
     for (const auto &row : rows) state.dataOffsets.emplace(std::string(row.name.c_str()), row.offset);
@@ -508,7 +508,7 @@ void analyze(Translator &state)
     const runtime::QuadFile *file = state.request.quads;
     if (file == nullptr)
     {
-        state.fail("AOT：没有四元式输入");
+        state.fail("BUILD：没有四元式输入");
         return;
     }
     const Memory::Vector<runtime::Quad> &quads = file->quads;
@@ -611,7 +611,7 @@ void analyze(Translator &state)
             function.parameters.push_back(name);
         }
     /* 2.5 形参推断：段内只被读、从没被写过的名字就是形参。
-     * `program` 给不出参数表时（AOT 直接读 `.quad` 就是这种情况）靠这一遍补齐——
+     * `program` 给不出参数表时（BUILD 直接读 `.quad` 就是这种情况）靠这一遍补齐——
      * 少了它，`__chali_len` 这类形参在产物里就是没声明的标识符。 */
     for (auto &function : state.functions)
     {
@@ -662,7 +662,7 @@ void analyze(Translator &state)
                 function.llvmName = "f_" + sanitize(function.label.substr(9));
         }
     }
-    if (state.functions.empty()) state.fail("AOT：四元式里没有可翻译的函数");
+    if (state.functions.empty()) state.fail("BUILD：四元式里没有可翻译的函数");
 
     /* 4) 种类推断：先按 decl 与运算目标打底，再沿 `:=` 传播浮点 / 字符串。 */
     for (std::size_t at = 0; at < quads.size(); ++at)
@@ -899,7 +899,7 @@ void emitDataImage(const Translator &state, std::string &out)
 {
     Memory::Vector<runtime::LayoutRow> rows;
     if (!runtime::decodeDataLayout(state.request.dataLayout, rows)) return;
-    const auto *flag = std::getenv("CHALI_AOT_KEEP_DATA");
+    const auto *flag = std::getenv("CHALI_BUILD_KEEP_DATA");
     const bool keepAll = state.request.syntax != nullptr || (flag && *flag && std::strcmp(flag, "0") != 0);
     std::set<Memory::String> used;
     for (const auto &function : state.functions)
@@ -966,7 +966,7 @@ void emitDataImage(const Translator &state, std::string &out)
     }
     const auto layout = runtime::encodeDataLayout(retained);
     out += "@chali_data_layout_size = constant i64 " + std::to_string(layout.size()) + "\n";
-    out += "; AOT data image: original=" + std::to_string(original.size()) + " stored=" + std::to_string(packed.size())
+    out += "; BUILD data image: original=" + std::to_string(original.size()) + " stored=" + std::to_string(packed.size())
            + " rows=" + std::to_string(retained.size()) + "/" + std::to_string(rows.size()) + " segments=" + std::to_string(segments.size()) + "\n";
     out += "@chali_data_layout = constant [" + std::to_string(layout.size() + 1u) + " x i8] c\"";
     for (const unsigned char byte : layout)
@@ -1737,7 +1737,7 @@ struct Builder
             const auto &signature = *external->second;
             if (arguments.size() != signature.parameterTypes.size())
             {
-                state.fail("AOT：外部函数实参数量不匹配：" + callee);
+                state.fail("BUILD：外部函数实参数量不匹配：" + callee);
                 return false;
             }
             std::vector<Value> values;
@@ -1746,7 +1746,7 @@ struct Builder
                 const Text target = abiType(signature.parameterTypes[at]);
                 if (target.empty())
                 {
-                    state.fail("AOT：不支持的 ABI 参数类型 " + signature.parameterTypes[at]);
+                    state.fail("BUILD：不支持的 ABI 参数类型 " + signature.parameterTypes[at]);
                     return false;
                 }
                 values.push_back(convert(argument(at), target, signature.parameterTypes[at].find("unsigned") != Memory::String::npos));
@@ -1754,7 +1754,7 @@ struct Builder
             const Text resultType = abiType(signature.resultType);
             if (resultType.empty())
             {
-                state.fail("AOT：不支持的 ABI 返回类型 " + signature.resultType);
+                state.fail("BUILD：不支持的 ABI 返回类型 " + signature.resultType);
                 return false;
             }
             const Text target = usesDynamicAbiLibrary(signature) ? "chali_external_" + std::to_string(external->second - state.request.externs.data()) : llvmSymbol(signature.symbol);
@@ -1815,7 +1815,7 @@ struct Builder
         const Function &target = state.functions[found->second];
         if (arguments.size() != target.parameters.size())
         {
-            state.fail("AOT：函数实参数量不匹配：" + callee);
+            state.fail("BUILD：函数实参数量不匹配：" + callee);
             return false;
         }
         std::vector<Value> values;
@@ -2078,7 +2078,7 @@ struct Builder
                 const auto offset = state.offsetOf(a);
                 if (offset < 0)
                 {
-                    state.fail("AOT：数据区里没有符号 " + a);
+                    state.fail("BUILD：数据区里没有符号 " + a);
                     return Text();
                 }
                 write(c, { "i64", std::to_string(offset) });
@@ -2158,7 +2158,7 @@ struct Builder
                 const auto target = labels.find(textOf(c));
                 if (target == labels.end())
                 {
-                    state.fail("AOT：跳转目标不在本函数内 " + c);
+                    state.fail("BUILD：跳转目标不在本函数内 " + c);
                     return Text();
                 }
                 const Text destination = "%q" + std::to_string(target->second);
@@ -2240,7 +2240,7 @@ struct Builder
             }
             else if (!arithmetic(base, suffix, a, b, c))
             {
-                state.fail("AOT：暂不支持的四元式操作符 " + op);
+                state.fail("BUILD：暂不支持的四元式操作符 " + op);
                 return Text();
             }
             if (!terminated) body += "  br label %q" + std::to_string(at + 1) + "\n";
@@ -2474,11 +2474,11 @@ static Memory::String generateLinkedLLVM(Request &request, Memory::Vector<Memory
     if (header != nullptr) header->clear();
     if (request.quads == nullptr && request.syntax == nullptr)
     {
-        state.fail("AOT：没有四元式输入");
+        state.fail("BUILD：没有四元式输入");
         return {};
     }
     for (const auto &external : request.externs)
-        if (external.abiConvention != "C") state.fail("AOT：外部调用约定不受支持");
+        if (external.abiConvention != "C") state.fail("BUILD：外部调用约定不受支持");
     Memory::Set<Memory::String> reachableBuiltin;
     if (request.syntax)
     {
@@ -2491,7 +2491,7 @@ static Memory::String generateLinkedLLVM(Request &request, Memory::Vector<Memory
     else { loadLayout(state); analyze(state); }
     if (diagnostics != nullptr && !diagnostics->empty()) return {};
     for (const auto &name : request.options.exports)
-        if (state.functionByLabel.count(textOf(name)) == 0u) state.fail("AOT：找不到要导出的函数 " + name);
+        if (state.functionByLabel.count(textOf(name)) == 0u) state.fail("BUILD：找不到要导出的函数 " + name);
     if (diagnostics != nullptr && !diagnostics->empty()) return {};
     for (const auto &function : state.functions)
         for (std::size_t at = function.begin; at < function.end; ++at)
@@ -2508,12 +2508,12 @@ static Memory::String generateLinkedLLVM(Request &request, Memory::Vector<Memory
     const Memory::String asset = state.target.runtime;
     if (!chali_module::embedded::findGeneratorAssetByPath(asset, &runtime))
     {
-        state.fail("AOT：缺少内嵌 LLVM 运行时 " + asset);
+        state.fail("BUILD：缺少内嵌 LLVM 运行时 " + asset);
         return {};
     }
     const bool libraryLifecycle = request.options.shared && state.functionByLabel.count("__chali_library_init") != 0u;
     std::istringstream input(textOf(runtime));
-    Text out = "; ChaLi LLVM AOT\n; checks: " + Text(request.options.checked ? "on" : "off") + "\nsource_filename = \"chali-aot\"\n", line;
+    Text out = "; ChaLi LLVM BUILD\n; checks: " + Text(request.options.checked ? "on" : "off") + "\nsource_filename = \"chali-aot\"\n", line;
     while (std::getline(input, line))
     {
         if (line.rfind("declare ", 0) == 0 && line.find("@chali_invoke(") != Text::npos) continue;
@@ -2715,7 +2715,7 @@ static Memory::String generateLinkedLLVM(Request &request, Memory::Vector<Memory
         const auto existing = externalDeclarations.emplace(textOf(external.symbol), declaration);
         if (!existing.second && existing.first->second != declaration)
         {
-            state.fail("AOT：同一外部符号的 ABI 声明不一致 " + external.symbol);
+            state.fail("BUILD：同一外部符号的 ABI 声明不一致 " + external.symbol);
             return {};
         }
         if (existing.second) out += declaration;
@@ -2734,7 +2734,7 @@ static Memory::String generateLinkedLLVM(Request &request, Memory::Vector<Memory
     out += "define hidden ptr @chali_program_thread_services() {\nentry:\n";
     out += needsThreadServices ? "  %services = call ptr @chali_build_thread_services()\n  ret ptr %services\n}\n" : "  ret ptr null\n}\n";
 
-    out += "; AOT standard modules:";
+    out += "; BUILD standard modules:";
     for (const auto &module : modules) out += " " + textOf(module);
     out += "\n";
     for (const auto &module : modules) out += "declare i32 @chali_std_bind_" + textOf(module) + "(ptr, ptr)\n";
@@ -2758,7 +2758,7 @@ static Memory::String generateLinkedLLVM(Request &request, Memory::Vector<Memory
     if (!request.options.shared) out += Text("define i32 @main(i32 %argc, ptr %argv) {\nentry:\n") + (request.options.debug ? "  call void @chali_debug_console()\n" : "") + "  call void @chali_init()\n  call void @chali_host_process_arguments(i32 %argc, ptr %argv)\n  %result = call i64 @f_main()\n  call void @chali_finish()\n  %code = trunc i64 %result to i32\n  ret i32 %code\n}\n";
     if (header != nullptr)
     {
-        Text declarations = "/* ChaLi LLVM AOT C ABI */\n#ifndef CHALI_AOT_H\n#define CHALI_AOT_H\n#include <stdint.h>\n#include <stdbool.h>\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n";
+        Text declarations = "/* ChaLi LLVM BUILD C ABI */\n#ifndef CHALI_BUILD_H\n#define CHALI_BUILD_H\n#include <stdint.h>\n#include <stdbool.h>\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n";
         declarations += "/**\n * @brief 分配本模块的运行时内存、装入数据并执行全局初始化。\n * @note 必须先于导出函数调用，使用结束后调用 chali_finish。\n */\nvoid chali_init(void);\n";
         declarations += "/**\n * @brief 执行全局资源清理、刷新输出并释放本模块的运行时内存。\n * @note 收尾之后不能继续使用原有句柄。\n */\nvoid chali_finish(void);\n";
         for (const auto &function : state.functions)
@@ -2952,17 +2952,17 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     }
     if (int(objectOnly) + int(assemblyOnly) + int(request.options.emitLLVMOnly) > 1)
     {
-        if (diagnostics) diagnostics->push_back("AOT：LLVM 文本、对象文件与机器汇编输出只能选择一种");
+        if (diagnostics) diagnostics->push_back("BUILD：LLVM 文本、对象文件与机器汇编输出只能选择一种");
         return 1;
     }
     if (!target.native && !codeOnly && !request.options.emitLLVMOnly && request.options.runtimeDirectory.empty())
     {
-        if (diagnostics) diagnostics->push_back("AOT：跨目标链接需要 --runtime-dir 指定目标 libchali_aot_host.a，并准备目标 sysroot；可先使用 --emit-obj、--emit-asm 或 --emit-llvm");
+        if (diagnostics) diagnostics->push_back("BUILD：跨目标链接需要 --runtime-dir 指定目标 libchali_aot_host.a，并准备目标 sysroot；可先使用 --emit-obj、--emit-asm 或 --emit-llvm");
         return 1;
     }
     if (!request.options.assemblySources.empty() && (codeOnly || request.options.emitLLVMOnly))
     {
-        if (diagnostics) diagnostics->push_back("AOT：--asm 只用于最终链接，不能与 --emit-asm、--emit-obj 或 --emit-llvm 组合");
+        if (diagnostics) diagnostics->push_back("BUILD：--asm 只用于最终链接，不能与 --emit-asm、--emit-obj 或 --emit-llvm 组合");
         return 1;
     }
     Memory::String header;
@@ -2972,14 +2972,14 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     if (source.empty()) return 1;
     if (!target.native && !codeOnly && !request.options.emitLLVMOnly && (!linked.abiGlue.empty() || !nativeLibraries.empty()))
     {
-        if (diagnostics) diagnostics->push_back("AOT：内置原生扩展和复杂 ABI 的链接需要同目标平台的工具链；可先用 --emit-obj 导出对象及 .abi.cpp");
+        if (diagnostics) diagnostics->push_back("BUILD：内置原生扩展和复杂 ABI 的链接需要同目标平台的工具链；可先用 --emit-obj 导出对象及 .abi.cpp");
         return 1;
     }
     const Text prefix = request.options.outputPrefix.empty() ? "chali_aot" : textOf(request.options.outputPrefix);
     const Text llvmPath = prefix + ".ll";
     if (!writeFile(llvmPath, source) || (!header.empty() && !writeFile(prefix + ".h", header)))
     {
-        if (diagnostics != nullptr) diagnostics->push_back("AOT：无法写入 LLVM 模块或 ABI 头文件");
+        if (diagnostics != nullptr) diagnostics->push_back("BUILD：无法写入 LLVM 模块或 ABI 头文件");
         return 1;
     }
     if (request.options.emitLLVMOnly) return 0;
@@ -2994,7 +2994,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     }
     if (codeOnly && !linked.abiGlue.empty() && !writeFile(prefix + ".abi.cpp", linked.abiGlue))
     {
-        if (diagnostics) diagnostics->push_back("AOT：无法写入目标 ABI 封送源码");
+        if (diagnostics) diagnostics->push_back("BUILD：无法写入目标 ABI 封送源码");
         return 1;
     }
     std::unique_ptr<chali_native_tools::Workspace> assemblyWork;
@@ -3018,7 +3018,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     const Text compiler = compilerPath(request.options.compiler);
     if (quote(compiler).empty() || quote(llvmPath).empty() || quote(product).empty())
     {
-        if (diagnostics != nullptr) diagnostics->push_back("AOT：工具或输出路径含不支持的命令行字符");
+        if (diagnostics != nullptr) diagnostics->push_back("BUILD：工具或输出路径含不支持的命令行字符");
         return 1;
     }
     RuntimeAssets runtimeAssets;
@@ -3035,7 +3035,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
             runtimeDirectory = std::filesystem::u8path(textOf(request.options.runtimeDirectory));
             if (!std::filesystem::is_regular_file(runtimeDirectory / "libchali_aot_host.a"))
             {
-                if (diagnostics) diagnostics->push_back("AOT：目标运行时目录缺少 libchali_aot_host.a");
+                if (diagnostics) diagnostics->push_back("BUILD：目标运行时目录缺少 libchali_aot_host.a");
                 return 1;
             }
             const auto targetFile = runtimeDirectory / "target.txt";
@@ -3047,7 +3047,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
                 if (!runtimeTarget.empty() && runtimeTarget.back() == '\r') runtimeTarget.pop_back();
                 if (runtimeTarget != textOf(target.triple))
                 {
-                    if (diagnostics) diagnostics->push_back("AOT：目标运行时的 target.txt 与 --target 不一致，拒绝混用目标库");
+                    if (diagnostics) diagnostics->push_back("BUILD：目标运行时的 target.txt 与 --target 不一致，拒绝混用目标库");
                     return 1;
                 }
             }
@@ -3115,7 +3115,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
             const Text argument = quote(textOf(library));
             if (argument.empty())
             {
-                if (diagnostics != nullptr) diagnostics->push_back("AOT：链接库路径含不支持的字符");
+                if (diagnostics != nullptr) diagnostics->push_back("BUILD：链接库路径含不支持的字符");
                 return 1;
             }
             command += " " + argument;
@@ -3136,7 +3136,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     {
         if (diagnostics != nullptr)
         {
-            diagnostics->push_back("AOT：LLVM 编译或链接失败；请检查 library/llvm/ 工具链或使用 --llvm 指定 clang");
+            diagnostics->push_back("BUILD：LLVM 编译或链接失败；请检查 library/llvm/ 工具链或使用 --llvm 指定 clang");
             std::ifstream input(std::filesystem::u8path(log), std::ios::binary);
             Text output((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
             if (output.size() > 8000) output.resize(8000);

@@ -158,7 +158,7 @@ function main() {
   // 5. 折叠与图标。
   const menus = contributes.menus || {};
   for (const slot of ['editor/context', 'explorer/context']) {
-    check(`${slot} 提供原生 AOT 构建`, ['chali.buildExe'].every(
+    check(`${slot} 提供原生 BUILD 构建`, ['chali.buildExe'].every(
       (command) => (menus[slot] || []).some((item) => item.command === command)));
   }
   check('构建按钮位于编辑器标题栏', (menus['editor/title'] || []).some((item) => item.command === 'chali.build'));

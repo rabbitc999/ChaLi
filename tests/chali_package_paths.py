@@ -41,7 +41,7 @@ commands = ['import extra;']
         assert run(args).stdout == "20 2\n"
         emitted = [args[0], "build", *args[2:], "--emit-llvm", "--incremental"]
         run(emitted)
-        # AOT 重用模块预处理；原生输出不采用已删除的四元式产物缓存。
+        # BUILD 重用模块预处理；原生输出不采用已删除的四元式产物缓存。
         repeated = run(emitted).stderr
         assert re.search(r"增量编译：[1-9][0-9]* 个模块复用", repeated), repeated
         manifest.write_text(config.replace("['../first', '../second']", "['../second', '../first']"), encoding="utf-8")

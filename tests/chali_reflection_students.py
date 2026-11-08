@@ -92,7 +92,7 @@ def main():
                 raise AssertionError((label, '标准错误非空', result.stderr))
             if result.stdout != expected + '\n':
                 raise AssertionError((label, '输出不符', repr(result.stdout), '期望', repr(expected + '\n')))
-        print('AOT 反射版学生管理系统回归通过：%d 条命令（含持久化、校验、注入）' % len(CASES))
+        print('BUILD 反射版学生管理系统回归通过：%d 条命令（含持久化、校验、注入）' % len(CASES))
         return 0
 
 

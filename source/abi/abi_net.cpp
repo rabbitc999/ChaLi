@@ -1438,6 +1438,6 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_net_records(size_t *count)
 }
 
 #ifndef GLUE_NO_STD_NET
-#define CHALI_AOT_BIND_MODULE net
+#define CHALI_BUILD_BIND_MODULE net
 #include "aot_bind_module.h"
 #endif

@@ -29,7 +29,7 @@ bool validateProgramFeatures(std::uint32_t required,
     if ((required & ~kKnownProgramFeatures) != 0)
         error = "不支持的程序特征标志";
     else if ((required & ~supportedProgramFeatures()) != 0)
-        error = "程序要求反射支持，但运行时未启用 STACKVM_WITH_REFLECTION=1";
+        error = "程序要求反射支持，但运行时未启用 RUNTIME_WITH_REFLECTION=1";
     if (error == nullptr) return true;
     if (diagnostics != nullptr) diagnostics->emplace_back(error);
     return false;

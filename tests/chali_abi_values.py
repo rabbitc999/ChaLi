@@ -74,6 +74,6 @@ def main():
         bad.write_text(declaration.replace('LIBRARY', json.dumps(library.as_posix())) + '\nvoid main() { return; }\n', encoding='utf-8')
         result = run([compiler, 'build', bad, '--emit-llvm', '--out', WORK / 'bad'], succeeds=False)
         assert 'abi' in result.stderr.lower() or '语法错误' in result.stderr, result.stderr
-    print(('unchecked AOT' if options.aot else 'checked AOT') + ' ABI 值、引用和非空返回检查通过')
+    print(('unchecked BUILD' if options.aot else 'checked BUILD') + ' ABI 值、引用和非空返回检查通过')
 if __name__ == '__main__':
     main()

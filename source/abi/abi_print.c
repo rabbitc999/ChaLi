@@ -44,5 +44,5 @@ const ChaliAbiRecord *abi_print_records(size_t *count)
     return kRecords;
 }
 
-#define CHALI_AOT_BIND_MODULE print
+#define CHALI_BUILD_BIND_MODULE print
 #include "aot_bind_module.h"

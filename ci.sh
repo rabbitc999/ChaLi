@@ -159,7 +159,7 @@ run_required_step() {
 # ---- 3. ChaLi：由文法生成解析器，再编驱动 ----
 if [ "$full" = 1 ] && [ "${OS:-}" = Windows_NT ]; then
     run_required_step "校验并恢复 LLVM 离线工具链" "$PYTHON" library/llvm/setup.py
-    run_step "检查 AOT 运行时 LLVM 模块同步" sh tools/build_aot_runtime.sh --check
+    run_step "检查 BUILD 运行时 LLVM 模块同步" sh tools/build_aot_runtime.sh --check
 fi
 run_required_step "生成 CHALI 解析器（gen.sh）" env CHALI_DEFER_ASSET_EMBED=1 sh gen.sh
 run_required_step "构建 CHALI 驱动（chali）" "$MAKE" -j4
@@ -202,7 +202,7 @@ run_required_step "编译地址视图与调试内存目录回归" g++ -std=c++17
 run_step "运行地址视图与调试内存目录回归" tmp/ci/heap-address-view
 run_step "运行 C ABI 契约与直通胶水入口表回归" "$PYTHON" tests/chali_c_api_contract.py
 run_step "运行数组按值传参与引用回归" "$PYTHON" tests/chali_array_parameters.py --chali "$CHALI_BIN"
-run_required_step "编译字面量数据合并单元测试" g++ -std=c++17 -O2 -DCHALI_CUSTOM_ALLOCATOR=0 -DCHALI_WITH_REFLECTION=1 -DSTACKVM_WITH_REFLECTION=1 source/ast/test_ast.cpp source/ast/ast.cpp source/ast/ast_type.cpp source/ast/ast_node.cpp source/ast/ast_data.cpp -o tmp/ci/simple-ast-literals
+run_required_step "编译字面量数据合并单元测试" g++ -std=c++17 -O2 -DCHALI_CUSTOM_ALLOCATOR=0 -DCHALI_WITH_REFLECTION=1 -DRUNTIME_WITH_REFLECTION=1 source/ast/test_ast.cpp source/ast/ast.cpp source/ast/ast_type.cpp source/ast/ast_node.cpp source/ast/ast_data.cpp -o tmp/ci/simple-ast-literals
 run_step "运行字面量数据合并单元测试" tmp/ci/simple-ast-literals
 run_step "检查诊断摘录与 TOML 注释往返" "$PYTHON" tests/chali_diagnostic_layout.py --chali "$CHALI_BIN"
 run_step "运行字面量合并与字符串副本回归" "$PYTHON" tests/chali_string_literals.py --chali "$CHALI_BIN"
@@ -210,11 +210,11 @@ run_step "检查 opcode 声明与不可复制限制" "$PYTHON" tests/chali_opcod
 run_step "检查区间与循环值表达式" "$PYTHON" tests/chali_range_loop_values.py --chali "$CHALI_BIN"
 run_step "检查 opcode 资源所有权与借用" "$PYTHON" tests/chali_opcode_resources.py --chali "$CHALI_BIN"
 run_step "检查 opcode 反射与语言服务隐藏" "$PYTHON" tests/chali_opcode_visibility.py --chali "$CHALI_BIN"
-run_step "检查 AOT 共享运行时构建与资产清单同步" "$PYTHON" tools/stackvm_sources.py --check
+run_step "检查 BUILD 共享运行时构建与资产清单同步" "$PYTHON" tools/stackvm_sources.py --check
 run_required_step "编译 TOML 注释保存回归" g++ -std=c++17 -O2 source/toml/test_toml.cpp source/toml/toml.cpp source/toml/toml_source.cpp -o tmp/ci/toml-comments
 run_step "运行 TOML 注释保存回归" tmp/ci/toml-comments
 run_step "检查标准对象与运行期核心隔离" "$PYTHON" tests/opcode_core_isolation.py
-run_step "检查 AOT 集合传参、返回值与复制语义" "$PYTHON" tests/chali_collection_glue.py --chali "$CHALI_BIN"
+run_step "检查 BUILD 集合传参、返回值与复制语义" "$PYTHON" tests/chali_collection_glue.py --chali "$CHALI_BIN"
 run_step "检查 Map Pair 迭代元素类型" "$PYTHON" tests/chali_map_pair_iterator.py --chali "$CHALI_BIN"
 run_step "检查泛型命名构造入口推导" "$PYTHON" tests/chali_generic_constructors.py --chali "$CHALI_BIN"
 run_step "检查标准库 opcode 存储与资源边界" "$PYTHON" tests/chali_opcode_std_storage.py --chali "$CHALI_BIN"
@@ -338,8 +338,8 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
             run_step "python tests/$t.py" "$PYTHON" "tests/$t.py"
         fi
     done
-    run_step "运行 AOT 结构体、引用及缓冲区 ABI 回归" "$PYTHON" tests/chali_abi_values.py --chali "$CHALI_BIN" --aot
-    run_step "运行 AOT 所有权及同步 C 回调回归" "$PYTHON" tests/chali_abi_contracts.py --chali "$CHALI_BIN" --aot
+    run_step "运行 BUILD 结构体、引用及缓冲区 ABI 回归" "$PYTHON" tests/chali_abi_values.py --chali "$CHALI_BIN" --aot
+    run_step "运行 BUILD 所有权及同步 C 回调回归" "$PYTHON" tests/chali_abi_contracts.py --chali "$CHALI_BIN" --aot
     run_step "验证 run/build 的中文参数及原生产物路径" "$PYTHON" tests/chali_aot_arguments.py --chali "$CHALI_BIN"
     run_step "验证综合标准错误样例的编译预算与异常边界" "$PYTHON" tests/chali_compiler_budget.py --chali "$CHALI_BIN"
 fi
@@ -360,7 +360,7 @@ if [ "$full" = 1 ] && [ "$run_python" = 1 ]; then
     run_step "运行新增书本示例与 LaTeX 同步回归" "$PYTHON" tests/chali_book_updates.py
     run_step "核对番外原文与双语教程例程" "$PYTHON" tests/chali_book_rewrite.py
     run_step "运行嵌套函数值的内联 fn 实参回归" "$PYTHON" tests/chali_inline_fn_arguments.py
-    run_step "运行 AOT 同步回调、重入与 panic 传播回归" "$PYTHON" tests/chali_native_callbacks.py
+    run_step "运行 BUILD 同步回调、重入与 panic 传播回归" "$PYTHON" tests/chali_native_callbacks.py
     run_step "运行库包格式、摘要与生成器资产回归" "$PYTHON" tools/run_module_gates.py libraries --chali "$CHALI_BIN" --jobs 1
     run_step "运行真实 VSCode 扩展宿主调试与进程清理回归" "$PYTHON" tests/chali_vscode_extension_host.py --chali "$CHALI_BIN"
     run_step "运行标准库统一错误接口回归" "$PYTHON" tests/chali_std_errors.py --chali "$CHALI_BIN"

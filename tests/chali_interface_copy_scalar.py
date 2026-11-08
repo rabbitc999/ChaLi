@@ -24,9 +24,9 @@ def main():
     for allocator in ('malloc', 'pool'):
         for fallback in (False, True):
             env = dict(os.environ, CHALI_LANG='zh')
-            env.pop('CHALI_NO_AOT_OBJECT_COPY_SCALAR', None)
+            env.pop('CHALI_NO_BUILD_OBJECT_COPY_SCALAR', None)
             if fallback:
-                env['CHALI_NO_AOT_OBJECT_COPY_SCALAR'] = '1'
+                env['CHALI_NO_BUILD_OBJECT_COPY_SCALAR'] = '1'
             label = allocator + ('-fallback' if fallback else '-scalar')
 
             def execute(command, suffix):

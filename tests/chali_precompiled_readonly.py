@@ -55,7 +55,7 @@ def main():
             assert not list(work.rglob('*.unit')) and not list(work.rglob('chali-stdlib-cache'))
         finally:
             permissions('restore')
-    print('Windows DACL: project creation/source writes denied, isolated binary assets and outside-project AOT passed; permissions restored')
+    print('Windows DACL: project creation/source writes denied, isolated binary assets and outside-project BUILD passed; permissions restored')
 
 
 if __name__ == '__main__':

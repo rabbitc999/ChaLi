@@ -26,10 +26,10 @@ ChaLi 前端完成类型、借用和确定性清理的降低后，正常路径�
 | 环境变量 | 关闭的快速路径 |
 | --- | --- |
 | `CHALI_NO_ARRAY_COPY_BULK` | 64 位平凡数组的槽复制路径 |
-| `CHALI_NO_AOT_BULK_COPY` | 原生聚合槽批量复制助手 |
-| `CHALI_NO_AOT_ADDRESS_CACHE` | 已验证原生地址复用 |
-| `CHALI_NO_AOT_INLINE_HINT` | 原生小函数内联提示 |
-| `CHALI_NO_AOT_DIRECT_CALLS` | 已知无环境函数值直接调用 |
+| `CHALI_NO_BUILD_BULK_COPY` | 原生聚合槽批量复制助手 |
+| `CHALI_NO_BUILD_ADDRESS_CACHE` | 已验证原生地址复用 |
+| `CHALI_NO_BUILD_INLINE_HINT` | 原生小函数内联提示 |
+| `CHALI_NO_BUILD_DIRECT_CALLS` | 已知无环境函数值直接调用 |
 
 专项入口：[语言用例](../example/samples/backend_ownership.chl)、[生成证据与复制边界测试](../tests/chali_backend_ownership.py)。
 

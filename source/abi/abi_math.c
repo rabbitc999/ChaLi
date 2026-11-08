@@ -128,6 +128,6 @@ const ChaliAbiRecord *abi_math_records(size_t *count)
 }
 
 #ifndef GLUE_NO_STD_MATH
-#define CHALI_AOT_BIND_MODULE math
+#define CHALI_BUILD_BIND_MODULE math
 #include "aot_bind_module.h"
 #endif

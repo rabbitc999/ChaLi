@@ -35,7 +35,7 @@ def main():
                 reason = '旧解释执行表述或字节码提示'
             elif code and re.search(r'(?:使用|use)\s+aot\b', line):
                 reason = '诊断仍推荐已删除命令'
-            elif guide and re.search(r'\b(?:chali|ChaLi)(?:\.exe)? aot\b|原生\s*AOT\s*调试|Native AOT debugging|00-vision\.md|99-chali-in-blocks\.md', line, re.I):
+            elif guide and re.search(r'\b(?:chali|ChaLi)(?:\.exe)? aot\b|原生\s*BUILD\s*调试|Native BUILD debugging|00-vision\.md|99-chali-in-blocks\.md', line, re.I):
                 reason = '已删除命令或旧调试标题'
             elif configuration and re.match(r'\s*\[aot\]', line):
                 reason = '旧构建配置表'
@@ -64,7 +64,7 @@ def main():
                     failures.append(f'{path.relative_to(ROOT).as_posix()}:{node.lineno}: 回归循环仍使用已删除命令')
     for path in sorted((ROOT / 'doc/images').glob('*.svg')):
         root = ET.parse(path).getroot()
-        if re.search(r'\bAOT\b', ' '.join(root.itertext())):
+        if re.search(r'\bBUILD\b', ' '.join(root.itertext())):
             failures.append(f'{path.relative_to(ROOT).as_posix()}: 图中文字仍使用旧名称')
         for node in root.iter('{http://www.w3.org/2000/svg}text'):
             if node.get('font-weight') != '700':

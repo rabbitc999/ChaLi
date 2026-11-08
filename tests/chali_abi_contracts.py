@@ -73,7 +73,7 @@ def main():
             output = work / 'contracts'
             invoke([compiler, 'build', source, '--out', output])
             assert invoke([str(output) + ('.exe' if os.name == 'nt' else '')]).strip() == b'ABI contracts OK'
-            print('AOT C ABI 返回所有权、闭包与嵌套同步回调通过')
+            print('BUILD C ABI 返回所有权、闭包与嵌套同步回调通过')
         else:
             assert invoke([compiler, 'run', source]).strip() == b'ABI contracts OK'
         imported = work / 'imported.chl'

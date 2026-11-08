@@ -1,4 +1,4 @@
-"""真实汇编器的对象、重定位、包含、诊断、事务发布及 AOT 链接验收。"""
+"""真实汇编器的对象、重定位、包含、诊断、事务发布及 BUILD 链接验收。"""
 from pathlib import Path
 import argparse
 import json
@@ -105,7 +105,7 @@ def main():
         if info['llvm']=='static':
             environment={'PATH':str(Path(os.environ['SystemRoot'])/'System32'),'CHALI_LLVM_CLANG':str(work/'missing-clang.exe')}
             invoke([compiler,'asm',assembly,'--out',work/'isolated.o','-I',include],work,environment=environment)
-    print('assembler: three targets, relocation link, includes, debug, atomic failure, dialect/target rejection and AOT integration passed')
+    print('assembler: three targets, relocation link, includes, debug, atomic failure, dialect/target rejection and BUILD integration passed')
 
 
 if __name__=='__main__':

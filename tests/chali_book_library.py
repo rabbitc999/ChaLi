@@ -27,7 +27,7 @@ def main():
     parser.add_argument('--chali', type=Path, default=compiler_path())
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
-    chinese = chapter_example(root / 'doc/book/27-AOT导出.md', '### 从源码模块构建应用')
+    chinese = chapter_example(root / 'doc/book/27-BUILD导出.md', '### 从源码模块构建应用')
     english = chapter_example(root / 'doc/book/en/27-aot-export.md', '### Build an application with a source module')
     assert chinese == english, '中英文书稿代码和命令必须一致'
     sources, commands = chinese

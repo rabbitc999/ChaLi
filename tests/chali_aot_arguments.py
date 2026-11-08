@@ -41,7 +41,7 @@ def main():
         vm = invoke([compiler, 'run', source, '--out', work / 'vm', '--', *values], work, environment, report)
         native = invoke([str(output) + ('.exe' if os.name == 'nt' else ''), *values], work, environment, report)
         assert vm == expected and native == expected, (values, vm, native, expected, work)
-    print('VM/AOT UTF-8 参数、空串、引号、反斜线及中文产物路径通过')
+    print('VM/BUILD UTF-8 参数、空串、引号、反斜线及中文产物路径通过')
     print('完整证据：' + str(work))
 
 

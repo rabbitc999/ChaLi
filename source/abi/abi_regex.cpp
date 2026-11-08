@@ -179,6 +179,6 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_regex_records(size_t *count)
 }
 
 #ifndef GLUE_NO_STD_REGEX
-#define CHALI_AOT_BIND_MODULE regex
+#define CHALI_BUILD_BIND_MODULE regex
 #include "aot_bind_module.h"
 #endif

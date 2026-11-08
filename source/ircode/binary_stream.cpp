@@ -46,7 +46,7 @@ std::uint32_t binaryChecksum(const std::uint8_t *data, std::size_t size)
 bool readBinaryFile(const Memory::String &path, Memory::Vector<std::uint8_t> *bytes,
                     Memory::Vector<Memory::String> *diagnostics)
 {
-#if STACKVM_WITH_HOST_IO
+#if RUNTIME_WITH_HOST_IO
 
     std::ifstream stream(Memory::u8path(path), std::ios::binary);
     if (!stream)

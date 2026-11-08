@@ -1,7 +1,7 @@
 # Chapter 27 release build: delivering native artifacts
 
 <!-- LANGUAGE NAVIGATION -->
-**English** · [简体中文](../27-AOT导出.md)
+**English** · [简体中文](../27-BUILD导出.md)
 <!-- END LANGUAGE NAVIGATION -->
 
 Running a development example and delivering a deployable application require different evidence. LLVM generates target machine code, while target libraries, loaders, dynamic dependencies and resources still need to match. File creation alone is insufficient acceptance.

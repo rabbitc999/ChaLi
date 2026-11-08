@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    """在两种分配器及开关下比较 checked run 和 unchecked AOT。"""
+    """在两种分配器及开关下比较 checked run 和 unchecked BUILD。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     compiler = parser.parse_args().chali.resolve()

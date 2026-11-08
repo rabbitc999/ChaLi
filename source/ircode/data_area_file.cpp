@@ -17,7 +17,7 @@ using namespace runtimeDetail;
 bool DataArea::load(const Memory::String &binaryPath, const Memory::String &layoutPath,
                     Memory::Vector<Memory::String> *diagnostics)
 {
-#if STACKVM_WITH_HOST_IO
+#if RUNTIME_WITH_HOST_IO
 
     // 1. 读二进制。
     std::ifstream binaryStream(Memory::u8path(binaryPath), std::ios::binary);

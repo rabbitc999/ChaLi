@@ -34,7 +34,7 @@ def main():
             for fallback in (False, True):
                 env = dict(environment)
                 if fallback:
-                    env['CHALI_NO_AOT_RAW_INTRINSICS'] = '1'
+                    env['CHALI_NO_BUILD_RAW_INTRINSICS'] = '1'
                 label = allocator + mode + ('-fallback' if fallback else '-direct')
                 prefix = work / label
                 built = execute([compiler, 'build', ROOT / 'tests/fixtures/aot_buffer_growth.chl',

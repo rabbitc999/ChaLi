@@ -10,14 +10,14 @@
 extern "C" int32_t chali_abi_bind_standard(ChaliAbiRegistry *registry, ChaliAbiError *error)
 {
 #define CHALI_STANDARD_ONLY
-#define CHALI_AOT_MODULE(name, ...)                                                                                       \
+#define CHALI_BUILD_MODULE(name, ...)                                                                                       \
     {                                                                                                                     \
         const ChaliAbiModule modules[] = { __VA_ARGS__ };                                                                 \
         const int32_t status = chali_abi_register_tables(registry, modules, sizeof(modules) / sizeof(modules[0]), error); \
         if (status != ChaliAbiOk) return status;                                                                          \
     }
 #include "aot_modules.inc"
-#undef CHALI_AOT_MODULE
+#undef CHALI_BUILD_MODULE
 #undef CHALI_STANDARD_ONLY
     return ChaliAbiOk;
 }

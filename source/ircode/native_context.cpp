@@ -131,7 +131,7 @@ void NativeCallContextImpl::fail(const Memory::String &message)
  */
 EventPoster NativeCallContextImpl::eventPoster()
 {
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     if (context_.machine) return context_.machine->eventPoster();
 #endif
     return {};

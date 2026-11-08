@@ -9,7 +9,7 @@ namespace runtime
 using namespace runtimeDetail;
 namespace runtimeDetail
 {
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
 /**
  * @brief 将非负毫秒等待转换为饱和截止时间；负一表示无限。
  * @param millis 等待预算。

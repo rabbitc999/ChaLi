@@ -1465,6 +1465,6 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_image_records(size_t *count)
 }
 
 #ifndef GLUE_NO_STD_IMAGE
-#define CHALI_AOT_BIND_MODULE image
+#define CHALI_BUILD_BIND_MODULE image
 #include "aot_bind_module.h"
 #endif

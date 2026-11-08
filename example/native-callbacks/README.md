@@ -1,4 +1,4 @@
-# AOT 同步回调：C 调用 ChaLi 函数
+# BUILD 同步回调：C 调用 ChaLi 函数
 
 <!-- LANGUAGE NAVIGATION -->
 [English（中文原文）](README.md) · **简体中文**

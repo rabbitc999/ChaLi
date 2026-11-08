@@ -1,4 +1,4 @@
-"""通过 checked AOT 验证表达式临时值、严格释放和分支上的自动清理。"""
+"""通过 checked BUILD 验证表达式临时值、严格释放和分支上的自动清理。"""
 from compiler_path import compiler_path
 import argparse
 import os

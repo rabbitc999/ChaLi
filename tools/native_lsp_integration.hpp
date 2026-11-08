@@ -75,7 +75,7 @@ J standardLocation(const Record &record)
  */
 static std::string projectText(const Memory::String &value) { return std::string(value.data(), value.size()); }
 /**
- * @brief 读取并验证实际项目与 AOT 目标，不执行构建或网络请求。
+ * @brief 读取并验证实际项目与 BUILD 目标，不执行构建或网络请求。
  * @param params 源文件 URI。
  * @return 项目、目标、输出和实际编译器变体。
  */

@@ -57,10 +57,10 @@ class ReleaseTests(unittest.TestCase):
             isolated = root / 'isolated'
             (isolated / 'chali-runtime').mkdir(parents=True)
             config = isolated / 'chali-runtime/buildConfig.json'
-            config.write_text('CHALI_WITH_REFLECTION=1 STACKVM_WITH_REFLECTION=1', encoding='utf-8')
+            config.write_text('CHALI_WITH_REFLECTION=1 RUNTIME_WITH_REFLECTION=1', encoding='utf-8')
             with patch.object(release, 'compiler_version', return_value='1.0.0'):
                 release.verify_assets(root, binary, vsix, '1.0.0', False, build_root=isolated)
-                config.write_text('CHALI_WITH_REFLECTION=0 STACKVM_WITH_REFLECTION=0', encoding='utf-8')
+                config.write_text('CHALI_WITH_REFLECTION=0 RUNTIME_WITH_REFLECTION=0', encoding='utf-8')
                 with self.assertRaisesRegex(ValueError, '反射'):
                     release.verify_assets(root, binary, vsix, '1.0.0', False, build_root=isolated)
 

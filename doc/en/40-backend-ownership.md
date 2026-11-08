@@ -26,10 +26,10 @@ Set a variable to a nonempty value during compilation to retain the correspondin
 | Variable | Disabled fast path |
 | --- | --- |
 | `CHALI_NO_ARRAY_COPY_BULK` | Word-copy path for plain 64-bit arrays |
-| `CHALI_NO_AOT_BULK_COPY` | Native aggregate bulk-copy helper |
-| `CHALI_NO_AOT_ADDRESS_CACHE` | Reuse of validated native addresses |
-| `CHALI_NO_AOT_INLINE_HINT` | Tiny native function inline hints |
-| `CHALI_NO_AOT_DIRECT_CALLS` | Direct calls of proven environment-free function values |
+| `CHALI_NO_BUILD_BULK_COPY` | Native aggregate bulk-copy helper |
+| `CHALI_NO_BUILD_ADDRESS_CACHE` | Reuse of validated native addresses |
+| `CHALI_NO_BUILD_INLINE_HINT` | Tiny native function inline hints |
+| `CHALI_NO_BUILD_DIRECT_CALLS` | Direct calls of proven environment-free function values |
 
 Case entry points: [language sample](../../example/samples/backend_ownership.chl), [generation-evidence and copy-boundary test](../../tests/chali_backend_ownership.py).
 

@@ -50,5 +50,5 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_collection_records(size_t *c
     return records;
 }
 
-#define CHALI_AOT_BIND_MODULE collection
+#define CHALI_BUILD_BIND_MODULE collection
 #include "aot_bind_module.h"

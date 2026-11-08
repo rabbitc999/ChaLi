@@ -1,6 +1,6 @@
 /**
  * @file backend_profile.cpp
- * @brief 可选 AOT 所有权操作计数，独立于正式性能计时。
+ * @brief 可选 BUILD 所有权操作计数，独立于正式性能计时。
  */
 #include <cstdint>
 #include <cstdlib>
@@ -68,7 +68,7 @@ struct Profile
         try
         {
             std::ofstream out(output, std::ios::binary);
-            out << "{\"schema\":1,\"scope\":\"executed AOT AST or compatibility quad ownership sites; allocation requests, not heap residency\",\"events\":[";
+            out << "{\"schema\":1,\"scope\":\"executed BUILD AST or compatibility quad ownership sites; allocation requests, not heap residency\",\"events\":[";
             bool first = true;
             for (const auto &entry : counters)
             {
@@ -85,7 +85,7 @@ struct Profile
 }  // namespace
 
 /**
- * @brief 记录一次插桩所有权操作；仅插桩 AOT 模块调用本入口。
+ * @brief 记录一次插桩所有权操作；仅插桩 BUILD 模块调用本入口。
  * @param site 包含操作种类、函数、源位置和 AST 或显式兼容指令编号的常量字符串。
  * @param bytes 已知的非负请求字节数；零表示不适用或未知。
  */

@@ -108,7 +108,7 @@ def main():
         duplicate = subprocess.run([str(compiler), 'check', str(source)], cwd=ROOT, env=env,
                                    capture_output=True, text=True, encoding='utf-8', timeout=120)
         assert duplicate.returncode == 0 and '函数 f 重复定义' in duplicate.stderr, duplicate
-    print('运行时数组声明：checked run、unchecked AOT、双形参等价、独立复制、清理与五项拒绝边界通过')
+    print('运行时数组声明：checked run、unchecked BUILD、双形参等价、独立复制、清理与五项拒绝边界通过')
 
 
 if __name__ == '__main__':

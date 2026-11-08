@@ -1,6 +1,6 @@
 /**
  * @file backend_ownership_test.cpp
- * @brief AOT 地址验证缓存等生成证据及回退测试。
+ * @brief BUILD 地址验证缓存等生成证据及回退测试。
  */
 #include "chali_aot.hpp"
 #include <cstdlib>
@@ -109,7 +109,7 @@ void buildCopyFixture(const Memory::String &prefix, const Memory::String &mode)
     Memory::Vector<Memory::String> diagnostics;
     const int status = chali_build::run(request, &diagnostics);
     for (const auto &message : diagnostics) std::cerr << message << '\n';
-    require(status == 0, "复制边界 AOT 编译失败");
+    require(status == 0, "复制边界 BUILD 编译失败");
 }
 }  // namespace
 
@@ -132,15 +132,15 @@ int main(int argc, char **argv)
         chali_build::Request request;
         request.quads = &quads;
         Memory::Vector<Memory::String> diagnostics;
-        environment("CHALI_NO_AOT_ADDRESS_CACHE", "1");
+        environment("CHALI_NO_BUILD_ADDRESS_CACHE", "1");
         const auto plain = chali_build::generateLLVM(request, &diagnostics);
         for (const auto &message : diagnostics) std::cerr << message << '\n';
         require(diagnostics.empty() && !plain.empty(), "原始 LLVM 生成失败");
-        environment("CHALI_NO_AOT_ADDRESS_CACHE", "");
+        environment("CHALI_NO_BUILD_ADDRESS_CACHE", "");
         const auto optimized = chali_build::generateLLVM(request, &diagnostics);
         require(diagnostics.empty() && !optimized.empty(), "优化 LLVM 生成失败");
         require(occurrences(plain, "call ptr @chali_host_address(") == occurrences(optimized, "call ptr @chali_host_address(") + 1, "重复地址验证未按证明消除");
-        require(optimized.find("inlinehint") != Memory::String::npos, "极小 AOT 函数缺少内联提示");
+        require(optimized.find("inlinehint") != Memory::String::npos, "极小 BUILD 函数缺少内联提示");
         const auto callbacks = runtime::parseQuads("(call, main, _, _)\n(halt, _, _, _)\n(label, _, _, main)\n"
                                                    "(addr, function_label, _, fp)\n(param, 41, _, x)\n(callptr, fp, _, answer)\n(ret, answer, _, _)\n"
                                                    "(decl, i64, local, x)\n(label, _, _, tiny)\n(+:i64, x, 1, result)\n(ret, result, _, _)\n",
@@ -148,9 +148,9 @@ int main(int argc, char **argv)
         request.quads = &callbacks;
         request.dataBytes = Memory::String("\0tiny\0", 6);
         request.dataLayout = "function_label offset=1 size=5 stride=1\n";
-        environment("CHALI_NO_AOT_DIRECT_CALLS", "1");
+        environment("CHALI_NO_BUILD_DIRECT_CALLS", "1");
         const auto indirect = chali_build::generateLLVM(request, &diagnostics);
-        environment("CHALI_NO_AOT_DIRECT_CALLS", "");
+        environment("CHALI_NO_BUILD_DIRECT_CALLS", "");
         const auto direct = chali_build::generateLLVM(request, &diagnostics);
         require(diagnostics.empty(), "函数值调用 LLVM 生成失败");
         require(occurrences(indirect, "call i64 @chali_invoke(") == occurrences(direct, "call i64 @chali_invoke(") + 1,

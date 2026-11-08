@@ -8,10 +8,10 @@
 #include <memory>
 
 // 模块绑定实现位于各自 ABI 编译单元，编译器这里只引用声明。
-#define CHALI_AOT_MODULE(name, ...) \
+#define CHALI_BUILD_MODULE(name, ...) \
     extern "C" int32_t chali_std_bind_##name(ChaliAbiRegistry *, ChaliAbiError *);
 #include "aot_modules.inc"
-#undef CHALI_AOT_MODULE
+#undef CHALI_BUILD_MODULE
 
 namespace std_registry
 {
@@ -30,12 +30,12 @@ Memory::Vector<Memory::String> buildModulesFor(const Memory::Vector<Memory::Stri
         int32_t (*bind)(ChaliAbiRegistry *, ChaliAbiError *);
     };
     static const Module modules[] = {
-#define CHALI_AOT_MODULE(name, ...) { #name, &chali_std_bind_##name },
+#define CHALI_BUILD_MODULE(name, ...) { #name, &chali_std_bind_##name },
 #include "aot_modules.inc"
-#undef CHALI_AOT_MODULE
+#undef CHALI_BUILD_MODULE
     };
     Memory::Vector<Memory::String> required;
-    const auto *full = std::getenv("CHALI_AOT_FULL_STDLIB");
+    const auto *full = std::getenv("CHALI_BUILD_FULL_STDLIB");
     for (const auto &module : modules)
     {
         if (full && *full)
@@ -49,7 +49,7 @@ Memory::Vector<Memory::String> buildModulesFor(const Memory::Vector<Memory::Stri
             chali_abi_registry_create(&error), &chali_abi_registry_destroy);
         if (!registry || module.bind(registry.get(), &error) != ChaliAbiOk)
         {
-            if (diagnostics) diagnostics->push_back(Memory::String("AOT 标准库模块绑定失败：") + message);
+            if (diagnostics) diagnostics->push_back(Memory::String("BUILD 标准库模块绑定失败：") + message);
             continue;
         }
         for (const auto &name : names)

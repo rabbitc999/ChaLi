@@ -54,12 +54,12 @@ def main():
                                 input_text, cwd=virtual, timeout=1800 if name == 'std_red_black_delete' else 300)
             assert reference.returncode == 0, (name, 'VM', reference)
             built = execute([compiler, 'build', sample, '--out', prefix, *flags], cwd=native)
-            assert built.returncode == 0, (name, 'AOT 编译', built)
+            assert built.returncode == 0, (name, 'BUILD 编译', built)
             product = prefix.with_suffix('.exe' if os.name == 'nt' else '')
             result = execute([product, *arguments], input_text, cwd=native)
             assert (result.returncode, result.stdout) == (reference.returncode, reference.stdout), (name, result, reference)
             assert not result.stderr, (name, result.stderr)
-            print('checked run／AOT 运行时差分通过：' + name, flush=True)
+            print('checked run／BUILD 运行时差分通过：' + name, flush=True)
         for name, expression, diagnostic in [
             ('integer_zero', 'integer(1) / integer(0)', '除零'),
             ('integer_overflow', 'integer(-9223372036854775807 - 1) / integer(-1)', '溢出'),
@@ -78,7 +78,7 @@ def main():
             assert built.returncode == 0, built
             result = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')])
             assert result.returncode != 0 and result.stdout == reference.stdout and diagnostic in result.stderr, result
-            print('checked run／AOT 陷阱与输出时机通过：' + name, flush=True)
+            print('checked run／BUILD 陷阱与输出时机通过：' + name, flush=True)
         for name, source_text, expected, diagnostic in [
             ('step_limit', 'void main() { println("before stop"); while (true) {} }', 'before stop\n', '执行步数超过上限'),
         ]:
@@ -92,7 +92,7 @@ def main():
             assert built.returncode == 0, built
             result = execute([prefix.with_suffix('.exe' if os.name == 'nt' else '')])
             assert result.returncode == reference.returncode and result.stdout == reference.stdout and diagnostic in result.stderr, (result, reference)
-            print('checked run／AOT 执行控制通过：' + name, flush=True)
+            print('checked run／BUILD 执行控制通过：' + name, flush=True)
 
 
 if __name__ == '__main__':

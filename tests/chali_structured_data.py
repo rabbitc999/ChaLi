@@ -8,7 +8,7 @@ from project_temp import tempfile
 ROOT=Path(__file__).resolve().parents[1]
 
 def main():
-    """编译仓库内核测试并核对当前 AOT 契约，不引用已删除的 VM／裁剪产物。"""
+    """编译仓库内核测试并核对当前 BUILD 契约，不引用已删除的 VM／裁剪产物。"""
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali',type=Path,default=compiler_path())
     parser.add_argument('--cxx',default=os.environ.get('CXX','g++'))

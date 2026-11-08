@@ -1,4 +1,4 @@
-"""验证 LLVM AOT 列表值语义及用户 opcode 的 C ABI 生命周期。"""
+"""验证 LLVM BUILD 列表值语义及用户 opcode 的 C ABI 生命周期。"""
 import os
 import ctypes
 import _ctypes
@@ -110,7 +110,7 @@ void main()
     assert(resource_live() == 0);
     exercise();
     assert(resource_live() == 0);
-    println("AOT opcode lifecycle ok");
+    println("BUILD opcode lifecycle ok");
 }
 '''
 

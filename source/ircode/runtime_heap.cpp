@@ -9,7 +9,7 @@ namespace runtime
 using namespace runtimeDetail;
 namespace runtimeDetail
 {
-#if STACKVM_WITH_DEFAULT_HEAP
+#if RUNTIME_WITH_DEFAULT_HEAP
 namespace
 {
 std::atomic<std::uint64_t> addressMappingRevision{ 1 };  ///< 模块级代次在堆销毁后仍存活，零为永久禁用缓存。

@@ -20,7 +20,7 @@ def run(arguments, *, success=True, cwd=ROOT, timeout=1800):
 
 
 def main():
-    """验证唯一的 AOT 工具链在开关两种状态下的诊断、产物与缓存行为。"""
+    """验证唯一的 BUILD 工具链在开关两种状态下的诊断、产物与缓存行为。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     args = parser.parse_args()
@@ -34,7 +34,7 @@ def main():
         annotated.write_text('@annotation Label(text:String="ok")\n@Label\nvoid main(){ println("feature:42"); }\n',
                              encoding='utf-8')
 
-        # 默认开启：不加开关也能用注解，AOT 产物照常运行。
+        # 默认开启：不加开关也能用注解，BUILD 产物照常运行。
         prefix = work / 'initial'
         assert run([chali, 'run', source, '--out', prefix]).stdout == 'feature:42\n'
         assert prefix.with_suffix('.ll').is_file()

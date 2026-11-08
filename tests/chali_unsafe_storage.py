@@ -1,4 +1,4 @@
-"""验证 unsafe 权限隔离、原始槽位状态和资源所有权，覆盖 VM 与 LLVM AOT。"""
+"""验证 unsafe 权限隔离、原始槽位状态和资源所有权，覆盖 VM 与 LLVM BUILD。"""
 from compiler_path import compiler_path
 from project_temp import tempfile
 from pathlib import Path

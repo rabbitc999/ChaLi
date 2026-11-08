@@ -26,7 +26,7 @@ std::optional<bool> Machine::callMailboxService(runtimeDetail::ConcurrentCallSta
     auto &nativeCallbackDepth = state.nativeCallbackDepth;
     auto &assign = state.assign;
     auto &fail = state.fail;
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
     auto &failFromThread = state.failFromThread;
     /**
      * @brief 在并发等待时继续观察取消、失败与截止时间。
@@ -58,7 +58,7 @@ std::optional<bool> Machine::callMailboxService(runtimeDetail::ConcurrentCallSta
             pending.clear();
             return true;
         }
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
         if ((messageSendThread || messageReceiveThread) && (!threadsEnabled_ || threadRuntime_ == nullptr))
         {
             fail(CHALI_RUNTIME_TEXT("多线程已关闭；run／aot 构建时去掉 --no-threads"));
@@ -66,11 +66,11 @@ std::optional<bool> Machine::callMailboxService(runtimeDetail::ConcurrentCallSta
             return true;
         }
 #else
-        /* 裁剪配置不编线程运行时与线程共享值（`STACKVM_WITH_THREADS=0`）：这几个名字明确报
+        /* 裁剪配置不编线程运行时与线程共享值（`RUNTIME_WITH_THREADS=0`）：这几个名字明确报
          * "这个构建没有"，而不是掉到"函数入口不存在"。不提供其他执行上下文。 */
         if (messageSendThread || messageReceiveThread || sharedCreate || sharedGet || sharedSet || sharedSwap)
         {
-            fail("这个构建没有多线程 / 线程共享值（STACKVM_WITH_THREADS=0）：" + name);
+            fail("这个构建没有多线程 / 线程共享值（RUNTIME_WITH_THREADS=0）：" + name);
             pending.clear();
             return true;
         }
@@ -111,7 +111,7 @@ std::optional<bool> Machine::callMailboxService(runtimeDetail::ConcurrentCallSta
             }
         }
         pending.clear();
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
         if (sharedCreate || sharedGet || sharedSet || sharedSwap)
         {
             std::shared_ptr<TransferPacket> previous;
@@ -217,7 +217,7 @@ std::optional<bool> Machine::callMailboxService(runtimeDetail::ConcurrentCallSta
                 threadRuntime_->changed.notify_all();
             }
         }
-#endif /* STACKVM_WITH_THREADS */
+#endif /* RUNTIME_WITH_THREADS */
         if (receive)
         {
             Slot value;

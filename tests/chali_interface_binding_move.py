@@ -25,7 +25,7 @@ def main():
         for fallback in (False, True):
             env = dict(os.environ, CHALI_LANG='zh')
             env.pop('CHALI_NO_INTERFACE_BINDING_MOVE', None)
-            env.pop('CHALI_NO_AOT_OBJECT_COPY_SCALAR', None)
+            env.pop('CHALI_NO_BUILD_OBJECT_COPY_SCALAR', None)
             if fallback:
                 env['CHALI_NO_INTERFACE_BINDING_MOVE'] = '1'
             label = allocator + ('-copy' if fallback else '-move')

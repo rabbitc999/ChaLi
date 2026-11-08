@@ -253,8 +253,8 @@ _MESSAGES = {
   "硬实时编译禁止启用反射": [
     "Reflection is forbidden in hard real-time compilation"
   ],
-  "--reflection 需要 CHALI_WITH_REFLECTION=1 且运行时 STACKVM_WITH_REFLECTION=1": [
-    "--reflection requires CHALI_WITH_REFLECTION=1 and STACKVM_WITH_REFLECTION=1"
+  "--reflection 需要 CHALI_WITH_REFLECTION=1 且运行时 RUNTIME_WITH_REFLECTION=1": [
+    "--reflection requires CHALI_WITH_REFLECTION=1 and RUNTIME_WITH_REFLECTION=1"
   ],
   "--memory-size 缺少容量\n": [
     "--memory-size requires a capacity\n"
@@ -778,11 +778,11 @@ _MESSAGES = {
   " 与目标函数类型不匹配": [
     " does not match the target function type"
   ],
-  "AOT：ABI 编译器或临时路径含不支持的命令行字符": [
-    "AOT: unsupported command-line characters in the ABI compiler or temporary path"
+  "BUILD：ABI 编译器或临时路径含不支持的命令行字符": [
+    "BUILD: unsupported command-line characters in the ABI compiler or temporary path"
   ],
-  "AOT：复杂 ABI 宿主封送编译失败；可用 CHALI_ABI_CXX 指定同位数 C++ 编译器": [
-    "AOT: complex ABI marshalling compilation failed; set CHALI_ABI_CXX to a C++ compiler with matching bitness"
+  "BUILD：复杂 ABI 宿主封送编译失败；可用 CHALI_ABI_CXX 指定同位数 C++ 编译器": [
+    "BUILD: complex ABI marshalling compilation failed; set CHALI_ABI_CXX to a C++ compiler with matching bitness"
   ],
   "chali: 编译器内存预算不足（池容量 %zu 字节，失败时活动 %zu 字节，本次申请 %zu 字节）\n": [
     "chali: compiler memory budget exhausted (capacity %zu bytes, live at failure %zu bytes, requested %zu bytes)\n"

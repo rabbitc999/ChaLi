@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    """运行真实对象表计数单测及两分配器的共享／原路径 AOT 对照。"""
+    """运行真实对象表计数单测及两分配器的共享／原路径 BUILD 对照。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     parser.add_argument('--build-root', type=Path)
@@ -50,8 +50,8 @@ def main():
                  'chali-host-records/librecords.a', 'chali-runtime/libast.a',
                  'chali-runtime/libpreprocess.a')]
     execute([cxx, *tool_flags, '-std=c++17', '-O2', '-pthread', '-ffunction-sections', '-fdata-sections',
-             '-DSTACKVM_AOT_ONLY=1', '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1',
-             '-DSTACKVM_WITH_REFLECTION=1', '-Isource', '-Ilibrary', '-I.',
+             '-DRUNTIME_BUILD_ONLY=1', '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1',
+             '-DRUNTIME_WITH_REFLECTION=1', '-Isource', '-Ilibrary', '-I.',
              ROOT / 'tests/chali_interface_snapshot.cpp', ROOT / 'source/allocator/system_arena.cpp',
              '-Wl,--gc-sections', '-Wl,--start-group',
              *libraries, '-Wl,--end-group', *(['-lwinhttp'] if os.name == 'nt' else []), '-o', unit], 'compile-unit')

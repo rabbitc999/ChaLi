@@ -66,6 +66,6 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_compress_records(size_t *cou
 }
 
 #ifndef GLUE_NO_STD_COMPRESS
-#define CHALI_AOT_BIND_MODULE compress
+#define CHALI_BUILD_BIND_MODULE compress
 #include "aot_bind_module.h"
 #endif

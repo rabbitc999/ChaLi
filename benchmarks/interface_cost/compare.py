@@ -39,7 +39,7 @@ def main():
     cc = args.cc.resolve() if args.cc else Path(shutil.which('cc') or 'cc')
     clang = args.clang.resolve() if args.clang else Path(shutil.which('clang') or 'clang')
     env = dict(os.environ,CHALI_QUIET='1',CHALI_LANG='zh')
-    for name in ('CHALI_BACKEND_PROFILE','CHALI_BACKEND_PROFILE_OUTPUT','CHALI_NO_AOT_OBJECT_CONSTRUCTION_SCALARS'):
+    for name in ('CHALI_BACKEND_PROFILE','CHALI_BACKEND_PROFILE_OUTPUT','CHALI_NO_BUILD_OBJECT_CONSTRUCTION_SCALARS'):
         env.pop(name,None)
     cc_env = {'PATH':str(cc.parent)+os.pathsep+env.get('PATH','')}
     configs = {'before':args.before.resolve(),'after':args.after.resolve()}
@@ -90,7 +90,7 @@ def main():
             path = folder/'kernel.chl'
             path.write_text(program,encoding='utf-8')
             prefix = folder/'kernel'
-            extra = {'CHALI_NO_AOT_OBJECT_CONSTRUCTION_SCALARS':'1'} if label == 'after_generic_construction' else {}
+            extra = {'CHALI_NO_BUILD_OBJECT_CONSTRUCTION_SCALARS':'1'} if label == 'after_generic_construction' else {}
             execute([compiler,'build',path,'--shared','--unchecked','--allocator',args.allocator,'--out',prefix],extra)
             library = prefix.with_suffix('.dll' if os.name == 'nt' else '.so')
             c = folder/'driver.c'

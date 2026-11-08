@@ -26,7 +26,7 @@ struct Frame
     Memory::Map<Memory::String, Slot> locals;               ///< 本帧的局部变量（形参 + 函数体里声明的）。
     Memory::Map<Memory::String, Slot> scratch;              ///< 本帧的编译器临时量（`__temp_*`）：每次激活一份，递归互不覆盖。
     std::size_t returnIp = 0;                               ///< 返回地址。
-#if STACKVM_WITH_PANIC_TRACE
+#if RUNTIME_WITH_PANIC_TRACE
     Memory::String function;  ///< 实际被调函数的符号；压缩产物中为逻辑编号。
 #endif
     Memory::String returnDest;  ///< 返回值写回调用方的哪个变量（可空）。

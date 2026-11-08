@@ -1,4 +1,4 @@
-"""下载并校验固定的 llvm-mingw 分发，仅安装外置 AOT 所需工具和目标库。"""
+"""下载并校验固定的 llvm-mingw 分发，仅安装外置 BUILD 所需工具和目标库。"""
 import argparse
 import copy
 import hashlib

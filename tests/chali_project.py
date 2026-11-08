@@ -27,7 +27,7 @@ class ProjectTests(unittest.TestCase):
         return result
 
     def test_generated_project(self):
-        """验证新建应用的原生运行、测试发现与 AOT 产物交付。"""
+        """验证新建应用的原生运行、测试发现与 BUILD 产物交付。"""
         env = dict(os.environ, CHALI_PYTHON='missing-python-for-project-test')
         self.run_cli('new', 'hello-chali', env=env)
         project = self.directory / 'hello-chali'

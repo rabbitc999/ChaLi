@@ -91,12 +91,12 @@ def main():
     records = []
     for allocator, fallback, old_abi in product(('malloc', 'pool'), (False, True), (False, True)):
         env = dict(os.environ, CHALI_LANG='zh')
-        env.pop('CHALI_NO_AOT_NUMERIC_LIST_APPEND', None)
-        env.pop('CHALI_NO_AOT_COLLECTION_SCALARS', None)
+        env.pop('CHALI_NO_BUILD_NUMERIC_LIST_APPEND', None)
+        env.pop('CHALI_NO_BUILD_COLLECTION_SCALARS', None)
         if fallback:
-            env['CHALI_NO_AOT_NUMERIC_LIST_APPEND'] = '1'
+            env['CHALI_NO_BUILD_NUMERIC_LIST_APPEND'] = '1'
         if old_abi:
-            env['CHALI_NO_AOT_COLLECTION_SCALARS'] = '1'
+            env['CHALI_NO_BUILD_COLLECTION_SCALARS'] = '1'
         label = allocator + ('-bootstrap' if fallback else '-primitive') + ('-old-abi' if old_abi else '-scalar')
 
         def execute(command, suffix, success=True):
@@ -122,7 +122,7 @@ def main():
         primitive = re.search(r'call i64 @chali_(?:host_list_storage(?:_scalar)?|list_storage_fast)\(i64(?: noundef)? 18,', bodies[0])
         assert bool(primitive) != fallback, (label, bodies[0], work)
         direct = re.search(r'call i64 @chali_list_storage_fast\(i64(?: noundef)? 18,', bodies[0])
-        expected_direct = not fallback and not old_abi and not env.get('CHALI_NO_AOT_NUMERIC_LIST_VIEWS')
+        expected_direct = not fallback and not old_abi and not env.get('CHALI_NO_BUILD_NUMERIC_LIST_VIEWS')
         assert bool(direct) == expected_direct, (label, bodies[0], work)
         (work / (label + '-fill.ll')).write_text(bodies[0] + '\n', encoding='utf-8')
         errors = {

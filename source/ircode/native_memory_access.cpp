@@ -63,7 +63,7 @@ bool nativeReleaseString(NativeContext &ctx, std::size_t address)
  */
 bool allocatedHeapRange(const HeapAllocator &heap, std::size_t address, std::size_t count)
 {
-#if STACKVM_WITH_ALLOCATION_GUARDS
+#if RUNTIME_WITH_ALLOCATION_GUARDS
     std::size_t capacity = 0;
     return count == 0 || (heap.capacityAt(address, capacity) && count <= capacity);
 #else
@@ -85,7 +85,7 @@ bool allocatedHeapRange(const HeapAllocator &heap, std::size_t address, std::siz
 bool nativeRead(const NativeContext &ctx, std::size_t address, char *out, std::size_t count)
 {
     if (count == 0) return true;
-#if STACKVM_WITH_ALLOCATION_GUARDS
+#if RUNTIME_WITH_ALLOCATION_GUARDS
     const bool heap = ctx.heap != nullptr && ctx.heap->contains(address);
     const bool valid = heap ? allocatedHeapRange(*ctx.heap, address, count) :
                               ctx.data != nullptr && address <= ctx.data->size() && count <= ctx.data->size() - address;
@@ -113,7 +113,7 @@ bool nativeRead(const NativeContext &ctx, std::size_t address, char *out, std::s
 bool nativeWrite(NativeContext &ctx, std::size_t address, const char *in, std::size_t count)
 {
     if (count == 0) return true;
-#if STACKVM_WITH_ALLOCATION_GUARDS
+#if RUNTIME_WITH_ALLOCATION_GUARDS
     const bool heap = ctx.heap != nullptr && ctx.heap->contains(address);
     const bool valid = heap ? allocatedHeapRange(*ctx.heap, address, count) :
                               ctx.data != nullptr && address <= ctx.data->size() && count <= ctx.data->size() - address;

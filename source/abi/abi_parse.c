@@ -85,6 +85,6 @@ const ChaliAbiRecord *CHALI_ABI_CALL abi_parse_records(size_t *count)
 }
 
 #ifndef GLUE_NO_STD_PARSE
-#define CHALI_AOT_BIND_MODULE parse
+#define CHALI_BUILD_BIND_MODULE parse
 #include "aot_bind_module.h"
 #endif

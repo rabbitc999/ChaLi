@@ -39,7 +39,7 @@ def main():
                 "source/console", "source/lztext", "source/bignum", "source/json"]
     flags = [options.cxx, "-std=c++17", "-O3", "-Wall", "-Wextra", "-pthread",
              "-ffunction-sections", "-fdata-sections", "-DCHALI_CUSTOM_ALLOCATOR=1",
-             "-DCHALI_WITH_REFLECTION=1", "-DSTACKVM_WITH_REFLECTION=1",
+             "-DCHALI_WITH_REFLECTION=1", "-DRUNTIME_WITH_REFLECTION=1",
              *["-I" + value for value in includes]]
     if os.name == 'nt':
         flags.append('-static')

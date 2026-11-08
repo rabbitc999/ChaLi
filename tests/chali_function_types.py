@@ -38,8 +38,8 @@ def main():
     system = ['-static', '-lwinhttp'] if os.name == 'nt' else []
     result = execute(cxx, *(['--sysroot=' + args.sysroot.resolve().as_posix()] if args.sysroot else []),
                      '-std=c++17', '-O3', '-pthread', '-ffunction-sections', '-fdata-sections',
-                     '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1', '-DSTACKVM_WITH_REFLECTION=1',
-                     '-DSTACKVM_AOT_ONLY=1',
+                     '-DCHALI_CUSTOM_ALLOCATOR=1', '-DCHALI_WITH_REFLECTION=1', '-DRUNTIME_WITH_REFLECTION=1',
+                     '-DRUNTIME_BUILD_ONLY=1',
                      '-I' + str(ROOT), '-I' + str(ROOT / 'source'), '-I' + str(ROOT / 'library'),
                      '-I' + str(ROOT / 'source/preprocess'), ROOT / 'tests/chali_function_types_test.cpp',
                      '-Wl,--gc-sections', '-Wl,--start-group', *libraries, '-Wl,--end-group', *system, '-o', unit,

@@ -100,7 +100,7 @@ def main():
             pointer_calls = re.findall(r'\bcall[^\n]*@f_[^\s(]*(?:BarePtr__[^\s(]*[_.](?:leftAdd|leftSub|rightAdd)|barePointer__|readAt__|takeAt__|initAt__)', optimized_text)
             results.append(dict(case=name, checked_run='passed', aot='passed', llvm_byte_intrinsics='passed',
                                 remaining_optimized_pointer_calls=pointer_calls))
-            print(name, 'checked run/AOT and LLVM intrinsic passed', flush=True)
+            print(name, 'checked run/BUILD and LLVM intrinsic passed', flush=True)
     (work / 'results.json').write_text(json.dumps(results, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print('namespace and native memory intrinsic checks passed; logs:', work)
 

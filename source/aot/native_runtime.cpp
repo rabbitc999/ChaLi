@@ -1010,7 +1010,7 @@ unsigned char *chali_host_address(std::int64_t address, std::size_t count)
 unsigned char *chali_host_address_view(std::int64_t address, std::size_t count, Heap::AddressView *view)
 {
     static_assert(sizeof(Heap::AddressView) == 40 && offsetof(Heap::AddressView, stamp) == 32,
-                  "AOT 地址视图必须与 64 位 LLVM 布局一致");
+                  "BUILD 地址视图必须与 64 位 LLVM 布局一致");
     static_assert(std::atomic<std::uint64_t>::is_always_lock_free && sizeof(std::atomic<std::uint64_t>) == 8,
                   "LLVM 地址原语要求原生无锁的 64 位映射代次");
     auto &context = currentContext();

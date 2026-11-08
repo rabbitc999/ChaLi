@@ -1,5 +1,5 @@
 #include "event_service.hpp"
-#if STACKVM_WITH_THREADS
+#if RUNTIME_WITH_THREADS
 #include <algorithm>
 #include <limits>
 namespace runtime
