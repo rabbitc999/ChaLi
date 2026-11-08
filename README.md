@@ -105,25 +105,6 @@ sh gen.sh          # 用 IELR 从 chali.gram 重新生成前端（需要 [ParseE
 
 `gen.sh` 需要一份 ParseEngine 文法生成器。最省事是把它放到项目根目录 `./ParseEngine[.exe]`；
 也可以让它待在旁边的 ParseEngine 仓库里（`gen.sh` 会自动找 `../ParseEngine/build/bin/`）。
-
-### 编入注解与反射
-
-默认构建同时编入注解与反射前端、原生运行时支持：
-
-```sh
-make                # 默认 CHALI_WITH_REFLECTION=1 STACKVM_WITH_REFLECTION=1
-make reflection     # 保留的显式启用入口
-```
-
-反射是语言的固定组成，**不可裁剪**：`CHALI_WITH_REFLECTION` 与 `STACKVM_WITH_REFLECTION`
-固定为 `1`（`features.mk` 里不是裁剪项，与 `NO_CHALI_*` 那套可选能力无关），反射前端与运行时
-始终编入，编译流程始终执行完整的反射处理。
-
-单次源码编译默认生成反射元数据及对应产物特征位；`--no-reflection` 不写这份元数据并拒绝程序里的
-注解与反射使用 —— 它只决定这次的产物，**不减少编译期工作量**（元数据与查询源码那一轮照跑）。
-部署到未编入反射的目标宿主运行时时，必须使用 `--no-reflection`。
-`make` 已把两项钉死为 1；只有直接 `-D` 手编才能关掉反射，那条路只用于验证编译器自身，不是受支持的裁剪配置。
-
 ## 快速使用
 
 ```sh
