@@ -6,10 +6,10 @@ struct Plain {
     int64 number;
 };
 
-enum Box<T: Valued> {
+enum MyBox<T: Valued> {
     Value(T item)
 };
 
 void main() {
-    Box<Plain> value;
+    MyBox<Plain> value;
 }

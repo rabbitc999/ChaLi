@@ -7,11 +7,11 @@ struct Leaf {
     $std::macro::Hash<Leaf>(hash);
     $std::macro::Clone<Leaf>(clone);
 }
-struct Box<T> {
+struct MyBox<T> {
     T value;
-    $std::macro::Equal<Box<T>>(leftEqual);
-    $std::macro::Hash<Box<T>>(hash);
-    $std::macro::Clone<Box<T>>(clone);
+    $std::macro::Equal<MyBox<T>>(leftEqual);
+    $std::macro::Hash<MyBox<T>>(hash);
+    $std::macro::Clone<MyBox<T>>(clone);
 }
 struct Fraction {
     float64 value;
@@ -25,10 +25,10 @@ enum Choice {
     $std::macro::Clone<Choice>(clone);
 }
 void main() {
-    Box<Leaf> original;
+    MyBox<Leaf> original;
     original.value.number = 7;
     original.value.text = "value";
-    Box<Leaf> duplicate = original.clone();
+    MyBox<Leaf> duplicate = original.clone();
     assert(original == duplicate);
     assert(original.hash(original) == duplicate.hash(duplicate));
     duplicate.value.text = "different";

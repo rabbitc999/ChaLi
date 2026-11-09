@@ -6,10 +6,10 @@ struct Plain {
     int64 n;
 };
 
-struct Box<T: Valued> {
+struct MyBox<T: Valued> {
     T value;
 };
 
 void main() {
-    Box<Plain> bad;
+    MyBox<Plain> bad;
 }

@@ -52,7 +52,7 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-548"></a>`struct XmlNode` | An XML element with ordered mixed content. |
+| 模块 | <a id="symbol-553"></a>`struct XmlNode` | An XML element with ordered mixed content. |
 
 ## 函数索引
 

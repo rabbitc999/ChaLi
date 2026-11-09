@@ -19,8 +19,8 @@ enum Choice { Ready, Value(int64 value); int64 read(){return 7;} };
 int64 plus(int64 value){return value+1;}
 @Reflect int64 overloaded(int64 value){return value;}
 @Reflect float64 overloaded(float64 value){return value;}
-struct Box<T>{T value;};
-@Reflect String readBox(Box<String> value){return value.value;}
+struct MyBox<T>{T value;};
+@Reflect String readBox(MyBox<String> value){return value.value;}
 struct Hidden{int64 value;};
 // 核对标准库内部完全限定泛型参数，不受根模块同名类型影响。
 struct StructInfo{int64 sentinel;};
@@ -51,7 +51,7 @@ void main(){
     $assert(getStaticMemberAnnotations<Counter>("total")[0].args[0].asText().unwrap()=="static");
     $assert(getFuncAnnotations("program::plus")[1].args[0].asText().unwrap()=="function");
     $assert(getFieldAnnotations<Counter>("missing").len()==0);
-    $assert(getTypeId<Box<String>>()==getTypeId<Box<String>>());
+    $assert(getTypeId<MyBox<String>>()==getTypeId<MyBox<String>>());
     $assert(getTypeId<int32>()!=getTypeId<int64>());
     $assert(getTypeId<String>()==getTypeId<String>());
     println("reflection queries OK");

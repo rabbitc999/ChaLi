@@ -604,7 +604,7 @@ Further nesting and reordered parameters work with generic functions, interface 
 enum payloads, containers, tuples, function values and references.
 Inside methods, `item.first`, `item = value` and `&item` follow the same layout and ownership rules as `self.item`.
 
-Default type arguments use `struct Box<T, V = T, W = TypeA<T, V>> { W value; };`.
+Default type arguments use `struct MyBox<T, V = T, W = TypeA<T, V>> { W value; };`.
 Defaults may refer to earlier parameters and are bound from left to right, including nested expansion.
 Self references and forward references are rejected. The same rule applies to unbound parameters with
 explicit defaults during generic function inference; unbound parameters without explicit defaults are errors.
@@ -952,7 +952,7 @@ Specializations are selected at compile time, rather than replaced at run time. 
 
 A struct may directly declare an `let f = fn<T>(T value) { value };` member and specialize it within the struct. Instances call it as `s.f(1)` or `s.f<String>("text")`. Default initialization resolves captures in the member's declaration scope, preserving isolation from same-named locals in the constructing caller. Existing restrictions on implicit captures of `self` and receiver fields remain applicable.
 
-Both ordinary and generic closure values can serve as a generic type parameter `F`, for example `int64 apply<F>(F f) { return f(3); }`; `apply(callback)` infers `F`. Generic aggregates such as `Box<F>` can store closure values. A generic closure retains its declaration identity and capture environment, without erasure to a single ordinary function-pointer signature. Borrow and move rules continue to apply.
+Both ordinary and generic closure values can serve as a generic type parameter `F`, for example `int64 apply<F>(F f) { return f(3); }`; `apply(callback)` infers `F`. Generic aggregates such as `MyBox<F>` can store closure values. A generic closure retains its declaration identity and capture environment, without erasure to a single ordinary function-pointer signature. Borrow and move rules continue to apply.
 
 ### Function-value declarations inside outer generics
 

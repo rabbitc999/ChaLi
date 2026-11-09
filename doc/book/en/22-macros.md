@@ -637,7 +637,7 @@ The declaration has three variants. Quit has no payload, Text has one String and
 
 DESCRIBE obtains descriptors with `$variants<T>()`. The outer compile-time loop emits one output statement for each variant. The inner loop visits that variant's payloads and emits their names and types. Quit has an empty payload collection, so it produces no indented lines.
 
-`payload.type.name` is canonical, hence std::core::String for text. Generic enums substitute concrete arguments before exposing payload types: a T payload in Box<int16> has type int16. Descriptors do not read an enum object; use ordinary match to inspect a Message value.
+`payload.type.name` is canonical, hence std::core::String for text. Generic enums substitute concrete arguments before exposing payload types: a T payload in MyBox<int16> has type int16. Descriptors do not read an enum object; use ordinary match to inspect a Message value.
 
 main invokes the macro. Iteration happens during compilation; the generated println statements execute at runtime. Variants and payloads expose name, index and id. Variants additionally expose payloads, and payloads expose type. A payload is not a struct field and cannot be passed to `$member`.
 

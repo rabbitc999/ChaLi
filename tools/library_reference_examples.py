@@ -48,9 +48,10 @@ EXAMPLES = {
 # 同模块的新接口复用正式样例，仍由同一生成器写入网页和内嵌数据。
 SUPPLEMENTAL = {
     'std::big_number': ['example/samples/bigint_methods.chl', 'example/samples/std_bignumber.chl'],
-    'std::macro': ['example/samples/std_macro.chl', 'example/samples/std_macro_value_members.chl'],
+    'std::macro': ['example/samples/std_macro.chl', 'example/samples/std_macro_value_members.chl', 'example/samples/std_box.chl'],
     'std::thread': ['example/samples/thread_pool.chl'],
     'std::concurrency': ['example/samples/thread_channel.chl'],
-    'std::core': ['example/samples/std_read_lines.chl'],
+    'std::core': ['example/samples/std_read_lines.chl', 'example/samples/std_box.chl'],
     'std::io': ['example/samples/std_file_strings.chl'],
+    'std::memory': ['example/samples/std_rc.chl'],
 }

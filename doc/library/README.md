@@ -30,7 +30,7 @@
 | [`std::complex`](std-complex.md) | 泛型复数 | 8 | 0 |
 | [`std::compress`](std-compress.md) | 无损压缩 | 2 | 0 |
 | [`std::concurrency`](std-concurrency.md) | 线程通信与共享 | 18 | 0 |
-| [`std::core`](std-core.md) | 核心库 | 271 | 2 |
+| [`std::core`](std-core.md) | 核心库 | 276 | 2 |
 | [`std::csv`](std-csv.md) | CSV 读写 | 4 | 0 |
 | [`std::date_time`](std-date_time.md) | UTC 日期时间 | 15 | 0 |
 | [`std::encoding`](std-encoding.md) | 文本编码 | 8 | 0 |
@@ -43,9 +43,9 @@
 | [`std::linear_algebra`](std-linear_algebra.md) | 向量与矩阵 | 56 | 0 |
 | [`std::linked_list`](std-linked_list.md) | 双向链表 | 20 | 0 |
 | [`std::log`](std-log.md) | 结构化日志 | 3 | 0 |
-| [`std::macro`](std-macro.md) | 标准宏 | 0 | 7 |
+| [`std::macro`](std-macro.md) | 标准宏 | 0 | 9 |
 | [`std::math`](std-math.md) | 泛型数学 | 24 | 0 |
-| [`std::memory`](std-memory.md) | 内存视图与统计 | 5 | 0 |
+| [`std::memory`](std-memory.md) | 内存视图与统计 | 14 | 0 |
 | [`std::message`](std-message.md) | 线程邮箱 | 6 | 0 |
 | [`std::net`](std-net.md) | TCP 与 HTTP | 39 | 0 |
 | [`std::number_theory`](std-number_theory.md) | 整数数论 | 7 | 0 |

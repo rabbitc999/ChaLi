@@ -4,7 +4,7 @@ struct Number : ImplicitConvert<int64>, ExplicitConvert<int64> {
     int64 explicitConvert() { return self.value + 100; }
 };
 
-struct Box<T> : ImplicitConvert<T> {
+struct MyBox<T> : ImplicitConvert<T> {
     T value;
     T implicitConvert() { return self.value; }
 };
@@ -33,7 +33,7 @@ void main() {
     assert(useNumber(number) == 7 && returnNumber(number) == 7);
     const Number readonly = number;
     assert(useNumber(readonly) == 7 && (int64)readonly == 107);
-    Box<int64> boxed;
+    MyBox<int64> boxed;
     boxed.value = 9;
     int64 generic = boxed;
     assert(generic == 9 && cast<int64>(boxed) == 9);

@@ -1,1 +1,1 @@
-chali: Box 的类型实参 program::Plain 未实现接口 Valued
+chali: MyBox 的类型实参 program::Plain 未实现接口 Valued

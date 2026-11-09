@@ -74,6 +74,8 @@ isObject=1 len=1
 | `$MIN(left, right)` | 选择较小的值。 |
 | `$MAX(left, right)` | 选择较大的值。 |
 | `$CLAMP(value, low, high)` | 将值限制在闭区间内。上下界颠倒时触发断言。 |
+| `$IN_RANGE(value, low, high)` | 判断值是否在闭区间内。上下界颠倒时返回 false。 |
+| `$BOX(value)` | 创建 Box，并从表达式推导元素类型。 |
 
 ```chali
 import std::macro;

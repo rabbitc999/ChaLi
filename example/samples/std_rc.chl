@@ -1,0 +1,50 @@
+import std::memory;
+
+int64 closed = 0;
+
+struct Resource : Closeable {
+    int64 id;
+    void close() { closed += self.id; }
+};
+
+void main() {
+    int64 before = Memory::stats().liveBlocks;
+    {
+        Rc<int64> first = rc(42);
+        let second = first.clone();
+        let observer = first.downgrade();
+        first.close();
+        assert(second.get() == 42);
+        assert(!observer.isExpired());
+        let third = observer.upgrade();
+        second.close();
+        assert(third.get() == 42);
+        third.close();
+        assert(observer.isExpired());
+        let expired = observer.upgrade();
+        assert(expired.isEmpty());
+    }
+    {
+        Weak<Resource> observer;
+        {
+            Resource resource;
+            resource.id = 7;
+            let first = rc(move resource);
+            let second = first.clone();
+            observer = second.downgrade();
+            first.close();
+            assert(closed == 0);
+            assert(!observer.isExpired());
+        }
+        assert(closed == 7);
+        assert(observer.isExpired());
+        observer.close();
+        observer.close();
+    }
+    {
+        Weak<int64> empty;
+        assert(empty.isExpired());
+    }
+    assert(Memory::stats().liveBlocks == before);
+    println("Rc and Weak OK");
+}

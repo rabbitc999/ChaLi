@@ -111,29 +111,29 @@ response ok=1 status=200 reason=OK len=5 type=text/plain body=hello
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-351"></a>`const int64 NET_OK = 0` | 模块公开的只读常量。 |
-| 模块 | <a id="symbol-352"></a>`const int64 NET_CLOSED = 1` | 模块公开的只读常量。 |
-| 模块 | <a id="symbol-353"></a>`const int64 NET_TIMEOUT = 2` | 模块公开的只读常量。 |
-| 模块 | <a id="symbol-354"></a>`const int64 NET_ERROR = 3` | 模块公开的只读常量。 |
-| 模块 | <a id="symbol-355"></a>`const int64 NET_PENDING = 4` | 非阻塞操作尚未就绪，调用方可用 std::thread::sleepFor 有界暂停后继续轮询。 |
-| 模块 | <a id="symbol-356"></a>`#NonCopyable opcode TcpSocket` | 独占 TCP 连接；复制被拒绝，显式 move 转移所有权。 |
-| 模块 | <a id="symbol-357"></a>`#NonCopyable opcode TcpListener` | 独占 TCP 监听器；端口为零时由系统分配。 |
-| 模块 | <a id="symbol-358"></a>`struct Url` | 拆开的 HTTP 地址。 |
-| Url | <a id="symbol-359"></a>`bool ok` | 当前解析或请求是否成功。 |
-| Url | <a id="symbol-360"></a>`String host` | URL 中的主机名。 |
-| Url | <a id="symbol-361"></a>`int64 port` | 网络端口。 |
-| Url | <a id="symbol-362"></a>`String path` | 请求目标路径。 |
-| Url | <a id="symbol-363"></a>`String error` | 最近操作的错误说明。 |
-| 模块 | <a id="symbol-364"></a>`struct HttpResponse` | HTTP 响应：状态码、原因、头部原文、正文。 |
-| HttpResponse | <a id="symbol-365"></a>`bool ok` | 当前解析或请求是否成功。 |
-| HttpResponse | <a id="symbol-366"></a>`int64 status` | HTTP 响应状态码。 |
-| HttpResponse | <a id="symbol-367"></a>`String reason` | HTTP 状态原因文本。 |
-| HttpResponse | <a id="symbol-368"></a>`String headers` | HTTP 响应头。 |
-| HttpResponse | <a id="symbol-369"></a>`String body` | HTTP 响应正文。 |
-| HttpResponse | <a id="symbol-370"></a>`String error` | 最近操作的错误说明。 |
-| 模块 | <a id="symbol-371"></a>`struct HttpClient` | 一条连接上的 HTTP 客户端；也提供一次性便捷方法 `fetch`/`submit`。 |
-| HttpClient | <a id="symbol-372"></a>`TcpSocket socket` | HTTP 客户端使用的 TCP 连接。 |
-| HttpClient | <a id="symbol-373"></a>`bool connected` | 客户端是否已建立连接。 |
+| 模块 | <a id="symbol-356"></a>`const int64 NET_OK = 0` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-357"></a>`const int64 NET_CLOSED = 1` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-358"></a>`const int64 NET_TIMEOUT = 2` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-359"></a>`const int64 NET_ERROR = 3` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-360"></a>`const int64 NET_PENDING = 4` | 非阻塞操作尚未就绪，调用方可用 std::thread::sleepFor 有界暂停后继续轮询。 |
+| 模块 | <a id="symbol-361"></a>`#NonCopyable opcode TcpSocket` | 独占 TCP 连接；复制被拒绝，显式 move 转移所有权。 |
+| 模块 | <a id="symbol-362"></a>`#NonCopyable opcode TcpListener` | 独占 TCP 监听器；端口为零时由系统分配。 |
+| 模块 | <a id="symbol-363"></a>`struct Url` | 拆开的 HTTP 地址。 |
+| Url | <a id="symbol-364"></a>`bool ok` | 当前解析或请求是否成功。 |
+| Url | <a id="symbol-365"></a>`String host` | URL 中的主机名。 |
+| Url | <a id="symbol-366"></a>`int64 port` | 网络端口。 |
+| Url | <a id="symbol-367"></a>`String path` | 请求目标路径。 |
+| Url | <a id="symbol-368"></a>`String error` | 最近操作的错误说明。 |
+| 模块 | <a id="symbol-369"></a>`struct HttpResponse` | HTTP 响应：状态码、原因、头部原文、正文。 |
+| HttpResponse | <a id="symbol-370"></a>`bool ok` | 当前解析或请求是否成功。 |
+| HttpResponse | <a id="symbol-371"></a>`int64 status` | HTTP 响应状态码。 |
+| HttpResponse | <a id="symbol-372"></a>`String reason` | HTTP 状态原因文本。 |
+| HttpResponse | <a id="symbol-373"></a>`String headers` | HTTP 响应头。 |
+| HttpResponse | <a id="symbol-374"></a>`String body` | HTTP 响应正文。 |
+| HttpResponse | <a id="symbol-375"></a>`String error` | 最近操作的错误说明。 |
+| 模块 | <a id="symbol-376"></a>`struct HttpClient` | 一条连接上的 HTTP 客户端；也提供一次性便捷方法 `fetch`/`submit`。 |
+| HttpClient | <a id="symbol-377"></a>`TcpSocket socket` | HTTP 客户端使用的 TCP 连接。 |
+| HttpClient | <a id="symbol-378"></a>`bool connected` | 客户端是否已建立连接。 |
 
 ## 函数索引
 

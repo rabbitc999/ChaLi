@@ -1451,6 +1451,48 @@ struct RawStorage<T>: Closeable {
     }
 };
 
+/** 独占堆上的一个值。默认构造为空，移动时转移所有权，离开作用域时自动释放。 */
+struct Box<T>: Closeable {
+    /** 内部所有权存储；通过 Box 的方法访问其中的值。 */
+    RawStorage<T> __storage;
+
+    /** 把一个值放入独占的堆盒。可复制的实参可按值传入，转移所有权时使用 move。
+     * @param value 要装箱的值。
+     * @return 持有该值的 Box。
+     */
+    static Box<T> newBox(T value) {
+        Box<T> result;
+        result.__storage = RawStorage<T>::allocate(1);
+        unsafe { initAt(result.__storage.pointer(0), move value); }
+        return move result;
+    }
+
+    /** 查询当前 Box 是否为空。
+     * @return 默认构造或关闭后为 true。
+     */
+    bool isEmpty() { return self.__storage.capacity() == 0; }
+
+    /** 复制盒中的值，要求 T 可复制。空盒触发断言。
+     * @return 盒中值的独立副本。
+     */
+    T get() {
+        assert(!self.isEmpty(), "Box 为空");
+        unsafe { return readAt(self.__storage.pointer(0)); }
+    }
+
+    /** 消耗当前 Box 并释放堆存储。空盒触发断言。
+     * @return 从盒中移出的值。
+     */
+    T take() {
+        assert(!self.isEmpty(), "Box 为空");
+        Box<T> owner = move self;
+        unsafe { return takeAt(owner.__storage.pointer(0)); }
+    }
+
+    /** 销毁仍在盒中的值并释放堆存储。可以重复关闭。 */
+    void close() { self.__storage.close(); }
+};
+
 /** 自举集合的原始槽访问边界；算法在下方 ChaLi 函数中执行。 */
 unsafe int64 __listStorageGuard(int64 handle,int64 operation,int64 index);
 unsafe int64 __listStorageCapacity(int64 handle);

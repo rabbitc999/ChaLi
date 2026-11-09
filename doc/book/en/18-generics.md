@@ -225,7 +225,7 @@ void main()
 
 The first declaration creates the current module's String with one integer field. The bare name in `echo<String>` resolves at the call site, selecting that user type. The qualified name in the next call selects the standard string for both parameter and result.
 
-Containers, tuples, references and function types preserve the source of their component types. Defaults resolve at the template definition: `Box<T = String>` keeps that module's String when a caller writes `Box<>`; explicit arguments still come from the caller. Qualify ambiguous names introduced by direct imports. Any remains reserved and cannot be redeclared this way.
+Containers, tuples, references and function types preserve the source of their component types. Defaults resolve at the template definition: `MyBox<T = String>` keeps that module's String when a caller writes `MyBox<>`; explicit arguments still come from the caller. Qualify ambiguous names introduced by direct imports. Any remains reserved and cannot be redeclared this way.
 
 ### Derivation is checked for each concrete instance
 
@@ -235,22 +235,22 @@ A member macro in a generic type generates methods for each concrete instance. T
 ```chali
 import std::macro;
 
-struct Box<T>
+struct MyBox<T>
 {
     T value;
-    $std::macro::Clone<Box<T>>(clone);
+    $std::macro::Clone<MyBox<T>>(clone);
 }
 
 void main()
 {
-    Box<int64> number;
+    MyBox<int64> number;
     number.value = 7;
-    Box<int64> copiedNumber = number.clone();
+    MyBox<int64> copiedNumber = number.clone();
     println("{}", copiedNumber.value);
 
-    Box<String> text;
+    MyBox<String> text;
     text.value = "kept";
-    Box<String> copiedText = text.clone();
+    MyBox<String> copiedText = text.clone();
     text.value = "changed";
     println("{}", copiedText.value);
 }
@@ -261,11 +261,11 @@ void main()
 kept
 ```
 
-The first five lines define Box and request Clone. The field still has type T; at the first use it becomes int64, so copiedNumber.value is 7.
+The first five lines define MyBox and request Clone. The field still has type T; at the first use it becomes int64, so copiedNumber.value is 7.
 
 The second half selects String. The clone independently owns its text. Changing text.value leaves copiedText.value unchanged, so the second output remains kept. Ordinary copying, explicit cloning and resource transfer retain their usual rules.
 
-A user-defined field type must provide the required Clone protocol. Deriving the outer template does not supply the inner requirement. Modules may each declare Box; each definition retains its own derivation and operator settings. Diagnostics and previews point back to the member macro call, and concrete instances are checked separately.
+A user-defined field type must provide the required Clone protocol. Deriving the outer template does not supply the inner requirement. Modules may each declare MyBox; each definition retains its own derivation and operator settings. Diagnostics and previews point back to the member macro call, and concrete instances are checked separately.
 ### Call the same template on two types
 
 The calls infer integer and string types and preserve the respective result types.

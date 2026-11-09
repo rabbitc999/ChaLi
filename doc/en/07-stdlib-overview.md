@@ -73,6 +73,8 @@ Import `std::macro` to use these expression macros. Each argument is evaluated o
 | `$MIN(left, right)` | Selects the smaller value. |
 | `$MAX(left, right)` | Selects the larger value. |
 | `$CLAMP(value, low, high)` | Limits a value to the inclusive interval. Reversed bounds trigger an assertion. |
+| `$IN_RANGE(value, low, high)` | Tests whether the value is in the inclusive interval. Reversed bounds return false. |
+| `$BOX(value)` | Creates a Box and infers its payload type from the expression. |
 
 ```chali
 import std::macro;

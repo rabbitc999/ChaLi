@@ -1,6 +1,6 @@
 // T & 与 T const& 使用同一类型身份，适用于泛型、元组和回调。
 struct Cell { int64 value; };
-struct Box<T> { T value; };
+struct MyBox<T> { T value; };
 int64 read(Cell & cell) { return cell.value; }
 int64 & relay(int64 & value) { return value; }
 Cell & relayCell(Cell & value) { return value; }
@@ -28,8 +28,8 @@ void main() {
     assert(namedPair[0] == "sugar" && (namedPair[1]).value == 9);
     Option<String &> optional = Option<String &>::Value(&text);
     assert(optional.unwrap() == "sugar");
-    Box<int64 &> box; box.value = &value;
-    Box<int64 const&> same = box;
+    MyBox<int64 &> box; box.value = &value;
+    MyBox<int64 const&> same = box;
     assert(same.value == 7);
     List<int64 &> values; values.push(&value);
     assert(values[0] == 7);

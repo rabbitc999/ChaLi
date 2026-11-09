@@ -7,16 +7,16 @@ struct String : Clone<String> {
         return self;
     }
 }
-struct Box<T> {
+struct MyBox<T> {
     T value;
-    $std::macro::Clone<Box<T>>(clone);
+    $std::macro::Clone<MyBox<T>>(clone);
 }
 void main() {
-    Box<String> custom;
+    MyBox<String> custom;
     custom.value.code = 23;
     let customCopy = custom.clone();
     assert(customCopy.value.code == 23 && customClones == 1);
-    Box<std::core::String> standard;
+    MyBox<std::core::String> standard;
     standard.value = "kept";
     let standardCopy = standard.clone();
     standard.value = "changed";

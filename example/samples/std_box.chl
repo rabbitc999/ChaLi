@@ -1,0 +1,64 @@
+import std::macro;
+import std::memory;
+
+int64 closed = 0;
+int64 calls = 0;
+
+struct Resource : Closeable {
+    int64 id;
+    void close() { closed += self.id; }
+};
+
+int64 observed(int64 value) {
+    calls += 1;
+    return value;
+}
+
+void main() {
+    assert($IN_RANGE(observed(4), observed(4), observed(6)));
+    assert(calls == 3);
+    assert($IN_RANGE(6, 4, 6));
+    assert(!$IN_RANGE(7, 4, 6));
+    assert(!$IN_RANGE(5, 6, 4));
+
+    assert(Box<int64>::newBox(42).take() == 42);
+    std::core::Box<int64> empty;
+    assert(empty.isEmpty());
+    empty.close();
+
+    int64 before = Memory::stats().liveBlocks;
+    {
+        std::core::Box<List<int64>> numbers = Box<List<int64>>::newBox([2, 3]);
+        List<int64> copy = numbers.get();
+        copy.push(4);
+        assert(numbers.get().len() == 2);
+        List<int64> taken = numbers.take();
+        assert(taken[0] == 2 && taken[1] == 3);
+    }
+    {
+        Resource resource;
+        resource.id = 7;
+        let owned = $BOX(move resource);
+        let moved = move owned;
+        let extracted = moved.take();
+        assert(extracted.id == 7 && closed == 0);
+    }
+    assert(closed == 7);
+    {
+        Resource resource;
+        resource.id = 11;
+        let owned = Box<Resource>::newBox(move resource);
+    }
+    assert(closed == 18);
+    {
+        Resource resource;
+        resource.id = 13;
+        let owned = std::core::Box<Resource>::newBox(move resource);
+        owned.close();
+        assert(owned.isEmpty());
+        owned.close();
+    }
+    assert(closed == 31);
+    assert(Memory::stats().liveBlocks == before);
+    println("Box and standard macros OK");
+}

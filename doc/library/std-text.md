@@ -69,18 +69,18 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-477"></a>`struct KmpReply` | KMP 操作回执，所有字段由语言实现直接更新。 |
-| KmpReply | <a id="symbol-478"></a>`String error` | 本次胶水调用的错误说明；成功时为空串。 |
-| KmpReply | <a id="symbol-479"></a>`int64 value` | 首个匹配的字节下标；找不到为 -1。 |
-| KmpReply | <a id="symbol-480"></a>`int64 flag` | 布尔结果：1 = 命中。 |
-| KmpReply | <a id="symbol-481"></a>`List<int64> table` | 长度为针长的 KMP 失配表。 |
-| KmpReply | <a id="symbol-482"></a>`List<int64> positions` | 全部命中下标，升序且允许重叠。 |
-| 模块 | <a id="symbol-483"></a>`struct Text` | 字符串查找、比较、裁剪和替换的静态入口。 |
-| 模块 | <a id="symbol-484"></a>`struct StringBuilder : Drop` | 字符串构建器：把片段收进列表，最后一次分配写入结果区（与 `Text::join` 同口径）。
+| 模块 | <a id="symbol-482"></a>`struct KmpReply` | KMP 操作回执，所有字段由语言实现直接更新。 |
+| KmpReply | <a id="symbol-483"></a>`String error` | 本次胶水调用的错误说明；成功时为空串。 |
+| KmpReply | <a id="symbol-484"></a>`int64 value` | 首个匹配的字节下标；找不到为 -1。 |
+| KmpReply | <a id="symbol-485"></a>`int64 flag` | 布尔结果：1 = 命中。 |
+| KmpReply | <a id="symbol-486"></a>`List<int64> table` | 长度为针长的 KMP 失配表。 |
+| KmpReply | <a id="symbol-487"></a>`List<int64> positions` | 全部命中下标，升序且允许重叠。 |
+| 模块 | <a id="symbol-488"></a>`struct Text` | 字符串查找、比较、裁剪和替换的静态入口。 |
+| 模块 | <a id="symbol-489"></a>`struct StringBuilder : Drop` | 字符串构建器：把片段收进列表，最后一次分配写入结果区（与 `Text::join` 同口径）。
 `s = s + t` 每次复制整串，逐块累加是 O(n²)；构建器把每段代价压到拷贝一次片段，
 `toString` 再用 O(n log k) 的合并收尾。循环拼字符串一律走这里。 |
-| StringBuilder | <a id="symbol-485"></a>`List<String> chunks` | 已累计的字符串片段。 |
-| StringBuilder | <a id="symbol-486"></a>`int64 length` | 已累计的总字节数。 |
+| StringBuilder | <a id="symbol-490"></a>`List<String> chunks` | 已累计的字符串片段。 |
+| StringBuilder | <a id="symbol-491"></a>`int64 length` | 已累计的总字节数。 |
 
 ## 函数索引
 

@@ -46,3 +46,130 @@ struct Memory {
         return result;
     }
 };
+
+/** 引用计数控制块。weak 包含强引用组持有的一份隐式弱引用。 */
+struct __RcState<T> {
+    int64 strong;
+    int64 weak;
+    Box<T> value;
+};
+
+/** 释放一份弱引用；最后一份弱引用释放已清空的控制块。 */
+unsafe void __releaseWeak<T>(RawPtr<__RcState<T>> pointer) {
+    __RcState<T> mut& state = borrowAt(pointer);
+    state.weak -= 1;
+    if (state.weak == 0) {
+        RawStorage<__RcState<T>> storage;
+        storage.handle = pointer.storage;
+        storage.close();
+    }
+}
+
+/** 同一线程内共享堆值的强引用。默认构造为空，使用 clone 显式增加拥有者。 */
+struct Rc<T>: Closeable {
+    /** 内部控制块身份。 */
+    RawPtr<__RcState<T>> __state;
+
+    /** 查询强引用句柄是否为空。 */
+    bool isEmpty() { return self.__state.storage == 0u; }
+
+    /** 返回共享同一值的新拥有者。空句柄返回空句柄。 */
+    Rc<T> clone() {
+        Rc<T> result;
+        if (!self.isEmpty()) {
+            unsafe {
+                __RcState<T> mut& state = borrowAt(self.__state);
+                assert(state.strong < 9223372036854775807, "Rc 强引用计数溢出");
+                state.strong += 1;
+            }
+            result.__state = self.__state;
+        }
+        return move result;
+    }
+
+    /** 返回盒中可复制值的副本。空句柄触发断言。 */
+    T get() {
+        assert(!self.isEmpty(), "Rc 为空");
+        unsafe { return borrowAt(self.__state)->value.get(); }
+    }
+
+    /** 创建弱引用。空句柄产生空弱引用。 */
+    Weak<T> downgrade() {
+        Weak<T> result;
+        if (!self.isEmpty()) {
+            unsafe {
+                __RcState<T> mut& state = borrowAt(self.__state);
+                assert(state.weak < 9223372036854775807, "Rc 弱引用计数溢出");
+                state.weak += 1;
+            }
+            result.__state = self.__state;
+        }
+        return move result;
+    }
+
+    /** 释放当前强引用；最后一个强引用负责销毁值。 */
+    void close() {
+        if (self.isEmpty()) { return; }
+        RawPtr<__RcState<T>> pointer = self.__state;
+        self.__state.storage = 0u;
+        unsafe {
+            __RcState<T> mut& state = borrowAt(pointer);
+            state.strong -= 1;
+            if (state.strong == 0) {
+                state.value.close();
+                __releaseWeak(pointer);
+            }
+        }
+    }
+};
+
+/** 同一线程内观察 Rc 值的弱引用。可通过 upgrade 尝试取得拥有者。 */
+struct Weak<T>: Closeable {
+    /** 内部控制块身份。 */
+    RawPtr<__RcState<T>> __state;
+
+    /** 值已经销毁或句柄为空时返回 true。 */
+    bool isExpired() {
+        if (self.__state.storage == 0u) { return true; }
+        unsafe { return borrowAt(self.__state)->strong == 0; }
+    }
+
+    /** 值仍存活时返回新的强引用，否则返回空 Rc。 */
+    Rc<T> upgrade() {
+        Rc<T> result;
+        if (!self.isExpired()) {
+            unsafe {
+                __RcState<T> mut& state = borrowAt(self.__state);
+                assert(state.strong < 9223372036854775807, "Rc 强引用计数溢出");
+                state.strong += 1;
+            }
+            result.__state = self.__state;
+        }
+        return move result;
+    }
+
+    /** 释放当前弱引用。 */
+    void close() {
+        if (self.__state.storage == 0u) { return; }
+        RawPtr<__RcState<T>> pointer = self.__state;
+        self.__state.storage = 0u;
+        unsafe { __releaseWeak(pointer); }
+    }
+};
+
+/** 创建第一个拥有堆值的强引用。
+ * @param value 要交给引用计数管理的值。
+ * @return 拥有该值的 Rc。
+ */
+Rc<T> rc<T>(T value) {
+    RawStorage<__RcState<T>> storage = RawStorage<__RcState<T>>::allocate(1);
+    __RcState<T> state;
+    state.strong = 1;
+    state.weak = 1;
+    state.value = std::core::Box<T>::newBox(move value);
+    Rc<T> result;
+    result.__state = storage.pointer(0);
+    unsafe { initAt(result.__state, move state); }
+    storage.handle = 0u;
+    return move result;
+}

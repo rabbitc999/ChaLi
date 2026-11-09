@@ -59,36 +59,36 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-448"></a>`struct SqlStatement` | 可独立保存、查看并执行的 SQL 与参数，参数为 JSON 标量数组。 |
-| SqlStatement | <a id="symbol-449"></a>`String sql` | 包含占位符的 SQL 文本，不含参数值。 |
-| SqlStatement | <a id="symbol-450"></a>`String parameters` | 按占位符顺序保存类型的 JSON 标量数组。 |
-| 模块 | <a id="symbol-451"></a>`struct Query` | 值语义的动态查询；复制后可独立修改条件。 |
-| Query | <a id="symbol-452"></a>`String model` | 从反射类型与注解构造的模型元数据 JSON。 |
-| Query | <a id="symbol-453"></a>`List<String> filters` | 按添加顺序合取的参数化过滤条件。 |
-| Query | <a id="symbol-454"></a>`List<String> orders` | 按添加顺序使用的字段排序声明。 |
-| Query | <a id="symbol-455"></a>`List<String> columns` | 结果集按顺序保存的列名。 |
-| Query | <a id="symbol-456"></a>`int64 limitValue` | 最大返回行数，零表示不限制。 |
-| Query | <a id="symbol-457"></a>`int64 offsetValue` | 分页跳过的行数。 |
-| 模块 | <a id="symbol-458"></a>`const int64 CELL_NULL = 0` | ── 格子取值类型编号 ─────────────────────────────────────────────────── |
-| 模块 | <a id="symbol-459"></a>`const int64 CELL_INT = 1` | 模块公开的只读常量。 |
-| 模块 | <a id="symbol-460"></a>`const int64 CELL_REAL = 2` | 模块公开的只读常量。 |
-| 模块 | <a id="symbol-461"></a>`const int64 CELL_TEXT = 3` | 模块公开的只读常量。 |
-| 模块 | <a id="symbol-462"></a>`struct DataCell` | 结果集里的一个格子，保留类型与文本两种形态。 |
-| DataCell | <a id="symbol-463"></a>`int64 kind` | 单元格种类：NULL、整数、浮点或文本。 |
-| DataCell | <a id="symbol-464"></a>`int64 intValue` | 整数单元格保存的值。 |
-| DataCell | <a id="symbol-465"></a>`float64 realValue` | 浮点单元格保存的值。 |
-| DataCell | <a id="symbol-466"></a>`String textValue` | 文本单元格保存的字符串。 |
-| 模块 | <a id="symbol-467"></a>`struct DataRow` | 结果集的一行。 |
-| DataRow | <a id="symbol-468"></a>`List<DataCell> cells` | 该行按列顺序保存的单元格。 |
-| 模块 | <a id="symbol-469"></a>`struct ResultSet` | 一次 exec 的结果：状态、错误、影响行数、结果集。 |
-| ResultSet | <a id="symbol-470"></a>`bool ok` | 当前解析或请求是否成功。 |
-| ResultSet | <a id="symbol-471"></a>`String error` | 最近操作的错误说明。 |
-| ResultSet | <a id="symbol-472"></a>`int64 affected` | 操作影响的记录数量。 |
-| ResultSet | <a id="symbol-473"></a>`List<String> columns` | 结果集按顺序保存的列名。 |
-| ResultSet | <a id="symbol-474"></a>`List<DataRow> rows` | 按查询顺序保存的数据行。 |
-| 模块 | <a id="symbol-475"></a>`enum Driver` | std::sql 支持的数据库引擎。 |
+| 模块 | <a id="symbol-453"></a>`struct SqlStatement` | 可独立保存、查看并执行的 SQL 与参数，参数为 JSON 标量数组。 |
+| SqlStatement | <a id="symbol-454"></a>`String sql` | 包含占位符的 SQL 文本，不含参数值。 |
+| SqlStatement | <a id="symbol-455"></a>`String parameters` | 按占位符顺序保存类型的 JSON 标量数组。 |
+| 模块 | <a id="symbol-456"></a>`struct Query` | 值语义的动态查询；复制后可独立修改条件。 |
+| Query | <a id="symbol-457"></a>`String model` | 从反射类型与注解构造的模型元数据 JSON。 |
+| Query | <a id="symbol-458"></a>`List<String> filters` | 按添加顺序合取的参数化过滤条件。 |
+| Query | <a id="symbol-459"></a>`List<String> orders` | 按添加顺序使用的字段排序声明。 |
+| Query | <a id="symbol-460"></a>`List<String> columns` | 结果集按顺序保存的列名。 |
+| Query | <a id="symbol-461"></a>`int64 limitValue` | 最大返回行数，零表示不限制。 |
+| Query | <a id="symbol-462"></a>`int64 offsetValue` | 分页跳过的行数。 |
+| 模块 | <a id="symbol-463"></a>`const int64 CELL_NULL = 0` | ── 格子取值类型编号 ─────────────────────────────────────────────────── |
+| 模块 | <a id="symbol-464"></a>`const int64 CELL_INT = 1` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-465"></a>`const int64 CELL_REAL = 2` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-466"></a>`const int64 CELL_TEXT = 3` | 模块公开的只读常量。 |
+| 模块 | <a id="symbol-467"></a>`struct DataCell` | 结果集里的一个格子，保留类型与文本两种形态。 |
+| DataCell | <a id="symbol-468"></a>`int64 kind` | 单元格种类：NULL、整数、浮点或文本。 |
+| DataCell | <a id="symbol-469"></a>`int64 intValue` | 整数单元格保存的值。 |
+| DataCell | <a id="symbol-470"></a>`float64 realValue` | 浮点单元格保存的值。 |
+| DataCell | <a id="symbol-471"></a>`String textValue` | 文本单元格保存的字符串。 |
+| 模块 | <a id="symbol-472"></a>`struct DataRow` | 结果集的一行。 |
+| DataRow | <a id="symbol-473"></a>`List<DataCell> cells` | 该行按列顺序保存的单元格。 |
+| 模块 | <a id="symbol-474"></a>`struct ResultSet` | 一次 exec 的结果：状态、错误、影响行数、结果集。 |
+| ResultSet | <a id="symbol-475"></a>`bool ok` | 当前解析或请求是否成功。 |
+| ResultSet | <a id="symbol-476"></a>`String error` | 最近操作的错误说明。 |
+| ResultSet | <a id="symbol-477"></a>`int64 affected` | 操作影响的记录数量。 |
+| ResultSet | <a id="symbol-478"></a>`List<String> columns` | 结果集按顺序保存的列名。 |
+| ResultSet | <a id="symbol-479"></a>`List<DataRow> rows` | 按查询顺序保存的数据行。 |
+| 模块 | <a id="symbol-480"></a>`enum Driver` | std::sql 支持的数据库引擎。 |
 | Driver | `MySQL, SQLite, PostgreSQL, SqlServer, Odbc, MariaDB` | std::sql 支持的数据库引擎。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-476"></a>`#NonCopyable opcode Database` | 不可复制的数据库连接 opcode，状态和释放责任由宿主记录保存。 |
+| 模块 | <a id="symbol-481"></a>`#NonCopyable opcode Database` | 不可复制的数据库连接 opcode，状态和释放责任由宿主记录保存。 |
 
 ## 函数索引
 

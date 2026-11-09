@@ -27,9 +27,9 @@ MODULES = {
     'std::toml': ('TOML 文档与反射编解码', 'parse 返回 Result<TomlValue,MessageError>。与 JSON 共用拥有型 opcode 协议；普通复制深复制子树，close 只影响当前值。表对应 isTable/isObject；时间值使用 isDateTime/asDateTime。asXxx 类型不符返回 None；含零字节的文本使用字节列表接口。kind 编码与 JSON 节点一致。解析文档根节点的 dump() 保留原文注释、空白与换行；反复解析保存不丢失或重复注释。底层 C++ 等形值编辑保留布局；结构编辑保留注释内容，但可调整位置。子节点只输出值。'),
     'std::linear_algebra': ('向量与矩阵', 'Vector<T>、Matrix<T> 保留泛型聚合外观，values 使用 ScalarArray<T>，底层 ScalarStorage opcode 拥有连续数值缓冲，不再保存通用 List。支持内建有符号/无符号整数及 float32/float64，复制得到独立缓冲。下标从 0 开始；加减、点积和乘法必须维度兼容，非法维度触发断言或宿主错误。fromArray 复制，toArray 返回独立数组；裸引用重载须提供有效 count。normalized 不接受零向量。浮点分解和 solve 使用宿主胶水，返回分解结构/解向量；奇异、非法形状或不满足算法条件时报告运行错误，不返回 Result。'),
     'std::big_number': ('任意精度数值', '大整数和十进制大数支持算术、构造和格式化。BigDecimal 的有效位数范围为 1..100000。'),
-    'std::macro': ('标准宏', '包含选择、区间限制和标准值协议成员宏，见标准库总览。'),
+    'std::macro': ('标准宏', '包含选择、闭区间判断、区间限制、装箱和标准值协议成员宏，见标准库总览。'),
     'std::math': ('泛型数学', '三角函数使用弧度；普通整数返回 float64，float32 保持类型，float64 转发宿主数学库。BigInteger 转为 BigDecimal，BigDecimal 使用十进制高精度算法并沿用有效位数，Expr 组合符号 AST。pi(digits) 返回 1..100000 位圆周率。大十进制无 NaN/无穷，非法定义域报告错误；普通浮点沿用宿主特殊值。round 中点远离零，trunc 向零，fmod 余数与被除数同号。abs/min/max 保留既有泛型比较语义；clamp 检查 low<=high。'),
-    'std::memory': ('内存视图与统计', 'Span<T> 是引用加长度，不拥有缓冲区；iterator 返回元素 mut&。调用者保证底层连续存储有效。缓冲区可用 new 分配，并由普通作用域管理所有权；视图不能超过底层存储的有效期。Memory.stats 返回宿主分配器统计，不代表整个操作系统进程内存。'),
+    'std::memory': ('内存视图与统计', 'Span<T> 是引用加长度，不拥有缓冲区；iterator 返回元素 mut&。调用者保证底层连续存储有效。缓冲区可用 new 分配，并由普通作用域管理所有权；视图不能超过底层存储的有效期。Rc<T> 在同一线程内共享堆值，clone 增加强引用，最后一个强引用负责清理值。Weak<T> 只保留控制块，upgrade 在值失效后返回空 Rc。Memory.stats 返回宿主分配器统计，不代表整个操作系统进程内存。'),
     'std::message': ('线程邮箱', '泛型线程消息按值复制，接收类型必须匹配；静态函数可传递，引用、独占资源、嵌套函数值和带捕获闭包不可传递。邮箱容量 256，sendThread 在满时等待；sendFor/trySend 和 receiveFor/tryReceive 返回统一操作状态。receiveThread 沿用阻塞和原始诊断；Receive<T> 仅在 READY 时读取 value。多线程默认启用，--no-threads 可关闭。'),
     'std::net': ('TCP 与 HTTP', 'TcpSocket、TcpListener 是不可复制的 opcode，宿主记录独占连接，作用域退出自动关闭；所有权通过 move 转移，先检查 isOpen/lastError。receive/receiveLine 的空串需结合 status 区分关闭、超时和错误。端口 0 可让系统分配监听端口。HTTP 仅支持 http://，不支持 TLS；HTTP 状态码与传输错误分别检查。close 可提前关闭，重复调用安全；每条连接独立保存最近读状态与错误。connectAsync/pollConnect、acceptAsync、sendAsync、receiveAsync、receiveLineAsync 采用非阻塞轮询，未就绪返回 NET_PENDING；调用方可用 std::thread::sleepFor 有界暂停后重试。connectAsync 只接受数值 IPv4，默认五秒超时，域名使用同步 connect；sendAsync 返回本次部分发送字节数，调用方推进 offset；异步行缓冲上限 1 MiB，待完成数据保留至下次轮询。'),
     'std::numerics': ('数值分析', '回调应满足算法的连续性/可微性条件。实现由 std::numerics 模块用 ChaLi 表达，前置条件（导数步长、辛普森区间数、二分区间与容限、最大迭代次数、ODE 步数）在模块内校验并以 std::core::panic 停机。二分需端点异号或端点为根；ODE 输出包含初值和后续 steps 个点。迭代次数按 int64 计数。数值结果是近似值，不保证任意模型收敛。'),
@@ -120,7 +120,7 @@ for key,extra in {
  'std::numerics':' 二分要求 left<right、tolerance>0、maxIterations>0；导数与 rk4Step 要求 step>0；Simpson 要求 intervals 为正偶数；ODE 要求 steps>=0。',
  'std::signal':' FFT/IFFT 的长度必须为正的 2 的幂。',
  'std::sql':' DataCell.asInt/asReal 只转换数值类型，其他类型返回 0/0.0；text 对 NULL 返回 "NULL"。ResultSet.scalar/count 在空结果上返回空串/0，at/intAt/realAt/textAt 的行列索引必须有效。',
- 'std::core':' List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。',
+ 'std::core':' Box<T> 独占堆上的一个值，由 Box<T>::newBox(value) 装箱。get 复制值，take 消耗盒并移出值；两者在空盒上触发断言。close 和作用域退出清理剩余值。List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。',
 }.items():
  title,text=MODULES[key];MODULES[key]=(title,text+extra)
 BEHAVIOR['zipValue']='按较短列表长度配对元素并返回元组列表，较长列表的多余元素忽略。'

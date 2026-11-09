@@ -22,6 +22,25 @@ $macro CLAMP(value:value, low:value, high:value) -> expr
 }
 $end_macro
 
+/** 判断值是否在闭区间内。每个实参求值一次，反向区间返回 false。 */
+$macro IN_RANGE(value:value, low:value, high:value) -> expr
+{
+    yield low <= value && value <= high;
+}
+$end_macro
+
+/** 为 BOX 宏推导装箱类型，将实际构造交给 Box.newBox。 */
+std::core::Box<T> __boxExpression<T>(T value) {
+    return std::core::Box<T>::newBox(move value);
+}
+
+/** 装箱一个表达式，由实参推导元素类型。传入 move 表达式可以转移所有权。 */
+$macro BOX(value:expr) -> expr
+{
+    yield std::macro::__boxExpression(value);
+}
+$end_macro
+
 /** 以 FNV-1a 顺序混合字符串的 UTF-8 字节。 */
 $macro __hash_text(value:value) -> expr
 {

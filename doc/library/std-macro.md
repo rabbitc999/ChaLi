@@ -14,7 +14,7 @@ import std::macro;
 
 ## 公共约定与错误边界
 
-包含选择、区间限制和标准值协议成员宏，见标准库总览。
+包含选择、闭区间判断、区间限制、装箱和标准值协议成员宏，见标准库总览。
 
 ## 参考代码
 
@@ -22,7 +22,7 @@ import std::macro;
 
 ## 宏定义
 
-<a id="symbol-334"></a>
+<a id="symbol-335"></a>
 
 ### `MIN`
 
@@ -32,7 +32,7 @@ $macro MIN(left:value, right:value) -> expr
 
 返回两个可比较值中较小的值。每个实参求值一次，相等时返回左值。
 
-<a id="symbol-335"></a>
+<a id="symbol-336"></a>
 
 ### `MAX`
 
@@ -42,7 +42,7 @@ $macro MAX(left:value, right:value) -> expr
 
 返回两个可比较值中较大的值。每个实参求值一次，相等时返回左值。
 
-<a id="symbol-336"></a>
+<a id="symbol-337"></a>
 
 ### `CLAMP`
 
@@ -52,7 +52,27 @@ $macro CLAMP(value:value, low:value, high:value) -> expr
 
 将值限制在闭区间内。每个实参求值一次，上界小于下界时触发断言。
 
-<a id="symbol-337"></a>
+<a id="symbol-338"></a>
+
+### `IN_RANGE`
+
+```chali
+$macro IN_RANGE(value:value, low:value, high:value) -> expr
+```
+
+判断值是否在闭区间内。每个实参求值一次，反向区间返回 false。
+
+<a id="symbol-339"></a>
+
+### `BOX`
+
+```chali
+$macro BOX(value:expr) -> expr
+```
+
+装箱一个表达式，由实参推导元素类型。传入 move 表达式可以转移所有权。
+
+<a id="symbol-340"></a>
 
 ### `Equal`
 
@@ -62,7 +82,7 @@ $macro Equal<T>(method:ident) -> member
 
 为类型 T 生成调用方命名的相等方法，按声明顺序比较实例字段或匹配枚举载荷。
 
-<a id="symbol-338"></a>
+<a id="symbol-341"></a>
 
 ### `Hash`
 
@@ -72,7 +92,7 @@ $macro Hash<T>(method:ident) -> member
 
 为类型 T 生成调用方命名的哈希方法，按声明顺序混合字段或枚举载荷。
 
-<a id="symbol-339"></a>
+<a id="symbol-342"></a>
 
 ### `Clone`
 
@@ -82,7 +102,7 @@ $macro Clone<T>(method:ident) -> member
 
 为类型 T 生成调用方命名的克隆方法。嵌套拥有值沿用其克隆协议。
 
-<a id="symbol-340"></a>
+<a id="symbol-343"></a>
 
 ### `Debug`
 
@@ -129,11 +149,11 @@ struct Leaf {
     $std::macro::Hash<Leaf>(hash);
     $std::macro::Clone<Leaf>(clone);
 }
-struct Box<T> {
+struct MyBox<T> {
     T value;
-    $std::macro::Equal<Box<T>>(leftEqual);
-    $std::macro::Hash<Box<T>>(hash);
-    $std::macro::Clone<Box<T>>(clone);
+    $std::macro::Equal<MyBox<T>>(leftEqual);
+    $std::macro::Hash<MyBox<T>>(hash);
+    $std::macro::Clone<MyBox<T>>(clone);
 }
 struct Fraction {
     float64 value;
@@ -147,10 +167,10 @@ enum Choice {
     $std::macro::Clone<Choice>(clone);
 }
 void main() {
-    Box<Leaf> original;
+    MyBox<Leaf> original;
     original.value.number = 7;
     original.value.text = "value";
-    Box<Leaf> duplicate = original.clone();
+    MyBox<Leaf> duplicate = original.clone();
     assert(original == duplicate);
     assert(original.hash(original) == duplicate.hash(duplicate));
     duplicate.value.text = "different";
@@ -169,5 +189,76 @@ void main() {
         _ => { assert(false); }
     }
     println("{} {}", original.value.number, original.value.text);
+}
+```
+
+## 补充完整示例
+
+[example/samples/std_box.chl](../../example/samples/std_box.chl)。
+
+```chali
+import std::macro;
+import std::memory;
+
+int64 closed = 0;
+int64 calls = 0;
+
+struct Resource : Closeable {
+    int64 id;
+    void close() { closed += self.id; }
+};
+
+int64 observed(int64 value) {
+    calls += 1;
+    return value;
+}
+
+void main() {
+    assert($IN_RANGE(observed(4), observed(4), observed(6)));
+    assert(calls == 3);
+    assert($IN_RANGE(6, 4, 6));
+    assert(!$IN_RANGE(7, 4, 6));
+    assert(!$IN_RANGE(5, 6, 4));
+
+    assert(Box<int64>::newBox(42).take() == 42);
+    std::core::Box<int64> empty;
+    assert(empty.isEmpty());
+    empty.close();
+
+    int64 before = Memory::stats().liveBlocks;
+    {
+        std::core::Box<List<int64>> numbers = Box<List<int64>>::newBox([2, 3]);
+        List<int64> copy = numbers.get();
+        copy.push(4);
+        assert(numbers.get().len() == 2);
+        List<int64> taken = numbers.take();
+        assert(taken[0] == 2 && taken[1] == 3);
+    }
+    {
+        Resource resource;
+        resource.id = 7;
+        let owned = $BOX(move resource);
+        let moved = move owned;
+        let extracted = moved.take();
+        assert(extracted.id == 7 && closed == 0);
+    }
+    assert(closed == 7);
+    {
+        Resource resource;
+        resource.id = 11;
+        let owned = Box<Resource>::newBox(move resource);
+    }
+    assert(closed == 18);
+    {
+        Resource resource;
+        resource.id = 13;
+        let owned = std::core::Box<Resource>::newBox(move resource);
+        owned.close();
+        assert(owned.isEmpty());
+        owned.close();
+    }
+    assert(closed == 31);
+    assert(Memory::stats().liveBlocks == before);
+    println("Box and standard macros OK");
 }
 ```

@@ -105,12 +105,12 @@ void main()
 省略类型实参不再自动补成 Any。允许函数类型推导，也允许模板声明显式给出默认类型。
 
 ```chali
-struct Box<T> { T value; };
+struct MyBox<T> { T value; };
 struct ExplicitDefault<T = Any> { T value; };
 void main() {
-    Box<int64> number;
+    MyBox<int64> number;
     number.value = 7;
-    Box<Any> dynamic;
+    MyBox<Any> dynamic;
     dynamic.value.set("explicit");
     ExplicitDefault<> chosen;
     chosen.value.set(true);
@@ -119,7 +119,21 @@ void main() {
 
 例如 `Pair<int64>` 不能再省略第二个类型参数，应写成 `Pair<int64, String>` 或确实需要类型擦除时写成 `Pair<int64, Any>`。
 
-类型实参按调用位置的模块查找，默认类型与约束按模板定义位置查找；引用、元组、函数及嵌套容器保留组成类型的来源。可重定义名称与核心类型同名时，标准库自己的实参仍绑定标准类型，例如用户声明 String 后，`Box<String>` 使用用户类型，`Box<std::core::String>` 使用标准字符串。导入产生歧义时使用限定名，Any 仍是保留名。完整例子见[泛型教程](book/18-泛型.md)。
+类型实参按调用位置的模块查找，默认类型与约束按模板定义位置查找；引用、元组、函数及嵌套容器保留组成类型的来源。可重定义名称与核心类型同名时，标准库自己的实参仍绑定标准类型，例如用户声明 String 后，`MyBox<String>` 使用用户类型，`MyBox<std::core::String>` 使用标准字符串。导入产生歧义时使用限定名，Any 仍是保留名。完整例子见[泛型教程](book/18-泛型.md)。
+
+## 堆装箱 `Box<T>`
+
+`std::core::Box<T>` 独占堆上的一个值。用 `Box<T>::newBox(value)` 创建。导入 `std::macro` 后也可用 `$BOX(value)` 推导类型。Box 本身只能移动。`get()` 返回盒内可复制值的副本，`take()` 消耗盒并移出原值。`close()` 或离开作用域会释放存储并清理仍在盒中的值。默认构造的盒为空，可用 `isEmpty()` 判断。对空盒调用 `get()` 或 `take()` 会触发断言。
+
+```chali
+let number = Box<int64>::newBox(42);
+assert(number.get() == 42);
+int64 value = number.take();
+```
+
+## 共享所有权与弱引用
+
+导入 `std::memory` 后，用 `rc(value)` 创建同一线程内共享所有权的 `Rc<T>`。`clone()` 增加一个强引用，最后一个强引用离开时销毁值。`downgrade()` 创建 `Weak<T>`。值存活时，`upgrade()` 返回一个新的强引用；值销毁后返回空 `Rc<T>`。
 
 ## 新模块
 

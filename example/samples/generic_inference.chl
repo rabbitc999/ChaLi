@@ -1,6 +1,6 @@
 /* 后置类型参数、函数实参推导、泛型回调及无载荷枚举上下文。 */
 enum Choice<T> { None1, Value1(T value); };
-struct Box<T> { T value; };
+struct MyBox<T> { T value; };
 
 
 struct Handler {
@@ -9,7 +9,7 @@ struct Handler {
 
 T identity<T>(T value) { return value; }
 T apply<T>(T fn(T) callback, T value) { return callback(value); }
-T readBox<T>(Box<T> box) { return box.value; }
+T readBox<T>(MyBox<T> box) { return box.value; }
 T first<T>(List<T> values) { return values[0]; }
 T fromChoice<T>(Choice<T> value, T fallback) {
     match (value) {
@@ -32,7 +32,7 @@ int64 tag(Choice<int64> value) {
 }
 void main() {
     int64 generic = 7;
-    Box<int64> box;
+    MyBox<int64> box;
     box.value = identity(generic);
     int64 fn(int64) callback = increment;
     Choice<int64> absent = None1;

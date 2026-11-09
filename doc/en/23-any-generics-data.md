@@ -110,12 +110,12 @@ Interface reference targets accept references to concrete types implementing tha
 Missing type arguments no longer default to Any. Function inference and defaults explicitly written in a template declaration remain supported.
 
 ```chali
-struct Box<T> { T value; };
+struct MyBox<T> { T value; };
 struct ExplicitDefault<T = Any> { T value; };
 void main() {
-    Box<int64> number;
+    MyBox<int64> number;
     number.value = 7;
-    Box<Any> dynamic;
+    MyBox<Any> dynamic;
     dynamic.value.set("explicit");
     ExplicitDefault<> chosen;
     chosen.value.set(true);
@@ -124,7 +124,21 @@ void main() {
 
 For example, replace `Pair<int64>` with `Pair<int64, String>`, or explicitly choose `Pair<int64, Any>` when type erasure is required.
 
-Type arguments resolve in the caller's module; defaults and constraints resolve at the template definition. References, tuples, function types and nested containers preserve their component types' sources. When an allowed user name shadows a core type, standard-library templates retain their standard types: `Box<String>` can select a user type, while `Box<std::core::String>` selects the standard string. Qualify ambiguous imports. Any remains reserved. See the [generic tutorial](../book/en/18-generics.md) for a complete example.
+Type arguments resolve in the caller's module; defaults and constraints resolve at the template definition. References, tuples, function types and nested containers preserve their component types' sources. When an allowed user name shadows a core type, standard-library templates retain their standard types: `MyBox<String>` can select a user type, while `MyBox<std::core::String>` selects the standard string. Qualify ambiguous imports. Any remains reserved. See the [generic tutorial](../book/en/18-generics.md) for a complete example.
+
+## Heap boxing with `Box<T>`
+
+`std::core::Box<T>` owns one heap-allocated value. Create it with `Box<T>::newBox(value)`. Import `std::macro` to use `$BOX(value)` and infer the payload type. A Box is move-only. `get()` returns a copy of a copyable payload. `take()` consumes the box and moves out the payload. Calling `close()` or leaving scope releases the storage and destroys any remaining payload. A default-constructed box is empty. Use `isEmpty()` to check it. Calling `get()` or `take()` on an empty box triggers an assertion.
+
+```chali
+let number = Box<int64>::newBox(42);
+assert(number.get() == 42);
+int64 value = number.take();
+```
+
+## Shared and weak ownership
+
+Import `std::memory` and call `rc(value)` to create an `Rc<T>` for one thread. `clone()` creates another strong owner, and the last strong owner destroys the value. `downgrade()` returns a `Weak<T>`. Its `upgrade()` method returns a new strong owner while the value is alive and an empty `Rc<T>` after it expires.
 
 ## New modules
 
