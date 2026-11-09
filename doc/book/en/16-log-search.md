@@ -113,6 +113,52 @@ Result<String, Error> readText(String path)
 
 The first statement opens the file and propagates failure with ?. The next reads the remaining text within a four-MiB budget and returns that Result. The local stream's resource is cleaned up when its scope ends; the caller receives text, not ownership of the stream. This size is the tool's policy, not String's language limit.
 
+### Reuse a byte buffer for chunked I/O
+
+For input containing zero bytes or for large files you want to process in chunks, open a binary stream and reuse a runtime `uint8[]`. `readInto(&buffer)` reads up to `len(buffer)` bytes from the current position and returns the number read. Only the first `n` entries belong to that read. After a short read, the tail still holds its previous contents. `Ok(0)` with a nonempty buffer means end of file. A zero-length buffer can also produce zero, so use a nonempty buffer when testing for EOF.
+
+`writeFrom(&buffer, count)` writes the first `count` bytes. The count must be between zero and the buffer length. An out-of-range count produces an error. When copying a binary stream, use the actual number of bytes read for each write. This keeps the tail of the previous chunk out of a short final write. `copyTo(&source, &destination)` performs this loop from the streams' current positions and returns the total byte count on success. The caller closes both streams. An I/O failure can occur after a position has advanced or some bytes have been written, so account for partial progress when handling errors.
+
+Run this example in a temporary directory. It creates or overwrites two files there. The program writes five bytes and reads them back using a three-byte buffer. After the second read, the third slot still contains `255`.
+
+<!-- verify-book -->
+```chali
+import std::io;
+
+void main() {
+    uint8 bytes[] = new[3];
+    bytes[0] = (uint8)0;
+    bytes[1] = (uint8)10;
+    bytes[2] = (uint8)255;
+
+    FileStream output = FileStream::open("book-buffer.bin", "wb").take();
+    assert(output.writeFrom(&bytes, 4).isErr());
+    assert(output.writeFrom(&bytes, 3).unwrap() == 3);
+    assert(output.writeFrom(&bytes, 2).unwrap() == 2);
+    assert(output.close() == 0);
+
+    FileStream input = FileStream::open("book-buffer.bin", "rb").take();
+    assert(input.readInto(&bytes).unwrap() == 3);
+    assert(bytes[0] == (uint8)0 && bytes[2] == (uint8)255);
+    assert(input.readInto(&bytes).unwrap() == 2);
+    assert(bytes[0] == (uint8)0 && bytes[1] == (uint8)10);
+    assert(bytes[2] == (uint8)255);
+    assert(input.readInto(&bytes).unwrap() == 0);
+
+    input.seek(0, SeekOrigin::Begin).unwrap();
+    FileStream copied = FileStream::open("book-buffer-copy.bin", "wb").take();
+    int64 count = copyTo(&input, &copied).unwrap();
+    assert(count == 5);
+    assert(copied.close() == 0);
+    assert(input.close() == 0);
+    println("copied={} bytes", count);
+}
+```
+
+```text
+copied=5 bytes
+```
+
 ## 16.5 Parse a query configuration
 
 Options contains query, path, ignoreCase, countOnly, and help. parseOptions visits arguments in order, collecting positional values and updating switches, then requires a query and file.
