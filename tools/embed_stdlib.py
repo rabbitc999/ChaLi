@@ -53,29 +53,28 @@ def raw_chunks(content):
 
 
 def pack_tool_path():
-    """定位 lztext_pack 命令行工具；找不到就现场编译一个。"""
+    """定位 lztext_pack 命令行工具；缓存缺失或过期时重新编译。"""
     env = os.environ.get("LZTEXT_PACK")
     if env and os.path.isfile(env):
         return env
     build_root = os.path.join(ROOT, os.environ.get("CHALI_BUILD_ROOT", "build"))
     out_dir = os.path.join(build_root, "lztext")
     out_path = os.path.join(out_dir, "lztext-pack.exe" if os.name == "nt" else "lztext-pack")
-    if os.path.isfile(out_path):
+    src_dir = os.path.join(ROOT, "source", "lztext")
+    sources = [os.path.join(src_dir, name) for name in ("lztext_pack.cpp", "lztext.cpp")]
+    inputs = sources + [os.path.join(src_dir, "lztext.hpp"), os.path.join(ROOT, "source", "console", "utf8.hpp")]
+    if os.path.isfile(out_path) and os.path.getmtime(out_path) >= max(map(os.path.getmtime, inputs)):
         return out_path
     compiler = shutil.which("g++") or shutil.which("c++") or shutil.which("clang++")
     if compiler is None:
         raise RuntimeError("找不到 lztext_pack，也没有可用的 C++ 编译器；"
                            "先跑 `make -C source/lztext pack`，或设置 LZTEXT_PACK 指向该工具")
-    src_dir = os.path.join(ROOT, "source", "lztext")
     os.makedirs(out_dir, exist_ok=True)
     flags = []
     sdk = os.path.abspath(os.environ.get("CHALI_LLVM_SDK", os.path.join(ROOT, "build/dependencies/llvm/static-sdk")))
     if os.name == "nt" and Path(compiler).resolve().parent.parent == Path(sdk).resolve():
         flags = ["--sysroot=" + sdk, "-static"]
-    subprocess.check_call([compiler, *flags, "-std=c++17", "-O2", "-I", src_dir,
-                           os.path.join(src_dir, "lztext_pack.cpp"),
-                           os.path.join(src_dir, "lztext.cpp"),
-                           "-o", out_path])
+    subprocess.check_call([compiler, *flags, "-std=c++17", "-O2", "-I", src_dir, *sources, "-o", out_path])
     return out_path
 
 

@@ -80,7 +80,12 @@ def verify_generator(folder):
 
 
 def verify_pack_tool(folder):
-    """异宿主工具和其他变体的工具不能命中当前构建目录。"""
+    """只复用当前构建变体中未过期的打包工具。"""
+    source = folder / 'source'
+    (source / 'lztext').mkdir(parents=True)
+    (source / 'console').mkdir()
+    for name in ('lztext/lztext_pack.cpp', 'lztext/lztext.cpp', 'lztext/lztext.hpp', 'console/utf8.hpp'):
+        (source / name).touch()
     shared = folder / 'build/lztext'
     shared.mkdir(parents=True)
     for name in ['lztext-pack', 'lztext-pack.exe']:
@@ -97,6 +102,9 @@ def verify_pack_tool(folder):
         compile_tool.reset_mock()
         assert Path(embed_stdlib.pack_tool_path()) == expected
         compile_tool.assert_not_called()
+        os.utime(expected, (1, 1))
+        assert Path(embed_stdlib.pack_tool_path()) == expected
+        compile_tool.assert_called_once()
     if os.name == 'nt':
         expected.unlink()
         sdk = folder / 'static-sdk'

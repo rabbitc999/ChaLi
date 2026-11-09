@@ -12,9 +12,10 @@
  */
 
 #include "lztext.hpp"
+#include "../console/utf8.hpp"
 
-#include <cstdio>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -60,6 +61,15 @@ bool writeFile(const std::string &path, const std::string &data)
  */
 int main(int argc, char **argv)
 {
+#ifdef _WIN32
+    tool_console::ConsoleBuffer outBuffer(GetStdHandle(STD_OUTPUT_HANDLE), std::cout.rdbuf());
+    tool_console::ConsoleBuffer errBuffer(GetStdHandle(STD_ERROR_HANDLE), std::cerr.rdbuf());
+    std::ostream out(&outBuffer);
+    std::ostream err(&errBuffer);
+#else
+    auto &out = std::cout;
+    auto &err = std::cerr;
+#endif
     int argi = 1;
     bool decompressMode = false;
     if (argc > 1 && std::string(argv[1]) == "-d")
@@ -69,16 +79,17 @@ int main(int argc, char **argv)
     }
     if (argi + 1 >= argc)
     {
-        std::cerr << "用法：lztext_pack [-d] <输入文件> <输出文件>\n";
+        err << "用法：lztext_pack [-d] <输入文件> <输出文件>" << std::endl;
         return 2;
     }
     const std::string inPath = argv[argi];
     const std::string outPath = argv[argi + 1];
+    const auto displayPaths = tool_console::arguments(argc, argv);
 
     std::string input;
     if (!readFile(inPath, input))
     {
-        std::cerr << "打不开输入文件：" << inPath << "\n";
+        err << "打不开输入文件：" << displayPaths[argi] << std::endl;
         return 1;
     }
 
@@ -87,15 +98,15 @@ int main(int argc, char **argv)
         std::string plain;
         if (!lztext::decompress(reinterpret_cast<const unsigned char *>(input.data()), input.size(), plain))
         {
-            std::cerr << "解压失败：" << inPath << "\n";
+            err << "解压失败：" << displayPaths[argi] << std::endl;
             return 1;
         }
         if (!writeFile(outPath, plain))
         {
-            std::cerr << "写文件失败：" << outPath << "\n";
+            err << "写文件失败：" << displayPaths[argi + 1] << std::endl;
             return 1;
         }
-        std::printf("解压 %zu -> %zu 字节\n", input.size(), plain.size());
+        out << "解压 " << input.size() << " -> " << plain.size() << " 字节" << std::endl;
         return 0;
     }
 
@@ -105,17 +116,18 @@ int main(int argc, char **argv)
     std::string back;
     if (!lztext::decompress(packed.data(), packed.size(), back) || back != input)
     {
-        std::cerr << "压缩自检失败（往返不一致）：" << inPath << "\n";
+        err << "压缩自检失败（往返不一致）：" << displayPaths[argi] << std::endl;
         return 1;
     }
 
     const std::string blob(reinterpret_cast<const char *>(packed.data()), packed.size());
     if (!writeFile(outPath, blob))
     {
-        std::cerr << "写文件失败：" << outPath << "\n";
+        err << "写文件失败：" << displayPaths[argi + 1] << std::endl;
         return 1;
     }
     const double ratio = input.empty() ? 0.0 : (double)packed.size() / (double)input.size();
-    std::printf("压缩 %zu -> %zu 字节（比率 %.3f）\n", input.size(), packed.size(), ratio);
+    out << "压缩 " << input.size() << " -> " << packed.size()
+        << " 字节（比率 " << std::fixed << std::setprecision(3) << ratio << "）" << std::endl;
     return 0;
 }

@@ -48,7 +48,7 @@ check: tests
 $(TESTS_BIN): test_lztext.cpp lztext.cpp lztext.hpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(UTF8FLAGS) -I. test_lztext.cpp lztext.cpp -o $@
 
-$(PACK_BIN): lztext_pack.cpp lztext.cpp lztext.hpp | $(BUILD_DIR)
+$(PACK_BIN): lztext_pack.cpp lztext.cpp lztext.hpp ../console/utf8.hpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(UTF8FLAGS) -I. lztext_pack.cpp lztext.cpp -o $@
 
 $(BUILD_DIR):
