@@ -184,12 +184,11 @@ bool collect(Memory::String &source, const Memory::Vector<preprocess::LineOrigin
              Memory::Map<Memory::String, Generic> &generics, Memory::String &error);
 
 /**
- * @brief 生成具体泛型接口名称，供派生请求与普通接口约束使用相同身份。
- * @param name 模板名称。
- * @param args 实际类型参数。
- * @return 带稳定类型指纹的实例名。
+ * @brief 将诊断中的完整泛型实例标识符替换为源码形式。
+ * @param message 待显示的诊断消息。
+ * @return 保留原有上下文的诊断消息。
  */
-Memory::String mangle(const Memory::String &name, const Memory::Vector<Memory::String> &args);
+Memory::String formatDiagnostic(const Memory::String &message);
 
 /**
  * @brief 收集显式及请求派生的接口身份，排除字符串和注释中的伪声明。
@@ -263,6 +262,7 @@ struct Session
     Memory::Map<Memory::String, Generic> generics;
     Memory::Map<Memory::String, Memory::Set<Memory::String>> implemented;
     Memory::Map<Memory::String, Expansion> made;
+    Memory::Map<Memory::String, Memory::String> instanceDisplayNames;
     Memory::Map<Memory::String, Memory::Vector<Memory::String>> intrinsicArguments;
     Memory::Vector<Memory::String> pending;
     std::size_t emitted = 0;

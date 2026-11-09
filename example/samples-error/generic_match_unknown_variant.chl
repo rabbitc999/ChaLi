@@ -1,0 +1,7 @@
+void main() {
+    Result<String, float64> result = Ok("value");
+    match (result) {
+        Ok(value) => { println("{}", value); }
+        MessageError(message) => { println("{}", message); }
+    }
+}

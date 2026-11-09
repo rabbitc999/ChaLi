@@ -1,1 +1,1 @@
-chali: example/samples-error/enum_payload_result_ambiguous.chl 第 1 行第 1 列：枚举自动包装存在歧义，请显式指定变体：Result____chl_e6b48f37dec71154_std__core__String____chl_e6b48f37dec71154_std__core__String
+chali: example/samples-error/enum_payload_result_ambiguous.chl 第 1 行第 1 列：枚举自动包装存在歧义，请显式指定变体：Result<String, String>

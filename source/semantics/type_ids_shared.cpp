@@ -370,7 +370,7 @@ void AddDiagnostic(const Memory::String &message, std::size_t line, std::size_t 
 {
     // 诊断在 运行时 内存池销毁后仍需输出，字符串副本必须归宿主长期分配器所有。
     Memory::AllocationScope persistent(Memory::defaultRuntimeAllocator());
-    Memory::String detailed = message;
+    Memory::String detailed = chali_generic::formatDiagnostic(message);
     int frame = g_macroDiagnosticFrame;
     for (std::size_t depth = 0; frame >= 0 && depth < 256 && static_cast<std::size_t>(frame) < g_nodes.size(); ++depth)
     {
@@ -457,12 +457,13 @@ bool Fail(const Memory::String &message)
 {
     if (g_error.empty())
     {
-        g_error.assign(message.data(), message.size());
+        const auto readable = chali_generic::formatDiagnostic(message);
+        g_error.assign(readable.data(), readable.size());
         g_errorLine = g_reductionLine;
         /* 只有注解错误会显式给列（`g_errorColumn`），其余诊断的列用「最近一个 token」
          * 兜上；降级期 `ReductionSourceScope` 会把行与列一起恢复到正在降级的那个节点，
          * 所以这里落下的行列指向同一处源码。 */
-        AddDiagnostic(message, g_errorLine, g_errorColumn ? g_errorColumn : g_reductionColumn);
+        AddDiagnostic(g_error, g_errorLine, g_errorColumn ? g_errorColumn : g_reductionColumn);
     }
     return false;
 }

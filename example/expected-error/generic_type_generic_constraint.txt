@@ -1,1 +1,1 @@
-chali: G 的类型实参 B__int64 未实现接口 I
+chali: G 的类型实参 B<int64> 未实现接口 I

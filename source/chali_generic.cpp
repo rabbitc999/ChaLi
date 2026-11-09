@@ -1055,7 +1055,79 @@ void collectInterfaces(const Memory::String &source,
 }
 
 /**
- * @brief 生成长度受控的实例名，完整类型拼写参与散列以区分标点不同的类型。
+ * @brief 格式化完整的实例标识符，并在泛型实参中缩短无歧义的常用限定名。
+ * @param text 待显示的文本。
+ * @param typeArgument 文本是泛型实参时为 true。
+ * @return 展开的文本。
+ */
+static Memory::String formatInstances(const Memory::String &text, bool typeArgument)
+{
+    Memory::String result;
+    result.reserve(text.size());
+    for (std::size_t at = 0; at < text.size();)
+    {
+        if (!identPart(text[at]))
+        {
+            const char character = text[at++];
+            result += character;
+            if (typeArgument && character == ',' && at < text.size() && text[at] != ' ') result += ' ';
+            continue;
+        }
+        const auto begin = at;
+        auto leaf = at;
+        do
+        {
+            while (at < text.size() && identPart(text[at])) ++at;
+            if (!typeArgument || text.compare(at, 2, "::") != 0 ||
+                at + 2 >= text.size() || !identStart(text[at + 2])) break;
+            at += 2;
+            leaf = at;
+        } while (true);
+
+        const auto name = text.substr(leaf, at - leaf);
+        if (leaf != begin)
+        {
+            const auto prefix = text.substr(begin, leaf - begin);
+            bool keepQualifier = true;
+            if (prefix == "program::" || prefix == "std::core::" || prefix == "__root::")
+            {
+                const auto nominal = nominalTypeNames.find(name);
+                keepQualifier = nominal != nominalTypeNames.end() &&
+                    (nominal->second.size() != 1 || !nominal->second.count(prefix == "__root::" ? name : prefix + name));
+            }
+            if (keepQualifier) result += prefix;
+        }
+        const auto instance = session.instanceDisplayNames.find(name);
+        if (instance == session.instanceDisplayNames.end())
+        {
+            result += name;
+            continue;
+        }
+        const auto &display = instance->second;
+        const auto scopeEnd = display.rfind("::", display.find('<'));
+        const auto scopeSize = scopeEnd == Memory::String::npos ? 0 : scopeEnd + 2;
+        if (scopeSize && result.size() >= scopeSize &&
+            result.compare(result.size() - scopeSize, scopeSize, display, 0, scopeSize) == 0)
+            result.append(display, scopeSize, Memory::String::npos);
+        else
+            result += display;
+    }
+    return result;
+}
+
+/**
+ * @brief 将诊断中的完整泛型实例标识符替换为源码形式。
+ * @param message 待显示的诊断消息。
+ * @return 保留原有上下文的诊断消息。
+ */
+Memory::String formatDiagnostic(const Memory::String &message)
+{
+    if (session.instanceDisplayNames.empty() || message.find("__") == Memory::String::npos) return message;
+    return formatInstances(message, false);
+}
+
+/**
+ * @brief 生成长度受控的实例名，并为诊断保留实参的可读拼写。
  * @param name 模板名称。
  * @param args 已归一化的实际类型参数。
  * @return 保留可读前缀和稳定类型指纹的实例名称。
@@ -1065,6 +1137,29 @@ Memory::String mangle(const Memory::String &name, const Memory::Vector<Memory::S
     Memory::String result = name;
     for (const Memory::String &arg : args)
         result += "__" + chali_generic_name::argumentSymbol(arg);
+    if (!args.empty() && !session.instanceDisplayNames.count(result))
+    {
+        Memory::String display = name;
+        const auto definition = session.generics.find(name);
+        if (definition != session.generics.end() && !definition->second.sourceName.empty() &&
+            definition->second.sourceName != name)
+            display = definition->second.module + "::" + definition->second.sourceName;
+        display += '<';
+        const auto argumentsBegin = display.size();
+        for (std::size_t index = 0; index < args.size(); ++index)
+        {
+            if (index) display += ", ";
+            display += formatInstances(args[index], true);
+            // 递归模板可以在多个实参中重复上一层实例，限制展开后的诊断文本大小。
+            if (display.size() - argumentsBegin > 4096u)
+            {
+                display.resize(argumentsBegin);
+                display += "...";
+                break;
+            }
+        }
+        session.instanceDisplayNames.emplace(result, display + ">");
+    }
     return result;
 }
 

@@ -52,6 +52,12 @@ int main()
             "字符串、字符、注释或标识符边界发生误替换");
     require(mangle("G", { "(int64,std::core::String)" }) != mangle("G", { "_int64_lang__String_" }), "标点不同的类型发生实例名称碰撞");
     require(mangle("G", { Memory::String(4000u, 'a') }).size() < 100u, "实例名称随嵌套类型无限增长");
+    Memory::String repeated = "int64";
+    for (std::size_t i = 0; i < 32u; ++i)
+        repeated = mangle("Pair", { repeated, repeated });
+    const auto readable = formatDiagnostic(repeated);
+    require(readable.size() < 4200u && readable.find("...") != Memory::String::npos &&
+            readable.find("__chl_") == Memory::String::npos, "诊断中的重复嵌套实例没有限制展开长度");
     preprocess::Result result;
     Memory::String error;
     require(expand("struct AuditUnit<T,V=T,W=AuditUnitInner<T,V>>{W value;};"

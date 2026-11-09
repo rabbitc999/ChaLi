@@ -1,0 +1,1 @@
+chali: example/samples-error/generic_match_unknown_variant.chl 第 3 行第 5 列：enum Result<String, float64> 没有变体 MessageError

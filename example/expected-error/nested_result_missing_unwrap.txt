@@ -1,1 +1,1 @@
-chali: example/samples-error/nested_result_missing_unwrap.chl 第 1 行第 1 列：不能隐式转换：Result__int64____chl_d722a9ebb6a98fd6_std__core__MessageError -> int64（请显式强转）
+chali: example/samples-error/nested_result_missing_unwrap.chl 第 1 行第 1 列：不能隐式转换：Result<int64, MessageError> -> int64（请显式强转）
