@@ -1,0 +1,13 @@
+struct Box {
+    int64 v;
+};
+
+Result<Box, Error> make() {
+    Box b;
+    b.v = 1;
+    return Ok(b);
+}
+
+void main() {
+    Result<Box, int64> r = make();
+}

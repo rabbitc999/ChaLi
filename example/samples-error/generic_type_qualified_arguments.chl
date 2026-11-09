@@ -1,0 +1,11 @@
+import names::left;
+import names::right;
+
+struct Wrap<T> {
+    T value;
+};
+
+void main() {
+    Wrap<names::left::Shared> source;
+    Wrap<names::right::Shared> target = source;
+}
