@@ -63,31 +63,31 @@ void main(List<String> args) {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-196"></a>`enum IoError : Error` | 从 core.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::io;` 才能用）。 |
+| 模块 | <a id="symbol-198"></a>`enum IoError : Error` | 从 core.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::io;` 才能用）。 |
 | IoError | `OpenFailed(String message), ReadFailed(String message), WriteFailed(String message), SeekFailed(String message), Closed` | 从 core.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::io;` 才能用）。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-197"></a>`enum SeekOrigin` | 文件定位的基准：文件开始、当前位置或文件末尾。 |
+| 模块 | <a id="symbol-199"></a>`enum SeekOrigin` | 文件定位的基准：文件开始、当前位置或文件末尾。 |
 | SeekOrigin | `Begin, Current, End` | 文件定位的基准：文件开始、当前位置或文件末尾。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-198"></a>`interface Reader` | 按字节读取数据的接口。 |
-| 模块 | <a id="symbol-199"></a>`interface Writer` | 按字节写入数据的接口。 |
-| 模块 | <a id="symbol-200"></a>`interface Seek` | 改变资源读写位置的接口。 |
-| 模块 | <a id="symbol-201"></a>`interface ToString` | 将值转换成拥有字符串的接口。 |
-| 模块 | <a id="symbol-202"></a>`interface Formattable` | 按格式说明生成文本的接口。 |
-| 模块 | <a id="symbol-203"></a>`struct FileStream : Reader, Writer, Seek` | 拥有文件句柄的字节流；通过 Result 报告读写与定位错误。 |
-| FileStream | <a id="symbol-204"></a>`File handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
-| 模块 | <a id="symbol-205"></a>`struct FileInfo` | 文件信息，时间为 Unix 秒；目录的 size 为零。 |
-| FileInfo | <a id="symbol-206"></a>`int64 size` | 文件或响应报告的字节长度。 |
-| FileInfo | <a id="symbol-207"></a>`bool isFile` | 目标是否为普通文件。 |
-| FileInfo | <a id="symbol-208"></a>`bool isDirectory` | 目标是否为目录。 |
-| FileInfo | <a id="symbol-209"></a>`int64 modifiedUnixSeconds` | 最后修改时间，以 Unix 秒表示。 |
-| 模块 | <a id="symbol-210"></a>`struct IoReply` | 宿主回调的拥有型结果；字段顺序是胶水 ABI 的一部分。 |
-| IoReply | <a id="symbol-211"></a>`String error` | 最近操作的错误说明。 |
-| IoReply | <a id="symbol-212"></a>`List<uint8> bytes` | 字节数据，保留零字节。 |
-| IoReply | <a id="symbol-213"></a>`List<String> paths` | 目录枚举返回的路径。 |
-| IoReply | <a id="symbol-214"></a>`int64 count` | 本次操作实际处理的数量。 |
-| IoReply | <a id="symbol-215"></a>`int64 size` | 文件或响应报告的字节长度。 |
-| IoReply | <a id="symbol-216"></a>`bool isFile` | 目标是否为普通文件。 |
-| IoReply | <a id="symbol-217"></a>`bool isDirectory` | 目标是否为目录。 |
-| IoReply | <a id="symbol-218"></a>`int64 modifiedUnixSeconds` | 最后修改时间，以 Unix 秒表示。 |
+| 模块 | <a id="symbol-200"></a>`interface Reader` | 按字节读取数据的接口。 |
+| 模块 | <a id="symbol-201"></a>`interface Writer` | 按字节写入数据的接口。 |
+| 模块 | <a id="symbol-202"></a>`interface Seek` | 改变资源读写位置的接口。 |
+| 模块 | <a id="symbol-203"></a>`interface ToString` | 将值转换成拥有字符串的接口。 |
+| 模块 | <a id="symbol-204"></a>`interface Formattable` | 按格式说明生成文本的接口。 |
+| 模块 | <a id="symbol-205"></a>`struct FileStream : Reader, Writer, Seek` | 拥有文件句柄的字节流；通过 Result 报告读写与定位错误。 |
+| FileStream | <a id="symbol-206"></a>`File handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
+| 模块 | <a id="symbol-207"></a>`struct FileInfo` | 文件信息，时间为 Unix 秒；目录的 size 为零。 |
+| FileInfo | <a id="symbol-208"></a>`int64 size` | 文件或响应报告的字节长度。 |
+| FileInfo | <a id="symbol-209"></a>`bool isFile` | 目标是否为普通文件。 |
+| FileInfo | <a id="symbol-210"></a>`bool isDirectory` | 目标是否为目录。 |
+| FileInfo | <a id="symbol-211"></a>`int64 modifiedUnixSeconds` | 最后修改时间，以 Unix 秒表示。 |
+| 模块 | <a id="symbol-212"></a>`struct IoReply` | 宿主回调的拥有型结果；字段顺序是胶水 ABI 的一部分。 |
+| IoReply | <a id="symbol-213"></a>`String error` | 最近操作的错误说明。 |
+| IoReply | <a id="symbol-214"></a>`List<uint8> bytes` | 字节数据，保留零字节。 |
+| IoReply | <a id="symbol-215"></a>`List<String> paths` | 目录枚举返回的路径。 |
+| IoReply | <a id="symbol-216"></a>`int64 count` | 本次操作实际处理的数量。 |
+| IoReply | <a id="symbol-217"></a>`int64 size` | 文件或响应报告的字节长度。 |
+| IoReply | <a id="symbol-218"></a>`bool isFile` | 目标是否为普通文件。 |
+| IoReply | <a id="symbol-219"></a>`bool isDirectory` | 目标是否为目录。 |
+| IoReply | <a id="symbol-220"></a>`int64 modifiedUnixSeconds` | 最后修改时间，以 Unix 秒表示。 |
 
 ## 函数索引
 
@@ -110,31 +110,33 @@ void main(List<String> args) {
 | [FileStream::println](#api-14) | `Result<int64, Error> println(String text = "")` |
 | [FileStream::readBytes](#api-15) | `Result<List<uint8>,Error> readBytes(int64 count)` |
 | [FileStream::writeBytes](#api-16) | `Result<int64,Error> writeBytes(List<uint8> bytes)` |
-| [FileStream::flush](#api-17) | `Result<int64, Error> flush()` |
-| [FileStream::seek](#api-18) | `Result<int64, Error> seek(int64 offset, SeekOrigin origin)` |
-| [FileStream::close](#api-19) | `int64 close()` |
-| [fileOpen](#api-20) | `Result<File, Error> fileOpen(String path, String mode)` |
-| [fileRead](#api-21) | `String fileRead(file const& handle)` |
-| [fileReadLine](#api-22) | `String fileReadLine(File const& handle)` |
-| [fileReadString](#api-23) | `String fileReadString(File const& handle, int64 count)` |
-| [fileReadAllString](#api-24) | `String fileReadAllString(File const& handle, int64 maxBytes = 16777216)` |
-| [fileWrite](#api-25) | `int64 fileWrite(file const& handle, String text)` |
-| [filePrint](#api-26) | `int64 filePrint(file const& handle, String text)` |
-| [filePrintln](#api-27) | `int64 filePrintln(file const& handle, String text = "")` |
-| [fileEof](#api-28) | `int64 fileEof(file const& handle)` |
-| [fileClose](#api-29) | `int64 fileClose(file const& handle)` |
-| [readAllBytes](#api-30) | `Result<List<uint8>,Error> readAllBytes(String path, int64 maxBytes=16777216)` |
-| [writeAllBytes](#api-31) | `Result<int64,Error> writeAllBytes(String path, List<uint8> bytes)` |
-| [readAllText](#api-32) | `Result<String,Error> readAllText(String path, int64 maxBytes=16777216)` |
-| [writeAllText](#api-33) | `Result<int64,Error> writeAllText(String path, String text)` |
-| [listDirectory](#api-34) | `Result<List<String>,Error> listDirectory(String path)` |
-| [fileInfo](#api-35) | `Result<FileInfo,Error> fileInfo(String path)` |
-| [createDirectories](#api-36) | `Result<int64,Error> createDirectories(String path)` |
-| [renamePath](#api-37) | `Result<int64,Error> renamePath(String from, String to)` |
-| [copyTo](#api-38) | `Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination)` |
-| [walkDirectory](#api-39) | `Result<List<String>,Error> walkDirectory(String path)` |
-| [createTempFile](#api-40) | `Result<String,Error> createTempFile(String path)` |
-| [replaceFile](#api-41) | `Result<int64,Error> replaceFile(String from, String to)` |
+| [FileStream::readInto](#api-17) | `Result<int64, Error> readInto(uint8[] mut& buffer)` |
+| [FileStream::writeFrom](#api-18) | `Result<int64, Error> writeFrom(uint8[] const& buffer, int64 count)` |
+| [FileStream::flush](#api-19) | `Result<int64, Error> flush()` |
+| [FileStream::seek](#api-20) | `Result<int64, Error> seek(int64 offset, SeekOrigin origin)` |
+| [FileStream::close](#api-21) | `int64 close()` |
+| [fileOpen](#api-22) | `Result<File, Error> fileOpen(String path, String mode)` |
+| [fileRead](#api-23) | `String fileRead(file const& handle)` |
+| [fileReadLine](#api-24) | `String fileReadLine(File const& handle)` |
+| [fileReadString](#api-25) | `String fileReadString(File const& handle, int64 count)` |
+| [fileReadAllString](#api-26) | `String fileReadAllString(File const& handle, int64 maxBytes = 16777216)` |
+| [fileWrite](#api-27) | `int64 fileWrite(file const& handle, String text)` |
+| [filePrint](#api-28) | `int64 filePrint(file const& handle, String text)` |
+| [filePrintln](#api-29) | `int64 filePrintln(file const& handle, String text = "")` |
+| [fileEof](#api-30) | `int64 fileEof(file const& handle)` |
+| [fileClose](#api-31) | `int64 fileClose(file const& handle)` |
+| [readAllBytes](#api-32) | `Result<List<uint8>,Error> readAllBytes(String path, int64 maxBytes=16777216)` |
+| [writeAllBytes](#api-33) | `Result<int64,Error> writeAllBytes(String path, List<uint8> bytes)` |
+| [readAllText](#api-34) | `Result<String,Error> readAllText(String path, int64 maxBytes=16777216)` |
+| [writeAllText](#api-35) | `Result<int64,Error> writeAllText(String path, String text)` |
+| [listDirectory](#api-36) | `Result<List<String>,Error> listDirectory(String path)` |
+| [fileInfo](#api-37) | `Result<FileInfo,Error> fileInfo(String path)` |
+| [createDirectories](#api-38) | `Result<int64,Error> createDirectories(String path)` |
+| [renamePath](#api-39) | `Result<int64,Error> renamePath(String from, String to)` |
+| [copyTo](#api-40) | `Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination)` |
+| [walkDirectory](#api-41) | `Result<List<String>,Error> walkDirectory(String path)` |
+| [createTempFile](#api-42) | `Result<String,Error> createTempFile(String path)` |
+| [replaceFile](#api-43) | `Result<int64,Error> replaceFile(String from, String to)` |
 
 <a id="api-0"></a>
 
@@ -432,7 +434,7 @@ static Result<FileStream, Error> open(String path, String mode);
 FileStream::open(path, mode);
 ```
 
-**源码**：[source/std/io.chl:45](../../source/std/io.chl#L45)。
+**源码**：[source/std/io.chl:47](../../source/std/io.chl#L47)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -468,7 +470,7 @@ Result<String, Error> read();
 obj.read();
 ```
 
-**源码**：[source/std/io.chl:57](../../source/std/io.chl#L57)。
+**源码**：[source/std/io.chl:59](../../source/std/io.chl#L59)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -504,7 +506,7 @@ Result<String,Error> readLine();
 obj.readLine();
 ```
 
-**源码**：[source/std/io.chl:68](../../source/std/io.chl#L68)。
+**源码**：[source/std/io.chl:70](../../source/std/io.chl#L70)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -542,7 +544,7 @@ Result<String,Error> readString(int64 count);
 obj.readString(count);
 ```
 
-**源码**：[source/std/io.chl:76](../../source/std/io.chl#L76)。
+**源码**：[source/std/io.chl:78](../../source/std/io.chl#L78)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -580,7 +582,7 @@ Result<String,Error> readAllString(int64 maxBytes=16777216);
 obj.readAllString(maxBytes);
 ```
 
-**源码**：[source/std/io.chl:88](../../source/std/io.chl#L88)。
+**源码**：[source/std/io.chl:90](../../source/std/io.chl#L90)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -618,7 +620,7 @@ Result<int64, Error> write(String text);
 obj.write(text);
 ```
 
-**源码**：[source/std/io.chl:102](../../source/std/io.chl#L102)。
+**源码**：[source/std/io.chl:104](../../source/std/io.chl#L104)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -656,7 +658,7 @@ Result<int64, Error> print(String text);
 obj.print(text);
 ```
 
-**源码**：[source/std/io.chl:116](../../source/std/io.chl#L116)。
+**源码**：[source/std/io.chl:118](../../source/std/io.chl#L118)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -694,7 +696,7 @@ Result<int64, Error> println(String text = "");
 obj.println(text);
 ```
 
-**源码**：[source/std/io.chl:122](../../source/std/io.chl#L122)。
+**源码**：[source/std/io.chl:124](../../source/std/io.chl#L124)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -732,7 +734,7 @@ Result<List<uint8>,Error> readBytes(int64 count);
 obj.readBytes(count);
 ```
 
-**源码**：[source/std/io.chl:125](../../source/std/io.chl#L125)。
+**源码**：[source/std/io.chl:127](../../source/std/io.chl#L127)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -770,13 +772,90 @@ Result<int64,Error> writeBytes(List<uint8> bytes);
 obj.writeBytes(bytes);
 ```
 
-**源码**：[source/std/io.chl:131](../../source/std/io.chl#L131)。
+**源码**：[source/std/io.chl:133](../../source/std/io.chl#L133)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
 <a id="api-17"></a>
 
-### FileStream::flush（18）
+### FileStream::readInto（18）
+
+**声明**
+
+```chali
+Result<int64, Error> readInto(uint8[] mut& buffer);
+```
+
+**行为**
+
+将字节读入可复用缓冲区，未读取的尾部保留原内容。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `buffer` | `uint8[] mut& buffer` | 运行时字节数组的可变引用。 | 无 |
+
+**返回值**
+
+`Result<int64, Error>`。实际读取字节数，EOF 时可返回零。发生 I/O 错误时可能已读取部分数据。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.readInto(buffer);
+```
+
+**源码**：[source/std/io.chl:143](../../source/std/io.chl#L143)。
+
+**完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
+
+<a id="api-18"></a>
+
+### FileStream::writeFrom（19）
+
+**声明**
+
+```chali
+Result<int64, Error> writeFrom(uint8[] const& buffer, int64 count);
+```
+
+**行为**
+
+从可复用缓冲区写入指定长度的前缀。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `buffer` | `uint8[] const& buffer` | 运行时字节数组的只读引用。 | 无 |
+| `count` | `int64 count` | 要写入的字节数，必须在零至缓冲区长度之间。 | 无 |
+
+**返回值**
+
+`Result<int64, Error>`。成功时为写入字节数。发生 I/O 错误时可能已写入部分数据。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.writeFrom(buffer, count);
+```
+
+**源码**：[source/std/io.chl:158](../../source/std/io.chl#L158)。
+
+**完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
+
+<a id="api-19"></a>
+
+### FileStream::flush（20）
 
 **声明**
 
@@ -806,13 +885,13 @@ Result<int64, Error> flush();
 obj.flush();
 ```
 
-**源码**：[source/std/io.chl:137](../../source/std/io.chl#L137)。
+**源码**：[source/std/io.chl:170](../../source/std/io.chl#L170)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-18"></a>
+<a id="api-20"></a>
 
-### FileStream::seek（19）
+### FileStream::seek（21）
 
 **声明**
 
@@ -845,13 +924,13 @@ Result<int64, Error> seek(int64 offset, SeekOrigin origin);
 obj.seek(offset, origin);
 ```
 
-**源码**：[source/std/io.chl:146](../../source/std/io.chl#L146)。
+**源码**：[source/std/io.chl:179](../../source/std/io.chl#L179)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-19"></a>
+<a id="api-21"></a>
 
-### FileStream::close（20）
+### FileStream::close（22）
 
 **声明**
 
@@ -881,13 +960,13 @@ int64 close();
 obj.close();
 ```
 
-**源码**：[source/std/io.chl:161](../../source/std/io.chl#L161)。
+**源码**：[source/std/io.chl:194](../../source/std/io.chl#L194)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-20"></a>
+<a id="api-22"></a>
 
-### fileOpen（21）
+### fileOpen（23）
 
 **声明**
 
@@ -922,13 +1001,13 @@ Result<File, Error> fileOpen(String path, String mode);
 fileOpen(path, mode);
 ```
 
-**源码**：[source/std/io.chl:166](../../source/std/io.chl#L166)。
+**源码**：[source/std/io.chl:199](../../source/std/io.chl#L199)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-21"></a>
+<a id="api-23"></a>
 
-### fileRead（22）
+### fileRead（24）
 
 **声明**
 
@@ -960,13 +1039,13 @@ String fileRead(file const& handle);
 fileRead(handle);
 ```
 
-**源码**：[source/std/io.chl:174](../../source/std/io.chl#L174)。
+**源码**：[source/std/io.chl:207](../../source/std/io.chl#L207)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-22"></a>
+<a id="api-24"></a>
 
-### fileReadLine（23）
+### fileReadLine（25）
 
 **声明**
 
@@ -999,13 +1078,13 @@ String fileReadLine(File const& handle);
 fileReadLine(handle);
 ```
 
-**源码**：[source/std/io.chl:177](../../source/std/io.chl#L177)。
+**源码**：[source/std/io.chl:210](../../source/std/io.chl#L210)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-23"></a>
+<a id="api-25"></a>
 
-### fileReadString（24）
+### fileReadString（26）
 
 **声明**
 
@@ -1039,13 +1118,13 @@ String fileReadString(File const& handle, int64 count);
 fileReadString(handle, count);
 ```
 
-**源码**：[source/std/io.chl:183](../../source/std/io.chl#L183)。
+**源码**：[source/std/io.chl:216](../../source/std/io.chl#L216)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-24"></a>
+<a id="api-26"></a>
 
-### fileReadAllString（25）
+### fileReadAllString（27）
 
 **声明**
 
@@ -1079,13 +1158,13 @@ String fileReadAllString(File const& handle, int64 maxBytes = 16777216);
 fileReadAllString(handle, maxBytes);
 ```
 
-**源码**：[source/std/io.chl:195](../../source/std/io.chl#L195)。
+**源码**：[source/std/io.chl:228](../../source/std/io.chl#L228)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-25"></a>
+<a id="api-27"></a>
 
-### fileWrite（26）
+### fileWrite（28）
 
 **声明**
 
@@ -1118,13 +1197,13 @@ int64 fileWrite(file const& handle, String text);
 fileWrite(handle, text);
 ```
 
-**源码**：[source/std/io.chl:209](../../source/std/io.chl#L209)。
+**源码**：[source/std/io.chl:242](../../source/std/io.chl#L242)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-26"></a>
+<a id="api-28"></a>
 
-### filePrint（27）
+### filePrint（29）
 
 **声明**
 
@@ -1157,13 +1236,13 @@ int64 filePrint(file const& handle, String text);
 filePrint(handle, text);
 ```
 
-**源码**：[source/std/io.chl:216](../../source/std/io.chl#L216)。
+**源码**：[source/std/io.chl:249](../../source/std/io.chl#L249)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-27"></a>
+<a id="api-29"></a>
 
-### filePrintln（28）
+### filePrintln（30）
 
 **声明**
 
@@ -1196,13 +1275,13 @@ int64 filePrintln(file const& handle, String text = "");
 filePrintln(handle, text);
 ```
 
-**源码**：[source/std/io.chl:223](../../source/std/io.chl#L223)。
+**源码**：[source/std/io.chl:256](../../source/std/io.chl#L256)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-28"></a>
+<a id="api-30"></a>
 
-### fileEof（29）
+### fileEof（31）
 
 **声明**
 
@@ -1234,13 +1313,13 @@ int64 fileEof(file const& handle);
 fileEof(handle);
 ```
 
-**源码**：[source/std/io.chl:226](../../source/std/io.chl#L226)。
+**源码**：[source/std/io.chl:259](../../source/std/io.chl#L259)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-29"></a>
+<a id="api-31"></a>
 
-### fileClose（30）
+### fileClose（32）
 
 **声明**
 
@@ -1272,13 +1351,13 @@ int64 fileClose(file const& handle);
 fileClose(handle);
 ```
 
-**源码**：[source/std/io.chl:227](../../source/std/io.chl#L227)。
+**源码**：[source/std/io.chl:260](../../source/std/io.chl#L260)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-30"></a>
+<a id="api-32"></a>
 
-### readAllBytes（31）
+### readAllBytes（33）
 
 **声明**
 
@@ -1311,13 +1390,13 @@ Result<List<uint8>,Error> readAllBytes(String path, int64 maxBytes=16777216);
 readAllBytes(path, maxBytes);
 ```
 
-**源码**：[source/std/io.chl:241](../../source/std/io.chl#L241)。
+**源码**：[source/std/io.chl:274](../../source/std/io.chl#L274)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-31"></a>
+<a id="api-33"></a>
 
-### writeAllBytes（32）
+### writeAllBytes（34）
 
 **声明**
 
@@ -1350,13 +1429,13 @@ Result<int64,Error> writeAllBytes(String path, List<uint8> bytes);
 writeAllBytes(path, bytes);
 ```
 
-**源码**：[source/std/io.chl:261](../../source/std/io.chl#L261)。
+**源码**：[source/std/io.chl:294](../../source/std/io.chl#L294)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-32"></a>
+<a id="api-34"></a>
 
-### readAllText（33）
+### readAllText（35）
 
 **声明**
 
@@ -1389,13 +1468,13 @@ Result<String,Error> readAllText(String path, int64 maxBytes=16777216);
 readAllText(path, maxBytes);
 ```
 
-**源码**：[source/std/io.chl:275](../../source/std/io.chl#L275)。
+**源码**：[source/std/io.chl:308](../../source/std/io.chl#L308)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-33"></a>
+<a id="api-35"></a>
 
-### writeAllText（34）
+### writeAllText（36）
 
 **声明**
 
@@ -1428,13 +1507,13 @@ Result<int64,Error> writeAllText(String path, String text);
 writeAllText(path, text);
 ```
 
-**源码**：[source/std/io.chl:284](../../source/std/io.chl#L284)。
+**源码**：[source/std/io.chl:317](../../source/std/io.chl#L317)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-34"></a>
+<a id="api-36"></a>
 
-### listDirectory（35）
+### listDirectory（37）
 
 **声明**
 
@@ -1466,13 +1545,13 @@ Result<List<String>,Error> listDirectory(String path);
 listDirectory(path);
 ```
 
-**源码**：[source/std/io.chl:289](../../source/std/io.chl#L289)。
+**源码**：[source/std/io.chl:322](../../source/std/io.chl#L322)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-35"></a>
+<a id="api-37"></a>
 
-### fileInfo（36）
+### fileInfo（38）
 
 **声明**
 
@@ -1504,13 +1583,13 @@ Result<FileInfo,Error> fileInfo(String path);
 fileInfo(path);
 ```
 
-**源码**：[source/std/io.chl:295](../../source/std/io.chl#L295)。
+**源码**：[source/std/io.chl:328](../../source/std/io.chl#L328)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-36"></a>
+<a id="api-38"></a>
 
-### createDirectories（37）
+### createDirectories（39）
 
 **声明**
 
@@ -1542,13 +1621,13 @@ Result<int64,Error> createDirectories(String path);
 createDirectories(path);
 ```
 
-**源码**：[source/std/io.chl:303](../../source/std/io.chl#L303)。
+**源码**：[source/std/io.chl:336](../../source/std/io.chl#L336)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-37"></a>
+<a id="api-39"></a>
 
-### renamePath（38）
+### renamePath（40）
 
 **声明**
 
@@ -1581,13 +1660,13 @@ Result<int64,Error> renamePath(String from, String to);
 renamePath(from, to);
 ```
 
-**源码**：[source/std/io.chl:309](../../source/std/io.chl#L309)。
+**源码**：[source/std/io.chl:342](../../source/std/io.chl#L342)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-38"></a>
+<a id="api-40"></a>
 
-### copyTo（39）
+### copyTo（41）
 
 **声明**
 
@@ -1597,7 +1676,7 @@ Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination);
 
 **行为**
 
-从当前读位置复制到目标流，分块处理，成功返回总字节数。两端保持打开。
+从当前读位置复制到目标流，复用一个缓冲区，成功返回总字节数。两端保持打开。
 
 **参数**
 
@@ -1608,7 +1687,7 @@ Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination);
 
 **返回值**
 
-`Result<int64,Error>`。从当前读位置复制到目标流，分块处理，成功返回总字节数。两端保持打开。
+`Result<int64,Error>`。从当前读位置复制到目标流，复用一个缓冲区，成功返回总字节数。两端保持打开。
 
 **错误与边界**
 
@@ -1620,13 +1699,13 @@ Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination);
 copyTo(source, destination);
 ```
 
-**源码**：[source/std/io.chl:317](../../source/std/io.chl#L317)。
+**源码**：[source/std/io.chl:350](../../source/std/io.chl#L350)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-39"></a>
+<a id="api-41"></a>
 
-### walkDirectory（40）
+### walkDirectory（42）
 
 **声明**
 
@@ -1658,13 +1737,13 @@ Result<List<String>,Error> walkDirectory(String path);
 walkDirectory(path);
 ```
 
-**源码**：[source/std/io.chl:336](../../source/std/io.chl#L336)。
+**源码**：[source/std/io.chl:370](../../source/std/io.chl#L370)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-40"></a>
+<a id="api-42"></a>
 
-### createTempFile（41）
+### createTempFile（43）
 
 **声明**
 
@@ -1696,13 +1775,13 @@ Result<String,Error> createTempFile(String path);
 createTempFile(path);
 ```
 
-**源码**：[source/std/io.chl:343](../../source/std/io.chl#L343)。
+**源码**：[source/std/io.chl:377](../../source/std/io.chl#L377)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
-<a id="api-41"></a>
+<a id="api-43"></a>
 
-### replaceFile（42）
+### replaceFile（44）
 
 **声明**
 
@@ -1735,7 +1814,7 @@ Result<int64,Error> replaceFile(String from, String to);
 replaceFile(from, to);
 ```
 
-**源码**：[source/std/io.chl:350](../../source/std/io.chl#L350)。
+**源码**：[source/std/io.chl:384](../../source/std/io.chl#L384)。
 
 **完整示例**：[doc/examples/library/io.chl](../../doc/examples/library/io.chl)。
 
@@ -1764,5 +1843,39 @@ void main(List<String> args) {
     assert(fileReadAllString(&handle)=="line two\nlast");
     fileClose(&handle);
     println("file strings ok");
+}
+```
+
+## 补充完整示例
+
+[example/samples/std_file_buffer.chl](../../example/samples/std_file_buffer.chl)。
+
+```chali
+import std::io;
+
+void main(List<String> args) {
+    String path = args[0];
+    uint8 bytes[] = new[65539];
+    bytes[0] = (uint8)7;
+    bytes[65537] = (uint8)255;
+    FileStream output = FileStream::open(path, "wb").take();
+    assert(output.readInto(&bytes).isErr());
+    assert(output.writeFrom(&bytes, -1).isErr());
+    assert(output.writeFrom(&bytes, 65540).isErr());
+    assert(output.writeFrom(&bytes, 0).unwrap() == 0);
+    assert(output.writeFrom(&bytes, 65538).unwrap() == 65538);
+    assert(output.close() == 0);
+
+    FileStream input = FileStream::open(path, "rb").take();
+    uint8 empty[] = new[0];
+    assert(input.readInto(&empty).unwrap() == 0);
+    bytes[65538] = (uint8)99;
+    assert(input.readInto(&bytes).unwrap() == 65538);
+    assert(bytes[0] == (uint8)7 && bytes[1] == (uint8)0);
+    assert(bytes[65537] == (uint8)255 && bytes[65538] == (uint8)99);
+    assert(input.readInto(&bytes).unwrap() == 0);
+    assert(input.close() == 0);
+    assert(input.readInto(&bytes).isErr());
+    println("reusable byte buffer OK");
 }
 ```

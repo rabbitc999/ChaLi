@@ -164,18 +164,18 @@ memory=ok
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-348"></a>`struct Span<T>: Iterator<T mut&>, Index<T, int64>` | `Span<T>` 是"指针 + 长度"的视图，所以它的迭代器**返回元素指针**：
+| 模块 | <a id="symbol-350"></a>`struct Span<T>: Iterator<T mut&>, Index<T, int64>` | `Span<T>` 是"指针 + 长度"的视图，所以它的迭代器**返回元素指针**：
 `for (T mut& p in span) { *p = …; }` 拿到的是可写元素地址，不复制元素；
 只要值就读 `span[i]` 或先 `T v = *p;`。 |
-| Span | <a id="symbol-349"></a>`T mut& data` | 视图引用的连续存储；视图不延长来源的生命周期。 |
-| Span | <a id="symbol-350"></a>`int64 length` | 连续存储中可访问的元素数量。 |
-| 模块 | <a id="symbol-351"></a>`struct MemoryStats` | 当前活跃分配的字节数、块数及历史字节峰值快照。 |
-| MemoryStats | <a id="symbol-352"></a>`int64 liveBytes` | 当前活跃分配的字节数。 |
-| MemoryStats | <a id="symbol-353"></a>`int64 liveBlocks` | 当前活跃分配的块数。 |
-| MemoryStats | <a id="symbol-354"></a>`int64 peakBytes` | 历史活跃分配字节数的峰值。 |
-| 模块 | <a id="symbol-355"></a>`struct Memory` | 内存统计与宿主内存管理操作的静态入口。 |
-| 模块 | <a id="symbol-356"></a>`struct Rc<T>: Closeable` | 同一线程内共享堆值的强引用。默认构造为空，使用 clone 显式增加拥有者。 |
-| 模块 | <a id="symbol-357"></a>`struct Weak<T>: Closeable` | 同一线程内观察 Rc 值的弱引用。可通过 upgrade 尝试取得拥有者。 |
+| Span | <a id="symbol-351"></a>`T mut& data` | 视图引用的连续存储；视图不延长来源的生命周期。 |
+| Span | <a id="symbol-352"></a>`int64 length` | 连续存储中可访问的元素数量。 |
+| 模块 | <a id="symbol-353"></a>`struct MemoryStats` | 当前活跃分配的字节数、块数及历史字节峰值快照。 |
+| MemoryStats | <a id="symbol-354"></a>`int64 liveBytes` | 当前活跃分配的字节数。 |
+| MemoryStats | <a id="symbol-355"></a>`int64 liveBlocks` | 当前活跃分配的块数。 |
+| MemoryStats | <a id="symbol-356"></a>`int64 peakBytes` | 历史活跃分配字节数的峰值。 |
+| 模块 | <a id="symbol-357"></a>`struct Memory` | 内存统计与宿主内存管理操作的静态入口。 |
+| 模块 | <a id="symbol-358"></a>`struct Rc<T>: Closeable` | 同一线程内共享堆值的强引用。默认构造为空，使用 clone 显式增加拥有者。 |
+| 模块 | <a id="symbol-359"></a>`struct Weak<T>: Closeable` | 同一线程内观察 Rc 值的弱引用。可通过 upgrade 尝试取得拥有者。 |
 
 ## 函数索引
 

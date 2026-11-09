@@ -69,23 +69,23 @@ ack:hello 5
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-494"></a>`const int64 RUNNING = 0` | 任务正在运行的状态常量。 |
-| 模块 | <a id="symbol-495"></a>`const int64 SUCCEEDED = 1` | 任务已成功完成的状态常量。 |
-| 模块 | <a id="symbol-496"></a>`const int64 FAILED = 2` | 任务失败的状态常量，数值见所属模块声明。 |
-| 模块 | <a id="symbol-497"></a>`const int64 CANCELLED = 3` | 任务已取消的状态常量，数值见所属模块声明。 |
-| 模块 | <a id="symbol-498"></a>`struct ThreadResult` | 任务完成状态、原始错误与调用栈。 |
-| ThreadResult | <a id="symbol-499"></a>`int64 status` | 线程等待状态，区分完成、超时、取消与失败。 |
-| ThreadResult | <a id="symbol-500"></a>`String error` | 最近操作的错误说明。 |
-| ThreadResult | <a id="symbol-501"></a>`String trace` | 失败任务保留的原始源码调用栈文本。 |
-| 模块 | <a id="symbol-502"></a>`struct ThreadGroup : Drop` | 拥有任务回收责任的线程组。 |
-| ThreadGroup | <a id="symbol-503"></a>`List<Thread> tasks` | 线程组登记并负责回收的 Thread 列表。 |
-| ThreadGroup | <a id="symbol-504"></a>`bool completed` | 全部任务是否已经回收。 |
-| ThreadGroup | <a id="symbol-505"></a>`bool successful` | 已完成线程组是否全部成功。 |
-| ThreadGroup | <a id="symbol-506"></a>`String error` | 最近操作的错误说明。 |
-| 模块 | <a id="symbol-507"></a>`struct ThreadPool : Drop` | 固定工作线程和有界静态任务队列。 |
-| ThreadPool | <a id="symbol-508"></a>`Channel<void fn()> jobs` | 跨线程的有界静态任务队列。 |
-| ThreadPool | <a id="symbol-509"></a>`ThreadGroup group` | 统一负责工作线程生命周期的线程组。 |
-| ThreadPool | <a id="symbol-510"></a>`bool closed` | 是否已停止接受任务或事件。 |
+| 模块 | <a id="symbol-496"></a>`const int64 RUNNING = 0` | 任务正在运行的状态常量。 |
+| 模块 | <a id="symbol-497"></a>`const int64 SUCCEEDED = 1` | 任务已成功完成的状态常量。 |
+| 模块 | <a id="symbol-498"></a>`const int64 FAILED = 2` | 任务失败的状态常量，数值见所属模块声明。 |
+| 模块 | <a id="symbol-499"></a>`const int64 CANCELLED = 3` | 任务已取消的状态常量，数值见所属模块声明。 |
+| 模块 | <a id="symbol-500"></a>`struct ThreadResult` | 任务完成状态、原始错误与调用栈。 |
+| ThreadResult | <a id="symbol-501"></a>`int64 status` | 线程等待状态，区分完成、超时、取消与失败。 |
+| ThreadResult | <a id="symbol-502"></a>`String error` | 最近操作的错误说明。 |
+| ThreadResult | <a id="symbol-503"></a>`String trace` | 失败任务保留的原始源码调用栈文本。 |
+| 模块 | <a id="symbol-504"></a>`struct ThreadGroup : Drop` | 拥有任务回收责任的线程组。 |
+| ThreadGroup | <a id="symbol-505"></a>`List<Thread> tasks` | 线程组登记并负责回收的 Thread 列表。 |
+| ThreadGroup | <a id="symbol-506"></a>`bool completed` | 全部任务是否已经回收。 |
+| ThreadGroup | <a id="symbol-507"></a>`bool successful` | 已完成线程组是否全部成功。 |
+| ThreadGroup | <a id="symbol-508"></a>`String error` | 最近操作的错误说明。 |
+| 模块 | <a id="symbol-509"></a>`struct ThreadPool : Drop` | 固定工作线程和有界静态任务队列。 |
+| ThreadPool | <a id="symbol-510"></a>`Channel<void fn()> jobs` | 跨线程的有界静态任务队列。 |
+| ThreadPool | <a id="symbol-511"></a>`ThreadGroup group` | 统一负责工作线程生命周期的线程组。 |
+| ThreadPool | <a id="symbol-512"></a>`bool closed` | 是否已停止接受任务或事件。 |
 
 ## 函数索引
 

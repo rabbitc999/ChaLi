@@ -32,6 +32,8 @@ String __fileTryRead(File const& handle);
 String __fileTryReadLine(File const& handle);
 List<uint8> __fileTryReadBytes(File const& handle, int64 count);
 int64 __fileTryWriteBytes(File const& handle, List<uint8> bytes);
+unsafe int64 __fileTryReadInto(File const& handle, int64 bufferAddress, int64 count);
+unsafe int64 __fileTryWriteFrom(File const& handle, int64 bufferAddress, int64 count);
 int64 __fileTryWrite(File const& handle, String text);
 int64 __fileTryFlush(File const& handle);
 int64 __fileTrySeek(File const& handle, int64 offset, int64 origin);
@@ -132,6 +134,37 @@ struct FileStream : Reader, Writer, Seek {
         int64 count=__fileTryWriteBytes(&self.handle,bytes);
         if (__fileSucceeded(&self.handle)) { return Result<int64,Error>::Ok(count); }
         return Result<int64,Error>::Err(IoError::WriteFailed(__fileLastError(&self.handle)));
+    }
+
+    /** 将字节读入可复用缓冲区，未读取的尾部保留原内容。
+     * @param buffer 运行时字节数组的可变引用。
+     * @return 实际读取字节数，EOF 时可返回零。发生 I/O 错误时可能已读取部分数据。
+     */
+    Result<int64, Error> readInto(uint8[] mut& buffer) {
+        int64 capacity = len(buffer);
+        int64 start = 0;
+        if (capacity > 0) { start = (int64)address(&buffer[0]); }
+        int64 count;
+        unsafe { count = __fileTryReadInto(&self.handle, start, capacity); }
+        if (__fileSucceeded(&self.handle)) { return Result<int64, Error>::Ok(count); }
+        return Result<int64, Error>::Err(IoError::ReadFailed(__fileLastError(&self.handle)));
+    }
+
+    /** 从可复用缓冲区写入指定长度的前缀。
+     * @param buffer 运行时字节数组的只读引用。
+     * @param count 要写入的字节数，必须在零至缓冲区长度之间。
+     * @return 成功时为写入字节数。发生 I/O 错误时可能已写入部分数据。
+     */
+    Result<int64, Error> writeFrom(uint8[] const& buffer, int64 count) {
+        if (count < 0 || count > len(buffer)) {
+            return Result<int64, Error>::Err(IoError::WriteFailed("byte count exceeds buffer range"));
+        }
+        int64 start = 0;
+        if (count > 0) { start = (int64)address(&buffer[0]); }
+        int64 written;
+        unsafe { written = __fileTryWriteFrom(&self.handle, start, count); }
+        if (__fileSucceeded(&self.handle)) { return Result<int64, Error>::Ok(written); }
+        return Result<int64, Error>::Err(IoError::WriteFailed(__fileLastError(&self.handle)));
     }
 
     Result<int64, Error> flush() {
@@ -313,14 +346,15 @@ Result<int64,Error> renamePath(String from, String to) {
 }
 
 
-/** 从当前读位置复制到目标流，分块处理，成功返回总字节数。两端保持打开。 */
+/** 从当前读位置复制到目标流，复用一个缓冲区，成功返回总字节数。两端保持打开。 */
 Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination) {
+    uint8 block[] = new[65536];
     int64 total = 0;
     while (true) {
-        List<uint8> block = source.readBytes(65536)?;
-        if (block.len() == 0) { break; }
-        int64 written = destination.writeBytes(block)?;
-        if (written != block.len() || total > 9223372036854775807 - written) {
+        int64 count = source.readInto(&block)?;
+        if (count == 0) { break; }
+        int64 written = destination.writeFrom(&block, count)?;
+        if (written != count || total > 9223372036854775807 - written) {
             return Result<int64,Error>::Err(IoError::WriteFailed("incomplete stream copy"));
         }
         total = total + written;

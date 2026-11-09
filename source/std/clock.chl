@@ -9,3 +9,79 @@ module std::clock;
  */
 int64 nowMs();
 int64 nowNanos();
+
+/** 以纳秒计的非负时长。默认值为零。 */
+struct Duration {
+    int64 __nanos;
+
+    /** 用非负纳秒数构造时长。
+     * @param nanos 非负的纳秒数。
+     * @return 指定时长。
+     */
+    static Duration fromNanos(int64 nanos) {
+        assert(nanos >= 0, "Duration requires nonnegative nanoseconds");
+        Duration result;
+        result.__nanos = nanos;
+        return result;
+    }
+
+    /** 用非负毫秒数构造时长。超出纳秒表示范围时触发断言。
+     * @param millis 非负的毫秒数。
+     * @return 指定时长。
+     */
+    static Duration fromMillis(int64 millis) {
+        assert(millis >= 0 && millis <= 9223372036854, "Duration milliseconds out of range");
+        return Duration::fromNanos(millis * 1000000);
+    }
+
+    /** 返回精确的纳秒数。 */
+    int64 toNanos() { return self.__nanos; }
+
+    /** 向上取整到毫秒，适用于以整毫秒接收超时的接口。 */
+    int64 toMillisCeil() {
+        int64 millis = self.__nanos / 1000000;
+        if (self.__nanos % 1000000 != 0) { millis += 1; }
+        return millis;
+    }
+};
+
+/** 单调时钟上的时刻，用于计算耗时和截止时间。 */
+struct Instant {
+    int64 __ticks;
+
+    /** 取得当前单调时钟读数。 */
+    static Instant now() {
+        Instant result;
+        result.__ticks = nowNanos();
+        return result;
+    }
+
+    /** 从此时刻向后推移，超出范围时饱和到最大时刻。
+     * @param duration 向后推移的时长。
+     * @return 推移后的单调时刻。
+     */
+    Instant plus(Duration duration) {
+        Instant result;
+        int64 nanos = duration.toNanos();
+        result.__ticks = 9223372036854775807;
+        if (self.__ticks <= 9223372036854775807 - nanos) {
+            result.__ticks = self.__ticks + nanos;
+        }
+        return result;
+    }
+
+    /** 计算从 earlier 到此时刻的时长，反向区间返回零。
+     * @param earlier 用作差值起点的单调时刻。
+     * @return 两个时刻之间的非负时长。
+     */
+    Duration durationSince(Instant earlier) {
+        if (self.__ticks <= earlier.__ticks) { return Duration::fromNanos(0); }
+        return Duration::fromNanos(self.__ticks - earlier.__ticks);
+    }
+
+    /** 计算从此时刻到现在的耗时。 */
+    Duration elapsed() { return Instant::now().durationSince(self); }
+
+    /** 计算到此截止时刻的剩余时长，过期时返回零。 */
+    Duration remaining() { return self.durationSince(Instant::now()); }
+};

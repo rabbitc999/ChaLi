@@ -1,0 +1,39 @@
+import std::concurrency;
+import std::thread;
+
+struct Claim {
+    AtomicInt64 state;
+    Channel<int64> gate;
+    Channel<bool> results;
+    int64 id;
+};
+
+void claim(Claim job) {
+    assert(job.gate.receive().isReady());
+    assert(job.results.send(job.state.compareExchange(0, job.id)) == READY);
+}
+
+void main() {
+    Claim job;
+    job.state = AtomicInt64::create(0);
+    assert(!job.state.compareExchange(1, 5) && job.state.get() == 0);
+    job.gate = Channel<int64>::create(2);
+    job.results = Channel<bool>::create(2);
+    job.id = 1;
+    Thread first = createWith(claim, job);
+    job.id = 2;
+    Thread second = createWith(claim, job);
+    assert(job.gate.send(1) == READY && job.gate.send(1) == READY);
+    let a = job.results.receive();
+    let b = job.results.receive();
+    assert(a.isReady() && b.isReady() && a.value != b.value);
+    wait(first);
+    wait(second);
+    int64 winner = job.state.get();
+    assert(winner == 1 || winner == 2);
+    assert(job.state.compareExchange(winner, -1));
+    assert(job.state.fetchAdd(1) == -1 && job.state.get() == 0);
+    job.gate.close();
+    job.results.close();
+    println("atomic compare-exchange OK");
+}

@@ -1,0 +1,27 @@
+import std::io;
+
+void main(List<String> args) {
+    String path = args[0];
+    uint8 bytes[] = new[65539];
+    bytes[0] = (uint8)7;
+    bytes[65537] = (uint8)255;
+    FileStream output = FileStream::open(path, "wb").take();
+    assert(output.readInto(&bytes).isErr());
+    assert(output.writeFrom(&bytes, -1).isErr());
+    assert(output.writeFrom(&bytes, 65540).isErr());
+    assert(output.writeFrom(&bytes, 0).unwrap() == 0);
+    assert(output.writeFrom(&bytes, 65538).unwrap() == 65538);
+    assert(output.close() == 0);
+
+    FileStream input = FileStream::open(path, "rb").take();
+    uint8 empty[] = new[0];
+    assert(input.readInto(&empty).unwrap() == 0);
+    bytes[65538] = (uint8)99;
+    assert(input.readInto(&bytes).unwrap() == 65538);
+    assert(bytes[0] == (uint8)7 && bytes[1] == (uint8)0);
+    assert(bytes[65537] == (uint8)255 && bytes[65538] == (uint8)99);
+    assert(input.readInto(&bytes).unwrap() == 0);
+    assert(input.close() == 0);
+    assert(input.readInto(&bytes).isErr());
+    println("reusable byte buffer OK");
+}

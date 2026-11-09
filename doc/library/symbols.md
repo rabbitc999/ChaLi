@@ -179,6 +179,15 @@
 | [std::cli::CliParser::parse](std-cli.md#api-7) | `Result<CliArguments,Error> parse(List<String> arguments)` |
 | [std::cli::cliError](std-cli.md#api-3) | `CliError cliError(String argument, String message)` |
 | [std::cli::cliTail](std-cli.md#api-4) | `String cliTail(String text,int64 start)` |
+| [std::clock::Duration::fromMillis](std-clock.md#api-3) | `static Duration fromMillis(int64 millis)` |
+| [std::clock::Duration::fromNanos](std-clock.md#api-2) | `static Duration fromNanos(int64 nanos)` |
+| [std::clock::Duration::toMillisCeil](std-clock.md#api-5) | `int64 toMillisCeil()` |
+| [std::clock::Duration::toNanos](std-clock.md#api-4) | `int64 toNanos()` |
+| [std::clock::Instant::durationSince](std-clock.md#api-8) | `Duration durationSince(Instant earlier)` |
+| [std::clock::Instant::elapsed](std-clock.md#api-9) | `Duration elapsed()` |
+| [std::clock::Instant::now](std-clock.md#api-6) | `static Instant now()` |
+| [std::clock::Instant::plus](std-clock.md#api-7) | `Instant plus(Duration duration)` |
+| [std::clock::Instant::remaining](std-clock.md#api-10) | `Duration remaining()` |
 | [std::clock::nowMs](std-clock.md#api-0) | `int64 nowMs()` |
 | [std::clock::nowNanos](std-clock.md#api-1) | `int64 nowNanos()` |
 | [std::collections::Channel::create](std-collections.md#api-53) | `static Channel<T> create()` |
@@ -259,18 +268,19 @@
 | [std::concurrency::ArcWeak::close](std-concurrency.md#api-8) | `void close()` |
 | [std::concurrency::ArcWeak::isExpired](std-concurrency.md#api-6) | `bool isExpired()` |
 | [std::concurrency::ArcWeak::upgrade](std-concurrency.md#api-7) | `Arc<T> upgrade()` |
+| [std::concurrency::AtomicInt64::compareExchange](std-concurrency.md#api-19) | `bool compareExchange(int64 expected, int64 desired)` |
 | [std::concurrency::AtomicInt64::create](std-concurrency.md#api-15) | `static AtomicInt64 create(int64 value)` |
 | [std::concurrency::AtomicInt64::fetchAdd](std-concurrency.md#api-18) | `int64 fetchAdd(int64 delta)` |
 | [std::concurrency::AtomicInt64::get](std-concurrency.md#api-16) | `int64 get()` |
 | [std::concurrency::AtomicInt64::set](std-concurrency.md#api-17) | `void set(int64 value)` |
-| [std::concurrency::Channel::close](std-concurrency.md#api-26) | `void close()` |
-| [std::concurrency::Channel::create](std-concurrency.md#api-19) | `static Channel<T> create(int64 capacity)` |
-| [std::concurrency::Channel::receive](std-concurrency.md#api-24) | `Receive<T> receive()` |
-| [std::concurrency::Channel::receiveFor](std-concurrency.md#api-23) | `Receive<T> receiveFor(int64 millis)` |
-| [std::concurrency::Channel::send](std-concurrency.md#api-21) | `int64 send(T value)` |
-| [std::concurrency::Channel::sendFor](std-concurrency.md#api-20) | `int64 sendFor(T value, int64 millis)` |
-| [std::concurrency::Channel::tryReceive](std-concurrency.md#api-25) | `Receive<T> tryReceive()` |
-| [std::concurrency::Channel::trySend](std-concurrency.md#api-22) | `int64 trySend(T value)` |
+| [std::concurrency::Channel::close](std-concurrency.md#api-27) | `void close()` |
+| [std::concurrency::Channel::create](std-concurrency.md#api-20) | `static Channel<T> create(int64 capacity)` |
+| [std::concurrency::Channel::receive](std-concurrency.md#api-25) | `Receive<T> receive()` |
+| [std::concurrency::Channel::receiveFor](std-concurrency.md#api-24) | `Receive<T> receiveFor(int64 millis)` |
+| [std::concurrency::Channel::send](std-concurrency.md#api-22) | `int64 send(T value)` |
+| [std::concurrency::Channel::sendFor](std-concurrency.md#api-21) | `int64 sendFor(T value, int64 millis)` |
+| [std::concurrency::Channel::tryReceive](std-concurrency.md#api-26) | `Receive<T> tryReceive()` |
+| [std::concurrency::Channel::trySend](std-concurrency.md#api-23) | `int64 trySend(T value)` |
 | [std::concurrency::Receive::isReady](std-concurrency.md#api-0) | `bool isReady()` |
 | [std::concurrency::Shared::create](std-concurrency.md#api-10) | `static Shared<T> create(T value)` |
 | [std::concurrency::Shared::get](std-concurrency.md#api-11) | `T get()` |
@@ -852,19 +862,21 @@
 | [std::image::Image::toGray](std-image.md#api-16) | `Result<List<uint8>, Error> toGray()` |
 | [std::image::Image::toRGB565](std-image.md#api-20) | `Result<List<uint16>, Error> toRGB565()` |
 | [std::image::Image::width](std-image.md#api-0) | `int64 width()` |
-| [std::io::FileStream::close](std-io.md#api-19) | `int64 close()` |
-| [std::io::FileStream::flush](std-io.md#api-17) | `Result<int64, Error> flush()` |
+| [std::io::FileStream::close](std-io.md#api-21) | `int64 close()` |
+| [std::io::FileStream::flush](std-io.md#api-19) | `Result<int64, Error> flush()` |
 | [std::io::FileStream::open](std-io.md#api-7) | `static Result<FileStream, Error> open(String path, String mode)` |
 | [std::io::FileStream::print](std-io.md#api-13) | `Result<int64, Error> print(String text)` |
 | [std::io::FileStream::println](std-io.md#api-14) | `Result<int64, Error> println(String text = "")` |
 | [std::io::FileStream::read](std-io.md#api-8) | `Result<String, Error> read()` |
 | [std::io::FileStream::readAllString](std-io.md#api-11) | `Result<String,Error> readAllString(int64 maxBytes=16777216)` |
 | [std::io::FileStream::readBytes](std-io.md#api-15) | `Result<List<uint8>,Error> readBytes(int64 count)` |
+| [std::io::FileStream::readInto](std-io.md#api-17) | `Result<int64, Error> readInto(uint8[] mut& buffer)` |
 | [std::io::FileStream::readLine](std-io.md#api-9) | `Result<String,Error> readLine()` |
 | [std::io::FileStream::readString](std-io.md#api-10) | `Result<String,Error> readString(int64 count)` |
-| [std::io::FileStream::seek](std-io.md#api-18) | `Result<int64, Error> seek(int64 offset, SeekOrigin origin)` |
+| [std::io::FileStream::seek](std-io.md#api-20) | `Result<int64, Error> seek(int64 offset, SeekOrigin origin)` |
 | [std::io::FileStream::write](std-io.md#api-12) | `Result<int64, Error> write(String text)` |
 | [std::io::FileStream::writeBytes](std-io.md#api-16) | `Result<int64,Error> writeBytes(List<uint8> bytes)` |
+| [std::io::FileStream::writeFrom](std-io.md#api-18) | `Result<int64, Error> writeFrom(uint8[] const& buffer, int64 count)` |
 | [std::io::Formattable::toString](std-io.md#api-6) | `String toString(String style)` |
 | [std::io::IoError::toString](std-io.md#api-0) | `String toString()` |
 | [std::io::Reader::read](std-io.md#api-1) | `Result<String, Error> read()` |
@@ -872,28 +884,28 @@
 | [std::io::ToString::toString](std-io.md#api-5) | `String toString()` |
 | [std::io::Writer::flush](std-io.md#api-3) | `Result<int64, Error> flush()` |
 | [std::io::Writer::write](std-io.md#api-2) | `Result<int64, Error> write(String text)` |
-| [std::io::copyTo](std-io.md#api-38) | `Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination)` |
-| [std::io::createDirectories](std-io.md#api-36) | `Result<int64,Error> createDirectories(String path)` |
-| [std::io::createTempFile](std-io.md#api-40) | `Result<String,Error> createTempFile(String path)` |
-| [std::io::fileClose](std-io.md#api-29) | `int64 fileClose(file const& handle)` |
-| [std::io::fileEof](std-io.md#api-28) | `int64 fileEof(file const& handle)` |
-| [std::io::fileInfo](std-io.md#api-35) | `Result<FileInfo,Error> fileInfo(String path)` |
-| [std::io::fileOpen](std-io.md#api-20) | `Result<File, Error> fileOpen(String path, String mode)` |
-| [std::io::filePrint](std-io.md#api-26) | `int64 filePrint(file const& handle, String text)` |
-| [std::io::filePrintln](std-io.md#api-27) | `int64 filePrintln(file const& handle, String text = "")` |
-| [std::io::fileRead](std-io.md#api-21) | `String fileRead(file const& handle)` |
-| [std::io::fileReadAllString](std-io.md#api-24) | `String fileReadAllString(File const& handle, int64 maxBytes = 16777216)` |
-| [std::io::fileReadLine](std-io.md#api-22) | `String fileReadLine(File const& handle)` |
-| [std::io::fileReadString](std-io.md#api-23) | `String fileReadString(File const& handle, int64 count)` |
-| [std::io::fileWrite](std-io.md#api-25) | `int64 fileWrite(file const& handle, String text)` |
-| [std::io::listDirectory](std-io.md#api-34) | `Result<List<String>,Error> listDirectory(String path)` |
-| [std::io::readAllBytes](std-io.md#api-30) | `Result<List<uint8>,Error> readAllBytes(String path, int64 maxBytes=16777216)` |
-| [std::io::readAllText](std-io.md#api-32) | `Result<String,Error> readAllText(String path, int64 maxBytes=16777216)` |
-| [std::io::renamePath](std-io.md#api-37) | `Result<int64,Error> renamePath(String from, String to)` |
-| [std::io::replaceFile](std-io.md#api-41) | `Result<int64,Error> replaceFile(String from, String to)` |
-| [std::io::walkDirectory](std-io.md#api-39) | `Result<List<String>,Error> walkDirectory(String path)` |
-| [std::io::writeAllBytes](std-io.md#api-31) | `Result<int64,Error> writeAllBytes(String path, List<uint8> bytes)` |
-| [std::io::writeAllText](std-io.md#api-33) | `Result<int64,Error> writeAllText(String path, String text)` |
+| [std::io::copyTo](std-io.md#api-40) | `Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination)` |
+| [std::io::createDirectories](std-io.md#api-38) | `Result<int64,Error> createDirectories(String path)` |
+| [std::io::createTempFile](std-io.md#api-42) | `Result<String,Error> createTempFile(String path)` |
+| [std::io::fileClose](std-io.md#api-31) | `int64 fileClose(file const& handle)` |
+| [std::io::fileEof](std-io.md#api-30) | `int64 fileEof(file const& handle)` |
+| [std::io::fileInfo](std-io.md#api-37) | `Result<FileInfo,Error> fileInfo(String path)` |
+| [std::io::fileOpen](std-io.md#api-22) | `Result<File, Error> fileOpen(String path, String mode)` |
+| [std::io::filePrint](std-io.md#api-28) | `int64 filePrint(file const& handle, String text)` |
+| [std::io::filePrintln](std-io.md#api-29) | `int64 filePrintln(file const& handle, String text = "")` |
+| [std::io::fileRead](std-io.md#api-23) | `String fileRead(file const& handle)` |
+| [std::io::fileReadAllString](std-io.md#api-26) | `String fileReadAllString(File const& handle, int64 maxBytes = 16777216)` |
+| [std::io::fileReadLine](std-io.md#api-24) | `String fileReadLine(File const& handle)` |
+| [std::io::fileReadString](std-io.md#api-25) | `String fileReadString(File const& handle, int64 count)` |
+| [std::io::fileWrite](std-io.md#api-27) | `int64 fileWrite(file const& handle, String text)` |
+| [std::io::listDirectory](std-io.md#api-36) | `Result<List<String>,Error> listDirectory(String path)` |
+| [std::io::readAllBytes](std-io.md#api-32) | `Result<List<uint8>,Error> readAllBytes(String path, int64 maxBytes=16777216)` |
+| [std::io::readAllText](std-io.md#api-34) | `Result<String,Error> readAllText(String path, int64 maxBytes=16777216)` |
+| [std::io::renamePath](std-io.md#api-39) | `Result<int64,Error> renamePath(String from, String to)` |
+| [std::io::replaceFile](std-io.md#api-43) | `Result<int64,Error> replaceFile(String from, String to)` |
+| [std::io::walkDirectory](std-io.md#api-41) | `Result<List<String>,Error> walkDirectory(String path)` |
+| [std::io::writeAllBytes](std-io.md#api-33) | `Result<int64,Error> writeAllBytes(String path, List<uint8> bytes)` |
+| [std::io::writeAllText](std-io.md#api-35) | `Result<int64,Error> writeAllText(String path, String text)` |
 | [std::iter::Iter::all](std-iter.md#api-9) | `bool all(bool fn(T) predicate)` |
 | [std::iter::Iter::any](std-iter.md#api-10) | `bool any(bool fn(T) predicate)` |
 | [std::iter::Iter::count](std-iter.md#api-6) | `int64 count()` |

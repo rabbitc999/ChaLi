@@ -26,7 +26,7 @@ import std::log;
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-336"></a>`enum LogLevel` | 日志严重性。 |
+| 模块 | <a id="symbol-338"></a>`enum LogLevel` | 日志严重性。 |
 | LogLevel | `Debug, Info, Warn, Error` | 日志严重性。 变体及载荷见声明。 |
 
 ## 函数索引

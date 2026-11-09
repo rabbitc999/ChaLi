@@ -68,18 +68,18 @@ UTC dates, epochs and arithmetic OK
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-142"></a>`struct DateTime` | UTC 民用时间，使用公历；有效年份为 1 到 9999，不表示闰秒。 |
-| DateTime | <a id="symbol-143"></a>`int64 year` | 公历年份。 |
-| DateTime | <a id="symbol-144"></a>`int64 month` | 月份，1–12。 |
-| DateTime | <a id="symbol-145"></a>`int64 day` | 当月日期，从 1 开始。 |
-| DateTime | <a id="symbol-146"></a>`int64 hour` | 小时，0–23。 |
-| DateTime | <a id="symbol-147"></a>`int64 minute` | 分钟，0–59。 |
-| DateTime | <a id="symbol-148"></a>`int64 second` | 秒，0–59，不表示闰秒。 |
-| 模块 | <a id="symbol-149"></a>`enum DateTimeError : Error` | 日期、时间、格式、可表示范围或宿主时钟不可用的错误。 |
+| 模块 | <a id="symbol-144"></a>`struct DateTime` | UTC 民用时间，使用公历；有效年份为 1 到 9999，不表示闰秒。 |
+| DateTime | <a id="symbol-145"></a>`int64 year` | 公历年份。 |
+| DateTime | <a id="symbol-146"></a>`int64 month` | 月份，1–12。 |
+| DateTime | <a id="symbol-147"></a>`int64 day` | 当月日期，从 1 开始。 |
+| DateTime | <a id="symbol-148"></a>`int64 hour` | 小时，0–23。 |
+| DateTime | <a id="symbol-149"></a>`int64 minute` | 分钟，0–59。 |
+| DateTime | <a id="symbol-150"></a>`int64 second` | 秒，0–59，不表示闰秒。 |
+| 模块 | <a id="symbol-151"></a>`enum DateTimeError : Error` | 日期、时间、格式、可表示范围或宿主时钟不可用的错误。 |
 | DateTimeError | `InvalidDate, InvalidTime, InvalidFormat, OutOfRange, ClockUnavailable` | 日期、时间、格式、可表示范围或宿主时钟不可用的错误。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-150"></a>`struct DateTimeOffset` | 民用日期与显式 UTC 偏移；正偏移表示当地时间快于 UTC。 |
-| DateTimeOffset | <a id="symbol-151"></a>`DateTime local` | 偏移后的民用日期和钟表时间。 |
-| DateTimeOffset | <a id="symbol-152"></a>`int64 offset_minutes` | 当地时间相对 UTC 的有符号分钟数。 |
+| 模块 | <a id="symbol-152"></a>`struct DateTimeOffset` | 民用日期与显式 UTC 偏移；正偏移表示当地时间快于 UTC。 |
+| DateTimeOffset | <a id="symbol-153"></a>`DateTime local` | 偏移后的民用日期和钟表时间。 |
+| DateTimeOffset | <a id="symbol-154"></a>`int64 offset_minutes` | 当地时间相对 UTC 的有符号分钟数。 |
 
 ## 函数索引
 

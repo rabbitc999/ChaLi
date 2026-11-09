@@ -132,6 +132,8 @@ void main() {
 
 > 线程执行、通道通信和显式事件分别由 std::thread、std::concurrency 和 std::event 提供。
 
+`AtomicInt64.compareExchange(expected, desired)` 在一次原子操作内比较当前值，相等时写入新值并返回 `true`。失败时返回 `false`，共享槽保留原值。
+
 ### 系统与环境
 
 | 模块 | 内容 |
@@ -140,8 +142,12 @@ void main() {
 | `std::net` | TCP 与 HTTP 客户端；通过类型化套接字与监听器接口使用宿主网络服务 |
 | `std::sql` | 连接 MySQL / SQLite / PostgreSQL / SQL Server；SQL 交给数据库引擎，ChaLi 负责收发 |
 | `std::process` | 进程与系统调用；命令管道由宿主管柄池持有 |
-| `std::clock` | 单调时钟 `steady_clock`，只做差值，不当挂钟用 |
+| `std::clock` | 单调时刻 `Instant`、非负时长 `Duration`、纳秒和毫秒读数 |
 | `std::memory` | `Span<T>`（引用地址 + 长度视图）；它的迭代器返回**元素引用**，`for (T mut& p in span)` 可直接写 |
+
+`Instant::now().plus(Duration::fromMillis(250))` 生成截止时间。每次限时操作前用 `deadline.remaining().toMillisCeil()` 取得剩余毫秒数，多个操作可以共用一个预算。时间读数以单调时钟为基准。
+
+`FileStream.readInto(&buffer)` 将字节读入已有的运行时 `uint8[]`，返回实际读取数量。`writeFrom(&buffer, count)` 写入指定前缀。`copyTo` 在整个复制过程复用一个缓冲区，并保持两个流打开。
 
 ### 迭代
 

@@ -4200,7 +4200,7 @@
       "documentation": "读取单调时钟毫秒计数。"
     },
     "errors": {
-      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。",
+      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。Duration 表示非负时长，Instant 表示单调时刻。截止时间的 remaining 返回零或剩余时长，toMillisCeil 向上取整以适配毫秒超时接口。",
       "preconditions": [],
       "panic": false
     },
@@ -4227,7 +4227,7 @@
       "documentation": "读取单调时钟纳秒计数。"
     },
     "errors": {
-      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。",
+      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。Duration 表示非负时长，Instant 表示单调时刻。截止时间的 remaining 返回零或剩余时长，toMillisCeil 向上取整以适配毫秒超时接口。",
       "preconditions": [],
       "panic": false
     },
@@ -4240,6 +4240,281 @@
     "line": 11,
     "page": "std-clock.md",
     "anchor": "api-1"
+  },
+  {
+    "module": "std::clock",
+    "name": "Duration::fromNanos",
+    "owner": "Duration",
+    "signature": "static Duration fromNanos(int64 nanos)",
+    "documentation": "用非负纳秒数构造时长。\n\n**返回值**：Duration。指定时长。",
+    "comment": "/** 用非负纳秒数构造时长。\n     * @param nanos 非负的纳秒数。\n     * @return 指定时长。\n     */",
+    "parameters": [
+      {
+        "name": "nanos",
+        "label": "int64 nanos",
+        "documentation": "非负的纳秒数。",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "Duration",
+      "documentation": "指定时长。"
+    },
+    "errors": {
+      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。Duration 表示非负时长，Instant 表示单调时刻。截止时间的 remaining 返回零或剩余时长，toMillisCeil 向上取整以适配毫秒超时接口。",
+      "preconditions": [
+        "nanos >= 0, \"Duration requires nonnegative nanoseconds\""
+      ],
+      "panic": false
+    },
+    "usage": "Duration::fromNanos(nanos);",
+    "examples": [
+      "example/samples/std_monotonic_time.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/clock.chl",
+    "line": 21,
+    "page": "std-clock.md",
+    "anchor": "api-2"
+  },
+  {
+    "module": "std::clock",
+    "name": "Duration::fromMillis",
+    "owner": "Duration",
+    "signature": "static Duration fromMillis(int64 millis)",
+    "documentation": "用非负毫秒数构造时长。超出纳秒表示范围时触发断言。\n\n**返回值**：Duration。指定时长。",
+    "comment": "/** 用非负毫秒数构造时长。超出纳秒表示范围时触发断言。\n     * @param millis 非负的毫秒数。\n     * @return 指定时长。\n     */",
+    "parameters": [
+      {
+        "name": "millis",
+        "label": "int64 millis",
+        "documentation": "非负的毫秒数。",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "Duration",
+      "documentation": "指定时长。"
+    },
+    "errors": {
+      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。Duration 表示非负时长，Instant 表示单调时刻。截止时间的 remaining 返回零或剩余时长，toMillisCeil 向上取整以适配毫秒超时接口。",
+      "preconditions": [
+        "millis >= 0 && millis <= 9223372036854, \"Duration milliseconds out of range\""
+      ],
+      "panic": false
+    },
+    "usage": "Duration::fromMillis(millis);",
+    "examples": [
+      "example/samples/std_monotonic_time.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/clock.chl",
+    "line": 32,
+    "page": "std-clock.md",
+    "anchor": "api-3"
+  },
+  {
+    "module": "std::clock",
+    "name": "Duration::toNanos",
+    "owner": "Duration",
+    "signature": "int64 toNanos()",
+    "documentation": "返回精确的纳秒数。\n\n**返回值**：int64。",
+    "comment": "/** 返回精确的纳秒数。 */",
+    "parameters": [],
+    "returns": {
+      "type": "int64",
+      "documentation": "返回精确的纳秒数。"
+    },
+    "errors": {
+      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。Duration 表示非负时长，Instant 表示单调时刻。截止时间的 remaining 返回零或剩余时长，toMillisCeil 向上取整以适配毫秒超时接口。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.toNanos();",
+    "examples": [
+      "example/samples/std_monotonic_time.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/clock.chl",
+    "line": 38,
+    "page": "std-clock.md",
+    "anchor": "api-4"
+  },
+  {
+    "module": "std::clock",
+    "name": "Duration::toMillisCeil",
+    "owner": "Duration",
+    "signature": "int64 toMillisCeil()",
+    "documentation": "向上取整到毫秒，适用于以整毫秒接收超时的接口。\n\n**返回值**：int64。",
+    "comment": "/** 向上取整到毫秒，适用于以整毫秒接收超时的接口。 */",
+    "parameters": [],
+    "returns": {
+      "type": "int64",
+      "documentation": "向上取整到毫秒，适用于以整毫秒接收超时的接口。"
+    },
+    "errors": {
+      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。Duration 表示非负时长，Instant 表示单调时刻。截止时间的 remaining 返回零或剩余时长，toMillisCeil 向上取整以适配毫秒超时接口。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.toMillisCeil();",
+    "examples": [
+      "example/samples/std_monotonic_time.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/clock.chl",
+    "line": 41,
+    "page": "std-clock.md",
+    "anchor": "api-5"
+  },
+  {
+    "module": "std::clock",
+    "name": "Instant::now",
+    "owner": "Instant",
+    "signature": "static Instant now()",
+    "documentation": "取得当前单调时钟读数。\n\n**返回值**：Instant。",
+    "comment": "/** 取得当前单调时钟读数。 */",
+    "parameters": [],
+    "returns": {
+      "type": "Instant",
+      "documentation": "取得当前单调时钟读数。"
+    },
+    "errors": {
+      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。Duration 表示非负时长，Instant 表示单调时刻。截止时间的 remaining 返回零或剩余时长，toMillisCeil 向上取整以适配毫秒超时接口。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "Instant::now();",
+    "examples": [
+      "example/samples/std_monotonic_time.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/clock.chl",
+    "line": 53,
+    "page": "std-clock.md",
+    "anchor": "api-6"
+  },
+  {
+    "module": "std::clock",
+    "name": "Instant::plus",
+    "owner": "Instant",
+    "signature": "Instant plus(Duration duration)",
+    "documentation": "从此时刻向后推移，超出范围时饱和到最大时刻。\n\n**返回值**：Instant。推移后的单调时刻。",
+    "comment": "/** 从此时刻向后推移，超出范围时饱和到最大时刻。\n     * @param duration 向后推移的时长。\n     * @return 推移后的单调时刻。\n     */",
+    "parameters": [
+      {
+        "name": "duration",
+        "label": "Duration duration",
+        "documentation": "向后推移的时长。",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "Instant",
+      "documentation": "推移后的单调时刻。"
+    },
+    "errors": {
+      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。Duration 表示非负时长，Instant 表示单调时刻。截止时间的 remaining 返回零或剩余时长，toMillisCeil 向上取整以适配毫秒超时接口。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.plus(duration);",
+    "examples": [
+      "example/samples/std_monotonic_time.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/clock.chl",
+    "line": 63,
+    "page": "std-clock.md",
+    "anchor": "api-7"
+  },
+  {
+    "module": "std::clock",
+    "name": "Instant::durationSince",
+    "owner": "Instant",
+    "signature": "Duration durationSince(Instant earlier)",
+    "documentation": "计算从 earlier 到此时刻的时长，反向区间返回零。\n\n**返回值**：Duration。两个时刻之间的非负时长。",
+    "comment": "/** 计算从 earlier 到此时刻的时长，反向区间返回零。\n     * @param earlier 用作差值起点的单调时刻。\n     * @return 两个时刻之间的非负时长。\n     */",
+    "parameters": [
+      {
+        "name": "earlier",
+        "label": "Instant earlier",
+        "documentation": "用作差值起点的单调时刻。",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "Duration",
+      "documentation": "两个时刻之间的非负时长。"
+    },
+    "errors": {
+      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。Duration 表示非负时长，Instant 表示单调时刻。截止时间的 remaining 返回零或剩余时长，toMillisCeil 向上取整以适配毫秒超时接口。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.durationSince(earlier);",
+    "examples": [
+      "example/samples/std_monotonic_time.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/clock.chl",
+    "line": 77,
+    "page": "std-clock.md",
+    "anchor": "api-8"
+  },
+  {
+    "module": "std::clock",
+    "name": "Instant::elapsed",
+    "owner": "Instant",
+    "signature": "Duration elapsed()",
+    "documentation": "计算从此时刻到现在的耗时。\n\n**返回值**：Duration。",
+    "comment": "/** 计算从此时刻到现在的耗时。 */",
+    "parameters": [],
+    "returns": {
+      "type": "Duration",
+      "documentation": "计算从此时刻到现在的耗时。"
+    },
+    "errors": {
+      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。Duration 表示非负时长，Instant 表示单调时刻。截止时间的 remaining 返回零或剩余时长，toMillisCeil 向上取整以适配毫秒超时接口。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.elapsed();",
+    "examples": [
+      "example/samples/std_monotonic_time.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/clock.chl",
+    "line": 83,
+    "page": "std-clock.md",
+    "anchor": "api-9"
+  },
+  {
+    "module": "std::clock",
+    "name": "Instant::remaining",
+    "owner": "Instant",
+    "signature": "Duration remaining()",
+    "documentation": "计算到此截止时刻的剩余时长，过期时返回零。\n\n**返回值**：Duration。",
+    "comment": "/** 计算到此截止时刻的剩余时长，过期时返回零。 */",
+    "parameters": [],
+    "returns": {
+      "type": "Duration",
+      "documentation": "计算到此截止时刻的剩余时长，过期时返回零。"
+    },
+    "errors": {
+      "documentation": "采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。Duration 表示非负时长，Instant 表示单调时刻。截止时间的 remaining 返回零或剩余时长，toMillisCeil 向上取整以适配毫秒超时接口。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.remaining();",
+    "examples": [
+      "example/samples/std_monotonic_time.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/clock.chl",
+    "line": 86,
+    "page": "std-clock.md",
+    "anchor": "api-10"
   },
   {
     "module": "std::collections",
@@ -6275,14 +6550,15 @@
       "documentation": "操作状态为 READY 时返回 true。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
     "usage": "obj.isReady();",
     "examples": [
       "example/samples/thread_channel.chl",
-      "example/samples/std_arc.chl"
+      "example/samples/std_arc.chl",
+      "example/samples/std_atomic_compare_exchange.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
@@ -6303,7 +6579,7 @@
       "documentation": "查询句柄是否为空。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6313,7 +6589,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 43,
+    "line": 44,
     "page": "std-concurrency.md",
     "anchor": "api-1"
   },
@@ -6330,7 +6606,7 @@
       "documentation": "增加一份强引用；普通赋值也采用相同的所有权语义。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6340,7 +6616,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 46,
+    "line": 47,
     "page": "std-concurrency.md",
     "anchor": "api-2"
   },
@@ -6357,18 +6633,19 @@
       "documentation": "在当前线程恢复独立的值副本。空句柄触发运行时错误。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
     "usage": "obj.get();",
     "examples": [
       "example/samples/typed_messages_shared.chl",
-      "example/samples/std_arc.chl"
+      "example/samples/std_arc.chl",
+      "example/samples/std_atomic_compare_exchange.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 49,
+    "line": 50,
     "page": "std-concurrency.md",
     "anchor": "api-3"
   },
@@ -6385,7 +6662,7 @@
       "documentation": "创建可跨线程传递的弱引用。空强引用产生空弱引用。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6395,7 +6672,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 52,
+    "line": 53,
     "page": "std-concurrency.md",
     "anchor": "api-4"
   },
@@ -6412,18 +6689,19 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
     "usage": "obj.close();",
     "examples": [
       "example/samples/thread_channel.chl",
-      "example/samples/std_arc.chl"
+      "example/samples/std_arc.chl",
+      "example/samples/std_atomic_compare_exchange.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 59,
+    "line": 60,
     "page": "std-concurrency.md",
     "anchor": "api-5"
   },
@@ -6440,7 +6718,7 @@
       "documentation": "检查当前时刻是否已经失效。空句柄也视为失效。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6450,7 +6728,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 67,
+    "line": 68,
     "page": "std-concurrency.md",
     "anchor": "api-6"
   },
@@ -6467,7 +6745,7 @@
       "documentation": "原子地尝试取得强引用，失效时返回空 Arc。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6477,7 +6755,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 70,
+    "line": 71,
     "page": "std-concurrency.md",
     "anchor": "api-7"
   },
@@ -6494,18 +6772,19 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
     "usage": "obj.close();",
     "examples": [
       "example/samples/thread_channel.chl",
-      "example/samples/std_arc.chl"
+      "example/samples/std_arc.chl",
+      "example/samples/std_atomic_compare_exchange.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 77,
+    "line": 78,
     "page": "std-concurrency.md",
     "anchor": "api-8"
   },
@@ -6529,7 +6808,7 @@
       "documentation": "持有新快照的强引用。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6539,7 +6818,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 84,
+    "line": 85,
     "page": "std-concurrency.md",
     "anchor": "api-9"
   },
@@ -6563,7 +6842,7 @@
       "documentation": "创建值为 value 的原子共享槽。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6571,11 +6850,12 @@
     "examples": [
       "example/samples/typed_messages_shared.chl",
       "example/samples/thread_channel.chl",
-      "example/samples/std_arc.chl"
+      "example/samples/std_arc.chl",
+      "example/samples/std_atomic_compare_exchange.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 94,
+    "line": 95,
     "page": "std-concurrency.md",
     "anchor": "api-10"
   },
@@ -6592,18 +6872,19 @@
       "documentation": "读取共享槽当前值的副本。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
     "usage": "obj.get();",
     "examples": [
       "example/samples/typed_messages_shared.chl",
-      "example/samples/std_arc.chl"
+      "example/samples/std_arc.chl",
+      "example/samples/std_atomic_compare_exchange.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 95,
+    "line": 96,
     "page": "std-concurrency.md",
     "anchor": "api-11"
   },
@@ -6627,7 +6908,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6635,7 +6916,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 96,
+    "line": 97,
     "page": "std-concurrency.md",
     "anchor": "api-12"
   },
@@ -6659,7 +6940,7 @@
       "documentation": "原子替换共享槽并返回旧值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6669,7 +6950,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 97,
+    "line": 98,
     "page": "std-concurrency.md",
     "anchor": "api-13"
   },
@@ -6686,7 +6967,7 @@
       "documentation": "共享槽的引用标识，不拥有槽内值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6694,7 +6975,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 99,
+    "line": 100,
     "page": "std-concurrency.md",
     "anchor": "api-14"
   },
@@ -6718,7 +6999,7 @@
       "documentation": "创建 int64 原子槽。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6726,11 +7007,12 @@
     "examples": [
       "example/samples/typed_messages_shared.chl",
       "example/samples/thread_channel.chl",
-      "example/samples/std_arc.chl"
+      "example/samples/std_arc.chl",
+      "example/samples/std_atomic_compare_exchange.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 105,
+    "line": 106,
     "page": "std-concurrency.md",
     "anchor": "api-15"
   },
@@ -6747,18 +7029,19 @@
       "documentation": "读取共享槽当前值的副本。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
     "usage": "obj.get();",
     "examples": [
       "example/samples/typed_messages_shared.chl",
-      "example/samples/std_arc.chl"
+      "example/samples/std_arc.chl",
+      "example/samples/std_atomic_compare_exchange.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 106,
+    "line": 107,
     "page": "std-concurrency.md",
     "anchor": "api-16"
   },
@@ -6782,7 +7065,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6790,7 +7073,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 107,
+    "line": 108,
     "page": "std-concurrency.md",
     "anchor": "api-17"
   },
@@ -6814,17 +7097,59 @@
       "documentation": "原子累加 int64 并返回旧值，溢出按 64 位回绕。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
     "usage": "obj.fetchAdd(delta);",
-    "examples": [],
+    "examples": [
+      "example/samples/std_atomic_compare_exchange.chl"
+    ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 108,
+    "line": 109,
     "page": "std-concurrency.md",
     "anchor": "api-18"
+  },
+  {
+    "module": "std::concurrency",
+    "name": "AtomicInt64::compareExchange",
+    "owner": "AtomicInt64",
+    "signature": "bool compareExchange(int64 expected, int64 desired)",
+    "documentation": "原子地比较并更新整数槽。\n\n**返回值**：bool。已交换时为 true，否则为 false。",
+    "comment": "/** 原子地比较并更新整数槽。\n     * @param expected 预期的当前值。\n     * @param desired 比较相等时写入的新值。\n     * @return 已交换时为 true，否则为 false。\n     */",
+    "parameters": [
+      {
+        "name": "expected",
+        "label": "int64 expected",
+        "documentation": "预期的当前值。",
+        "default": ""
+      },
+      {
+        "name": "desired",
+        "label": "int64 desired",
+        "documentation": "比较相等时写入的新值。",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "bool",
+      "documentation": "已交换时为 true，否则为 false。"
+    },
+    "errors": {
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.compareExchange(expected, desired);",
+    "examples": [
+      "example/samples/std_atomic_compare_exchange.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/concurrency.chl",
+    "line": 116,
+    "page": "std-concurrency.md",
+    "anchor": "api-19"
   },
   {
     "module": "std::concurrency",
@@ -6846,7 +7171,7 @@
       "documentation": "创建指定容量的跨线程通道。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6854,13 +7179,14 @@
     "examples": [
       "example/samples/typed_messages_shared.chl",
       "example/samples/thread_channel.chl",
-      "example/samples/std_arc.chl"
+      "example/samples/std_arc.chl",
+      "example/samples/std_atomic_compare_exchange.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 114,
+    "line": 124,
     "page": "std-concurrency.md",
-    "anchor": "api-19"
+    "anchor": "api-20"
   },
   {
     "module": "std::concurrency",
@@ -6888,7 +7214,7 @@
       "documentation": "在截止时间内复制发送载荷，返回统一操作状态。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6896,9 +7222,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 115,
+    "line": 125,
     "page": "std-concurrency.md",
-    "anchor": "api-20"
+    "anchor": "api-21"
   },
   {
     "module": "std::concurrency",
@@ -6920,20 +7246,21 @@
       "documentation": "按值复制并等待发送，队列满时施加背压。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
     "usage": "obj.send(value);",
     "examples": [
       "example/samples/thread_channel.chl",
-      "example/samples/std_arc.chl"
+      "example/samples/std_arc.chl",
+      "example/samples/std_atomic_compare_exchange.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 116,
+    "line": 126,
     "page": "std-concurrency.md",
-    "anchor": "api-21"
+    "anchor": "api-22"
   },
   {
     "module": "std::concurrency",
@@ -6955,7 +7282,7 @@
       "documentation": "立即尝试复制发送，队列满返回 FULL。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6963,9 +7290,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 117,
+    "line": 127,
     "page": "std-concurrency.md",
-    "anchor": "api-22"
+    "anchor": "api-23"
   },
   {
     "module": "std::concurrency",
@@ -6987,7 +7314,7 @@
       "documentation": "显式限时接收，只有 READY 时 value 有效；-1 无限、0 非阻塞。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -6995,9 +7322,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 118,
+    "line": 128,
     "page": "std-concurrency.md",
-    "anchor": "api-23"
+    "anchor": "api-24"
   },
   {
     "module": "std::concurrency",
@@ -7012,20 +7339,21 @@
       "documentation": "等待并按值接收下一项，关闭排空后返回 CLOSED。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
     "usage": "obj.receive();",
     "examples": [
       "example/samples/thread_channel.chl",
-      "example/samples/std_arc.chl"
+      "example/samples/std_arc.chl",
+      "example/samples/std_atomic_compare_exchange.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 125,
+    "line": 135,
     "page": "std-concurrency.md",
-    "anchor": "api-24"
+    "anchor": "api-25"
   },
   {
     "module": "std::concurrency",
@@ -7040,7 +7368,7 @@
       "documentation": "立即尝试接收，未就绪返回 TIMEOUT，只有 READY 时读取 value。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
@@ -7048,9 +7376,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 126,
+    "line": 136,
     "page": "std-concurrency.md",
-    "anchor": "api-25"
+    "anchor": "api-26"
   },
   {
     "module": "std::concurrency",
@@ -7065,20 +7393,21 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
+      "documentation": "Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。AtomicInt64.compareExchange 在当前值等于预期时原子写入新值并返回 true。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。",
       "preconditions": [],
       "panic": false
     },
     "usage": "obj.close();",
     "examples": [
       "example/samples/thread_channel.chl",
-      "example/samples/std_arc.chl"
+      "example/samples/std_arc.chl",
+      "example/samples/std_atomic_compare_exchange.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/concurrency.chl",
-    "line": 127,
+    "line": 137,
     "page": "std-concurrency.md",
-    "anchor": "api-26"
+    "anchor": "api-27"
   },
   {
     "module": "std::core",
@@ -19024,11 +19353,12 @@
     "usage": "FileStream::open(path, mode);",
     "examples": [
       "doc/examples/library/io.chl",
-      "example/samples/std_file_strings.chl"
+      "example/samples/std_file_strings.chl",
+      "example/samples/std_file_buffer.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 45,
+    "line": 47,
     "page": "std-io.md",
     "anchor": "api-7"
   },
@@ -19055,7 +19385,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 57,
+    "line": 59,
     "page": "std-io.md",
     "anchor": "api-8"
   },
@@ -19082,7 +19412,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 68,
+    "line": 70,
     "page": "std-io.md",
     "anchor": "api-9"
   },
@@ -19116,7 +19446,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 76,
+    "line": 78,
     "page": "std-io.md",
     "anchor": "api-10"
   },
@@ -19150,7 +19480,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 88,
+    "line": 90,
     "page": "std-io.md",
     "anchor": "api-11"
   },
@@ -19185,7 +19515,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 102,
+    "line": 104,
     "page": "std-io.md",
     "anchor": "api-12"
   },
@@ -19217,7 +19547,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 116,
+    "line": 118,
     "page": "std-io.md",
     "anchor": "api-13"
   },
@@ -19248,11 +19578,12 @@
     "usage": "obj.println(text);",
     "examples": [
       "doc/examples/library/io.chl",
-      "example/samples/std_file_strings.chl"
+      "example/samples/std_file_strings.chl",
+      "example/samples/std_file_buffer.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 122,
+    "line": 124,
     "page": "std-io.md",
     "anchor": "api-14"
   },
@@ -19284,7 +19615,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 125,
+    "line": 127,
     "page": "std-io.md",
     "anchor": "api-15"
   },
@@ -19316,9 +19647,83 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 131,
+    "line": 133,
     "page": "std-io.md",
     "anchor": "api-16"
+  },
+  {
+    "module": "std::io",
+    "name": "FileStream::readInto",
+    "owner": "FileStream",
+    "signature": "Result<int64, Error> readInto(uint8[] mut& buffer)",
+    "documentation": "将字节读入可复用缓冲区，未读取的尾部保留原内容。\n\n**返回值**：Result<int64, Error>。实际读取字节数，EOF 时可返回零。发生 I/O 错误时可能已读取部分数据。",
+    "comment": "/** 将字节读入可复用缓冲区，未读取的尾部保留原内容。\n     * @param buffer 运行时字节数组的可变引用。\n     * @return 实际读取字节数，EOF 时可返回零。发生 I/O 错误时可能已读取部分数据。\n     */",
+    "parameters": [
+      {
+        "name": "buffer",
+        "label": "uint8[] mut& buffer",
+        "documentation": "运行时字节数组的可变引用。",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "Result<int64, Error>",
+      "documentation": "实际读取字节数，EOF 时可返回零。发生 I/O 错误时可能已读取部分数据。"
+    },
+    "errors": {
+      "documentation": "整文件字节读写由 ChaLi 组合 FileStream 实现，分块检查预算。文件句柄仍由宿主托管，保留自动关闭与错误状态。FileStream 返回 Result<T, Error>，失败载荷保留具体 IoError 类型；read/write/seek 之前检查打开结果。read 按底层文件读取一行。close 显式关闭句柄。Reader/Writer/Seek 是用户可实现的接口，接口本身不创建文件。路径与模式由宿主文件系统解释。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.readInto(buffer);",
+    "examples": [
+      "example/samples/std_file_buffer.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/io.chl",
+    "line": 143,
+    "page": "std-io.md",
+    "anchor": "api-17"
+  },
+  {
+    "module": "std::io",
+    "name": "FileStream::writeFrom",
+    "owner": "FileStream",
+    "signature": "Result<int64, Error> writeFrom(uint8[] const& buffer, int64 count)",
+    "documentation": "从可复用缓冲区写入指定长度的前缀。\n\n**返回值**：Result<int64, Error>。成功时为写入字节数。发生 I/O 错误时可能已写入部分数据。",
+    "comment": "/** 从可复用缓冲区写入指定长度的前缀。\n     * @param buffer 运行时字节数组的只读引用。\n     * @param count 要写入的字节数，必须在零至缓冲区长度之间。\n     * @return 成功时为写入字节数。发生 I/O 错误时可能已写入部分数据。\n     */",
+    "parameters": [
+      {
+        "name": "buffer",
+        "label": "uint8[] const& buffer",
+        "documentation": "运行时字节数组的只读引用。",
+        "default": ""
+      },
+      {
+        "name": "count",
+        "label": "int64 count",
+        "documentation": "要写入的字节数，必须在零至缓冲区长度之间。",
+        "default": ""
+      }
+    ],
+    "returns": {
+      "type": "Result<int64, Error>",
+      "documentation": "成功时为写入字节数。发生 I/O 错误时可能已写入部分数据。"
+    },
+    "errors": {
+      "documentation": "整文件字节读写由 ChaLi 组合 FileStream 实现，分块检查预算。文件句柄仍由宿主托管，保留自动关闭与错误状态。FileStream 返回 Result<T, Error>，失败载荷保留具体 IoError 类型；read/write/seek 之前检查打开结果。read 按底层文件读取一行。close 显式关闭句柄。Reader/Writer/Seek 是用户可实现的接口，接口本身不创建文件。路径与模式由宿主文件系统解释。",
+      "preconditions": [],
+      "panic": false
+    },
+    "usage": "obj.writeFrom(buffer, count);",
+    "examples": [
+      "example/samples/std_file_buffer.chl"
+    ],
+    "sourceLanguage": "zh",
+    "source": "source/std/io.chl",
+    "line": 158,
+    "page": "std-io.md",
+    "anchor": "api-18"
   },
   {
     "module": "std::io",
@@ -19343,9 +19748,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 137,
+    "line": 170,
     "page": "std-io.md",
-    "anchor": "api-17"
+    "anchor": "api-19"
   },
   {
     "module": "std::io",
@@ -19383,9 +19788,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 146,
+    "line": 179,
     "page": "std-io.md",
-    "anchor": "api-18"
+    "anchor": "api-20"
   },
   {
     "module": "std::io",
@@ -19407,13 +19812,14 @@
     "usage": "obj.close();",
     "examples": [
       "doc/examples/library/io.chl",
-      "example/samples/std_file_strings.chl"
+      "example/samples/std_file_strings.chl",
+      "example/samples/std_file_buffer.chl"
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 161,
+    "line": 194,
     "page": "std-io.md",
-    "anchor": "api-19"
+    "anchor": "api-21"
   },
   {
     "module": "std::io",
@@ -19451,9 +19857,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 166,
+    "line": 199,
     "page": "std-io.md",
-    "anchor": "api-20"
+    "anchor": "api-22"
   },
   {
     "module": "std::io",
@@ -19483,9 +19889,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 174,
+    "line": 207,
     "page": "std-io.md",
-    "anchor": "api-21"
+    "anchor": "api-23"
   },
   {
     "module": "std::io",
@@ -19517,9 +19923,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 177,
+    "line": 210,
     "page": "std-io.md",
-    "anchor": "api-22"
+    "anchor": "api-24"
   },
   {
     "module": "std::io",
@@ -19557,9 +19963,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 183,
+    "line": 216,
     "page": "std-io.md",
-    "anchor": "api-23"
+    "anchor": "api-25"
   },
   {
     "module": "std::io",
@@ -19597,9 +20003,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 195,
+    "line": 228,
     "page": "std-io.md",
-    "anchor": "api-24"
+    "anchor": "api-26"
   },
   {
     "module": "std::io",
@@ -19635,9 +20041,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 209,
+    "line": 242,
     "page": "std-io.md",
-    "anchor": "api-25"
+    "anchor": "api-27"
   },
   {
     "module": "std::io",
@@ -19673,9 +20079,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 216,
+    "line": 249,
     "page": "std-io.md",
-    "anchor": "api-26"
+    "anchor": "api-28"
   },
   {
     "module": "std::io",
@@ -19711,9 +20117,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 223,
+    "line": 256,
     "page": "std-io.md",
-    "anchor": "api-27"
+    "anchor": "api-29"
   },
   {
     "module": "std::io",
@@ -19743,9 +20149,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 226,
+    "line": 259,
     "page": "std-io.md",
-    "anchor": "api-28"
+    "anchor": "api-30"
   },
   {
     "module": "std::io",
@@ -19777,9 +20183,9 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 227,
+    "line": 260,
     "page": "std-io.md",
-    "anchor": "api-29"
+    "anchor": "api-31"
   },
   {
     "module": "std::io",
@@ -19815,9 +20221,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 241,
+    "line": 274,
     "page": "std-io.md",
-    "anchor": "api-30"
+    "anchor": "api-32"
   },
   {
     "module": "std::io",
@@ -19853,9 +20259,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 261,
+    "line": 294,
     "page": "std-io.md",
-    "anchor": "api-31"
+    "anchor": "api-33"
   },
   {
     "module": "std::io",
@@ -19891,9 +20297,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 275,
+    "line": 308,
     "page": "std-io.md",
-    "anchor": "api-32"
+    "anchor": "api-34"
   },
   {
     "module": "std::io",
@@ -19929,9 +20335,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 284,
+    "line": 317,
     "page": "std-io.md",
-    "anchor": "api-33"
+    "anchor": "api-35"
   },
   {
     "module": "std::io",
@@ -19961,9 +20367,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 289,
+    "line": 322,
     "page": "std-io.md",
-    "anchor": "api-34"
+    "anchor": "api-36"
   },
   {
     "module": "std::io",
@@ -19993,9 +20399,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 295,
+    "line": 328,
     "page": "std-io.md",
-    "anchor": "api-35"
+    "anchor": "api-37"
   },
   {
     "module": "std::io",
@@ -20025,9 +20431,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 303,
+    "line": 336,
     "page": "std-io.md",
-    "anchor": "api-36"
+    "anchor": "api-38"
   },
   {
     "module": "std::io",
@@ -20063,17 +20469,17 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 309,
+    "line": 342,
     "page": "std-io.md",
-    "anchor": "api-37"
+    "anchor": "api-39"
   },
   {
     "module": "std::io",
     "name": "copyTo",
     "owner": "",
     "signature": "Result<int64,Error> copyTo(FileStream mut& source, FileStream mut& destination)",
-    "documentation": "从当前读位置复制到目标流，分块处理，成功返回总字节数。两端保持打开。\n\n**返回值**：Result<int64,Error>。",
-    "comment": "/** 从当前读位置复制到目标流，分块处理，成功返回总字节数。两端保持打开。 */",
+    "documentation": "从当前读位置复制到目标流，复用一个缓冲区，成功返回总字节数。两端保持打开。\n\n**返回值**：Result<int64,Error>。",
+    "comment": "/** 从当前读位置复制到目标流，复用一个缓冲区，成功返回总字节数。两端保持打开。 */",
     "parameters": [
       {
         "name": "source",
@@ -20090,7 +20496,7 @@
     ],
     "returns": {
       "type": "Result<int64,Error>",
-      "documentation": "从当前读位置复制到目标流，分块处理，成功返回总字节数。两端保持打开。"
+      "documentation": "从当前读位置复制到目标流，复用一个缓冲区，成功返回总字节数。两端保持打开。"
     },
     "errors": {
       "documentation": "整文件字节读写由 ChaLi 组合 FileStream 实现，分块检查预算。文件句柄仍由宿主托管，保留自动关闭与错误状态。FileStream 返回 Result<T, Error>，失败载荷保留具体 IoError 类型；read/write/seek 之前检查打开结果。read 按底层文件读取一行。close 显式关闭句柄。Reader/Writer/Seek 是用户可实现的接口，接口本身不创建文件。路径与模式由宿主文件系统解释。",
@@ -20101,9 +20507,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 317,
+    "line": 350,
     "page": "std-io.md",
-    "anchor": "api-38"
+    "anchor": "api-40"
   },
   {
     "module": "std::io",
@@ -20133,9 +20539,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 336,
+    "line": 370,
     "page": "std-io.md",
-    "anchor": "api-39"
+    "anchor": "api-41"
   },
   {
     "module": "std::io",
@@ -20165,9 +20571,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 343,
+    "line": 377,
     "page": "std-io.md",
-    "anchor": "api-40"
+    "anchor": "api-42"
   },
   {
     "module": "std::io",
@@ -20203,9 +20609,9 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/std/io.chl",
-    "line": 350,
+    "line": 384,
     "page": "std-io.md",
-    "anchor": "api-41"
+    "anchor": "api-43"
   },
   {
     "module": "std::iter",

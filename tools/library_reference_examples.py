@@ -50,8 +50,9 @@ SUPPLEMENTAL = {
     'std::big_number': ['example/samples/bigint_methods.chl', 'example/samples/std_bignumber.chl'],
     'std::macro': ['example/samples/std_macro.chl', 'example/samples/std_macro_value_members.chl', 'example/samples/std_box.chl'],
     'std::thread': ['example/samples/thread_pool.chl'],
-    'std::concurrency': ['example/samples/thread_channel.chl', 'example/samples/std_arc.chl'],
+    'std::concurrency': ['example/samples/thread_channel.chl', 'example/samples/std_arc.chl', 'example/samples/std_atomic_compare_exchange.chl'],
+    'std::clock': ['example/samples/std_monotonic_time.chl'],
     'std::core': ['example/samples/std_read_lines.chl', 'example/samples/std_box.chl'],
-    'std::io': ['example/samples/std_file_strings.chl'],
+    'std::io': ['example/samples/std_file_strings.chl', 'example/samples/std_file_buffer.chl'],
     'std::memory': ['example/samples/std_rc.chl'],
 }

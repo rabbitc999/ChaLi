@@ -106,6 +106,9 @@ def behavior(entry):
     if module == 'std::core' and (owner in ('RawStorage', 'BarePtr', 'Box') or name in ('initAt','readAt','borrowAt','takeAt','dropAt','relocateNonOverlapping','barePointer','pointerFromAddress','dereference','memcpy','memset')):
         return comment_text(entry['comment'])
 
+    if module == 'std::clock' and owner in ('Duration', 'Instant'):
+        return comment_text(entry['comment'])
+
     if module == 'std::memory' and owner in ('Rc', 'Weak'):
         return comment_text(entry['comment'])
 

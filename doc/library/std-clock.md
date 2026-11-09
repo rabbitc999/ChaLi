@@ -14,7 +14,7 @@ import std::clock;
 
 ## 公共约定与错误边界
 
-采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。
+采用宿主 steady_clock。读数的起点由平台决定，只能用于差值与计时，不代表日期时间；单位分别为毫秒和纳秒，实际分辨率由平台决定。Duration 表示非负时长，Instant 表示单调时刻。截止时间的 remaining 返回零或剩余时长，toMillisCeil 向上取整以适配毫秒超时接口。
 
 ## 参考代码
 
@@ -123,12 +123,30 @@ void main() {
 
 聚合入口的具体操作参见对应子模块；本页类型/方法的调用形式列在下方。
 
+## 类型、枚举、常量与字段
+
+公开字段按源码原样列出；句柄和游标字段用于包装器状态，通常通过方法操作。枚举的括号表示变体载荷。
+
+| 所属类型 | 声明 | 说明 |
+| --- | --- | --- |
+| 模块 | <a id="symbol-27"></a>`struct Duration` | 以纳秒计的非负时长。默认值为零。 |
+| 模块 | <a id="symbol-28"></a>`struct Instant` | 单调时钟上的时刻，用于计算耗时和截止时间。 |
+
 ## 函数索引
 
 | 名称 | 声明 |
 | --- | --- |
 | [nowMs](#api-0) | `int64 nowMs()` |
 | [nowNanos](#api-1) | `int64 nowNanos()` |
+| [Duration::fromNanos](#api-2) | `static Duration fromNanos(int64 nanos)` |
+| [Duration::fromMillis](#api-3) | `static Duration fromMillis(int64 millis)` |
+| [Duration::toNanos](#api-4) | `int64 toNanos()` |
+| [Duration::toMillisCeil](#api-5) | `int64 toMillisCeil()` |
+| [Instant::now](#api-6) | `static Instant now()` |
+| [Instant::plus](#api-7) | `Instant plus(Duration duration)` |
+| [Instant::durationSince](#api-8) | `Duration durationSince(Instant earlier)` |
+| [Instant::elapsed](#api-9) | `Duration elapsed()` |
+| [Instant::remaining](#api-10) | `Duration remaining()` |
 
 <a id="api-0"></a>
 
@@ -203,3 +221,365 @@ nowNanos();
 **源码**：[source/std/clock.chl:11](../../source/std/clock.chl#L11)。
 
 **完整示例**：[example/samples/std_math_clock_random.chl](../../example/samples/std_math_clock_random.chl)。
+
+<a id="api-2"></a>
+
+### Duration::fromNanos（3）
+
+**声明**
+
+```chali
+static Duration fromNanos(int64 nanos);
+```
+
+**行为**
+
+用非负纳秒数构造时长。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `nanos` | `int64 nanos` | 非负的纳秒数。 | 无 |
+
+**返回值**
+
+`Duration`。指定时长。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+显式前置检查：`nanos >= 0, "Duration requires nonnegative nanoseconds"`。
+
+**调用形式**
+
+```chali
+Duration::fromNanos(nanos);
+```
+
+**源码**：[source/std/clock.chl:21](../../source/std/clock.chl#L21)。
+
+**完整示例**：[example/samples/std_math_clock_random.chl](../../example/samples/std_math_clock_random.chl)。
+
+<a id="api-3"></a>
+
+### Duration::fromMillis（4）
+
+**声明**
+
+```chali
+static Duration fromMillis(int64 millis);
+```
+
+**行为**
+
+用非负毫秒数构造时长。超出纳秒表示范围时触发断言。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `millis` | `int64 millis` | 非负的毫秒数。 | 无 |
+
+**返回值**
+
+`Duration`。指定时长。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+显式前置检查：`millis >= 0 && millis <= 9223372036854, "Duration milliseconds out of range"`。
+
+**调用形式**
+
+```chali
+Duration::fromMillis(millis);
+```
+
+**源码**：[source/std/clock.chl:32](../../source/std/clock.chl#L32)。
+
+**完整示例**：[example/samples/std_math_clock_random.chl](../../example/samples/std_math_clock_random.chl)。
+
+<a id="api-4"></a>
+
+### Duration::toNanos（5）
+
+**声明**
+
+```chali
+int64 toNanos();
+```
+
+**行为**
+
+返回精确的纳秒数。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`int64`。返回精确的纳秒数。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.toNanos();
+```
+
+**源码**：[source/std/clock.chl:38](../../source/std/clock.chl#L38)。
+
+**完整示例**：[example/samples/std_math_clock_random.chl](../../example/samples/std_math_clock_random.chl)。
+
+<a id="api-5"></a>
+
+### Duration::toMillisCeil（6）
+
+**声明**
+
+```chali
+int64 toMillisCeil();
+```
+
+**行为**
+
+向上取整到毫秒，适用于以整毫秒接收超时的接口。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`int64`。向上取整到毫秒，适用于以整毫秒接收超时的接口。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.toMillisCeil();
+```
+
+**源码**：[source/std/clock.chl:41](../../source/std/clock.chl#L41)。
+
+**完整示例**：[example/samples/std_math_clock_random.chl](../../example/samples/std_math_clock_random.chl)。
+
+<a id="api-6"></a>
+
+### Instant::now（7）
+
+**声明**
+
+```chali
+static Instant now();
+```
+
+**行为**
+
+取得当前单调时钟读数。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`Instant`。取得当前单调时钟读数。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+Instant::now();
+```
+
+**源码**：[source/std/clock.chl:53](../../source/std/clock.chl#L53)。
+
+**完整示例**：[example/samples/std_math_clock_random.chl](../../example/samples/std_math_clock_random.chl)。
+
+<a id="api-7"></a>
+
+### Instant::plus（8）
+
+**声明**
+
+```chali
+Instant plus(Duration duration);
+```
+
+**行为**
+
+从此时刻向后推移，超出范围时饱和到最大时刻。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `duration` | `Duration duration` | 向后推移的时长。 | 无 |
+
+**返回值**
+
+`Instant`。推移后的单调时刻。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.plus(duration);
+```
+
+**源码**：[source/std/clock.chl:63](../../source/std/clock.chl#L63)。
+
+**完整示例**：[example/samples/std_math_clock_random.chl](../../example/samples/std_math_clock_random.chl)。
+
+<a id="api-8"></a>
+
+### Instant::durationSince（9）
+
+**声明**
+
+```chali
+Duration durationSince(Instant earlier);
+```
+
+**行为**
+
+计算从 earlier 到此时刻的时长，反向区间返回零。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `earlier` | `Instant earlier` | 用作差值起点的单调时刻。 | 无 |
+
+**返回值**
+
+`Duration`。两个时刻之间的非负时长。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.durationSince(earlier);
+```
+
+**源码**：[source/std/clock.chl:77](../../source/std/clock.chl#L77)。
+
+**完整示例**：[example/samples/std_math_clock_random.chl](../../example/samples/std_math_clock_random.chl)。
+
+<a id="api-9"></a>
+
+### Instant::elapsed（10）
+
+**声明**
+
+```chali
+Duration elapsed();
+```
+
+**行为**
+
+计算从此时刻到现在的耗时。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`Duration`。计算从此时刻到现在的耗时。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.elapsed();
+```
+
+**源码**：[source/std/clock.chl:83](../../source/std/clock.chl#L83)。
+
+**完整示例**：[example/samples/std_math_clock_random.chl](../../example/samples/std_math_clock_random.chl)。
+
+<a id="api-10"></a>
+
+### Instant::remaining（11）
+
+**声明**
+
+```chali
+Duration remaining();
+```
+
+**行为**
+
+计算到此截止时刻的剩余时长，过期时返回零。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`Duration`。计算到此截止时刻的剩余时长，过期时返回零。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.remaining();
+```
+
+**源码**：[source/std/clock.chl:86](../../source/std/clock.chl#L86)。
+
+**完整示例**：[example/samples/std_math_clock_random.chl](../../example/samples/std_math_clock_random.chl)。
+
+## 补充完整示例
+
+[example/samples/std_monotonic_time.chl](../../example/samples/std_monotonic_time.chl)。
+
+```chali
+import std::clock;
+
+void main() {
+    Duration zero;
+    assert(zero.toNanos() == 0);
+    assert(Duration::fromNanos(1).toMillisCeil() == 1);
+    assert(Duration::fromNanos(1000001).toMillisCeil() == 2);
+    assert(Duration::fromMillis(2).toMillisCeil() == 2);
+    let maximum = Duration::fromNanos(9223372036854775807);
+    assert(maximum.toMillisCeil() == 9223372036855);
+
+    let start = Instant::now();
+    let end = start.plus(Duration::fromMillis(7));
+    assert(end.durationSince(start).toNanos() == 7000000);
+    assert(start.durationSince(end).toNanos() == 0);
+    assert(start.remaining().toNanos() == 0);
+    let distant = start.plus(maximum);
+    assert(distant.plus(Duration::fromMillis(1)).durationSince(distant).toNanos() == 0);
+    assert(start.elapsed().toNanos() >= 0);
+    println("monotonic time OK");
+}
+```

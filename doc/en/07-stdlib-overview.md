@@ -125,6 +125,8 @@ void main() {
 
 > std::thread executes tasks, std::concurrency provides channels, and std::event provides explicit events.
 
+`AtomicInt64.compareExchange(expected, desired)` checks and updates the current value in one atomic operation. It returns `true` after writing the new value. A mismatch returns `false` and leaves the current value in place.
+
 ### System and environment
 
 | Module | Contents |
@@ -133,8 +135,12 @@ void main() {
 | `std::net` | TCP and HTTP clients; typed socket and listener interfaces use host network services |
 | `std::sql` | MySQL / SQLite / PostgreSQL / SQL Server; SQL is executed by the engine, ChaLi sends and fetches |
 | `std::process` | processes and system calls; command pipes are held by a host handle pool |
-| `std::clock` | monotonic clock `steady_clock`; take differences only, never treat it as wall time |
+| `std::clock` | monotonic instants, nonnegative durations, and millisecond or nanosecond readings |
 | `std::memory` | `Span<T>` (pointer + length view); its iterator returns **element pointers**, so `for (T mut& p in span)` writes directly |
+
+Use `Instant::now().plus(Duration::fromMillis(250))` to create a deadline. Before each timed operation, call `deadline.remaining().toMillisCeil()` to share one timeout budget across several operations. The readings come from the monotonic clock.
+
+`FileStream.readInto(&buffer)` reads into an existing `uint8[]` and returns the number of bytes read. `writeFrom(&buffer, count)` writes the specified prefix. `copyTo` reuses one buffer throughout the copy and leaves both streams open.
 
 ### Iteration
 

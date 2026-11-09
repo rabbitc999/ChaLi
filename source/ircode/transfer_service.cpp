@@ -157,12 +157,14 @@ std::optional<bool> Machine::callTransferService(runtimeDetail::ConcurrentCallSt
             return true;
         }
     }
-    if (name == "std::concurrency::__channelCreate" || name == "std::concurrency::__channelClose" || name == "std::concurrency::__poll" || name == "std::concurrency::__fetchAdd")
+    if (name == "std::concurrency::__channelCreate" || name == "std::concurrency::__channelClose" || name == "std::concurrency::__poll" || name == "std::concurrency::__fetchAdd" || name == "std::concurrency::__compareExchange")
     {
         const bool create = name == "std::concurrency::__channelCreate";
         const bool close = name == "std::concurrency::__channelClose";
         const bool add = name == "std::concurrency::__fetchAdd";
-        if (!threadsEnabled_ || !threadRuntime_ || nativeCallbackDepth || pending.size() != (create || close ? 1u : 2u))
+        const bool compare = name == "std::concurrency::__compareExchange";
+        const std::size_t wanted = compare ? 3u : create || close ? 1u : 2u;
+        if (!threadsEnabled_ || !threadRuntime_ || nativeCallbackDepth || pending.size() != wanted)
         {
             fail("通道与共享原子操作的运行环境或参数无效");
             pending.clear();
@@ -170,21 +172,28 @@ std::optional<bool> Machine::callTransferService(runtimeDetail::ConcurrentCallSt
         }
         const auto handle = pending[0].value.integer;
         const auto millis = create || close ? 0 : pending[1].value.integer;
+        const auto desired = compare ? pending[2].value.integer : 0;
         pending.clear();
-        if (add)
+        if (add || compare)
         {
             std::lock_guard<std::mutex> lock(sharedRuntime_->mutex);
             const auto found = sharedRuntime_->values.find(handle);
             if (found == sharedRuntime_->values.end() || found->second->type != "int64")
             {
-                fail("fetchAdd 仅支持有效的 Shared<int64> 槽");
+                fail(compare ? "compareExchange 仅支持有效的 Shared<int64> 槽" : "fetchAdd 仅支持有效的 Shared<int64> 槽");
                 return true;
             }
             const auto old = found->second->value.integer;
+            if (compare && old != millis)
+            {
+                if (!returnDest.empty()) assign(returnDest, Slot::fromInt(0));
+                return true;
+            }
             auto replacement = Memory::makeShared<TransferPacket>(*found->second);
-            replacement->value.integer = static_cast<std::int64_t>(static_cast<std::uint64_t>(old) + static_cast<std::uint64_t>(millis));
+            replacement->value.integer = compare ? desired :
+                static_cast<std::int64_t>(static_cast<std::uint64_t>(old) + static_cast<std::uint64_t>(millis));
             found->second = std::move(replacement);
-            if (!returnDest.empty()) assign(returnDest, Slot::fromInt(old));
+            if (!returnDest.empty()) assign(returnDest, Slot::fromInt(compare ? 1 : old));
             return true;
         }
         std::unique_lock<std::mutex> lock(threadRuntime_->mutex);

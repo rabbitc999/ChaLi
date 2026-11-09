@@ -1,0 +1,21 @@
+import std::clock;
+
+void main() {
+    Duration zero;
+    assert(zero.toNanos() == 0);
+    assert(Duration::fromNanos(1).toMillisCeil() == 1);
+    assert(Duration::fromNanos(1000001).toMillisCeil() == 2);
+    assert(Duration::fromMillis(2).toMillisCeil() == 2);
+    let maximum = Duration::fromNanos(9223372036854775807);
+    assert(maximum.toMillisCeil() == 9223372036855);
+
+    let start = Instant::now();
+    let end = start.plus(Duration::fromMillis(7));
+    assert(end.durationSince(start).toNanos() == 7000000);
+    assert(start.durationSince(end).toNanos() == 0);
+    assert(start.remaining().toNanos() == 0);
+    let distant = start.plus(maximum);
+    assert(distant.plus(Duration::fromMillis(1)).durationSince(distant).toNanos() == 0);
+    assert(start.elapsed().toNanos() >= 0);
+    println("monotonic time OK");
+}

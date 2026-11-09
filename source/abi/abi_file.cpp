@@ -5,6 +5,7 @@
 #include "chali_file.h"
 #include <algorithm>
 #include <memory>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -57,10 +58,30 @@ public:
         }
         return true;
     }
+    /** @brief 向调用者提供的宿主缓冲区读取一块字节。
+     * @param bytes 缓冲区。
+     * @param capacity 缓冲区字节容量。
+     * @param count 实际读取的字节数。
+     * @return 成功为真，EOF 可以返回较少字节。
+     */
+    bool readInto(char *bytes, std::size_t capacity, std::size_t &count)
+    {
+        if (!capacity) return file_.readable;
+        return chali_file_read(&file_, bytes, capacity, &count);
+    }
+    /** @brief 写入原始字节并刷新。
+     * @param bytes 字节缓冲区。
+     * @param count 字节数。
+     * @return 成功为真。
+     */
+    bool writeFrom(const char *bytes, std::size_t count)
+    {
+        return !unreadableEof_ && chali_file_write(&file_, bytes, count);
+    }
     /** @brief 写入并刷新。 @param text 输入。 @param error 错误。 @return 成功为真。 */
     bool write(const Memory::String &text, Memory::String &error)
     {
-        if (!unreadableEof_ && chali_file_write(&file_, text.data(), text.size())) return true;
+        if (writeFrom(text.data(), text.size())) return true;
         error = "写入文件失败";
         return false;
     }
@@ -134,6 +155,8 @@ enum class Operation
     TryRead,
     TryReadLine,
     TryReadBytes,
+    TryReadInto,
+    TryWriteFrom,
     TryWrite,
     TryWriteBytes,
     TryFlush,
@@ -266,7 +289,7 @@ try
         }
         return;
     }
-    constexpr int64_t failed = op == Operation::TryWrite || op == Operation::TryWriteBytes || op == Operation::TryFlush || op == Operation::TrySeek ? -1 : 0;
+    constexpr int64_t failed = op == Operation::TryWrite || op == Operation::TryWriteBytes || op == Operation::TryWriteFrom || op == Operation::TryFlush || op == Operation::TrySeek ? -1 : 0;
     if (!record)
     {
         chali_abi_return_integer(frame, failed);
@@ -322,6 +345,50 @@ try
         const auto list = chali_abi_list_from_bytes(frame, reinterpret_cast<const unsigned char *>(bytes.data()), bytes.size());
         if (list) record->succeeded = true;
         chali_abi_return_integer(frame, list);
+    }
+    if constexpr (op == Operation::TryReadInto || op == Operation::TryWriteFrom)
+    {
+        int64_t address = 0, count = 0;
+        if (!chali_abi_argument_integer(frame, 1, &address) || !chali_abi_argument_integer(frame, 2, &count)) return;
+        if (address < 0 || count < 0 || (count && (!address || count > std::numeric_limits<int64_t>::max() - address)))
+        {
+            record->error = "无效的字节缓冲区范围";
+            chali_abi_return_integer(frame, failed);
+            return;
+        }
+        char block[65536];
+        int64_t total = 0;
+        do
+        {
+            const auto chunk = static_cast<std::size_t>(std::min<int64_t>(count - total, sizeof(block)));
+            if constexpr (op == Operation::TryReadInto)
+            {
+                std::size_t actual = 0;
+                const bool okay = record->file->readInto(block, chunk, actual);
+                if (actual && !chali_abi_write(frame, address + total, block, actual)) return;
+                total += static_cast<int64_t>(actual);
+                if (!okay)
+                {
+                    record->error = "读取文件失败";
+                    chali_abi_return_integer(frame, failed);
+                    return;
+                }
+                if (actual < chunk) break;
+            }
+            else
+            {
+                if (chunk && !chali_abi_read(frame, address + total, block, chunk)) return;
+                if (!record->file->writeFrom(block, chunk))
+                {
+                    record->error = "写入文件失败";
+                    chali_abi_return_integer(frame, failed);
+                    return;
+                }
+                total += static_cast<int64_t>(chunk);
+            }
+        } while (total < count);
+        record->succeeded = true;
+        chali_abi_return_integer(frame, total);
     }
     if constexpr (op == Operation::TryWrite || op == Operation::TryWriteBytes)
     {
@@ -401,10 +468,12 @@ extern "C" const ChaliAbiRecord *CHALI_ABI_CALL abi_file_records(size_t *count)
         { "std::io::__fileTryFlush", fileEntry<Operation::TryFlush, true>, 1 },
         { "std::io::__fileTryRead", fileEntry<Operation::TryRead, true>, 1 },
         { "std::io::__fileTryReadBytes", fileEntry<Operation::TryReadBytes, true>, 2 },
+        { "std::io::__fileTryReadInto", fileEntry<Operation::TryReadInto, true>, 3 },
         { "std::io::__fileTryReadLine", fileEntry<Operation::TryReadLine, true>, 1 },
         { "std::io::__fileTrySeek", fileEntry<Operation::TrySeek, true>, 3 },
         { "std::io::__fileTryWrite", fileEntry<Operation::TryWrite, true>, 2 },
         { "std::io::__fileTryWriteBytes", fileEntry<Operation::TryWriteBytes, true>, 2 },
+        { "std::io::__fileTryWriteFrom", fileEntry<Operation::TryWriteFrom, true>, 3 },
     };
     if (count) *count = sizeof(records) / sizeof(records[0]);
     return records;
