@@ -263,6 +263,7 @@ struct Session
     Memory::Map<Memory::String, Memory::Set<Memory::String>> implemented;
     Memory::Map<Memory::String, Expansion> made;
     Memory::Map<Memory::String, Memory::String> instanceDisplayNames;
+    Memory::Set<Memory::String> ambiguousTemplateNames;
     Memory::Map<Memory::String, Memory::Vector<Memory::String>> intrinsicArguments;
     Memory::Vector<Memory::String> pending;
     std::size_t emitted = 0;

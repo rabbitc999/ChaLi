@@ -1,5 +1,6 @@
 """验证泛型实参、默认类型和约束保留模块来源及核心别名身份。"""
 import argparse
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -63,6 +64,19 @@ void main(){Record mut& object=new Record;Any holder;holder.set(&object);View co
 import beta;
 struct Box<T>{T value;}
 void main(){Box<String> value;}''',['歧义']),
+        ('qualified_templates','''import alpha;
+import beta;
+void main(){alpha::Clash<int64> source;beta::Clash<int64> target=source;}''',
+         ['alpha::Clash<int64> -> beta::Clash<int64>']),
+        ('qualified_arguments','''import alpha;
+import beta;
+struct Wrap<T>{T value;}
+void main(){Wrap<alpha::String> source;Wrap<beta::String> target=source;}''',
+         ['Wrap<alpha::String> -> Wrap<beta::String>']),
+        ('qualified_core_shadow','''struct String{int64 tag;}
+struct Wrap<T>{T value;}
+void main(){Wrap<String> source;Wrap<std::core::String> target=source;}''',
+         ['Wrap<program::String> -> Wrap<std::core::String>']),
     ]
     if args.case:
         cases=[case for case in cases if case[0] in args.case]
@@ -73,11 +87,13 @@ void main(){Box<String> value;}''',['歧义']),
         (work/'alpha.chl').write_text('''module alpha;
 struct String{int64 tag;}
 struct Box<T=String>{T value;}
+struct Clash<T>{T value;}
 T identity<T>(T value){return value;}
 String make(){String value;value.tag=11;return identity<String>(value);}
 ''',encoding='utf-8')
         (work/'beta.chl').write_text('''module beta;
 struct String{int64 tag;}
+struct Clash<T>{T value;}
 T identity<T>(T value){return value;}
 String make(){String value;value.tag=22;return identity<String>(value);}
 ''',encoding='utf-8')
@@ -90,6 +106,11 @@ String make(){String value;value.tag=22;return identity<String>(value);}
                 valid=result.returncode!=0 and all(text in result.stderr for text in diagnostics) if diagnostics else (result.returncode,result.stdout,result.stderr)==(0,'','')
                 if not valid:failures.append((name,uncached,result.returncode,result.stdout,result.stderr))
                 print(name,'source' if uncached else 'embedded','通过' if valid else ('失败 '+repr(failures[-1])),flush=True)
+            if name.startswith('qualified_'):
+                result=subprocess.run([str(args.chali.resolve()),'--check','--diagnostics=json',str(path)],cwd=ROOT,env=dict(os.environ,CHALI_LANG='zh'),capture_output=True,text=True,encoding='utf-8',timeout=240)
+                assert result.returncode==1, (name,result)
+                messages=[item['message'] for item in json.loads(result.stdout)['diagnostics']]
+                assert any(all(text in message for text in diagnostics) and '__chl_' not in message for message in messages), (name,messages)
     assert not failures,failures
     print(f'泛型来源作用域通过：{len(cases)} 项，关键项对照源码与内嵌路径')
 

@@ -1141,9 +1141,16 @@ Memory::String mangle(const Memory::String &name, const Memory::Vector<Memory::S
     {
         Memory::String display = name;
         const auto definition = session.generics.find(name);
-        if (definition != session.generics.end() && !definition->second.sourceName.empty() &&
-            definition->second.sourceName != name)
-            display = definition->second.module + "::" + definition->second.sourceName;
+        if (definition != session.generics.end())
+        {
+            const auto &generic = definition->second;
+            const auto &sourceName = generic.sourceName.empty() ? generic.name : generic.sourceName;
+            const auto nominal = nominalTypeNames.find(sourceName);
+            display = sourceName;
+            if (session.ambiguousTemplateNames.count(sourceName) ||
+                (nominal != nominalTypeNames.end() && nominal->second.size() > 1u))
+                display = (generic.module.empty() ? Memory::String("__root") : generic.module) + "::" + sourceName;
+        }
         display += '<';
         const auto argumentsBegin = display.size();
         for (std::size_t index = 0; index < args.size(); ++index)
@@ -2368,9 +2375,12 @@ interface Closeable { void close(); };
                  noExpansions, noPending, error)) return false;
     normalizeGenericSyntax(result.text);
     if (!collect(result.text, result.lineMap, generics, error)) return false;
+    Memory::Set<Memory::String> templateNames;
     for (auto &entry : generics)
     {
         auto &generic = entry.second;
+        const auto &sourceName = generic.sourceName.empty() ? generic.name : generic.sourceName;
+        if (!templateNames.insert(sourceName).second) session.ambiguousTemplateNames.insert(sourceName);
         const auto key = generic.module.empty() ? generic.sourceName : generic.module + "::" + generic.sourceName;
         const auto switched = operatorSwitches.find(key);
         if (switched != operatorSwitches.end()) generic.operatorSwitches = switched->second;
