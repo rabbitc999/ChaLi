@@ -197,7 +197,7 @@ JSON and TOML parsing OK
 
 ## 宏定义
 
-<a id="symbol-307"></a>
+<a id="symbol-309"></a>
 
 ### `Json`
 
@@ -213,8 +213,8 @@ $macro Json<T>(encode:ident, decode:ident) -> member
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-308"></a>`interface Json` | 结构化 JSON 编码协议；配套的成员宏可生成静态解码入口。 |
-| 模块 | <a id="symbol-309"></a>`struct JsonValue : Iterator<JsonValue>` | 独立拥有 JSON 子树的值，关闭不影响副本或已提取子值。 |
+| 模块 | <a id="symbol-310"></a>`interface Json` | 结构化 JSON 编码协议；配套的成员宏可生成静态解码入口。 |
+| 模块 | <a id="symbol-311"></a>`struct JsonValue : Iterator<JsonValue>` | 独立拥有 JSON 子树的值，关闭不影响副本或已提取子值。 |
 
 ## 函数索引
 

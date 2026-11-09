@@ -120,7 +120,7 @@ void main() {
 | --- | --- |
 | `std::thread` | isolated threads (`Thread`) |
 | `std::message` | messages across threads |
-| `std::concurrency` | explicit shared slots `Shared<T>`; ordinary globals stay isolated between threads |
+| `std::concurrency` | shared slots `Shared<T>`, cross-thread strong references `Arc<T>` and weak references `ArcWeak<T>`. Ordinary globals stay isolated between threads |
 | `std::event` | explicit events and timers; receive consumes notifications and coalesces missed periods |
 
 > std::thread executes tasks, std::concurrency provides channels, and std::event provides explicit events.

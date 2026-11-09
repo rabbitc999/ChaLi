@@ -115,6 +115,8 @@ def behavior(entry):
         return '在 SQLite 中绑定并执行一条 SqlStatement，严格检查参数数量并返回独立结果；其他后端报告不支持参数化执行。'
     if module == 'std::cas':
         return comment_text(entry['comment'])
+    if module == 'std::concurrency' and owner in ('Arc', 'ArcWeak'):
+        return comment_text(entry['comment'])
     if module in ('std::thread','std::concurrency','std::event','std::message'):
         if name in CONCURRENCY_BEHAVIOR: return CONCURRENCY_BEHAVIOR[name]
         if module=='std::event' and name=='stop': return '删除定时源及其未接收通知，重复停止安全。'

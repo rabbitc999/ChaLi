@@ -14,7 +14,7 @@ import std::concurrency;
 
 ## 公共约定与错误边界
 
-Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。
+Channel<T> 是线程组内的有界多生产者多消费者通道，容量 1..1048576；队列按值复制，关闭后排空再返回 CLOSED。句柄可复制，显式 close 负责关闭，运行结束统一释放；最多 1024 个未排空通道。Receive<T> 只有 READY 时 value 有效。状态为 READY=0、TIMEOUT=1、CLOSED=2、CANCELLED=3、FULL=4、FAILED=5、INVALID=6。millis=-1 无限、0 非阻塞、正数限时；超时不取消任务。Shared<T> 单次 get/set/swap 原子；AtomicInt64.fetchAdd 原子返回旧值，按 int64 位宽回绕。多线程默认启用，--no-threads 可关闭；普通全局变量继续隔离。 Arc<T> 和 ArcWeak<T> 可跨线程复制。强引用共同拥有不可变快照，get 在当前线程恢复独立副本；最后一份强引用释放载荷，弱引用失效后升级返回空 Arc。Shared<T> 直接保存线程组共享槽的非拥有整数标识；复制引用不分配宿主记录，也不复制或销毁槽内值。
 
 ## 参考代码
 
@@ -98,34 +98,45 @@ void main() {
 | 模块 | <a id="symbol-51"></a>`struct Receive<T>` | 操作状态与载荷；仅在 READY 时读取 value。 |
 | Receive | <a id="symbol-52"></a>`int64 status` | 统一操作状态码；载荷仅在 READY 时有效。 |
 | Receive | <a id="symbol-53"></a>`T value` | 保存的单个值。 |
-| 模块 | <a id="symbol-54"></a>`struct Shared<T>` | 每次 get/set/swap 原子；组合调用不构成原子事务。 |
-| 模块 | <a id="symbol-55"></a>`struct AtomicInt64` | 共享 int64 原子槽，fetchAdd 返回旧值。 |
-| AtomicInt64 | <a id="symbol-56"></a>`Shared<int64> slot` | 显式共享的 int64 原子槽。 |
-| 模块 | <a id="symbol-57"></a>`struct Channel<T>` | 跨线程有界传值通道；可复制句柄，显式关闭。 |
-| Channel | <a id="symbol-58"></a>`int64 handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
+| 模块 | <a id="symbol-54"></a>`struct Arc<T>` | 可跨线程复制的强引用。各副本共同拥有一个不可变的值快照。 |
+| 模块 | <a id="symbol-55"></a>`struct ArcWeak<T>` | 可跨线程复制的弱引用，仅观察 Arc 载荷的存活状态。 |
+| 模块 | <a id="symbol-56"></a>`struct Shared<T>` | 每次 get/set/swap 原子；组合调用不构成原子事务。 |
+| 模块 | <a id="symbol-57"></a>`struct AtomicInt64` | 共享 int64 原子槽，fetchAdd 返回旧值。 |
+| AtomicInt64 | <a id="symbol-58"></a>`Shared<int64> slot` | 显式共享的 int64 原子槽。 |
+| 模块 | <a id="symbol-59"></a>`struct Channel<T>` | 跨线程有界传值通道；可复制句柄，显式关闭。 |
+| Channel | <a id="symbol-60"></a>`int64 handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
 
 ## 函数索引
 
 | 名称 | 声明 |
 | --- | --- |
 | [Receive::isReady](#api-0) | `bool isReady()` |
-| [Shared::create](#api-1) | `static Shared<T> create(T value)` |
-| [Shared::get](#api-2) | `T get()` |
-| [Shared::set](#api-3) | `void set(T value)` |
-| [Shared::swap](#api-4) | `T swap(T value)` |
-| [Shared::id](#api-5) | `int64 id()` |
-| [AtomicInt64::create](#api-6) | `static AtomicInt64 create(int64 value)` |
-| [AtomicInt64::get](#api-7) | `int64 get()` |
-| [AtomicInt64::set](#api-8) | `void set(int64 value)` |
-| [AtomicInt64::fetchAdd](#api-9) | `int64 fetchAdd(int64 delta)` |
-| [Channel::create](#api-10) | `static Channel<T> create(int64 capacity)` |
-| [Channel::sendFor](#api-11) | `int64 sendFor(T value, int64 millis)` |
-| [Channel::send](#api-12) | `int64 send(T value)` |
-| [Channel::trySend](#api-13) | `int64 trySend(T value)` |
-| [Channel::receiveFor](#api-14) | `Receive<T> receiveFor(int64 millis)` |
-| [Channel::receive](#api-15) | `Receive<T> receive()` |
-| [Channel::tryReceive](#api-16) | `Receive<T> tryReceive()` |
-| [Channel::close](#api-17) | `void close()` |
+| [Arc::isEmpty](#api-1) | `bool isEmpty()` |
+| [Arc::clone](#api-2) | `Arc<T> clone()` |
+| [Arc::get](#api-3) | `T get()` |
+| [Arc::downgrade](#api-4) | `ArcWeak<T> downgrade()` |
+| [Arc::close](#api-5) | `void close()` |
+| [ArcWeak::isExpired](#api-6) | `bool isExpired()` |
+| [ArcWeak::upgrade](#api-7) | `Arc<T> upgrade()` |
+| [ArcWeak::close](#api-8) | `void close()` |
+| [arc](#api-9) | `Arc<T> arc<T>(T value)` |
+| [Shared::create](#api-10) | `static Shared<T> create(T value)` |
+| [Shared::get](#api-11) | `T get()` |
+| [Shared::set](#api-12) | `void set(T value)` |
+| [Shared::swap](#api-13) | `T swap(T value)` |
+| [Shared::id](#api-14) | `int64 id()` |
+| [AtomicInt64::create](#api-15) | `static AtomicInt64 create(int64 value)` |
+| [AtomicInt64::get](#api-16) | `int64 get()` |
+| [AtomicInt64::set](#api-17) | `void set(int64 value)` |
+| [AtomicInt64::fetchAdd](#api-18) | `int64 fetchAdd(int64 delta)` |
+| [Channel::create](#api-19) | `static Channel<T> create(int64 capacity)` |
+| [Channel::sendFor](#api-20) | `int64 sendFor(T value, int64 millis)` |
+| [Channel::send](#api-21) | `int64 send(T value)` |
+| [Channel::trySend](#api-22) | `int64 trySend(T value)` |
+| [Channel::receiveFor](#api-23) | `Receive<T> receiveFor(int64 millis)` |
+| [Channel::receive](#api-24) | `Receive<T> receive()` |
+| [Channel::tryReceive](#api-25) | `Receive<T> tryReceive()` |
+| [Channel::close](#api-26) | `void close()` |
 
 <a id="api-0"></a>
 
@@ -165,7 +176,333 @@ obj.isReady();
 
 <a id="api-1"></a>
 
-### Shared::create（2）
+### Arc::isEmpty（2）
+
+**声明**
+
+```chali
+bool isEmpty();
+```
+
+**行为**
+
+查询句柄是否为空。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`bool`。查询句柄是否为空。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.isEmpty();
+```
+
+**源码**：[source/std/concurrency.chl:43](../../source/std/concurrency.chl#L43)。
+
+**完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
+
+<a id="api-2"></a>
+
+### Arc::clone（3）
+
+**声明**
+
+```chali
+Arc<T> clone();
+```
+
+**行为**
+
+增加一份强引用；普通赋值也采用相同的所有权语义。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`Arc<T>`。增加一份强引用；普通赋值也采用相同的所有权语义。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.clone();
+```
+
+**源码**：[source/std/concurrency.chl:46](../../source/std/concurrency.chl#L46)。
+
+**完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
+
+<a id="api-3"></a>
+
+### Arc::get（4）
+
+**声明**
+
+```chali
+T get();
+```
+
+**行为**
+
+在当前线程恢复独立的值副本。空句柄触发运行时错误。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`T`。在当前线程恢复独立的值副本。空句柄触发运行时错误。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.get();
+```
+
+**源码**：[source/std/concurrency.chl:49](../../source/std/concurrency.chl#L49)。
+
+**完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
+
+<a id="api-4"></a>
+
+### Arc::downgrade（5）
+
+**声明**
+
+```chali
+ArcWeak<T> downgrade();
+```
+
+**行为**
+
+创建可跨线程传递的弱引用。空强引用产生空弱引用。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`ArcWeak<T>`。创建可跨线程传递的弱引用。空强引用产生空弱引用。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.downgrade();
+```
+
+**源码**：[source/std/concurrency.chl:52](../../source/std/concurrency.chl#L52)。
+
+**完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
+
+<a id="api-5"></a>
+
+### Arc::close（6）
+
+**声明**
+
+```chali
+void close();
+```
+
+**行为**
+
+释放当前强引用。最后一份强引用释放载荷。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+无返回值。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.close();
+```
+
+**源码**：[source/std/concurrency.chl:59](../../source/std/concurrency.chl#L59)。
+
+**完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
+
+<a id="api-6"></a>
+
+### ArcWeak::isExpired（7）
+
+**声明**
+
+```chali
+bool isExpired();
+```
+
+**行为**
+
+检查当前时刻是否已经失效。空句柄也视为失效。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`bool`。检查当前时刻是否已经失效。空句柄也视为失效。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.isExpired();
+```
+
+**源码**：[source/std/concurrency.chl:67](../../source/std/concurrency.chl#L67)。
+
+**完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
+
+<a id="api-7"></a>
+
+### ArcWeak::upgrade（8）
+
+**声明**
+
+```chali
+Arc<T> upgrade();
+```
+
+**行为**
+
+原子地尝试取得强引用，失效时返回空 Arc。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+`Arc<T>`。原子地尝试取得强引用，失效时返回空 Arc。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.upgrade();
+```
+
+**源码**：[source/std/concurrency.chl:70](../../source/std/concurrency.chl#L70)。
+
+**完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
+
+<a id="api-8"></a>
+
+### ArcWeak::close（9）
+
+**声明**
+
+```chali
+void close();
+```
+
+**行为**
+
+释放当前弱引用。
+
+**参数**
+
+无显式参数。实例方法使用当前接收者。
+
+**返回值**
+
+无返回值。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+obj.close();
+```
+
+**源码**：[source/std/concurrency.chl:77](../../source/std/concurrency.chl#L77)。
+
+**完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
+
+<a id="api-9"></a>
+
+### arc（10）
+
+**声明**
+
+```chali
+Arc<T> arc<T>(T value);
+```
+
+**行为**
+
+创建可跨线程共享的值快照，元素须符合线程传值规则。
+
+**参数**
+
+| 参数 | 类型／声明 | 含义 | 默认值 |
+| --- | --- | --- | --- |
+| `value` | `T value` | 用于生成共享快照的值。 | 无 |
+
+**返回值**
+
+`Arc<T>`。持有新快照的强引用。
+
+**错误与边界**
+
+遵循本页“公共约定与错误边界”。
+
+**调用形式**
+
+```chali
+arc(value);
+```
+
+**源码**：[source/std/concurrency.chl:84](../../source/std/concurrency.chl#L84)。
+
+**完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
+
+<a id="api-10"></a>
+
+### Shared::create（11）
 
 **声明**
 
@@ -197,13 +534,13 @@ static Shared<T> create(T value);
 Shared<T>::create(value);
 ```
 
-**源码**：[source/std/concurrency.chl:29](../../source/std/concurrency.chl#L29)。
+**源码**：[source/std/concurrency.chl:94](../../source/std/concurrency.chl#L94)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-2"></a>
+<a id="api-11"></a>
 
-### Shared::get（3）
+### Shared::get（12）
 
 **声明**
 
@@ -233,13 +570,13 @@ T get();
 obj.get();
 ```
 
-**源码**：[source/std/concurrency.chl:30](../../source/std/concurrency.chl#L30)。
+**源码**：[source/std/concurrency.chl:95](../../source/std/concurrency.chl#L95)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-3"></a>
+<a id="api-12"></a>
 
-### Shared::set（4）
+### Shared::set（13）
 
 **声明**
 
@@ -271,13 +608,13 @@ void set(T value);
 obj.set(value);
 ```
 
-**源码**：[source/std/concurrency.chl:31](../../source/std/concurrency.chl#L31)。
+**源码**：[source/std/concurrency.chl:96](../../source/std/concurrency.chl#L96)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-4"></a>
+<a id="api-13"></a>
 
-### Shared::swap（5）
+### Shared::swap（14）
 
 **声明**
 
@@ -309,13 +646,13 @@ T swap(T value);
 obj.swap(value);
 ```
 
-**源码**：[source/std/concurrency.chl:32](../../source/std/concurrency.chl#L32)。
+**源码**：[source/std/concurrency.chl:97](../../source/std/concurrency.chl#L97)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-5"></a>
+<a id="api-14"></a>
 
-### Shared::id（6）
+### Shared::id（15）
 
 **声明**
 
@@ -345,13 +682,13 @@ int64 id();
 obj.id();
 ```
 
-**源码**：[source/std/concurrency.chl:34](../../source/std/concurrency.chl#L34)。
+**源码**：[source/std/concurrency.chl:99](../../source/std/concurrency.chl#L99)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-6"></a>
+<a id="api-15"></a>
 
-### AtomicInt64::create（7）
+### AtomicInt64::create（16）
 
 **声明**
 
@@ -383,13 +720,13 @@ static AtomicInt64 create(int64 value);
 AtomicInt64::create(value);
 ```
 
-**源码**：[source/std/concurrency.chl:40](../../source/std/concurrency.chl#L40)。
+**源码**：[source/std/concurrency.chl:105](../../source/std/concurrency.chl#L105)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-7"></a>
+<a id="api-16"></a>
 
-### AtomicInt64::get（8）
+### AtomicInt64::get（17）
 
 **声明**
 
@@ -419,13 +756,13 @@ int64 get();
 obj.get();
 ```
 
-**源码**：[source/std/concurrency.chl:41](../../source/std/concurrency.chl#L41)。
+**源码**：[source/std/concurrency.chl:106](../../source/std/concurrency.chl#L106)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-8"></a>
+<a id="api-17"></a>
 
-### AtomicInt64::set（9）
+### AtomicInt64::set（18）
 
 **声明**
 
@@ -457,13 +794,13 @@ void set(int64 value);
 obj.set(value);
 ```
 
-**源码**：[source/std/concurrency.chl:42](../../source/std/concurrency.chl#L42)。
+**源码**：[source/std/concurrency.chl:107](../../source/std/concurrency.chl#L107)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-9"></a>
+<a id="api-18"></a>
 
-### AtomicInt64::fetchAdd（10）
+### AtomicInt64::fetchAdd（19）
 
 **声明**
 
@@ -495,13 +832,13 @@ int64 fetchAdd(int64 delta);
 obj.fetchAdd(delta);
 ```
 
-**源码**：[source/std/concurrency.chl:43](../../source/std/concurrency.chl#L43)。
+**源码**：[source/std/concurrency.chl:108](../../source/std/concurrency.chl#L108)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-10"></a>
+<a id="api-19"></a>
 
-### Channel::create（11）
+### Channel::create（20）
 
 **声明**
 
@@ -533,13 +870,13 @@ static Channel<T> create(int64 capacity);
 Channel<T>::create(capacity);
 ```
 
-**源码**：[source/std/concurrency.chl:49](../../source/std/concurrency.chl#L49)。
+**源码**：[source/std/concurrency.chl:114](../../source/std/concurrency.chl#L114)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-11"></a>
+<a id="api-20"></a>
 
-### Channel::sendFor（12）
+### Channel::sendFor（21）
 
 **声明**
 
@@ -572,13 +909,13 @@ int64 sendFor(T value, int64 millis);
 obj.sendFor(value, millis);
 ```
 
-**源码**：[source/std/concurrency.chl:50](../../source/std/concurrency.chl#L50)。
+**源码**：[source/std/concurrency.chl:115](../../source/std/concurrency.chl#L115)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-12"></a>
+<a id="api-21"></a>
 
-### Channel::send（13）
+### Channel::send（22）
 
 **声明**
 
@@ -610,13 +947,13 @@ int64 send(T value);
 obj.send(value);
 ```
 
-**源码**：[source/std/concurrency.chl:51](../../source/std/concurrency.chl#L51)。
+**源码**：[source/std/concurrency.chl:116](../../source/std/concurrency.chl#L116)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-13"></a>
+<a id="api-22"></a>
 
-### Channel::trySend（14）
+### Channel::trySend（23）
 
 **声明**
 
@@ -648,13 +985,13 @@ int64 trySend(T value);
 obj.trySend(value);
 ```
 
-**源码**：[source/std/concurrency.chl:52](../../source/std/concurrency.chl#L52)。
+**源码**：[source/std/concurrency.chl:117](../../source/std/concurrency.chl#L117)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-14"></a>
+<a id="api-23"></a>
 
-### Channel::receiveFor（15）
+### Channel::receiveFor（24）
 
 **声明**
 
@@ -686,13 +1023,13 @@ Receive<T> receiveFor(int64 millis);
 obj.receiveFor(millis);
 ```
 
-**源码**：[source/std/concurrency.chl:53](../../source/std/concurrency.chl#L53)。
+**源码**：[source/std/concurrency.chl:118](../../source/std/concurrency.chl#L118)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-15"></a>
+<a id="api-24"></a>
 
-### Channel::receive（16）
+### Channel::receive（25）
 
 **声明**
 
@@ -722,13 +1059,13 @@ Receive<T> receive();
 obj.receive();
 ```
 
-**源码**：[source/std/concurrency.chl:60](../../source/std/concurrency.chl#L60)。
+**源码**：[source/std/concurrency.chl:125](../../source/std/concurrency.chl#L125)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-16"></a>
+<a id="api-25"></a>
 
-### Channel::tryReceive（17）
+### Channel::tryReceive（26）
 
 **声明**
 
@@ -758,13 +1095,13 @@ Receive<T> tryReceive();
 obj.tryReceive();
 ```
 
-**源码**：[source/std/concurrency.chl:61](../../source/std/concurrency.chl#L61)。
+**源码**：[source/std/concurrency.chl:126](../../source/std/concurrency.chl#L126)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
-<a id="api-17"></a>
+<a id="api-26"></a>
 
-### Channel::close（18）
+### Channel::close（27）
 
 **声明**
 
@@ -794,7 +1131,7 @@ void close();
 obj.close();
 ```
 
-**源码**：[source/std/concurrency.chl:62](../../source/std/concurrency.chl#L62)。
+**源码**：[source/std/concurrency.chl:127](../../source/std/concurrency.chl#L127)。
 
 **完整示例**：[example/samples/typed_messages_shared.chl](../../example/samples/typed_messages_shared.chl)。
 
@@ -818,5 +1155,92 @@ void main() {
     let completed = waitResult(task);
     assert(completed.isReady());
     println("channel {}", next.value);
+}
+```
+
+## 补充完整示例
+
+[example/samples/std_arc.chl](../../example/samples/std_arc.chl)。
+
+```chali
+import std::concurrency;
+import std::message;
+import std::thread;
+
+struct Parcel {
+    String title;
+    List<int64> values;
+};
+
+struct Task {
+    Arc<Parcel> owner;
+    ArcWeak<Parcel> observer;
+    Channel<int64> gate;
+};
+
+void readParcel(Task task) {
+    assert(task.gate.receive().isReady());
+    let acquired = task.observer.upgrade();
+    assert(!acquired.isEmpty());
+    Parcel snapshot = acquired.get();
+    assert(snapshot.title == "original" && snapshot.values.len() == 1);
+    snapshot.values.push(99);
+    assert(task.owner.get().values.len() == 1);
+}
+
+void leaveInboxUnread(Channel<int64> gate) {
+    assert(gate.receive().isReady());
+}
+
+void main() {
+    Parcel original;
+    original.title = "original";
+    original.values = [7];
+    let owner = arc(original);
+    let observer = owner.downgrade();
+    original.values.push(8);
+
+    Task task;
+    task.owner = owner.clone();
+    task.observer = observer;
+    task.gate = Channel<int64>::create(1);
+    Thread reader = createWith(readParcel, task);
+    task.owner.close();
+    owner.close();
+    assert(!observer.isExpired());
+    assert(task.gate.send(1) == READY);
+    wait(reader);
+    assert(observer.isExpired() && observer.upgrade().isEmpty());
+    task.gate.close();
+
+    let sharedNumber = arc(42);
+    let queuedObserver = sharedNumber.downgrade();
+    let values = Channel<Arc<int64>>::create(1);
+    assert(values.send(sharedNumber) == READY);
+    sharedNumber.close();
+    assert(!queuedObserver.isExpired());
+    {
+        let delivery = values.receive();
+        assert(delivery.isReady() && delivery.value.get() == 42);
+    }
+    assert(queuedObserver.isExpired());
+    values.close();
+
+    let gate = Channel<int64>::create(1);
+    Thread recipient = createWith(leaveInboxUnread, gate);
+    let unread = arc(99);
+    let unreadObserver = unread.downgrade();
+    sendThread<Arc<int64>>(recipient, unread);
+    unread.close();
+    assert(!unreadObserver.isExpired());
+    assert(gate.send(1) == READY);
+    wait(recipient);
+    assert(unreadObserver.isExpired());
+    gate.close();
+
+    Arc<int64> empty;
+    let emptyCopy = empty.clone();
+    assert(emptyCopy.isEmpty() && empty.downgrade().isExpired());
+    println("Arc and ArcWeak OK");
 }
 ```

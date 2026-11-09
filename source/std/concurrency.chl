@@ -22,6 +22,71 @@ int64 __channelSend<T>(int64 handle, int64 millis, T value);
 T __channelTake<T>();
 int64 __fetchAdd(int64 handle, int64 delta);
 
+/** 跨线程引用计数句柄，复制与清理由对象表维护。 */
+opcode __ArcStorage {
+    new = __std_arc_empty;
+    copy = __std_arc_copy;
+    drop = __std_object_free;
+};
+
+__ArcStorage __arcCreate<T>(T value);
+T __arcGet<T>(int64 handle);
+__ArcStorage __arcDowngrade(int64 handle);
+__ArcStorage __arcUpgrade(int64 handle);
+bool __arcExpired(int64 handle);
+
+/** 可跨线程复制的强引用。各副本共同拥有一个不可变的值快照。 */
+struct Arc<T> {
+    __ArcStorage __storage;
+
+    /** 查询句柄是否为空。 */
+    bool isEmpty() { return self.__storage.opcode == 0; }
+
+    /** 增加一份强引用；普通赋值也采用相同的所有权语义。 */
+    Arc<T> clone() { return self; }
+
+    /** 在当前线程恢复独立的值副本。空句柄触发运行时错误。 */
+    T get() { return __arcGet<T>(self.__storage.opcode); }
+
+    /** 创建可跨线程传递的弱引用。空强引用产生空弱引用。 */
+    ArcWeak<T> downgrade() {
+        ArcWeak<T> result;
+        result.__storage = __arcDowngrade(self.__storage.opcode);
+        return result;
+    }
+
+    /** 释放当前强引用。最后一份强引用释放载荷。 */
+    void close() { self.__storage = __ArcStorage::new(); }
+};
+
+/** 可跨线程复制的弱引用，仅观察 Arc 载荷的存活状态。 */
+struct ArcWeak<T> {
+    __ArcStorage __storage;
+
+    /** 检查当前时刻是否已经失效。空句柄也视为失效。 */
+    bool isExpired() { return __arcExpired(self.__storage.opcode); }
+
+    /** 原子地尝试取得强引用，失效时返回空 Arc。 */
+    Arc<T> upgrade() {
+        Arc<T> result;
+        result.__storage = __arcUpgrade(self.__storage.opcode);
+        return result;
+    }
+
+    /** 释放当前弱引用。 */
+    void close() { self.__storage = __ArcStorage::new(); }
+};
+
+/** 创建可跨线程共享的值快照，元素须符合线程传值规则。
+ * @param value 用于生成共享快照的值。
+ * @return 持有新快照的强引用。
+ */
+Arc<T> arc<T>(T value) {
+    Arc<T> result;
+    result.__storage = __arcCreate(value);
+    return result;
+}
+
 /* 线程组拥有共享槽；Shared 只保存非拥有标识，复制不会复制或销毁槽内值。 */
 /* 每次 get/set/swap 原子；组合调用不构成原子事务。 */
 struct Shared<T> {

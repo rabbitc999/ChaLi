@@ -162,6 +162,18 @@ std::optional<bool> Machine::callThreadService(runtimeDetail::ConcurrentCallStat
                         childResult.error = "线程运行时发生未知宿主异常";
                     }
                     {
+                        // 先关闭收件箱，再在锁外释放弃收的载荷，最后发布完成。
+                        Memory::Deque<std::shared_ptr<TransferPacket>> discarded;
+                        std::shared_ptr<TransferPacket> reserved, initial;
+                        {
+                            std::lock_guard<std::mutex> guard(group->mutex);
+                            worker->inboxClosed = true;
+                            discarded.swap(worker->inbox);
+                            reserved = std::move(worker->reserved);
+                            initial = std::move(worker->initial);
+                        }
+                    }
+                    {
                         std::lock_guard<std::mutex> guard(group->mutex);
                         worker->result = std::move(childResult);
                         worker->done = true;

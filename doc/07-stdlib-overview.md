@@ -127,7 +127,7 @@ void main() {
 | --- | --- |
 | `std::thread` | 隔离线程 `Thread` |
 | `std::message` | 跨线程消息 |
-| `std::concurrency` | 显式共享槽 `Shared<T>`；普通全局变量在线程间仍隔离 |
+| `std::concurrency` | 共享槽 `Shared<T>`、跨线程强引用 `Arc<T>` 和弱引用 `ArcWeak<T>`，普通全局变量在线程间隔离 |
 | `std::event` | 显式事件与定时源；通过 receive 接收，周期积压合并 |
 
 > 线程执行、通道通信和显式事件分别由 std::thread、std::concurrency 和 std::event 提供。

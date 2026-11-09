@@ -71,30 +71,30 @@ void main() {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-530"></a>`enum EventKind` | 窗口、输入、控件和自定义事件的分类。 |
+| 模块 | <a id="symbol-532"></a>`enum EventKind` | 窗口、输入、控件和自定义事件的分类。 |
 | EventKind | `None, Opened, Closing, Resized, Focused, Blurred, KeyPressed, KeyReleased, TextEntered, MousePressed, MouseReleased, MouseMoved, MouseWheel, Control, Custom` | 窗口、输入、控件和自定义事件的分类。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-531"></a>`struct Event` | 独立拥有的事件快照；控件 code 保存组合标志。 |
-| Event | <a id="symbol-532"></a>`int64 source` | 事件来源控件的身份编号。 |
-| Event | <a id="symbol-533"></a>`int64 code` | 事件码；控件事件为组合标志，窗口输入为键码或按钮号。 |
-| Event | <a id="symbol-534"></a>`float64 x` | 逻辑像素横坐标。 |
-| Event | <a id="symbol-535"></a>`float64 y` | 逻辑像素纵坐标。 |
-| Event | <a id="symbol-536"></a>`float64 delta_x` | 横向移动或滚轮增量。 |
-| Event | <a id="symbol-537"></a>`float64 delta_y` | 纵向移动或滚轮增量。 |
-| Event | <a id="symbol-538"></a>`String name` | 事件名称。 |
-| Event | <a id="symbol-539"></a>`String text` | 独立拥有的事件文本。 |
-| Event | <a id="symbol-540"></a>`float64 value` | 事件携带的浮点值。 |
-| 模块 | <a id="symbol-541"></a>`struct Rect` | 使用逻辑像素坐标的矩形。 |
-| Rect | <a id="symbol-542"></a>`float32 x` | 逻辑像素横坐标。 |
-| Rect | <a id="symbol-543"></a>`float32 y` | 逻辑像素纵坐标。 |
-| Rect | <a id="symbol-544"></a>`float32 width` | 逻辑像素宽度。 |
-| Rect | <a id="symbol-545"></a>`float32 height` | 逻辑像素高度。 |
-| 模块 | <a id="symbol-546"></a>`struct Point` | 位置、偏移或二维尺寸。 |
-| Point | <a id="symbol-547"></a>`float64 x` | 逻辑像素横坐标。 |
-| Point | <a id="symbol-548"></a>`float64 y` | 逻辑像素纵坐标。 |
-| 模块 | <a id="symbol-549"></a>`struct Widget` | 由窗口拥有的控件句柄与同步回调模型。 |
-| 模块 | <a id="symbol-550"></a>`struct Texture` | 由窗口拥有的 GPU 纹理句柄。 |
-| 模块 | <a id="symbol-551"></a>`struct EventBus` | 同一线程中的事件订阅与延迟派发队列。 |
-| 模块 | <a id="symbol-552"></a>`struct CustomWidget` | 持有绘图、命中检测与输入回调的自绘控件。 |
+| 模块 | <a id="symbol-533"></a>`struct Event` | 独立拥有的事件快照；控件 code 保存组合标志。 |
+| Event | <a id="symbol-534"></a>`int64 source` | 事件来源控件的身份编号。 |
+| Event | <a id="symbol-535"></a>`int64 code` | 事件码；控件事件为组合标志，窗口输入为键码或按钮号。 |
+| Event | <a id="symbol-536"></a>`float64 x` | 逻辑像素横坐标。 |
+| Event | <a id="symbol-537"></a>`float64 y` | 逻辑像素纵坐标。 |
+| Event | <a id="symbol-538"></a>`float64 delta_x` | 横向移动或滚轮增量。 |
+| Event | <a id="symbol-539"></a>`float64 delta_y` | 纵向移动或滚轮增量。 |
+| Event | <a id="symbol-540"></a>`String name` | 事件名称。 |
+| Event | <a id="symbol-541"></a>`String text` | 独立拥有的事件文本。 |
+| Event | <a id="symbol-542"></a>`float64 value` | 事件携带的浮点值。 |
+| 模块 | <a id="symbol-543"></a>`struct Rect` | 使用逻辑像素坐标的矩形。 |
+| Rect | <a id="symbol-544"></a>`float32 x` | 逻辑像素横坐标。 |
+| Rect | <a id="symbol-545"></a>`float32 y` | 逻辑像素纵坐标。 |
+| Rect | <a id="symbol-546"></a>`float32 width` | 逻辑像素宽度。 |
+| Rect | <a id="symbol-547"></a>`float32 height` | 逻辑像素高度。 |
+| 模块 | <a id="symbol-548"></a>`struct Point` | 位置、偏移或二维尺寸。 |
+| Point | <a id="symbol-549"></a>`float64 x` | 逻辑像素横坐标。 |
+| Point | <a id="symbol-550"></a>`float64 y` | 逻辑像素纵坐标。 |
+| 模块 | <a id="symbol-551"></a>`struct Widget` | 由窗口拥有的控件句柄与同步回调模型。 |
+| 模块 | <a id="symbol-552"></a>`struct Texture` | 由窗口拥有的 GPU 纹理句柄。 |
+| 模块 | <a id="symbol-553"></a>`struct EventBus` | 同一线程中的事件订阅与延迟派发队列。 |
+| 模块 | <a id="symbol-554"></a>`struct CustomWidget` | 持有绘图、命中检测与输入回调的自绘控件。 |
 
 ## 函数索引
 

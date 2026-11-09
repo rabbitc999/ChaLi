@@ -63,31 +63,31 @@ void main(List<String> args) {
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-194"></a>`enum IoError : Error` | 从 core.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::io;` 才能用）。 |
+| 模块 | <a id="symbol-196"></a>`enum IoError : Error` | 从 core.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::io;` 才能用）。 |
 | IoError | `OpenFailed(String message), ReadFailed(String message), WriteFailed(String message), SeekFailed(String message), Closed` | 从 core.chl 原样迁出：符号名不变，只换了模块归属（现在必须 `import std::io;` 才能用）。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-195"></a>`enum SeekOrigin` | 文件定位的基准：文件开始、当前位置或文件末尾。 |
+| 模块 | <a id="symbol-197"></a>`enum SeekOrigin` | 文件定位的基准：文件开始、当前位置或文件末尾。 |
 | SeekOrigin | `Begin, Current, End` | 文件定位的基准：文件开始、当前位置或文件末尾。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-196"></a>`interface Reader` | 按字节读取数据的接口。 |
-| 模块 | <a id="symbol-197"></a>`interface Writer` | 按字节写入数据的接口。 |
-| 模块 | <a id="symbol-198"></a>`interface Seek` | 改变资源读写位置的接口。 |
-| 模块 | <a id="symbol-199"></a>`interface ToString` | 将值转换成拥有字符串的接口。 |
-| 模块 | <a id="symbol-200"></a>`interface Formattable` | 按格式说明生成文本的接口。 |
-| 模块 | <a id="symbol-201"></a>`struct FileStream : Reader, Writer, Seek` | 拥有文件句柄的字节流；通过 Result 报告读写与定位错误。 |
-| FileStream | <a id="symbol-202"></a>`File handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
-| 模块 | <a id="symbol-203"></a>`struct FileInfo` | 文件信息，时间为 Unix 秒；目录的 size 为零。 |
-| FileInfo | <a id="symbol-204"></a>`int64 size` | 文件或响应报告的字节长度。 |
-| FileInfo | <a id="symbol-205"></a>`bool isFile` | 目标是否为普通文件。 |
-| FileInfo | <a id="symbol-206"></a>`bool isDirectory` | 目标是否为目录。 |
-| FileInfo | <a id="symbol-207"></a>`int64 modifiedUnixSeconds` | 最后修改时间，以 Unix 秒表示。 |
-| 模块 | <a id="symbol-208"></a>`struct IoReply` | 宿主回调的拥有型结果；字段顺序是胶水 ABI 的一部分。 |
-| IoReply | <a id="symbol-209"></a>`String error` | 最近操作的错误说明。 |
-| IoReply | <a id="symbol-210"></a>`List<uint8> bytes` | 字节数据，保留零字节。 |
-| IoReply | <a id="symbol-211"></a>`List<String> paths` | 目录枚举返回的路径。 |
-| IoReply | <a id="symbol-212"></a>`int64 count` | 本次操作实际处理的数量。 |
-| IoReply | <a id="symbol-213"></a>`int64 size` | 文件或响应报告的字节长度。 |
-| IoReply | <a id="symbol-214"></a>`bool isFile` | 目标是否为普通文件。 |
-| IoReply | <a id="symbol-215"></a>`bool isDirectory` | 目标是否为目录。 |
-| IoReply | <a id="symbol-216"></a>`int64 modifiedUnixSeconds` | 最后修改时间，以 Unix 秒表示。 |
+| 模块 | <a id="symbol-198"></a>`interface Reader` | 按字节读取数据的接口。 |
+| 模块 | <a id="symbol-199"></a>`interface Writer` | 按字节写入数据的接口。 |
+| 模块 | <a id="symbol-200"></a>`interface Seek` | 改变资源读写位置的接口。 |
+| 模块 | <a id="symbol-201"></a>`interface ToString` | 将值转换成拥有字符串的接口。 |
+| 模块 | <a id="symbol-202"></a>`interface Formattable` | 按格式说明生成文本的接口。 |
+| 模块 | <a id="symbol-203"></a>`struct FileStream : Reader, Writer, Seek` | 拥有文件句柄的字节流；通过 Result 报告读写与定位错误。 |
+| FileStream | <a id="symbol-204"></a>`File handle` | 宿主资源句柄；应通过所属类型的方法操作。 |
+| 模块 | <a id="symbol-205"></a>`struct FileInfo` | 文件信息，时间为 Unix 秒；目录的 size 为零。 |
+| FileInfo | <a id="symbol-206"></a>`int64 size` | 文件或响应报告的字节长度。 |
+| FileInfo | <a id="symbol-207"></a>`bool isFile` | 目标是否为普通文件。 |
+| FileInfo | <a id="symbol-208"></a>`bool isDirectory` | 目标是否为目录。 |
+| FileInfo | <a id="symbol-209"></a>`int64 modifiedUnixSeconds` | 最后修改时间，以 Unix 秒表示。 |
+| 模块 | <a id="symbol-210"></a>`struct IoReply` | 宿主回调的拥有型结果；字段顺序是胶水 ABI 的一部分。 |
+| IoReply | <a id="symbol-211"></a>`String error` | 最近操作的错误说明。 |
+| IoReply | <a id="symbol-212"></a>`List<uint8> bytes` | 字节数据，保留零字节。 |
+| IoReply | <a id="symbol-213"></a>`List<String> paths` | 目录枚举返回的路径。 |
+| IoReply | <a id="symbol-214"></a>`int64 count` | 本次操作实际处理的数量。 |
+| IoReply | <a id="symbol-215"></a>`int64 size` | 文件或响应报告的字节长度。 |
+| IoReply | <a id="symbol-216"></a>`bool isFile` | 目标是否为普通文件。 |
+| IoReply | <a id="symbol-217"></a>`bool isDirectory` | 目标是否为目录。 |
+| IoReply | <a id="symbol-218"></a>`int64 modifiedUnixSeconds` | 最后修改时间，以 Unix 秒表示。 |
 
 ## 函数索引
 

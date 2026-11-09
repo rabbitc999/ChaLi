@@ -1742,10 +1742,12 @@ ast::NodePtr LowerCall(int id)
     const bool sharedGet = transferCall("std::core::__sharedGet");
     const bool sharedSet = transferCall("std::core::__sharedSet");
     const bool sharedSwap = transferCall("std::core::__sharedSwap");
-    if (sendThread || receiveThread || channelSend || mailSend || channelTake || typedCreate || sharedCreate || sharedGet || sharedSet || sharedSwap)
+    const bool arcCreate = transferCall("std::concurrency::__arcCreate");
+    const bool arcGet = transferCall("std::concurrency::__arcGet");
+    if (sendThread || receiveThread || channelSend || mailSend || channelTake || typedCreate || sharedCreate || sharedGet || sharedSet || sharedSwap || arcCreate || arcGet)
     {
         const std::shared_ptr<MType> type =
-            (receiveThread || channelTake || sharedGet || sharedSwap) ? result :
+            (receiveThread || channelTake || sharedGet || sharedSwap || arcGet) ? result :
                                                                         signature->second.params.back().type;
         Memory::Set<Memory::String> seen;
         Memory::Function<bool(const std::shared_ptr<MType> &)> supported =
@@ -1780,7 +1782,11 @@ ast::NodePtr LowerCall(int id)
             }
         };
         if (!supported(type))
+        {
+            if (arcCreate || arcGet)
+                return Fail("Arc 的值类型必须支持跨线程传值：" + Describe(type)), Bad();
             return Fail("消息与 std::core::Shared 不支持 " + Describe(type) + "：请改用标量、字符串、普通值结构体或容器；引用、数组、资源和 std::core::Any 不能跨线程传递"), Bad();
+        }
         const int kind = IsStandardOpcode(type, "String") ? 2 :
                          type->kind == MType::Struct      ? 4 :
                          type->kind == MType::Func        ? 0 :
@@ -1789,7 +1795,7 @@ ast::NodePtr LowerCall(int id)
                                                             0;
         Memory::Vector<Memory::String> intrinsicNames;
         Memory::Vector<ast::NodePtr> intrinsicValues;
-        if (sendThread || channelSend || mailSend || typedCreate || sharedGet || sharedSet || sharedSwap)
+        if (sendThread || channelSend || mailSend || typedCreate || sharedGet || sharedSet || sharedSwap || arcGet)
         {
             intrinsicNames.push_back("__chali_target");
             intrinsicValues.push_back(LowerExpr(args[0]));
@@ -1800,7 +1806,7 @@ ast::NodePtr LowerCall(int id)
         intrinsicValues.push_back(ContainerStorageFlag(type));
         intrinsicNames.push_back("__chali_type");
         intrinsicValues.push_back(ast::Node::str(Describe(type)));
-        if (sendThread || channelSend || mailSend || typedCreate || sharedCreate || sharedSet || sharedSwap)
+        if (sendThread || channelSend || mailSend || typedCreate || sharedCreate || sharedSet || sharedSwap || arcCreate)
         {
             const int valueId = args.back();
             intrinsicNames.push_back("__chali_value");
@@ -1811,7 +1817,8 @@ ast::NodePtr LowerCall(int id)
             intrinsicNames.push_back("__chali_timeout");
             intrinsicValues.push_back(LowerExpr(args[1]));
         }
-        const Memory::String native = typedCreate ? "__std_thread_create" : channelSend ? "__std_channel_send" :
+        const Memory::String native = arcCreate ? "__std_arc_create" : arcGet ? "__std_arc_get" :
+                                                                        typedCreate ? "__std_thread_create" : channelSend ? "__std_channel_send" :
                                                                         mailSend        ? "__std_mail_send" :
                                                                         channelTake     ? "__std_channel_take" :
                                                                         sendThread      ? "__std_message_send_thread" :

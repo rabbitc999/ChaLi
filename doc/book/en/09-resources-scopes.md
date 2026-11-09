@@ -157,6 +157,46 @@ expired=1
 
 `boxed.take()` moves out `42` and frees the box storage. When `first.close()` releases the first strong reference, `second` still owns `7`, so `observer.upgrade()` acquires another strong reference. At the end of the inner block, `upgraded` and `second` are released in that order. The last strong reference destroys the value. `observer` can still check its status, and the next upgrade returns an empty `Rc<int64>`.
 
+### Sharing ownership across threads with Arc and ArcWeak
+
+Each ChaLi thread has its own heap and ordinary globals. `Arc<T>` from `std::concurrency` shares ownership through the runtime across those isolated heaps. `arc(value)` captures a snapshot of the value. Copying an `Arc<T>` handle or calling `clone()` adds a strong reference. Call `close()` to release the current handle early. Scope exit also releases it automatically. A thread startup argument keeps its strong references for the duration of the task call. A queued message holds its strong references until delivery. The runtime releases the payload when the last strong reference goes away.
+
+`downgrade()` creates an `ArcWeak<T>` that you can copy or send to another thread. It keeps the information needed for reference counting. Strong references determine the lifetime of the payload. `isExpired()` reports the state at the moment of the call. Another thread can release the last strong reference at any time. To use the payload, call `upgrade()` and check whether the returned `Arc<T>` is empty. A successful upgrade returns a strong reference that keeps the payload alive until the handle is released. The runtime synchronizes upgrades with the final release.
+
+`Arc.get()` restores an independent value from the same immutable snapshot in the calling thread. Editing the original value after construction, or editing an ordinary struct or container returned by `get()`, leaves the shared snapshot intact. The payload follows the thread transfer rules. Examples include transferable scalars, strings, containers and ordinary value structs. Borrowed references, exclusive resources and `Any` are excluded. For state that threads need to update, `Shared<T>` provides atomic reads and writes.
+
+The example sends a weak reference to the worker. The main thread keeps a strong reference while it waits, so the worker can upgrade. The worker releases its strong reference on return. The main thread then closes the last strong reference, and the next upgrade yields an empty handle.
+
+<!-- verify-book -->
+```chali
+import std::concurrency;
+import std::thread;
+
+void readValue(ArcWeak<int64> observer)
+{
+    let acquired = observer.upgrade();
+    assert(!acquired.isEmpty());
+    println("worker={}", acquired.get());
+}
+
+void main()
+{
+    let owner = arc(42);
+    let observer = owner.downgrade();
+
+    Thread worker = createWith(readValue, observer);
+    wait(worker);
+    owner.close();
+    assert(observer.upgrade().isEmpty());
+    println("expired");
+}
+```
+
+```text
+worker=42
+expired
+```
+
 ## 9.6 Manual allocation boundaries
 
 New T creates manually allocated storage, optionally with constructor arguments. Its release protocol differs from ordinary automatic local values. Do not assume raw storage is an automatic resource wrapper.

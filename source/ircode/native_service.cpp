@@ -17,7 +17,11 @@ std::optional<NativeValue> Machine::nativeThreadArgument(NativeContext &context)
 #if RUNTIME_WITH_THREADS
     if (threadRuntime_)
     {
-        const auto packet = threadRuntime_->workers.at(threadId_)->initial;
+        std::shared_ptr<TransferPacket> packet;
+        {
+            std::lock_guard<std::mutex> guard(threadRuntime_->mutex);
+            packet = std::move(threadRuntime_->workers.at(threadId_)->initial);
+        }
         if (packet)
         {
             Slot value;

@@ -1,0 +1,80 @@
+import std::concurrency;
+import std::message;
+import std::thread;
+
+struct Parcel {
+    String title;
+    List<int64> values;
+};
+
+struct Task {
+    Arc<Parcel> owner;
+    ArcWeak<Parcel> observer;
+    Channel<int64> gate;
+};
+
+void readParcel(Task task) {
+    assert(task.gate.receive().isReady());
+    let acquired = task.observer.upgrade();
+    assert(!acquired.isEmpty());
+    Parcel snapshot = acquired.get();
+    assert(snapshot.title == "original" && snapshot.values.len() == 1);
+    snapshot.values.push(99);
+    assert(task.owner.get().values.len() == 1);
+}
+
+void leaveInboxUnread(Channel<int64> gate) {
+    assert(gate.receive().isReady());
+}
+
+void main() {
+    Parcel original;
+    original.title = "original";
+    original.values = [7];
+    let owner = arc(original);
+    let observer = owner.downgrade();
+    original.values.push(8);
+
+    Task task;
+    task.owner = owner.clone();
+    task.observer = observer;
+    task.gate = Channel<int64>::create(1);
+    Thread reader = createWith(readParcel, task);
+    task.owner.close();
+    owner.close();
+    assert(!observer.isExpired());
+    assert(task.gate.send(1) == READY);
+    wait(reader);
+    assert(observer.isExpired() && observer.upgrade().isEmpty());
+    task.gate.close();
+
+    let sharedNumber = arc(42);
+    let queuedObserver = sharedNumber.downgrade();
+    let values = Channel<Arc<int64>>::create(1);
+    assert(values.send(sharedNumber) == READY);
+    sharedNumber.close();
+    assert(!queuedObserver.isExpired());
+    {
+        let delivery = values.receive();
+        assert(delivery.isReady() && delivery.value.get() == 42);
+    }
+    assert(queuedObserver.isExpired());
+    values.close();
+
+    let gate = Channel<int64>::create(1);
+    Thread recipient = createWith(leaveInboxUnread, gate);
+    let unread = arc(99);
+    let unreadObserver = unread.downgrade();
+    sendThread<Arc<int64>>(recipient, unread);
+    unread.close();
+    assert(!unreadObserver.isExpired());
+    assert(gate.send(1) == READY);
+    wait(recipient);
+    assert(unreadObserver.isExpired());
+    gate.close();
+
+    Arc<int64> empty;
+    let emptyCopy = empty.clone();
+    assert(emptyCopy.isEmpty() && empty.downgrade().isExpired());
+    println("Arc and ArcWeak OK");
+}

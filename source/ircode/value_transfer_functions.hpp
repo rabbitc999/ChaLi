@@ -78,4 +78,12 @@ bool restoreTransferObject(NativeContext &ctx, const TransferPacket &packet,
  * @retval 满足检查条件或操作完成时为 true，检查失败或无法完成时为 false。
  */
 bool restoreTransfer(NativeContext &ctx, const TransferPacket &packet, Slot *out);
+
+Slot arcEmpty(NativeContext &ctx, const Memory::Vector<Slot> &args);
+Slot arcCopy(NativeContext &ctx, const Memory::Vector<Slot> &args);
+Slot arcCreate(NativeContext &ctx, const Memory::Vector<Slot> &args);
+Slot arcGet(NativeContext &ctx, const Memory::Vector<Slot> &args);
+Slot arcDowngrade(NativeContext &ctx, const Memory::Vector<Slot> &args);
+Slot arcUpgrade(NativeContext &ctx, const Memory::Vector<Slot> &args);
+Slot arcExpired(NativeContext &ctx, const Memory::Vector<Slot> &args);
 }  // namespace runtime::runtimeDetail

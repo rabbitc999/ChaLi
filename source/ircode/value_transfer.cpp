@@ -211,5 +211,134 @@ bool restoreTransfer(NativeContext &ctx, const TransferPacket &packet, Slot *out
     ctx.objects->releaseValue(value);
     return okay;
 }
+namespace
+{
+/** @brief 同一对象表中的壳独立，跨线程只共享不可变的载荷和标准引用计数。 */
+struct ArcRecord
+{
+    std::shared_ptr<const TransferPacket> strong;
+    std::weak_ptr<const TransferPacket> weak;
+};
+
+/**
+ * @brief 复制一个强或弱句柄，保持相同的引用计数身份。
+ * @param value 来源记录。
+ * @param error 接收分配失败诊断。
+ * @return 独立记录，分配失败时为空。
+ */
+void *cloneArcRecord(const void *value, Memory::String &error)
+{
+    auto *copy = new (std::nothrow) ArcRecord(*static_cast<const ArcRecord *>(value));
+    if (!copy) error = "Arc 句柄分配失败";
+    return copy;
+}
+
+/** @brief 释放记录持有的一份强引用或弱引用。 */
+void destroyArcRecord(void *value) { delete static_cast<ArcRecord *>(value); }
+
+const NativeRecordType arcRecordType{ "Arc", cloneArcRecord, destroyArcRecord };
+
+/**
+ * @brief 将一份强引用或弱引用登记为当前线程的独立对象句柄。
+ * @param ctx 当前线程的对象表。
+ * @param record 待转移的引用。
+ * @return 新对象句柄，失败时记录诊断。
+ */
+Slot makeArcRecord(NativeContext &ctx, ArcRecord record)
+{
+    auto owned = std::unique_ptr<ArcRecord>(new (std::nothrow) ArcRecord(std::move(record)));
+    if (!owned)
+    {
+        ctx.error = "Arc 句柄分配失败";
+        return Slot::fromInt(0);
+    }
+    NativeCallContextImpl host(ctx);
+    const auto handle = host.makeNativeRecord(arcRecordType, owned.get());
+    if (handle) owned.release();
+    return Slot::fromInt(handle);
+}
+
+/**
+ * @brief 验证本线程中的 Arc 句柄，允许零表示空。
+ * @param ctx 当前线程的对象表。
+ * @param handle 待查询的对象句柄。
+ * @return 匹配的记录，空或失效时返回空指针。
+ */
+const ArcRecord *findArcRecord(NativeContext &ctx, std::int64_t handle)
+{
+    if (!handle) return nullptr;
+    NativeCallContextImpl host(ctx);
+    const auto *record = static_cast<const ArcRecord *>(host.nativeRecord(handle, arcRecordType));
+    if (!record) ctx.error = "Arc 句柄无效";
+    return record;
+}
+}  // namespace
+
+/** @brief 构造空句柄，零值无需分配。 */
+Slot arcEmpty(NativeContext &, const Memory::Vector<Slot> &) { return Slot::fromInt(0); }
+
+/** @brief 复制当前句柄，空句柄仍为空。 */
+Slot arcCopy(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    return nativeInt(args[0]) == 0 ? Slot::fromInt(0) : objectCopy(ctx, args);
+}
+
+/** @brief 以线程传值协议捕获不可变快照并返回第一份强引用。 */
+Slot arcCreate(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    Memory::String type;
+    if (!nativeReadCString(ctx, static_cast<std::size_t>(nativeInt(args[2])), &type))
+        return Slot::fromInt(0);
+    auto packet = Memory::makeShared<TransferPacket>();
+    if (!captureTransfer(ctx, args[3], static_cast<int>(nativeInt(args[0])), nativeInt(args[1]), type, packet.get()))
+        return Slot::fromInt(0);
+    return makeArcRecord(ctx, { std::move(packet), {} });
+}
+
+/** @brief 在调用线程中恢复强引用载荷的独立副本，并核对类型身份。 */
+Slot arcGet(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    const auto *record = findArcRecord(ctx, nativeInt(args[0]));
+    if (!record || !record->strong)
+    {
+        if (ctx.error.empty()) ctx.error = "Arc 为空";
+        return Slot::fromInt(0);
+    }
+    // 持有独立引用，恢复宿主记录时即使发生重入，载荷仍然存活。
+    const auto packet = record->strong;
+    Memory::String type;
+    if (!nativeReadCString(ctx, static_cast<std::size_t>(nativeInt(args[3])), &type))
+        return Slot::fromInt(0);
+    if (type != packet->type)
+    {
+        ctx.error = "Arc 载荷类型不匹配：" + type;
+        return Slot::fromInt(0);
+    }
+    Slot value;
+    return restoreTransfer(ctx, *packet, &value) ? value : Slot::fromInt(0);
+}
+
+/** @brief 创建与强引用共享控制块的弱句柄。 */
+Slot arcDowngrade(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    const auto *record = findArcRecord(ctx, nativeInt(args[0]));
+    return record && record->strong ? makeArcRecord(ctx, { {}, record->strong }) : Slot::fromInt(0);
+}
+
+/** @brief 在载荷仍然存活时原子取得一份强引用。 */
+Slot arcUpgrade(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    const auto *record = findArcRecord(ctx, nativeInt(args[0]));
+    auto strong = record ? record->weak.lock() : nullptr;
+    return strong ? makeArcRecord(ctx, { std::move(strong), {} }) : Slot::fromInt(0);
+}
+
+/** @brief 读取弱引用当前是否失效。 */
+Slot arcExpired(NativeContext &ctx, const Memory::Vector<Slot> &args)
+{
+    const auto *record = findArcRecord(ctx, nativeInt(args[0]));
+    return Slot::fromInt(!record || record->weak.expired());
+}
+
 }  // namespace runtimeDetail
 }  // namespace runtime

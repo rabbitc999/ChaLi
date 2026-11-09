@@ -251,24 +251,33 @@
 | [std::complex::Complex::scale](std-complex.md#api-3) | `Complex<T> scale(T factor)` |
 | [std::compress::compress](std-compress.md#api-0) | `List<uint8> compress(String text)` |
 | [std::compress::decompress](std-compress.md#api-1) | `String decompress(List<uint8> bytes)` |
-| [std::concurrency::AtomicInt64::create](std-concurrency.md#api-6) | `static AtomicInt64 create(int64 value)` |
-| [std::concurrency::AtomicInt64::fetchAdd](std-concurrency.md#api-9) | `int64 fetchAdd(int64 delta)` |
-| [std::concurrency::AtomicInt64::get](std-concurrency.md#api-7) | `int64 get()` |
-| [std::concurrency::AtomicInt64::set](std-concurrency.md#api-8) | `void set(int64 value)` |
-| [std::concurrency::Channel::close](std-concurrency.md#api-17) | `void close()` |
-| [std::concurrency::Channel::create](std-concurrency.md#api-10) | `static Channel<T> create(int64 capacity)` |
-| [std::concurrency::Channel::receive](std-concurrency.md#api-15) | `Receive<T> receive()` |
-| [std::concurrency::Channel::receiveFor](std-concurrency.md#api-14) | `Receive<T> receiveFor(int64 millis)` |
-| [std::concurrency::Channel::send](std-concurrency.md#api-12) | `int64 send(T value)` |
-| [std::concurrency::Channel::sendFor](std-concurrency.md#api-11) | `int64 sendFor(T value, int64 millis)` |
-| [std::concurrency::Channel::tryReceive](std-concurrency.md#api-16) | `Receive<T> tryReceive()` |
-| [std::concurrency::Channel::trySend](std-concurrency.md#api-13) | `int64 trySend(T value)` |
+| [std::concurrency::Arc::clone](std-concurrency.md#api-2) | `Arc<T> clone()` |
+| [std::concurrency::Arc::close](std-concurrency.md#api-5) | `void close()` |
+| [std::concurrency::Arc::downgrade](std-concurrency.md#api-4) | `ArcWeak<T> downgrade()` |
+| [std::concurrency::Arc::get](std-concurrency.md#api-3) | `T get()` |
+| [std::concurrency::Arc::isEmpty](std-concurrency.md#api-1) | `bool isEmpty()` |
+| [std::concurrency::ArcWeak::close](std-concurrency.md#api-8) | `void close()` |
+| [std::concurrency::ArcWeak::isExpired](std-concurrency.md#api-6) | `bool isExpired()` |
+| [std::concurrency::ArcWeak::upgrade](std-concurrency.md#api-7) | `Arc<T> upgrade()` |
+| [std::concurrency::AtomicInt64::create](std-concurrency.md#api-15) | `static AtomicInt64 create(int64 value)` |
+| [std::concurrency::AtomicInt64::fetchAdd](std-concurrency.md#api-18) | `int64 fetchAdd(int64 delta)` |
+| [std::concurrency::AtomicInt64::get](std-concurrency.md#api-16) | `int64 get()` |
+| [std::concurrency::AtomicInt64::set](std-concurrency.md#api-17) | `void set(int64 value)` |
+| [std::concurrency::Channel::close](std-concurrency.md#api-26) | `void close()` |
+| [std::concurrency::Channel::create](std-concurrency.md#api-19) | `static Channel<T> create(int64 capacity)` |
+| [std::concurrency::Channel::receive](std-concurrency.md#api-24) | `Receive<T> receive()` |
+| [std::concurrency::Channel::receiveFor](std-concurrency.md#api-23) | `Receive<T> receiveFor(int64 millis)` |
+| [std::concurrency::Channel::send](std-concurrency.md#api-21) | `int64 send(T value)` |
+| [std::concurrency::Channel::sendFor](std-concurrency.md#api-20) | `int64 sendFor(T value, int64 millis)` |
+| [std::concurrency::Channel::tryReceive](std-concurrency.md#api-25) | `Receive<T> tryReceive()` |
+| [std::concurrency::Channel::trySend](std-concurrency.md#api-22) | `int64 trySend(T value)` |
 | [std::concurrency::Receive::isReady](std-concurrency.md#api-0) | `bool isReady()` |
-| [std::concurrency::Shared::create](std-concurrency.md#api-1) | `static Shared<T> create(T value)` |
-| [std::concurrency::Shared::get](std-concurrency.md#api-2) | `T get()` |
-| [std::concurrency::Shared::id](std-concurrency.md#api-5) | `int64 id()` |
-| [std::concurrency::Shared::set](std-concurrency.md#api-3) | `void set(T value)` |
-| [std::concurrency::Shared::swap](std-concurrency.md#api-4) | `T swap(T value)` |
+| [std::concurrency::Shared::create](std-concurrency.md#api-10) | `static Shared<T> create(T value)` |
+| [std::concurrency::Shared::get](std-concurrency.md#api-11) | `T get()` |
+| [std::concurrency::Shared::id](std-concurrency.md#api-14) | `int64 id()` |
+| [std::concurrency::Shared::set](std-concurrency.md#api-12) | `void set(T value)` |
+| [std::concurrency::Shared::swap](std-concurrency.md#api-13) | `T swap(T value)` |
+| [std::concurrency::arc](std-concurrency.md#api-9) | `Arc<T> arc<T>(T value)` |
 | [std::core::Add::leftAdd](std-core.md#api-231) | `R leftAdd(T value)` |
 | [std::core::And::leftBitAnd](std-core.md#api-253) | `R leftBitAnd(T value)` |
 | [std::core::Any::clear](std-core.md#api-214) | `void clear()` |

@@ -164,9 +164,9 @@ memory=ok
 
 | 所属类型 | 声明 | 说明 |
 | --- | --- | --- |
-| 模块 | <a id="symbol-380"></a>`enum ParseError : Error` | 区分空输入、格式错误与数值范围错误，作为标准 Error 接口返回。 |
+| 模块 | <a id="symbol-382"></a>`enum ParseError : Error` | 区分空输入、格式错误与数值范围错误，作为标准 Error 接口返回。 |
 | ParseError | `Empty, Invalid, Overflow` | 区分空输入、格式错误与数值范围错误，作为标准 Error 接口返回。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-381"></a>`struct Parse` | 文本到数值和布尔值的解析入口。 |
+| 模块 | <a id="symbol-383"></a>`struct Parse` | 文本到数值和布尔值的解析入口。 |
 
 ## 函数索引
 

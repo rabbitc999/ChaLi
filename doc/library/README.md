@@ -29,7 +29,7 @@
 | [`std::collections`](std-collections.md) | 集合扩展 | 60 | 0 |
 | [`std::complex`](std-complex.md) | 泛型复数 | 8 | 0 |
 | [`std::compress`](std-compress.md) | 无损压缩 | 2 | 0 |
-| [`std::concurrency`](std-concurrency.md) | 线程通信与共享 | 18 | 0 |
+| [`std::concurrency`](std-concurrency.md) | 线程通信与共享 | 27 | 0 |
 | [`std::core`](std-core.md) | 核心库 | 276 | 2 |
 | [`std::csv`](std-csv.md) | CSV 读写 | 4 | 0 |
 | [`std::date_time`](std-date_time.md) | UTC 日期时间 | 15 | 0 |

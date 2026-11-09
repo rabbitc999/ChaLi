@@ -22,7 +22,7 @@ import std::macro;
 
 ## 宏定义
 
-<a id="symbol-335"></a>
+<a id="symbol-337"></a>
 
 ### `MIN`
 
@@ -32,7 +32,7 @@ $macro MIN(left:value, right:value) -> expr
 
 返回两个可比较值中较小的值。每个实参求值一次，相等时返回左值。
 
-<a id="symbol-336"></a>
+<a id="symbol-338"></a>
 
 ### `MAX`
 
@@ -42,7 +42,7 @@ $macro MAX(left:value, right:value) -> expr
 
 返回两个可比较值中较大的值。每个实参求值一次，相等时返回左值。
 
-<a id="symbol-337"></a>
+<a id="symbol-339"></a>
 
 ### `CLAMP`
 
@@ -52,7 +52,7 @@ $macro CLAMP(value:value, low:value, high:value) -> expr
 
 将值限制在闭区间内。每个实参求值一次，上界小于下界时触发断言。
 
-<a id="symbol-338"></a>
+<a id="symbol-340"></a>
 
 ### `IN_RANGE`
 
@@ -62,7 +62,7 @@ $macro IN_RANGE(value:value, low:value, high:value) -> expr
 
 判断值是否在闭区间内。每个实参求值一次，反向区间返回 false。
 
-<a id="symbol-339"></a>
+<a id="symbol-341"></a>
 
 ### `BOX`
 
@@ -72,7 +72,7 @@ $macro BOX(value:expr) -> expr
 
 装箱一个表达式，由实参推导元素类型。传入 move 表达式可以转移所有权。
 
-<a id="symbol-340"></a>
+<a id="symbol-342"></a>
 
 ### `Equal`
 
@@ -82,7 +82,7 @@ $macro Equal<T>(method:ident) -> member
 
 为类型 T 生成调用方命名的相等方法，按声明顺序比较实例字段或匹配枚举载荷。
 
-<a id="symbol-341"></a>
+<a id="symbol-343"></a>
 
 ### `Hash`
 
@@ -92,7 +92,7 @@ $macro Hash<T>(method:ident) -> member
 
 为类型 T 生成调用方命名的哈希方法，按声明顺序混合字段或枚举载荷。
 
-<a id="symbol-342"></a>
+<a id="symbol-344"></a>
 
 ### `Clone`
 
@@ -102,7 +102,7 @@ $macro Clone<T>(method:ident) -> member
 
 为类型 T 生成调用方命名的克隆方法。嵌套拥有值沿用其克隆协议。
 
-<a id="symbol-343"></a>
+<a id="symbol-345"></a>
 
 ### `Debug`
 
