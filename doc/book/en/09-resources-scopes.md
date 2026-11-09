@@ -6,7 +6,7 @@
 
 Files, connections and buffers carry cleanup obligations as well as data. Acquisition must be followed by a clear account of ownership, transfer and cleanup on every exit path.
 
-Printed exit actions first distinguish registration from execution. A Closeable example then follows ownership through moves. Only after automatic cleanup is clear does the chapter introduce manual allocation with its separate protocol.
+Printed exit actions first distinguish registration from execution. A Closeable example then follows ownership through moves. Smart pointers then illustrate different ways to own a heap value. The chapter ends with the release protocol for manual allocation.
 
 ## 9.1 Start with a pair of braces
 
@@ -114,7 +114,50 @@ Handle implements Closeable, and close prints its id to expose cleanup timing. A
 Resource two moves from second to third without creating another independently owned copy. After printing third's id, main closes resource two when its scope ends. The output therefore follows consume one, close one, observe two, close two. Printing only demonstrates lifetime behavior; a real handle's close method must release its external resource.
 
 
-## 9.5 Manual allocation boundaries
+## 9.5 Smart pointers and heap ownership
+
+| Type | Ownership | Common operations |
+| --- | --- | --- |
+| `Box<T>` | One box owns a heap value exclusively | `Box<T>::newBox(value)` boxes the value. `take()` moves it out and consumes the box. |
+| `Rc<T>` | Multiple strong references in one thread own a value together | `rc(value)` creates the first strong reference. `clone()` adds another. |
+| `Weak<T>` | Observes whether the value managed by an `Rc<T>` is still alive | `downgrade()` creates a weak reference. `upgrade()` tries to acquire a strong reference. |
+
+`Box<T>` comes from the automatically loaded `std::core` module. Use `move` to transfer a noncopyable value into the box. Both `Box.get()` and `Rc.get()` return a copy and require a copyable value. Import `Rc<T>` and `Weak<T>` from `std::memory` to manage ownership within a single thread.
+
+<!-- verify-book -->
+```chali
+import std::memory;
+
+void main()
+{
+    let boxed = Box<int64>::newBox(42);
+    println("box={}", boxed.take());
+
+    let first = rc(7);
+    let observer = first.downgrade();
+    {
+        let second = first.clone();
+        first.close();
+        let upgraded = observer.upgrade();
+        if (!upgraded.isEmpty()) {
+            println("shared={}", upgraded.get());
+        }
+    }
+
+    let expired = observer.upgrade();
+    println("expired={}", expired.isEmpty());
+}
+```
+
+```text
+box=42
+shared=7
+expired=1
+```
+
+`boxed.take()` moves out `42` and frees the box storage. When `first.close()` releases the first strong reference, `second` still owns `7`, so `observer.upgrade()` acquires another strong reference. At the end of the inner block, `upgraded` and `second` are released in that order. The last strong reference destroys the value. `observer` can still check its status, and the next upgrade returns an empty `Rc<int64>`.
+
+## 9.6 Manual allocation boundaries
 
 New T creates manually allocated storage, optionally with constructor arguments. Its release protocol differs from ordinary automatic local values. Do not assume raw storage is an automatic resource wrapper.
 
