@@ -1,0 +1,41 @@
+import std::memory;
+
+struct Entry { String text; };
+
+Entry makeEntry(String text) {
+    Entry value;
+    value.text = text;
+    return value;
+}
+
+int64 consume(#MoveOnly Entry left, #MoveOnly Entry right) {
+    return len(left.text) + len(right.text);
+}
+
+String inspect(#CopyOnly Entry entry) {
+    entry.text = entry.text + "!";
+    return entry.text;
+}
+
+int64 scalar(#MoveOnly int64 value) { return value; }
+
+int64 unbox(#MoveOnly Box<int64> value) { return value.take(); }
+
+T transfer<T>(#MoveOnly T value) { return move value; }
+
+void main() {
+    int64 before = Memory::stats().liveBlocks;
+    {
+        Entry named = makeEntry("a");
+        assert(inspect(named) == "a!" && named.text == "a");
+        assert(consume(move named, makeEntry("bc")) == 3);
+        assert(consume(makeEntry("de"), makeEntry("fgh")) == 5);
+        int64 number = 7;
+        assert(scalar(move number) == 7 && scalar(8) == 8);
+        assert(unbox(Box<int64>::newBox(9)) == 9);
+        Entry forwarded = transfer(makeEntry("ijk"));
+        assert(forwarded.text == "ijk");
+    }
+    assert(Memory::stats().liveBlocks == before);
+    println("parameter passing directives OK");
+}

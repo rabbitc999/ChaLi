@@ -1,0 +1,6 @@
+struct Entry { int64 value; };
+void consume(#MoveOnly Entry value) {}
+void main() {
+    Entry value;
+    consume(value);
+}

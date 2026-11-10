@@ -314,17 +314,25 @@ operator_def := type name_token OPNAME LPAREN param COMMA param RPAREN block
     { $$ = M_OperatorDef($1, $2, $3, M_List2($5, $7), $9); } ;
 
 /* ---- 函数 ---- */
-func_def := type name_token LPAREN param_list RPAREN block
+func_def := type name_token LPAREN named_param_list RPAREN block
     { $$ = M_Func($1, $2, $4, $6); }
     /* 返回引用的函数：`Cell mut& push_front(Cell mut& head, int64 value)` */
-  | ptr_type name_token LPAREN param_list RPAREN block
+  | ptr_type name_token LPAREN named_param_list RPAREN block
     { $$ = M_Func($1, $2, $4, $6); }
-  | array_type name_token LPAREN param_list RPAREN block
+  | array_type name_token LPAREN named_param_list RPAREN block
     { $$ = M_Func($1, $2, $4, $6); }
-  | LET name_token LPAREN param_list RPAREN block
+  | LET name_token LPAREN named_param_list RPAREN block
     { $$ = M_Func(-1, $2, $4, $6); }
     /* fn 前缀：返回类型后置，省略 -> 时为 void；与局部具名闭包共用同一条产生式 */
   | fn_named { $$ = $1; } ;
+
+named_param_list := %empty { $$ = M_List(); }
+  | named_param_items { $$ = $1; } ;
+named_param_items := named_param { $$ = M_List1($1); }
+  | named_param_items COMMA named_param { M_ListAdd($1, $3); $$ = $1; } ;
+named_param := param { $$ = $1; }
+  | MOVE_ONLY type name_token { $$ = M_ParameterPassing(M_Param($2, $3), 1); }
+  | COPY_ONLY type name_token { $$ = M_ParameterPassing(M_Param($2, $3), 0); } ;
 
 /* ---- C++ 胶水声明 ---- */
 host_type_decl := TYPE_KW name_token ASSIGN type SEMI
@@ -332,9 +340,9 @@ host_type_decl := TYPE_KW name_token ASSIGN type SEMI
   | TYPE_KW name_token ASSIGN ptr_type SEMI
     { $$ = M_HostType($2, $4); } ;
 
-host_func_decl := type name_token LPAREN param_list RPAREN SEMI
+host_func_decl := type name_token LPAREN named_param_list RPAREN SEMI
     { $$ = M_ExternFunc($1, $2, $4); }
-  | ptr_type name_token LPAREN param_list RPAREN SEMI
+  | ptr_type name_token LPAREN named_param_list RPAREN SEMI
     { $$ = M_ExternFunc($1, $2, $4); }
   | type YIELD LPAREN param_list RPAREN SEMI
     { $$ = M_ExternFunc($1, M_YieldName(), $4); }
@@ -1013,12 +1021,6 @@ macro_type_arguments := macro_type_argument { $$ = M_List1($1); }
     | macro_type_arguments COMMA macro_type_argument { M_ListAdd($1, $3); $$ = $1; } ;
 macro_type_argument := element_type { $$ = M_TupleTypeItem($1); }
     | MACRO_FRAGMENT { $$ = M_MacroFragmentReference($1); } ;
-
-%code
-inline const char *const kChaLiStdModules[] = {
-    nullptr, // 当前没有需要特殊登记的标准模块。
-};
-%endcode
 
 %code include "chali_ast.hpp"
 %code include "macro/ast.hpp"

@@ -111,7 +111,7 @@ MyBox<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 177 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 180 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -153,6 +153,8 @@ MyBox<int64 fn(int64)> box;
 | `STRUCT` | `struct` |
 | `OPCODE` | `opcode` |
 | `NONCOPYABLE` | `#NonCopyable` |
+| `MOVE_ONLY` | `#MoveOnly` |
+| `COPY_ONLY` | `#CopyOnly` |
 | `ENUM` | `enum` |
 | `INT8` | `int8` |
 | `INT16` | `int16` |
@@ -527,17 +529,27 @@ OPNAME = "+"
 
 operator_def = type, name_token, OPNAME, "(", param, ",", param, ")", block ;
 
-func_def = type, name_token, "(", param_list, ")", block
-    | ptr_type, name_token, "(", param_list, ")", block
-    | array_type, name_token, "(", param_list, ")", block
-    | "let", name_token, "(", param_list, ")", block
+func_def = type, name_token, "(", named_param_list, ")", block
+    | ptr_type, name_token, "(", named_param_list, ")", block
+    | array_type, name_token, "(", named_param_list, ")", block
+    | "let", name_token, "(", named_param_list, ")", block
     | fn_named ;
+
+named_param_list = ""
+    | named_param_items ;
+
+named_param_items = named_param
+    | named_param_items, ",", named_param ;
+
+named_param = param
+    | "#MoveOnly", type, name_token
+    | "#CopyOnly", type, name_token ;
 
 host_type_decl = "type", name_token, "=", type, ";"
     | "type", name_token, "=", ptr_type, ";" ;
 
-host_func_decl = type, name_token, "(", param_list, ")", ";"
-    | ptr_type, name_token, "(", param_list, ")", ";"
+host_func_decl = type, name_token, "(", named_param_list, ")", ";"
+    | ptr_type, name_token, "(", named_param_list, ")", ";"
     | type, "yield", "(", param_list, ")", ";"
     | ptr_type, "yield", "(", param_list, ")", ";" ;
 

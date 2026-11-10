@@ -846,6 +846,27 @@ _MESSAGES = {
   ],
   "$build 标志名称无效，不支持赋值": [
     "Invalid $build flag name; values are not supported"
+  ],
+  "宿主声明和原生导出函数的形参不支持 #MoveOnly 或 #CopyOnly：": [
+    "Host declarations and native exports cannot declare #MoveOnly or #CopyOnly parameters: "
+  ],
+  "声明 #CopyOnly 形参需要可复制类型：": [
+    "A #CopyOnly parameter requires a copyable type: "
+  ],
+  "声明 #MoveOnly 形参需要具体聚合或基础标量类型：": [
+    "A #MoveOnly parameter requires a concrete aggregate or primitive scalar type: "
+  ],
+  "传参约定需要具体按值形参：": [
+    "The passing convention requires a concrete value parameter: "
+  ],
+  "带 #MoveOnly 或 #CopyOnly 的函数须直接调用：": [
+    "Functions with #MoveOnly or #CopyOnly parameters must be called directly: "
+  ],
+  "不能向 #CopyOnly 形参传入 move 实参：": [
+    "A #CopyOnly parameter cannot receive a move argument: "
+  ],
+  "传入 #MoveOnly 形参需要显式 move 或拥有型临时值：": [
+    "A #MoveOnly argument requires an explicit move or an owned temporary: "
   ]
 }
 # CHALI_CATALOG_END

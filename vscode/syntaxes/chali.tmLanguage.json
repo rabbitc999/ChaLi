@@ -27,7 +27,7 @@
       "patterns": [
         {
           "name": "keyword.control.chali",
-          "match": "#abi\\b|#export\\b|#NonCopyable\\b|#borrow\\b|#static\\b|#ret\\b"
+          "match": "#abi\\b|#export\\b|#NonCopyable\\b|#MoveOnly\\b|#CopyOnly\\b|#borrow\\b|#static\\b|#ret\\b"
         },
         {
           "name": "comment.block.chali",

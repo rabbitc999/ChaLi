@@ -49,6 +49,8 @@
 %token STRUCT "struct"
 %token OPCODE "opcode"
 %token NONCOPYABLE "#NonCopyable"
+%token MOVE_ONLY "#MoveOnly"
+%token COPY_ONLY "#CopyOnly"
 /* 编译器指令：`#NoAddReplace` / `#NoLessReplace` … 关掉该结构体对应运算符接口的自动推导。
  * 接口名由语义层核对（`Add` / `Multiply` / `Less` …），词法只负责整串识别。 */
 %token regex NO_REPLACE "#No[A-Za-z][A-Za-z0-9]*Replace"

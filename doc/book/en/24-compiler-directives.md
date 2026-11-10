@@ -158,6 +158,55 @@ void main() {
 legacy
 ```
 
+## 24.4 Ownership in value parameters
+
+In an ordinary named top-level function, put an ownership directive before the type of a value parameter. Each directive applies to the parameter it marks.
+
+| Directive | Caller | Callee |
+| --- | --- | --- |
+| `#MoveOnly` | Hand over an existing value with `move`, or pass an owned temporary directly | Takes ownership of the argument |
+| `#CopyOnly` | Provide a copyable value. Passing a direct `move` is an error | Gets an independent copy that it can modify |
+
+### Copy, then move
+
+`Parcel` is copyable. After calling `inspect`, the label in the original parcel is still `ChaLi`. The expression `move parcel` hands it over to `send`. The original binding can no longer be read after the call.
+
+<!-- verify-book -->
+```chali
+struct Parcel {
+    String label;
+};
+
+String inspect(#CopyOnly Parcel parcel) {
+    parcel.label = parcel.label + " (copy)";
+    return parcel.label;
+}
+
+void send(#MoveOnly Parcel parcel) {
+    println("发送 {}", parcel.label);
+}
+
+void main() {
+    Parcel parcel;
+    parcel.label = "ChaLi";
+    println("{}", inspect(parcel));
+    println("原件 {}", parcel.label);
+    send(move parcel);
+}
+```
+
+```text
+ChaLi (copy)
+原件 ChaLi
+发送 ChaLi
+```
+
+Writing `send(parcel)` produces a diagnostic asking for an explicit move or an owned temporary. A factory can pass its new parcel straight into `send(makeParcel())`. Writing `inspect(move parcel)` produces a diagnostic that `#CopyOnly` rejects the move argument.
+
+### Where the directives apply
+
+`#MoveOnly` accepts aggregates with concrete layouts and primitive scalars, including `Box<T>`, ordinary structs, and `int64`. `#CopyOnly` requires a copyable type. These parameters are required, and a function that declares one must be called directly. Use `T const&` or `T mut&` when you need a borrow.
+
 ### Summary
 
 Operator directives limit replacement, and borrow declarations identify result sources. Check each against its body and call site instead of generalizing one output to every combination.

@@ -1115,8 +1115,6 @@ int M_Call(int calleeName, int args)
     g_nodes[static_cast<std::size_t>(id)].kids = { args };
     return id;
 }
-bool IsStandardModule(const Memory::String &name);
-
 /**
  * @brief 构造后缀调用，显式 Index 调用生成缓冲区索引左值。
  * @param callee 被调用的表达式节点。
@@ -1148,13 +1146,11 @@ int M_CallOn(int callee, int args)
         }
         return id;
     }
-    /* 已声明模块按模块调用处理，模块限定调用不应被误判为类型构造。 */
+    /* 入口模块限定调用按普通函数调用处理。 */
     const std::size_t qualifier = target.s.rfind("::");
     const std::size_t typeStart = qualifier == Memory::String::npos ? 0u : qualifier + 2u;
     std::size_t typeLetter = typeStart;
     while (typeLetter < target.s.size() && target.s[typeLetter] == '_') ++typeLetter;
-    const bool standardModule = target.s.compare(0u, 11u, "std::core::") == 0 && IsStandardModule(target.s.substr(11u));
-    const bool moduleQualifier = standardModule || target.s == "program";
     const auto instance = chali_generic::session.made.find(target.s.substr(typeStart));
     const bool instantiatedType = instance != chali_generic::session.made.end() && instance->second.generic
         && (chali_generic::wordAt(instance->second.generic->declaration, 0, "struct")
@@ -1162,7 +1158,7 @@ int M_CallOn(int callee, int args)
             || chali_generic::wordAt(instance->second.generic->declaration, 0, "interface")
             || chali_generic::wordAt(instance->second.generic->declaration, 0, "type"));
     /* 同名模板的内部实例以 __module_ 开头，按实际声明识别类型而不是依赖首字母。 */
-    if (target.kind == MNode::EnumCtor && !moduleQualifier
+    if (target.kind == MNode::EnumCtor && target.s != "program"
         && (instantiatedType || (typeLetter < target.s.size() && std::isupper(static_cast<unsigned char>(target.s[typeLetter])))))
     {
         if (target.s.compare(0u, 11u, "std::core::") == 0) target.s.erase(0u, 11u);
@@ -1211,24 +1207,6 @@ int M_QualifiedName(int leftNameId, int rightNameId)
 }
 
 /**
- * @brief `std::core::X` 里的 X 是不是标准库**模块**（表在 `chali.gram` 的 `%code` 里）。
- *
- * 判定办法是查文法声明的那张表，而不是在编译器里写死 —— 新加标准模块只要改文法。
- * @param name `std::` 后面的那一段（如 `Math` / `Clock`）。
- * @return 是模块返回 true。
- */
-bool IsStandardModule(const Memory::String &name)
-{
-    static const Memory::Set<Memory::String> modules = []() {
-        Memory::Set<Memory::String> result;
-        for (const char *item : kChaLiStdModules)
-            if (item) result.insert(item);
-        return result;
-    }();
-    return modules.count("std::core::" + name) != 0u;
-}
-
-/**
  * @brief 构造并登记限定符号引用。
  * @param leftRefId 左侧限定引用的编号。
  * @param rightNameId 右侧名称的编号。
@@ -1244,10 +1222,8 @@ int M_QualifiedRef(int leftRefId, int rightNameId)
         return id;
     }
     const bool standardType = left.s == "std::core" && !left.s2.empty() && std::isupper(static_cast<unsigned char>(left.s2[0]));
-    /* `std::core::X::y` 里的 X 是不是**模块**，看 chali.gram 的 `%code` 里那张
-     * kChaLiStdModules 表（新加标准模块时改文法，别在编译器里硬编码）。
-     * 表外的按标准**类型**处理（`std::core::List::of` 只留 `List::of`）。 */
-    const Memory::String qualified = standardType ? (IsStandardModule(left.s2) ? "std::core::" + left.s2 : left.s2) : left.s + "::" + left.s2;
+    // 自动加载的 std::core 类型可用短名，其他路径保留完整模块限定。
+    const Memory::String qualified = standardType ? left.s2 : left.s + "::" + left.s2;
     const int nameId = M_Name(qualified.c_str());
     const int emptyArgs = M_List();
     return M_EnumCtor(nameId, rightNameId, emptyArgs);
@@ -2800,6 +2776,20 @@ int M_Param(int typeId, int nameId)
     g_nodes[static_cast<std::size_t>(id)].type = typeId;
     return id;
 }
+
+/**
+ * @brief 为普通具名函数的形参登记所有权约定。
+ * @param paramId 已构造的形参节点编号。
+ * @param moveOnly 非零要求移动，零要求复制。
+ * @return 原形参节点编号。
+ */
+int M_ParameterPassing(int paramId, int moveOnly)
+{
+    g_nodes[static_cast<std::size_t>(paramId)].parameterPassing =
+        moveOnly ? MParameterPassing::MoveOnly : MParameterPassing::CopyOnly;
+    return paramId;
+}
+
 /**
  * @brief 保存形参默认表达式。
  * @param paramId 形参节点。
@@ -3728,6 +3718,8 @@ void WriteUnitNode(std::ostream &out, const MNode &node, const Memory::Vector<st
     if (node.unsafeRequired) flags |= 1u << 10;
     if (node.unsafeScope) flags |= 1u << 11;
     if (node.formattedOutputBridge) flags |= 1u << 12;
+    if (node.parameterPassing == MParameterPassing::MoveOnly) flags |= 1u << 13;
+    if (node.parameterPassing == MParameterPassing::CopyOnly) flags |= 1u << 14;
     chali_incremental::writeNumber(out, flags);
     chali_incremental::writeNumber(out, static_cast<std::uint64_t>(node.i));
     WriteUnitDouble(out, node.d);
@@ -3817,6 +3809,8 @@ bool ReadUnitNode(std::istream &in, MNode &node)
     node.unsafeRequired = (flags & (1u << 10)) != 0;
     node.unsafeScope = (flags & (1u << 11)) != 0;
     node.formattedOutputBridge = (flags & (1u << 12)) != 0;
+    if (flags & (1u << 13)) node.parameterPassing = MParameterPassing::MoveOnly;
+    else if (flags & (1u << 14)) node.parameterPassing = MParameterPassing::CopyOnly;
     std::uint64_t integerValue = 0, guard = 0, type = 0, type2 = 0;
     if (!chali_incremental::readNumber(in, integerValue)) return false;
     node.i = static_cast<long long>(integerValue);

@@ -130,6 +130,8 @@ Type arguments resolve in the caller's module; defaults and constraints resolve 
 
 `std::core::Box<T>` owns one heap-allocated value. Create it with `Box<T>::newBox(value)`. Import `std::macro` to use `$BOX(value)` and infer the payload type. A Box is move-only. `get()` returns a copy of a copyable payload. `take()` consumes the box and moves out the payload. Calling `close()` or leaving scope releases the storage and destroys any remaining payload. A default-constructed box is empty. Use `isEmpty()` to check it. Calling `get()` or `take()` on an empty box triggers an assertion.
 
+A recursive enum can store child nodes as `Box<Node>` payloads. Pass the result of `Box<Node>::newBox(...)` directly to a variant constructor and each payload takes ownership of its box. Use `move` to transfer ownership from an existing box variable.
+
 ```chali
 let number = Box<int64>::newBox(42);
 assert(number.get() == 42);

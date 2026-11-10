@@ -40,6 +40,14 @@ int64 first(Node node) {
 void main() {
     int64 before = Memory::stats().liveBlocks;
     {
+        Box<Node> tree = Box<Node>::newBox(
+            Branch(Box<Node>::newBox(Leaf(1)), Box<Node>::newBox(Leaf(2))));
+        assert(sum(move tree) == 3);
+        assert(sum(Box<Node>::newBox(Branch(
+            Box<Node>::newBox(Branch(leaf(1), leaf(2))),
+            Box<Node>::newBox(Branch(leaf(3), leaf(4)))))) == 10);
+    }
+    {
         Box<Box<int64>> outer = Box<Box<int64>>::newBox(Box<int64>::newBox(42));
         Box<int64> inner = outer.take();
         assert(inner.take() == 42);

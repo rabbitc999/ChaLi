@@ -35,6 +35,7 @@ def generate():
         '12.': 'module import inline', '13.': 'mut',
         '15.': '@annotation', '16.': '#abi #export opcode #NonCopyable unsafe __rawSize __rawAlign', 'fn 捕获': 'fn copy move',
         '返回控制表达式': 'return', '具名函数声明': 'fn mut copy move', '#borrow 与 #static 生命周期契约': '#borrow #static #ret',
+        '按值形参的传参约定': '#MoveOnly #CopyOnly',
         'for-in 整数': 'for let in', '带值退出': 'break yield',
         '按标签退出循环': 'break', '块表达式': 'break',
     }

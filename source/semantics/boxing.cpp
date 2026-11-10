@@ -481,7 +481,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
 }
 
 /**
- * @brief 这个声明落在**编译器内嵌的标准库**里吗（`std::core` / `std::*` / 文法登记的标准模块）？
+ * @brief 判断声明是否位于内嵌标准库的模块命名空间中。
  *
  * 标准库里那些"只有签名"的宿主函数由 运行时 内建提供（`std::thread::wait`、
  * `std::io::__fileTryRead`、`std::memory::__memoryLiveBytes`…），不一定挂在
@@ -490,10 +490,7 @@ ast::NodePtr LowerAlgorithmCall(const Memory::String &name, const Memory::Vector
  */
 bool IsStandardLibraryModule(const Memory::String &module)
 {
-    if (module.empty()) return false;
-    if (module == "std::core" || module == "std") return true;
-    if (module.compare(0u, 5u, "std::") == 0) return true;
-    return IsStandardModule(module); /* 文法登记的标准模块 */
+    return module == "std" || module.compare(0u, 5u, "std::") == 0;
 }
 
 /**
@@ -1896,7 +1893,8 @@ ast::NodePtr LowerCall(int id)
         // 核心枚举内部转送已有借用；标准游标不保存到全局，允许借用跨度在
         // 调用链上继续传播。间接用户回调仍严格检查，不能隐藏来源后逃逸。
         const bool libraryForward = (g_currentModule == "std::core" && label.rfind("std::core::", 0) == 0) || label.rfind("std::iter::", 0) == 0;
-        values.push_back(index < args.size() ? LowerArgumentValue(args[index], signature->second.params[index].type, !libraryForward) : LowerDefaultArgument(signature->second.params[index]));
+        const auto &parameter = signature->second.params[index];
+        values.push_back(index < args.size() ? LowerArgumentValue(args[index], parameter, !libraryForward) : LowerDefaultArgument(parameter));
     }
     if (variadic)
     {
@@ -2232,11 +2230,6 @@ ast::NodePtr LowerEnumCtor(int id)
     }
     Memory::Vector<Memory::String> parameterNames;
     Memory::Vector<ast::NodePtr> arguments;
-    /*
-     * 结构体载荷是**按值**进聚合的（构造器会深拷贝它槽里的字符串 / 对象）。
-     * 实参如果是**当场造出来的聚合值**（嵌套的枚举构造器 / 工厂调用），它本身就是
-     * 一份没人接的临时值：先落进临时变量，等构造器把它拷进结果之后，再把这份临时值收尾。
-     */
     Memory::Vector<ast::NodePtr> pre;
     Memory::Vector<ast::NodePtr> post;
     for (std::size_t index = 0; index < variant->payloads.size(); ++index)
@@ -2246,19 +2239,17 @@ ast::NodePtr LowerEnumCtor(int id)
         const bool ownedPayload = payload.type->kind == MType::Struct
                                       ? IsOwnedAggregateTemporary(valueId) || IsImplicitConversionValue(valueId, payload.type)
                                       : IsFreshValue(valueId);
-        if (HasNonCopyableValue(payload.type) && !ownedPayload)
+        const bool nonCopyable = HasNonCopyableValue(payload.type);
+        if (nonCopyable && !ownedPayload)
             return Fail("不可复制的枚举载荷必须显式 move 或使用拥有临时值：" + Describe(payload.type)), Bad();
         parameterNames.push_back(EnumPayloadParameterName(node.s, node.s2, index));
-        ast::NodePtr argument = LowerValueForType(node.kids[index], payload.type);
-        if (payload.type->kind == MType::Struct && AggregateNeedsDeepCopy(payload.type) && IsFreshAggregate(node.kids[index]))
+        ast::NodePtr argument = LowerValueForType(valueId, payload.type);
+        if (payload.type->kind == MType::Struct && ownedPayload &&
+            (nonCopyable || AggregateNeedsDeepCopy(payload.type)))
         {
-            const Memory::String temp = AllocateName("__chali_agg_arg");
-            pre.push_back(ast::Node::declare(temp, LowerType(payload.type, temp)));
-            pre.push_back(ast::Node::assign(temp, argument));
-            for (const ast::NodePtr &statement :
-                 MakeAggregateCleanup(payload.type, ast::Node::var(temp)))
-                post.push_back(statement);
-            argument = ast::Node::var(temp);
+            // 独立存储保留每个实参，后续调用即使复用返回槽也不会覆盖前一项。
+            // 构造器移走不可复制的载荷，表达式收尾会析构仍由调用点拥有的副本来源。
+            argument = OwnedAggregateTemp(argument, payload.type);
         }
         else if ((IsStandardOpcode(payload.type, "String") || IsObjectLike(payload.type)) && IsOwnedKind(payload.type) && !IsRuntimeArray(payload.type) && !IsResourceLike(payload.type) && IsFreshValue(node.kids[index]) && !(IsStandardOpcode(payload.type, "String") && N(node.kids[index]).kind == MNode::Str))
         {
@@ -2270,9 +2261,9 @@ ast::NodePtr LowerEnumCtor(int id)
             const Memory::String temp = AllocateName("__chali_ctor_arg");
             pre.push_back(ast::Node::declare(temp, LowerType(payload.type, temp)));
             // ? 等表达式已登记拥有型临时值，交给构造参数后清空原槽，避免两处清理同一资源。
-            pre.push_back(ast::Node::assign(temp, TakeExpressionTempValue(argument, payload.type)));
+            const auto capture = ast::Node::assign(temp, TakeExpressionTempValue(argument, payload.type));
             post.push_back(MakeDrop(temp, false));
-            argument = ast::Node::var(temp);
+            argument = ast::Node::sequence({ capture }, ast::Node::var(temp));
         }
         arguments.push_back(argument);
     }
@@ -4778,7 +4769,7 @@ ast::Function LowerFunction(const Memory::String &name, const Memory::String &ow
                                                             ast::Node::alloc(ast::Node::i(std::max(8, StructStride(param.type))))));
             g_pendingParameterStorage.push_back(storage);
             g_parameterValueStorage.insert(storage);
-            parameterReferences.push_back(HasNonCopyableValue(param.type) ?
+            parameterReferences.push_back((HasNonCopyableValue(param.type) || ParameterPassing(param) == MParameterPassing::MoveOnly) ?
                                               MoveStructValue(ast::Node::var(storage), ast::Node::var(param.emitted), param.type) :
                                               DeepCopyStructValue(ast::Node::var(storage), ast::Node::var(param.emitted), param.type));
             g_scope.back()[parameterKey].emitted = storage;

@@ -1,0 +1,6 @@
+struct Entry { int64 value; };
+void consume(#CopyOnly Entry value) {}
+void main() {
+    Entry value;
+    consume(move value);
+}

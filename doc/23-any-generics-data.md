@@ -125,6 +125,8 @@ void main() {
 
 `std::core::Box<T>` 独占堆上的一个值。用 `Box<T>::newBox(value)` 创建。导入 `std::macro` 后也可用 `$BOX(value)` 推导类型。Box 本身只能移动。`get()` 返回盒内可复制值的副本，`take()` 消耗盒并移出原值。`close()` 或离开作用域会释放存储并清理仍在盒中的值。默认构造的盒为空，可用 `isEmpty()` 判断。对空盒调用 `get()` 或 `take()` 会触发断言。
 
+递归枚举可用 `Box<Node>` 作为子节点载荷。可以直接把 `Box<Node>::newBox(...)` 的返回值传给变体构造器，每个载荷都会接管自己的盒。传入已有的盒变量时用 `move` 转移所有权。
+
 ```chali
 let number = Box<int64>::newBox(42);
 assert(number.get() == 42);

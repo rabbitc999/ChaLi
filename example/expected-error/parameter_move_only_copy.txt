@@ -1,0 +1,1 @@
+chali: example/samples-error/parameter_move_only_copy.chl 第 5 行第 5 列：传入 #MoveOnly 形参需要显式 move 或拥有型临时值：value

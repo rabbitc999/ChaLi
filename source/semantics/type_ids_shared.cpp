@@ -840,6 +840,16 @@ Memory::String ResolveFunctionValue(const Memory::String &module, const Memory::
 }
 
 /**
+ * @brief 取得形参在源码中声明的按值传参约定。
+ * @param param 形参描述。
+ * @return 源码指令对应的约定，合成形参使用默认约定。
+ */
+MParameterPassing ParameterPassing(const MParam &param)
+{
+    return param.declaration >= 0 ? N(param.declaration).parameterPassing : MParameterPassing::Default;
+}
+
+/**
  * @brief 函数指针的值：数据区里**存着函数标签那串字节**的地址。
  *
  * 栈机侧 `(callptr, 地址, _, 目标)` 就是去那儿读标签。数据区从偏移 8 开始排
@@ -852,6 +862,13 @@ Memory::String ResolveFunctionValue(const Memory::String &module, const Memory::
  */
 ast::NodePtr FunctionPointerValue(const Memory::String &label)
 {
+    if (const auto signature = g_funcs.find(label); signature != g_funcs.end() &&
+        std::any_of(signature->second.params.begin(), signature->second.params.end(),
+                    [](const MParam &param) { return ParameterPassing(param) != MParameterPassing::Default; }))
+    {
+        Fail("带 #MoveOnly 或 #CopyOnly 的函数须直接调用：" + label);
+        return ast::Node::i(0);
+    }
     for (const auto &declaration : g_functionDecls)
         if (declaration.label == label && !declaration.superseded && declaration.moduleLocal && declaration.module != g_currentModule)
         {

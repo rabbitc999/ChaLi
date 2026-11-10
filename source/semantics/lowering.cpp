@@ -2188,6 +2188,45 @@ ast::NodePtr LowerArgumentValue(int id, const std::shared_ptr<MType> &type,
 }
 
 /**
+ * @brief 按具名形参的约定降级实参，移动聚合在调用前存入独立临时槽。
+ * @param id 实参表达式编号。
+ * @param param 已匹配的形参描述。
+ * @param checkObjectBorrow 是否检查实参携带的隐式借用。
+ * @return 已检查并准备传递的实参。
+ */
+ast::NodePtr LowerArgumentValue(int id, const MParam &param, bool checkObjectBorrow)
+{
+    const auto passing = ParameterPassing(param);
+    if (passing == MParameterPassing::Default)
+        return LowerArgumentValue(id, param.type, checkObjectBorrow);
+    const auto arg = N(id);
+    if (passing == MParameterPassing::CopyOnly)
+    {
+        int source = id;
+        while (N(source).kind == MNode::Cast && !N(source).kids.empty())
+            source = N(source).kids[0];
+        if (const auto &value = N(source); value.kind == MNode::Call && !value.kids.empty() &&
+            StandardCallName(N(value.kids[0])) == "__move")
+            return Fail("不能向 #CopyOnly 形参传入 move 实参：" + param.source), Bad();
+        return LowerArgumentValue(id, param.type, checkObjectBorrow);
+    }
+    const bool aggregate = param.type->kind == MType::Struct;
+    const bool literal = arg.kind == MNode::Int || arg.kind == MNode::Float ||
+                         arg.kind == MNode::Bool || arg.kind == MNode::Char;
+    const bool owned = aggregate ? IsOwnedAggregateTemporary(id) &&
+                                       (arg.kind != MNode::EnumCtor || arg.type2 == 1 ||
+                                        FindEnumVariant(arg.s, arg.s2) != nullptr)
+                                 : literal || IsFreshValue(id) ||
+                                       ((arg.kind == MNode::Bin || arg.kind == MNode::Un) &&
+                                        RawExprType(id)->kind != MType::Ptr && arg.s != "*");
+    if (!owned)
+        return Fail("传入 #MoveOnly 形参需要显式 move 或拥有型临时值：" + param.source), Bad();
+    if (checkObjectBorrow) RecordObjectArgumentBorrow(id, param.type);
+    const auto value = LowerValueForType(id, param.type);
+    return aggregate ? OwnedAggregateTemp(value, param.type) : value;
+}
+
+/**
  * 赋值：目标是变量就直接 `:=`；是下标 / 成员 / `*p` 就走 ast 的 `(store, 地址, 值, _)`。
  */
 /**

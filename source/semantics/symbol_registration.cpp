@@ -1424,6 +1424,19 @@ bool RegisterTop()
             declaration.signature.params.back().bindingKey = NodeBindingKey(N(paramId));
             declaration.signature.params.back().bindingIdentity = N(paramId).bindingIdentity;
             declaration.signature.params.back().declaration = paramId;
+            const auto &param = declaration.signature.params.back();
+            const auto passing = ParameterPassing(param);
+            if (passing == MParameterPassing::Default) continue;
+            if (top.kind != MNode::FuncDef || declaration.exported)
+                return Fail("宿主声明和原生导出函数的形参不支持 #MoveOnly 或 #CopyOnly：" + param.source);
+            if (passing == MParameterPassing::CopyOnly && HasNonCopyableValue(param.type))
+                return Fail("声明 #CopyOnly 形参需要可复制类型：" + param.source);
+            if (passing == MParameterPassing::MoveOnly && param.type->kind != MType::Struct &&
+                param.type->kind != MType::Int && param.type->kind != MType::Double &&
+                param.type->kind != MType::Bool && param.type->kind != MType::Char)
+                return Fail("声明 #MoveOnly 形参需要具体聚合或基础标量类型：" + param.source);
+            if (param.type->kind == MType::Ptr || param.type->kind == MType::Void || IsInterfaceType(param.type))
+                return Fail("传参约定需要具体按值形参：" + param.source);
         }
         if (!ValidateVariadicParameters(declaration.signature.params,
                                         "函数 " + declaration.source))

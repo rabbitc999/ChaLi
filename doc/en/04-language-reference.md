@@ -318,6 +318,26 @@ A generic struct’s `create` entry can infer the owner’s type arguments from 
 
 ---
 
+## Passing conventions for value parameters
+
+Prefix a parameter type in an ordinary named top-level function with `#MoveOnly` or `#CopyOnly`. Each directive applies to one value parameter.
+
+```chali
+struct Entry { String name; };
+
+void consume(#MoveOnly Entry value) { println("{}", value.name); }
+void inspect(#CopyOnly Entry value) { println("{}", value.name); }
+
+void main() {
+    Entry entry;
+    entry.name = "ChaLi";
+    inspect(entry);
+    consume(move entry);
+}
+```
+
+`#MoveOnly` accepts aggregates with concrete layouts and primitive scalars. Use `move` for an existing value, or pass an owned temporary directly. `#CopyOnly` requires a copyable type, uses ordinary pass-by-value copying, and rejects a direct `move` argument. These parameters are required, and functions that declare them must be called directly. Declare reference parameters with `const&` or `mut&`.
+
 ## 5. Operators
 
 ```chali

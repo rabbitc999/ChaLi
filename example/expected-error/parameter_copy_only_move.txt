@@ -1,0 +1,1 @@
+chali: example/samples-error/parameter_copy_only_move.chl 第 5 行第 5 列：不能向 #CopyOnly 形参传入 move 实参：value

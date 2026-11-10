@@ -109,6 +109,9 @@ struct MAnnotationValue
     Memory::String text;    ///< 已解码的字符串值。
 };
 
+/** @brief 普通具名函数的按值形参传递约定。 */
+enum class MParameterPassing { Default, MoveOnly, CopyOnly };
+
 struct MNode
 {
     enum Kind
@@ -284,6 +287,7 @@ struct MNode
     bool formattedOutputBridge = false; ///< 仅标准错误流归一化生成的调用可访问对应私有入口。
     bool generatedDeclaration = false;  ///< 由编译器自身的派生模板生成，允许内部辅助符号。
     bool nonCopyable = false;           ///< 禁用值复制：`#NonCopyable opcode`，或实现 Closeable 的结构体自动获得。
+    MParameterPassing parameterPassing = MParameterPassing::Default;  ///< 具名函数的按值传参约定。
     long long i = 0;
     double d = 0.0;
     int guard = -1;                ///< match 分支的可选 bool 守卫。
@@ -1100,6 +1104,7 @@ int M_TypeTagType(int typeId);
 int M_RawLayout(int typeId, int alignment);
 
 int M_Param(int typeId, int nameId);
+int M_ParameterPassing(int paramId, int moveOnly);
 /**
  * @brief 保存形参默认表达式。
  * @param paramId 形参节点。

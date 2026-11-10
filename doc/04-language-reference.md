@@ -335,6 +335,26 @@ void main() {
 
 ---
 
+## 按值形参的传参约定
+
+普通顶层具名函数可在类型前写 `#MoveOnly` 或 `#CopyOnly`。这些指令作用于单个按值形参。
+
+```chali
+struct Entry { String name; };
+
+void consume(#MoveOnly Entry value) { println("{}", value.name); }
+void inspect(#CopyOnly Entry value) { println("{}", value.name); }
+
+void main() {
+    Entry entry;
+    entry.name = "ChaLi";
+    inspect(entry);
+    consume(move entry);
+}
+```
+
+`#MoveOnly` 接受具有具体布局的聚合和基础标量。已有值须用 `move`，拥有型临时值可直接传入。`#CopyOnly` 要求可复制的类型，使用普通按值复制，拒绝直接传入 `move`。带指令的形参是必填形参，函数须直接调用。引用形参继续通过 `const&` 和 `mut&` 声明。
+
 ## 5. 运算符
 
 ```chali
