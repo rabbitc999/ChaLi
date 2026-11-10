@@ -16,7 +16,7 @@ struct LspUnit
      * @param source 原文。
      */
     explicit LspUnit(std::string source) : text(std::make_shared<const std::string>(std::move(source))),
-                                           positions(*text), tokens(lex(*text)), raw(lex(*text, true))
+                                           positions(*text), tokens(lex(*text, false, false, true)), raw(lex(*text, true, false, true))
     {
         imports = directives(*text, "import");
         std::vector<int> scope{ 0 };

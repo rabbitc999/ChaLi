@@ -614,75 +614,118 @@ struct Token
  * @brief 扫描源文本并产生词法项。
  * @param s 待处理的文本或节点文本值。
  * @param trivia 是否保留空白及注释词法项。
- * @param multilineStrings 是否跨行扫描字符串，格式化时用于逐字保护字符串内容。
+ * @param multilineStrings 是否跨行扫描普通字符串。
+ * @param expandInterpolation 是否输出插值中的代码与字面片段。
  * @retval 按处理顺序保存的结果元素集合。
  */
-std::vector<Token> lex(const std::string &s, bool trivia = false, bool multilineStrings = false)
+std::vector<Token> lex(const std::string &s, bool trivia = false, bool multilineStrings = false, bool expandInterpolation = false)
 {
     std::vector<Token> out;
     size_t i = 0;
-    while (i < s.size())
-    {
-        if (std::isspace((unsigned char)s[i]))
+    const auto append = [&](size_t a, size_t b, int kind) {
+        if (a < b && (trivia || !kind || kind == 10 || kind == 11))
+            out.push_back({ s.substr(a, b - a), a, b, kind });
+    };
+    const auto scan = [&](const auto &self, bool interpolation, unsigned nesting, bool emit) -> void {
+        int braces = 0;
+        while (i < s.size())
         {
-            ++i;
-            continue;
-        }
-        size_t a = i;
-        int kind = 0;
-        char c = s[i++];
-        if (c == '/' && i < s.size() && (s[i] == '/' || s[i] == '*'))
-        {
-            kind = 8;
-            if (s[i++] == '/')
+            if (std::isspace((unsigned char)s[i]))
             {
-                while (i < s.size() && s[i] != '\n')
+                ++i;
+                continue;
+            }
+            size_t a = i;
+            int kind = 0;
+            char c = s[i++];
+            if (interpolation && c == '}' && braces == 0)
+            {
+                if (emit) append(a, i, 11);
+                return;
+            }
+            if (c == '{') ++braces;
+            if (c == '}') --braces;
+            if (c == 'f' && i < s.size() && s[i] == '"' && nesting < 64)
+            {
+                ++i;
+                auto segment = a;
+                const bool split = emit && expandInterpolation;
+                while (i < s.size())
+                {
+                    const auto at = i;
+                    const auto ch = s[i++];
+                    if (ch == '\\' && i < s.size())
+                        ++i;
+                    else if (ch == '"')
+                        break;
+                    else if (ch == '{')
+                    {
+                        if (split)
+                        {
+                            append(segment, at, 9);
+                            append(at, i, 11);
+                        }
+                        self(self, true, nesting + 1, split);
+                        segment = i;
+                    }
+                }
+                if (emit) append(split ? segment : a, i, 9);
+                continue;
+            }
+            if (c == '/' && i < s.size() && (s[i] == '/' || s[i] == '*'))
+            {
+                kind = 8;
+                if (s[i++] == '/')
+                {
+                    while (i < s.size() && s[i] != '\n')
+                        ++i;
+                }
+                else
+                {
+                    auto end = s.find("*/", i);
+                    i = end == s.npos ? s.size() : end + 2;
+                }
+            }
+            else if (c == '"' || c == '\'')
+            {
+                kind = 9;
+                while (i < s.size() && (multilineStrings || interpolation || s[i] != '\n'))
+                {
+                    char v = s[i++];
+                    if (v == '\\' && i < s.size())
+                        ++i;
+                    else if (v == c)
+                        break;
+                }
+            }
+            else if (std::isdigit((unsigned char)c))
+            {
+                kind = 10;
+                while (i < s.size() && (std::isalnum((unsigned char)s[i]) || s[i] == '_' || s[i] == '.' || ((s[i] == '+' || s[i] == '-') && (s[i - 1] == 'e' || s[i - 1] == 'E'))))
+                    ++i;
+            }
+            else if (std::isalpha((unsigned char)c) || c == '_' || c == '$')
+            {
+                while (i < s.size() && (std::isalnum((unsigned char)s[i]) || s[i] == '_' || s[i] == '$'))
                     ++i;
             }
             else
             {
-                auto end = s.find("*/", i);
-                i = end == s.npos ? s.size() : end + 2;
+                for (auto op : { "::", "->", "=>", "...", "==", "!=", "<=", ">=", "++", "--",
+                                 "+=", "-=", "*=", "/=", "&&", "||" })
+                    if (s.compare(a, std::char_traits<char>::length(op), op) == 0)
+                    {
+                        i = a + std::char_traits<char>::length(op);
+                        break;
+                    }
             }
+            if (emit) append(a, i, kind);
         }
-        else if (c == '"' || c == '\'')
-        {
-            kind = 9;
-            while (i < s.size() && (multilineStrings || s[i] != '\n'))
-            {
-                char v = s[i++];
-                if (v == '\\' && i < s.size())
-                    ++i;
-                else if (v == c)
-                    break;
-            }
-        }
-        else if (std::isdigit((unsigned char)c))
-        {
-            kind = 10;
-            while (i < s.size() && (std::isalnum((unsigned char)s[i]) || s[i] == '_' || s[i] == '.' || ((s[i] == '+' || s[i] == '-') && (s[i - 1] == 'e' || s[i - 1] == 'E'))))
-                ++i;
-        }
-        else if (std::isalpha((unsigned char)c) || c == '_' || c == '$')
-        {
-            while (i < s.size() && (std::isalnum((unsigned char)s[i]) || s[i] == '_' || s[i] == '$'))
-                ++i;
-        }
-        else
-        {
-            for (auto op : { "::", "->", "=>", "...", "==", "!=", "<=", ">=", "++", "--",
-                             "+=", "-=", "*=", "/=", "&&", "||" })
-                if (s.compare(a, std::char_traits<char>::length(op), op) == 0)
-                {
-                    i = a + std::char_traits<char>::length(op);
-                    break;
-                }
-        }
-        if (trivia || !kind || kind == 10)
-            out.push_back({ s.substr(a, i - a), a, i, kind });
-    }
+    };
+    scan(scan, false, 0, true);
     return out;
 }
+
 /**
  * @brief 查找括号组对应的结束位置。
  * @param t 待扫描的词法项数组。
@@ -1144,7 +1187,7 @@ struct Binding
 std::vector<Binding> scanBindings(const std::string &s,
                                   std::set<std::string> types)
 {
-    auto t = lex(s);
+    auto t = lex(s, false, false, true);
     auto hiddenTypes = opcodeNames(t);
     // String 是语言值类型；隐藏胶水声明不应隐藏用户的字符串绑定。
     hiddenTypes.erase("String");
@@ -1352,7 +1395,7 @@ std::vector<int> scopeAt(const std::string &s, size_t cursor)
     }
     std::vector<int> scope{ 0 };
     int serial = 0;
-    for (auto &t : lex(s))
+    for (auto &t : lex(s, false, false, true))
     {
         if (t.a > cursor)
             break;
@@ -1395,7 +1438,7 @@ std::string expression(const std::string &s, size_t cursor)
     }
     if (!indexed)
     {
-        fallback = lex(s.substr(0, cursor));
+        fallback = lex(s.substr(0, cursor), false, false, true);
         indexed = &fallback;
         end = fallback.size();
     }
@@ -4702,7 +4745,7 @@ class Server
         }
         if (method == "textDocument/completion")
         {
-            for (auto &token : lex(s, true))
+            for (const auto &token : unit->raw)
                 if (token.a < cursor && cursor <= token.b && (token.kind == 8 || token.kind == 9) && (cursor < token.b || starts(token.word, "//") || (starts(token.word, "/*") && !ends(token.word, "*/")) || (token.kind == 9 && token.word.back() != token.word.front())))
                     return A{};
             auto name = expression(s, cursor);
@@ -4889,7 +4932,7 @@ class Server
             }
             return out;
         }
-        auto tokens = lex(s);
+        const auto &tokens = unit->tokens;
         if (method == "textDocument/hover")
             for (size_t at = 1; at < tokens.size(); ++at)
             {

@@ -55,7 +55,7 @@ bool inMacroTemplate(const std::string &text, size_t at)
 SymbolIdentity resolveSymbol(const std::string &u, const std::string &text, const std::vector<Record> &records, size_t at, const std::vector<Binding> *indexed = nullptr)
 {
     SymbolIdentity result;
-    const auto localTokens = activeUnit && activeUnit->text.get() == &text ? std::vector<Token>() : lex(text);
+    const auto localTokens = activeUnit && activeUnit->text.get() == &text ? std::vector<Token>() : lex(text, false, false, true);
     const auto &tokens = activeUnit && activeUnit->text.get() == &text ? activeUnit->tokens : localTokens;
     auto token = std::upper_bound(tokens.begin(), tokens.end(), at, [](size_t value, const Token &part) { return value < part.a; });
     if (token == tokens.begin()) return result;

@@ -333,7 +333,7 @@ function registerProviders(context, deps) {
        *
        * @param {vscode.TextDocument} document 文档。
        * @param {vscode.Position} position 位置。
-       * @returns {Promise<vscode.Location[]>} 定义位置。
+       * @returns {Promise<vscode.Definition | vscode.DefinitionLink[]>} 定义位置或带原始范围的链接。
        */
       provideDefinition: async (document, position, token) => {
         const result = await request('textDocument/definition', {
@@ -342,11 +342,16 @@ function registerProviders(context, deps) {
         }, token, document);
         if (!result) return [];
         const items = Array.isArray(result) ? result : [result];
-        return items.flatMap((item) => {
-          const uri = item?.targetUri || item?.uri;
-          const range = item?.targetSelectionRange || item?.range;
-          return uri && range ? [new vscode.Location(vscode.Uri.parse(uri), toRange(range))] : [];
-        });
+        if (items.some((item) => item?.targetUri)) {
+          return items.flatMap((item) => item?.targetUri && item?.targetRange && item?.targetSelectionRange ? [{
+            targetUri: vscode.Uri.parse(item.targetUri),
+            targetRange: toRange(item.targetRange),
+            targetSelectionRange: toRange(item.targetSelectionRange),
+            originSelectionRange: item.originSelectionRange && toRange(item.originSelectionRange),
+          }] : []);
+        }
+        return items.flatMap((item) => item?.uri && item?.range
+          ? [new vscode.Location(vscode.Uri.parse(item.uri), toRange(item.range))] : []);
       },
     }),
 

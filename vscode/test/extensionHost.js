@@ -130,6 +130,22 @@ exports.run = async function () {
   const expandedAlias = await bounded(vscode.commands.executeCommand('chali.previewTypeAlias'), '类型别名展开');
   assert.equal(expandedAlias?.spelling, 'Count');
   assert.equal(expandedAlias?.type, 'int64');
+  const interpolationSource = path.join(folder.uri.fsPath, 'interpolation-links.chl');
+  const interpolationText = 'String dumpNode(int64 expr, int64 pool) { return "node"; }\n'
+    + 'void main() { String name = "test"; int64 expr = 1; int64 pool = 2;\n'
+    + '    println(f"😀 let {name} = {dumpNode(expr, pool)}"); }\n';
+  fs.writeFileSync(interpolationSource, interpolationText);
+  const interpolationDocument = await vscode.workspace.openTextDocument(interpolationSource);
+  await vscode.window.showTextDocument(interpolationDocument);
+  for (const [word, declaration] of [['name', 'name ='], ['dumpNode', 'dumpNode(int64']]) {
+    const at = interpolationText.lastIndexOf(word);
+    const definitions = await bounded(vscode.commands.executeCommand('vscode.executeDefinitionProvider',
+      interpolationDocument.uri, interpolationDocument.positionAt(at + 1)), '插值定义链接');
+    const link = definitions?.find(item => item.targetUri?.toString() === interpolationDocument.uri.toString());
+    assert(link?.originSelectionRange?.start.isEqual(interpolationDocument.positionAt(at)));
+    assert(link.originSelectionRange.end.isEqual(interpolationDocument.positionAt(at + word.length)));
+    assert(link.targetSelectionRange.start.isEqual(interpolationDocument.positionAt(interpolationText.indexOf(declaration))));
+  }
   const scenarios = [];
   const tracker = vscode.debug.registerDebugAdapterTrackerFactory('chali', {
     createDebugAdapterTracker(session) {
@@ -215,7 +231,7 @@ exports.run = async function () {
       active = null;
     }
     fs.writeFileSync(path.join(work, 'result.json'), JSON.stringify({ vscode: vscode.version, extension: extension.packageJSON.version,
-      activated: true, scenarios: scenarios.map(state => ({ name: state.session.name,
+      activated: true, interpolationDefinitionLinks: true, scenarios: scenarios.map(state => ({ name: state.session.name,
         stopped: state.messages.filter(message => message.event === 'stopped').length,
         processesExited: state.processes.length,
         processes: state.processes,
