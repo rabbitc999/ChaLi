@@ -3947,6 +3947,11 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
     }
 
     const MNode &switchNode = N(id);
+    const auto subjectId = switchNode.kids[0];
+    const auto &subjectNode = N(subjectId);
+    const bool ownsSubject = IsFreshAggregate(subjectId);
+    const bool movedSubject = subjectNode.kind == MNode::Call && !subjectNode.kids.empty() &&
+                              StandardCallName(N(subjectNode.kids[0])) == "__move";
     const Memory::String subject = AllocateName("__chali_switch_enum");
     const Memory::String breakLabel = NewBlockLabel("brk");
     Memory::Vector<ast::NodePtr> setup;
@@ -3959,7 +3964,7 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
      * **每个构造器一份的静态对象**，连着 match 同类型枚举会盖掉前一次的槽
      * （`match (f(8)) …; match (f(2)) …;` 里第一份载荷会漏）。
      */
-    if (IsFreshAggregate(switchNode.kids[0]) && subjectType && subjectType->kind == MType::Struct)
+    if (ownsSubject && subjectType->kind == MType::Struct)
     {
         if (const ast::NodePtr init = DefaultInit(subject, subjectType))
             setup.push_back(init);
@@ -3998,6 +4003,7 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
         PushOwnedScope();
         Memory::Vector<ast::NodePtr> body;
         Memory::Vector<ast::NodePtr> patternChecks;
+        Memory::Vector<std::function<void()>> transfers;
         if (variant != nullptr)
         {
             const MNode &pattern = normalizedPatterns.at(static_cast<int>(item.i));
@@ -4037,18 +4043,21 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
                     continue;
                 }
                 if (sourceName == "_") continue;
-                /*
-                 * 载荷绑定默认是"只看不改"的：值载荷本来就是副本，`T const &` 载荷也只能读。
-                 * 但 `Value(T mut & v)` 这种**可变引用载荷**要放开 —— 否则透过它写回原对象会被
-                 * `ConstRootOf` 当成"改 const 变量的内容"拦掉，"用引用载荷拿可变引用"就没意义了。
-                 */
                 const bool valueMatch = switchNode.type2 == 1;
-                const bool frozen = valueMatch ? payload.type->kind == MType::Ptr : payload.type->kind != MType::Ptr || payload.type->readOnly;
-                const Memory::String emitted = DeclareVar(sourceName, payload.type, Memory::String(), frozen, NodeBindingKey(bindingSyntax), bindingSyntax.bindingIdentity);
+                const bool nonCopyable = HasNonCopyableValue(payload.type);
+                const bool transferPayload = ownsSubject && (nonCopyable ||
+                    (movedSubject && (payload.type->kind == MType::Struct || LeafOwnedByAggregate(payload.type))));
+                if (valueMatch && nonCopyable && !transferPayload)
+                    return Fail("不可复制枚举的值匹配需要显式移动主体"), Bad();
+                const bool frozen = !transferPayload && (valueMatch ? payload.type->kind == MType::Ptr :
+                    payload.type->kind != MType::Ptr || payload.type->readOnly);
+                const bool guardedTransfer = transferPayload && item.guard >= 0;
+                const Memory::String emitted = DeclareVar(sourceName, payload.type, Memory::String(), frozen || guardedTransfer,
+                    NodeBindingKey(bindingSyntax), bindingSyntax.bindingIdentity);
                 if (HasBorrowedValue(payload.type))
                     FindNodeVar(bindingSyntax)->borrowDepth = BorrowSourceDepth(switchNode.kids[0]);
                 // 被闭包借用的载荷直接使用主体的稳定槽，避免建立指向临时标量的引用。
-                const bool captureStorage = !valueMatch && g_addressTakenNames.count(sourceName) && NeedsReferenceStorage(payload.type);
+                const bool captureStorage = !valueMatch && !transferPayload && g_addressTakenNames.count(sourceName) && NeedsReferenceStorage(payload.type);
                 FindNodeVar(bindingSyntax)->elementReference = captureStorage;
                 body.push_back(DebugPatternDeclaration(emitted, payload.type, pattern.kids[index], frozen,
                                                         captureStorage ? ast::Type::i64() : LowerType(payload.type, emitted)));
@@ -4066,40 +4075,48 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
                  * 的既有语义（`result = error;` 里 result 会随绑定一起被释放），所以不复制。
                  */
                 auto value = payload.type->kind == MType::Struct || captureStorage ? address : ast::Node::loadFrom(address, LowerType(payload.type, emitted));
-                const bool transferPayload = HasNonCopyableValue(payload.type) && IsFreshAggregate(switchNode.kids[0]);
-                if (valueMatch && HasNonCopyableValue(payload.type) && !transferPayload)
-                    return Fail("不可复制枚举的值匹配需要显式移动主体"), Bad();
                 if (transferPayload)
                 {
-                    FindNodeVar(bindingSyntax)->elementReference = false;
-                    if (payload.type->kind == MType::Struct)
+                    auto transfer = [&, emitted, address, type = payload.type, bindingId = pattern.kids[index]] {
+                        const auto &binding = N(bindingId);
+                        FindNodeVar(binding)->isConst = false;
+                        if (type->kind == MType::Struct)
+                        {
+                            body.push_back(DefaultInit(emitted, type, false, true));
+                            body.push_back(MoveStructValue(ast::Node::var(emitted), address, type));
+                            MarkDestructor(emitted, type);
+                        }
+                        else
+                        {
+                            body.push_back(ast::Node::assign(emitted, ast::Node::loadInt(address)));
+                            body.push_back(ast::Node::storeAt(address, ast::Node::i(0), ast::Type::i64()));
+                            MarkOwned(emitted);
+                            if (g_addressTakenNames.count(binding.s) && NeedsReferenceStorage(type))
+                            {
+                                // 表达式分支的载荷副本与普通局部值一样，需要稳定槽供 break 隐式移动。
+                                const auto storage = AllocateName("__chali_match_value_storage");
+                                body.push_back(ast::Node::declare(storage, ast::Type::i64()));
+                                body.push_back(ast::Node::assign(storage, ast::Node::alloc(ast::Node::i(ElementBytes(type)))));
+                                body.push_back(ast::Node::storeAt(ast::Node::var(storage), ast::Node::var(emitted), LowerType(type, storage)));
+                                MarkOwned(storage);
+                                auto &names = g_ownedScopes.back().names;
+                                const auto slot = names.back();
+                                names.pop_back();
+                                names.insert(names.begin(), slot);
+                                g_referenceStorage[emitted] = storage;
+                                FindNodeVar(binding)->emitted = storage;
+                                FindNodeVar(binding)->elementReference = true;
+                            }
+                        }
+                    };
+                    if (guardedTransfer)
                     {
-                        body.push_back(DefaultInit(emitted, payload.type, false, true));
-                        body.push_back(MoveStructValue(ast::Node::var(emitted), address, payload.type));
-                        MarkDestructor(emitted, payload.type);
+                        // 守卫只借用主体槽。只有命中分支后才接管载荷，失败时下一模式仍能读取它。
+                        body.push_back(ast::Node::assign(emitted, value));
+                        transfers.push_back(std::move(transfer));
                     }
                     else
-                    {
-                        body.push_back(ast::Node::assign(emitted, ast::Node::loadInt(address)));
-                        body.push_back(ast::Node::storeAt(address, ast::Node::i(0), ast::Type::i64()));
-                        MarkOwned(emitted);
-                        if (g_addressTakenNames.count(sourceName) && NeedsReferenceStorage(payload.type))
-                        {
-                            // 表达式分支的载荷副本与普通局部值一样，需要稳定槽供 break 隐式移动。
-                            const auto storage = AllocateName("__chali_match_value_storage");
-                            body.push_back(ast::Node::declare(storage, ast::Type::i64()));
-                            body.push_back(ast::Node::assign(storage, ast::Node::alloc(ast::Node::i(ElementBytes(payload.type)))));
-                            body.push_back(ast::Node::storeAt(ast::Node::var(storage), ast::Node::var(emitted), LowerType(payload.type, storage)));
-                            MarkOwned(storage);
-                            auto &names = g_ownedScopes.back().names;
-                            const auto slot = names.back();
-                            names.pop_back();
-                            names.insert(names.begin(), slot);
-                            g_referenceStorage[emitted] = storage;
-                            FindNodeVar(bindingSyntax)->emitted = storage;
-                            FindNodeVar(bindingSyntax)->elementReference = true;
-                        }
-                    }
+                        transfer();
                     continue;
                 }
                 if (valueMatch && payload.type->kind == MType::Struct)
@@ -4143,6 +4160,7 @@ ast::NodePtr LowerEnumSwitch(int id, const std::shared_ptr<MType> &subjectType,
         }
         body.insert(body.begin(), patternChecks.begin(), patternChecks.end());
         AppendMatchGuard(item, next, &body, &g_ownedScopes.back());
+        for (const auto &transfer : transfers) transfer();
         const Memory::Vector<ast::NodePtr> statements = LowerStmtList(item.kids[0]);
         body.insert(body.end(), statements.begin(), statements.end());
         const MOwnedScope owned = g_ownedScopes.back();

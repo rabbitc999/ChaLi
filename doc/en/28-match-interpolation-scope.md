@@ -14,6 +14,8 @@ All normal arms must produce compatible values of the same type. Without `_`, an
 
 Value payloads are copied in expression matches, including owned strings and structures. Changing a copy does not change the subject. Reference payloads retain their reference identity and cannot be used to mutate the subject or escape a finished branch. Existing statement matches keep their binding rules and accept a trailing semicolon.
 
+With `match (move node)`, the selected branch takes ownership of resource-owning enum payloads such as child `Box<Node>` values, `Rc<T>`, and `Arc<T>`. The branch can call `take()` or `close()` on these bindings or move them onward. Guards inspect these payloads through read-only bindings. Ownership transfers after the guard passes. Payloads ignored with `_` are cleaned up with the subject.
+
 ## Interpolated strings
 
 ```chali

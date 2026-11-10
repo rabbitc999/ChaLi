@@ -1,0 +1,55 @@
+import std::memory;
+
+enum Node {
+    Leaf(int64 value),
+    Branch(Box<Node> left, Box<Node> right);
+};
+
+Box<Node> leaf(int64 value) {
+    return Box<Node>::newBox(Node::Leaf(value));
+}
+
+Box<Node> branch(Box<Node> left, Box<Node> right) {
+    return Box<Node>::newBox(Node::Branch(move left, move right));
+}
+
+Box<Node> deepTree(int64 depth) {
+    if (depth == 0) { return leaf(0); }
+    return branch(deepTree(depth - 1), leaf(depth));
+}
+
+int64 sum(Box<Node> tree) {
+    Node node = tree.take();
+    match (move node) {
+        Leaf(value) => { return value; }
+        Branch(left, _) if left.isEmpty() => { return -100; }
+        Branch(left, right) => { return sum(move left) + sum(move right); }
+    }
+    return -1;
+}
+
+int64 first(Node node) {
+    return match (move node) {
+        Leaf(value) => { value }
+        Branch(left, _) if left.isEmpty() => { -100 }
+        Branch(left, _) if !left.isEmpty() => { first(left.take()) }
+        Branch(_, _) => { -1 }
+    };
+}
+
+void main() {
+    int64 before = Memory::stats().liveBlocks;
+    {
+        Box<Box<int64>> outer = Box<Box<int64>>::newBox(Box<int64>::newBox(42));
+        Box<int64> inner = outer.take();
+        assert(inner.take() == 42);
+    }
+    for (int64 run = 0; run < 4; run = run + 1) {
+        assert(sum(branch(leaf(1), branch(leaf(2), leaf(3)))) == 6);
+        Box<Node> root = branch(branch(leaf(7), leaf(8)), leaf(9));
+        assert(first(root.take()) == 7);
+    }
+    assert(sum(deepTree(32)) == 528);
+    assert(Memory::stats().liveBlocks == before);
+    println("recursive Box ownership OK");
+}

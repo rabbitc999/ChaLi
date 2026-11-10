@@ -1232,6 +1232,19 @@ void leaveInboxUnread(Channel<int64> gate) {
     assert(gate.receive().isReady());
 }
 
+enum ArcPayload { Owned(Arc<int64> owner, ArcWeak<int64> observer); };
+
+void unpackArc(ArcPayload payload) {
+    match (move payload) {
+        Owned(_, observer) if observer.isExpired() => { assert(false); }
+        Owned(owner, observer) => {
+            assert(owner.get() == 29 && !observer.isExpired());
+            owner.close();
+            assert(owner.isEmpty());
+        }
+    }
+}
+
 void main() {
     Parcel original;
     original.title = "original";
@@ -1281,6 +1294,14 @@ void main() {
     Arc<int64> empty;
     let emptyCopy = empty.clone();
     assert(emptyCopy.isEmpty() && empty.downgrade().isExpired());
+    {
+        let owner = arc(29);
+        let sentinel = owner.downgrade();
+        let observer = sentinel;
+        Box<ArcPayload> box = Box<ArcPayload>::newBox(ArcPayload::Owned(move owner, move observer));
+        unpackArc(box.take());
+        assert(sentinel.isExpired());
+    }
     println("Arc and ArcWeak OK");
 }
 ```

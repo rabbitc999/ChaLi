@@ -7,6 +7,20 @@ struct Resource : Closeable {
     void close() { closed += self.id; }
 };
 
+enum SharedResource { Owned(Rc<Resource> owner, Weak<Resource> observer); };
+
+void unpack(SharedResource payload) {
+    match (move payload) {
+        Owned(_, observer) if observer.isExpired() => { assert(false); }
+        Owned(owner, observer) => {
+            assert(!observer.isExpired());
+            Rc<Resource> moved = move owner;
+            moved.close();
+            assert(observer.isExpired());
+        }
+    }
+}
+
 void main() {
     int64 before = Memory::stats().liveBlocks;
     {
@@ -44,6 +58,14 @@ void main() {
     {
         Weak<int64> empty;
         assert(empty.isExpired());
+    }
+    {
+        Resource resource;
+        resource.id = 13;
+        let owner = rc(move resource);
+        let observer = owner.downgrade();
+        unpack(SharedResource::Owned(move owner, move observer));
+        assert(closed == 20);
     }
     assert(Memory::stats().liveBlocks == before);
     println("Rc and Weak OK");
