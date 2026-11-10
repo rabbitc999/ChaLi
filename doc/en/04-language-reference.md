@@ -124,7 +124,7 @@ Reply<int64> lookup(bool found) {
 }
 ```
 
-Generic aliases use the existing type parameters, interface constraints, default arguments, and `N:int64` constant parameters. Resolve the target and defaults in the declaring module and explicit arguments in the calling module. Qualify an alias with its module name or use its short name after directly importing that module. If every generic parameter has a default, `Block block;` and `Block<> block;` are equivalent. Alias chains must be acyclic. An alias for a named type can qualify static members or enum variants, as in `Reply<int64>::Fail("missing")`.
+Generic aliases use the existing type parameters, interface constraints, default arguments, and `N:int64` constant parameters. Resolve the target and defaults in the declaring module and explicit arguments in the calling module. Qualify an alias with its module name or use its short name after directly importing that module. If every generic parameter has a default, `Block block;` and `Block<> block;` are equivalent. Alias chains must be acyclic. An alias for a named type can qualify static members or enum variants, as in `Reply<int64>::Fail("missing")`. The implicitly available `std::core::StdResult<T>` denotes `Result<T, Error>`.
 
 ## 3. Declarations
 

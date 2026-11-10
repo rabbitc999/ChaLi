@@ -6,7 +6,7 @@
 
 `chali lsp` uses six queues for completion/signatures, hover/definitions, semantic tokens/outlines, workspace queries, macro previews, and compiler diagnostics. The protocol thread continues to receive edits and cancellations. JSON-RPC IDs pair responses with requests, and a mutex protects complete output frames. [中文](lsp.md)
 
-The editor completes type aliases, navigates to their declarations, and shows the resolved target type on hover. Place the cursor on an alias or one of its arguments and run **ChaLi: Preview Type Alias Expansion** to see the spelling and the compiler-expanded type in the Output panel. The preview includes default arguments and module resolution.
+The editor completes type aliases, navigates to their declarations, and shows the resolved target type on hover. Place the cursor on an alias or one of its arguments and run **ChaLi: Preview Type Alias Expansion** to see the spelling and the compiler-expanded type in the Output panel. For valid code, the expansion includes default arguments and module resolution, including new unsaved modules that are open in the editor. Alias declarations show their target with symbolic parameters. When compiler analysis is incomplete, the editor may show a provisional preview from source. Enum variants qualified through an alias support completion and navigation.
 
 ## Types, macros and safe refactoring
 

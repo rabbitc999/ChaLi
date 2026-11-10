@@ -182,6 +182,7 @@ def render(data):
     output={}
     api_index=[]
     symbol_index=[]
+    alias_count=0
     from library_reference_symbols import symbol_description
     missing_parameters=set()
     examples={}
@@ -216,7 +217,7 @@ def render(data):
         visible_names={}
         for owner in visible:
             for entry in data.get(owner, []):
-                if not entry['owner'] and entry['kind'] in ('function', 'struct', 'enum', 'interface', 'opcode'):
+                if not entry['owner'] and entry['kind'] in ('function', 'struct', 'enum', 'interface', 'opcode', 'alias'):
                     visible_names.setdefault(entry['name'], set()).add(owner)
         title, contract=MODULES[module]
         # `__` 前缀是编译器/宿主协议，不是应用 API：既不进参考页，也不进编辑器索引，
@@ -261,7 +262,7 @@ def render(data):
             for r in macros:
                 name=(r['owner']+'::' if r['owner'] else '')+r['name']
                 description=comment_text(r['comment'])
-                symbol_anchor='symbol-'+str(len(symbol_index))
+                symbol_anchor='symbol-'+str(len(symbol_index)-alias_count)
                 lines += [f'<a id="{symbol_anchor}"></a>', '', f'### `{name}`', '',
                           '```chali', r['signature'], '```', '']
                 if description:
@@ -275,7 +276,7 @@ def render(data):
             lines+=['## 类型、枚举、常量与字段', '', '公开字段按源码原样列出；句柄和游标字段用于包装器状态，通常通过方法操作。枚举的括号表示变体载荷。', '', '| 所属类型 | 声明 | 说明 |', '| --- | --- | --- |']
             for r in types:
                 if r['name'].startswith('__') or r['owner'].startswith('__'): continue
-                if r['kind'] not in ('struct','enum','interface','opcode','member','constant'): continue
+                if r['kind'] not in ('struct','enum','interface','opcode','member','constant','alias'): continue
                 symbol=dict(r)
                 if r['kind']=='member':
                     if r['owner'] in enum_types:
@@ -288,7 +289,11 @@ def render(data):
                     if symbol['name'].startswith('__'): continue
                     symbol['type']=r['signature'][:match.start()].strip()
                 description=symbol_description(symbol)
-                symbol_anchor='symbol-'+str(len(symbol_index))
+                if r['kind']=='alias':
+                    symbol_anchor='symbol-alias-'+symbol['name']
+                    alias_count+=1
+                else:
+                    symbol_anchor='symbol-'+str(len(symbol_index)-alias_count)
                 lines.append('| '+(r['owner'] or '模块')+' | <a id="'+symbol_anchor+'"></a>`'+table_text(r['signature'])+'` | '+table_text(description)+' |')
                 symbol_index.append(dict(module=module,name=(r['owner']+'::' if r['owner'] else '')+symbol['name'],
                     owner=r['owner'],kind=r['kind'],type=symbol.get('type',''),signature=r['signature'],
@@ -386,7 +391,7 @@ def render(data):
         fallback=ROOT/(module.replace('::','/')+'.chl')
         source=candidates[0] if candidates else fallback
         dependencies[module]=re.findall(r'\bimport\s+([\w:]+)\s*;',without_comments(source.read_text(encoding='utf-8'))) if source.exists() else []
-    output['../../tools/chali_stdlib_api.json']=json.dumps(dict(schemaVersion=1,modules=dependencies,types=sorted({r['name'] for records in data.values() for r in records if r['kind'] in ('struct','enum','interface','opcode') and not r['name'].startswith('__')}),functions=api_index,symbols=symbol_index,
+    output['../../tools/chali_stdlib_api.json']=json.dumps(dict(schemaVersion=1,modules=dependencies,types=sorted({r['name'] for records in data.values() for r in records if r['kind'] in ('struct','enum','interface','opcode','alias') and not r['name'].startswith('__')}),functions=api_index,symbols=symbol_index,
         reference=dict(modules=module_info,examples=examples,sourceLanguage='zh')),ensure_ascii=False,separators=(',', ':'))+'\n'
     # 编辑器把本清单当作公开 API 直接补全；`__` 前缀是内部协议，漏进来就等于把它公开了。
     leaked=sorted({row['name'] for row in api_index if row['name'].startswith('__') or row['owner'].startswith('__')} |

@@ -264,11 +264,12 @@ inline bool inspect(const preprocess::Result &input, UnitInfo &info, Memory::Str
  * @param includeDirs 显式包含目录。
  * @param path 命中时接收规范路径。
  * @param explicitOnly 仅查找显式目录，供内置原生模块的覆盖机制使用。
- * @return 存在对应普通文件时为真。
+ * @param cache 可选的增量缓存，包含尚未落盘的编辑器模块。
+ * @return 存在普通文件或编辑器覆盖时为真。
  */
 inline bool findModule(const Memory::String &name, const Memory::String &fromDir,
                        const Memory::Vector<Memory::String> &includeDirs, Memory::String &path,
-                       bool explicitOnly = false)
+                       bool explicitOnly = false, const chali_incremental::Cache *cache = nullptr)
 {
     namespace fs = std::filesystem;
     Memory::String relative = name;
@@ -285,7 +286,8 @@ inline bool findModule(const Memory::String &name, const Memory::String &fromDir
     for (const fs::path &candidate : candidates)
     {
         std::error_code ec;
-        if (!fs::is_regular_file(candidate, ec)) continue;
+        if (!fs::is_regular_file(candidate, ec) && !(cache && cache->hasOverlay(candidate.u8string().c_str()))) continue;
+        ec.clear();
         path = fs::weakly_canonical(candidate, ec).u8string();
         if (path.empty()) path = candidate.lexically_normal().u8string();
         return true;
@@ -560,7 +562,7 @@ private:
     bool importFile(const Memory::String &name, const Memory::String &base, preprocess::Result &output,
                     Memory::String &error, Memory::String path = {})
     {
-        if (path.empty() && !findModule(name, base, includeDirs_, path))
+        if (path.empty() && !findModule(name, base, includeDirs_, path, false, cache_))
         {
             error = "找不到模块 " + name + "（需要 .chl）";
             return false;
@@ -642,7 +644,7 @@ private:
             /* 兼容显式安装的扩展版本；未指定 -I 时始终优先使用内建模块。 */
             Memory::String overridePath;
             if ((imported == "std::gui" || imported == "std::audio" || imported == "std::xml") &&
-                findModule(imported, base, includeDirs_, overridePath, true))
+                findModule(imported, base, includeDirs_, overridePath, true, cache_))
             {
                 if (!importFile(imported, base, output, error, std::move(overridePath))) return false;
                 continue;

@@ -202,6 +202,11 @@ function registerProviders(context, deps) {
       context.subscriptions.push(aliasOutput);
     }
     aliasOutput.clear();
+    if (result.mode === 'declaration') {
+      aliasOutput.appendLine(vscode.l10n.t('Alias declaration target'));
+    } else if (result.mode === 'provisional') {
+      aliasOutput.appendLine(vscode.l10n.t('Provisional expansion from source'));
+    }
     aliasOutput.appendLine(result.spelling);
     aliasOutput.appendLine(result.type);
     aliasOutput.show(true);

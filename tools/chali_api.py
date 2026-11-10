@@ -97,6 +97,7 @@ def declarations(path, source=None, line_offset=0, root=None):
                     elif tokens[body_end][0] == '}': depth -= 1
                     body_end += 1
             kind_match = re.match(r'(?:#\s*NonCopyable\s+)*(struct|enum|interface|opcode)\s+(\w+)', signature)
+            alias = re.match(r'^type\s+alias\s+([A-Za-z_]\w*)', signature) if not owner else None
             function = None
             declaration_matches = list(TOKEN.finditer(signature))
             declaration_tokens = [m.group() for m in declaration_matches]
@@ -126,6 +127,9 @@ def declarations(path, source=None, line_offset=0, root=None):
                                     signature.partition('=')[0].strip()) if not owner else None
             if constant:
                 entry.update(kind='constant', name=constant['name'], type=constant['type'])
+                records.append(entry)
+            elif alias:
+                entry.update(kind='alias', name=alias[1])
                 records.append(entry)
             elif kind_match:
                 kind, name = kind_match.groups()

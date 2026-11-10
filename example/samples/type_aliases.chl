@@ -43,6 +43,13 @@ void main() {
         Fail(message) => { assert(message == "missing"); }
     }
 
+    StdResult<int64> standard = Ok(21);
+    Result<int64, Error> original = standard;
+    std::core::StdResult<int64> returned = original;
+    assert(returned.unwrap() == 21);
+    StdResult<int64> bad = StdResult<int64>::Fail(MessageError::from("bad"));
+    assert(bad.error().toString() == "bad");
+
     FailureText local;
     local.message = "local";
     modules::type_alias_models::FailureText foreign;

@@ -1009,8 +1009,32 @@ std::vector<Record> scan(const std::string &source, const std::string &s)
                     r.qualified = qualified(r);
                     records.push_back(r);
                     if (t[i].word == "{")
-                        visit(i + 1, end - 1,
-                              owner.empty() ? r.name : owner + "::" + r.name);
+                    {
+                        const auto childOwner = owner.empty() ? r.name : owner + "::" + r.name;
+                        auto member = i + 1;
+                        if (r.kind == "enum")
+                        {
+                            while (member < end - 1 && identifier(t[member].word))
+                            {
+                                const auto &variant = t[member++];
+                                if (member < end - 1 && t[member].word == "(")
+                                    member = groupEnd(t, member, "(", ")");
+                                if (member > end - 1) break;
+                                Record value;
+                                value.module = module;
+                                value.owner = childOwner;
+                                value.name = variant.word;
+                                value.qualified = qualified(value);
+                                value.kind = "variant";
+                                value.source = source;
+                                value.offset = variant.a;
+                                value.signature = cleanSignature(s.substr(variant.a, t[member - 1].b - variant.a));
+                                records.push_back(std::move(value));
+                                if (member == end - 1 || t[member++].word != ",") break;
+                            }
+                        }
+                        visit(member, end - 1, childOwner);
+                    }
                 }
                 else if (owner.empty() && start + 3 < i && t[start].word == "type" && t[start + 1].word == "alias")
                 {
@@ -1095,7 +1119,7 @@ std::vector<Record> scan(const std::string &source, const std::string &s)
     visit(0, t.size(), "");
     const auto hiddenTypes = opcodeNames(t);
     records.erase(std::remove_if(records.begin(), records.end(), [&](const Record &record) {
-                      return record.kind != "function" && opcodeSignature(record.signature, hiddenTypes);
+                      return record.kind != "function" && record.kind != "alias" && record.kind != "variant" && opcodeSignature(record.signature, hiddenTypes);
                   }),
                   records.end());
     return records;
@@ -1462,9 +1486,12 @@ struct CompilerTypeScope
  * @brief 为编辑中的成员补全替换别名形参，保留尚未求值的常量。
  * @param alias 词法索引中的别名声明。
  * @param use 调用处的类型拼写。
- * @return 可用于接收者查找的类型文本，缺少实参时为空。
+ * @param symbolic 使用声明的符号形参，不应用默认值。
+ * @param resolveArgument 在调用模块中限定显式类型实参，可为空。
+ * @return 替换后的类型文本，缺少必填实参时为空。
  */
-std::string aliasReceiverType(const Record &alias, const std::string &use)
+std::string aliasReceiverType(const Record &alias, const std::string &use, bool symbolic = false,
+                              const std::function<std::string(const std::string &)> &resolveArgument = {})
 {
     const auto &signature = alias.signature;
     auto declaration = signature.find(alias.name, std::string("type alias").size());
@@ -1486,13 +1513,19 @@ std::string aliasReceiverType(const Record &alias, const std::string &use)
     auto end = owner == use.npos ? use.size() : owner;
     open = use.find_first_not_of(" \t\r\n", end);
     if (open != use.npos && use[open] == '<' && !chali_syntax::groupArguments(use.c_str(), open, arguments, end)) return {};
-    if (arguments.size() > parameters.size()) return {};
+    if (!symbolic && arguments.size() > parameters.size()) return {};
     Memory::Map<Memory::String, Memory::String> bindings;
     for (std::size_t i = 0; i < parameters.size(); ++i)
     {
         const auto &parameter = parameters[i];
-        if (i >= arguments.size() && !parameter.hasDefault) return {};
-        bindings[parameter.name] = i < arguments.size() ? arguments[i] : chali_generic::substituteIdentifiers(parameter.fallback, bindings);
+        if (symbolic) bindings[parameter.name] = parameter.name;
+        else if (i < arguments.size())
+        {
+            if (!parameter.constant && resolveArgument) bindings[parameter.name] = resolveArgument(arguments[i].c_str()).c_str();
+            else bindings[parameter.name] = arguments[i];
+        }
+        else if (parameter.hasDefault) bindings[parameter.name] = chali_generic::substituteIdentifiers(parameter.fallback, bindings);
+        else return {};
     }
     const auto target = chali_generic::substituteIdentifiers(trim(signature.substr(equal + 1)).c_str(), bindings);
     return std::string(target.data(), target.size()) + use.substr(end);
@@ -1574,7 +1607,9 @@ class ReceiverTypes
                 for (const auto &record : records)
                     if (record.kind == "alias" && record.qualified == qualified)
                     {
-                        const auto expanded = aliasReceiverType(record, type);
+                        const auto expanded = aliasReceiverType(record, type, false, [&](const std::string &argument) {
+                            return qualify(argument, module, depth + 1);
+                        });
                         if (!expanded.empty()) return qualify(expanded, record.module, depth + 1);
                         break;
                     }
@@ -2345,6 +2380,23 @@ public:
     }
 
     /**
+     * @brief 获取别名限定的静态成员或枚举变体所属的类型名。
+     * @param type 包含泛型实参的别名拼写。
+     * @return 已展开类型的限定名，非别名或无法展开时为空。
+     */
+    std::string aliasOwner(const std::string &type) const
+    {
+        const auto name = base(type);
+        if (std::none_of(records.begin(), records.end(), [&](const Record &record) {
+                return record.kind == "alias" && (record.name == name || record.qualified == name);
+            })) return {};
+        const auto target = base(qualify(type));
+        return target != name && std::none_of(records.begin(), records.end(), [&](const Record &record) {
+            return record.kind == "alias" && record.qualified == target;
+        }) ? target : std::string();
+    }
+
+    /**
      * @brief 获取指定类型的直接成员。
      * @param type 实例类型。
      * @param name 成员过滤名。
@@ -2356,7 +2408,7 @@ public:
         if (type.empty()) return out;
         auto owner = base(qualify(type));
         for (auto &r : records)
-            if (!r.owner.empty() && r.name != tail(r.owner) && (includeStatic || !starts(r.signature, "static ")) && (r.module.empty() ? r.owner : r.module + "::" + r.owner) == owner && (name.empty() || r.name == name)) out.push_back(r);
+            if (!r.owner.empty() && r.name != tail(r.owner) && (includeStatic || (r.kind != "variant" && !starts(r.signature, "static "))) && (r.module.empty() ? r.owner : r.module + "::" + r.owner) == owner && (name.empty() || r.name == name)) out.push_back(r);
         if (!includeStatic && (name.empty() || name == "toString") && std::none_of(out.begin(), out.end(), [](const Record &record) { return record.name == "toString" && record.parameters.empty(); }))
         {
             Record method;
@@ -2396,9 +2448,27 @@ std::vector<Record> matching(const std::vector<Record> &records,
         ReceiverTypes resolver(records, source, types);
         return resolver.members(resolver.infer(receiver, cursor), member);
     }
-    for (auto &r : records)
-        if (name.find("::") != name.npos ? (r.qualified == name || ends(r.qualified, "::" + name)) : (r.name == name && r.owner.empty()))
+    const auto separator = name.rfind("::");
+    for (const auto &r : records)
+        if (separator != name.npos ? (r.qualified == name || ends(r.qualified, "::" + name)) : (r.name == name && r.owner.empty()))
             out.push_back(r);
+    if (separator != name.npos && out.empty())
+    {
+        const auto receiver = name.substr(0, separator);
+        const auto head = receiver.substr(0, receiver.find('<'));
+        if (std::any_of(records.begin(), records.end(), [&](const Record &record) {
+                return record.kind == "alias" && (record.name == head || record.qualified == head);
+            }))
+        {
+            const auto target = ReceiverTypes(records, source, types).aliasOwner(receiver);
+            if (!target.empty())
+            {
+                const auto member = target + name.substr(separator);
+                for (const auto &r : records)
+                    if (r.qualified == member) out.push_back(r);
+            }
+        }
+    }
     if (name.find("::") == name.npos && std::count_if(out.begin(), out.end(), [](const Record &entry) {
             return entry.module != "std::core";
         }) == 1 && std::any_of(out.begin(), out.end(), [](const Record &entry) { return entry.kind == "alias"; }))
@@ -3594,6 +3664,8 @@ class Server
             return 8;
         if (r.kind == "constant")
             return 14;
+        if (r.kind == "variant")
+            return 22;
         return r.owner.empty() ? 12 : 6;
     }
     /**
@@ -3613,6 +3685,8 @@ class Server
             return 5;
         if (r.kind == "constant")
             return 21;
+        if (r.kind == "variant")
+            return 20;
         return 3;
     }
     /**
@@ -3802,7 +3876,7 @@ class Server
             if (ephemeralAnalysis) throw std::runtime_error("candidate report is not cached");
             const auto memory = cache->report(u);
             const auto entry = memory ? *memory : parse(read(saved));
-            bool valid = integer(get(entry, "schema")) == 3 && integer(get(entry, "language"), -1) == int(chali_i18n::language()) && str(entry, "input") == lspHash(body) && str(entry, "graph") == analysisGraph && get(entry, "dependencies").asObject();
+            bool valid = integer(get(entry, "schema")) == 4 && integer(get(entry, "language"), -1) == int(chali_i18n::language()) && str(entry, "input") == lspHash(body) && str(entry, "graph") == analysisGraph && get(entry, "dependencies").asObject();
             if (valid)
                 for (const auto &dependency : get(entry, "dependencies").asObject()->members())
                     if (fingerprint(std::string(dependency.key)) != str(dependency.value))
@@ -3890,7 +3964,7 @@ class Server
                 }
                 cache->dependencies(u, dependencyUris);
                 if (interrupted()) return J();
-                const auto entry = object({ { "schema", 3 }, { "language", int(chali_i18n::language()) }, { "input", lspHash(body) }, { "graph", analysisGraph }, { "dependencies", J(std::move(hashes)) }, { "report", report } });
+                const auto entry = object({ { "schema", 4 }, { "language", int(chali_i18n::language()) }, { "input", lspHash(body) }, { "graph", analysisGraph }, { "dependencies", J(std::move(hashes)) }, { "report", report } });
                 cache->rememberReport(u, entry);
                 cache->save(saved, entry);
             }
@@ -4211,7 +4285,7 @@ class Server
 #include "native_lsp_integration.hpp"
 #include "native_lsp_actions.hpp"
     /**
-     * @brief 查询光标下别名使用点的真实编译展开。
+     * @brief 查询光标下别名的声明目标、编译展开或暂定源码预览。
      * @param u 当前文档 URI。
      * @param source 当前文档的源码快照。
      * @param cursor 光标的 UTF-8 字节位置。
@@ -4222,15 +4296,42 @@ class Server
     {
         const auto tokens = lex(source);
         std::size_t begin = 0, end = 0;
+        const Record *selected = nullptr;
+        bool declaration = false;
+        const auto module = documentModule(source);
+        const auto imports = directives(source, "import");
         for (std::size_t i = 0; i < tokens.size() && tokens[i].a <= cursor; ++i)
         {
             const auto &token = tokens[i];
-            if (!identifier(token.word) || (i && tokens[i - 1].word == ".")
-                || (i >= 2 && tokens[i - 1].word == "alias" && tokens[i - 2].word == "type"))
-                continue;
-            if (std::none_of(records.begin(), records.end(), [&](const Record &record) {
-                    return record.kind == "alias" && record.name == token.word;
-                })) continue;
+            if (!identifier(token.word) || (i && tokens[i - 1].word == ".")) continue;
+            const bool isDeclaration = i >= 2 && tokens[i - 1].word == "alias" && tokens[i - 2].word == "type";
+            auto start = i;
+            while (start >= 2 && tokens[start - 1].word == "::" && identifier(tokens[start - 2].word)) start -= 2;
+            std::string name;
+            for (auto j = start; j <= i; ++j) name += tokens[j].word;
+            const Record *candidate = nullptr;
+            int priority = 0;
+            bool ambiguous = false;
+            for (const auto &record : records)
+            {
+                if (record.name != token.word || !record.owner.empty()) continue;
+                if (record.kind != "alias" && record.kind != "struct" && record.kind != "enum"
+                    && record.kind != "interface" && record.kind != "opcode") continue;
+                const int rank = start != i ? (record.qualified == name ? 3 : 0)
+                    : record.module == module ? 3
+                    : std::find(imports.begin(), imports.end(), record.module) != imports.end() ? 2
+                    : record.module == "std::core" ? 1 : 0;
+                if (!rank || rank < priority || (isDeclaration && (record.source != u || record.offset != token.a))) continue;
+                if (rank == priority && candidate)
+                {
+                    if (candidate->qualified != record.qualified) ambiguous = true;
+                    continue;
+                }
+                candidate = &record;
+                priority = rank;
+                ambiguous = false;
+            }
+            if (!candidate || ambiguous || candidate->kind != "alias") continue;
             auto stop = token.b;
             auto open = source.find_first_not_of(" \t\r\n", stop);
             if (open != source.npos && source[open] == '<')
@@ -4239,25 +4340,29 @@ class Server
                 if (!chali_syntax::groupArguments(source.c_str(), open, arguments, stop)) continue;
             }
             if (cursor > stop) continue;
-            auto start = i;
-            while (start >= 2 && tokens[start - 1].word == "::" && identifier(tokens[start - 2].word)) start -= 2;
             begin = tokens[start].a;
             end = stop;
+            selected = candidate;
+            declaration = isDeclaration;
         }
-        if (end == 0) return J();
+        if (!selected) return J();
         const auto spelling = source.substr(begin, end - begin);
         auto key = spelling;
         key.erase(std::remove_if(key.begin(), key.end(), [](unsigned char ch) { return std::isspace(ch); }), key.end());
-        const auto modules = directives(source, "module");
-        const auto module = modules.empty() ? std::string("program") : modules.front();
-        const auto report = checkReport(u, [] { return false; });
-        for (const auto &item : array(get(get(report, "analysis"), "typeAliases")))
+        if (!declaration)
         {
-            const auto owner = str(item, "module");
-            if ((owner == module || (modules.empty() && owner.empty())) && str(item, "spelling") == key)
-                return object({ { "spelling", spelling }, { "type", str(item, "type") }, { "range", range(source, begin, end) } });
+            const auto report = checkReport(u, [] { return false; });
+            const auto &analysis = get(report, "analysis");
+            for (const auto &item : array(get(analysis, "typeAliases")))
+                if ((str(item, "module") == module || (module == "program" && str(item, "module").empty())) && str(item, "spelling") == key)
+                    return object({ { "spelling", spelling }, { "type", str(item, "type") }, { "range", range(source, begin, end) }, { "mode", "resolved" } });
+            const auto complete = get(analysis, "complete").asBool();
+            if (complete && *complete) return J();
         }
-        return J();
+        const auto target = aliasReceiverType(*selected, spelling, declaration);
+        if (target.empty()) return J();
+        return object({ { "spelling", spelling }, { "type", target }, { "range", range(source, begin, end) },
+                        { "mode", declaration ? "declaration" : "provisional" } });
     }
 
     /**
@@ -4552,13 +4657,16 @@ class Server
             for (auto &symbol : array(workspaceSymbols))
                 if (!str(symbol, "containerName").empty())
                     modules.insert(str(symbol, "containerName"));
+            std::string aliasTarget;
             if (qualifiedName && !member)
             {
+                aliasTarget = ReceiverTypes(records, s, types).aliasOwner(receiver);
+                if (!aliasTarget.empty()) receiver = aliasTarget;
                 std::string selected;
                 for (const auto &m : modules)
                     if ((receiver == m || starts(receiver, m + "::")) && m.size() > selected.size())
                         selected = m;
-                if (!selected.empty())
+                if (!selected.empty() && aliasTarget.empty())
                     records = collect(u, "import " + selected + ";\n" + s);
             }
             A out;
@@ -4657,7 +4765,7 @@ class Server
                                   { "kind", completionKind(r) },
                                   { "detail", r.signature },
                                   { "documentation", markup(r.documentation) } });
-                if (qualifiedName)
+                if (qualifiedName && aliasTarget.empty())
                     addImport(item, r.module);
                 out.push_back(item);
             }
@@ -4881,7 +4989,12 @@ class Server
             {
                 const auto expansion = aliasPreview(u, s, cursor, records);
                 if (!expansion.isNull())
-                    content += "\n\n类型别名展开\n\n```chali\n" + str(expansion, "type") + "\n```";
+                {
+                    const auto mode = str(expansion, "mode");
+                    const std::string title = mode == "declaration" ? "别名声明目标" :
+                                              mode == "provisional" ? "别名展开预览（待编译确认）" : "类型别名展开";
+                    content += "\n\n" + title + "\n\n```chali\n" + str(expansion, "type") + "\n```";
+                }
             }
             if (content.empty() && binding)
             {
@@ -5132,14 +5245,17 @@ public:
                 for (auto &v : array(m.value))
                     out.push_back(str(v));
             }
-        Memory::String macroSource;
-        if (chali_module::embedded::find("std::macro", &macroSource))
+        for (const auto &module : library->sourceModules)
         {
-            library->imports.try_emplace("std::macro");
-            const std::string body(macroSource.data(), macroSource.size());
-            for (auto &entry : scan(standardUri("std::macro"), body))
+            Memory::String source;
+            if (!chali_module::embedded::find(module.c_str(), &source)) continue;
+            const bool macros = module == "std::macro";
+            if (!macros && source.find("enum ") == Memory::String::npos) continue;
+            if (macros) library->imports.try_emplace(module);
+            const std::string body(source.data(), source.size());
+            for (auto &entry : scan(standardUri(module), body))
             {
-                if (entry.kind != "macro") continue;
+                if (entry.kind != "variant" && !(macros && entry.kind == "macro")) continue;
                 entry.offset = static_cast<std::size_t>(std::count(body.begin(), body.begin() + entry.offset, '\n')) + 1;
                 library->standard.push_back(std::move(entry));
             }

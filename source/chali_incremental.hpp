@@ -209,6 +209,13 @@ public:
      */
     void setOverlays(const Memory::Map<Memory::String, Memory::String> &values) { overlays_ = values; }
 
+    /**
+     * @brief 判断导入候选路径是否有编辑器源码，即使它尚未落盘。
+     * @param path 候选模块路径。
+     * @return 覆盖表中存在该规范路径时返回 true。
+     */
+    bool hasOverlay(const Memory::String &path) const { return !overlays_.empty() && overlays_.count(canonical(path)); }
+
     std::size_t reused() const { return reused_; }
     std::size_t rebuilt() const { return rebuilt_; }
     /**

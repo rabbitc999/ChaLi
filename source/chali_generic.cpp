@@ -1837,11 +1837,12 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
         const auto nominal = hasAliases ? nominalTypeNames.find(name) : nominalTypeNames.end();
         const bool localType = nominal != nominalTypeNames.end()
             && nominal->second.count(lookupModule.empty() ? name : lookupModule + "::" + name);
-        if (hasAliases && qualifier.empty() && scoped == scopedGenerics.end() && !localType
-            && imports != nominalTypeImports.end())
+        if (hasAliases && qualifier.empty() && scoped == scopedGenerics.end() && !localType)
         {
             auto importedAlias = generics.end();
-            for (const auto &owner : imports->second)
+            const Memory::Set<Memory::String> noImports;
+            const auto &visibleImports = imports == nominalTypeImports.end() ? noImports : imports->second;
+            for (const auto &owner : visibleImports)
             {
                 const auto found = scopedGenerics.find(owner + "::" + name);
                 if (found == scopedGenerics.end()) continue;
@@ -1856,6 +1857,12 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
                 importedAlias = candidate;
             }
             if (importedAlias != generics.end()) generic = importedAlias;
+            else if (generic == generics.end())
+            {
+                const auto core = scopedGenerics.find("std::core::" + name);
+                if (core != scopedGenerics.end() && !generics.at(core->second).aliasTarget.empty())
+                    generic = generics.find(core->second);
+            }
         }
         const bool alias = generic != generics.end() && !generic->second.aliasTarget.empty();
         const auto wholeBegin = qualifier.empty() ? begin : begin - qualifier.size() - 2u;

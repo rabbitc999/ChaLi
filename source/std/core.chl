@@ -1088,6 +1088,9 @@ enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, From
     }
 };
 
+/** @brief 将错误类型固定为 std::core::Error 的透明结果别名。 */
+type alias StdResult<T> = Result<T, Error>;
+
 /**
  * @brief 自定义区间的有状态前进协议。
  * @note nextValue 从接收者的游标状态产生下一项并推进状态；到达终点后返回 None。

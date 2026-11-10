@@ -47,9 +47,21 @@ findFirst returns Value on a match and None after exhausting the list. main unwr
 
 ## 14.2 Carry Success Data and Failure Information
 
+`std::core` defines a common error interface and a result alias. Both are available by their short names.
+
+```chali
+interface Error {
+    String toString();
+};
+
+type alias StdResult<T> = Result<T, Error>;
+```
+
+`Error` requires `toString()` to provide a displayable description. `MessageError` is the standard implementation for text diagnostics. `MessageError::from(text)` constructs an error that owns the supplied text. A struct implementing `Error` can carry additional data. Chapter 17 shows how to distinguish concrete errors.
+
 <!-- verify-book -->
 ```chali
-Result<int64, Error> checkedScore(int64 value)
+StdResult<int64> checkedScore(int64 value)
 {
     if (value < 0 || value > 100)
     {
@@ -58,7 +70,7 @@ Result<int64, Error> checkedScore(int64 value)
     return Ok(value);
 }
 
-Result<int64, Error> addBonus(int64 value)
+StdResult<int64> addBonus(int64 value)
 {
     int64 score = checkedScore(value)?;
     return Ok(score + 5);
@@ -84,11 +96,11 @@ void main()
 invalid score
 ```
 
-checkedScore accepts zero through one hundred. It otherwise constructs MessageError and returns it through Error. The common toString interface is enough to display it; Chapter 17 explains concrete implementations.
+`checkedScore` returns `Ok(value)` for scores from zero through one hundred. Otherwise it constructs a text error and returns it through the `Fail` payload.
 
 main prints 75 for the valid input and invalid score for the rejected input. An error is not a successful score or a magic sentinel integer.
 
-The declared Result<int64, Error> return type selects its unique matching Fail payload automatically, so the error object can be returned directly. Initialization, assignment and arguments with known target types follow the same rule, including Option and custom single-payload enum variants. Equal matches require an explicit variant: a String cannot choose between Ok and Fail in Result<String, String>. Keeping Ok on successful returns can still make the two paths easier to read.
+`StdResult<int64>` denotes the same type as `Result<int64, Error>`. The declared return type selects its unique matching Fail payload automatically, so the error object can be returned directly. Initialization, assignment and arguments with known target types follow the same rule, including Option and custom single-payload enum variants. Equal matches require an explicit variant: a String cannot choose between Ok and Fail in Result<String, String>. Keeping Ok on successful returns can still make the two paths easier to read.
 
 ## 14.3 Propagate When Computation Cannot Continue
 

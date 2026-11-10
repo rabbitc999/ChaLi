@@ -57,6 +57,7 @@ TYPE_DESCRIPTIONS = {
     'Text': '字符串查找、比较、裁剪和替换的静态入口。',
     'Option': '可选值：Value(T) 表示存在，None 表示缺失。',
     'Result': '操作结果：Ok(T) 表示成功，Fail(E) 保存错误。',
+    'StdResult': '将失败载荷固定为 Error 的透明别名，展开为 Result<T, Error>。',
     'Pair': '包含 first 和 second 的两个值，分别使用 K 与 V 类型。',
     'Math': '核心数学常量和数值操作的静态入口。',
     'Drop': '显式释放拥有资源的析构协议。',
@@ -254,7 +255,7 @@ def symbol_description(row):
                   'value':'事件携带的浮点值。', 'width':'逻辑像素宽度。', 'height':'逻辑像素高度。'}
         if name in fields: return fields[name]
     if row.get('module')=='std::concurrency' and name=='Channel' and not owner: return '跨线程有界传值通道；可复制句柄，显式关闭。'
-    if kind in ('struct','enum','interface','opcode'):
+    if kind in ('struct','enum','interface','opcode','alias'):
         if name in TYPE_DESCRIPTIONS:
             return TYPE_DESCRIPTIONS[name]
         operation = name.removeprefix('Right')
