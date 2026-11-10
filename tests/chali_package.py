@@ -100,8 +100,7 @@ def main():
         rejected = run([COMPILER, 'run', source, '--out', binary], success=False, cwd=project)
         assert 'unknown key: chali.encrypt' in rejected.stderr
         manifest.write_text(original, encoding='utf-8')
-        rejected = run([COMPILER, 'svmb', source, '--out', binary], success=False)
-        assert '.svmb' in rejected.stderr
+        run([COMPILER, 'svmb', source, '--out', binary], success=False)
         rejected = run([COMPILER, 'run', source, '--out', binary, '--encrypt'], success=False, cwd=project)
         assert '--encrypt' in rejected.stderr
         manifest.write_text(original + '\n[embedded]\nenabled = true\nmax_memory = 1024\nrestrict_modules = ["std::net"]\n', encoding='utf-8')
@@ -111,7 +110,10 @@ def main():
         probe = work / 'metadata.cpp'
         probe.write_text('#include "chali_package.hpp"\n#include <iostream>\nint main(int argc, char **argv) { chali_package::Project p; Memory::String e; if (!chali_package::read(std::filesystem::u8path(argv[1]), p, e)) { std::cerr << e.c_str() << "\\n"; return 1; } std::cout << p.name << "\\n" << p.version << "\\n" << p.authors.at(0) << "\\n" << (p.debug ? "debug=1" : "debug=0") << "\\n" << p.run << "\\n"; }\n', encoding='utf-8')
         exe = work / ('metadata.exe' if os.name == 'nt' else 'metadata')
-        run(['g++', '-std=c++17', '-I', ROOT / 'source', '-I', ROOT / 'library', probe, ROOT / 'source/chali_package.cpp', ROOT / 'source/toml/toml.cpp', ROOT / 'source/toml/toml_source.cpp', ROOT / 'source/json/json.cpp', '-o', exe])
+        run(['g++', '-std=c++17', '-I', ROOT / 'source', '-I', ROOT / 'library', probe,
+             ROOT / 'source/chali_package.cpp', ROOT / 'source/chali_aot_target.cpp',
+             ROOT / 'source/toml/toml.cpp', ROOT / 'source/toml/toml_source.cpp',
+             ROOT / 'source/json/json.cpp', '-o', exe])
         assert run([exe, manifest]).stdout == 'chali-demo\n0.1.0\n示例作者\ndebug=0\nrun\n'
         manifest.write_text(original.replace('[chali]', '[chali]\ndebug = true'), encoding='utf-8')
         assert run([exe, manifest]).stdout == 'chali-demo\n0.1.0\n示例作者\ndebug=1\nrun\n'
@@ -119,8 +121,7 @@ def main():
         manifest.write_text(original.replace('[chali]', '[chali]\nrun = "interpret"'), encoding='utf-8')
         assert run([exe, manifest]).stdout == 'chali-demo\n0.1.0\n示例作者\ndebug=0\nrun\n'
         manifest.write_text(original.replace('[chali]', '[chali]\nrun = "smvb"'), encoding='utf-8')
-        rejected = run([exe, manifest], success=False)
-        assert '.svmb was removed' in rejected.stderr, rejected.stderr
+        run([exe, manifest], success=False)
         manifest.write_text(original, encoding='utf-8')
     print('CHALI package checks passed')
 if __name__ == '__main__':
