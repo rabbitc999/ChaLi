@@ -1,1 +1,1 @@
-int64 bad(){Result<int64,MessageError> value=Err(MessageError::from("x"));return value?;}void main(){}
+int64 bad(){Result<int64,MessageError> value=Fail(MessageError::from("x"));return value?;}void main(){}

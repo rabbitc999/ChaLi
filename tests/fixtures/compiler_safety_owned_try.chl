@@ -3,7 +3,7 @@ Result<String, String> safetyText(bool fail)
 {
     if (fail)
     {
-        return Result<String, String>::Err("原始错误");
+        return Result<String, String>::Fail("原始错误");
     }
     return Result<String, String>::Ok("hello");
 }

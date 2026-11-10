@@ -35,7 +35,7 @@ struct Port {
     int64 value;
     static Result<Port, String> tryCreate(int64 value) {
         if (value < 1 || value > 65535) {
-            return Result<Port, String>::Err("invalid port");
+            return Result<Port, String>::Fail("invalid port");
         }
         Port result;
         result.value = value;
@@ -87,11 +87,11 @@ void main() {
     }
     match (Port::tryCreate(8080)) {
         Result<Port, String>::Ok(port) => { assert(port.value == 8080); }
-        Result<Port, String>::Err(error) => { assert(false); }
+        Result<Port, String>::Fail(error) => { assert(false); }
     }
     match (Port::tryCreate(0)) {
         Result<Port, String>::Ok(port) => { assert(false); }
-        Result<Port, String>::Err(error) => { assert(error == "invalid port"); }
+        Result<Port, String>::Fail(error) => { assert(error == "invalid port"); }
     }
     println("static new: builds={} drops={} generic/enum/result=OK", Entry::builds, Entry::drops);
 }

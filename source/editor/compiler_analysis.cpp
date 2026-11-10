@@ -1,3 +1,4 @@
+#include "chali_generic.hpp"
 #include "compiler_analysis.hpp"
 #include <filesystem>
 #include <fstream>
@@ -115,6 +116,17 @@ bool CompilerAnalysis::write(const std::string &path, bool complete, std::string
         first = false;
         out << "{\"file\":" << jsonString(hint.file) << ",\"name\":" << jsonString(hint.name) << ",\"type\":" << jsonString(hint.type)
             << ",\"line\":" << hint.line << ",\"column\":" << hint.column << '}';
+    }
+    out << "],\"typeAliases\":[";
+    first = true;
+    for (const auto &entry : chali_generic::session.editorAliasTypes)
+    {
+        if (!first) out << ',';
+        first = false;
+        const auto target = chali_generic::formatDiagnostic(entry.second);
+        out << "{\"module\":" << jsonString({ entry.first.first.data(), entry.first.first.size() })
+            << ",\"spelling\":" << jsonString({ entry.first.second.data(), entry.first.second.size() })
+            << ",\"type\":" << jsonString({ target.data(), target.size() }) << '}';
     }
     out << "],\"generatedDeclarations\":[";
     first = true;

@@ -35,7 +35,7 @@ String describe(Lookup item) {
 }
 
 Result<String, String> positive(int64 value, String tag) {
-    if (value <= 0) { return Result<String, String>::Err("bad:" + tag); }
+    if (value <= 0) { return Result<String, String>::Fail("bad:" + tag); }
     return Result<String, String>::Ok(tag + ":" + Text::repeat("x", value));
 }
 
@@ -60,10 +60,10 @@ void main() {
 
     match (twice(2)) {
         Result<String, String>::Ok(text) => { println("ok {}", text); }
-        Result<String, String>::Err(error) => { println("err {}", error); }
+        Result<String, String>::Fail(error) => { println("err {}", error); }
     }
     match (twice(0)) {
         Result<String, String>::Ok(text) => { println("ok {}", text); }
-        Result<String, String>::Err(error) => { println("err {}", error); }
+        Result<String, String>::Fail(error) => { println("err {}", error); }
     }
 }

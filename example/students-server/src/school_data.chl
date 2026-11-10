@@ -209,7 +209,7 @@ Reply write(Database mut& database, String entity, User user, String method, int
     {
         let body = match (parse(text)) {
             Ok(value) => { value }
-            Err(_) => { return errorReply(400, "记录必须是 JSON 对象"); }
+            Fail(_) => { return errorReply(400, "记录必须是 JSON 对象"); }
         };
         if (!body.isObject()) { return errorReply(400, "记录必须是 JSON 对象"); }
         List<String> names = fields(entity);
@@ -220,7 +220,7 @@ Reply write(Database mut& database, String entity, User user, String method, int
         {
             String item = match (literal(&database, &body, name)) {
                 Ok(value) => { value }
-                Err(error) => { return errorReply(400, error.toString()); }
+                Fail(error) => { return errorReply(400, error.toString()); }
             };
             if (!columns.isEmpty()) { columns += ","; values += ","; updates += ","; }
             columns += name; values += item; updates += name + "=" + item;

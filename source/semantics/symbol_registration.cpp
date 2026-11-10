@@ -469,7 +469,10 @@ bool ResolveImportedTypeNames(bool registerOpcodes = true, const std::shared_ptr
         for (std::size_t i = 0; i < names.size(); ++i)
         {
             Memory::String resolved;
-            if (!resolve(g_names[names[i]], node.module, &resolved)) return false;
+            const auto &name = g_names[names[i]];
+            const auto &aliases = chali_generic::session.aliasInterfaceNames;
+            const auto alias = aliases.find(name);
+            if (!resolve(alias == aliases.end() ? name : alias->second, node.module, &resolved)) return false;
             g_nodes[list].kids[i] = M_Name(resolved.c_str());
         }
     }

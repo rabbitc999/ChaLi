@@ -136,7 +136,7 @@ static Result<Regex, Error> compile(String pattern);
 
 **行为**
 
-编译正则模式；失败返回 Err(Invalid)。
+编译正则模式；失败返回 Fail(Invalid)。
 
 **参数**
 
@@ -146,7 +146,7 @@ static Result<Regex, Error> compile(String pattern);
 
 **返回值**
 
-`Result<Regex, Error>`。编译正则模式；失败返回 Err(Invalid)。
+`Result<Regex, Error>`。编译正则模式；失败返回 Fail(Invalid)。
 
 **错误与边界**
 

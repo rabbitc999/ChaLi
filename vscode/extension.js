@@ -70,7 +70,7 @@ function activate(context) {
   context.subscriptions.push(outputChannel, diagnosticCollection, statusItem);
 
   // 1. 语言能力：诊断由服务器推送，其余按需请求。
-  providers.registerProviders(context, { getClient: () => client, logLine });
+  providers.registerProviders(context, { getClient: () => client, logLine, flushDocument: notifyChange });
   standardSources = registerStandardSources(vscode, context, { getClient: () => client });
 
   // 2. 文档同步。

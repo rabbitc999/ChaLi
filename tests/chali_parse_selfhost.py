@@ -38,19 +38,19 @@ while(index<inputs.len()) {
     String text=inputs[index];
     match(std::parse::Parse::parseInt64(text)) {
         Ok(value) => {println("{}:i:ok:{}",index,value);}
-        Err(error) => {println("{}:i:err:{}",index,error.toString());}
+        Fail(error) => {println("{}:i:err:{}",index,error.toString());}
     }
     match(std::parse::Parse::parseUInt64(text)) {
         Ok(value) => {println("{}:u:ok:{}",index,value);}
-        Err(error) => {println("{}:u:err:{}",index,error.toString());}
+        Fail(error) => {println("{}:u:err:{}",index,error.toString());}
     }
     match(std::parse::Parse::parseFloat64(text)) {
         Ok(value) => {println("{}:f:ok:{:17F}",index,value);}
-        Err(error) => {println("{}:f:err:{}",index,error.toString());}
+        Fail(error) => {println("{}:f:err:{}",index,error.toString());}
     }
     match(std::parse::Parse::parseBool(text)) {
         Ok(value) => {println("{}:b:ok:{}",index,(int64)value);}
-        Err(error) => {println("{}:b:err:{}",index,error.toString());}
+        Fail(error) => {println("{}:b:err:{}",index,error.toString());}
     }
     index=index+1;
 }

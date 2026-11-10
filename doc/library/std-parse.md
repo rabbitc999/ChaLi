@@ -40,19 +40,19 @@ void main() {
     Result<bool, Error> flag = Parse::parseBool("true");
     match (integer) {
         Result<int64, Error>::Ok(value) => { println("int64={}", value); }
-        Result<int64, Error>::Err(error) => { println("int64=error"); }
+        Result<int64, Error>::Fail(error) => { println("int64=error"); }
     }
     match (natural) {
         Result<uint64, Error>::Ok(value) => { println("uint64={}", value); }
-        Result<uint64, Error>::Err(error) => { println("uint64=error"); }
+        Result<uint64, Error>::Fail(error) => { println("uint64=error"); }
     }
     match (real) {
         Result<float64, Error>::Ok(value) => { println("float64={:1F}", value); }
-        Result<float64, Error>::Err(error) => { println("float64=error"); }
+        Result<float64, Error>::Fail(error) => { println("float64=error"); }
     }
     match (flag) {
         Result<bool, Error>::Ok(value) => { println("bool={}", (int64)value); }
-        Result<bool, Error>::Err(error) => { println("bool=error"); }
+        Result<bool, Error>::Fail(error) => { println("bool=error"); }
     }
 
     Result<int64, Error> empty = Parse::parseInt64("");
@@ -61,7 +61,7 @@ void main() {
     Parse::parseInt64("999999999999999999999999");
     match (empty) {
         Result<int64, Error>::Ok(value) => { println("empty=bad"); }
-        Result<int64, Error>::Err(error) => {
+        Result<int64, Error>::Fail(error) => {
             match (error) {
                 ParseError(detail) => {
                     match(detail) {
@@ -75,7 +75,7 @@ void main() {
     }
     match (invalid) {
         Result<int64, Error>::Ok(value) => { println("invalid=bad"); }
-        Result<int64, Error>::Err(error) => {
+        Result<int64, Error>::Fail(error) => {
             match (error) {
                 ParseError(detail) => {
                     match(detail) {
@@ -89,7 +89,7 @@ void main() {
     }
     match (overflow) {
         Result<int64, Error>::Ok(value) => { println("overflow=bad"); }
-        Result<int64, Error>::Err(error) => {
+        Result<int64, Error>::Fail(error) => {
             match (error) {
                 ParseError(detail) => {
                     match(detail) {

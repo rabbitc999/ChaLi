@@ -44,7 +44,7 @@ Result<Options, Error> parseOptions(List<String> arguments)
         }
         else if (flags && Text::startsWith(argument, "--"))
         {
-            return Result<Options, Error>::Err(MessageError::from("unknown option: " + argument));
+            return Result<Options, Error>::Fail(MessageError::from("unknown option: " + argument));
         }
         else
         {
@@ -57,13 +57,13 @@ Result<Options, Error> parseOptions(List<String> arguments)
     }
     if (positional.len() != 2)
     {
-        return Result<Options, Error>::Err(MessageError::from("usage: log-search [--ignore-case] [--count] [--] QUERY FILE"));
+        return Result<Options, Error>::Fail(MessageError::from("usage: log-search [--ignore-case] [--count] [--] QUERY FILE"));
     }
     options.query = positional[0];
     options.path = positional[1];
     if (options.query.isEmpty())
     {
-        return Result<Options, Error>::Err(MessageError::from("query must not be empty"));
+        return Result<Options, Error>::Fail(MessageError::from("query must not be empty"));
     }
     return Result<Options, Error>::Ok(options);
 }
@@ -124,7 +124,7 @@ Result<int64, Error> run(List<String> arguments)
     let loaded = readText(options.path);
     if (loaded.isErr())
     {
-        return Result<int64, Error>::Err(MessageError::from(options.path + ": " + loaded.error().toString()));
+        return Result<int64, Error>::Fail(MessageError::from(options.path + ": " + loaded.error().toString()));
     }
     String text = loaded.unwrap();
     List<Hit> hits = search(text, options.query, options.ignoreCase);

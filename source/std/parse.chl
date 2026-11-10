@@ -20,7 +20,7 @@ float64 __parseFloat64Value(String text);
 /** 完整解析十进制幅值；溢出的数字前缀优先报告 Overflow。 */
 inline Result<uint64, Error> __parseMagnitude(String text, int64 start, uint64 limit) {
     int64 length = text.length();
-    if (start == length) { return Result<uint64, Error>::Err(ParseError::Invalid); }
+    if (start == length) { return Result<uint64, Error>::Fail(ParseError::Invalid); }
     uint64 value = 0;
     bool overflow = false;
     uint64 quotient = limit / 10;
@@ -29,8 +29,8 @@ inline Result<uint64, Error> __parseMagnitude(String text, int64 start, uint64 l
     while (index < length) {
         uint8 byte = text.byteAt(index).unwrap();
         if (byte < 48 || byte > 57) {
-            if (overflow) { return Result<uint64, Error>::Err(ParseError::Overflow); }
-            return Result<uint64, Error>::Err(ParseError::Invalid);
+            if (overflow) { return Result<uint64, Error>::Fail(ParseError::Overflow); }
+            return Result<uint64, Error>::Fail(ParseError::Invalid);
         }
         uint64 digit = (uint64)(byte - 48);
         if (!overflow) {
@@ -40,13 +40,13 @@ inline Result<uint64, Error> __parseMagnitude(String text, int64 start, uint64 l
         }
         index = index + 1;
     }
-    if (overflow) { return Result<uint64, Error>::Err(ParseError::Overflow); }
+    if (overflow) { return Result<uint64, Error>::Fail(ParseError::Overflow); }
     return Result<uint64, Error>::Ok(value);
 }
 
 struct Parse {
     static Result<int64, Error> parseInt64(String text) {
-        if (text.length() == 0) { return Result<int64, Error>::Err(ParseError::Empty); }
+        if (text.length() == 0) { return Result<int64, Error>::Fail(ParseError::Empty); }
         bool negative = text.byteAt(0).unwrap() == 45;
         int64 start = 0;
         uint64 limit = 9223372036854775807;
@@ -57,7 +57,7 @@ struct Parse {
     }
 
     static Result<uint64, Error> parseUInt64(String text) {
-        if (text.length() == 0) { return Result<uint64, Error>::Err(ParseError::Empty); }
+        if (text.length() == 0) { return Result<uint64, Error>::Fail(ParseError::Empty); }
         return __parseMagnitude(text, 0, (uint64)0 - (uint64)1);
     }
 
@@ -66,15 +66,15 @@ struct Parse {
         if (error == 0) {
             return Result<float64, Error>::Ok(__parseFloat64Value(text));
         }
-        if (error == 1) { return Result<float64, Error>::Err(ParseError::Empty); }
-        if (error == 2) { return Result<float64, Error>::Err(ParseError::Overflow); }
-        return Result<float64, Error>::Err(ParseError::Invalid);
+        if (error == 1) { return Result<float64, Error>::Fail(ParseError::Empty); }
+        if (error == 2) { return Result<float64, Error>::Fail(ParseError::Overflow); }
+        return Result<float64, Error>::Fail(ParseError::Invalid);
     }
 
     static Result<bool, Error> parseBool(String text) {
         if (text == "true") { return Result<bool, Error>::Ok(true); }
         if (text == "false") { return Result<bool, Error>::Ok(false); }
-        if (text.length() == 0) { return Result<bool, Error>::Err(ParseError::Empty); }
-        return Result<bool, Error>::Err(ParseError::Invalid);
+        if (text.length() == 0) { return Result<bool, Error>::Fail(ParseError::Empty); }
+        return Result<bool, Error>::Fail(ParseError::Invalid);
     }
 };

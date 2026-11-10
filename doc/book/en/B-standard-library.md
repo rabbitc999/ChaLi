@@ -178,7 +178,7 @@ Result<bool, Error> roundTrip() {
 void main() {
     match (roundTrip()) {
         Ok(_) => {}
-        Err(error) => { println("{}", error.toString()); }
+        Fail(error) => { println("{}", error.toString()); }
     }
 }
 ```

@@ -21,7 +21,7 @@ Option<String> describe(int64 value) {
 /* 同一个程序里 Result 和 Option 的 `?` 各走各的：两条检测按**枚举名**区分
  * （Result__* / Option__*），形状不同、互不冲突。 */
 Result<int64, String> parsePositive(int64 value) {
-    if (value <= 0) { return Result<int64, String>::Err("not positive"); }
+    if (value <= 0) { return Result<int64, String>::Fail("not positive"); }
     return Result<int64, String>::Ok(value * 10);
 }
 
@@ -33,11 +33,11 @@ Result<int64, String> scale(int64 value) {
 void main() {
     match (scale(3)) {
         Result<int64, String>::Ok(number) => { println("ok {}", number); }
-        Result<int64, String>::Err(message) => { println("err {}", message); }
+        Result<int64, String>::Fail(message) => { println("err {}", message); }
     }
     match (scale(0)) {
         Result<int64, String>::Ok(number) => { println("ok {}", number); }
-        Result<int64, String>::Err(message) => { println("err {}", message); }
+        Result<int64, String>::Fail(message) => { println("err {}", message); }
     }
     match (describe(8)) {   /* half(8) = 4 -> 四个 x */
         Option<String>::Value(text) => { println("value {}", text); }

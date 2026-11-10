@@ -291,7 +291,7 @@ Pair has a variant with two payloads. SELECT evaluates its value once, inserts p
 
 Pair::Values(x, y) binds payloads 7 and 8. The accompanying block uses these bindings to produce 15. The outer x remains 100: a pattern-local binding does not update it.
 
-Union patterns such as 1 | 2 and interface-payload patterns such as Err::IoError(e) use the normal matching rules from Chapters 10 and 17. For interface filtering in multiple payload positions, keep the type annotations inside the variant parentheses.
+Union patterns such as 1 | 2 and interface-payload patterns such as Fail::IoError(e) use the normal matching rules from Chapters 10 and 17. For interface filtering in multiple payload positions, keep the type annotations inside the variant parentheses.
 
 ## 22.9 Reading Field Metadata
 
@@ -512,7 +512,7 @@ Result<T, MessageError> requireValue<T>(Option<T> value, String description) {
         Value(item) => { return Ok(item); }
         None => {
             MessageError error = MessageError::from(description);
-            return Err(error);
+            return Fail(error);
         }
     }
 }
@@ -549,7 +549,7 @@ Result<bool, Error> demonstrateJson() {
 void main() {
     match (demonstrateJson()) {
         Ok(_) => {}
-        Err(error) => { println("{}", error.toString()); }
+        Fail(error) => { println("{}", error.toString()); }
     }
 }
 ```
@@ -558,7 +558,7 @@ void main() {
 {"middle":{"inner":{"count":42,"text":"a\"\\\u000a","enabled":true,"empty":{}}},"items":[5,8],"unique":["only"],"byName":{"b\"ox":[{"count":42,"text":"a\"\\\u000a","enabled":true,"empty":{}}]},"emptyList":[],"emptySet":[],"emptyMap":{}}
 ```
 
-This general helper keeps Err(error): T can itself be MessageError, making the success and error payload types identical. The explicit variant selects failure in that case. Naming the error avoids nested constructors; other error returns can still use a direct payload when the target has a unique best match.
+This general helper keeps Fail(error): T can itself be MessageError, making the success and error payload types identical. The explicit variant selects failure in that case. Naming the error avoids nested constructors; other error returns can still use a direct payload when the target has a unique best match.
 
 requireValue maps a missing required field to MessageError, and verifyJson uses ? to propagate parsing, missing-field, and type failures. Option and Result carry different residual states, so mapping absence requires an explicit application error. Main matches the final result.
 
@@ -1258,15 +1258,15 @@ void main()
     profile.secret = "internal";
     match (profile.toJson()) {
         Ok(encoded) => { println("{}", encoded); }
-        Err(error) => { println("{}", error.toString()); return; }
+        Fail(error) => { println("{}", error.toString()); return; }
     }
 
     let decoded = Profile::fromJson("{\"student_id\":7,\"name\":\"Ada\"}");
     match (decoded)
     {
         Ok(value) => { println("{} {}", value.id, value.name); }
-        Err::MessageError(error) => { println("{}", error.toString()); }
-        Err(_) => { println("unavailable"); }
+        Fail::MessageError(error) => { println("{}", error.toString()); }
+        Fail(_) => { println("unavailable"); }
     }
 }
 ```
@@ -1280,9 +1280,9 @@ Import std::json first. Json declares toJson; derivation also generates a static
 
 The name annotation changes the JSON key, not profile.id. skip excludes secret from encoding and input reconstruction, leaving its default-constructed value after decoding. This annotation is restricted to instance fields of structures that derive Json; functions, static fields and unrelated types reject it.
 
-main constructs the value and prints its encoding in declaration order. The second half decodes external text. Ok receives the owned value, MessageError handles a concrete diagnostic, and Err(_) covers other Error implementations. A real application must still validate the identifier and enforce account permissions.
+main constructs the value and prints its encoding in declaration order. The second half decodes external text. Ok receives the owned value, MessageError handles a concrete diagnostic, and Fail(_) covers other Error implementations. A real application must still validate the identifier and enforce account permissions.
 
-Missing required fields, unknown keys, wrong types and out-of-range values return Err. A known skipped input key is ignored. Renamed fields use their new key. Duplicate mapped names, repeated field annotations and ASCII controls in key names are compile-time errors. Derived enum tag objects also reject unknown fields.
+Missing required fields, unknown keys, wrong types and out-of-range values return Fail. A known skipped input key is ignored. Renamed fields use their new key. Duplicate mapped names, repeated field annotations and ASCII controls in key names are compile-time errors. Derived enum tag objects also reject unknown fields.
 
 Supported values include all base numeric types, bool, char, String, List, Set, String-keyed Map and recursively supported Option/Result. char encodes as a byte number. uint64 above the signed 64-bit range encodes as a decimal string to preserve precision. Floats must be finite and decoding checks the destination width. Enums use objects with $variant and $values in payload declaration order.
 

@@ -30,9 +30,9 @@ The automatically imported std::core module defines TryBranch<T,R>, Try<T,R>, Tr
 
 Standard-library failures return `Result<T, Error>` while retaining the concrete error inside the owned interface value. If IoError implements Error, `?` can propagate a custom `Result<T, IoError>` into `Result<U, Error>`, including conversion of the standard error residual wrapper. An Option source still yields its concrete success value, which can be placed into `Option<Interface>`; None propagates as the destination Option's None. Custom Try, TryMove and FromResidual protocols also accept legal concrete-to-interface residual conversions.
 
-Interface types can be generic arguments and owned payloads. `Err(IoError error)` checks the dynamic type and binds the concrete error; `Err(_)` covers remaining errors without binding, and `Err(_ error)` retains an interface binding. Repeated outer enum tags with distinct payload patterns are tried in source order. Open interfaces require a fallback. See the [complete multi-tag example](../../example/samples/interface_payload_match.chl).
+Interface types can be generic arguments and owned payloads. `Fail(IoError error)` checks the dynamic type and binds the concrete error; `Fail(_)` covers remaining errors without binding, and `Fail(_ error)` retains an interface binding. Repeated outer enum tags with distinct payload patterns are tried in source order. Open interfaces require a fallback. See the [complete multi-tag example](../../example/samples/interface_payload_match.chl).
 
-Single interface payloads also support `Err::IoError(error)`, or `IoError(error)` when the tag is unique and there is no variant-name collision. Multiple payloads retain `Tag(Type a, Type b, ordinary)`; ordinary payloads may bind directly without a type annotation. These forms share type compatibility, duplicate detection, source ordering and exhaustiveness checks.
+Single interface payloads also support `Fail::IoError(error)`, or `IoError(error)` when the tag is unique and there is no variant-name collision. Multiple payloads retain `Tag(Type a, Type b, ordinary)`; ordinary payloads may bind directly without a type annotation. These forms share type compatibility, duplicate detection, source ordering and exhaustiveness checks.
 
 A named value uses the read-only branch method. Explicit `move value?` uses intoBranch. Owned temporaries prefer the move protocol and may fall back to the read protocol. The source is evaluated once. Propagation performs normal cleanup and exits the current function or lambda.
 
@@ -40,7 +40,7 @@ Result<T,E> uses ErrorResidual<E>; Option<T> uses NoneResidual. Different succes
 
 ## Error adapters
 
-- `result.mapErr<F>(mapper)` maps only Err values.
+- `result.mapErr<F>(mapper)` maps only Fail values.
 - `option.okOr<E>(error)` constructs an error for None; arguments are evaluated normally.
 - `option.okOrElse<E>(factory)` calls the error factory only for None.
 - `result.ok()` explicitly discards error information.

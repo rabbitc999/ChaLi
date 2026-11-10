@@ -214,7 +214,7 @@ void serve(Database mut& database, State mut& state, TcpSocket mut& peer, String
 {
     Request request = match (readRequest(peer, 10000)) {
         Ok(value) => { value }
-        Err(_) => { return; }
+        Fail(_) => { return; }
     };
     if ((request.path == "/" || request.path == "/index.html") && request.method == "GET")
     {
@@ -250,7 +250,7 @@ api::Reply login(std::sql::Database mut& database, State mut& state, String body
     prune(&state);
     let value = match (std::json::parse(body)) {
         Ok(json) => { json }
-        Err(_) => { return api::errorReply(400, "登录数据必须是 JSON 对象"); }
+        Fail(_) => { return api::errorReply(400, "登录数据必须是 JSON 对象"); }
     };
     String username = stringField(&value, "username");
     String password = stringField(&value, "password");
@@ -269,7 +269,7 @@ api::Reply login(std::sql::Database mut& database, State mut& state, String body
     if (rows.intAt(0, 8) > now) { return api::errorReply(429, "登录尝试过多，请稍后再试"); }
     String digest = match (crypto::derive(password, rows.textAt(0, 5), (uint64)600000)) {
         Ok(value) => { value }
-        Err(_) => { return api::errorReply(503, "认证服务暂不可用"); }
+        Fail(_) => { return api::errorReply(503, "认证服务暂不可用"); }
     };
     int64 id = rows.intAt(0, 0);
     if (rows.intAt(0, 4) != 1 || !crypto::equalDigest(digest, rows.textAt(0, 6)))
@@ -283,7 +283,7 @@ api::Reply login(std::sql::Database mut& database, State mut& state, String body
     if (len(state.sessions) >= 4096) { return api::errorReply(503, "会话数量已达上限"); }
     String random = match (crypto::token()) {
         Ok(value) => { value }
-        Err(_) => { return api::errorReply(503, "无法创建会话"); }
+        Fail(_) => { return api::errorReply(503, "无法创建会话"); }
     };
     Session session;
     session.token = random; session.userId = id; session.version = rows.intAt(0, 3); session.expires = std::clock::nowMs() + 1800000;
@@ -390,7 +390,7 @@ Reply write(Database mut& database, String entity, User user, String method, int
     {
         let body = match (parse(text)) {
             Ok(value) => { value }
-            Err(_) => { return errorReply(400, "记录必须是 JSON 对象"); }
+            Fail(_) => { return errorReply(400, "记录必须是 JSON 对象"); }
         };
         if (!body.isObject()) { return errorReply(400, "记录必须是 JSON 对象"); }
         List<String> names = fields(entity);
@@ -401,7 +401,7 @@ Reply write(Database mut& database, String entity, User user, String method, int
         {
             String item = match (literal(&database, &body, name)) {
                 Ok(value) => { value }
-                Err(error) => { return errorReply(400, error.toString()); }
+                Fail(error) => { return errorReply(400, error.toString()); }
             };
             if (!columns.isEmpty()) { columns += ","; values += ","; updates += ","; }
             columns += name; values += item; updates += name + "=" + item;
@@ -467,7 +467,7 @@ Result<bool, Error> demonstrateGrade()
 void main() {
     match (demonstrateGrade()) {
         Ok(_) => {}
-        Err(error) => { println("{}", error.toString()); }
+        Fail(error) => { println("{}", error.toString()); }
     }
 }
 ```

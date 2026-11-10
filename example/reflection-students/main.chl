@@ -62,7 +62,7 @@ Result<String, Error> encodeRows(ResultSet const& rows)
             int64 column = rows.columnIndex(field.name);
             if (column < 0)
             {
-                return Result<String, Error>::Err(MessageError::from("数据库缺少字段：" + field.name));
+                return Result<String, Error>::Fail(MessageError::from("数据库缺少字段：" + field.name));
             }
             String value = rows.textAt(row, column);
             if (field.typeId == getTypeId<String>())
@@ -76,13 +76,13 @@ Result<String, Error> encodeRows(ResultSet const& rows)
         let checked = deserialize<Student>(text);
         if (checked.isErr())
         {
-            return Result<String, Error>::Err(MessageError::from("数据库记录不符合学生模型：" + checked.error().toString()));
+            return Result<String, Error>::Fail(MessageError::from("数据库记录不符合学生模型：" + checked.error().toString()));
         }
         Student student = checked.unwrap();
         String error = validate(&student);
         if (error != "")
         {
-            return Result<String, Error>::Err(MessageError::from(error));
+            return Result<String, Error>::Fail(MessageError::from(error));
         }
         String encoded = serialize<Student>(&student)?;
         records.push(encoded);
@@ -118,7 +118,7 @@ Result<String, Error> execute(Database mut& database, List<String> const& args)
         String error = validate(&student);
         if (error != "")
         {
-            return Result<String, Error>::Err(MessageError::from(error));
+            return Result<String, Error>::Fail(MessageError::from(error));
         }
         if (command == "update")
         {
@@ -133,11 +133,11 @@ Result<String, Error> execute(Database mut& database, List<String> const& args)
         let rows = database.exec(prepared);
         if (!rows.ok)
         {
-            return Result<String, Error>::Err(MessageError::from(rows.error));
+            return Result<String, Error>::Fail(MessageError::from(rows.error));
         }
         if (rows.affected != 1)
         {
-            return Result<String, Error>::Err(MessageError::from("学生不存在"));
+            return Result<String, Error>::Fail(MessageError::from("学生不存在"));
         }
         String encoded = serialize<Student>(&student)?;
         return Result<String, Error>::Ok(encoded);
@@ -147,7 +147,7 @@ Result<String, Error> execute(Database mut& database, List<String> const& args)
         let parsed = Parse::parseInt64(args[2]);
         if (parsed.isErr() || parsed.unwrap() <= 0)
         {
-            return Result<String, Error>::Err(MessageError::from("学号必须是正整数"));
+            return Result<String, Error>::Fail(MessageError::from("学号必须是正整数"));
         }
         filter<int64>(&query, "id", parsed.unwrap())?;
         String operation = "select";
@@ -159,19 +159,19 @@ Result<String, Error> execute(Database mut& database, List<String> const& args)
         let rows = database.exec(prepared);
         if (!rows.ok)
         {
-            return Result<String, Error>::Err(MessageError::from(rows.error));
+            return Result<String, Error>::Fail(MessageError::from(rows.error));
         }
         if (command == "delete")
         {
             if (rows.affected != 1)
             {
-                return Result<String, Error>::Err(MessageError::from("学生不存在"));
+                return Result<String, Error>::Fail(MessageError::from("学生不存在"));
             }
             return Result<String, Error>::Ok("已删除");
         }
         if (rows.isEmpty())
         {
-            return Result<String, Error>::Err(MessageError::from("学生不存在"));
+            return Result<String, Error>::Fail(MessageError::from("学生不存在"));
         }
         return encodeRows(&rows);
     }
@@ -191,7 +191,7 @@ Result<String, Error> execute(Database mut& database, List<String> const& args)
         {
             if (args[3] != "asc" && args[3] != "desc")
             {
-                return Result<String, Error>::Err(MessageError::from("排序方向必须是 asc 或 desc"));
+                return Result<String, Error>::Fail(MessageError::from("排序方向必须是 asc 或 desc"));
             }
             descending = args[3] == "desc";
         }
@@ -200,11 +200,11 @@ Result<String, Error> execute(Database mut& database, List<String> const& args)
         let rows = database.exec(prepared);
         if (!rows.ok)
         {
-            return Result<String, Error>::Err(MessageError::from(rows.error));
+            return Result<String, Error>::Fail(MessageError::from(rows.error));
         }
         return encodeRows(&rows);
     }
-    return Result<String, Error>::Err(MessageError::from("命令或参数错误：add/update JSON；get/delete 学号；list [字段 [asc|desc]]；search 姓名；schema"));
+    return Result<String, Error>::Fail(MessageError::from("命令或参数错误：add/update JSON；get/delete 学号；list [字段 [asc|desc]]；search 姓名；schema"));
 }
 
 /**

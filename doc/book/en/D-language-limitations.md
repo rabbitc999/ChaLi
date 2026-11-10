@@ -20,7 +20,7 @@ Imported types, functions, constants, and variants can use short names when unam
 
 Generic arguments can be inferred from actual arguments and available expected types. Insufficient information still requires annotations or explicit arguments. Generic bodies are checked for concrete instances; one successful instance does not prove every unused type combination. Compilation also depends on instantiation, memory, and host time budgets.
 
-When the target enum and its arguments are known, returns, initialization, assignment, and arguments may wrap a payload in a uniquely matching single-payload variant. Equal-priority candidates require an explicit variant. In `Result<T, Error>`, T may itself be an error type, so a generic error branch may still need `Err(error)` to preserve its meaning. Multiple-payload variants require explicit construction. Wrapping preserves move, borrow, and cleanup rules.
+When the target enum and its arguments are known, returns, initialization, assignment, and arguments may wrap a payload in a uniquely matching single-payload variant. Equal-priority candidates require an explicit variant. In `Result<T, Error>`, T may itself be an error type, so a generic error branch may still need `Fail(error)` to preserve its meaning. Multiple-payload variants require explicit construction. Wrapping preserves move, borrow, and cleanup rules.
 
 ## D.3 Borrow contracts across functions
 

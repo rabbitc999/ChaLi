@@ -244,11 +244,11 @@ struct MReflectionSerialization
                 const auto helper = g_reflectionEnabled ? ensure(type) : Memory::String{}, result = InferenceTypeText(decl.signature.result);
                 entries += result + " " + decl.source + "(" + InferenceTypeText(decl.signature.params.front().type) + " " + decl.signature.params.front().source + "){String error;";
                 if (!g_reflectionEnabled)
-                    entries += "std::core::panic(\"编译器未启用反射支持\");return " + result + "::Err(std::core::MessageError::from(\"编译器未启用反射支持\"));}\n";
+                    entries += "std::core::panic(\"编译器未启用反射支持\");return " + result + "::Fail(std::core::MessageError::from(\"编译器未启用反射支持\"));}\n";
                 else if (encoding)
-                    entries += "String text=" + helper + "Encode(&value,&error,0);if(error!=\"\"){return " + result + "::Err(std::core::MessageError::from(error));}return " + result + "::Ok(text);}\n";
+                    entries += "String text=" + helper + "Encode(&value,&error,0);if(error!=\"\"){return " + result + "::Fail(std::core::MessageError::from(error));}return " + result + "::Ok(text);}\n";
                 else
-                    entries += "let parsed=std::json::parse(text);if(parsed.isErr()){return " + result + "::Err(parsed.error());}let node=parsed.unwrap();" + InferenceTypeText(type) + " value;if(!" + helper + "Decode(&node,&value,&error,0)){return " + result + "::Err(std::core::MessageError::from(error));}return " + result + "::Ok(move value);}\n";
+                    entries += "let parsed=std::json::parse(text);if(parsed.isErr()){return " + result + "::Fail(parsed.error());}let node=parsed.unwrap();" + InferenceTypeText(type) + " value;if(!" + helper + "Decode(&node,&value,&error,0)){return " + result + "::Fail(std::core::MessageError::from(error));}return " + result + "::Ok(move value);}\n";
                 queries.replaced.insert(decl.source);
                 break;
             }

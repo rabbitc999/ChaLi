@@ -26,7 +26,7 @@ const lines = [
   '    Option<int64> maybe=Option<int64>::Value(3);',
   '    Option<int64> none=Option<int64>::None;',
   '    Result<int64, int64> ok=Result<int64, int64>::Ok(9);',
-  '    Result<int64, int64> err=Result<int64, int64>::Err(5);',
+  '    Result<int64, int64> err=Result<int64, int64>::Fail(5);',
   '    println("READY {}", row.first);',
   '    int64 keep=1;',
   '    println("KEEP {}", keep);',
@@ -125,7 +125,7 @@ async function main() {
     assert.equal(values.none.value, 'None()');
     assert.equal(values.ok.value, 'Ok(…)');
     assert.equal((await expand(client, values.ok)).value.value, '9');
-    assert.equal(values.err.value, 'Err(…)');
+    assert.equal(values.err.value, 'Fail(…)');
     assert.equal((await expand(client, values.err)).error.value, '5');
 
     // 继续后旧的展开引用必须失效。

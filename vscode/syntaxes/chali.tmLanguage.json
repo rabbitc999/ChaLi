@@ -112,6 +112,10 @@
           "match": "\\b(fn)(?:\\s*<[^>]*>)?\\s+(copy)\\b"
         },
         {
+          "name": "keyword.declaration.chali",
+          "match": "\\btype\\s+alias(?=\\s+[A-Za-z_])"
+        },
+        {
           "name": "keyword.control.chali",
           "match": "\\b(?:_|unsafe|__rawSize|__rawAlign|break|cast|const|continue|defer|drop|elif|else|enum|export|fn|for|if|impl|import|in|inline|interface|let|loop|match|module|move|mut|new|opcode|return|scope|static|struct|type|while|yield)\\b"
         },

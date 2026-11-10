@@ -12,21 +12,21 @@ bool __verify(String input, int64 length, String public_key, String signature);
 /** 生成 count 个安全随机字节，以小写十六进制返回。 */
 Result<String,Error> randomHex(int64 count) {
     String value = __random_hex(count);
-    if (len(value) == 0) { return Result<String,Error>::Err(MessageError::from("invalid count or random backend unavailable")); }
+    if (len(value) == 0) { return Result<String,Error>::Fail(MessageError::from("invalid count or random backend unavailable")); }
     return Result<String,Error>::Ok(value);
 }
 
 /** 计算 UTF-8 String 的 SHA-256，小写十六进制编码。 */
 Result<String,Error> sha256(String input) {
     String value = __sha256(input, len(input));
-    if (len(value) == 0) { return Result<String,Error>::Err(MessageError::from("SHA-256 backend unavailable")); }
+    if (len(value) == 0) { return Result<String,Error>::Fail(MessageError::from("SHA-256 backend unavailable")); }
     return Result<String,Error>::Ok(value);
 }
 
 /** 计算 HMAC-SHA-256，结果采用小写十六进制。 */
 Result<String,Error> hmacSha256(String input, String key) {
     String value = __hmac(input, len(input), key, len(key));
-    if (len(value) == 0) { return Result<String,Error>::Err(MessageError::from("HMAC-SHA-256 backend unavailable")); }
+    if (len(value) == 0) { return Result<String,Error>::Fail(MessageError::from("HMAC-SHA-256 backend unavailable")); }
     return Result<String,Error>::Ok(value);
 }
 

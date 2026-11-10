@@ -23,9 +23,9 @@ struct CliArguments {
     /** 严格转换整数参数，失败返回带参数名的错误。 */
     Result<int64,Error> getInt(String name) {
         CliError error; error.argument=name; error.message="expected an integer option";
-        if (self.options.has(name)==0) { return Result<int64,Error>::Err(error); }
+        if (self.options.has(name)==0) { return Result<int64,Error>::Fail(error); }
         let parsed=Parse::parseInt64(self.options[name]);
-        if (!parsed.isOk()) { return Result<int64,Error>::Err(error); }
+        if (!parsed.isOk()) { return Result<int64,Error>::Fail(error); }
         return Result<int64,Error>::Ok(parsed.unwrap());
     }
 };
@@ -103,15 +103,15 @@ struct CliParser {
                     for (int64 j=0; j<self.definitions.len(); j=j+1) {
                         if (self.definitions[j].name==name) { found=j; break; }
                     }
-                    if (found<0) { return Result<CliArguments,Error>::Err(cliError(argument,"unknown option")); }
+                    if (found<0) { return Result<CliArguments,Error>::Fail(cliError(argument,"unknown option")); }
                     CliOption option=self.definitions[found];
                     if (option.takesValue) {
                         if (!assigned) {
-                            if (i+1>=arguments.len()) { return Result<CliArguments,Error>::Err(cliError(argument,"missing value")); }
+                            if (i+1>=arguments.len()) { return Result<CliArguments,Error>::Fail(cliError(argument,"missing value")); }
                             i=i+1; value=arguments[i];
                         }
                     } else {
-                        if (assigned) { return Result<CliArguments,Error>::Err(cliError(argument,"flag does not accept a value")); }
+                        if (assigned) { return Result<CliArguments,Error>::Fail(cliError(argument,"flag does not accept a value")); }
                         value="true";
                     }
                     result.options[name]=value; seen[name]=true;
@@ -127,13 +127,13 @@ struct CliParser {
                                 if (self.definitions[k].shortName==(char)argumentBytes[j]) { found=k; break; }
 
                             }
-                            if (found<0) { return Result<CliArguments,Error>::Err(cliError(argument,"unknown short option")); }
+                            if (found<0) { return Result<CliArguments,Error>::Fail(cliError(argument,"unknown short option")); }
                             CliOption option=self.definitions[found]; String value="true";
                             if (option.takesValue) {
                                 value="";
                                 if (j+1<len(argument)) { value=cliTail(argument,j+1); }
                                 if (j+1==len(argument)) {
-                                    if (i+1>=arguments.len()) { return Result<CliArguments,Error>::Err(cliError(argument,"missing value")); }
+                                    if (i+1>=arguments.len()) { return Result<CliArguments,Error>::Fail(cliError(argument,"missing value")); }
                                     i=i+1; value=arguments[i];
                                 }
                                 j=len(argument);
@@ -150,7 +150,7 @@ struct CliParser {
         }
         if (!result.helpRequested) {
             for (CliOption option in self.definitions) {
-                if (option.required && seen.has(option.name)==0) { return Result<CliArguments,Error>::Err(cliError(option.name,"required option is missing")); }
+                if (option.required && seen.has(option.name)==0) { return Result<CliArguments,Error>::Fail(cliError(option.name,"required option is missing")); }
             }
         }
         return Result<CliArguments,Error>::Ok(result);

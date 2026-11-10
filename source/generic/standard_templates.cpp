@@ -78,7 +78,8 @@ bool writeTemplateUnit(std::ostream &out, const Memory::String &module)
     const auto file = TemplateUnitFile(module);
     Memory::Vector<const Generic *> records;
     for (const auto &entry : session.generics)
-        if (entry.second.origin.file == file && !entry.second.sourceTemplate.empty()) records.push_back(&entry.second);
+        if (entry.second.origin.file == file && !entry.second.sourceTemplate.empty() && entry.second.aliasTarget.empty())
+            records.push_back(&entry.second);
     chali_incremental::writeNumber(out, kTemplateUnitMagic);
     chali_incremental::writeNumber(out, 1);
     chali_incremental::writeString(out, module);

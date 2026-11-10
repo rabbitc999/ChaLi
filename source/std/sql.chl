@@ -23,16 +23,16 @@ struct SqlStatement {
 Result<String,Error> __model<T>() {
     requireReflection();
     let reflected = getStructInfo<T>();
-    if (reflected.isNone()) { return Result<String,Error>::Err(MessageError::from("SQL 模型需要 @Reflect")); }
+    if (reflected.isNone()) { return Result<String,Error>::Fail(MessageError::from("SQL 模型需要 @Reflect")); }
     let info = reflected.unwrap();
     let classInfo = getAnnotationInfo("std::sql::ModelClass");
     let fieldInfo = getAnnotationInfo("std::sql::ModelField");
-    if (classInfo.isNone() || fieldInfo.isNone()) { return Result<String,Error>::Err(MessageError::from("SQL 注解元数据不可用")); }
+    if (classInfo.isNone() || fieldInfo.isNone()) { return Result<String,Error>::Fail(MessageError::from("SQL 注解元数据不可用")); }
     String table;
     for (Annotation annotation in info.annotations) {
         if (annotation.annotationId == classInfo.unwrap().typeId) { table = annotation.args.at(0).asText().unwrap(); }
     }
-    if (table == "") { return Result<String,Error>::Err(MessageError::from("SQL 模型需要 @ModelClass(table)")); }
+    if (table == "") { return Result<String,Error>::Fail(MessageError::from("SQL 模型需要 @ModelClass(table)")); }
     String output = "{\"name\":" + std::reflect::__serdeQuote(info.name) + ",\"table\":" + std::reflect::__serdeQuote(table) + ",\"fields\":[";
     bool first = true;
     for (FieldInfo field in info.fields) {
@@ -52,7 +52,7 @@ Result<String,Error> __model<T>() {
             elif (field.typeId == getTypeId<bool>()) { kind = "bool"; }
             elif (field.typeId == getTypeId<float32>() || field.typeId == getTypeId<float64>()) { kind = "real"; }
             elif (field.typeId == getTypeId<int8>() || field.typeId == getTypeId<int16>() || field.typeId == getTypeId<int32>() || field.typeId == getTypeId<int64>() || field.typeId == getTypeId<uint8>() || field.typeId == getTypeId<uint16>() || field.typeId == getTypeId<uint32>()) { kind = "int"; }
-            else { return Result<String,Error>::Err(MessageError::from("无法推断 SQL 字段存储类型：" + field.name)); }
+            else { return Result<String,Error>::Fail(MessageError::from("无法推断 SQL 字段存储类型：" + field.name)); }
         }
         if (!first) { output = output + ","; }
         first = false;
@@ -84,14 +84,14 @@ struct Query {
     void page(int64 limit, int64 offset = 0) { self.limitValue = limit; self.offsetValue = offset; }
     /** 生成 SQL 与参数；UPDATE/DELETE 强制要求过滤条件。 */
     Result<SqlStatement,Error> build(String operation = "select", String values = "{}") {
-        if (self.limitValue < 0 || self.offsetValue < 0) { return Result<SqlStatement,Error>::Err(MessageError::from("分页参数不能为负数")); }
+        if (self.limitValue < 0 || self.offsetValue < 0) { return Result<SqlStatement,Error>::Fail(MessageError::from("分页参数不能为负数")); }
         String separator = ",";
         String options = "{\"filters\":[" + separator.join(self.filters) + "],\"orders\":[" + separator.join(self.orders) + "],\"columns\":[" + separator.join(self.columns) + "],\"limit\":" + self.limitValue.toString() + ",\"offset\":" + self.offsetValue.toString() + "}";
         let parsed = parse(__ipageBuild(self.model, operation, options, values));
-        if (parsed.isErr()) { return Result<SqlStatement,Error>::Err(MessageError::from(parsed.error())); }
+        if (parsed.isErr()) { return Result<SqlStatement,Error>::Fail(MessageError::from(parsed.error())); }
         let response = parsed.unwrap();
         String error = response.find("error").unwrap().asString().unwrap();
-        if (error != "") { return Result<SqlStatement,Error>::Err(MessageError::from(error)); }
+        if (error != "") { return Result<SqlStatement,Error>::Fail(MessageError::from(error)); }
         SqlStatement statement;
         statement.sql = response.find("sql").unwrap().asString().unwrap();
         statement.parameters = response.find("params").unwrap().dump();
@@ -548,7 +548,7 @@ int64 displayWidth(String text) {
 /** 从带模型注解的反射类型创建查询。 */
 Result<Query,Error> query<T>() {
     let metadata = __model<T>();
-    if (metadata.isErr()) { return Result<Query,Error>::Err(MessageError::from(metadata.error())); }
+    if (metadata.isErr()) { return Result<Query,Error>::Fail(MessageError::from(metadata.error())); }
     Query query;
     query.model = metadata.unwrap();
     return Result<Query,Error>::Ok(query);
@@ -556,14 +556,14 @@ Result<Query,Error> query<T>() {
 /** 添加参数化条件；操作符编号与 ipage OperatorType 一致，默认相等。 */
 Result<bool,Error> filter<V>(Query mut& query, String field, V value, int64 operation = 0) {
     let encoded = serialize<V>(&value);
-    if (encoded.isErr()) { return Result<bool,Error>::Err(MessageError::from(encoded.error())); }
+    if (encoded.isErr()) { return Result<bool,Error>::Fail(MessageError::from(encoded.error())); }
     query.filters.push("{\"field\":" + std::reflect::__serdeQuote(field) + ",\"op\":" + operation.toString() + ",\"values\":[" + encoded.unwrap() + "]}");
     return Result<bool,Error>::Ok(true);
 }
 /** 添加 IN 或 NOT IN 等多参数条件。 */
 Result<bool,Error> filterMany<V>(Query mut& query, String field, List<V> values, int64 operation = 11) {
     let encoded = serialize<List<V>>(&values);
-    if (encoded.isErr()) { return Result<bool,Error>::Err(MessageError::from(encoded.error())); }
+    if (encoded.isErr()) { return Result<bool,Error>::Fail(MessageError::from(encoded.error())); }
     query.filters.push("{\"field\":" + std::reflect::__serdeQuote(field) + ",\"op\":" + operation.toString() + ",\"values\":" + encoded.unwrap() + "}");
     return Result<bool,Error>::Ok(true);
 }
@@ -571,12 +571,12 @@ Result<bool,Error> filterMany<V>(Query mut& query, String field, List<V> values,
 /** 使用模型值生成参数化 INSERT。 */
 Result<SqlStatement,Error> insert<T>(Query mut& query, T const& value) {
     let encoded = serialize<T>(value);
-    if (encoded.isErr()) { return Result<SqlStatement,Error>::Err(MessageError::from(encoded.error())); }
+    if (encoded.isErr()) { return Result<SqlStatement,Error>::Fail(MessageError::from(encoded.error())); }
     return query.build("insert", encoded.unwrap());
 }
 /** 使用模型值生成参数化 UPDATE，主键不会被修改。 */
 Result<SqlStatement,Error> update<T>(Query mut& query, T const& value) {
     let encoded = serialize<T>(value);
-    if (encoded.isErr()) { return Result<SqlStatement,Error>::Err(MessageError::from(encoded.error())); }
+    if (encoded.isErr()) { return Result<SqlStatement,Error>::Fail(MessageError::from(encoded.error())); }
     return query.build("update", encoded.unwrap());
 }

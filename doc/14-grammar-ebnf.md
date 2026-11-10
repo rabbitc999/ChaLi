@@ -52,7 +52,7 @@ int64 const& fn(int64 const&) reader = borrow;
 List<int64 fn(int64)> callbacks;
 ```
 
-函数类型可以嵌套，`bool fn(int64 fn(int64))` 表示接收一个函数值并返回 bool。`fn` 前的引用限定符属于返回值：`int64 const& fn()` 返回只读引用。变长参数须放在末尾。`fn` 是关键字；语言不提供函数类型别名。
+函数类型可以嵌套，`bool fn(int64 fn(int64))` 表示接收一个函数值并返回 bool。`fn` 前的引用限定符属于返回值：`int64 const& fn()` 返回只读引用。变长参数须放在末尾。`fn` 是关键字。可以用 `type alias Mapper<T> = T fn(T);` 给函数类型命名。
 
 引用函数值本身使用完整类型括号：`(int64 fn(int64)) const& ref = &callback;`。`(int64 fn(int64)) mut&` 可以替换被引用的函数值，替换沿用所有权与 Drop 清理规则；`int64 fn(int64) values[] = new[2];` 表示运行时函数值数组。函数值的引用限定符写在完整括号之后，函数返回值的引用限定符写在 `fn` 之前；函数值可以参与枚举载荷、结构体字段、泛型、数组及容器组合。
 
@@ -78,6 +78,8 @@ generic_struct_head = "struct", VARIABLE, generic_parameters ;
 generic_enum_head = "enum", VARIABLE, generic_parameters ;
 generic_interface_head = "interface", VARIABLE, generic_parameters ;
 generic_host_type_head = "type", VARIABLE, generic_parameters ;
+type_alias_decl = "type", "alias", VARIABLE, [ generic_parameters ], "=",
+                  ( type | ptr_type | array_type ), ";" ;
 ```
 
 以上 `*_head` 只描述声明头，后续继承列表、函数体或成员块分别沿用完整文法。实例化支持显式实参和可确定的函数参数推导。类型参数与整数值共同决定实例，整数表达式先求值；`N: int64` 可用于结构体数组字段的尺寸。受接口约束的类型参数可用 `C.Item` 表示关联类型，模板展开时将其绑定到具体实现。完整示例见 [匹配、插值、泛型与作用域清理](28-match-interpolation-scope.md)。未决定的泛型类型不具备运行时反射身份。例如 `MyBox<int64 fn(int64)>` 中只有末尾 `>` 结束 MyBox 的实参。
@@ -109,7 +111,7 @@ MyBox<int64 fn(int64)> box;
 
 <!-- BEGIN GENERATED CHALI EBNF -->
 
-以下 169 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
+以下 177 条产生式由 `source/chali.gram` 导出，语义动作及解析优先级指令省略。
 
 ### 终结符登记
 
@@ -641,9 +643,13 @@ stmt = block
     | while_stmt
     | loop_stmt
     | for_in_stmt
+    | for_stmt
+    | loop_else
     | expr, ":", while_stmt
     | expr, ":", loop_stmt
     | expr, ":", for_in_stmt
+    | expr, ":", for_stmt
+    | expr, ":", loop_else
     | match_stmt
     | match_stmt, ";"
     | "return", expr, ";"
@@ -717,17 +723,37 @@ while_stmt = "while", "(", expr, ")", block ;
 
 loop_stmt = "loop", block ;
 
-loop_expr = "loop", block
-    | "while", "(", expr, ")", if_block, "else", if_block
-    | "for", "(", name_token, "in", for_in_source, ")", if_block, "else", if_block
-    | "for", "(", "let", name_token, "in", for_in_source, ")", if_block, "else", if_block
-    | "for", "(", type, name_token, "in", for_in_source, ")", if_block, "else", if_block
-    | "for", "(", ptr_type, name_token, "in", for_in_source, ")", if_block, "else", if_block ;
+for_stmt = "for", "(", for_init, for_condition, ";", for_update, ")", if_block ;
 
-for_in_stmt = "for", "(", name_token, "in", for_in_source, ")", block
-    | "for", "(", "let", name_token, "in", for_in_source, ")", block
-    | "for", "(", type, name_token, "in", for_in_source, ")", block
-    | "for", "(", ptr_type, name_token, "in", for_in_source, ")", block ;
+for_init = ";"
+    | for_expressions, ";"
+    | type, declarator_list, ";"
+    | ptr_type, declarator_list, ";"
+    | array_type, declarator_list, ";"
+    | "const", type, declarator_list, ";"
+    | "const", ptr_type, declarator_list, ";"
+    | "let", declarator_list, ";" ;
+
+for_condition = ""
+    | expr ;
+
+for_update = ""
+    | for_expressions ;
+
+for_expressions = expr
+    | for_expressions, ",", expr ;
+
+loop_expr = z_loop_value
+    | "while", "(", expr, ")", if_block, "else", if_block
+    | z_loop_else_value ;
+
+loop_else = for_stmt, "else", if_block
+    | for_in_stmt, "else", if_block ;
+
+for_in_stmt = "for", "(", name_token, "in", for_in_source, ")", if_block
+    | "for", "(", "let", name_token, "in", for_in_source, ")", if_block
+    | "for", "(", type, name_token, "in", for_in_source, ")", if_block
+    | "for", "(", ptr_type, name_token, "in", for_in_source, ")", if_block ;
 
 for_in_source = expr ;
 
@@ -877,6 +903,10 @@ primary = name_token
 z_if_value = if_stmt ;
 
 z_match_value = match_stmt ;
+
+z_loop_value = loop_stmt ;
+
+z_loop_else_value = loop_else ;
 
 z_block_value = "{", nonempty_stmt_list, "}" ;
 

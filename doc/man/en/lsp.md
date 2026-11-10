@@ -6,6 +6,8 @@
 
 `chali lsp` uses six queues for completion/signatures, hover/definitions, semantic tokens/outlines, workspace queries, macro previews, and compiler diagnostics. The protocol thread continues to receive edits and cancellations. JSON-RPC IDs pair responses with requests, and a mutex protects complete output frames. [中文](lsp.md)
 
+The editor completes type aliases, navigates to their declarations, and shows the resolved target type on hover. Place the cursor on an alias or one of its arguments and run **ChaLi: Preview Type Alias Expansion** to see the spelling and the compiler-expanded type in the Output panel. The preview includes default arguments and module resolution.
+
 ## Types, macros and safe refactoring
 
 The compiler exports macro-generated structs and methods from its registered declaration tables for completion, hover, signatures, document outlines and source navigation. For example, `$RECORD<int64>(Box)` and `$RECORD<String>(Label)` expose concrete `value` fields and `create` methods, while `$GETTER(read,value)` exposes `Counter.read`. Unsaved documents are supported. Incomplete member expressions inside ordinary function bodies use an isolated analysis copy to verify outer declarations without changing editor text. Hygienic private names remain hidden. Generated declarations cannot be renamed directly; edit the macro arguments or template instead. Navigation selects a real name in the invocation arguments when available, otherwise the macro invocation origin.

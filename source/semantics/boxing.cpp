@@ -2476,7 +2476,7 @@ ast::NodePtr LowerTry(int id)
     const MEnumVariantDef *sourceErr = nullptr;
     /*
      * 两种形状都收：
-     *   * `Result<T,E>` —— `Err` 带载荷，传播时要保证**错误类型**一致；
+     *   * `Result<T,E>` —— `Fail` 带载荷，传播时要保证**错误类型**一致；
      *   * **可空枚举**（`Option<T>` 这样"一个带载荷变体 + 一个空变体"）—— 空变体
      *     没有载荷，传播时原样返回同名空变体（函数返回类型也得是同样的可空枚举）。
      * 两种形状的"好消息变体"都放在 sourceOk 里。
@@ -2558,8 +2558,8 @@ ast::NodePtr LowerTry(int id)
         const ast::NodePtr errorValue = EnumPayloadValue(
             ast::Node::var(source), sourceType->name, sourceErr->payloads[0]);
         propagate.push_back(ast::Node::assign(
-            returned, ast::Node::call("__chali_enum_" + g_returnType->name + "_Err",
-                                      { EnumPayloadParameterName(g_returnType->name, "Err", 0u) },
+            returned, ast::Node::call("__chali_enum_" + g_returnType->name + "_" + returnErr->name,
+                                      { EnumPayloadParameterName(g_returnType->name, returnErr->name, 0u) },
                                       { errorValue })));
     }
     AppendDropsAll(Memory::String(), &propagate);
@@ -3163,7 +3163,7 @@ Memory::String ReturnedVariableName(int returnId)
  *
  * 两类：
  *   * `return x;`（x 是直接变量）—— 按 **move** 交出去，x 不参与本函数收尾；
- *   * `return Result::Err(arr);` 里**运行时数组**载荷 —— 聚合只借用数组，所有权
+ *   * `return Result::Fail(arr);` 里**运行时数组**载荷 —— 聚合只借用数组，所有权
  *     还是被 `return` 出去的那个变量（字符串 / 对象载荷不在此列：构造器会各复制一份，
  *     原变量照常释放）。
  *

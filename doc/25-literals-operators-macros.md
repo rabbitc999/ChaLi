@@ -611,7 +611,7 @@ VSCode 的“预览宏展开”显示当前文件的调用；“当前宏展开�
 
 导入 std::json 后，`$std::json::Json<T>(toJson, fromJson);` 为结构体或枚举实现 `Json.toJson()`，并生成具体类型的静态 `fromJson(String)`。返回值分别为 `Result<String, Error>` 和 `Result<T, Error>`，当前要求启用反射代码生成；这不会自动以 @Reflect 暴露运行期字段。
 
-结构体实例字段可使用 `@std::json::Field(name:"external_name", skip:false)`。空 name 沿用语言字段名；skip 为 true 时不编码、不恢复该字段，解码保留默认构造值，输入中的已知忽略键被忽略。重复映射名、重复注解、控制字节名称，以及函数／静态字段／未派生类型上的该注解均在编译时拒绝。非忽略字段缺失、未知键、类型或数值范围错误返回 Err。枚举使用仅含 $variant 与 $values 的对象，并校验标签和载荷数量。
+结构体实例字段可使用 `@std::json::Field(name:"external_name", skip:false)`。空 name 沿用语言字段名；skip 为 true 时不编码、不恢复该字段，解码保留默认构造值，输入中的已知忽略键被忽略。重复映射名、重复注解、控制字节名称，以及函数／静态字段／未派生类型上的该注解均在编译时拒绝。非忽略字段缺失、未知键、类型或数值范围错误返回 Fail。枚举使用仅含 $variant 与 $values 的对象，并校验标签和载荷数量。
 
 支持全部基础数值、bool、char、标准 String、List、Set、String 键 Map 及递归受支持的 Option／Result。char 编码为字节数值，超出有符号范围的 uint64 使用精确十进制字符串；非有限浮点编码和目标浮点越界解码返回错误。嵌套用户类型也须派生 Json；引用、函数、动态接口、数组、不可复制资源及其他类型在编译时拒绝，skip 不改变这些约束。已有 toJson／fromJson 不被覆盖。
 

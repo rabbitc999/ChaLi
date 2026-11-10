@@ -10,6 +10,22 @@ Distinguish type parameters, integer constants, associated types and generic int
 
 Prefer omitting function type arguments when the arguments determine them. After importing `std::algorithms`, write `foldValue(items, 0, add)`; the list element type, initial value, and callback must be compatible. Type declarations still use `List<int64>`. Add explicit type arguments or a module qualifier when inference cannot determine a unique meaning.
 
+## Transparent generic aliases
+
+Use `type alias` to give an existing type another name. Here the error type is fixed to `String` and the success type has a default.
+
+```chali
+type alias TextResult<T = int64> = Result<T, String>;
+
+void main() {
+    TextResult answer = Ok(42);
+    TextResult<> same = answer;
+    TextResult<String> missing = Fail("no text");
+}
+```
+
+You can omit the angle brackets when every generic parameter has a default. The alias shares the type identity of its target.
+
 ## 18.1 Parameterize a repeated calculation
 
 <!-- verify-book -->

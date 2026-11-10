@@ -45,16 +45,16 @@ interface FromResidual<F,R> { static F fromResidual(R residual); };
 
 标准库失败返回统一使用 `Result<T, Error>`，盒内仍保存具体错误类型。若 `IoError` 实现 `Error`，自定义 `Result<T, IoError>` 可经 `?` 向返回 `Result<U, Error>` 的函数传播；标准错误包装随之转换。`Option<Concrete>` 的 `?` 仍取出 Concrete，调用方可将它装入 `Option<Interface>`；None 直接传播为目标 Option 的 None。自定义 `Try`、`TryMove`、`FromResidual` 同样支持残余的具体类型到接口转换。
 
-接口可用作泛型实参与拥有载荷。`Err(IoError error)` 检查动态类型并绑定具体错误，`Err(_)` 覆盖剩余错误且不绑定，`Err(_ error)` 保留接口绑定。同一外层标签的类型分支按源码顺序尝试，开放接口必须兜底。见[完整多标签程序](../example/samples/interface_payload_match.chl)。
+接口可用作泛型实参与拥有载荷。`Fail(IoError error)` 检查动态类型并绑定具体错误，`Fail(_)` 覆盖剩余错误且不绑定，`Fail(_ error)` 保留接口绑定。同一外层标签的类型分支按源码顺序尝试，开放接口必须兜底。见[完整多标签程序](../example/samples/interface_payload_match.chl)。
 
-单接口载荷可使用 `Err::IoError(error)`，标签唯一且无名称冲突时可进一步写为 `IoError(error)`。双／多载荷仍写 `Tag(Type a, Type b, ordinary)`；非接口位置可直接写变量。所有写法共用类型关系、重复模式、分支顺序和穷尽检查。
+单接口载荷可使用 `Fail::IoError(error)`，标签唯一且无名称冲突时可进一步写为 `IoError(error)`。双／多载荷仍写 `Tag(Type a, Type b, ordinary)`；非接口位置可直接写变量。所有写法共用类型关系、重复模式、分支顺序和穷尽检查。
 
 用户类型可返回 `TryBranch<T,ErrorResidual<AppError>>`，直接向标准 `Result<U,AppError>` 传播；自定义返回类型可实现 `FromResidual<F,ErrorResidual<AppError>>` 接收标准 Result。完整程序见 [自定义传播样例](../example/samples/try_custom.chl)。
 
 ## 错误适配
 
-- `result.mapErr<F>(mapper)`：仅在 Err 时调用映射函数，得到 `Result<T,F>`。
-- `option.okOr<E>(error)`：缺失时生成 Err，error 按普通实参规则求值。
+- `result.mapErr<F>(mapper)`：仅在 Fail 时调用映射函数，得到 `Result<T,F>`。
+- `option.okOr<E>(error)`：缺失时生成 Fail，error 按普通实参规则求值。
 - `option.okOrElse<E>(factory)`：只在缺失时调用错误工厂。
 - `result.ok()`：明确丢弃错误信息，得到 Option。
 

@@ -141,7 +141,7 @@ function toDiagnostics(diagnostics) {
  * 注册全部语言能力。
  *
  * @param {vscode.ExtensionContext} context 扩展上下文。
- * @param {{getClient: () => any, logLine: (text: string) => void}} deps 依赖：
+ * @param {{getClient: () => any, logLine: (text: string) => void, flushDocument?: (document: vscode.TextDocument) => void}} deps 依赖：
  *        getClient 取当前 LSP 客户端（可能为 null），logLine 写输出面板。
  */
 function registerProviders(context, deps) {
@@ -182,6 +182,31 @@ function registerProviders(context, deps) {
     request, selector: SELECTOR, toRange, toPosition,
   });
   require('./codeActions').registerCodeActions(vscode, context, { request, selector: SELECTOR });
+
+  let aliasOutput;
+  context.subscriptions.push(vscode.commands.registerCommand('chali.previewTypeAlias', async () => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'chali') return null;
+    const { document, selection } = editor;
+    deps.flushDocument?.(document);
+    const result = await request('chali/expandTypeAlias', {
+      textDocument: { uri: document.uri.toString() },
+      position: { line: selection.active.line, character: selection.active.character },
+    }, undefined, document);
+    if (!result || !result.type) {
+      vscode.window.showInformationMessage(vscode.l10n.t('No resolved type alias at the cursor.'));
+      return null;
+    }
+    if (!aliasOutput) {
+      aliasOutput = vscode.window.createOutputChannel('ChaLi Type Alias');
+      context.subscriptions.push(aliasOutput);
+    }
+    aliasOutput.clear();
+    aliasOutput.appendLine(result.spelling);
+    aliasOutput.appendLine(result.type);
+    aliasOutput.show(true);
+    return result;
+  }));
 
   context.subscriptions.push(
     vscode.languages.registerDocumentSemanticTokensProvider(SELECTOR, {

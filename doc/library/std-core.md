@@ -169,8 +169,8 @@ $macro assert(condition, message)
 | 模块 | <a id="symbol-78"></a>`interface FromResidual<F, R>` | 以静态方法从传播载荷构造函数返回值的编译期协议。 |
 | 模块 | <a id="symbol-79"></a>`enum Option<T> : Try<T, NoneResidual>, TryMove<T, NoneResidual>, FromResidual<Option<T>, NoneResidual>` | 可选值：Value(T) 表示存在，None 表示缺失。 |
 | Option | `Value(T value), None` | 可选值：Value(T) 表示存在，None 表示缺失。 变体及载荷见声明。 |
-| 模块 | <a id="symbol-80"></a>`enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, FromResidual<Result<T, E>, ErrorResidual<E>>` | 操作结果：Ok(T) 表示成功，Err(E) 保存错误。 |
-| Result | `Ok(T value), Err(E error)` | 操作结果：Ok(T) 表示成功，Err(E) 保存错误。 变体及载荷见声明。 |
+| 模块 | <a id="symbol-80"></a>`enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, FromResidual<Result<T, E>, ErrorResidual<E>>` | 操作结果：Ok(T) 表示成功，Fail(E) 保存错误。 |
+| Result | `Ok(T value), Fail(E error)` | 操作结果：Ok(T) 表示成功，Fail(E) 保存错误。 变体及载荷见声明。 |
 | 模块 | <a id="symbol-81"></a>`interface NextValue<T>` | 自定义区间的有状态前进协议。
 @note nextValue 从接收者的游标状态产生下一项并推进状态；到达终点后返回 None。 |
 | 模块 | <a id="symbol-82"></a>`struct Pair<K, V>` | 包含 first 和 second 的两个值，分别使用 K 与 V 类型。 |
@@ -4554,7 +4554,7 @@ T unwrap();
 
 **行为**
 
-提取成功载荷；None/Err 时 panic。
+提取成功载荷；None/Fail 时 panic。
 
 **参数**
 
@@ -4562,7 +4562,7 @@ T unwrap();
 
 **返回值**
 
-`T`。提取成功载荷；None/Err 时 panic。
+`T`。提取成功载荷；None/Fail 时 panic。
 
 **错误与边界**
 
@@ -4591,7 +4591,7 @@ T unwrapOr(T fallback);
 
 **行为**
 
-提取成功载荷；None/Err 时返回 fallback。
+提取成功载荷；None/Fail 时返回 fallback。
 
 **参数**
 
@@ -4601,7 +4601,7 @@ T unwrapOr(T fallback);
 
 **返回值**
 
-`T`。提取成功载荷；None/Err 时返回 fallback。
+`T`。提取成功载荷；None/Fail 时返回 fallback。
 
 **错误与边界**
 
@@ -4629,7 +4629,7 @@ T expect(String message);
 
 **行为**
 
-提取成功载荷；None/Err 时以 message 触发 panic。
+提取成功载荷；None/Fail 时以 message 触发 panic。
 
 **参数**
 
@@ -4639,7 +4639,7 @@ T expect(String message);
 
 **返回值**
 
-`T`。提取成功载荷；None/Err 时以 message 触发 panic。
+`T`。提取成功载荷；None/Fail 时以 message 触发 panic。
 
 **错误与边界**
 
@@ -4926,7 +4926,7 @@ bool isErr();
 
 **行为**
 
-判断 Result 是否为 Err。
+判断 Result 是否为 Fail。
 
 **参数**
 
@@ -4934,7 +4934,7 @@ bool isErr();
 
 **返回值**
 
-`bool`。判断 Result 是否为 Err。
+`bool`。判断 Result 是否为 Fail。
 
 **错误与边界**
 
@@ -4999,7 +4999,7 @@ T unwrap();
 
 **行为**
 
-提取成功载荷；None/Err 时 panic。
+提取成功载荷；None/Fail 时 panic。
 
 **参数**
 
@@ -5007,7 +5007,7 @@ T unwrap();
 
 **返回值**
 
-`T`。提取成功载荷；None/Err 时 panic。
+`T`。提取成功载荷；None/Fail 时 panic。
 
 **错误与边界**
 
@@ -5036,7 +5036,7 @@ T unwrapOr(T fallback);
 
 **行为**
 
-提取成功载荷；None/Err 时返回 fallback。
+提取成功载荷；None/Fail 时返回 fallback。
 
 **参数**
 
@@ -5046,7 +5046,7 @@ T unwrapOr(T fallback);
 
 **返回值**
 
-`T`。提取成功载荷；None/Err 时返回 fallback。
+`T`。提取成功载荷；None/Fail 时返回 fallback。
 
 **错误与边界**
 
@@ -5074,7 +5074,7 @@ T expect(String message);
 
 **行为**
 
-提取成功载荷；None/Err 时以 message 触发 panic。
+提取成功载荷；None/Fail 时以 message 触发 panic。
 
 **参数**
 
@@ -5084,7 +5084,7 @@ T expect(String message);
 
 **返回值**
 
-`T`。提取成功载荷；None/Err 时以 message 触发 panic。
+`T`。提取成功载荷；None/Fail 时以 message 触发 panic。
 
 **错误与边界**
 
@@ -5150,7 +5150,7 @@ E error();
 
 **行为**
 
-提取 Err 载荷；Ok 时 panic。
+提取 Fail 载荷；Ok 时 panic。
 
 **参数**
 
@@ -5158,7 +5158,7 @@ E error();
 
 **返回值**
 
-`E`。提取 Err 载荷；Ok 时 panic。
+`E`。提取 Fail 载荷；Ok 时 panic。
 
 **错误与边界**
 
@@ -6587,7 +6587,7 @@ __Range range(int64 start, int64 stop);
 range(start, stop);
 ```
 
-**源码**：[source/chali_generic.cpp:2067](../../source/chali_generic.cpp#L2067)。
+**源码**：[source/chali_generic.cpp:2392](../../source/chali_generic.cpp#L2392)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6628,7 +6628,7 @@ __Range range(int64 start, int64 stop, int64 step);
 range(start, stop, step);
 ```
 
-**源码**：[source/chali_generic.cpp:2075](../../source/chali_generic.cpp#L2075)。
+**源码**：[source/chali_generic.cpp:2400](../../source/chali_generic.cpp#L2400)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6669,7 +6669,7 @@ __Interval_int64 rangeEq(int64 start, int64 stop);
 rangeEq(start, stop);
 ```
 
-**源码**：[source/chali_generic.cpp:2090](../../source/chali_generic.cpp#L2090)。
+**源码**：[source/chali_generic.cpp:2415](../../source/chali_generic.cpp#L2415)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6705,7 +6705,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/chali_generic.cpp:2296](../../source/chali_generic.cpp#L2296)。
+**源码**：[source/chali_generic.cpp:2621](../../source/chali_generic.cpp#L2621)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6741,7 +6741,7 @@ void close();
 obj.close();
 ```
 
-**源码**：[source/chali_generic.cpp:2304](../../source/chali_generic.cpp#L2304)。
+**源码**：[source/chali_generic.cpp:2629](../../source/chali_generic.cpp#L2629)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7414,7 +7414,7 @@ T mut& toReference<T>(Option<T mut&> value);
 toReference<T>(value);
 ```
 
-**源码**：[source/chali_generic.cpp:2004](../../source/chali_generic.cpp#L2004)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:2329](../../source/chali_generic.cpp#L2329)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7452,7 +7452,7 @@ Option<T mut&> toOptional<T>(T mut& value);
 toOptional<T>(value);
 ```
 
-**源码**：[source/chali_generic.cpp:2010](../../source/chali_generic.cpp#L2010)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:2335](../../source/chali_generic.cpp#L2335)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -10708,7 +10708,7 @@ T copy();
 obj.copy();
 ```
 
-**源码**：[source/chali_generic.cpp:1987](../../source/chali_generic.cpp#L1987)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:2312](../../source/chali_generic.cpp#L2312)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 

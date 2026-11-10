@@ -136,7 +136,7 @@ def behavior(entry):
     if owner=='Any' and name=='get': return '依据接收上下文取得盒子内的值。'
     if entry.get('intrinsic') and owner.startswith(('Right','Add','Subtract','Multiply','Divide','Modulo','Equal','NotEqual','Less','Greater','And','Or','Xor','Shift','Negate','BitNot','Positive')):
         return '用户类型实现此运算符接口时提供 '+name+'；R 为运算结果类型，T 为操作数类型，左右方向由接口名决定。'
-    if name.startswith('as') and module=='std::reflect': return '精确提取 '+name[2:]+' 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。'
+    if name.startswith('as') and module=='std::reflect': return '精确提取 '+name[2:]+' 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。'
     if name in ('drop', 'close'):
         return ('释放对象拥有的资源，调用后遵守本模块失效规则。' if name=='drop' else '关闭底层资源；文档节点会使同文档所有视图失效。')
     if name=='create' or name==owner:

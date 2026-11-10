@@ -44,8 +44,8 @@ void main() {
         Read b=a; b.change("copy");
         assert(a.read()=="local" && b.read()=="copy");
         Read c=copy(a); assert(c.read()=="parameter" && a.read()=="local");
-        Result<int64, Read> result=Result<int64,Read>::Err(a);
-        match(result) { Ok(value)=>{assert(false);} Err(error)=>{assert(error.read()=="local");} }
+        Result<int64, Read> result=Result<int64,Read>::Fail(a);
+        match(result) { Ok(value)=>{assert(false);} Fail(error)=>{assert(error.read()=="local");} }
         Option<Read> option=Option<Read>::Value(b);
         assert(option.unwrap().read()=="copy");
         List<Read> items; items.push(a); assert(items[0].read()=="local");
@@ -73,24 +73,24 @@ int64 read(Result<A,B> res) {
     match(res) {
         OK(A a)=>{result=a.number();}
         Ok(_)=>{result=-1;}
-        Err(E b)=>{result=b.code();}
-        Err(F c)=>{result=c.code();}
-        Err(_ d)=>{result=d.code();}
+        Fail(E b)=>{result=b.code();}
+        Fail(F c)=>{result=c.code();}
+        Fail(_ d)=>{result=d.code();}
     }
     return result;
 }
 void main() {
     Success s; E e; F f; Other other;
     assert(read(Result<A,B>::Ok(s))==7);
-    assert(read(Result<A,B>::Err(e))==11);
-    assert(read(Result<A,B>::Err(f))==22);
-    assert(read(Result<A,B>::Err(other))==33);
+    assert(read(Result<A,B>::Fail(e))==11);
+    assert(read(Result<A,B>::Fail(f))==22);
+    assert(read(Result<A,B>::Fail(other))==33);
     B error=f; int64 result=0;
     match(error) { E(value)=>{result=1;} F(value)=>{result=value.code();} _=>{result=3;} }
     assert(result==22);
     match(error) { E(value)=>{assert(false);} _(value)=>{assert(value.code()==22);} }
-    Result<A,B> res=Result<A,B>::Err(other);
-    match(res) { Ok(_)=>{assert(false);} Err(E e)=>{assert(false);} Err(_)=>{} }
+    Result<A,B> res=Result<A,B>::Fail(other);
+    match(res) { Ok(_)=>{assert(false);} Fail(E e)=>{assert(false);} Fail(_)=>{} }
 }
 ''')
 
@@ -101,7 +101,7 @@ struct IoError : Error {
     String toString(){return self.message;}
 };
 Result<int64,IoError> leaf(bool fail) {
-    if(fail) { IoError error; error.message="io"; return Result<int64,IoError>::Err(error); }
+    if(fail) { IoError error; error.message="io"; return Result<int64,IoError>::Fail(error); }
     return Result<int64,IoError>::Ok(9);
 }
 Result<int64,Error> outer(bool fail) { let value=leaf(fail)?; return Result<int64,Error>::Ok(value+1); }
@@ -137,7 +137,7 @@ Receiver dynamicOuter(Fallible input) { let value=input?; Receiver result;result
 void main() {
     std::core::assert(outer(false).unwrap()==10,"result success",1);
     let failure=outer(true);
-    match(failure) { Ok(_)=>{std::core::assert(false,"result must fail",1);} Err(IoError error)=>{std::core::assert(error.message=="io","result error text",1);} Err(_)=>{std::core::assert(false,"dynamic error type",1);} }
+    match(failure) { Ok(_)=>{std::core::assert(false,"result must fail",1);} Fail(IoError error)=>{std::core::assert(error.message=="io","result error text",1);} Fail(_)=>{std::core::assert(false,"dynamic error type",1);} }
     std::core::assert(optionOuter(true).isNone(),"option none",1);
     std::core::assert(optionOuter(false).unwrap().toString()=="option","option value",1);
     std::core::assert(customOuter(Custom::Good).value==12,"custom success",1);
@@ -152,7 +152,7 @@ void main() {
 interface Value<T> { T value(); };
 struct Number : Value<int64> { int64 value(){return 17;} };
 int64 read(Result<Value<int64>, Error> result) {
-    match(result) { Ok(Number n)=>{return n.value();} Ok(_)=>{return 0;} Err(_)=>{return -1;} }
+    match(result) { Ok(Number n)=>{return n.value();} Ok(_)=>{return 0;} Fail(_)=>{return -1;} }
 }
 int64 direct(Value<int64> value) {
     match(value) { Number(n)=>{return n.value();} _(other)=>{return other.value();} }
@@ -169,8 +169,8 @@ struct Second : Base {int64 value(){return 2;}};
 '''
         for body in (
             'First first;Base value=first;match(value){First(x)=>{}}',
-            'First first;Result<int64,Base> value=Result<int64,Base>::Err(first);match(value){Ok(_)=>{} Err(First x)=>{} Err(Second y)=>{}}',
-            'First first;Result<int64,Base> value=Result<int64,Base>::Err(first);match(value){Ok(_)=>{} Err(First x)=>{} Err(First y)=>{} Err(_)=>{}}',
+            'First first;Result<int64,Base> value=Result<int64,Base>::Fail(first);match(value){Ok(_)=>{} Fail(First x)=>{} Fail(Second y)=>{}}',
+            'First first;Result<int64,Base> value=Result<int64,Base>::Fail(first);match(value){Ok(_)=>{} Fail(First x)=>{} Fail(First y)=>{} Fail(_)=>{}}',
         ):
             with self.subTest(body=body):
                 self.program(prefix+'void main(){'+body+'}',False)
@@ -186,8 +186,8 @@ void exercise(){
     while(i<32){
         {Value original;original.value="owned";
          TextValue first=original;TextValue second=first;
-         Result<int64,TextValue> result=Result<int64,TextValue>::Err(second);
-         match(result){Ok(_)=>{assert(false);} Err(Value actual)=>{assert(actual.value=="owned");} Err(_)=>{assert(false);}}
+         Result<int64,TextValue> result=Result<int64,TextValue>::Fail(second);
+         match(result){Ok(_)=>{assert(false);} Fail(Value actual)=>{assert(actual.value=="owned");} Fail(_)=>{assert(false);}}
         }
         i=i+1;
     }
@@ -211,13 +211,13 @@ void main(){Read value=escape();}
 struct LocalError : Error {String text;String toString(){return self.text;}};
 void main(){
     LocalError error;error.text="local";
-    Result<int64,Error> local=Result<int64,Error>::Err(error);
+    Result<int64,Error> local=Result<int64,Error>::Fail(error);
     int64 count=0;
-    match(local){Ok(_)=>{assert(false);} Err::LocalError(e)=>{assert(e.text=="local");count=count+1;} Err(_)=>{assert(false);}}
-    match(local){Ok(_)=>{assert(false);} Err::LocalError(_)=>{count=count+1;} Err(_)=>{assert(false);}}
-    match(local){Ok(_)=>{assert(false);} LocalError(e)=>{assert(e.text=="local");count=count+1;} Err(_)=>{assert(false);}}
-    Result<int64,Error> io=Result<int64,Error>::Err(std::io::IoError::Closed);
-    match(io){Ok(_)=>{assert(false);} Err::std::io::IoError(e)=>{assert(e.toString()!="");count=count+1;} Err(_)=>{assert(false);}}
+    match(local){Ok(_)=>{assert(false);} Fail::LocalError(e)=>{assert(e.text=="local");count=count+1;} Fail(_)=>{assert(false);}}
+    match(local){Ok(_)=>{assert(false);} Fail::LocalError(_)=>{count=count+1;} Fail(_)=>{assert(false);}}
+    match(local){Ok(_)=>{assert(false);} LocalError(e)=>{assert(e.text=="local");count=count+1;} Fail(_)=>{assert(false);}}
+    Result<int64,Error> io=Result<int64,Error>::Fail(std::io::IoError::Closed);
+    match(io){Ok(_)=>{assert(false);} Fail::std::io::IoError(e)=>{assert(e.toString()!="");count=count+1;} Fail(_)=>{assert(false);}}
     assert(count==4);
 }
 ''')

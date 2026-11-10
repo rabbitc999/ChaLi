@@ -81,7 +81,7 @@ $end_macro
 void main(){List<int64> values;loop{$WRAP({break;});List<int64> moved=__move(values);}values.push(7);assert(values[0]==7);}''',None),
     ]
     propagation='''struct Failure:Error{String toString(){return "failure";}}
-Result<int64,Error> leaf(bool fail){if(fail){Failure error;return Result<int64,Error>::Err(error);}return Result<int64,Error>::Ok(41);}
+Result<int64,Error> leaf(bool fail){if(fail){Failure error;return Result<int64,Error>::Fail(error);}return Result<int64,Error>::Ok(41);}
 '''
     verify='void main(){assert(outer(false).unwrap()==42);assert(outer(true).isErr());}'
     cases.extend([

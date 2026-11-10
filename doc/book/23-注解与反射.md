@@ -101,7 +101,7 @@ void main()
     profile.score = 80;
     match (updateProfile(&profile)) {
         Ok(_) => {}
-        Err(error) => { println("{}", error.toString()); }
+        Fail(error) => { println("{}", error.toString()); }
     }
 }
 ```

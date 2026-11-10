@@ -46,7 +46,7 @@ Result<XmlNode,Error> parse(String text) {
     if (!error.isNone()) {
         let line = value.find("line").unwrap().asInt().unwrap();
         let column = value.find("column").unwrap().asInt().unwrap();
-        return Result<XmlNode,Error>::Err(MessageError::from(format("{}:{}: {}", line, column, error.unwrap().asString().unwrap())));
+        return Result<XmlNode,Error>::Fail(MessageError::from(format("{}:{}: {}", line, column, error.unwrap().asString().unwrap())));
     }
     XmlNode root;
     root.__value = move value;

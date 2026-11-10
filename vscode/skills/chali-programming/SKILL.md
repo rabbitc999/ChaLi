@@ -106,7 +106,7 @@ third=alpha
 
 ## `Option` 与 `Result`
 
-可能没有值用 `Option<T>`，可能失败用 `Result<T, E>`。类型上下文明确或名称唯一时，优先写 `Value(x)` / `None`、`Ok(x)` / `Err(e)`，泛型参数由上下文推断；其他枚举也优先使用短变体名。名称冲突且上下文不足时再保留必要的 `类型::变体` 限定。判断与取值用 `isValue()` / `isNone()` / `isOk()` / `isErr()`，取值用 `take()`（转移载荷）、`unwrap()`、`unwrapOr(兜底)`、`takeError()`：
+可能没有值用 `Option<T>`，可能失败用 `Result<T, E>`。类型上下文明确或名称唯一时，优先写 `Value(x)` / `None`、`Ok(x)` / `Fail(e)`，泛型参数由上下文推断；其他枚举也优先使用短变体名。名称冲突且上下文不足时再保留必要的 `类型::变体` 限定。判断与取值用 `isValue()` / `isNone()` / `isOk()` / `isErr()`，取值用 `take()`（转移载荷）、`unwrap()`、`unwrapOr(兜底)`、`takeError()`：
 
 ```chali
 Option<int64> look(List<int64> values, int64 index) {
@@ -118,7 +118,7 @@ Option<int64> look(List<int64> values, int64 index) {
 
 Result<int64, MessageError> divide(int64 a, int64 b) {
     if (b == 0) {
-        return Err(MessageError::from("除数为零"));
+        return Fail(MessageError::from("除数为零"));
     }
     return Ok(a / b);
 }
@@ -187,4 +187,4 @@ count=3
 
 标准库错误类型实现 `Error.toString()`；通用处理接收 `Error const&` 或约束 `<E: Error>`。文本错误使用 `MessageError::from(text)`，保留错误原文。
 
-目标枚举已确定时，返回、初始化、赋值与实参可以直接使用唯一匹配的单载荷值，例如 `return MessageError::from("failed");` 自动成为 `Err(...)`。相同最佳匹配必须显式选择变体；无载荷、多载荷和未确定的泛型参数不靠此规则猜测。资源移动与引用生命周期检查仍然适用。
+目标枚举已确定时，返回、初始化、赋值与实参可以直接使用唯一匹配的单载荷值，例如 `return MessageError::from("failed");` 自动成为 `Fail(...)`。相同最佳匹配必须显式选择变体；无载荷、多载荷和未确定的泛型参数不靠此规则猜测。资源移动与引用生命周期检查仍然适用。

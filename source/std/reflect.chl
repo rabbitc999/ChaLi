@@ -62,67 +62,67 @@ enum ReflectValue {
         return id;
     }
     Result<bool,Error> asBool() {
-        Result<bool,Error> result = Result<bool,Error>::Err(ReflectError::TypeMismatch);
+        Result<bool,Error> result = Result<bool,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { Bool(value) => {result = Result<bool,Error>::Ok(value);} _ => {} }
         return result;
     }
     Result<char,Error> asChar() {
-        Result<char,Error> result = Result<char,Error>::Err(ReflectError::TypeMismatch);
+        Result<char,Error> result = Result<char,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { Char(value) => {result = Result<char,Error>::Ok(value);} _ => {} }
         return result;
     }
     Result<int8,Error> asI8() {
-        Result<int8,Error> result = Result<int8,Error>::Err(ReflectError::TypeMismatch);
+        Result<int8,Error> result = Result<int8,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { I8(value) => {result = Result<int8,Error>::Ok(value);} _ => {} }
         return result;
     }
     Result<int16,Error> asI16() {
-        Result<int16,Error> result = Result<int16,Error>::Err(ReflectError::TypeMismatch);
+        Result<int16,Error> result = Result<int16,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { I16(value) => {result = Result<int16,Error>::Ok(value);} _ => {} }
         return result;
     }
     Result<int32,Error> asI32() {
-        Result<int32,Error> result = Result<int32,Error>::Err(ReflectError::TypeMismatch);
+        Result<int32,Error> result = Result<int32,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { I32(value) => {result = Result<int32,Error>::Ok(value);} _ => {} }
         return result;
     }
     Result<int64,Error> asI64() {
-        Result<int64,Error> result = Result<int64,Error>::Err(ReflectError::TypeMismatch);
+        Result<int64,Error> result = Result<int64,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { I64(value) => {result = Result<int64,Error>::Ok(value);} _ => {} }
         return result;
     }
     Result<uint8,Error> asU8() {
-        Result<uint8,Error> result = Result<uint8,Error>::Err(ReflectError::TypeMismatch);
+        Result<uint8,Error> result = Result<uint8,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { U8(value) => {result = Result<uint8,Error>::Ok(value);} _ => {} }
         return result;
     }
     Result<uint16,Error> asU16() {
-        Result<uint16,Error> result = Result<uint16,Error>::Err(ReflectError::TypeMismatch);
+        Result<uint16,Error> result = Result<uint16,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { U16(value) => {result = Result<uint16,Error>::Ok(value);} _ => {} }
         return result;
     }
     Result<uint32,Error> asU32() {
-        Result<uint32,Error> result = Result<uint32,Error>::Err(ReflectError::TypeMismatch);
+        Result<uint32,Error> result = Result<uint32,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { U32(value) => {result = Result<uint32,Error>::Ok(value);} _ => {} }
         return result;
     }
     Result<uint64,Error> asU64() {
-        Result<uint64,Error> result = Result<uint64,Error>::Err(ReflectError::TypeMismatch);
+        Result<uint64,Error> result = Result<uint64,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { U64(value) => {result = Result<uint64,Error>::Ok(value);} _ => {} }
         return result;
     }
     Result<float32,Error> asF32() {
-        Result<float32,Error> result = Result<float32,Error>::Err(ReflectError::TypeMismatch);
+        Result<float32,Error> result = Result<float32,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { F32(value) => {result = Result<float32,Error>::Ok(value);} _ => {} }
         return result;
     }
     Result<float64,Error> asF64() {
-        Result<float64,Error> result = Result<float64,Error>::Err(ReflectError::TypeMismatch);
+        Result<float64,Error> result = Result<float64,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { F64(value) => {result = Result<float64,Error>::Ok(value);} _ => {} }
         return result;
     }
     Result<String,Error> asText() {
-        Result<String,Error> result = Result<String,Error>::Err(ReflectError::TypeMismatch);
+        Result<String,Error> result = Result<String,Error>::Fail(ReflectError::TypeMismatch);
         match(self) { Text(value) => {result = Result<String,Error>::Ok(value);} _ => {} }
         return result;
     }

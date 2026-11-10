@@ -34,6 +34,7 @@ struct Generic
     Memory::String declaration;
     Memory::String sourceTemplate;  ///< 归一后尚未移除的完整模板，供二进制身份匹配。
     std::size_t nameOffset = 0;
+    Memory::String aliasTarget;  ///< 透明别名的右侧类型，普通模板为空。
     preprocess::LineOrigin origin;
     Memory::Vector<preprocess::LineOrigin> declarationOrigins;  ///< 声明逐行来源，保留字段和方法的原始行。
     bool intrinsic = false;
@@ -262,6 +263,10 @@ struct Session
     Memory::Map<Memory::String, Generic> generics;
     Memory::Map<Memory::String, Memory::Set<Memory::String>> implemented;
     Memory::Map<Memory::String, Expansion> made;
+    Memory::Map<Memory::String, Expansion> aliasConstraints;
+    Memory::Vector<Memory::String> aliasExpansionChain;
+    Memory::Map<std::pair<Memory::String, Memory::String>, Memory::String> editorAliasTypes;  ///< 按使用模块及拼写保存实际别名展开。
+    Memory::Map<Memory::String, Memory::String> aliasInterfaceNames;  ///< 接口列表内部标识符到限定名的映射。
     Memory::Map<Memory::String, Memory::String> instanceDisplayNames;
     Memory::Set<Memory::String> ambiguousTemplateNames;
     Memory::Map<Memory::String, Memory::Vector<Memory::String>> intrinsicArguments;
@@ -308,12 +313,14 @@ bool checkTypeNesting(const Memory::String &text, Memory::String &error);
  * @param error 失败时接收实参、约束或递归深度诊断。
  * @param depth 当前默认类型展开的递归层数。
  * @param initialModule 类型片段继承的来源模块，完整源码中的 module 声明可更新它。
+ * @param typeFragment 是否已知输入是类型片段。
+ * @param recordAliasUses 是否记录原始源码中的具体别名使用点。
  * @return 所有泛型使用点可完成实例化时返回 true。
  */
 bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &generics,
              const Memory::Map<Memory::String, Memory::Set<Memory::String>> &implemented,
              Memory::Map<Memory::String, Expansion> &made, Memory::Vector<Memory::String> &pending,
-             Memory::String &error, std::size_t depth = 0, const Memory::String &initialModule = {});
+             Memory::String &error, std::size_t depth = 0, const Memory::String &initialModule = {}, bool typeFragment = false, bool recordAliasUses = false);
 
 /**
  * @brief 在全部嵌套实例展开后检查约束，包含泛型实例实现的接口及传递继承。

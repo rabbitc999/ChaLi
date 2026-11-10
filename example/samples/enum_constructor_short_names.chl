@@ -10,7 +10,7 @@ void main() {
     Option<Right> missing = None;
     Result<Right, Error> success = Ok(Value(33));
     Result<Result<int64, MessageError>, Error> nested = Ok(Ok(44));
-    Result<int64, Error> failure = Err(MessageError::from("expected"));
+    Result<int64, Error> failure = Fail(MessageError::from("expected"));
     assert(present.isValue() && missing.isNone());
     assert(nested.unwrap().unwrap() == 44 && failure.isErr());
     assert(wrap((int64)55).unwrap() == 55);

@@ -22,7 +22,7 @@ Boolean formatting may print 1 and 0. JSON encoding must explicitly produce true
 
 ## C.2 Declarations, Functions and Type Shapes
 
-Explicit declarations use T name = value, inferred declarations use let, and constants use const. A type declaration introduces an opaque host type, not a transparent scalar alias.
+Explicit declarations use T name = value, inferred declarations use let, and constants use const. `type Name = T;` introduces an opaque host type. `type alias Name<T> = T;` declares a transparent alias, with optional generic parameters.
 
 | Form | Meaning | Chapter |
 | --- | --- | --- |
@@ -172,9 +172,9 @@ void main()
 
 Type parameters, constant parameters, constraints and associated types express different static relationships. Generic closures retain captured state; specialization is not runtime replacement.
 
-Result<A,B> matches success and error labels independently. Typed payload patterns filter concrete interface implementations. Err(_) binds nothing. Single-payload sugar supports Err::IoError(e), or IoError(e) when unique. Multiple payloads retain the outer variant and internal type annotations.
+Result<A,B> matches success and error labels independently. Typed payload patterns filter concrete interface implementations. Fail(_) binds nothing. Single-payload sugar supports Fail::IoError(e), or IoError(e) when unique. Multiple payloads retain the outer variant and internal type annotations.
 
-Propagation extracts a successful value or returns through the relevant protocol. Concrete errors can widen to implemented interfaces. Option and custom Try still obey their protocols; a payload named Error does not itself select Err.
+Propagation extracts a successful value or returns through the relevant protocol. Concrete errors can widen to implemented interfaces. Option and custom Try still obey their protocols; a payload named Error does not itself select Fail.
 
 ## C.7 Macros, Annotations and Compiler Directives
 
@@ -198,7 +198,7 @@ These forms require sufficient name or type context and preserve type, ownership
 | --- | --- | --- |
 | Short imported names | Unambiguous functions, constants, interfaces, enums and structs; qualify conflicts | 11 |
 | Inferred function type arguments | Actual arguments and available context determine types; declarations retain necessary parameters | 18 |
-| Short variants such as Ok, Err, Value and None | Enum context or a unique candidate determines construction and matching | 10, 14 |
+| Short variants such as Ok, Fail, Value and None | Enum context or a unique candidate determines construction and matching | 10, 14 |
 | Direct single-payload values | Known target enum and one best variant in initialization, assignment, arguments or returns; name ambiguous variants | 10, 14 |
 | #borrow(a,b) | Destination a borrows from b; #ret names a return target and lists describe multiple sources; generic and cross-module direct calls are supported | 24 |
 | Three-part for | Loop-local initialization declarations, continue through the update, optional parts and comma-ordered initialization/update expressions | 5 |

@@ -975,12 +975,12 @@ Option<V> __mapGetOptionImpl<K,V>(Map<K,V> const& source, K key) {
 }
 
 enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, FromResidual<Result<T, E>, ErrorResidual<E>> {
-    Ok(T value), Err(E error);
+    Ok(T value), Fail(E error);
 
     TryBranch<T, ErrorResidual<E>> branch() {
         match (self) {
             Result<T,E>::Ok(value) => { return TryBranch<T,ErrorResidual<E>>::Continue(value); }
-            Result<T,E>::Err(error) => {
+            Result<T,E>::Fail(error) => {
                 ErrorResidual<E> residual;
                 residual.error = error;
                 return TryBranch<T,ErrorResidual<E>>::Break(residual);
@@ -993,18 +993,18 @@ enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, From
         residual.error = self.takeError();
         return TryBranch<T, ErrorResidual<E>>::Break(move residual);
     }
-    static Result<T,E> fromResidual(ErrorResidual<E> residual) { return Result<T,E>::Err(move residual.error); }
+    static Result<T,E> fromResidual(ErrorResidual<E> residual) { return Result<T,E>::Fail(move residual.error); }
     Option<T> ok() {
         match (self) {
             Result<T,E>::Ok(value) => { return Option<T>::Value(value); }
-            Result<T,E>::Err(error) => { return Option<T>::None; }
+            Result<T,E>::Fail(error) => { return Option<T>::None; }
         }
     }
     bool isOk() {
         bool result = false;
         match (self) {
             Result<T, E>::Ok(value) => { result = true; }
-            Result<T, E>::Err(error) => { result = false; }
+            Result<T, E>::Fail(error) => { result = false; }
         }
         return result;
     }
@@ -1016,7 +1016,7 @@ enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, From
         return {
             match (move self) {
                 Result<T, E>::Ok(value) => { yield value; }
-                Result<T, E>::Err(error) => { panic("called take() without a value"); }
+                Result<T, E>::Fail(error) => { panic("called take() without a value"); }
             }
             loop { panic("called take() without a value"); }
         };
@@ -1026,7 +1026,7 @@ enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, From
         T result;
         match (self) {
             Result<T, E>::Ok(value) => { result = value; }
-            Result<T, E>::Err(error) => { panic("called Result.unwrap() on Err"); }
+            Result<T, E>::Fail(error) => { panic("called Result.unwrap() on Fail"); }
         }
         return result;
     }
@@ -1035,7 +1035,7 @@ enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, From
         T result = fallback;
         match (self) {
             Result<T, E>::Ok(value) => { result = value; }
-            Result<T, E>::Err(error) => { }
+            Result<T, E>::Fail(error) => { }
         }
         return result;
     }
@@ -1044,7 +1044,7 @@ enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, From
         T result;
         match (self) {
             Result<T, E>::Ok(value) => { result = value; }
-            Result<T, E>::Err(error) => { panic(message); }
+            Result<T, E>::Fail(error) => { panic(message); }
         }
         return result;
     }
@@ -1054,7 +1054,7 @@ enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, From
         return {
             match (move self) {
                 Result<T, E>::Ok(value) => { panic("called takeError() on Ok"); }
-                Result<T, E>::Err(error) => { yield error; }
+                Result<T, E>::Fail(error) => { yield error; }
             }
             loop { panic("called takeError() on Ok"); }
         };
@@ -1064,7 +1064,7 @@ enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, From
         E result;
         match (self) {
             Result<T, E>::Ok(value) => { panic("called Result.error() on Ok"); }
-            Result<T, E>::Err(error) => { result = error; }
+            Result<T, E>::Fail(error) => { result = error; }
         }
         return result;
     }
@@ -1073,7 +1073,7 @@ enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, From
         Result<T, E> result;
         match (self) {
             Result<T, E>::Ok(value) => { result = Result<T, E>::Ok(mapper(value)); }
-            Result<T, E>::Err(error) => { result = Result<T, E>::Err(error); }
+            Result<T, E>::Fail(error) => { result = Result<T, E>::Fail(error); }
         }
         return result;
     }
@@ -1082,7 +1082,7 @@ enum Result<T, E> : Try<T, ErrorResidual<E>>, TryMove<T, ErrorResidual<E>>, From
         Result<T, E> result;
         match (self) {
             Result<T, E>::Ok(value) => { result = mapper(value); }
-            Result<T, E>::Err(error) => { result = Result<T, E>::Err(error); }
+            Result<T, E>::Fail(error) => { result = Result<T, E>::Fail(error); }
         }
         return result;
     }
@@ -1241,21 +1241,21 @@ interface __chaliCastTo<U> {};
 Result<T,F> __mapErrImpl<T,E,F>(Result<T,E> value, F fn(E) mapper) {
     match(value) {
         Result<T,E>::Ok(item) => { return Result<T,F>::Ok(item); }
-        Result<T,E>::Err(error) => { return Result<T,F>::Err(mapper(error)); }
+        Result<T,E>::Fail(error) => { return Result<T,F>::Fail(mapper(error)); }
     }
 }
 /** 将缺失转换为指定错误，error 参数按普通调用规则求值。 */
 Result<T,E> __okOrImpl<T,E>(Option<T> value, E error) {
     match(value) {
         Option<T>::Value(item) => { return Result<T,E>::Ok(item); }
-        Option<T>::None => { return Result<T,E>::Err(error); }
+        Option<T>::None => { return Result<T,E>::Fail(error); }
     }
 }
 /** 只在缺失时调用错误工厂。 */
 Result<T,E> __okOrElseImpl<T,E>(Option<T> value, E fn() factory) {
     match(value) {
         Option<T>::Value(item) => { return Result<T,E>::Ok(item); }
-        Option<T>::None => { return Result<T,E>::Err(factory()); }
+        Option<T>::None => { return Result<T,E>::Fail(factory()); }
     }
 }
 

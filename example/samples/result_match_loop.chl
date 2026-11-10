@@ -2,7 +2,7 @@ Result<int64, String> parse_value(bool valid) {
     if (valid) {
         return Result<int64, String>::Ok(20);
     }
-    return Result<int64, String>::Err("bad input");
+    return Result<int64, String>::Fail("bad input");
 }
 
 Result<int64, String> double_value(bool valid) {
@@ -37,12 +37,12 @@ void main() {
     Result<int64, String> success = double_value(true);
     match (success) {
         Result<int64, String>::Ok(value) => { println("ok={}", value); }
-        Result<int64, String>::Err(error) => { println("err={}", error); }
+        Result<int64, String>::Fail(error) => { println("err={}", error); }
     }
 
     Result<int64, String> failure = double_value(false);
     match (failure) {
         Result<int64, String>::Ok(value) => { println("unexpected={}", value); }
-        Result<int64, String>::Err(error) => { println("propagated={}", error); }
+        Result<int64, String>::Fail(error) => { println("propagated={}", error); }
     }
 }

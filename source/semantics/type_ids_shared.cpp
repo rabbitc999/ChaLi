@@ -208,7 +208,7 @@ bool ResultVariants(const std::shared_ptr<MType> &type, const MEnumVariantDef **
 {
     if (!IsEnumType(type) || type->name.rfind("Result__", 0u) != 0u) return false;
     const MEnumVariantDef *okVariant = FindEnumVariant(type->name, "Ok");
-    const MEnumVariantDef *errVariant = FindEnumVariant(type->name, "Err");
+    const MEnumVariantDef *errVariant = FindEnumVariant(type->name, "Fail");
     if (okVariant == nullptr || errVariant == nullptr || okVariant->payloads.size() != 1u || errVariant->payloads.size() != 1u)
         return false;
     if (ok != nullptr) *ok = okVariant;

@@ -65,7 +65,7 @@ void main() {
                 Option<int64 mut&>::None => { assert(false); }
             }
         }
-        Result<Option<int64 mut&>, String>::Err(error) => { assert(false); }
+        Result<Option<int64 mut&>, String>::Fail(error) => { assert(false); }
     }
     int64 mut& fn(int64 mut&) callback = int64 mut& fn(int64 mut& p) { return p; };
     int64 mut& borrowed = throughCallback(callback, &value);

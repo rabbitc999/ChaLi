@@ -6,6 +6,7 @@
   "chali.installDependencies.title": "ChaLi: 下载并锁定模块依赖",
   "chali.checkDependencies.title": "ChaLi: 离线校验模块依赖",
   "chali.openLibraries.title": "ChaLi: 打开在线依赖缓存",
+  "chali.previewTypeAlias.title": "ChaLi：预览类型别名展开",
   "chali.previewMacroExpansion.title": "ChaLi: 预览宏展开",
   "chali.previewMacroExpansionOnce.title": "ChaLi: 当前宏展开一层",
   "chali.previewMacroExpansionAtCursor.title": "ChaLi: 当前宏全部展开",

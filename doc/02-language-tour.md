@@ -172,7 +172,7 @@ none
 ```chali
 Result<int64, Error> parse_value(bool valid) {
     if (valid) { return Result<int64, Error>::Ok(20); }
-    return Result<int64, Error>::Err(MessageError::from("bad input"));
+    return Result<int64, Error>::Fail(MessageError::from("bad input"));
 }
 Result<int64, Error> doubled(bool valid) {
     int64 value = parse_value(valid)?;
@@ -181,7 +181,7 @@ Result<int64, Error> doubled(bool valid) {
 void main() {
     match (doubled(true)) {
         Result<int64, Error>::Ok(v) => { println("ok={}", v); }
-        Result<int64, Error>::Err(e) => { println("err={}", e.toString()); }
+        Result<int64, Error>::Fail(e) => { println("err={}", e.toString()); }
     }
 }
 ```
@@ -190,7 +190,7 @@ void main() {
 ok=40
 ```
 
-`expr?` 在 `Err` 时立刻把错误返回给调用者，在 `Ok` 时取出里面的值。没有异常，错误是返回值的一部分。
+`expr?` 在 `Fail` 时立刻把错误返回给调用者，在 `Ok` 时取出里面的值。没有异常，错误是返回值的一部分。
 
 ---
 

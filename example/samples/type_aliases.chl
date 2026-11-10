@@ -1,0 +1,55 @@
+import modules::type_alias_models;
+
+const int64 width = 5;
+struct FailureText { String message; };
+struct Meter : Countable, Measurable {
+    int64 count() { return 2; }
+    type Reading = Score;
+    Reading reading() { return 8; }
+};
+struct Storage<T, N:int64> { T data[N]; int64 length() { return N; } };
+type alias Byte = uint8;
+type alias Block<T = Byte, N:int64 = 4> = Storage<T, N>;
+type alias Mapper<In, Out = In> = Out fn(In);
+type alias TextResult<T> = Result<T, String>;
+type alias Score = int64;
+
+Score twice(Score value) { return value * 2; }
+T unwrapValue<T>(TextResult<T> result) { return result.unwrap(); }
+TextResult<int64> forward(TextResult<int64> value) { return Ok(value? + 1); }
+
+void main() {
+    Meter meter;
+    assert(meter.count() + meter.reading() == 10);
+
+    Block block;
+    Block<> explicitDefaults = block;
+    Storage<uint8, 4> same = explicitDefaults;
+    assert(same.length() == 4);
+
+    ScopedStorage scoped;
+    ScopedStorage<width> explicitWidth;
+    assert(scoped.length() == 3 && explicitWidth.length() == 5);
+
+    Mapper<Score> mapper = twice;
+    assert(mapper(3) == 6);
+
+    Result<int64, String> success = Ok(7);
+    assert(unwrapValue(success) == 7);
+    assert(forward(success).unwrap() == 8);
+    TextResult<int64> failed = TextResult<int64>::Fail("missing");
+    match(forward(failed)) {
+        Ok(_) => { assert(false); }
+        Fail(message) => { assert(message == "missing"); }
+    }
+
+    FailureText local;
+    local.message = "local";
+    modules::type_alias_models::FailureText foreign;
+    foreign.code = 9;
+    modules::type_alias_models::Reply<FailureText> result = Ok(local);
+    Reply<> defaulted = Fail(foreign);
+    assert(result.unwrap().message == "local");
+    assert(defaulted.error().code == 9);
+    println("type aliases ok");
+}

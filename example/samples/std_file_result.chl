@@ -10,7 +10,7 @@ void main() {
             fileClose(&handle);
             println("opened");
         }
-        Result<File, Error>::Err(message) => {
+        Result<File, Error>::Fail(message) => {
             println("{}", message);
         }
     }

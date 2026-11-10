@@ -74,7 +74,7 @@ struct MReflectionCalls
         }
         body += "){";
         const auto error = [&](const char *name) {
-            return "return " + result + "::Err(std::reflect::ReflectError::" + name + ");";
+            return "return " + result + "::Fail(std::reflect::ReflectError::" + name + ");";
         };
         if (!exposed(owner))
             body += error("NotExposed");
@@ -125,7 +125,7 @@ struct MReflectionCalls
         const bool isStatic = api == "callStatic" || api == "callEnumStatic";
         const bool isEnum = api.find("Enum") != Memory::String::npos;
         const auto result = InferenceTypeText(decl.signature.result);
-        auto err = [&](const char *error) { return "return " + result + "::Err(std::reflect::ReflectError::" + error + ");"; };
+        auto err = [&](const char *error) { return "return " + result + "::Fail(std::reflect::ReflectError::" + error + ");"; };
         Memory::String body = result + " " + decl.source + "(";
         for (std::size_t i = 0; i < decl.signature.params.size(); ++i)
         {

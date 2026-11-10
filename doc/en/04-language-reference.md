@@ -103,11 +103,28 @@ Runnable check: [`literal_context_type.chl`](../../example/samples/literal_conte
 | `R fn(A, B)` | function type |
 | `T mut&` / `T const&` | writable / read-only reference (`T &` ≡ `T const&`) |
 | `Option<T>` | maybe a value: `Value(v)` / `None` |
-| `Result<T, E>` | maybe a failure: `Ok(v)` / `Err(e)` |
+| `Result<T, E>` | maybe a failure: `Ok(v)` / `Fail(e)` |
 | `List<T>` `Map<K,V>` `Set<T>` | built-in containers |
 | `std::core::Any` | type-erased box, used for runtime polymorphism |
 
 ---
+
+### Transparent type aliases
+
+At module scope, `type alias Name = Type;` gives a type another spelling. The alias and its target share type identity, borrowing and ownership rules, assignment compatibility, overload matching, and generic inference. The existing `type Name = Type;` declaration introduces a host type with a distinct identity.
+
+```chali
+type alias Byte = uint8;
+type alias Reply<T> = Result<T, String>;
+type alias Mapper<In, Out = In> = Out fn(In);
+
+Reply<int64> lookup(bool found) {
+    if (found) { return Ok(42); }
+    return Fail("missing");
+}
+```
+
+Generic aliases use the existing type parameters, interface constraints, default arguments, and `N:int64` constant parameters. Resolve the target and defaults in the declaring module and explicit arguments in the calling module. Qualify an alias with its module name or use its short name after directly importing that module. If every generic parameter has a default, `Block block;` and `Block<> block;` are equivalent. Alias chains must be acyclic. An alias for a named type can qualify static members or enum variants, as in `Reply<int64>::Fail("missing")`.
 
 ## 3. Declarations
 
@@ -485,17 +502,17 @@ match (res) // Result<A, B>; E and F implement interface B
 {
     OK(A a) => { /* success interface payload */ }
     Ok(_) => { /* success fallback without a binding */ }
-    Err(E b) => { /* concrete error E */ }
-    Err(F c) => { /* concrete error F */ }
-    Err(_ d) => { /* remaining errors as interface B */ }
+    Fail(E b) => { /* concrete error E */ }
+    Fail(F c) => { /* concrete error F */ }
+    Fail(_ d) => { /* remaining errors as interface B */ }
 }
 ```
 
-`Err(_)` is an unbound fallback; an asterisk is not part of this syntax. Ok remains the canonical Result success tag; match patterns also accept OK. A fallback may be omitted only when exhaustiveness is provable. Known implementations do not close an open interface. See the [runnable example](../../example/samples/interface_payload_match.chl).
+`Fail(_)` is an unbound fallback; an asterisk is not part of this syntax. Ok remains the canonical Result success tag; match patterns also accept OK. A fallback may be omitted only when exhaustiveness is provable. Known implementations do not close an open interface. See the [runnable example](../../example/samples/interface_payload_match.chl).
 
-For a single interface payload, `Err::IoError(e)` is equivalent to `Err(IoError e)`, with `Err::IoError(_)` for no binding. The tag may be omitted as `IoError(e)` only when its unique destination is unambiguous and its name does not collide with a variant. This sugar is restricted to single-payload variants. Multiple payloads retain the tag and parentheses: `Pair(A a, B b)` or `Many(A a, B b, text, count)`. Ordinary payloads may use untyped variable bindings; interface payloads need type annotations only for dynamic type filtering.
+For a single interface payload, `Fail::IoError(e)` is equivalent to `Fail(IoError e)`, with `Fail::IoError(_)` for no binding. The tag may be omitted as `IoError(e)` only when its unique destination is unambiguous and its name does not collide with a variant. This sugar is restricted to single-payload variants. Multiple payloads retain the tag and parentheses: `Pair(A a, B b)` or `Many(A a, B b, text, count)`. Ordinary payloads may use untyped variable bindings; interface payloads need type annotations only for dynamic type filtering.
 
-The type pattern `MessageError(error)` binds the concrete `MessageError` object, not its string field; use `error.toString()` for the text. Each `?` unwraps one layer of `Result<Result<T,E1>,E2>`, so `Ok((value?)?)` propagates both failure layers. Normal implicit text conversion still applies when the destination payload is `String`: `Ok(value?)` may turn the remaining inner `Result` into a successful string such as `"Err(inner)"`. That does not propagate the inner failure. Keep both `?` operators when both error layers must be checked. See the [nested Result stress tests](../../tests/chali_nested_result_stress.py).
+The type pattern `MessageError(error)` binds the concrete `MessageError` object, not its string field; use `error.toString()` for the text. Each `?` unwraps one layer of `Result<Result<T,E1>,E2>`, so `Ok((value?)?)` propagates both failure layers. Normal implicit text conversion still applies when the destination payload is `String`: `Ok(value?)` may turn the remaining inner `Result` into a successful string such as `"Fail(inner)"`. That does not propagate the inner failure. Keep both `?` operators when both error layers must be checked. See the [nested Result stress tests](../../tests/chali_nested_result_stress.py).
 
 Bind a variable, then add a condition with `if`:
 
@@ -534,7 +551,7 @@ void main() {
 }
 ```
 
-This supplies `Err(...)`, `Value(...)` or `Ok(...)` as appropriate, also for custom enums. An expression already having the target enum type passes through unchanged. Exact payload types win, followed by compatible references, interfaces and ordinary implicit conversions. Universal String formatting ranks last, so an error object assigned to `Result<String, Error>` selects Err. Equal best matches are rejected: `Result<String, String> result = "ambiguous";` needs an explicit Ok or Err. Zero-payload and multiple-payload variants do not participate. Recursive enum conversion cycles are not expanded.
+This supplies `Fail(...)`, `Value(...)` or `Ok(...)` as appropriate, also for custom enums. An expression already having the target enum type passes through unchanged. Exact payload types win, followed by compatible references, interfaces and ordinary implicit conversions. Universal String formatting ranks last, so an error object assigned to `Result<String, Error>` selects Fail. Equal best matches are rejected: `Result<String, String> result = "ambiguous";` needs an explicit Ok or Fail. Zero-payload and multiple-payload variants do not participate. Recursive enum conversion cycles are not expanded.
 
 The target enum and its generic arguments must already be known; wrapping does not replace generic inference or relax narrowing, moves, reference origins or `#borrow`. Resources still require explicit move where applicable, and local references cannot escape through a wrapper. An unconstrained let expression does not guess an outer enum. Explicit constructors remain useful for intentional success/failure selection, ambiguity and nested layers. See the [runnable payload wrapping example](../../example/samples/enum_payload_wrapping.chl).
 

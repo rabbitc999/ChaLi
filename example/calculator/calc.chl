@@ -72,12 +72,12 @@ Result<float64, String> parseNumberLexeme(String s) {
 
         char c = s[k];
         if (c == '.') {
-            if (seenDot) { return Err("malformed number: two dots"); }
+            if (seenDot) { return Fail("malformed number: two dots"); }
             seenDot = true;
         } else {
             int64 d = (int64)c - (int64)'0';
             if (d < 0 || d > 9) {
-                return Err("malformed number digit");
+                return Fail("malformed number digit");
             }
             if (seenDot) {
                 scale = scale / 10.0;
@@ -129,7 +129,7 @@ struct Lexer {
                 out.push(Token::TkOp(format("{}", c)));
                 self.pos = self.pos + 1;
             } else {
-                return Result<List<Token>, String>::Err(
+                return Result<List<Token>, String>::Fail(
                 format("unexpected character '{}'", c));
             }
         }
@@ -320,14 +320,14 @@ struct Parser {
                     self.kids[start + k] = child;
                     if (k + 1 < argc) {
                         if (!self.isOp(self.pos, ",")) {
-                            return Err("expected ',' between arguments");
+                            return Fail("expected ',' between arguments");
                         }
                         self.pos = self.pos + 1;
                     }
 
                 }
                 if (!self.isRParen(self.pos)) {
-                    return Err("expected ')' after call arguments");
+                    return Fail("expected ')' after call arguments");
                 }
                 self.pos = self.pos + 1;
                 return Ok(
@@ -339,12 +339,12 @@ struct Parser {
             self.pos = self.pos + 1;
             int64 inner = self.parseExpr()?;
             if (!self.isRParen(self.pos)) {
-                return Err("expected ')'");
+                return Fail("expected ')'");
             }
             self.pos = self.pos + 1;
             return Ok(inner);
         }
-        return Err("unexpected token in expression");
+        return Fail("unexpected token in expression");
     }
 
     Result<int64, String> parseLine() {
@@ -357,13 +357,13 @@ struct Parser {
             int64 root = self.parseExpr()?;
             self.letName = self.identAt(nameTok);
             if (!self.isEnd(self.pos)) {
-                return Err("unexpected token after assignment");
+                return Fail("unexpected token after assignment");
             }
             return Ok(root);
         }
         int64 root = self.parseExpr()?;
         if (!self.isEnd(self.pos)) {
-            return Err("unexpected token after expression");
+            return Fail("unexpected token after expression");
         }
         return Ok(root);
     }
@@ -466,9 +466,9 @@ struct VM {
 
     Result<float64, String> callBuiltin(String name, int64 argc) {
         if (name == "sqrt") {
-            if (argc != 1) { return Err("sqrt expects 1 argument"); }
+            if (argc != 1) { return Fail("sqrt expects 1 argument"); }
             float64 a = self.pop();
-            if (a < 0.0) { return Err("sqrt of negative number"); }
+            if (a < 0.0) { return Fail("sqrt of negative number"); }
             if (a == 0.0) { return Ok(0.0); }
             float64 x = a;
             for (int64 k = 0; k < 60; k = k + 1) {
@@ -479,27 +479,27 @@ struct VM {
             return Ok(x);
         }
         if (name == "abs") {
-            if (argc != 1) { return Err("abs expects 1 argument"); }
+            if (argc != 1) { return Fail("abs expects 1 argument"); }
             float64 a = self.pop();
             if (a < 0.0) { return Ok(0.0 - a); }
             return Ok(a);
         }
         if (name == "min") {
-            if (argc != 2) { return Err("min expects 2 arguments"); }
+            if (argc != 2) { return Fail("min expects 2 arguments"); }
             float64 b = self.pop();
             float64 a = self.pop();
             if (a < b) { return Ok(a); }
             return Ok(b);
         }
         if (name == "max") {
-            if (argc != 2) { return Err("max expects 2 arguments"); }
+            if (argc != 2) { return Fail("max expects 2 arguments"); }
             float64 b = self.pop();
             float64 a = self.pop();
             if (a > b) { return Ok(a); }
             return Ok(b);
         }
         if (name == "pow") {
-            if (argc != 2) { return Err("pow expects 2 arguments"); }
+            if (argc != 2) { return Fail("pow expects 2 arguments"); }
             float64 e = self.pop();
             float64 base = self.pop();
             int64 n = (int64)e;
@@ -510,12 +510,12 @@ struct VM {
                 r = r * base;
             }
             if (n < 0) {
-                if (r == 0.0) { return Err("pow: division by zero"); }
+                if (r == 0.0) { return Fail("pow: division by zero"); }
                 r = 1.0 / r;
             }
             return Ok(r);
         }
-        return Err(format("unknown function '{}'", name));
+        return Fail(format("unknown function '{}'", name));
     }
 
     Result<float64, String> run() {
@@ -527,7 +527,7 @@ struct VM {
                 self.stack.push(ins.num);
             } elif (ins.op == OP_LOAD) {
                 if (self.vars.has(ins.text) == 0) {
-                    return Err(
+                    return Fail(
                     format("undefined variable '{}'", ins.text));
                 }
                 self.stack.push(self.vars[ins.text]);
@@ -553,25 +553,25 @@ struct VM {
                 float64 b = self.pop();
                 float64 a = self.pop();
                 if (b == 0.0) {
-                    return Err("division by zero");
+                    return Fail("division by zero");
                 }
                 self.stack.push(a / b);
             } elif (ins.op == OP_CALL) {
                 Result<float64, String> r = self.callBuiltin(ins.text, (int64)ins.num);
                 match (r) {
                     Ok(v) => { self.stack.push(v); }
-                    Err(e) => {
-                        return Err(e);
+                    Fail(e) => {
+                        return Fail(e);
                     }
                 }
             } else {
                 if (self.stack.len() == 0) {
-                    return Err("empty result stack");
+                    return Fail("empty result stack");
                 }
                 return Ok(self.stack[self.stack.len() - 1]);
             }
         }
-        if (self.stack.len() == 0) { return Err("no result"); }
+        if (self.stack.len() == 0) { return Fail("no result"); }
         return Ok(self.stack[self.stack.len() - 1]);
     }
 };
@@ -701,7 +701,7 @@ void main(List<String> args) {
                 rep.tokens, rep.nodes, rep.instrs);
                 println("      [{}]", rep.disasm);
             }
-            Err(msg) => {
+            Fail(msg) => {
                 errCount = errCount + 1;
                 println("[{}] error {}   =>   {}", i + 1, program[i], msg);
             }

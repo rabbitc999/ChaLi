@@ -113,6 +113,23 @@ exports.run = async function () {
   assert(extension); await extension.activate(); assert(extension.isActive);
   const commands = await vscode.commands.getCommands(true);
   assert(commands.includes('chali.checkDebugEnvironment'));
+  assert(commands.includes('chali.previewTypeAlias'));
+  const aliasSource = path.join(folder.uri.fsPath, 'alias-preview.chl');
+  fs.writeFileSync(aliasSource, 'type alias Count<T = int64> = T;\nvoid main() { Count number = 3; assert(number == 3); }\n');
+  const aliasDocument = await vscode.workspace.openTextDocument(aliasSource);
+  const aliasEditor = await vscode.window.showTextDocument(aliasDocument);
+  aliasEditor.selection = new vscode.Selection(1, 16, 1, 16);
+  await bounded((async () => {
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const hovers = await vscode.commands.executeCommand('vscode.executeHoverProvider', aliasDocument.uri, aliasEditor.selection.active);
+      if (hovers?.some(hover => hover.contents.some(content => content.value?.includes('type alias Count')))) return;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    assert.fail('类型别名悬停未就绪');
+  })(), '类型别名语言服务就绪');
+  const expandedAlias = await bounded(vscode.commands.executeCommand('chali.previewTypeAlias'), '类型别名展开');
+  assert.equal(expandedAlias?.spelling, 'Count');
+  assert.equal(expandedAlias?.type, 'int64');
   const scenarios = [];
   const tracker = vscode.debug.registerDebugAdapterTrackerFactory('chali', {
     createDebugAdapterTracker(session) {

@@ -52,7 +52,7 @@ struct Numbers : Container {
 C.Item first<C: Container>(C container) { return container.get(0); }
 ```
 
-接口体内的 `type Item;` 声明关联类型，实现类型在类型体内提供 `type Item = T;`。泛型参数 C 受 Container 约束后，可用 C.Item 表示该实现的具体类型。关联类型参与方法签名检查和接口继承；缺失定义、循环定义、返回类型不匹配都报告错误。模块层 type 保持已有类型别名规则。
+接口体内的 `type Item;` 声明关联类型，实现类型在类型体内提供 `type Item = T;`。泛型参数 C 受 Container 约束后，可用 C.Item 表示该实现的具体类型。关联类型参与方法签名检查和接口继承；缺失定义、循环定义、返回类型不匹配都报告错误。模块层 `type Name = T;` 声明宿主类型，`type alias Name = T;` 声明透明别名。
 
 ## const 泛型与定长数组字段
 

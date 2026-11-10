@@ -8,6 +8,7 @@
 #include "../source/console/utf8.hpp"
 #include "../source/json/json.hpp"
 #include "../source/syntax/source_text.hpp"
+#include "../source/chali_generic.hpp"
 #include "../source/macro/signature.hpp"
 #include <limits>
 #include <cstdlib>
@@ -880,6 +881,17 @@ A parameters(const std::string &signature)
     return out;
 }
 /**
+ * @brief 取得编辑文档声明的模块。
+ * @param source 原始文档文本。
+ * @return 显式模块名，缺省时返回 program。
+ */
+std::string documentModule(const std::string &source)
+{
+    const auto modules = directives(source, "module");
+    return modules.empty() ? "program" : modules.front();
+}
+
+/**
  * @brief 扫描源文件并收集语言服务所需的符号信息。
  * @param source 提供输入数据的来源。
  * @param s 待处理的文本或节点文本值。
@@ -890,8 +902,7 @@ std::vector<Record> scan(const std::string &source, const std::string &s)
     auto t = lex(s);
     const auto raw = lex(s, true);
     std::vector<Record> records;
-    auto modules = directives(s, "module");
-    std::string module = modules.empty() ? "program" : modules[0];
+    const auto module = documentModule(s);
     // 宏体不是普通函数声明；单独索引定义和撤销，支持同名重载。
     std::set<size_t> macroTokens;
     for (size_t i = 0; i < t.size(); ++i)
@@ -1000,6 +1011,14 @@ std::vector<Record> scan(const std::string &source, const std::string &s)
                     if (t[i].word == "{")
                         visit(i + 1, end - 1,
                               owner.empty() ? r.name : owner + "::" + r.name);
+                }
+                else if (owner.empty() && start + 3 < i && t[start].word == "type" && t[start + 1].word == "alias")
+                {
+                    r.kind = "alias";
+                    r.name = t[start + 2].word;
+                    r.offset = t[start + 2].a;
+                    r.qualified = qualified(r);
+                    records.push_back(r);
                 }
                 else if (!owner.empty() && start + 1 < i && t[start + 1].word == "=" && (t[start].word == "new" || t[start].word == "drop" || t[start].word == "copy"))
                 {
@@ -1439,10 +1458,51 @@ struct CompilerTypeScope
     ~CompilerTypeScope() { activeCompilerTypes = previous; }
 };
 
+/**
+ * @brief 为编辑中的成员补全替换别名形参，保留尚未求值的常量。
+ * @param alias 词法索引中的别名声明。
+ * @param use 调用处的类型拼写。
+ * @return 可用于接收者查找的类型文本，缺少实参时为空。
+ */
+std::string aliasReceiverType(const Record &alias, const std::string &use)
+{
+    const auto &signature = alias.signature;
+    auto declaration = signature.find(alias.name, std::string("type alias").size());
+    if (declaration == signature.npos) return {};
+    declaration += alias.name.size();
+    Memory::Vector<chali_generic::Parameter> parameters;
+    auto open = signature.find_first_not_of(" \t\r\n", declaration);
+    if (open != signature.npos && signature[open] == '<')
+    {
+        Memory::Vector<Memory::String> groups;
+        if (!chali_syntax::groupArguments(signature.c_str(), open, groups, declaration)) return {};
+        Memory::String error;
+        if (!chali_generic::parseParameters(Memory::String(signature.substr(open + 1, declaration - open - 2).c_str()), parameters, error)) return {};
+    }
+    const auto equal = signature.find('=', declaration);
+    if (equal == signature.npos) return {};
+    Memory::Vector<Memory::String> arguments;
+    const auto owner = use.find_first_of("< &");
+    auto end = owner == use.npos ? use.size() : owner;
+    open = use.find_first_not_of(" \t\r\n", end);
+    if (open != use.npos && use[open] == '<' && !chali_syntax::groupArguments(use.c_str(), open, arguments, end)) return {};
+    if (arguments.size() > parameters.size()) return {};
+    Memory::Map<Memory::String, Memory::String> bindings;
+    for (std::size_t i = 0; i < parameters.size(); ++i)
+    {
+        const auto &parameter = parameters[i];
+        if (i >= arguments.size() && !parameter.hasDefault) return {};
+        bindings[parameter.name] = i < arguments.size() ? arguments[i] : chali_generic::substituteIdentifiers(parameter.fallback, bindings);
+    }
+    const auto target = chali_generic::substituteIdentifiers(trim(signature.substr(equal + 1)).c_str(), bindings);
+    return std::string(target.data(), target.size()) + use.substr(end);
+}
+
 class ReceiverTypes
 {
     const std::vector<Record> &records;
     const std::string &source;
+    const std::string currentModule;
     std::vector<Binding> vars;
 
     /**
@@ -1477,15 +1537,16 @@ class ReceiverTypes
      */
     bool isType(const Record &r) const
     {
-        return r.kind == "struct" || r.kind == "enum" || r.kind == "interface" || r.kind == "opcode";
+        return r.kind == "struct" || r.kind == "enum" || r.kind == "interface" || r.kind == "opcode" || r.kind == "alias";
     }
     /**
      * @brief 将名称解析为当前作用域中的限定名称。
      * @param type 类型描述。
      * @param module 当前模块的名称。
+     * @param depth 已展开的接收者别名层数。
      * @retval 生成或读取的结果文本。
      */
-    std::string qualify(std::string type, const std::string &module = "") const
+    std::string qualify(std::string type, const std::string &module = "", std::size_t depth = 0) const
     {
         type = trim(type);
         for (auto modifier : { "static ", "inline ", "export " })
@@ -1496,10 +1557,29 @@ class ReceiverTypes
             if (isType(r) && (r.qualified == name || r.name == name || ends(r.qualified, "::" + name)))
             {
                 found.insert(r.qualified);
-                if (r.module == module) preferred.insert(r.qualified);
+                if (r.module == (module.empty() ? currentModule : module)) preferred.insert(r.qualified);
             }
         if (preferred.size() == 1) found = preferred;
-        if (found.size() == 1) type.replace(0, name.size(), *found.begin());
+        else if (found.size() == 2 && found.count("std::core::" + name))
+        {
+            const auto importedAlias = std::find_if(records.begin(), records.end(), [&](const Record &record) {
+                return record.kind == "alias" && record.module != "std::core" && found.count(record.qualified);
+            });
+            if (importedAlias != records.end()) found = { importedAlias->qualified };
+        }
+        if (found.size() == 1)
+        {
+            const auto &qualified = *found.begin();
+            if (depth < 16)
+                for (const auto &record : records)
+                    if (record.kind == "alias" && record.qualified == qualified)
+                    {
+                        const auto expanded = aliasReceiverType(record, type);
+                        if (!expanded.empty()) return qualify(expanded, record.module, depth + 1);
+                        break;
+                    }
+            type.replace(0, name.size(), qualified);
+        }
         return type;
     }
     /**
@@ -1586,7 +1666,8 @@ public:
      * @param known 已登记的类型名。
      */
     ReceiverTypes(const std::vector<Record> &entries, const std::string &text,
-                  const std::set<std::string> &known) : records(entries), source(text), vars(bindings(text, known)) {}
+                  const std::set<std::string> &known)
+        : records(entries), source(text), currentModule(documentModule(text)), vars(bindings(text, known)) {}
 
     /**
      * @brief 取得绑定的声明类型或根据初始化、遍历源及调用上下文推断类型。
@@ -2113,7 +2194,7 @@ public:
         {
             auto owner = value.substr(0, variantAt), variant = value.substr(variantAt + 2);
             auto ownerName = base(qualify(owner));
-            if ((ownerName == "std::core::Result" && (variant == "Ok" || variant == "Err")) || (ownerName == "std::core::Option" && (variant == "Value" || variant == "None"))) return qualify(owner);
+            if ((ownerName == "std::core::Result" && (variant == "Ok" || variant == "Fail")) || (ownerName == "std::core::Option" && (variant == "Value" || variant == "None"))) return qualify(owner);
         }
         if (!call)
         {
@@ -2318,6 +2399,12 @@ std::vector<Record> matching(const std::vector<Record> &records,
     for (auto &r : records)
         if (name.find("::") != name.npos ? (r.qualified == name || ends(r.qualified, "::" + name)) : (r.name == name && r.owner.empty()))
             out.push_back(r);
+    if (name.find("::") == name.npos && std::count_if(out.begin(), out.end(), [](const Record &entry) {
+            return entry.module != "std::core";
+        }) == 1 && std::any_of(out.begin(), out.end(), [](const Record &entry) { return entry.kind == "alias"; }))
+        out.erase(std::remove_if(out.begin(), out.end(), [](const Record &entry) {
+            return entry.module == "std::core" && entry.kind != "function";
+        }), out.end());
     if (name.find("::") == name.npos && std::any_of(out.begin(), out.end(), [](const Record &entry) {
             return entry.module != "std::core" && entry.kind == "function";
         }))
@@ -3373,7 +3460,7 @@ class Server
                 const auto &entries = unit->records;
                 for (auto &r : entries)
                 {
-                    if (r.kind == "struct" || r.kind == "enum" || r.kind == "interface" || r.kind == "opcode")
+                    if (r.kind == "struct" || r.kind == "enum" || r.kind == "interface" || r.kind == "opcode" || r.kind == "alias")
                         types.insert(r.name);
                     out.push_back(r);
                 }
@@ -3497,7 +3584,7 @@ class Server
      */
     static int symbolKind(const Record &r)
     {
-        if (r.kind == "struct" || r.kind == "opcode")
+        if (r.kind == "struct" || r.kind == "opcode" || r.kind == "alias")
             return 23;
         if (r.kind == "enum")
             return 10;
@@ -3516,7 +3603,7 @@ class Server
      */
     static int completionKind(const Record &r)
     {
-        if (r.kind == "struct" || r.kind == "opcode")
+        if (r.kind == "struct" || r.kind == "opcode" || r.kind == "alias")
             return 22;
         if (r.kind == "enum")
             return 13;
@@ -3715,7 +3802,7 @@ class Server
             if (ephemeralAnalysis) throw std::runtime_error("candidate report is not cached");
             const auto memory = cache->report(u);
             const auto entry = memory ? *memory : parse(read(saved));
-            bool valid = integer(get(entry, "schema")) == 2 && integer(get(entry, "language"), -1) == int(chali_i18n::language()) && str(entry, "input") == lspHash(body) && str(entry, "graph") == analysisGraph && get(entry, "dependencies").asObject();
+            bool valid = integer(get(entry, "schema")) == 3 && integer(get(entry, "language"), -1) == int(chali_i18n::language()) && str(entry, "input") == lspHash(body) && str(entry, "graph") == analysisGraph && get(entry, "dependencies").asObject();
             if (valid)
                 for (const auto &dependency : get(entry, "dependencies").asObject()->members())
                     if (fingerprint(std::string(dependency.key)) != str(dependency.value))
@@ -3803,7 +3890,7 @@ class Server
                 }
                 cache->dependencies(u, dependencyUris);
                 if (interrupted()) return J();
-                const auto entry = object({ { "schema", 2 }, { "language", int(chali_i18n::language()) }, { "input", lspHash(body) }, { "graph", analysisGraph }, { "dependencies", J(std::move(hashes)) }, { "report", report } });
+                const auto entry = object({ { "schema", 3 }, { "language", int(chali_i18n::language()) }, { "input", lspHash(body) }, { "graph", analysisGraph }, { "dependencies", J(std::move(hashes)) }, { "report", report } });
                 cache->rememberReport(u, entry);
                 cache->save(saved, entry);
             }
@@ -3903,12 +3990,15 @@ class Server
         {
             if (t[i].word == "struct" || t[i].word == "enum" || t[i].word == "interface" || t[i].word == "opcode" || t[i].word == "type")
             {
-                known.insert(t[i + 1].word);
-                classes[t[i + 1].a] = { 1, 1 };
-                if (i + 2 < t.size() && t[i + 2].word == "<")
+                size_t name = i + 1;
+                if (t[i].word == "type" && t[name].word == "alias" && name + 1 < t.size() && identifier(t[name + 1].word))
+                    ++name;
+                known.insert(t[name].word);
+                classes[t[name].a] = { 1, 1 };
+                if (name + 1 < t.size() && t[name + 1].word == "<")
                 {
-                    auto end = groupEnd(t, i + 2, "<", ">");
-                    for (size_t g = i + 3; g + 1 < end; ++g)
+                    auto end = groupEnd(t, name + 1, "<", ">");
+                    for (size_t g = name + 2; g + 1 < end; ++g)
                         if (identifier(t[g].word) && (t[g - 1].word == "<" || t[g - 1].word == ","))
                         {
                             generic.insert(t[g].word);
@@ -4121,6 +4211,56 @@ class Server
 #include "native_lsp_integration.hpp"
 #include "native_lsp_actions.hpp"
     /**
+     * @brief 查询光标下别名使用点的真实编译展开。
+     * @param u 当前文档 URI。
+     * @param source 当前文档的源码快照。
+     * @param cursor 光标的 UTF-8 字节位置。
+     * @param records 已收集的可见声明。
+     * @return 带源码范围的原拼写及展开类型，未成功解析时为空。
+     */
+    J aliasPreview(const std::string &u, const std::string &source, std::size_t cursor, const std::vector<Record> &records)
+    {
+        const auto tokens = lex(source);
+        std::size_t begin = 0, end = 0;
+        for (std::size_t i = 0; i < tokens.size() && tokens[i].a <= cursor; ++i)
+        {
+            const auto &token = tokens[i];
+            if (!identifier(token.word) || (i && tokens[i - 1].word == ".")
+                || (i >= 2 && tokens[i - 1].word == "alias" && tokens[i - 2].word == "type"))
+                continue;
+            if (std::none_of(records.begin(), records.end(), [&](const Record &record) {
+                    return record.kind == "alias" && record.name == token.word;
+                })) continue;
+            auto stop = token.b;
+            auto open = source.find_first_not_of(" \t\r\n", stop);
+            if (open != source.npos && source[open] == '<')
+            {
+                Memory::Vector<Memory::String> arguments;
+                if (!chali_syntax::groupArguments(source.c_str(), open, arguments, stop)) continue;
+            }
+            if (cursor > stop) continue;
+            auto start = i;
+            while (start >= 2 && tokens[start - 1].word == "::" && identifier(tokens[start - 2].word)) start -= 2;
+            begin = tokens[start].a;
+            end = stop;
+        }
+        if (end == 0) return J();
+        const auto spelling = source.substr(begin, end - begin);
+        auto key = spelling;
+        key.erase(std::remove_if(key.begin(), key.end(), [](unsigned char ch) { return std::isspace(ch); }), key.end());
+        const auto modules = directives(source, "module");
+        const auto module = modules.empty() ? std::string("program") : modules.front();
+        const auto report = checkReport(u, [] { return false; });
+        for (const auto &item : array(get(get(report, "analysis"), "typeAliases")))
+        {
+            const auto owner = str(item, "module");
+            if ((owner == module || (modules.empty() && owner.empty())) && str(item, "spelling") == key)
+                return object({ { "spelling", spelling }, { "type", str(item, "type") }, { "range", range(source, begin, end) } });
+        }
+        return J();
+    }
+
+    /**
      * @brief 处理一个语言服务器请求并构造结果。
      * @param method 压缩方法编号或目标方法名称。
      * @param params 形参或类型参数列表。
@@ -4167,7 +4307,7 @@ class Server
                                                             A{ "declaration", "readonly" } } }) },
                                      { "full", true } }) },
                           { "experimental",
-                            object({ { "macroExpansionProvider", true } }) } }) },
+                            object({ { "macroExpansionProvider", true }, { "typeAliasExpansionProvider", true } }) } }) },
                   { "serverInfo", object({ { "name", "ChaLi" }, { "version", chali_package::compilerVersion } }) } });
         }
         if (method == "shutdown")
@@ -4202,6 +4342,7 @@ class Server
         LspIndexScope index(*unit);
         size_t cursor = offsetAt(s, get(params, "position"));
         auto records = collect(u, s);
+        if (method == "chali/expandTypeAlias") return aliasPreview(u, s, cursor, records);
         J compilerReport;
         if (s.find('$') != s.npos && (method == "textDocument/hover" || method == "textDocument/completion" ||
                                      method == "textDocument/signatureHelp" || method == "textDocument/definition" ||
@@ -4736,6 +4877,12 @@ class Server
                     content += "\n\n---\n\n";
                 content += "```chali\n" + r.signature + "\n```\n\n" + r.documentation;
             }
+            if (std::any_of(entries.begin(), entries.end(), [](const Record &entry) { return entry.kind == "alias"; }))
+            {
+                const auto expansion = aliasPreview(u, s, cursor, records);
+                if (!expansion.isNull())
+                    content += "\n\n类型别名展开\n\n```chali\n" + str(expansion, "type") + "\n```";
+            }
             if (content.empty() && binding)
             {
                 const auto type = ReceiverTypes(records, s, types).displayType(*binding, std::max(cursor, binding->end));
@@ -4860,7 +5007,7 @@ class Server
             folders = roots;
             version = revision->load();
         }
-        const size_t lane = method == "workspace/symbol" ? 3 : method == "chali/expandMacro"                                               ? 4 :
+        const size_t lane = method == "workspace/symbol" ? 3 : (method == "chali/expandMacro" || method == "chali/expandTypeAlias")          ? 4 :
                                                            (method == "textDocument/completion" || method == "textDocument/signatureHelp") ? 0 :
                                                            (method == "textDocument/hover" || method == "textDocument/definition")         ? 1 :
                                                                                                                                              2;
@@ -4876,7 +5023,7 @@ class Server
           std::lock_guard<std::mutex> lock(stateMutex);
           if (str(message, "method") != "chali/standardSource")
           {
-              if (str(message, "method") == "chali/expandMacro" || str(message, "method") == "textDocument/inlayHint" || str(message, "method") == "textDocument/codeAction")
+              if (str(message, "method") == "chali/expandMacro" || str(message, "method") == "chali/expandTypeAlias" || str(message, "method") == "textDocument/inlayHint" || str(message, "method") == "textDocument/codeAction")
               {
                   if (revision->load() != version) cancelled->store(true);
               }

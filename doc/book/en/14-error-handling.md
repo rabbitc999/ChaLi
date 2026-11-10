@@ -69,12 +69,12 @@ void main()
     match (addBonus(70))
     {
         Ok(score) => { println("{}", score); }
-        Err(error) => { println("{}", error.toString()); }
+        Fail(error) => { println("{}", error.toString()); }
     }
     match (addBonus(-1))
     {
         Ok(score) => { println("{}", score); }
-        Err(error) => { println("{}", error.toString()); }
+        Fail(error) => { println("{}", error.toString()); }
     }
 }
 ```
@@ -88,11 +88,11 @@ checkedScore accepts zero through one hundred. It otherwise constructs MessageEr
 
 main prints 75 for the valid input and invalid score for the rejected input. An error is not a successful score or a magic sentinel integer.
 
-The declared Result<int64, Error> return type selects its unique matching Err payload automatically, so the error object can be returned directly. Initialization, assignment and arguments with known target types follow the same rule, including Option and custom single-payload enum variants. Equal matches require an explicit variant: a String cannot choose between Ok and Err in Result<String, String>. Keeping Ok on successful returns can still make the two paths easier to read.
+The declared Result<int64, Error> return type selects its unique matching Fail payload automatically, so the error object can be returned directly. Initialization, assignment and arguments with known target types follow the same rule, including Option and custom single-payload enum variants. Equal matches require an explicit variant: a String cannot choose between Ok and Fail in Result<String, String>. Keeping Ok on successful returns can still make the two paths easier to read.
 
 ## 14.3 Propagate When Computation Cannot Continue
 
-checkedScore(value)? extracts an Ok payload or immediately returns Err from addBonus. The latter path never adds five. Propagation neither repairs nor retries the operation; main decides how to display failure.
+checkedScore(value)? extracts an Ok payload or immediately returns Fail from addBonus. The latter path never adds five. Propagation neither repairs nor retries the operation; main decides how to display failure.
 
 The enclosing return type must support the protocol. A void main cannot arbitrarily propagate Result. Option propagates absence through its own protocol. Early returns still perform established scope cleanup.
 

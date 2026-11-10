@@ -237,7 +237,7 @@ void main()
     {
         return Result<String, String>::Ok("value");
     }
-    return Result<String, String>::Err("原始错误");
+    return Result<String, String>::Fail("原始错误");
 }
 void main()
 {
@@ -250,7 +250,7 @@ void main()
 {
     if (fail)
     {
-        return Result<String, String>::Err("深层错误");
+        return Result<String, String>::Fail("深层错误");
     }
     return Result<String, String>::Ok("深层值");
 }
@@ -279,7 +279,7 @@ void main()
     {
         return Result<String, String>::Ok("元素");
     }
-    return Result<String, String>::Err("元素错误");
+    return Result<String, String>::Fail("元素错误");
 }
 void main()
 {
@@ -294,7 +294,7 @@ void main()
     {
         return Result<String, String>::Ok("值");
     }
-    return Result<String, String>::Err("错误");
+    return Result<String, String>::Fail("错误");
 }
 Result<String, String> scan()
 {

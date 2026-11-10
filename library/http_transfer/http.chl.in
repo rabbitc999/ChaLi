@@ -19,7 +19,7 @@ struct HttpClient {
     static Result<HttpClient,Error> open() {
         HttpClient client;
         client.__id = __open();
-        if (client.__id == 0) { return Result<HttpClient,Error>::Err(MessageError::from("cannot create HTTP session")); }
+        if (client.__id == 0) { return Result<HttpClient,Error>::Fail(MessageError::from("cannot create HTTP session")); }
         return Result<HttpClient,Error>::Ok(move client);
     }
 
@@ -38,14 +38,14 @@ struct HttpClient {
 
     /** 使用 PUT 流式上传普通文件，读取并丢弃响应正文。 */
     Result<int64,Error> uploadFile(String url, String source, int64 timeout_ms, int64 fn(int64, int64) cancel) {
-        if (len(source) == 0) { return Result<int64,Error>::Err(MessageError::from("upload path is empty")); }
+        if (len(source) == 0) { return Result<int64,Error>::Fail(MessageError::from("upload path is empty")); }
         return self.__request(url, source, "", timeout_ms, cancel);
     }
 
     Result<int64,Error> __request(String url, String upload, String download, int64 timeout_ms,
                                  int64 fn(int64, int64) cancel) {
         int64 status = __transfer(self.__id, url, upload, download, timeout_ms, cancel);
-        if (status < 0) { return Result<int64,Error>::Err(MessageError::from(format("HTTP transfer failed ({})", 0 - status))); }
+        if (status < 0) { return Result<int64,Error>::Fail(MessageError::from(format("HTTP transfer failed ({})", 0 - status))); }
         return Result<int64,Error>::Ok(status);
     }
 };

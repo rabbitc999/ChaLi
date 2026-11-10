@@ -79,7 +79,7 @@ import std::parse;
 void main() {
     match (Parse::parseInt64("-42")) {
         Ok(value) => { println("{}", value); }
-        Err(error) => { println("{}", error.toString()); }
+        Fail(error) => { println("{}", error.toString()); }
     }
 }
 ```

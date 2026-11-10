@@ -976,7 +976,7 @@ Result<File, Error> fileOpen(String path, String mode);
 
 **行为**
 
-按路径和模式打开文件，返回 Result<File,Error>，失败为 Err。
+按路径和模式打开文件，返回 Result<File,Error>，失败为 Fail。
 
 文件包装函数由 std::io 模块公开，使用前导入 std::io。 底层 __file* 入口由原生运行时提供。
 
@@ -989,7 +989,7 @@ Result<File, Error> fileOpen(String path, String mode);
 
 **返回值**
 
-`Result<File, Error>`。按路径和模式打开文件，返回 Result<File,Error>，失败为 Err。
+`Result<File, Error>`。按路径和模式打开文件，返回 Result<File,Error>，失败为 Fail。
 
 **错误与边界**
 

@@ -1,13 +1,13 @@
 Result<Result<String, MessageError>, MessageError> gen() {
-    return Ok(Err(MessageError::from("inner")));
+    return Ok(Fail(MessageError::from("inner")));
 }
 Result<String, Error> stringify() {
-    // String 的隐式文本转换不等于继续传播内层 Err。
+    // String 的隐式文本转换不等于继续传播内层 Fail。
     return Ok(gen()?);
 }
 void main() {
     let value = stringify();
     assert(value.isOk());
-    assert(value.unwrap() == "Err(inner)");
-    println("implicit String conversion: Ok(Err(inner))");
+    assert(value.unwrap() == "Fail(inner)");
+    println("implicit String conversion: Ok(Fail(inner))");
 }

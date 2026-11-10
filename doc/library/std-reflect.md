@@ -14,7 +14,7 @@ import std::reflect;
 
 ## 公共约定与错误边界
 
-要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。
+要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。
 
 ## 参考代码
 
@@ -296,7 +296,7 @@ Result<bool,Error> asBool();
 
 **行为**
 
-精确提取 Bool 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 Bool 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -304,7 +304,7 @@ Result<bool,Error> asBool();
 
 **返回值**
 
-`Result<bool,Error>`。精确提取 Bool 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<bool,Error>`。精确提取 Bool 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -332,7 +332,7 @@ Result<char,Error> asChar();
 
 **行为**
 
-精确提取 Char 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 Char 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -340,7 +340,7 @@ Result<char,Error> asChar();
 
 **返回值**
 
-`Result<char,Error>`。精确提取 Char 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<char,Error>`。精确提取 Char 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -368,7 +368,7 @@ Result<int8,Error> asI8();
 
 **行为**
 
-精确提取 I8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 I8 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -376,7 +376,7 @@ Result<int8,Error> asI8();
 
 **返回值**
 
-`Result<int8,Error>`。精确提取 I8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<int8,Error>`。精确提取 I8 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -404,7 +404,7 @@ Result<int16,Error> asI16();
 
 **行为**
 
-精确提取 I16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 I16 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -412,7 +412,7 @@ Result<int16,Error> asI16();
 
 **返回值**
 
-`Result<int16,Error>`。精确提取 I16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<int16,Error>`。精确提取 I16 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -440,7 +440,7 @@ Result<int32,Error> asI32();
 
 **行为**
 
-精确提取 I32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 I32 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -448,7 +448,7 @@ Result<int32,Error> asI32();
 
 **返回值**
 
-`Result<int32,Error>`。精确提取 I32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<int32,Error>`。精确提取 I32 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -476,7 +476,7 @@ Result<int64,Error> asI64();
 
 **行为**
 
-精确提取 I64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 I64 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -484,7 +484,7 @@ Result<int64,Error> asI64();
 
 **返回值**
 
-`Result<int64,Error>`。精确提取 I64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<int64,Error>`。精确提取 I64 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -512,7 +512,7 @@ Result<uint8,Error> asU8();
 
 **行为**
 
-精确提取 U8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 U8 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -520,7 +520,7 @@ Result<uint8,Error> asU8();
 
 **返回值**
 
-`Result<uint8,Error>`。精确提取 U8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<uint8,Error>`。精确提取 U8 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -548,7 +548,7 @@ Result<uint16,Error> asU16();
 
 **行为**
 
-精确提取 U16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 U16 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -556,7 +556,7 @@ Result<uint16,Error> asU16();
 
 **返回值**
 
-`Result<uint16,Error>`。精确提取 U16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<uint16,Error>`。精确提取 U16 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -584,7 +584,7 @@ Result<uint32,Error> asU32();
 
 **行为**
 
-精确提取 U32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 U32 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -592,7 +592,7 @@ Result<uint32,Error> asU32();
 
 **返回值**
 
-`Result<uint32,Error>`。精确提取 U32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<uint32,Error>`。精确提取 U32 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -620,7 +620,7 @@ Result<uint64,Error> asU64();
 
 **行为**
 
-精确提取 U64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 U64 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -628,7 +628,7 @@ Result<uint64,Error> asU64();
 
 **返回值**
 
-`Result<uint64,Error>`。精确提取 U64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<uint64,Error>`。精确提取 U64 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -656,7 +656,7 @@ Result<float32,Error> asF32();
 
 **行为**
 
-精确提取 F32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 F32 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -664,7 +664,7 @@ Result<float32,Error> asF32();
 
 **返回值**
 
-`Result<float32,Error>`。精确提取 F32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<float32,Error>`。精确提取 F32 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -692,7 +692,7 @@ Result<float64,Error> asF64();
 
 **行为**
 
-精确提取 F64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 F64 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -700,7 +700,7 @@ Result<float64,Error> asF64();
 
 **返回值**
 
-`Result<float64,Error>`。精确提取 F64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<float64,Error>`。精确提取 F64 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 
@@ -728,7 +728,7 @@ Result<String,Error> asText();
 
 **行为**
 
-精确提取 Text 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+精确提取 Text 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **参数**
 
@@ -736,7 +736,7 @@ Result<String,Error> asText();
 
 **返回值**
 
-`Result<String,Error>`。精确提取 Text 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。
+`Result<String,Error>`。精确提取 Text 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。
 
 **错误与边界**
 

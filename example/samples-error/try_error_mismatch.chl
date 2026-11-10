@@ -1,5 +1,5 @@
 Result<int64, String> source() {
-    return Result<int64, String>::Err("bad");
+    return Result<int64, String>::Fail("bad");
 }
 
 Result<int64, int64> target() {

@@ -88,8 +88,8 @@ opcode Image {
      * @return 新图片；宽高不合法时返回错误。
      */
     static Result<Image, Error> make(int64 width, int64 height) {
-        if (width <= 0 || height <= 0) { return Result<Image, Error>::Err(MessageError::from("图片创建：宽高必须为正")); }
-        if (width > 536870911 / height) { return Result<Image, Error>::Err(MessageError::from("图片创建：缓冲超过预算")); }
+        if (width <= 0 || height <= 0) { return Result<Image, Error>::Fail(MessageError::from("图片创建：宽高必须为正")); }
+        if (width > 536870911 / height) { return Result<Image, Error>::Fail(MessageError::from("图片创建：缓冲超过预算")); }
         Image image = __std_imageMake(width, height);
         return Result<Image, Error>::Ok(image);
     }
@@ -102,7 +102,7 @@ opcode Image {
     static Result<Image, Error> decode(List<uint8> bytes) {
         ImageReply reply;
         __decode(bytes, &reply);
-        if (len(reply.error) > 0) { return Result<Image, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<Image, Error>::Fail(MessageError::from(reply.error)); }
         Image image = __std_imageFromPixels(reply.width, reply.height, reply.pixels);
         return Result<Image, Error>::Ok(image);
     }
@@ -115,7 +115,7 @@ opcode Image {
      */
     static Result<Image, Error> open(String path) {
         Result<List<uint8>, Error> read = readAllBytes(path, 67108864);
-        if (read.isErr()) { return Result<Image, Error>::Err(MessageError::from(read.error().toString())); }
+        if (read.isErr()) { return Result<Image, Error>::Fail(MessageError::from(read.error().toString())); }
         return Image::decode(read.unwrap());
     }
 
@@ -127,7 +127,7 @@ opcode Image {
     Result<List<uint8>, Error> encodeBmp() {
         ImageReply reply;
         __encodeBmp(self.opcode, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint8>, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<List<uint8>, Error>::Fail(MessageError::from(reply.error)); }
         return Result<List<uint8>, Error>::Ok(reply.bytes);
     }
 
@@ -138,7 +138,7 @@ opcode Image {
     Result<List<uint8>, Error> encodePpm() {
         ImageReply reply;
         __encodePpm(self.opcode, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint8>, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<List<uint8>, Error>::Fail(MessageError::from(reply.error)); }
         return Result<List<uint8>, Error>::Ok(reply.bytes);
     }
 
@@ -150,7 +150,7 @@ opcode Image {
     Result<List<uint8>, Error> encodePgm() {
         ImageReply reply;
         __encodePgm(self.opcode, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint8>, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<List<uint8>, Error>::Fail(MessageError::from(reply.error)); }
         return Result<List<uint8>, Error>::Ok(reply.bytes);
     }
 
@@ -161,9 +161,9 @@ opcode Image {
      */
     Result<int64, Error> saveBmp(String path) {
         Result<List<uint8>, Error> encoded = self.encodeBmp();
-        if (encoded.isErr()) { return Result<int64, Error>::Err(MessageError::from(encoded.error())); }
+        if (encoded.isErr()) { return Result<int64, Error>::Fail(MessageError::from(encoded.error())); }
         Result<int64, Error> written = writeAllBytes(path, encoded.unwrap());
-        if (written.isErr()) { return Result<int64, Error>::Err(MessageError::from(written.error().toString())); }
+        if (written.isErr()) { return Result<int64, Error>::Fail(MessageError::from(written.error().toString())); }
         return Result<int64, Error>::Ok(written.unwrap());
     }
 
@@ -174,9 +174,9 @@ opcode Image {
      */
     Result<int64, Error> savePpm(String path) {
         Result<List<uint8>, Error> encoded = self.encodePpm();
-        if (encoded.isErr()) { return Result<int64, Error>::Err(MessageError::from(encoded.error())); }
+        if (encoded.isErr()) { return Result<int64, Error>::Fail(MessageError::from(encoded.error())); }
         Result<int64, Error> written = writeAllBytes(path, encoded.unwrap());
-        if (written.isErr()) { return Result<int64, Error>::Err(MessageError::from(written.error().toString())); }
+        if (written.isErr()) { return Result<int64, Error>::Fail(MessageError::from(written.error().toString())); }
         return Result<int64, Error>::Ok(written.unwrap());
     }
 
@@ -187,9 +187,9 @@ opcode Image {
      */
     Result<int64, Error> savePgm(String path) {
         Result<List<uint8>, Error> encoded = self.encodePgm();
-        if (encoded.isErr()) { return Result<int64, Error>::Err(MessageError::from(encoded.error())); }
+        if (encoded.isErr()) { return Result<int64, Error>::Fail(MessageError::from(encoded.error())); }
         Result<int64, Error> written = writeAllBytes(path, encoded.unwrap());
-        if (written.isErr()) { return Result<int64, Error>::Err(MessageError::from(written.error().toString())); }
+        if (written.isErr()) { return Result<int64, Error>::Fail(MessageError::from(written.error().toString())); }
         return Result<int64, Error>::Ok(written.unwrap());
     }
 
@@ -201,7 +201,7 @@ opcode Image {
      */
     Result<Pixel, Error> getPixel(int64 x, int64 y) {
         if (x < 0 || y < 0 || x >= self.width() || y >= self.height()) {
-            return Result<Pixel, Error>::Err(MessageError::from("getPixel：坐标越界"));
+            return Result<Pixel, Error>::Fail(MessageError::from("getPixel：坐标越界"));
         }
         int64 base = (y * self.width() + x) * 4;
         Pixel pixel;
@@ -224,10 +224,10 @@ opcode Image {
      */
     Result<int64, Error> setPixel(int64 x, int64 y, int64 r, int64 g, int64 b, int64 a) {
         if (x < 0 || y < 0 || x >= self.width() || y >= self.height()) {
-            return Result<int64, Error>::Err(MessageError::from("setPixel：坐标越界"));
+            return Result<int64, Error>::Fail(MessageError::from("setPixel：坐标越界"));
         }
         if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 || a < 0 || a > 255) {
-            return Result<int64, Error>::Err(MessageError::from("setPixel：分量必须在 0..255"));
+            return Result<int64, Error>::Fail(MessageError::from("setPixel：分量必须在 0..255"));
         }
         int64 base = (y * self.width() + x) * 4;
         __std_imageSetByte(&self, base, (uint8)r);
@@ -248,7 +248,7 @@ opcode Image {
     Result<Image, Error> convolve(List<float64> kernel, int64 kw, int64 kh) {
         ImageReply reply;
         __convolve(self.opcode, kernel, kw, kh, &reply);
-        if (len(reply.error) > 0) { return Result<Image, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<Image, Error>::Fail(MessageError::from(reply.error)); }
         Image image = __std_imageFromPixels(reply.width, reply.height, reply.pixels);
         return Result<Image, Error>::Ok(image);
     }
@@ -263,7 +263,7 @@ opcode Image {
     Result<Image, Error> pool(int64 mode, int64 kw, int64 kh) {
         ImageReply reply;
         __pool(self.opcode, mode, kw, kh, &reply);
-        if (len(reply.error) > 0) { return Result<Image, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<Image, Error>::Fail(MessageError::from(reply.error)); }
         Image image = __std_imageFromPixels(reply.width, reply.height, reply.pixels);
         return Result<Image, Error>::Ok(image);
     }
@@ -275,7 +275,7 @@ opcode Image {
     Result<List<uint8>, Error> toGray() {
         ImageReply reply;
         __toGray(self.opcode, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint8>, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<List<uint8>, Error>::Fail(MessageError::from(reply.error)); }
         return Result<List<uint8>, Error>::Ok(reply.gray);
     }
 
@@ -289,7 +289,7 @@ opcode Image {
     static Result<Image, Error> fromGray(int64 width, int64 height, List<uint8> gray) {
         ImageReply reply;
         __fromGray(width, height, gray, &reply);
-        if (len(reply.error) > 0) { return Result<Image, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<Image, Error>::Fail(MessageError::from(reply.error)); }
         Image image = __std_imageFromPixels(reply.width, reply.height, reply.pixels);
         return Result<Image, Error>::Ok(image);
     }
@@ -301,7 +301,7 @@ opcode Image {
     Result<List<uint32>, Error> toARGB() {
         ImageReply reply;
         __toARGB(self.opcode, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint32>, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<List<uint32>, Error>::Fail(MessageError::from(reply.error)); }
         return Result<List<uint32>, Error>::Ok(reply.argb);
     }
 
@@ -315,7 +315,7 @@ opcode Image {
     static Result<Image, Error> fromARGB(int64 width, int64 height, List<uint32> argb) {
         ImageReply reply;
         __fromARGB(width, height, argb, &reply);
-        if (len(reply.error) > 0) { return Result<Image, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<Image, Error>::Fail(MessageError::from(reply.error)); }
         Image image = __std_imageFromPixels(reply.width, reply.height, reply.pixels);
         return Result<Image, Error>::Ok(image);
     }
@@ -327,7 +327,7 @@ opcode Image {
     Result<List<uint16>, Error> toRGB565() {
         ImageReply reply;
         __toRGB565(self.opcode, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint16>, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<List<uint16>, Error>::Fail(MessageError::from(reply.error)); }
         return Result<List<uint16>, Error>::Ok(reply.rgb565);
     }
 
@@ -341,7 +341,7 @@ opcode Image {
     static Result<Image, Error> fromRGB565(int64 width, int64 height, List<uint16> rgb565) {
         ImageReply reply;
         __fromRGB565(width, height, rgb565, &reply);
-        if (len(reply.error) > 0) { return Result<Image, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<Image, Error>::Fail(MessageError::from(reply.error)); }
         Image image = __std_imageFromPixels(reply.width, reply.height, reply.pixels);
         return Result<Image, Error>::Ok(image);
     }
@@ -354,7 +354,7 @@ opcode Image {
         List<uint8> gray = self.toGray()?;
         ImageReply reply;
         __otsu(self.width(), self.height(), gray, &reply);
-        if (len(reply.error) > 0) { return Result<int64, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<int64, Error>::Fail(MessageError::from(reply.error)); }
         return Result<int64, Error>::Ok(reply.threshold);
     }
 
@@ -369,7 +369,7 @@ opcode Image {
     static Result<List<uint8>, Error> binarize(int64 width, int64 height, List<uint8> gray, int64 threshold) {
         ImageReply reply;
         __binarize(width, height, gray, threshold, &reply);
-        if (len(reply.error) > 0) { return Result<List<uint8>, Error>::Err(MessageError::from(reply.error)); }
+        if (len(reply.error) > 0) { return Result<List<uint8>, Error>::Fail(MessageError::from(reply.error)); }
         return Result<List<uint8>, Error>::Ok(reply.gray);
     }
 

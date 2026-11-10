@@ -99,7 +99,7 @@ Reply login(Database mut& database, State mut& state, String body)
     prune(&state);
     let value = match (parse(body)) {
         Ok(json) => { json }
-        Err(_) => { return errorReply(400, "登录数据必须是 JSON 对象"); }
+        Fail(_) => { return errorReply(400, "登录数据必须是 JSON 对象"); }
     };
     String username = stringField(&value, "username");
     String password = stringField(&value, "password");
@@ -118,7 +118,7 @@ Reply login(Database mut& database, State mut& state, String body)
     if (rows.intAt(0, 8) > now) { return errorReply(429, "登录尝试过多，请稍后再试"); }
     String digest = match (derive(password, rows.textAt(0, 5), (uint64)600000)) {
         Ok(value) => { value }
-        Err(_) => { return errorReply(503, "认证服务暂不可用"); }
+        Fail(_) => { return errorReply(503, "认证服务暂不可用"); }
     };
     int64 id = rows.intAt(0, 0);
     if (rows.intAt(0, 4) != 1 || !equalDigest(digest, rows.textAt(0, 6)))
@@ -132,7 +132,7 @@ Reply login(Database mut& database, State mut& state, String body)
     if (len(state.sessions) >= 4096) { return errorReply(503, "会话数量已达上限"); }
     String random = match (token()) {
         Ok(value) => { value }
-        Err(_) => { return errorReply(503, "无法创建会话"); }
+        Fail(_) => { return errorReply(503, "无法创建会话"); }
     };
     Session session;
     session.token = random; session.userId = id; session.version = rows.intAt(0, 3); session.expires = nowMs() + 1800000;

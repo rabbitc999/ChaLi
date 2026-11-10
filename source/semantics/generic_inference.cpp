@@ -620,7 +620,7 @@ bool CompleteGenericArguments(const chali_generic::Generic &generic,
             Memory::String error;
             if (!chali_generic::checkTypeNesting(argument, error)) return Fail(error);
             if (!chali_generic::rewrite(argument, chali_generic::session.generics,
-                                        chali_generic::session.implemented, made, pending, error)) return Fail(error);
+                                        chali_generic::session.implemented, made, pending, error, 0u, generic.module, true)) return Fail(error);
             // 先请求默认类型中的内层实例，重放后再实例化外层函数或枚举。
             if (!pending.empty())
             {

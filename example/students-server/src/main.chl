@@ -77,7 +77,7 @@ void serve(Database mut& database, State mut& state, TcpSocket mut& peer, String
 {
     Request request = match (readRequest(peer, 10000)) {
         Ok(value) => { value }
-        Err(_) => { return; }
+        Fail(_) => { return; }
     };
     if ((request.path == "/" || request.path == "/index.html") && request.method == "GET")
     {

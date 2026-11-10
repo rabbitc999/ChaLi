@@ -327,6 +327,10 @@
         "title": "%chali.openLibraries.title%"
       },
       {
+        "command": "chali.previewTypeAlias",
+        "title": "%chali.previewTypeAlias.title%"
+      },
+      {
         "command": "chali.previewMacroExpansion",
         "title": "%chali.previewMacroExpansion.title%"
       },
@@ -438,6 +442,11 @@
           "command": "chali.openLibraries",
           "when": "resourceFilename == chali.toml",
           "group": "chaliDependencies"
+        },
+        {
+          "command": "chali.previewTypeAlias",
+          "when": "editorLangId == chali && resourceScheme == file",
+          "group": "chali@3"
         },
         {
           "command": "chali.previewMacroExpansion",

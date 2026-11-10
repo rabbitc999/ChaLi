@@ -186,7 +186,7 @@ The version whose failure carries information is `Result<T, E>`, with `?` for ea
 ```chali
 Result<int64, Error> parse_value(bool valid) {
     if (valid) { return Result<int64, Error>::Ok(20); }
-    return Result<int64, Error>::Err(MessageError::from("bad input"));
+    return Result<int64, Error>::Fail(MessageError::from("bad input"));
 }
 Result<int64, Error> doubled(bool valid) {
     int64 value = parse_value(valid)?;
@@ -195,7 +195,7 @@ Result<int64, Error> doubled(bool valid) {
 void main() {
     match (doubled(true)) {
         Result<int64, Error>::Ok(v) => { println("ok={}", v); }
-        Result<int64, Error>::Err(e) => { println("err={}", e.toString()); }
+        Result<int64, Error>::Fail(e) => { println("err={}", e.toString()); }
     }
 }
 ```
@@ -204,7 +204,7 @@ void main() {
 ok=40
 ```
 
-`expr?` returns the error to the caller immediately on `Err`, and unwraps the value on `Ok`. There are
+`expr?` returns the error to the caller immediately on `Fail`, and unwraps the value on `Ok`. There are
 no exceptions; errors are part of the return value.
 
 ---

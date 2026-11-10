@@ -41,7 +41,7 @@
 ## 文档与产物
 
 - 文档索引为 doc/README.md；已有中英文对应页同步，链接使用相对路径，参考文档只写当前用法。
-- 书稿、文档及项目例程在无歧义且上下文足够时优先使用导入短名和泛型自动推断；Result 的 Ok／Err、Option 的 Value／None 及其他枚举变体避免重复完整类型限定，类型冲突或推断依据不足时保留必要限定。
+- 书稿、文档及项目例程在无歧义且上下文足够时优先使用导入短名和泛型自动推断；Result 的 Ok／Fail、Option 的 Value／None 及其他枚举变体避免重复完整类型限定，类型冲突或推断依据不足时保留必要限定。
 - 中文书稿修改同步 Markdown、LaTeX 和 PDF；番外及技术对照放在章末，小结、习题与参考解答在前。英文书稿放在 doc/book/en/，不翻译番外、不生成 LaTeX/PDF，由 man book 内嵌和导出。
 - doc/book/latex/chapters/ 是 Markdown 自动生成的章节目录，只在本地生成与验证，由 .gitignore 排除；不提交生成章节。Markdown、生成脚本、LaTeX 主文件与高亮定义继续纳入版本控制。tools/history/ 同样只供本地归档，不提交，不为此改写历史。
 - 程序版本以 VERSION 为准，语言服务与插件 chaliCompilerVersion 一致；插件 version 与编译器版本一致，按 LLVM 静态／外置链接分别打包，并核对实际内嵌变体。

@@ -27,14 +27,14 @@ $end_macro
 Result<String,Error> serialize<T>(T const& value) {
     requireReflection();
     let result = std::reflect::__serializeJson<T>(value);
-    if (result.isErr()) { return Result<String,Error>::Err(result.error()); }
+    if (result.isErr()) { return Result<String,Error>::Fail(result.error()); }
     return Result<String,Error>::Ok(result.unwrap());
 }
 /** 按具体类型验证并恢复拥有独立存储的值。 */
 Result<T,Error> deserialize<T>(String text) {
     requireReflection();
     let result = std::reflect::__deserializeJson<T>(text);
-    if (result.isErr()) { return Result<T,Error>::Err(result.error()); }
+    if (result.isErr()) { return Result<T,Error>::Fail(result.error()); }
     return Result<T,Error>::Ok(result.take());
 }
 
@@ -153,7 +153,7 @@ struct JsonValue : Iterator<JsonValue> {
 /** 解析文本；失败返回包含行列信息的诊断。 */
 Result<JsonValue, Error> parse(String text) {
     __JsonValueStorage handle = __parse(text);
-    if (!__valid(handle.opcode)) { String message = __takeError(handle.opcode); return Result<JsonValue, Error>::Err(MessageError::from(message)); }
+    if (!__valid(handle.opcode)) { String message = __takeError(handle.opcode); return Result<JsonValue, Error>::Fail(MessageError::from(message)); }
     JsonValue value; value.__storage = move handle;
     return Result<JsonValue, Error>::Ok(move value);
 }

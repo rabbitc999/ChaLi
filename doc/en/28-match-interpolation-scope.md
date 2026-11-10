@@ -36,7 +36,7 @@ struct Numbers : Container {
 C.Item first<C: Container>(C container) { return container.get(0); }
 ```
 
-An interface declares an associated type with `type Item;`; an implementation supplies `type Item = T;` in its body. C.Item resolves to the associated type of C. Associated types participate in signature checking and interface inheritance. Missing or cyclic definitions and mismatched method signatures are errors. Module-level type aliases keep their existing behavior.
+An interface declares an associated type with `type Item;`; an implementation supplies `type Item = T;` in its body. C.Item resolves to the associated type of C. Associated types participate in signature checking and interface inheritance. Missing or cyclic definitions and mismatched method signatures are errors. At module scope, `type Name = T;` declares a host type and `type alias Name = T;` declares a transparent alias.
 
 ## Const generics and fixed array fields
 

@@ -2,8 +2,8 @@ Result<Result<String, MessageError>, MessageError> gen(int64 gtype)
 {
     return match(gtype) {
         1 => { Ok(Ok("type1")) }
-        2 => { Ok(Err(MessageError::from("type2"))) }
-        _ => { Err(MessageError::from("type3")) }
+        2 => { Ok(Fail(MessageError::from("type2"))) }
+        _ => { Fail(MessageError::from("type3")) }
     };
 }
 Result<String, Error> run(int64 gtype) {
@@ -12,8 +12,8 @@ Result<String, Error> run(int64 gtype) {
 void showMode(int64 gtype) {
     match (run(gtype)) {
         Ok(S) => { println("Ok={}", S); }
-        MessageError(S) => { println("Err={}", S); }
-        Err(_) => { println("Error"); }
+        MessageError(S) => { println("Fail={}", S); }
+        Fail(_) => { println("Error"); }
     }
 }
 void main() {

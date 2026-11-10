@@ -33,7 +33,7 @@ opcode Regex {
 
     static Result<Regex, Error> compile(String pattern) {
         Regex value = __regexCompileHandle(pattern);
-        if (!__regexValid(value.opcode)) { return Result<Regex, Error>::Err(RegexError::Invalid); }
+        if (!__regexValid(value.opcode)) { return Result<Regex, Error>::Fail(RegexError::Invalid); }
         return Result<Regex, Error>::Ok(move value);
     }
 

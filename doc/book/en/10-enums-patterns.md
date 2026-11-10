@@ -56,7 +56,7 @@ copy original
 
 Packet has a Data variant carrying a String and an Empty variant carrying none. Packet currently holds Data, so both matches choose that arm. Empty still needs handling so the expression produces a result for every variant.
 
-Prefer short names such as Data and Empty for construction and matching when the type context determines the enum or the variant name is unambiguous. Result's Ok/Err and Option's Value/None follow the same rule; variable, return, and parameter types can supply generic arguments. Use a necessary qualifier such as Packet::Data when names collide and context is insufficient.
+Prefer short names such as Data and Empty for construction and matching when the type context determines the enum or the variant name is unambiguous. Result's Ok/Fail and Option's Value/None follow the same rule; variable, return, and parameter types can supply generic arguments. Use a necessary qualifier such as Packet::Data when names collide and context is insufficient.
 
 The first match binds a value copy of the payload as text, changes it to copy and yields it to label. It does not update packet. Matching again therefore reads original, producing `copy original`. Each text binding belongs to its own arm scope; the second is not the modified variable from the first match.
 

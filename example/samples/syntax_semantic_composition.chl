@@ -12,7 +12,7 @@ int64 effects = 0;
 bool tick() { effects += 1; return true; }
 Result<Result<int64, MessageError>, MessageError> nested(int64 value) {
     if (value % 5 == 0) { return MessageError::from("outer"); }
-    if (value % 3 == 0) { return Ok(Err(MessageError::from("inner"))); }
+    if (value % 3 == 0) { return Ok(Fail(MessageError::from("inner"))); }
     return Ok(Ok(value * 2));
 }
 Result<int64, Error> compute(int64 value) {
@@ -32,7 +32,7 @@ void main() {
                 Value(box) => { assert(invokeBox(box, (int64)6) == 7); }
                 None => { assert(false); }
             } }
-        Err(_) => { assert(false); }
+        Fail(_) => { assert(false); }
     }
     int64 first = 3;
     int64 second = 4;
@@ -54,7 +54,7 @@ void main() {
         match(compute(i)) {
             Ok(value) => { total += value; }
             MessageError(error) => { assert(error.toString() == "outer" || error.toString() == "inner"); errors += 1; }
-            Err(_) => { assert(false); }
+            Fail(_) => { assert(false); }
         }
     }
     assert(cleanups == 512);

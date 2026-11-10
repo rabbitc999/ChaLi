@@ -67,7 +67,7 @@ void main(List<String> arguments) {
         Result<int64, Error> parsed = Parse::parseInt64(arguments[0]);
         match (parsed) {
             Result<int64, Error>::Ok(value) => { digits = value; }
-            Result<int64, Error>::Err(error) => {
+            Result<int64, Error>::Fail(error) => {
                 panic("小数位数必须是非负整数");
             }
         }

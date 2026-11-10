@@ -202,14 +202,14 @@ void main()
     match (result)
     {
         Ok(text) => { println("{}", text); }
-        Err::IoError(e) => { println("qualified: {}", e.toString()); }
-        Err(_) => { println("other error"); }
+        Fail::IoError(e) => { println("qualified: {}", e.toString()); }
+        Fail(_) => { println("other error"); }
     }
     match (result)
     {
         Ok(_) => { println("ok"); }
         IoError(e) => { println("short: {}", e.toString()); }
-        Err(_) => { println("other error"); }
+        Fail(_) => { println("other error"); }
     }
 }
 ```
@@ -241,8 +241,8 @@ void main()
     {
         Ok(IoError e) => { println("ok: {}", e.toString()); }
         Ok(_) => { println("other success"); }
-        Err(IoError e) => { println("err: {}", e.toString()); }
-        Err(_) => { println("other failure"); }
+        Fail(IoError e) => { println("err: {}", e.toString()); }
+        Fail(_) => { println("other failure"); }
     }
 }
 ```
@@ -278,8 +278,8 @@ void main()
     match (readName())
     {
         Ok(name) => { println("{}", name); }
-        Err(IoError e) => { println("result: {}", e.toString()); }
-        Err(_) => { println("other error"); }
+        Fail(IoError e) => { println("result: {}", e.toString()); }
+        Fail(_) => { println("other error"); }
     }
     match (widenedError())
     {
@@ -295,7 +295,7 @@ result: 文件已关闭
 option: 文件已关闭
 ```
 
-The first example matches an IoError held through Error, using both explicit variant/type sugar and an unambiguous shorthand, with Err(_) as fallback.
+The first example matches an IoError held through Error, using both explicit variant/type sugar and an unambiguous shorthand, with Fail(_) as fallback.
 
 The second retains the outer variant for multiple payloads, with code and typed error positions. Result<Error,Error> can hold an error object in Ok; payload type alone does not determine success.
 

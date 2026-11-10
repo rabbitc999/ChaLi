@@ -1,0 +1,2 @@
+type alias Restricted<T:Closeable> = T;
+void main() { Restricted<int64> value = 3; }

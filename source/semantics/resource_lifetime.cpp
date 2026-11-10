@@ -313,7 +313,7 @@ void AppendDestruction(Memory::Vector<ast::NodePtr> *out, const ast::NodePtr &va
     if (drop)
         if (const ast::NodePtr selfDrop = MakeDropCallAt(structName, value))
             out->push_back(selfDrop);
-    // 枚举只有当前标签的载荷已构造；不能对 Err 中未激活的 Ok 资源调用 Drop。
+    // 枚举只有当前标签的载荷已构造；不能对 Fail 中未激活的 Ok 资源调用 Drop。
     const auto enumeration = g_enums.find(structName);
     if (enumeration != g_enums.end())
     {

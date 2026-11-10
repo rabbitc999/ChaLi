@@ -102,11 +102,28 @@ assert(buffer.isEmpty() && buffer.capacity() == capacity);
 | `R fn(A, B)` | 函数类型 |
 | `T mut&` / `T const&` | 可变引用 / 只读引用（`T &` ≡ `T const&`） |
 | `Option<T>` | 可能有值：`Value(v)` / `None` |
-| `Result<T, E>` | 可能失败：`Ok(v)` / `Err(e)` |
+| `Result<T, E>` | 可能失败：`Ok(v)` / `Fail(e)` |
 | `List<T>` `Map<K,V>` `Set<T>` | 内建容器 |
 | `std::core::Any` | 类型擦除的盒子，用于运行期多态 |
 
 ---
+
+### 透明类型别名
+
+模块层可以用 `type alias 名称 = 类型;` 为类型增加一种写法。别名和目标具有相同的类型身份、借用与所有权规则，可以参与赋值、重载匹配和泛型推断。现有的 `type 名称 = 类型;` 声明带独立身份的宿主类型。
+
+```chali
+type alias Byte = uint8;
+type alias Reply<T> = Result<T, String>;
+type alias Mapper<In, Out = In> = Out fn(In);
+
+Reply<int64> lookup(bool found) {
+    if (found) { return Ok(42); }
+    return Fail("missing");
+}
+```
+
+泛型别名沿用类型形参、接口约束、默认实参和 `N:int64` 常量形参。右侧及默认值在声明模块中解析，显式实参在使用模块中解析。使用模块名限定别名，或直接导入声明模块后使用短名。如果所有泛型参数都有默认值，`Block block;` 与 `Block<> block;` 等价。别名链必须无环。若目标是具名类型，可用别名限定其静态成员或枚举变体，例如 `Reply<int64>::Fail("missing")`。
 
 ## 3. 声明
 
@@ -494,17 +511,17 @@ match (res) // Result<A, B>；A、B 是接口，E、F 实现 B
 {
     OK(A a) => { /* 成功载荷的接口类型 */ }
     Ok(_) => { /* 无绑定成功兜底 */ }
-    Err(E b) => { /* 具体错误 E */ }
-    Err(F c) => { /* 具体错误 F */ }
-    Err(_ d) => { /* 其余错误，d 保留 B 接口 */ }
+    Fail(E b) => { /* 具体错误 E */ }
+    Fail(F c) => { /* 具体错误 F */ }
+    Fail(_ d) => { /* 其余错误，d 保留 B 接口 */ }
 }
 ```
 
-`Err(_)` 表示无绑定兜底，星号不是语法。标准 Result 的规范标签仍为 `Ok`，匹配位置兼容 `OK`。只有可证明穷尽时才允许省略兜底，不能用当前已知实现列表代表开放接口的全部类型。[完整可运行样例](../example/samples/interface_payload_match.chl)覆盖成功与多个失败类型。
+`Fail(_)` 表示无绑定兜底，星号不是语法。标准 Result 的规范标签仍为 `Ok`，匹配位置兼容 `OK`。只有可证明穷尽时才允许省略兜底，不能用当前已知实现列表代表开放接口的全部类型。[完整可运行样例](../example/samples/interface_payload_match.chl)覆盖成功与多个失败类型。
 
-单接口载荷还可写 `Err::IoError(e)`，等价于 `Err(IoError e)`；无绑定形式为 `Err::IoError(_)`。如果载荷类型能唯一确定标签且不与枚举变体名称冲突，还可省略标签写 `IoError(e)`。存在歧义时必须显式写标签。语法糖只适用于单载荷：双／多载荷使用 `Pair(A a, B b)`、`Many(A a, B b, text, count)`；非接口载荷可以直接绑定变量，接口载荷只需在按动态类型筛选时标注类型。
+单接口载荷还可写 `Fail::IoError(e)`，等价于 `Fail(IoError e)`；无绑定形式为 `Fail::IoError(_)`。如果载荷类型能唯一确定标签且不与枚举变体名称冲突，还可省略标签写 `IoError(e)`。存在歧义时必须显式写标签。语法糖只适用于单载荷：双／多载荷使用 `Pair(A a, B b)`、`Many(A a, B b, text, count)`；非接口载荷可以直接绑定变量，接口载荷只需在按动态类型筛选时标注类型。
 
-类型模式 `MessageError(error)` 绑定的是具体的 `MessageError` 对象，不是自动拆出其字符串字段；可调用 `error.toString()` 读取文本。对 `Result<Result<T,E1>,E2>`，每个 `?` 只展开一层，`Ok((value?)?)` 才会传播两层错误。若目标载荷是 `String`，普通隐式文本转换仍然适用：`Ok(value?)` 可以把剩下的内层 `Result` 变成类似 `"Err(inner)"` 的成功字符串，这不等于传播内层错误。需要检查两层失败时，应明确保留两次 `?`。可运行对照见[嵌套 Result 压力测试](../tests/chali_nested_result_stress.py)。
+类型模式 `MessageError(error)` 绑定的是具体的 `MessageError` 对象，不是自动拆出其字符串字段；可调用 `error.toString()` 读取文本。对 `Result<Result<T,E1>,E2>`，每个 `?` 只展开一层，`Ok((value?)?)` 才会传播两层错误。若目标载荷是 `String`，普通隐式文本转换仍然适用：`Ok(value?)` 可以把剩下的内层 `Result` 变成类似 `"Fail(inner)"` 的成功字符串，这不等于传播内层错误。需要检查两层失败时，应明确保留两次 `?`。可运行对照见[嵌套 Result 压力测试](../tests/chali_nested_result_stress.py)。
 
 绑定变量后再加条件，用 `if`：
 
@@ -543,7 +560,7 @@ void main() {
 }
 ```
 
-这分别补成 `Err(...)`、`Value(...)` 或 `Ok(...)`，同样适用于自定义枚举。已是目标枚举的表达式直接传递，不重复包装。选择时优先精确类型，再考虑兼容引用、接口和普通隐式转换；通用字符串格式化的优先级最低，因此错误对象传给 `Result<String, Error>` 会进入 `Err`。最佳候选相同时拒绝，例如 `Result<String, String> result = "ambiguous";` 必须明确写 `Ok` 或 `Err`。无载荷、多载荷变体不参与；不会凭空构造多个实参。循环的递归枚举转换不展开。
+这分别补成 `Fail(...)`、`Value(...)` 或 `Ok(...)`，同样适用于自定义枚举。已是目标枚举的表达式直接传递，不重复包装。选择时优先精确类型，再考虑兼容引用、接口和普通隐式转换；通用字符串格式化的优先级最低，因此错误对象传给 `Result<String, Error>` 会进入 `Fail`。最佳候选相同时拒绝，例如 `Result<String, String> result = "ambiguous";` 必须明确写 `Ok` 或 `Fail`。无载荷、多载荷变体不参与；不会凭空构造多个实参。循环的递归枚举转换不展开。
 
 目标枚举及其泛型实参必须已确定；这项糖不替代类型参数推导，也不放宽数值窄化、资源移动、引用来源或 `#borrow` 规则。需要移动的资源仍明确写 `move`，局部引用不能借自动包装逃逸。没有目标类型的 `let` 不会任意猜测外层枚举。显式构造器仍用于表达有意的成功／失败、区分歧义和控制多层嵌套。完整用例见[枚举自动包装样例](../example/samples/enum_payload_wrapping.chl)。
 

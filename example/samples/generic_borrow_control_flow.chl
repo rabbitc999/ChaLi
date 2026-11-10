@@ -60,7 +60,7 @@ void main() {
         String right = "right";
         assert(expression(&left, &right, false) == "right");
         Result<int64, MessageError> ok = Ok(mode);
-        Result<int64, MessageError> bad = Err(MessageError::from("expected"));
+        Result<int64, MessageError> bad = Fail(MessageError::from("expected"));
         assert(propagate(ok, mode % 3).unwrap() == mode);
         assert(propagate(bad, mode % 3).isErr());
     }

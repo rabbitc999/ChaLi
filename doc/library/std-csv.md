@@ -41,7 +41,7 @@ void main(){
     assert(parseCsv("a,").unwrap()[0].len()==2);
     let failure=parseCsv("a,b\n\"unfinished");assert(!failure.isOk());
     match(failure){
-        Err(CsvError error)=>{assert(error.line==2 && error.column==1);}
+        Fail(CsvError error)=>{assert(error.line==2 && error.column==1);}
         _=>{assert(false);}
     }
     assert(!parseCsv("\"x\"tail").isOk() && !parseCsv("x\"y").isOk());

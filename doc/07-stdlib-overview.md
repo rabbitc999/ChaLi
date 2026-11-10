@@ -19,7 +19,7 @@ void main() {
         Result<JsonValue, Error>::Ok(doc) => {
             println("isObject={} len={}", doc.isObject(), doc.len());
         }
-        Result<JsonValue, Error>::Err(e) => { println("err={}", e); }
+        Result<JsonValue, Error>::Fail(e) => { println("err={}", e); }
     }
 }
 ```

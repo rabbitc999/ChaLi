@@ -47,9 +47,9 @@ struct Resource:Closeable,Clone<Resource>,Debug{int64 value;void close(){closed+
 struct Owner{Resource resource; $std::macro::Clone<Owner>(clone); $std::macro::Debug<Owner>(debug); $Label<Owner>(label); }
 void main(){{Owner value;value.resource.value=7;let copy=value.clone();assert(copy.resource.value==7&&value.label()=="helper"&&value.debug()=="Owner { resource: resource }");}assert(closed==2);}''', None),
         ('option_lookalike', 'struct Option__Lookalike{int64 value;}\nstruct Outer{Option__Lookalike inner; $std::json::Json<Outer>(toJson, fromJson);}void main(){}', '嵌套类型必须实现 std::json::Json'),
-        ('result_lookalike', 'enum Result__Lookalike{Ok(int64 value),Err(String message)}\nstruct Outer{Result__Lookalike inner; $std::json::Json<Outer>(toJson, fromJson);}void main(){}', '嵌套类型必须实现 std::json::Json'),
+        ('result_lookalike', 'enum Result__Lookalike{Ok(int64 value),Fail(String message)}\nstruct Outer{Result__Lookalike inner; $std::json::Json<Outer>(toJson, fromJson);}void main(){}', '嵌套类型必须实现 std::json::Json'),
         ('standard_result', '''struct Data{Result<int64,String> value;Option<int64> optional; $std::json::Json<Data>(toJson, fromJson);}
-void main(){Data value;value.value=Result<int64,String>::Err("expected");value.optional=Option<int64>::Value(7);let copied=Data::fromJson(value.toJson().unwrap()).unwrap();assert(copied.value.error()=="expected"&&copied.optional.unwrap()==7);}''', None),
+void main(){Data value;value.value=Result<int64,String>::Fail("expected");value.optional=Option<int64>::Value(7);let copied=Data::fromJson(value.toJson().unwrap()).unwrap();assert(copied.value.error()=="expected"&&copied.optional.unwrap()==7);}''', None),
         ('qualified_protocol', '''import derive_tools;
 struct Data{int64 value; $derive_tools::Debug<Data>(label); $std::macro::Debug<Data>(debug); }
 void main(){Data value;assert(value.label()=="custom"&&value.debug()=="Data { value: 0 }");}''', None),

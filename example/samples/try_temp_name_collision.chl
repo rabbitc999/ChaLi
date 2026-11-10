@@ -13,7 +13,7 @@ Result<int32, int32> next(Result<int32, int32> a)
     int32 val = a?;
     val += 1;
     if (val == 38) {
-        return Err(12);
+        return Fail(12);
     }
     return Ok(val);
 }
@@ -36,10 +36,10 @@ void main()
     let a = Result<int32, int32>::Ok(0);
     match (fromNamedTemp(a)) {
         Ok(t) => { println("OK={}", t); }
-        Err(t) => { println("ERR={}", t); }
+        Fail(t) => { println("ERR={}", t); }
     }
     match (fromReservedTemp(a)) {
         Ok(t) => { println("OK={}", t); }
-        Err(t) => { println("ERR={}", t); }
+        Fail(t) => { println("ERR={}", t); }
     }
 }

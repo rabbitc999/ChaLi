@@ -1,5 +1,5 @@
 Ok=type1
-Err=type2
-Err=type3
-Err=type3
-Err=type3
+Fail=type2
+Fail=type3
+Fail=type3
+Fail=type3

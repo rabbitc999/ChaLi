@@ -10840,12 +10840,12 @@
     "name": "Option::unwrap",
     "owner": "Option",
     "signature": "T unwrap()",
-    "documentation": "提取成功载荷；None/Err 时 panic。\n\n**返回值**：T。",
+    "documentation": "提取成功载荷；None/Fail 时 panic。\n\n**返回值**：T。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "T",
-      "documentation": "提取成功载荷；None/Err 时 panic。"
+      "documentation": "提取成功载荷；None/Fail 时 panic。"
     },
     "errors": {
       "documentation": "自动加载，无需 import。错误输出包装和浮点去尾零由 ChaLi 实现；LLVM 构建的标准流直连运行时与 libc，显式执行步数限制保留宿主回退。标准库失败返回统一为 Result<T, Error>，具体错误实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 Box<T> 独占堆上的一个值，由 Box<T>::newBox(value) 装箱。get 复制值，take 消耗盒并移出值；两者在空盒上触发断言。close 和作用域退出清理剩余值。List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
@@ -10867,7 +10867,7 @@
     "name": "Option::unwrapOr",
     "owner": "Option",
     "signature": "T unwrapOr(T fallback)",
-    "documentation": "提取成功载荷；None/Err 时返回 fallback。\n\n**返回值**：T。",
+    "documentation": "提取成功载荷；None/Fail 时返回 fallback。\n\n**返回值**：T。",
     "comment": "",
     "parameters": [
       {
@@ -10879,7 +10879,7 @@
     ],
     "returns": {
       "type": "T",
-      "documentation": "提取成功载荷；None/Err 时返回 fallback。"
+      "documentation": "提取成功载荷；None/Fail 时返回 fallback。"
     },
     "errors": {
       "documentation": "自动加载，无需 import。错误输出包装和浮点去尾零由 ChaLi 实现；LLVM 构建的标准流直连运行时与 libc，显式执行步数限制保留宿主回退。标准库失败返回统一为 Result<T, Error>，具体错误实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 Box<T> 独占堆上的一个值，由 Box<T>::newBox(value) 装箱。get 复制值，take 消耗盒并移出值；两者在空盒上触发断言。close 和作用域退出清理剩余值。List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
@@ -10899,7 +10899,7 @@
     "name": "Option::expect",
     "owner": "Option",
     "signature": "T expect(String message)",
-    "documentation": "提取成功载荷；None/Err 时以 message 触发 panic。\n\n**返回值**：T。",
+    "documentation": "提取成功载荷；None/Fail 时以 message 触发 panic。\n\n**返回值**：T。",
     "comment": "",
     "parameters": [
       {
@@ -10911,7 +10911,7 @@
     ],
     "returns": {
       "type": "T",
-      "documentation": "提取成功载荷；None/Err 时以 message 触发 panic。"
+      "documentation": "提取成功载荷；None/Fail 时以 message 触发 panic。"
     },
     "errors": {
       "documentation": "自动加载，无需 import。错误输出包装和浮点去尾零由 ChaLi 实现；LLVM 构建的标准流直连运行时与 libc，显式执行步数限制保留宿主回退。标准库失败返回统一为 Result<T, Error>，具体错误实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 Box<T> 独占堆上的一个值，由 Box<T>::newBox(value) 装箱。get 复制值，take 消耗盒并移出值；两者在空盒上触发断言。close 和作用域退出清理剩余值。List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
@@ -11127,12 +11127,12 @@
     "name": "Result::isErr",
     "owner": "Result",
     "signature": "bool isErr()",
-    "documentation": "判断 Result 是否为 Err。\n\n**返回值**：bool。",
+    "documentation": "判断 Result 是否为 Fail。\n\n**返回值**：bool。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "bool",
-      "documentation": "判断 Result 是否为 Err。"
+      "documentation": "判断 Result 是否为 Fail。"
     },
     "errors": {
       "documentation": "自动加载，无需 import。错误输出包装和浮点去尾零由 ChaLi 实现；LLVM 构建的标准流直连运行时与 libc，显式执行步数限制保留宿主回退。标准库失败返回统一为 Result<T, Error>，具体错误实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 Box<T> 独占堆上的一个值，由 Box<T>::newBox(value) 装箱。get 复制值，take 消耗盒并移出值；两者在空盒上触发断言。close 和作用域退出清理剩余值。List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
@@ -11179,12 +11179,12 @@
     "name": "Result::unwrap",
     "owner": "Result",
     "signature": "T unwrap()",
-    "documentation": "提取成功载荷；None/Err 时 panic。\n\n**返回值**：T。",
+    "documentation": "提取成功载荷；None/Fail 时 panic。\n\n**返回值**：T。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "T",
-      "documentation": "提取成功载荷；None/Err 时 panic。"
+      "documentation": "提取成功载荷；None/Fail 时 panic。"
     },
     "errors": {
       "documentation": "自动加载，无需 import。错误输出包装和浮点去尾零由 ChaLi 实现；LLVM 构建的标准流直连运行时与 libc，显式执行步数限制保留宿主回退。标准库失败返回统一为 Result<T, Error>，具体错误实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 Box<T> 独占堆上的一个值，由 Box<T>::newBox(value) 装箱。get 复制值，take 消耗盒并移出值；两者在空盒上触发断言。close 和作用域退出清理剩余值。List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
@@ -11206,7 +11206,7 @@
     "name": "Result::unwrapOr",
     "owner": "Result",
     "signature": "T unwrapOr(T fallback)",
-    "documentation": "提取成功载荷；None/Err 时返回 fallback。\n\n**返回值**：T。",
+    "documentation": "提取成功载荷；None/Fail 时返回 fallback。\n\n**返回值**：T。",
     "comment": "",
     "parameters": [
       {
@@ -11218,7 +11218,7 @@
     ],
     "returns": {
       "type": "T",
-      "documentation": "提取成功载荷；None/Err 时返回 fallback。"
+      "documentation": "提取成功载荷；None/Fail 时返回 fallback。"
     },
     "errors": {
       "documentation": "自动加载，无需 import。错误输出包装和浮点去尾零由 ChaLi 实现；LLVM 构建的标准流直连运行时与 libc，显式执行步数限制保留宿主回退。标准库失败返回统一为 Result<T, Error>，具体错误实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 Box<T> 独占堆上的一个值，由 Box<T>::newBox(value) 装箱。get 复制值，take 消耗盒并移出值；两者在空盒上触发断言。close 和作用域退出清理剩余值。List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
@@ -11238,7 +11238,7 @@
     "name": "Result::expect",
     "owner": "Result",
     "signature": "T expect(String message)",
-    "documentation": "提取成功载荷；None/Err 时以 message 触发 panic。\n\n**返回值**：T。",
+    "documentation": "提取成功载荷；None/Fail 时以 message 触发 panic。\n\n**返回值**：T。",
     "comment": "",
     "parameters": [
       {
@@ -11250,7 +11250,7 @@
     ],
     "returns": {
       "type": "T",
-      "documentation": "提取成功载荷；None/Err 时以 message 触发 panic。"
+      "documentation": "提取成功载荷；None/Fail 时以 message 触发 panic。"
     },
     "errors": {
       "documentation": "自动加载，无需 import。错误输出包装和浮点去尾零由 ChaLi 实现；LLVM 构建的标准流直连运行时与 libc，显式执行步数限制保留宿主回退。标准库失败返回统一为 Result<T, Error>，具体错误实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 Box<T> 独占堆上的一个值，由 Box<T>::newBox(value) 装箱。get 复制值，take 消耗盒并移出值；两者在空盒上触发断言。close 和作用域退出清理剩余值。List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
@@ -11295,12 +11295,12 @@
     "name": "Result::error",
     "owner": "Result",
     "signature": "E error()",
-    "documentation": "提取 Err 载荷；Ok 时 panic。\n\n**返回值**：E。",
+    "documentation": "提取 Fail 载荷；Ok 时 panic。\n\n**返回值**：E。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "E",
-      "documentation": "提取 Err 载荷；Ok 时 panic。"
+      "documentation": "提取 Fail 载荷；Ok 时 panic。"
     },
     "errors": {
       "documentation": "自动加载，无需 import。错误输出包装和浮点去尾零由 ChaLi 实现；LLVM 构建的标准流直连运行时与 libc，显式执行步数限制保留宿主回退。标准库失败返回统一为 Result<T, Error>，具体错误实现 Error.toString()；文本诊断使用 MessageError，保留原始消息。String 提供字节查找、切片、替换、修剪、填充、连接、分割、ASCII 大小写与分类，以及严格 UTF-8 码点操作；普通方法返回独立值，字节索引与码点索引明确区分，详情见字符串方法文档。Option/Result 通过 match 或 isValue/isOk 分支处理；unwrap/expect 在失败分支触发 panic。浮点转整数向零截断，范围检查见各重载；字节编码默认小端。拥有值按值复制，引用的生命周期不得超过来源。 Box<T> 独占堆上的一个值，由 Box<T>::newBox(value) 装箱。get 复制值，take 消耗盒并移出值；两者在空盒上触发断言。close 和作用域退出清理剩余值。List.pop 空列表报错，列表/集合/映射的按位置访问需有效下标。Set/Map 的 has/contains 返回 int64 的 0/1；List 的同名接口返回 bool。Any.getReference/getOptional 的 const/mut 由接收上下文决定，返回引用受盒子寿命限制。内存内建接受有效存储引用，字节计数不是元素数量。$assert(condition) 和 $assert(condition,message) 为宏调用，自动添加调用点行号，宏体自带分号。",
@@ -12535,7 +12535,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2067,
+    "line": 2392,
     "page": "std-core.md",
     "anchor": "api-158"
   },
@@ -12581,7 +12581,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2075,
+    "line": 2400,
     "page": "std-core.md",
     "anchor": "api-159"
   },
@@ -12619,7 +12619,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2090,
+    "line": 2415,
     "page": "std-core.md",
     "anchor": "api-160"
   },
@@ -12646,7 +12646,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2296,
+    "line": 2621,
     "page": "std-core.md",
     "anchor": "api-161"
   },
@@ -12673,7 +12673,7 @@
     ],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2304,
+    "line": 2629,
     "page": "std-core.md",
     "anchor": "api-162"
   },
@@ -13223,7 +13223,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2004,
+    "line": 2329,
     "page": "std-core.md",
     "anchor": "api-180"
   },
@@ -13255,7 +13255,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2010,
+    "line": 2335,
     "page": "std-core.md",
     "anchor": "api-181"
   },
@@ -16014,7 +16014,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 1987,
+    "line": 2312,
     "page": "std-core.md",
     "anchor": "api-267"
   },
@@ -19826,7 +19826,7 @@
     "name": "fileOpen",
     "owner": "",
     "signature": "Result<File, Error> fileOpen(String path, String mode)",
-    "documentation": "按路径和模式打开文件，返回 Result<File,Error>，失败为 Err。\n\n**返回值**：Result<File, Error>。",
+    "documentation": "按路径和模式打开文件，返回 Result<File,Error>，失败为 Fail。\n\n**返回值**：Result<File, Error>。",
     "comment": "/* 文件包装函数由 std::io 模块公开，使用前导入 std::io。\n * 底层 __file* 入口由原生运行时提供。 */",
     "parameters": [
       {
@@ -19844,7 +19844,7 @@
     ],
     "returns": {
       "type": "Result<File, Error>",
-      "documentation": "按路径和模式打开文件，返回 Result<File,Error>，失败为 Err。"
+      "documentation": "按路径和模式打开文件，返回 Result<File,Error>，失败为 Fail。"
     },
     "errors": {
       "documentation": "整文件字节读写由 ChaLi 组合 FileStream 实现，分块检查预算。文件句柄仍由宿主托管，保留自动关闭与错误状态。FileStream 返回 Result<T, Error>，失败载荷保留具体 IoError 类型；read/write/seek 之前检查打开结果。read 按底层文件读取一行。close 显式关闭句柄。Reader/Writer/Seek 是用户可实现的接口，接口本身不创建文件。路径与模式由宿主文件系统解释。",
@@ -22935,7 +22935,7 @@
     "name": "tryFold",
     "owner": "",
     "signature": "Result<A,E> tryFold<T,A,E>(Iter<T> source, A initial, Result<A,E> fn(A, T) callback)",
-    "documentation": "累积到首个 Err 时短路返回，否则 Ok。\n\n**返回值**：Result<A,E>。",
+    "documentation": "累积到首个 Fail 时短路返回，否则 Ok。\n\n**返回值**：Result<A,E>。",
     "comment": "/**\n * @brief tryFold 迭代操作，保持 ChaLi 值复制和作用域清理。\n * @param source 来源游标、容器或连续存储。\n * @param initial 初始值或累加状态。\n * @param callback 处理元素或累加状态的函数。\n * @return 操作结果。\n */",
     "parameters": [
       {
@@ -22959,7 +22959,7 @@
     ],
     "returns": {
       "type": "Result<A,E>",
-      "documentation": "累积到首个 Err 时短路返回，否则 Ok。"
+      "documentation": "累积到首个 Fail 时短路返回，否则 Ok。"
     },
     "errors": {
       "documentation": "next 消费游标，peek 缓存下一项而不丢弃。转换器惰性执行，collect/fold/count 等终结操作消费输入。sizeHint 返回下界和可选上界。iter/iterMut 引用源容器，intoIter 拥有值；借用有效性由借用检查器约束。repeat/cycle 可无限，须 take 等限制后才能收集。chars 当前按字节推进，不能把它当 Unicode 字素迭代器。",
@@ -32022,7 +32022,7 @@
       "documentation": "无返回值。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": true
     },
@@ -32047,7 +32047,7 @@
       "documentation": "由实现者将当前值转换为文本，Formattable 重载接收 style。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32072,7 +32072,7 @@
       "documentation": "返回 ReflectValue 当前载荷的精确类型 ID。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32089,15 +32089,15 @@
     "name": "ReflectValue::asBool",
     "owner": "ReflectValue",
     "signature": "Result<bool,Error> asBool()",
-    "documentation": "精确提取 Bool 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<bool,Error>。",
+    "documentation": "精确提取 Bool 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<bool,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<bool,Error>",
-      "documentation": "精确提取 Bool 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 Bool 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32114,15 +32114,15 @@
     "name": "ReflectValue::asChar",
     "owner": "ReflectValue",
     "signature": "Result<char,Error> asChar()",
-    "documentation": "精确提取 Char 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<char,Error>。",
+    "documentation": "精确提取 Char 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<char,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<char,Error>",
-      "documentation": "精确提取 Char 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 Char 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32139,15 +32139,15 @@
     "name": "ReflectValue::asI8",
     "owner": "ReflectValue",
     "signature": "Result<int8,Error> asI8()",
-    "documentation": "精确提取 I8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<int8,Error>。",
+    "documentation": "精确提取 I8 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<int8,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<int8,Error>",
-      "documentation": "精确提取 I8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 I8 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32164,15 +32164,15 @@
     "name": "ReflectValue::asI16",
     "owner": "ReflectValue",
     "signature": "Result<int16,Error> asI16()",
-    "documentation": "精确提取 I16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<int16,Error>。",
+    "documentation": "精确提取 I16 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<int16,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<int16,Error>",
-      "documentation": "精确提取 I16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 I16 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32189,15 +32189,15 @@
     "name": "ReflectValue::asI32",
     "owner": "ReflectValue",
     "signature": "Result<int32,Error> asI32()",
-    "documentation": "精确提取 I32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<int32,Error>。",
+    "documentation": "精确提取 I32 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<int32,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<int32,Error>",
-      "documentation": "精确提取 I32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 I32 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32214,15 +32214,15 @@
     "name": "ReflectValue::asI64",
     "owner": "ReflectValue",
     "signature": "Result<int64,Error> asI64()",
-    "documentation": "精确提取 I64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<int64,Error>。",
+    "documentation": "精确提取 I64 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<int64,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<int64,Error>",
-      "documentation": "精确提取 I64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 I64 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32239,15 +32239,15 @@
     "name": "ReflectValue::asU8",
     "owner": "ReflectValue",
     "signature": "Result<uint8,Error> asU8()",
-    "documentation": "精确提取 U8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<uint8,Error>。",
+    "documentation": "精确提取 U8 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<uint8,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<uint8,Error>",
-      "documentation": "精确提取 U8 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 U8 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32264,15 +32264,15 @@
     "name": "ReflectValue::asU16",
     "owner": "ReflectValue",
     "signature": "Result<uint16,Error> asU16()",
-    "documentation": "精确提取 U16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<uint16,Error>。",
+    "documentation": "精确提取 U16 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<uint16,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<uint16,Error>",
-      "documentation": "精确提取 U16 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 U16 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32289,15 +32289,15 @@
     "name": "ReflectValue::asU32",
     "owner": "ReflectValue",
     "signature": "Result<uint32,Error> asU32()",
-    "documentation": "精确提取 U32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<uint32,Error>。",
+    "documentation": "精确提取 U32 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<uint32,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<uint32,Error>",
-      "documentation": "精确提取 U32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 U32 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32314,15 +32314,15 @@
     "name": "ReflectValue::asU64",
     "owner": "ReflectValue",
     "signature": "Result<uint64,Error> asU64()",
-    "documentation": "精确提取 U64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<uint64,Error>。",
+    "documentation": "精确提取 U64 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<uint64,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<uint64,Error>",
-      "documentation": "精确提取 U64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 U64 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32339,15 +32339,15 @@
     "name": "ReflectValue::asF32",
     "owner": "ReflectValue",
     "signature": "Result<float32,Error> asF32()",
-    "documentation": "精确提取 F32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<float32,Error>。",
+    "documentation": "精确提取 F32 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<float32,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<float32,Error>",
-      "documentation": "精确提取 F32 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 F32 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32364,15 +32364,15 @@
     "name": "ReflectValue::asF64",
     "owner": "ReflectValue",
     "signature": "Result<float64,Error> asF64()",
-    "documentation": "精确提取 F64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<float64,Error>。",
+    "documentation": "精确提取 F64 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<float64,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<float64,Error>",
-      "documentation": "精确提取 F64 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 F64 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32389,15 +32389,15 @@
     "name": "ReflectValue::asText",
     "owner": "ReflectValue",
     "signature": "Result<String,Error> asText()",
-    "documentation": "精确提取 Text 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<String,Error>。",
+    "documentation": "精确提取 Text 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。\n\n**返回值**：Result<String,Error>。",
     "comment": "",
     "parameters": [],
     "returns": {
       "type": "Result<String,Error>",
-      "documentation": "精确提取 Text 载荷；变体不匹配返回 Err(TypeMismatch)，不进行隐式数值转换。"
+      "documentation": "精确提取 Text 载荷；变体不匹配返回 Fail(TypeMismatch)，不进行隐式数值转换。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32429,7 +32429,7 @@
       "documentation": "按名称查找函数元数据，未找到时 None。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32461,7 +32461,7 @@
       "documentation": "按名称查找注解定义元数据。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32486,7 +32486,7 @@
       "documentation": "取得具体 T 的类型 ID。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32513,7 +32513,7 @@
       "documentation": "取得接口 I 的类型 ID。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32538,7 +32538,7 @@
       "documentation": "读取具体结构体的布局和成员元数据。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32565,7 +32565,7 @@
       "documentation": "读取枚举变体及成员元数据。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32590,7 +32590,7 @@
       "documentation": "读取接口方法及实现关系元数据。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32622,7 +32622,7 @@
       "documentation": "判断 T 是否实现给定接口 ID。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32647,7 +32647,7 @@
       "documentation": "取得类型上的注解列表。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32679,7 +32679,7 @@
       "documentation": "按字段名取得字段注解。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32711,7 +32711,7 @@
       "documentation": "按函数名取得函数注解。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32743,7 +32743,7 @@
       "documentation": "按方法名取得方法注解。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32775,7 +32775,7 @@
       "documentation": "按静态成员名取得注解。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32813,7 +32813,7 @@
       "documentation": "按名称动态调用函数，返回封闭值或 ReflectError。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32857,7 +32857,7 @@
       "documentation": "通过可写接收者动态调用实例方法。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32901,7 +32901,7 @@
       "documentation": "通过只读接收者动态调用允许的实例方法。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32939,7 +32939,7 @@
       "documentation": "动态调用 T 的静态方法。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -32983,7 +32983,7 @@
       "documentation": "通过可写枚举接收者动态调用方法。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -33027,7 +33027,7 @@
       "documentation": "通过只读枚举接收者动态调用方法。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -33065,7 +33065,7 @@
       "documentation": "动态调用枚举的静态方法。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -33097,7 +33097,7 @@
       "documentation": "动态调用 T 的构造函数，返回 T 或错误。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -33135,7 +33135,7 @@
       "documentation": "按字段名读取精确类型的独立值。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -33179,7 +33179,7 @@
       "documentation": "按字段名写入精确类型的值。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -33223,7 +33223,7 @@
       "documentation": "通过可写接口接收者动态调用方法。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -33267,7 +33267,7 @@
       "documentation": "通过只读接口接收者动态调用方法。"
     },
     "errors": {
-      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Err 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
+      "documentation": "要求工具链构建时同时启用 CHALI_WITH_REFLECTION=1 与 RUNTIME_WITH_REFLECTION=1，并在编译/运行时启用 --reflection。类型信息在具体类型和布局确定后生成；动态调用只支持 ReflectValue 的封闭载荷集合。Fail 区分未找到、歧义、参数数量、类型、接收者和未暴露等错误。",
       "preconditions": [],
       "panic": false
     },
@@ -33309,7 +33309,7 @@
     "name": "Regex::compile",
     "owner": "Regex",
     "signature": "static Result<Regex, Error> compile(String pattern)",
-    "documentation": "编译正则模式；失败返回 Err(Invalid)。\n\n**返回值**：Result<Regex, Error>。",
+    "documentation": "编译正则模式；失败返回 Fail(Invalid)。\n\n**返回值**：Result<Regex, Error>。",
     "comment": "",
     "parameters": [
       {
@@ -33321,7 +33321,7 @@
     ],
     "returns": {
       "type": "Result<Regex, Error>",
-      "documentation": "编译正则模式；失败返回 Err(Invalid)。"
+      "documentation": "编译正则模式；失败返回 Fail(Invalid)。"
     },
     "errors": {
       "documentation": "Regex 是 opcode；复制共享不可变编译模式，每次匹配使用独立状态，最后一个值释放时回收模式。compile 失败返回 RegexError::Invalid。find 返回首个匹配的字节下标或 None。capture 的 group=0 表示完整匹配。语法和 replacement 捕获组替换规则采用宿主 std::regex 的默认 ECMAScript 规则。",
@@ -40855,7 +40855,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2117,
+    "line": 2442,
     "page": "std-algorithms.md",
     "anchor": "api-0"
   },
@@ -40893,7 +40893,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2126,
+    "line": 2451,
     "page": "std-algorithms.md",
     "anchor": "api-1"
   },
@@ -40937,7 +40937,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2146,
+    "line": 2471,
     "page": "std-algorithms.md",
     "anchor": "api-2"
   },
@@ -40975,7 +40975,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2160,
+    "line": 2485,
     "page": "std-algorithms.md",
     "anchor": "api-3"
   },
@@ -41013,7 +41013,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2190,
+    "line": 2515,
     "page": "std-algorithms.md",
     "anchor": "api-4"
   },
@@ -41051,7 +41051,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2195,
+    "line": 2520,
     "page": "std-algorithms.md",
     "anchor": "api-5"
   },
@@ -41095,7 +41095,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2208,
+    "line": 2533,
     "page": "std-algorithms.md",
     "anchor": "api-6"
   },
@@ -41139,7 +41139,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2218,
+    "line": 2543,
     "page": "std-algorithms.md",
     "anchor": "api-7"
   },
@@ -41177,7 +41177,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2230,
+    "line": 2555,
     "page": "std-algorithms.md",
     "anchor": "api-8"
   },
@@ -41215,7 +41215,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2242,
+    "line": 2567,
     "page": "std-algorithms.md",
     "anchor": "api-9"
   },
@@ -41259,7 +41259,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2254,
+    "line": 2579,
     "page": "std-algorithms.md",
     "anchor": "api-10"
   },
@@ -41299,7 +41299,7 @@
     "examples": [],
     "sourceLanguage": "zh",
     "source": "source/chali_generic.cpp",
-    "line": 2265,
+    "line": 2590,
     "page": "std-algorithms.md",
     "anchor": "api-11"
   },

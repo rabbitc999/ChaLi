@@ -59,7 +59,7 @@ Option<int64> firstThree(int64 value) {
 }
 Option<int64> running(int64 mut& acc, int64 value) { acc = acc + value; return Option<int64>::Value(acc); }
 Result<int64, Error> checkedSum(int64 acc, int64 value) {
-    if (value == 3) { return Result<int64, Error>::Err(MessageError::from("three")); }
+    if (value == 3) { return Result<int64, Error>::Fail(MessageError::from("three")); }
     return Result<int64, Error>::Ok(acc + value);
 }
 struct Flaky : IterNext<int64> {
@@ -3245,7 +3245,7 @@ Result<A,E> tryFold<T,A,E>(Iter<T> source, A initial, Result<A,E> fn(A, T) callb
 
 **行为**
 
-累积到首个 Err 时短路返回，否则 Ok。
+累积到首个 Fail 时短路返回，否则 Ok。
 
 **参数**
 
@@ -3257,7 +3257,7 @@ Result<A,E> tryFold<T,A,E>(Iter<T> source, A initial, Result<A,E> fn(A, T) callb
 
 **返回值**
 
-`Result<A,E>`。累积到首个 Err 时短路返回，否则 Ok。
+`Result<A,E>`。累积到首个 Fail 时短路返回，否则 Ok。
 
 **错误与边界**
 

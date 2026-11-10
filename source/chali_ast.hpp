@@ -1046,7 +1046,7 @@ int M_StdContainerNamed(int moduleNameId, int typeNameId, int firstType, int sec
  */
 int M_StdNumberCtor(int moduleNameId, int kind, int value);
 /**
- * `result?`：取 Result::Ok 的值，Result::Err 则从当前函数提前返回。
+ * `result?`：取 Result::Ok 的值，Result::Fail 则从当前函数提前返回。
  */
 int M_Try(int value);
 /**

@@ -6,6 +6,7 @@
   "chali.installDependencies.title": "ChaLi: Download and Lock Module Dependencies",
   "chali.checkDependencies.title": "ChaLi: Check Module Dependencies Offline",
   "chali.openLibraries.title": "ChaLi: Open Dependency Cache",
+  "chali.previewTypeAlias.title": "ChaLi: Preview Type Alias Expansion",
   "chali.previewMacroExpansion.title": "ChaLi: Preview Macro Expansion",
   "chali.previewMacroExpansionOnce.title": "ChaLi: Expand Current Macro Once",
   "chali.previewMacroExpansionAtCursor.title": "ChaLi: Fully Expand Current Macro",

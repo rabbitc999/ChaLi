@@ -22,7 +22,7 @@ Result<T, MessageError> required<T>(Option<T> value) {
         Value(item) => { return Ok(item); }
         None => {
             MessageError error = MessageError::from("missing");
-            return Err(error);
+            return Fail(error);
         }
     }
 }
@@ -43,7 +43,7 @@ void main() {
     assert(result.isOk());
     result = MessageError::from("assigned");
     assert(result.isErr() && fail().isErr());
-    match(failCustom()) { Err(error) => { match(error) { IoError(text) => { assert(text == "custom"); } _ => { assert(false); } } } _ => { assert(false); } }
+    match(failCustom()) { Fail(error) => { match(error) { IoError(text) => { assert(text == "custom"); } _ => { assert(false); } } } _ => { assert(false); } }
     Choice number = (int64)42;
     Choice text = "text";
     Choice copied = identity(&number);

@@ -38,7 +38,7 @@ $end_macro
     interface = "interface Base{int64 value();};struct E:Base{int64 value(){return 3;}};struct F:Base{int64 value(){return 4;}};"
     cases.extend([
         ('interface',definition+interface+'void main(){E e;Base a=e;assert($SELECT(a,E(found),{yield found.value();})==3);}',None),
-        ('interface_sugar',definition+interface+'void main(){E e;Result<int64,Base> r=Result<int64,Base>::Err(e);assert($SELECT(r,Err::E(found),{yield found.value();})==3);}',None),
+        ('interface_sugar',definition+interface+'void main(){E e;Result<int64,Base> r=Result<int64,Base>::Fail(e);assert($SELECT(r,Fail::E(found),{yield found.value();})==3);}',None),
         ('typed_multiple',definition+interface+'enum Multi{Three(Base a,Base b,String text),Empty};void main(){E e;F f;Multi v=Multi::Three(e,f,"text");assert($SELECT(v,Three(E a,F b,text),{assert(text=="text");yield a.value()+b.value();})==7);}',None),
     ])
     if options.case:

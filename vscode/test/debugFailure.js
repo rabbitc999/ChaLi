@@ -1,6 +1,6 @@
 'use strict';
 
-/** 真实 GDB 验证内部代码步进过滤、panic／断言／受检查错误定位及 Result::Err 不视为异常。 */
+/** 真实 GDB 验证内部代码步进过滤、panic／断言／受检查错误定位及 Result::Fail 不视为异常。 */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -128,9 +128,9 @@ async function main() {
     assert((stop.text || '').includes(signalTarget.source + ':2'), JSON.stringify(stop));
   } finally { await signalClient.close(); }
 
-  // Result::Err 是普通值，不产生异常停点，程序正常结束。
+  // Result::Fail 是普通值，不产生异常停点，程序正常结束。
   const resultTarget = build('result', [
-    'Result<int64, int64> fail() { return Result<int64, int64>::Err(3); }',
+    'Result<int64, int64> fail() { return Result<int64, int64>::Fail(3); }',
     'void main() { Result<int64, int64> value = fail(); println("done"); }',
   ]);
   const resultClient = await start(resultTarget);
@@ -142,6 +142,6 @@ async function main() {
     await resultClient.event('terminated');
   } finally { await resultClient.close(); }
 
-  console.log('原生调试失败定位：内部代码步进过滤、panic／断言／越界消息与源码位置、Result::Err 不作异常通过');
+  console.log('原生调试失败定位：内部代码步进过滤、panic／断言／越界消息与源码位置、Result::Fail 不作异常通过');
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });

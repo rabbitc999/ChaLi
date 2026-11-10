@@ -9,8 +9,8 @@ Result<Result<String, MessageError>, MessageError> gen(int64 kind) {
     generated += 1;
     return match(kind) {
         1 => { Ok(Ok("type1")) }
-        2 => { Ok(Err(MessageError::from("type2"))) }
-        _ => { Err(MessageError::from("type3")) }
+        2 => { Ok(Fail(MessageError::from("type2"))) }
+        _ => { Fail(MessageError::from("type3")) }
     };
 }
 Result<String, Error> direct(int64 kind) {
@@ -37,9 +37,9 @@ Result<String, Error> genericRun(int64 kind) {
 Result<Result<Result<String, MessageError>, MessageError>, MessageError> deep(int64 kind) {
     Guard guard;
     generated += 1;
-    if (kind == 0) { return Err(MessageError::from("outer错误")); }
-    if (kind == 1) { return Ok(Err(MessageError::from("middle错误"))); }
-    if (kind == 2) { return Ok(Ok(Err(MessageError::from("inner错误")))); }
+    if (kind == 0) { return Fail(MessageError::from("outer错误")); }
+    if (kind == 1) { return Ok(Fail(MessageError::from("middle错误"))); }
+    if (kind == 2) { return Ok(Ok(Fail(MessageError::from("inner错误")))); }
     return Ok(Ok(Ok("deep成功")));
 }
 Result<String, Error> deepRun(int64 kind) {
@@ -55,7 +55,7 @@ void verify(Result<String, Error> value, int64 kind) {
             if (kind == 1) { assert(text.toString() == "type2"); }
             else { assert(text.toString() == "type3"); }
         }
-        Err(_) => { assert(false); }
+        Fail(_) => { assert(false); }
     }
 }
 void verifyDeep(Result<String, Error> value, int64 kind) {
@@ -66,7 +66,7 @@ void verifyDeep(Result<String, Error> value, int64 kind) {
             else if (kind == 1) { assert(text.toString() == "middle错误"); }
             else { assert(kind == 2 && text.toString() == "inner错误"); }
         }
-        Err(_) => { assert(false); }
+        Fail(_) => { assert(false); }
     }
 }
 struct OtherError : Error {
@@ -74,8 +74,8 @@ struct OtherError : Error {
     String toString() { assert(self.code == 9); return "Other=9"; }
 }
 Result<Result<String, MessageError>, OtherError> mixed(int64 kind) {
-    if (kind == 0) { OtherError error; error.code = 9; return Err(error); }
-    if (kind == 1) { return Ok(Err(MessageError::from("mixed-inner"))); }
+    if (kind == 0) { OtherError error; error.code = 9; return Fail(error); }
+    if (kind == 1) { return Ok(Fail(MessageError::from("mixed-inner"))); }
     return Ok(Ok("mixed-ok"));
 }
 Result<String, Error> mixedRun(int64 kind) {
@@ -87,7 +87,7 @@ void main() {
             Ok(text) => { assert(kind == 2 && text == "mixed-ok"); }
             MessageError(error) => { assert(kind == 1 && error.toString() == "mixed-inner"); }
             OtherError(error) => { assert(kind == 0 && error.code == 9); }
-            Err(_) => { assert(false); }
+            Fail(_) => { assert(false); }
         }
     }
     let callback = Result<String, Error> fn(int64 kind) { return direct(kind); };

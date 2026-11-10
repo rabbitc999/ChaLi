@@ -2,7 +2,7 @@
 enum Packet<T> {Empty, Value(T value);};
 Result<String,String> step(bool ok){
     List<String> scratch;scratch.push("scratch");
-    if(!ok){return Result<String,String>::Err("failure");}
+    if(!ok){return Result<String,String>::Fail("failure");}
     return Result<String,String>::Ok(scratch[0]+"!");
 }
 Result<String,String> propagate(bool ok){
@@ -46,7 +46,7 @@ void main(){
         let success=propagate(true);assert(success.unwrap()=="localscratch!");
         let failure=propagate(false);assert(failure.isErr());
         match(failure){
-            Result<String,String>::Err(error)=>{assert(error=="failure");}
+            Result<String,String>::Fail(error)=>{assert(error=="failure");}
             Result<String,String>::Ok(value)=>{assert(false);}
         }
     

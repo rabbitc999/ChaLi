@@ -12,9 +12,9 @@ int64 classify(Result<A, B> res)
     {
         OK(A a) => { result = a.value(); }
         Ok(_) => { result = -1; }
-        Err(E b) => { result = b.code(); }
-        Err(F c) => { result = c.code(); }
-        Err(_ d) => { result = d.code(); }
+        Fail(E b) => { result = b.code(); }
+        Fail(F c) => { result = c.code(); }
+        Fail(_ d) => { result = d.code(); }
     }
     return result;
 }
@@ -26,9 +26,9 @@ void main()
     F f;
     Other other;
     assert(classify(Result<A, B>::Ok(success)) == 7);
-    assert(classify(Result<A, B>::Err(e)) == 11);
-    assert(classify(Result<A, B>::Err(f)) == 22);
-    assert(classify(Result<A, B>::Err(other)) == 33);
+    assert(classify(Result<A, B>::Fail(e)) == 11);
+    assert(classify(Result<A, B>::Fail(f)) == 22);
+    assert(classify(Result<A, B>::Fail(other)) == 33);
     B error = f;
     match (error)
     {

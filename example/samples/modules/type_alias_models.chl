@@ -1,0 +1,13 @@
+module modules::type_alias_models;
+
+const int64 width = 3;
+struct SizedStorage<N:int64> { int64 length() { return N; } };
+type alias ScopedStorage<N:int64 = width> = SizedStorage<N>;
+
+interface Counter { int64 count(); };
+interface Gauge { type Reading; Reading reading(); };
+type alias Countable = Counter;
+type alias Measurable = Gauge;
+
+struct FailureText { int64 code; };
+type alias Reply<T = FailureText> = Result<T, FailureText>;

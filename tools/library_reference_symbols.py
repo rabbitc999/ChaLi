@@ -56,7 +56,7 @@ TYPE_DESCRIPTIONS = {
     'Regex': '拥有已编译正则表达式句柄的资源包装。',
     'Text': '字符串查找、比较、裁剪和替换的静态入口。',
     'Option': '可选值：Value(T) 表示存在，None 表示缺失。',
-    'Result': '操作结果：Ok(T) 表示成功，Err(E) 保存错误。',
+    'Result': '操作结果：Ok(T) 表示成功，Fail(E) 保存错误。',
     'Pair': '包含 first 和 second 的两个值，分别使用 K 与 V 类型。',
     'Math': '核心数学常量和数值操作的静态入口。',
     'Drop': '显式释放拥有资源的析构协议。',

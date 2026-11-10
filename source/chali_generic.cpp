@@ -30,6 +30,9 @@ Memory::Map<Memory::String, Memory::Set<Memory::String>> nominalTypeNames;
 
 Memory::Set<Memory::String> coreAliasShadows;
 
+/** @brief 用于检测别名与同模块类型声明重名。 */
+Memory::Map<Memory::String, std::size_t> nominalTypeDeclarations;
+
 /** @brief 类型实参来源模块的直接导入，仅在当前编译会话中使用。 */
 Memory::Map<Memory::String, Memory::Set<Memory::String>> nominalTypeImports;
 
@@ -524,6 +527,41 @@ void normalizeGenericSyntax(Memory::String &source)
             rounds = 0;
             annotated = false;
         }
+        if (rounds == 0 && !annotated && wordAt(source, at, "type")
+            && trim(source.substr(declaration, at - declaration)).empty())
+        {
+            std::size_t keyword = at + 4u;
+            skipSpace(source, keyword);
+            if (wordAt(source, keyword, "alias"))
+            {
+                auto name = keyword + 5u;
+                skipSpace(source, name);
+                if (name < source.size() && identStart(source[name]))
+                {
+                    auto end = name + 1u;
+                    while (end < source.size() && identPart(source[end])) ++end;
+                    auto open = end;
+                    skipSpace(source, open);
+                    std::size_t close = 0;
+                    if (open < source.size() && source[open] == '<' && balanced(source, open, '<', '>', close))
+                    {
+                        auto parameters = source.substr(open, close - open + 1u);
+                        auto head = source.substr(at, end - at);
+                        std::replace(parameters.begin(), parameters.end(), '\n', ' ');
+                        const auto newlines = std::count(source.begin() + end, source.begin() + close + 1u, '\n');
+                        edits.push_back({ at, close + 1u, "__chali_template" + parameters + " " + head });
+                        edits.back().text.append(static_cast<std::size_t>(newlines), '\n');
+                        at = close;
+                    }
+                    else if (open < source.size() && source[open] == '=')
+                    {
+                        edits.push_back({ at, at, "__chali_template<> " });
+                        at = end - 1u;
+                    }
+                    continue;
+                }
+            }
+        }
         // 首版不收集带前置注解的泛型模板，保留原文交给文法拒绝，避免丢失或错绑注解。
         if (source[at] != '<' || rounds != 0 || annotated) continue;
         const std::size_t open = at;
@@ -765,7 +803,7 @@ bool collect(Memory::String &source, const Memory::Vector<preprocess::LineOrigin
                 return false;
             }
             item.module = currentModule;
-            if (!parseParameters(source.substr(at + 1, paramsEnd - at - 1), item.params, error)) return false;
+            const auto parameters = source.substr(at + 1u, paramsEnd - at - 1u);
             std::size_t decl = paramsEnd + 1;
             skipSpace(source, decl);
             std::size_t nameAt = Memory::String::npos;
@@ -783,6 +821,12 @@ bool collect(Memory::String &source, const Memory::Vector<preprocess::LineOrigin
             {
                 nameAt = decl + 4u;
                 skipSpace(source, nameAt);
+                if (wordAt(source, nameAt, "alias"))
+                {
+                    auto candidate = nameAt + 5u;
+                    skipSpace(source, candidate);
+                    if (candidate < source.size() && identStart(source[candidate])) nameAt = candidate;
+                }
             }
             else
             {
@@ -855,6 +899,10 @@ bool collect(Memory::String &source, const Memory::Vector<preprocess::LineOrigin
             while (nameEnd < source.size() && identPart(source[nameEnd])) ++nameEnd;
             item.name = source.substr(nameAt, nameEnd - nameAt);
             item.sourceName = item.name;
+            auto keyword = decl + 4u;
+            skipSpace(source, keyword);
+            const bool aliasDecl = hostTypeDecl && keyword != nameAt;
+            if ((!aliasDecl || !trim(parameters).empty()) && !parseParameters(parameters, item.params, error)) return false;
             const std::size_t semicolon = source.find(';', nameEnd);
             const std::size_t body = source.find('{', nameEnd);
             const bool hostFunctionDecl = !structDecl && !enumDecl && !interfaceDecl && !hostTypeDecl && semicolon != Memory::String::npos && (body == Memory::String::npos || semicolon < body);
@@ -884,6 +932,17 @@ bool collect(Memory::String &source, const Memory::Vector<preprocess::LineOrigin
                 end = bodyEnd + 1;
                 skipSpace(source, end);
                 if ((structDecl || enumDecl || interfaceDecl) && end < source.size() && source[end] == ';') ++end;
+            }
+            if (aliasDecl)
+            {
+                auto equal = nameEnd;
+                skipSpace(source, equal);
+                if (equal >= semicolon || source[equal] != '='
+                    || (item.aliasTarget = trim(source.substr(equal + 1u, semicolon - equal - 1u))).empty())
+                {
+                    error = "类型别名 " + item.name + " 需要 = 类型;";
+                    return false;
+                }
             }
             item.declaration = source.substr(decl, end - decl);
             item.nameOffset = nameAt - decl;
@@ -1178,9 +1237,11 @@ void collectCoreAliasShadows(const Memory::String &source)
 {
     coreAliasShadows.clear();
     nominalTypeNames.clear();
+    nominalTypeDeclarations.clear();
     genericTypeModules.clear();
     nominalTypeImports.clear();
     Memory::String module;
+    int braces = 0;
     for (std::size_t at = 0; at < source.size();)
     {
         if (source.compare(at, 2, "//") == 0)
@@ -1210,6 +1271,8 @@ void collectCoreAliasShadows(const Memory::String &source)
         }
         if (!identStart(source[at]))
         {
+            if (source[at] == '{') ++braces;
+            if (source[at] == '}') --braces;
             ++at;
             continue;
         }
@@ -1235,11 +1298,19 @@ void collectCoreAliasShadows(const Memory::String &source)
         }
         if (word != "struct" && word != "enum" && word != "type" && word != "interface" && word != "opcode") continue;
         skipSpace(source, at);
-        const auto name = at;
+        auto name = at;
+        if (word == "type" && wordAt(source, at, "alias"))
+        {
+            auto candidate = at + 5u;
+            skipSpace(source, candidate);
+            if (candidate < source.size() && identStart(source[candidate])) at = name = candidate;
+        }
         while (at < source.size() && identPart(source[at])) ++at;
         const auto bare = source.substr(name, at - name);
         if (word != "opcode" || module != "std::core") coreAliasShadows.insert(bare);
-        nominalTypeNames[bare].insert(module.empty() ? bare : module + "::" + bare);
+        const auto qualified = module.empty() ? bare : module + "::" + bare;
+        nominalTypeNames[bare].insert(qualified);
+        if (braces == 0) ++nominalTypeDeclarations[qualified];
         std::size_t open = at;
         skipSpace(source, open);
         if (open < source.size() && source[open] == '<') genericTypeModules[bare] = module;
@@ -1295,6 +1366,8 @@ Memory::String canonicalTypeImpl(Memory::String value, const Memory::String *mod
         }
     }
     /* 复合类型先递归归一叶子，避免别名因引用或元组包装产生不同实例。 */
+    if (value.size() > 2u && value.compare(value.size() - 2u, 2u, "[]") == 0)
+        return canonicalTypeImpl(value.substr(0, value.size() - 2u), module, error) + "[]";
     for (const Memory::String suffix : { Memory::String(" const&"), Memory::String(" mut&") })
     {
         if (value.size() > suffix.size() && value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0)
@@ -1564,6 +1637,61 @@ bool checkTypeNesting(const Memory::String &text, Memory::String &error)
     return true;
 }
 
+/** @brief 在递归改写退出时恢复当前别名展开链。 */
+struct AliasExpansionScope
+{
+    Memory::Vector<Memory::String> &chain;
+    std::size_t size;
+
+    /** @brief 恢复进入本层前的别名链长度。 */
+    ~AliasExpansionScope() { chain.resize(size); }
+};
+
+/**
+ * @brief 判断裸别名是否出现在声明类型或限定类型成员的位置。
+ * @param text 待改写源码。
+ * @param begin 完整名称起点。
+ * @param after 名称后的首个非空白位置。
+ * @return 能按类型解释时返回 true。
+ */
+bool bareAliasUse(const Memory::String &text, std::size_t begin, std::size_t after)
+{
+    skipSpace(text, after);
+    auto before = begin;
+    while (before && std::isspace(static_cast<unsigned char>(text[before - 1u]))) --before;
+    if (before && text[before - 1u] == '.') return false;
+    if (text.compare(after, 2, "::") == 0) return true;
+    auto previous = before;
+    while (previous && identPart(text[previous - 1u])) --previous;
+    const auto prefix = text.substr(previous, before - previous);
+    if (prefix == "impl" || prefix == "new") return true;
+    if (after < text.size() && text[after] == '('
+        && (prefix.empty() || prefix == "return" || prefix == "yield" || prefix == "move"))
+        return true;
+    if (after == text.size()) return false;
+    if (text.compare(after, 2, "[]") == 0)
+    {
+        after += 2u;
+        skipSpace(text, after);
+    }
+    if (wordAt(text, after, "const") || wordAt(text, after, "mut"))
+    {
+        after += wordAt(text, after, "const") ? 5u : 3u;
+        skipSpace(text, after);
+    }
+    if (after < text.size() && text[after] == '&' && text.compare(after, 2, "&&") != 0
+        && (prefix.empty() || prefix == "const" || prefix == "static"))
+    {
+        ++after;
+        skipSpace(text, after);
+    }
+    if (after < text.size() && identStart(text[after])) return true;
+    if (before && text[before - 1u] == ':' && (before < 2u || text[before - 2u] != ':')
+        && (text[after] == '{' || text[after] == ',' || text[after] == '='))
+        return true;
+    return false;
+}
+
 /**
  * @brief 按已知模板改写泛型使用点并排队等待展开。
  * @param text 需要单态化的声明或表达式文本。
@@ -1579,7 +1707,7 @@ bool checkTypeNesting(const Memory::String &text, Memory::String &error)
 bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &generics,
              const Memory::Map<Memory::String, Memory::Set<Memory::String>> &implemented,
              Memory::Map<Memory::String, Expansion> &made, Memory::Vector<Memory::String> &pending,
-             Memory::String &error, std::size_t depth, const Memory::String &initialModule)
+             Memory::String &error, std::size_t depth, const Memory::String &initialModule, bool typeFragment, bool recordAliasUses)
 {
     if (depth == 0) error.clear();
     if (depth >= 128u)
@@ -1589,6 +1717,12 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
     }
     Memory::String output;
     Memory::String lookupModule = initialModule;
+    auto &aliasChain = session.aliasExpansionChain;
+    Memory::Vector<bool> typeGroups;
+    bool typeHead = false, interfaceList = false;
+    bool typeDefinition = false, typeTarget = false;
+    const bool hasAliases = std::any_of(generics.begin(), generics.end(),
+                                        [](const auto &entry) { return !entry.second.aliasTarget.empty(); });
     Memory::Map<Memory::String, Memory::String> scopedGenerics;
     for (const auto &entry : generics)
         scopedGenerics[entry.second.module + "::" + (entry.second.sourceName.empty() ? entry.second.name : entry.second.sourceName)] = entry.first;
@@ -1628,12 +1762,42 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
         }
         if (!identStart(text[at]))
         {
+            if (typeHead && text[at] == ':' && text.compare(at, 2, "::") != 0
+                && (at == 0 || text[at - 1u] != ':'))
+                interfaceList = true;
+            if (typeDefinition && text[at] == '=') typeTarget = true;
+            if (text[at] == '{' || text[at] == ';')
+                typeHead = interfaceList = typeDefinition = typeTarget = false;
+            if (hasAliases && !typeFragment && text[at] == '(')
+            {
+                auto head = at;
+                while (head && std::isspace(static_cast<unsigned char>(text[head - 1u]))) --head;
+                auto word = head;
+                while (word && identPart(text[word - 1u])) --word;
+                const auto opener = text.substr(word, head - word);
+                const bool typed = opener == "fn" || opener == "__typeTag" || opener == "__rawSize" || opener == "__rawAlign";
+                std::size_t close = 0;
+                const bool tuple = (head == 0 || !identPart(text[head - 1u]))
+                    && balanced(text, at, '(', ')', close)
+                    && bareAliasUse(text, at, close + 1u);
+                typeGroups.push_back(typed || tuple || (!typeGroups.empty() && typeGroups.back()));
+            }
+            else if (hasAliases && text[at] == ')' && !typeGroups.empty())
+                typeGroups.pop_back();
             output += text[at++];
             continue;
         }
         const std::size_t begin = at++;
         while (at < text.size() && identPart(text[at])) ++at;
         const Memory::String name = text.substr(begin, at - begin);
+        if (hasAliases && !typeFragment && (name == "struct" || name == "enum" || name == "interface"))
+            typeHead = true;
+        if (hasAliases && !typeFragment && name == "type")
+        {
+            auto previous = begin;
+            while (previous && std::isspace(static_cast<unsigned char>(text[previous - 1u]))) --previous;
+            typeDefinition = previous == 0 || text[previous - 1u] == '{' || text[previous - 1u] == '}' || text[previous - 1u] == ';';
+        }
         if (name == "module")
         {
             auto moduleBegin = at;
@@ -1643,6 +1807,16 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
             lookupModule = text.substr(moduleBegin, moduleEnd - moduleBegin);
             if (lookupModule == "__root") lookupModule.clear();
         }
+        if (hasAliases && (name == "module" || name == "import"))
+        {
+            const auto end = text.find(';', at);
+            if (end != Memory::String::npos)
+            {
+                output += text.substr(begin, end - begin + 1u);
+                at = end + 1u;
+                continue;
+            }
+        }
         auto generic = generics.find(name);
         Memory::String qualifier;
         if (begin >= 2 && text.compare(begin - 2, 2, "::") == 0)
@@ -1651,18 +1825,55 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
             while (qualifierBegin > 0 && (identPart(text[qualifierBegin - 1]) || text[qualifierBegin - 1] == ':')) --qualifierBegin;
             qualifier = text.substr(qualifierBegin, begin - qualifierBegin - 2);
         }
-        const auto scope = qualifier.empty() ? lookupModule : qualifier;
+        const auto scope = qualifier.empty() ? lookupModule : qualifier == "__root" ? Memory::String() : qualifier;
         const auto scoped = scopedGenerics.find(scope + "::" + name);
         if (scoped != scopedGenerics.end()) generic = generics.find(scoped->second);
         std::size_t open = at;
         while (open < text.size() && std::isspace(static_cast<unsigned char>(text[open]))) ++open;
+        const auto imports = nominalTypeImports.find(lookupModule);
+        if (generic != generics.end() && !generic->second.aliasTarget.empty()
+            && scoped == scopedGenerics.end())
+            generic = generics.end();
+        const auto nominal = hasAliases ? nominalTypeNames.find(name) : nominalTypeNames.end();
+        const bool localType = nominal != nominalTypeNames.end()
+            && nominal->second.count(lookupModule.empty() ? name : lookupModule + "::" + name);
+        if (hasAliases && qualifier.empty() && scoped == scopedGenerics.end() && !localType
+            && imports != nominalTypeImports.end())
+        {
+            auto importedAlias = generics.end();
+            for (const auto &owner : imports->second)
+            {
+                const auto found = scopedGenerics.find(owner + "::" + name);
+                if (found == scopedGenerics.end()) continue;
+                auto candidate = generics.find(found->second);
+                if (candidate->second.aliasTarget.empty()) continue;
+                if (importedAlias != generics.end() && (typeFragment || interfaceList || typeTarget || bareAliasUse(text, begin, open)
+                    || (open < text.size() && text[open] == '<')))
+                {
+                    error = "类型别名 " + name + " 有歧义，请使用模块限定名";
+                    return false;
+                }
+                importedAlias = candidate;
+            }
+            if (importedAlias != generics.end()) generic = importedAlias;
+        }
+        const bool alias = generic != generics.end() && !generic->second.aliasTarget.empty();
+        const auto wholeBegin = qualifier.empty() ? begin : begin - qualifier.size() - 2u;
+        const bool angles = open < text.size() && text[open] == '<';
+        bool typeGroup = false;
+        if (alias && !typeGroups.empty() && typeGroups.back())
+        {
+            auto before = wholeBegin;
+            while (before && std::isspace(static_cast<unsigned char>(text[before - 1u]))) --before;
+            typeGroup = before && (text[before - 1u] == '(' || text[before - 1u] == ',');
+        }
+        const bool bareAlias = alias && !angles && (typeFragment || typeGroup || interfaceList || typeTarget || bareAliasUse(text, wholeBegin, open));
         const auto requiredModule = generic == generics.end() ? Memory::String() : generic->second.requiredQualifier.empty() ? Memory::String() : generic->second.requiredQualifier.substr(0, generic->second.requiredQualifier.size() - 2u);
         const bool explicitQualifierMatches = generic == generics.end() || generic->second.requiredQualifier.empty() || (begin >= generic->second.requiredQualifier.size() && text.compare(begin - generic->second.requiredQualifier.size(), generic->second.requiredQualifier.size(), generic->second.requiredQualifier) == 0);
-        const auto imports = nominalTypeImports.find(lookupModule);
         const bool importedQualifierMatches = qualifier.empty() && !requiredModule.empty()
             && (requiredModule == "std::core" || lookupModule == requiredModule || (imports != nominalTypeImports.end() && imports->second.count(requiredModule)));
         const bool qualifierMatches = explicitQualifierMatches || importedQualifierMatches;
-        if (generic == generics.end() || !qualifierMatches || open >= text.size() || text[open] != '<')
+        if (generic == generics.end() || !qualifierMatches || (!angles && !bareAlias))
         {
             output += generic != generics.end() && generic->second.name != name && open < text.size() && text[open] == '(' ? generic->second.name : name;
             continue;
@@ -1672,7 +1883,8 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
         const bool functionTemplate = !generic->second.intrinsic && !wordAt(declaration, 0, "struct")
                                       && !wordAt(declaration, 0, "enum") && !wordAt(declaration, 0, "interface")
                                       && !wordAt(declaration, 0, "type");
-        const bool closed = balanced(text, open, '<', '>', close);
+        const bool closed = bareAlias || balanced(text, open, '<', '>', close);
+        if (bareAlias) close = at - 1u;
         // 同名局部值的比较不能跨越语句或函数体寻找模板右括号。
         if (functionTemplate)
         {
@@ -1699,7 +1911,7 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
         }
         // 宏类型模式保留类型应用，不能把通配符作为普通实参单态化。
         bool wildcard = false;
-        for (auto mark = text.find('?', open + 1); mark < close; mark = text.find('?', mark + 1))
+        for (auto mark = text.find('?', open + 1); !bareAlias && mark < close; mark = text.find('?', mark + 1))
         {
             auto before = mark;
             while (before > open && std::isspace(static_cast<unsigned char>(text[before - 1]))) --before;
@@ -1717,13 +1929,13 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
             at = close + 1;
             continue;
         }
-        Memory::Vector<Memory::String> args = splitTop(text.substr(open + 1, close - open - 1));
+        auto args = bareAlias ? Memory::Vector<Memory::String>{} : splitTop(text.substr(open + 1, close - open - 1));
         for (std::size_t index = 0; index < args.size(); ++index)
         {
             auto &arg = args[index];
             if (!checkTypeNesting(arg, error)) return false;
-            if (!rewrite(arg, generics, implemented, made, pending, error, depth + 1u, lookupModule)) return false;
             if (index < generic->second.params.size() && generic->second.params[index].constant) continue;
+            if (!rewrite(arg, generics, implemented, made, pending, error, depth + 1u, lookupModule, true, recordAliasUses)) return false;
             arg = lookupModule.empty() ? canonicalType(arg) : canonicalTypeInModule(arg, lookupModule, error);
             if (!error.empty()) return false;
         }
@@ -1734,13 +1946,41 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
             error = name + " 至多接受 " + Memory::toString(generic->second.params.size()) + " 个类型实参";
             return false;
         }
+        AliasExpansionScope aliasScope{ aliasChain, aliasChain.size() };
+        if (alias)
+        {
+            const auto &key = generic->second.name;
+            if (std::find(aliasChain.begin(), aliasChain.end(), key) != aliasChain.end())
+            {
+                error = "类型别名形成循环：";
+                for (const auto &entry : aliasChain) error += entry + " -> ";
+                error += key;
+                return false;
+            }
+            aliasChain.push_back(key);
+        }
         Memory::Map<Memory::String, Memory::String> bindings;
         auto constants = constantArguments;
-        const auto evaluateArgument = [&](std::size_t index, Memory::String &argument) {
+        const auto evaluateArgument = [&](std::size_t index, Memory::String &argument, const Memory::String &module) {
             const auto &parameter = generic->second.params[index];
             if (!parameter.constant) return true;
+            Memory::Map<Memory::String, Memory::String> scopedConstants;
+            const bool scoped = !module.empty() && !aliasChain.empty();
+            if (scoped)
+            {
+                scopedConstants = constants;
+                const auto prefix = module + "::";
+                for (const auto &entry : constantArguments)
+                {
+                    if (entry.first.compare(0, prefix.size(), prefix) != 0
+                        || entry.first.find("::", prefix.size()) != Memory::String::npos)
+                        continue;
+                    const auto bare = entry.first.substr(prefix.size());
+                    if (!bindings.count(bare)) scopedConstants[bare] = entry.second;
+                }
+            }
             Memory::String problem;
-            const auto value = chali_syntax::evaluateConstant(argument, constants, problem);
+            const auto value = chali_syntax::evaluateConstant(argument, scoped ? scopedConstants : constants, problem);
             if (!problem.empty() || value.string)
             {
                 error = name + " 的 const 泛型实参 " + parameter.name + " 必须是 int64 编译期常量：" + (problem.empty() ? argument : problem);
@@ -1752,7 +1992,7 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
         };
         for (std::size_t i = 0; i < args.size(); ++i)
         {
-            if (!evaluateArgument(i, args[i])) return false;
+            if (!evaluateArgument(i, args[i], lookupModule)) return false;
             bindings[generic->second.params[i].name] = args[i];
         }
         while (args.size() < generic->second.params.size())
@@ -1765,10 +2005,11 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
             }
             auto fallback = substituteIdentifiers(parameter.fallback, bindings);
             if (!checkTypeNesting(fallback, error)) return false;
-            if (!rewrite(fallback, generics, implemented, made, pending, error, depth + 1u, generic->second.module)) return false;
+            if (!parameter.constant && !rewrite(fallback, generics, implemented, made, pending, error,
+                                                depth + 1u, generic->second.module, true)) return false;
             if (!parameter.constant) fallback = generic->second.module.empty() ? canonicalType(fallback) : canonicalTypeInModule(fallback, generic->second.module, error);
             if (!error.empty()) return false;
-            if (!evaluateArgument(args.size(), fallback)) return false;
+            if (!evaluateArgument(args.size(), fallback, generic->second.module)) return false;
             bindings[parameter.name] = fallback;
             args.push_back(std::move(fallback));
         }
@@ -1776,8 +2017,43 @@ bool rewrite(Memory::String &text, const Memory::Map<Memory::String, Generic> &g
         for (const auto &parameter : generic->second.params)
         {
             auto constraint = substituteIdentifiers(parameter.constraint, bindings);
-            if (!constraint.empty() && !rewrite(constraint, generics, implemented, made, pending, error, depth + 1u, generic->second.module)) return false;
+            if (!constraint.empty() && !rewrite(constraint, generics, implemented, made, pending, error, depth + 1u, generic->second.module, true)) return false;
             constraints.push_back(std::move(constraint));
+        }
+        if (alias)
+        {
+            auto target = substituteIdentifiers(generic->second.aliasTarget, bindings);
+            const auto &module = generic->second.module;
+            if (!rewrite(target, generics, implemented, made, pending, error, depth + 1u, module, true)) return false;
+            target = canonicalTypeInModule(std::move(target), module, error);
+            if (!error.empty()) return false;
+            if (std::any_of(constraints.begin(), constraints.end(), [](const auto &value) { return !value.empty(); }))
+                session.aliasConstraints.emplace(mangle(generic->second.name, args),
+                                                 Expansion{ &generic->second, args, name, std::move(constraints) });
+            if (recordAliasUses && session.editorAliasTypes.size() < 4096u)
+            {
+                auto spelling = text.substr(wholeBegin, close + 1u - wholeBegin);
+                spelling.erase(std::remove_if(spelling.begin(), spelling.end(), [](unsigned char ch) { return std::isspace(ch); }), spelling.end());
+                session.editorAliasTypes.emplace(std::make_pair(lookupModule, std::move(spelling)), target);
+            }
+            if (interfaceList && target.find("::") != Memory::String::npos)
+            {
+                // 接口列表的文法只接收名称，语义层将内部名称还原成已解析的限定名。
+                const auto internal = mangle("__chali_alias_interface", { target });
+                session.aliasInterfaceNames.emplace(internal, target);
+                target = internal;
+            }
+            if (!qualifier.empty()) output.resize(output.size() - qualifier.size() - 2u);
+            auto suffix = close + 1u;
+            skipSpace(text, suffix);
+            const auto function = target.find(" fn(");
+            if (function != Memory::String::npos && target.find('<') > function && target.front() != '('
+                && suffix < text.size() && (text[suffix] == '&' || wordAt(text, suffix, "const") || wordAt(text, suffix, "mut")))
+                target = "(" + target + ")";
+            output += target;
+            output.append(static_cast<std::size_t>(std::count(text.begin() + begin, text.begin() + close + 1u, '\n')), '\n');
+            at = close + 1u;
+            continue;
         }
         const Memory::String specialized = mangle(generic->second.name, args);
         if (generic->second.intrinsic) session.intrinsicArguments[specialized] = args;
@@ -1838,6 +2114,55 @@ bool validateConstraints(const Memory::Map<Memory::String, Expansion> &made,
                 return false;
             }
         }
+    }
+    return true;
+}
+
+/**
+ * @brief 检查别名定义和默认实参中的递归展开，包括尚未使用的别名。
+ * @param generics 当前模块图中的泛型定义和别名。
+ * @param error 失败时接收别名声明的诊断。
+ * @return 所有别名都可以完成符号展开时返回 true。
+ */
+bool validateAliasDeclarations(const Memory::Map<Memory::String, Generic> &generics, Memory::String &error)
+{
+    if (std::none_of(generics.begin(), generics.end(),
+                     [](const auto &entry) { return !entry.second.aliasTarget.empty(); }))
+        return true;
+    auto symbolic = generics;
+    for (auto &entry : symbolic)
+        for (auto &parameter : entry.second.params)
+        {
+            parameter.constant = false;
+            parameter.constraint.clear();
+        }
+    for (const auto &entry : symbolic)
+    {
+        const auto &alias = entry.second;
+        if (alias.aliasTarget.empty()) continue;
+        const auto name = alias.module.empty() ? alias.sourceName : alias.module + "::" + alias.sourceName;
+        const auto declaration = nominalTypeDeclarations.find(name);
+        if (declaration != nominalTypeDeclarations.end() && declaration->second > 1u)
+        {
+            error = "类型别名与类型声明重名：" + name;
+            return false;
+        }
+        Memory::Map<Memory::String, Memory::String> bindings;
+        for (std::size_t i = 0; i < alias.params.size(); ++i)
+            bindings[alias.params[i].name] = "McAliasParameter" + Memory::toString(i);
+        Memory::Map<Memory::String, Expansion> made;
+        Memory::Vector<Memory::String> pending;
+        Memory::Map<Memory::String, Memory::Set<Memory::String>> implemented;
+        session.aliasExpansionChain.push_back(alias.name);
+        AliasExpansionScope scope{ session.aliasExpansionChain, 0u };
+        for (const auto &parameter : alias.params)
+        {
+            if (!parameter.hasDefault) continue;
+            auto fallback = substituteIdentifiers(parameter.fallback, bindings);
+            if (!rewrite(fallback, symbolic, implemented, made, pending, error, 0u, alias.module, true)) return false;
+        }
+        auto target = substituteIdentifiers(alias.aliasTarget, bindings);
+        if (!rewrite(target, symbolic, implemented, made, pending, error, 0u, alias.module, true)) return false;
     }
     return true;
 }
@@ -2375,6 +2700,7 @@ interface Closeable { void close(); };
                  noExpansions, noPending, error)) return false;
     normalizeGenericSyntax(result.text);
     if (!collect(result.text, result.lineMap, generics, error)) return false;
+    if (!validateAliasDeclarations(generics, error)) return false;
     Memory::Set<Memory::String> templateNames;
     for (auto &entry : generics)
     {
@@ -2389,7 +2715,7 @@ interface Closeable { void close(); };
     collectInterfaces(result.text, implemented);
     auto &made = session.made;
     auto &pending = session.pending;
-    if (!rewrite(result.text, generics, implemented, made, pending, error)) return false;
+    if (!rewrite(result.text, generics, implemented, made, pending, error, 0u, {}, false, true)) return false;
     Memory::String generated;
     Memory::Vector<preprocess::LineOrigin> generatedOrigins;
     for (std::size_t index = 0; index < pending.size(); ++index)
@@ -2453,7 +2779,8 @@ bool instantiate(const Memory::String &name, const Memory::Vector<Memory::String
  */
 bool validateRegisteredConstraints(RegisteredInterfaceCheck registered, Memory::String &error)
 {
-    return validateConstraints(session.made, session.implemented, error, registered);
+    return validateConstraints(session.made, session.implemented, error, registered)
+           && validateConstraints(session.aliasConstraints, session.implemented, error, registered);
 }
 
 #include "generic/standard_templates.cpp"
