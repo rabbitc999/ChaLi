@@ -10,22 +10,6 @@ Distinguish type parameters, integer constants, associated types and generic int
 
 Prefer omitting function type arguments when the arguments determine them. After importing `std::algorithms`, write `foldValue(items, 0, add)`; the list element type, initial value, and callback must be compatible. Type declarations still use `List<int64>`. Add explicit type arguments or a module qualifier when inference cannot determine a unique meaning.
 
-## Transparent generic aliases
-
-Use `type alias` to give an existing type another name. Here the error type is fixed to `String` and the success type has a default.
-
-```chali
-type alias TextResult<T = int64> = Result<T, String>;
-
-void main() {
-    TextResult answer = Ok(42);
-    TextResult<> same = answer;
-    TextResult<String> missing = Fail("no text");
-}
-```
-
-You can omit the angle brackets when every generic parameter has a default. The alias shares the type identity of its target.
-
 ## 18.1 Parameterize a repeated calculation
 
 <!-- verify-book -->
@@ -85,6 +69,51 @@ Buffer's T is an element type parameter and N is an int64 constant parameter. N 
 
 `Buffer<int64, 4>` supplies integer elements and four slots. Writing slot zero gives the output four and seven. Valid indices are zero through three; the returned length four is not the final index. Different N values affect the instantiated type and layout rather than acting like ordinary runtime assignments.
 
+### Transparent type aliases
+
+A module-level `type alias` gives a type another name. This example names `uint8` as `Byte` and gives `Block` defaults for its element type and capacity. `TextResult` fixes the error type of `Result` while leaving the success type for the caller to supply.
+
+<!-- verify-book -->
+```chali
+struct Buffer<T, N: int64>
+{
+    T data[N];
+};
+
+type alias Byte = uint8;
+type alias Block<T = Byte, N: int64 = 4> = Buffer<T, N>;
+type alias TextResult<T> = Result<T, String>;
+
+void main()
+{
+    Block block;
+    block.data[0] = 7;
+    Block<> same = block;
+    Buffer<uint8, 4> direct = same;
+    println("{}", direct.data[0]);
+
+    Block<int64> numbers;
+    numbers.data[3] = 42;
+    println("{}", numbers.data[3]);
+
+    TextResult<int64> result = Fail("missing");
+    match (result)
+    {
+        Ok(value) => { println("{}", value); }
+        Fail(message) => { println("{}", message); }
+    }
+}
+```
+
+```text
+7
+42
+missing
+```
+
+`Block block;` omits the angle brackets because both `T` and `N` have defaults. `Block`, `Block<>`, and `Buffer<uint8, 4>` denote the same type, so assignment between them works directly. `Block<int64>` supplies the element type and takes the default capacity of 4. `TextResult` requires its type argument, so the example uses `TextResult<int64>`. It expands to `Result<int64, String>`, with the usual `Ok` and `Fail` variants for construction and matching.
+
+To use an alias across modules, you can qualify it with its module name. The target type and defaults resolve in the declaring module, while explicit arguments resolve in the module that uses the alias. An alias can refer to another alias as long as the chain is acyclic.
 
 ## 18.3 Express required capabilities
 
