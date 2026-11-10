@@ -133,9 +133,38 @@ class LspCache
     size_t unitBytes_ = 0, diskBytes_ = 0;
     uint64_t unitClock_ = 0, diskClock_ = 0;
     std::string stamp_;
+    /**
+     * @brief 计算本机时区当天的两个午夜，保留夏令时切换日的真实长度。
+     * @return 当天的开始与结束；系统时间转换失败时两端相等。
+     */
+    static std::pair<fs::file_time_type, fs::file_time_type> today()
+    {
+        using namespace std::chrono;
+        const auto clock = system_clock::now();
+        const auto stamp = system_clock::to_time_t(clock);
+        std::tm local{};
+#if defined(_WIN32)
+        if (localtime_s(&local, &stamp) != 0) return {};
+#else
+        if (!localtime_r(&stamp, &local)) return {};
+#endif
+        local.tm_hour = local.tm_min = local.tm_sec = 0;
+        local.tm_isdst = -1;
+        const auto midnight = std::mktime(&local);
+        ++local.tm_mday;
+        local.tm_hour = local.tm_min = local.tm_sec = 0;
+        local.tm_isdst = -1;
+        const auto tomorrow = std::mktime(&local);
+        if (midnight == std::time_t(-1) || tomorrow == std::time_t(-1)) return {};
+        const auto fileClock = fs::file_time_type::clock::now();
+        return { fileClock + duration_cast<fs::file_time_type::duration>(system_clock::from_time_t(midnight) - clock),
+                 fileClock + duration_cast<fs::file_time_type::duration>(system_clock::from_time_t(tomorrow) - clock) };
+    }
     struct ReportEntry
     {
-        std::shared_ptr<const J> value;
+        std::shared_ptr<const J> value, good;
+        std::shared_ptr<const std::string> goodText;
+        size_t goodBytes;
         size_t bytes;
         uint64_t used;
     };
@@ -151,8 +180,10 @@ class LspCache
 
 public:
     fs::path directory;
+    bool persistent = true;
+    std::chrono::minutes cleanupPeriod{ 15 };
     std::atomic<uint64_t> scans{ 0 }, hits{ 0 }, restored{ 0 }, checks{ 0 }, diagnosticHits{ 0 }, cancelled{ 0 }, removed{ 0 };
-    std::atomic<uint64_t> memoryReportHits{ 0 }, mergedChecks{ 0 };
+    std::atomic<uint64_t> memoryReportHits{ 0 }, mergedChecks{ 0 }, parallelModules{ 0 };
     /**
      * @brief 合并同一入口的语义检查，等待者可以独立取消。
      * @param source 入口 URI。
@@ -191,26 +222,52 @@ public:
      * @brief 保存报告；最多 64 个入口、32 MiB，单项超过 8 MiB 不驻留。
      * @param source 入口 URI。
      * @param value 包含依赖指纹的完整记录。
+     * @param text 请求快照的源码；仅保留大小受限的成功版本用于编辑恢复。
      */
-    void rememberReport(const std::string &source, const J &value)
+    void rememberReport(const std::string &source, const J &value, std::shared_ptr<const std::string> text)
     {
         const auto bytes = value.dump().size();
         std::lock_guard<std::mutex> lock(reportMutex_);
         auto previous = reports_.find(source);
-        if (previous != reports_.end())
-        {
-            reportBytes_ -= previous->second.bytes;
-            reports_.erase(previous);
-        }
         if (bytes > 8ULL * 1024 * 1024) return;
-        reports_[source] = { std::make_shared<const J>(value), bytes, ++reportClock_ };
-        reportBytes_ += bytes;
+        const auto current = std::make_shared<const J>(value);
+        ReportEntry next{ current, {}, {}, 0, bytes, ++reportClock_ };
+        const auto complete = get(get(get(value, "report"), "analysis"), "complete").asBool();
+        if (complete && *complete && text->size() <= 256 * 1024)
+        {
+            next.good = current;
+            next.goodText = std::move(text);
+            next.goodBytes = bytes + next.goodText->size();
+            next.bytes = next.goodBytes;
+        }
+        else if (previous != reports_.end())
+        {
+            next.good = previous->second.good;
+            next.goodText = previous->second.goodText;
+            next.goodBytes = previous->second.goodBytes;
+            next.bytes += next.goodBytes;
+        }
+        if (previous != reports_.end()) reportBytes_ -= previous->second.bytes;
+        reportBytes_ += next.bytes;
+        reports_[source] = std::move(next);
         while (reports_.size() > 64 || reportBytes_ > 32ULL * 1024 * 1024)
         {
             auto oldest = std::min_element(reports_.begin(), reports_.end(), [](const auto &a, const auto &b) { return a.second.used < b.second.used; });
             reportBytes_ -= oldest->second.bytes;
             reports_.erase(oldest);
         }
+    }
+    /**
+     * @brief 取得用于恢复类型提示的最近一次成功源码快照及报告。
+     * @param source 入口 URI。
+     * @return 同一成功版本的源码和报告；没有成功版本时为空。
+     */
+    std::pair<std::shared_ptr<const std::string>, std::shared_ptr<const J>> lastGood(const std::string &source)
+    {
+        std::lock_guard<std::mutex> lock(reportMutex_);
+        const auto found = reports_.find(source);
+        if (found == reports_.end()) return {};
+        return { found->second.goodText, found->second.good };
     }
     /**
      * @brief 选择程序目录的 build/lsp，并按编译版本隔离记录。
@@ -220,7 +277,19 @@ public:
     {
         std::error_code ec;
         const auto modified = fs::last_write_time(compiler, ec).time_since_epoch().count();
-        stamp_ = lspHash(compiler.u8string() + std::to_string(modified) + __DATE__ + __TIME__);
+        const auto size = fs::file_size(compiler, ec);
+        stamp_ = lspHash(compiler.u8string() + std::to_string(modified) + ":" + std::to_string(ec ? 0 : size) + __DATE__ + __TIME__);
+        const auto config = compiler.parent_path() / "compiler.toml";
+        if (!fs::is_regular_file(config, ec)) return;
+        try
+        {
+            const auto data = manifest(config);
+            const auto &settings = field(data, "lsp");
+            persistent = field(settings, "cache").asBool().value_or(true);
+            const auto minutes = field(settings, "cleanup_minutes").asInt().value_or(15);
+            if (minutes >= 1 && minutes <= 1440) cleanupPeriod = std::chrono::minutes(minutes);
+        }
+        catch (const std::exception &error) { std::cerr << error.what() << '\n'; }
     }
     /**
      * @brief 原子写入缓存；写入失败不影响提示。
@@ -229,13 +298,14 @@ public:
      */
     void save(const fs::path &path, const J &value) const
     {
+        if (!persistent) return;
         try
         {
             chali_incremental::replaceCacheFile(path, [&](std::ostream &out) { out << value.dump(); });
         } catch (...) {}
     }
     /**
-     * @brief 成功复用时至多每小时刷新访问时间，避免活跃缓存因七天期限被清理。
+     * @brief 当天的缓存成功复用时至多每小时刷新文件时间。
      * @param file 缓存文件。
      */
     void touch(const fs::path &file) const
@@ -243,7 +313,8 @@ public:
         std::error_code ec;
         const auto modified = fs::last_write_time(file, ec);
         const auto now = fs::file_time_type::clock::now();
-        if (!ec && now - modified > std::chrono::hours(1)) fs::last_write_time(file, now, ec);
+        if (!ec && now - modified > std::chrono::hours(1) && modified >= today().first)
+            fs::last_write_time(file, now, ec);
     }
     /**
      * @brief 缓存文件键。
@@ -371,7 +442,7 @@ public:
         {
             auto result = std::make_shared<LspUnit>(body);
             bool loaded = false;
-            try
+            if (persistent) try
             {
                 const auto data = parse(read(path("index", uri)));
                 if (integer(get(data, "schema")) == 1 && str(data, "hash") == hash && str(data, "uri") == uri && get(data, "records").asArray())
@@ -402,9 +473,12 @@ public:
             {
                 result->records = scan(uri, body);
                 ++scans;
-                A records;
-                for (const auto &r : result->records) records.push_back(record(r));
-                save(path("index", uri), object({ { "schema", 1 }, { "hash", hash }, { "uri", uri }, { "records", records } }));
+                if (persistent)
+                {
+                    A records;
+                    for (const auto &r : result->records) records.push_back(record(r));
+                    save(path("index", uri), object({ { "schema", 1 }, { "hash", hash }, { "uri", uri }, { "records", records } }));
+                }
             }
             const auto bytes = result->bytes();
             promise->set_value(result);
@@ -434,14 +508,14 @@ public:
         }
     }
     /**
-     * @brief 自动清理过期缓存，并将超出 256 MiB 的缓存压到 192 MiB；只删除 build/lsp 内的普通文件。
+     * @brief 清理非当天的缓存，并将超出 256 MiB 的缓存压到 192 MiB。
      */
     void cleanup()
     {
         try
         {
             std::error_code ec;
-            if (!fs::is_directory(directory, ec) || fs::is_symlink(directory, ec)) return;
+            if (!fs::is_directory(directory, ec) || fs::is_symlink(directory, ec) || fs::is_symlink(directory.parent_path(), ec)) return;
             struct File
             {
                 fs::path path;
@@ -451,6 +525,7 @@ public:
             std::vector<File> files;
             uintmax_t size = 0;
             const auto now = fs::file_time_type::clock::now();
+            const auto day = today();
             for (fs::recursive_directory_iterator it(directory, fs::directory_options::skip_permission_denied, ec), end; it != end; it.increment(ec))
             {
                 if (ec)
@@ -470,7 +545,7 @@ public:
                 if (ec) continue;
                 const auto bytes = it->file_size(ec);
                 if (ec) continue;
-                if (now - time > std::chrono::hours(24 * 7))
+                if (day.first != day.second && (time < day.first || time >= day.second))
                 {
                     if (fs::remove(path, ec)) ++removed;
                     continue;
@@ -501,6 +576,41 @@ public:
     J stats()
     {
         std::scoped_lock lock(mutex_, diskMutex_, reportMutex_);
-        return object({ { "memoryReportHits", int64_t(memoryReportHits.load()) }, { "mergedChecks", int64_t(mergedChecks.load()) }, { "reportEntries", int64_t(reports_.size()) }, { "reportBytes", int64_t(reportBytes_) }, { "scans", int64_t(scans.load()) }, { "indexHits", int64_t(hits.load()) }, { "restored", int64_t(restored.load()) }, { "checks", int64_t(checks.load()) }, { "diagnosticHits", int64_t(diagnosticHits.load()) }, { "cancelled", int64_t(cancelled.load()) }, { "removed", int64_t(removed.load()) }, { "cacheDirectory", directory.u8string() }, { "indexBytes", int64_t(unitBytes_) }, { "sourceBytes", int64_t(diskBytes_) }, { "indexEntries", int64_t(units_.size()) } });
+        return object({ { "persistentCache", persistent }, { "cleanupMinutes", int64_t(cleanupPeriod.count()) }, { "parallelModules", int64_t(parallelModules.load()) }, { "memoryReportHits", int64_t(memoryReportHits.load()) }, { "mergedChecks", int64_t(mergedChecks.load()) }, { "reportEntries", int64_t(reports_.size()) }, { "reportBytes", int64_t(reportBytes_) }, { "scans", int64_t(scans.load()) }, { "indexHits", int64_t(hits.load()) }, { "restored", int64_t(restored.load()) }, { "checks", int64_t(checks.load()) }, { "diagnosticHits", int64_t(diagnosticHits.load()) }, { "cancelled", int64_t(cancelled.load()) }, { "removed", int64_t(removed.load()) }, { "cacheDirectory", directory.u8string() }, { "indexBytes", int64_t(unitBytes_) }, { "sourceBytes", int64_t(diskBytes_) }, { "indexEntries", int64_t(units_.size()) } });
+    }
+};
+
+/** @brief 在服务空闲时也定期清理磁盘缓存，退出时停止后台线程。 */
+class LspCacheJanitor
+{
+    std::mutex mutex_;
+    std::condition_variable wake_;
+    bool stop_ = false;
+    std::thread worker_;
+
+public:
+    /**
+     * @brief 启动后立即清理，随后按配置间隔定期检查。
+     * @param cache 服务共享的磁盘缓存。
+     */
+    explicit LspCacheJanitor(LspCache &cache) : worker_([this, &cache] {
+        std::unique_lock<std::mutex> lock(mutex_);
+        do
+        {
+            lock.unlock();
+            cache.cleanup();
+            lock.lock();
+        } while (!wake_.wait_for(lock, cache.cleanupPeriod, [this] { return stop_; }));
+    }) {}
+
+    /** @brief 唤醒并回收后台线程，确保它在缓存销毁前退出。 */
+    ~LspCacheJanitor()
+    {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            stop_ = true;
+        }
+        wake_.notify_one();
+        worker_.join();
     }
 };

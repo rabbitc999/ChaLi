@@ -49,24 +49,37 @@ def main():
             reused = server.query('chali/lspStats')
             assert reused['checks'] == 1 and reused['memoryReportHits'] > stats['memoryReportHits'], reused
             assert reused['reportEntries'] == 1 and 0 < reused['reportBytes'] <= 32 * 1024 * 1024, reused
+            # 不同源码版本各自保存报告，撤销后命中旧快照。
+            def edit(body, version):
+                server.send(dict(method='textDocument/didChange', params=dict(textDocument=dict(uri=uri, version=version),
+                                 contentChanges=[dict(text=body)])))
+                server.diagnostic(uri, version, lambda values: not values)
+            edit(text + '\n\n', 2)
+            alternate = server.query('chali/lspStats')
+            assert alternate['checks'] > reused['checks'], alternate
+            edit(text + '\n', 3)
+            intermediate = server.query('chali/lspStats')
+            edit(text + '\n\n', 4)
+            restored = server.query('chali/lspStats')
+            assert restored['checks'] == intermediate['checks'] and restored['diagnosticHits'] > intermediate['diagnosticHits'], restored
             # 原先不存在的项目清单被创建，也要触发入口重新检查。
             config = project / 'chali.toml'
             config.write_text('[warnings]\nall="allow"\n', encoding='utf-8')
             before = len(server.notifications)
             server.send(dict(method='workspace/didChangeWatchedFiles', params=dict(changes=[dict(uri=config.as_uri(), type=1)])))
-            server.diagnostic(uri, 1, lambda values: not values, after=before)
+            server.diagnostic(uri, 4, lambda values: not values, after=before)
             configured = server.query('chali/lspStats')
             assert configured['checks'] > reused['checks'], configured
             # 未保存依赖改变实际类型，不能复用入口旧报告。
             before = len(server.notifications)
             changed = 'module dep;\nString read(){return "changed";}\n'
             server.send(dict(method='textDocument/didOpen', params=dict(textDocument=dict(uri=dependency.as_uri(), text=changed, version=1))))
-            diagnostic = server.diagnostic(uri, 1, lambda values: any(d['severity'] == 1 for d in values), after=before)
+            diagnostic = server.diagnostic(uri, 4, lambda values: any(d['severity'] == 1 for d in values), after=before)
             assert any('String' in d['message'] for d in diagnostic['diagnostics']), diagnostic
             assert server.query('chali/lspStats')['checks'] > configured['checks']
             # 快速替换入口及依赖，等待最终版本，随后不允许旧结果覆盖。
             latest = 'import dep;\nvoid main(){String value=dep::read();assert(value=="changed");}\n'
-            for version in range(2, 12):
+            for version in range(5, 12):
                 server.send(dict(method='textDocument/didChange', params=dict(textDocument=dict(uri=uri, version=version), contentChanges=[dict(text=latest)])))
             server.diagnostic(uri, 11, lambda values: not values)
             after = len(server.notifications)

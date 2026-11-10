@@ -23,6 +23,8 @@
 #include <array>
 #include <cctype>
 #include <chrono>
+#include <condition_variable>
+#include <ctime>
 #include <cmath>
 #include <fstream>
 #include <functional>
@@ -3420,7 +3422,7 @@ class Server
     std::shared_ptr<std::atomic<uint64_t>> revision = std::make_shared<std::atomic<uint64_t>>(0);
     uint64_t snapshotRevision = 0;
     std::map<std::string, std::string> sourceSnapshot;
-    std::string analysisGraph;
+    std::string analysisEntry, analysisGraph;
     std::set<std::string> usedDocuments;
     bool definitionLinks = false;
     bool shutdown = false;
@@ -3563,6 +3565,8 @@ class Server
         visit(u, s);
         cache->dependencies(u, visited);
         usedDocuments = visited;
+        const auto active = documents.find(u);
+        analysisEntry = active != documents.end() && active->second->first == s ? u : std::string();
         analysisGraph = lspHash(graph);
         std::vector<std::string> pending(modules.begin(), modules.end());
         while (!pending.empty())
@@ -3849,6 +3853,57 @@ class Server
         } catch (...) { return "missing"; }
     }
     /**
+     * @brief 从最近一次成功报告恢复小改动之前、仍完整的类型提示。
+     * @param u 当前文档 URI。
+     * @param body 当前源码。
+     * @param current 本次分析；完整时直接返回。
+     * @return 当前分析，或仅含仍有效的历史类型提示的分析视图。
+     */
+    J stableTypeHints(const std::string &u, const std::string &body, const J &current)
+    {
+        const auto complete = get(current, "complete").asBool();
+        if (complete && *complete) return current;
+        const auto previous = cache->lastGood(u);
+        if (!previous.first) return current;
+        const auto &old = *previous.first;
+        const auto prefix = std::size_t(std::mismatch(old.begin(), old.end(), body.begin(), body.end()).first - old.begin());
+        const auto unchanged = old.size() == body.size() && prefix == body.size();
+        if (unchanged && current.isNull() && body.find('$') == body.npos) return current;
+        std::size_t lines = std::numeric_limits<std::size_t>::max();
+        if (!unchanged)
+        {
+            const auto suffix = std::size_t(std::mismatch(old.rbegin(), old.rend() - prefix, body.rbegin(), body.rend() - prefix).first - old.rbegin());
+            const auto oldChange = old.size() - prefix - suffix, newChange = body.size() - prefix - suffix;
+            if (oldChange > 256 || newChange > 256 || scopeAt(body, prefix).size() < 2) return current;
+            if (old.substr(prefix, oldChange).find_first_of("$#") != old.npos ||
+                body.substr(prefix, newChange).find_first_of("$#") != body.npos) return current;
+            lines = std::size_t(std::count(body.begin(), body.begin() + prefix, '\n'));
+        }
+        const auto path = normalizedPath(pathOf(u));
+        if (integer(get(*previous.second, "language"), -1) != int(chali_i18n::language())) return current;
+        const auto &dependencies = get(*previous.second, "dependencies");
+        if (!dependencies.asObject()) return current;
+        for (const auto &dependency : dependencies.asObject()->members())
+        {
+            const std::string name(dependency.key);
+            if (fs::u8path(name) != path && fingerprint(name) != str(dependency.value)) return current;
+        }
+        const auto &analysis = get(get(*previous.second, "report"), "analysis");
+        const auto beforeChange = [&](const char *key) {
+            A facts;
+            for (const auto &fact : array(get(analysis, key)))
+            {
+                const auto file = str(fact, "file");
+                const auto line = integer(get(fact, "line"));
+                if (line > 0 && std::size_t(line) <= lines && !file.empty() && file.front() != '<' && normalizedPath(fs::u8path(file)) == path)
+                    facts.push_back(fact);
+            }
+            return facts;
+        };
+        return object({ { "complete", true }, { "typeHints", beforeChange("typeHints") },
+                        { "generatedDeclarations", beforeChange("generatedDeclarations") } });
+    }
+    /**
      * @brief 生成前端检查报告并复用有效缓存。
      * @param u 待处理文档的 URI。
      * @param cancelled 请求取消标志。
@@ -3858,7 +3913,8 @@ class Server
     J checkReport(const std::string &u, const std::function<bool()> &cancelled, double timeout = 30)
     {
         const auto &body = documents.at(u)->first;
-        if (!ephemeralAnalysis) collect(u, body);
+        if (!ephemeralAnalysis && analysisEntry != u) collect(u, body);
+        const std::shared_ptr<const std::string> textSnapshot(documents.at(u), &body);
         const auto interrupted = [&] { return cancelled() || (requestCancelled && requestCancelled->load()) || revision->load() != snapshotRevision; };
         const auto serial = cache->reportLock(u);
         std::unique_lock<std::timed_mutex> single(*serial, std::defer_lock);
@@ -3870,31 +3926,39 @@ class Server
         }
         if (waited) ++cache->mergedChecks;
         if (interrupted()) return J();
-        const auto file = pathOf(u), saved = cache->path("diagnostics", u);
-        try
+        const auto file = pathOf(u);
+        const auto input = lspHash(body);
+        const auto language = int(chali_i18n::language());
+        const auto saved = cache->path("diagnostics", u + "\n" + analysisGraph + "\n" + std::to_string(language));
+        if (!ephemeralAnalysis && cache->persistent)
         {
-            if (ephemeralAnalysis) throw std::runtime_error("candidate report is not cached");
-            const auto memory = cache->report(u);
-            const auto entry = memory ? *memory : parse(read(saved));
-            bool valid = integer(get(entry, "schema")) == 4 && integer(get(entry, "language"), -1) == int(chali_i18n::language()) && str(entry, "input") == lspHash(body) && str(entry, "graph") == analysisGraph && get(entry, "dependencies").asObject();
-            if (valid)
+            const auto validReport = [&](const J &entry) {
+                if (integer(get(entry, "schema")) != 4 || integer(get(entry, "language"), -1) != language ||
+                    str(entry, "input") != input || str(entry, "graph") != analysisGraph ||
+                    !get(entry, "dependencies").asObject() || !get(entry, "report").find("diagnostics")) return false;
                 for (const auto &dependency : get(entry, "dependencies").asObject()->members())
-                    if (fingerprint(std::string(dependency.key)) != str(dependency.value))
-                    {
-                        valid = false;
-                        break;
-                    }
-            if (valid && get(entry, "report").find("diagnostics"))
+                    if (fingerprint(std::string(dependency.key)) != str(dependency.value)) return false;
+                return true;
+            };
+            try
             {
-                ++cache->diagnosticHits;
-                if (memory)
+                if (const auto memory = cache->report(u); memory && validReport(*memory))
+                {
+                    ++cache->diagnosticHits;
                     ++cache->memoryReportHits;
-                else
-                    cache->rememberReport(u, entry);
-                cache->touch(cache->path("diagnostics", u));
-                return get(entry, "report");
-            }
-        } catch (...) {}
+                    cache->touch(saved);
+                    return get(*memory, "report");
+                }
+                const auto entry = parse(read(saved));
+                if (validReport(entry))
+                {
+                    ++cache->diagnosticHits;
+                    cache->rememberReport(u, entry, textSnapshot);
+                    cache->touch(saved);
+                    return get(entry, "report");
+                }
+            } catch (...) {}
+        }
         if (interrupted()) return J();
         std::map<std::string, std::string> configurations;
         for (auto parent = file.parent_path(); !parent.empty();)
@@ -3928,7 +3992,7 @@ class Server
                                           "--source-overlays", (temporary.path / "overlays.json").u8string(),
                                           "--analysis-deps", (temporary.path / "dependencies.json").u8string(),
                                           "--analysis-types", (temporary.path / "types.json").u8string(), file.u8string() };
-        if (!ephemeralAnalysis) command.insert(command.end(), { "--incremental", "--cache-dir", (cache->directory / "preprocess").u8string() });
+        if (!ephemeralAnalysis && cache->persistent) command.insert(command.end(), { "--incremental", "--cache-dir", (cache->directory / "preprocess").u8string() });
         const auto result = execute(command, file.parent_path(), body, timeout, interrupted);
         slot.reset();
         if (result.cancelled || interrupted()) return J();
@@ -3944,6 +4008,7 @@ class Server
         {
             if (ephemeralAnalysis) return report;
             const auto dependencies = parse(read(temporary.path / "dependencies.json"));
+            cache->parallelModules += integer(get(dependencies, "parallelModules"));
             if (get(dependencies, "complete").asBool() && *get(dependencies, "complete").asBool())
             {
                 json::Object hashes;
@@ -3964,8 +4029,8 @@ class Server
                 }
                 cache->dependencies(u, dependencyUris);
                 if (interrupted()) return J();
-                const auto entry = object({ { "schema", 4 }, { "language", int(chali_i18n::language()) }, { "input", lspHash(body) }, { "graph", analysisGraph }, { "dependencies", J(std::move(hashes)) }, { "report", report } });
-                cache->rememberReport(u, entry);
+                const auto entry = object({ { "schema", 4 }, { "language", language }, { "input", input }, { "graph", analysisGraph }, { "dependencies", J(std::move(hashes)) }, { "report", report } });
+                cache->rememberReport(u, entry, textSnapshot);
                 cache->save(saved, entry);
             }
         } catch (...) {}
@@ -4457,9 +4522,9 @@ class Server
             try
             {
                 compilerReport = checkReport(u, [] { return false; });
-                if (get(compilerReport, "analysis").isNull() && !inMacroTemplate(s, cursor))
-                    compilerReport = generatedDeclarationProbe(u, s, cursor, records);
                 mergeGeneratedDeclarations(get(compilerReport, "analysis"), records);
+                if (get(compilerReport, "analysis").isNull() && !inMacroTemplate(s, cursor))
+                    mergeGeneratedDeclarations(get(generatedDeclarationProbe(u, s, cursor, records), "analysis"), records);
             } catch (const std::exception &)
             {
                 // 不完整源码仍使用已经确认的词法声明，不从宏模板猜测类型。
@@ -4469,11 +4534,11 @@ class Server
             return semantic(s);
         auto vars = bindings(s, types);
         CompilerTypeScope compilerTypes;
-        if (s.find('$') != s.npos && (method == "textDocument/hover" || method == "textDocument/completion" || method == "textDocument/signatureHelp"))
+        if (method == "textDocument/hover" || method == "textDocument/completion" || method == "textDocument/signatureHelp")
         {
             try
             {
-                const auto &analysis = get(compilerReport, "analysis");
+                const auto analysis = stableTypeHints(u, s, get(compilerReport, "analysis"));
                 mergeGeneratedDeclarations(analysis, records);
                 const auto complete = get(analysis, "complete").asBool();
                 if (complete && *complete)
@@ -4506,7 +4571,7 @@ class Server
         if (method == "textDocument/inlayHint")
         {
             const auto report = checkReport(u, [] { return false; });
-            return inlayHints(s, records, get(params, "range"), get(report, "analysis"), u);
+            return inlayHints(s, records, get(params, "range"), stableTypeHints(u, s, get(report, "analysis")), u);
         }
         if (method == "chali/expandMacro")
             return preview(u, s, params);
@@ -5269,8 +5334,7 @@ public:
     int run()
     {
         for (auto &queue : queues) queue = std::make_unique<LspQueue>();
-        queues[3]->post("cleanup", [this] { cache->cleanup(); }, std::make_shared<std::atomic<bool>>(false));
-        auto nextCleanup = std::chrono::steady_clock::now() + std::chrono::minutes(15);
+        LspCacheJanitor janitor(*cache);
         std::string line;
         while (true)
         {
@@ -5324,11 +5388,6 @@ public:
             {
                 finish();
                 return shutdown ? 0 : 1;
-            }
-            if (std::chrono::steady_clock::now() >= nextCleanup)
-            {
-                queues[3]->post("cleanup", [this] { cache->cleanup(); }, std::make_shared<std::atomic<bool>>(false));
-                nextCleanup = std::chrono::steady_clock::now() + std::chrono::minutes(15);
             }
             if (message.find("id"))
             {

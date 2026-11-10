@@ -65,7 +65,7 @@ MODULES = {
             "chali_lsp_overloads", "chali_lsp_naming_scopes", "chali_lsp_symbols",
             "chali_lsp_lambda_capture", "chali_lsp_semantic_features",
             "chali_lsp_macro_completion", "chali_lsp_macro_highlighting", "chali_lsp_generated_symbols",
-            "chali_native_lsp_parity", "chali_lsp_type_aliases", "chali_lsp_performance", "chali_lsp_highlight_speed"],
+            "chali_native_lsp_parity", "chali_lsp_type_aliases", "chali_lsp_recovery", "chali_lsp_performance", "chali_lsp_highlight_speed"],
 }
 
 

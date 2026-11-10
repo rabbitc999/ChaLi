@@ -50,17 +50,33 @@ Checks use the original source path and stdin text. Unsaved documents overlay im
 
 The compiler still performs complete type and borrow checking. Fast hints and final diagnostics can finish at different times. `fn move() { a }` takes ownership of a, so reading a afterwards still produces CHL1205. Capture keywords have contextual hover text, and CHL1205 marks the offending variable on its reported line.
 
+## Analysis and syntax error recovery
+
+A semantic check preprocesses up to three upcoming local imports in parallel. Recursive import traversal and semantic analysis retain source order, including cycle detection and the first diagnostic. Editor checks reuse preprocessed modules according to the build stamp, executable identity, and project options, and validate dependency contents.
+
+If a small edit inside a function interrupts semantic analysis, the editor can preserve compiler-derived type hints from the last successful check on complete lines before the edit. The server revalidates dependencies and uses the current source for declarations affected by the change. It continues to publish syntax diagnostics for the current source.
+
 ## Cache location and cleanup
 
 Caches live in `build/lsp/` beside the chali executable. With the bundled compiler this is the extension's `bin/build/lsp/`; with `chali.path` it is beside the configured compiler. The project directory does not select the cache location.
 
+Create `compiler.toml` beside the compiler and restart the LSP to apply it. The defaults are shown below.
+
+```toml
+[lsp]
+cache = true
+cleanup_minutes = 15
+```
+
+`cache = false` disables disk caching and reuse of full check reports. In-memory lexical indexes and the last successful hints still support the active editing session, and independent imports still run in parallel. The cleanup interval accepts 1 to 1440 minutes and defaults to 15. Cleanup continues to handle existing files when disk caching is disabled.
+
 | Directory | Contents |
 | --- | --- |
 | `index/` | Document declaration indices validated against compiler identity and source fingerprints |
-| `diagnostics/` | Complete compiler reports and dependency fingerprints |
+| `diagnostics/` | Full compiler diagnostics and dependency fingerprints keyed by source snapshot for reuse after undo |
 | `preprocess/` | Existing incremental compilation preprocessing and module caches |
 
-Cleanup runs at startup and is scheduled every fifteen minutes when messages arrive. Regular files unused for seven days are removed. Successful index and diagnostic reuse refreshes timestamps at most once an hour. Above 256 MiB, oldest files are evicted toward 192 MiB. Files newer than ten minutes are protected, so active writes may temporarily exceed the quota. Cleanup stays inside `build/lsp/`, skips symlinks, and preserves other build files.
+Cleanup runs at startup and at the configured interval, including while the server is idle. It keeps regular cache files dated today in the machine's local time zone. Reuse of today's index and diagnostic files refreshes their timestamps at most once an hour. Above 256 MiB, oldest files are evicted toward 192 MiB. Files newer than ten minutes are protected, so active writes may temporarily exceed the quota. Cleanup stays inside `build/lsp/`, skips symlinks, and preserves other build files.
 
 Memory indices use estimated 64 MiB and 256 entry eviction thresholds; disk source text uses 32 MiB and 512 entries. Least recently used records are evicted first. Active request snapshots remain alive until their requests finish, and one oversized file may exceed a threshold. These thresholds control caches rather than total process memory. Unwritable or damaged persistent caches fall back to analysis. Once the service exits, `build/lsp/` can be removed manually and will be regenerated. Published VSIX packages exclude runtime caches.
 

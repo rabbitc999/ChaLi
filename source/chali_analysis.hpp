@@ -34,13 +34,14 @@ inline Memory::Map<Memory::String, Memory::String> overlays(const Memory::String
  * @param path 输出文件。
  * @param dependencies 依赖列表。
  * @param complete 模块装载是否完整。
+ * @param parallelModules 已并行提交的源码模块数。
  */
 inline void dependencies(const Memory::String &path, const Memory::Vector<Memory::String> &dependencies,
-                         bool complete)
+                         bool complete, std::size_t parallelModules = 0)
 {
     if (path.empty()) return;
     chali_incremental::replaceCacheFile(Memory::u8path(path), [&](std::ostream &out) {
-        out << "{\"complete\":" << (complete ? "true" : "false") << ",\"dependencies\":[";
+        out << "{\"complete\":" << (complete ? "true" : "false") << ",\"parallelModules\":" << parallelModules << ",\"dependencies\":[";
         bool first = true;
         for (const auto &file : dependencies)
         {

@@ -7,6 +7,7 @@ import shutil
 import subprocess
 from project_temp import tempfile
 import time
+from datetime import datetime
 from cpu_budget import timing_budget
 from native_lsp_transport import Transport, position
 
@@ -26,7 +27,7 @@ def main():
         cache = binary.parent / 'build/lsp'
         cache.mkdir(parents=True)
         old = cache / 'expired.json'; old.write_text('{}')
-        timestamp = time.time() - 14 * 86400
+        timestamp = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp() - 1
         os.utime(old, (timestamp, timestamp))
         preserved = binary.parent / 'build/user-file.txt'; preserved.write_text('preserve')
         # 超额清理只处理缓存目录；三个较旧的大文件应淘汰到 192 MiB 以下。

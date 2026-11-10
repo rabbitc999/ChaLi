@@ -8,6 +8,7 @@
 #include <atomic>
 #include <chrono>
 #include <map>
+#include <mutex>
 #if defined(_WIN32)
 #include <process.h>
 #else
@@ -165,12 +166,25 @@ public:
     Cache(Memory::String directory, const Memory::String &executable,
           const Memory::Vector<Memory::String> &includes,
           const Memory::String &projectSignature = Memory::String(),
-          const Memory::String &outputOptions = Memory::String()) : directory_(std::move(directory)), includeDirs_(includes)
+          const Memory::String &outputOptions = Memory::String(), bool editorAnalysis = false)
+        : directory_(std::move(directory)), includeDirs_(includes)
     {
-        std::uint64_t binary = 0;
-        if (!fileHash(canonical(executable), binary)) binary = 0;
-        // The compile stamp also invalidates caches when argv[0] was resolved via PATH.
-        signature_ = hashBytes(Memory::toString(binary) + __DATE__ + __TIME__);
+        const auto binaryPath = canonical(executable);
+        signature_ = hashBytes(Memory::String(__DATE__) + __TIME__);
+        if (editorAnalysis)
+        {
+            // 编辑器每次检查都会启动子进程，使用编译戳和文件身份隔离前处理缓存。
+            std::error_code ec;
+            const auto size = fs::file_size(binaryPath, ec);
+            signature_ = hashBytes(binaryPath + Memory::toString(ec ? 0 : size), signature_);
+            signature_ = hashBytes(Memory::toString(directoryTime(binaryPath)), signature_);
+        }
+        else
+        {
+            std::uint64_t binary = 0;
+            if (!fileHash(binaryPath, binary)) binary = 0;
+            signature_ = hashBytes(Memory::toString(binary) + __DATE__ + __TIME__);
+        }
         for (const auto &item : includes) signature_ = hashBytes(canonical(item), signature_);
         if (!projectSignature.empty()) signature_ = hashBytes(projectSignature, signature_);
         outputSignature_ = hashBytes(outputOptions, signature_);
@@ -181,7 +195,7 @@ public:
     {
         const Memory::String source = canonical(path);
         const fs::path cachePath = fs::path(directory_) / (Memory::toString(hashBytes(source, signature_)) + ".unit");
-        if (readUnit(cachePath, source, result))
+        if (!directory_.empty() && readUnit(cachePath, source, result))
         {
             ++reused_;
             return true;
@@ -199,7 +213,7 @@ public:
             result.dependencies.push_back(source);
         }
         ++rebuilt_;
-        writeUnit(cachePath, source, result);
+        if (!directory_.empty()) writeUnit(cachePath, source, result);
         return true;
     }
 
@@ -308,15 +322,21 @@ private:
         if (ec) return false;
         const auto size = fs::file_size(key, ec);
         if (ec) return false;
-        auto found = dependencyHashes_.find(key);
-        if (found != dependencyHashes_.end() && found->second.modified == modified && found->second.size == size)
         {
-            hash = found->second.hash;
-            ++hashReuses_;
-            return true;
+            std::lock_guard<std::mutex> lock(dependencyMutex_);
+            const auto found = dependencyHashes_.find(key);
+            if (found != dependencyHashes_.end() && found->second.modified == modified && found->second.size == size)
+            {
+                hash = found->second.hash;
+                ++hashReuses_;
+                return true;
+            }
         }
         if (!fileHash(key, hash)) return false;
-        dependencyHashes_[key] = { hash, size, modified };
+        {
+            std::lock_guard<std::mutex> lock(dependencyMutex_);
+            dependencyHashes_[key] = { hash, size, modified };
+        }
         ++hashReads_;
         return true;
     }
@@ -427,10 +447,10 @@ private:
         std::uintmax_t size;
         fs::file_time_type modified;
     };
+    mutable std::mutex dependencyMutex_;
     mutable Memory::Map<Memory::String, DependencyFingerprint> dependencyHashes_;
-    mutable std::size_t hashReads_ = 0, hashReuses_ = 0;
-    std::size_t reused_ = 0;
-    std::size_t rebuilt_ = 0;
+    mutable std::atomic<std::size_t> hashReads_{ 0 }, hashReuses_{ 0 };
+    std::atomic<std::size_t> reused_{ 0 }, rebuilt_{ 0 };
 };
 
 inline std::uint64_t inputHash(const preprocess::Result &result, std::uint64_t seed)

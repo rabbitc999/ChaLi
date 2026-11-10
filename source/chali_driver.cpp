@@ -964,8 +964,9 @@ try
             return 1;
         }
     }
+    const bool editorAnalysis = sourceStdin && !analysisTypes.empty();
     Memory::UniquePtr<chali_incremental::Cache> cache;
-    if (incremental)
+    if (incremental || (editorAnalysis && !sourceOverlays.empty()))
     {
         Memory::Vector<Memory::String> searchDirs = includeDirs;
         searchDirs.insert(searchDirs.end(), importDirs.begin(), importDirs.end());
@@ -979,11 +980,12 @@ try
         for (const auto &directory : importDirs) pathSignature += chali_incremental::canonical(directory) + "\n";
         const Memory::String defaultCache = defaultArtifacts ? Memory::String((defaultArtifacts->root / "cache").u8string().c_str())
                                                              : prefix + ".chali-cache";
-        cache = Memory::makeUnique<chali_incremental::Cache>(cacheDirectory.empty() ? defaultCache : cacheDirectory, argv[0],
+        cache = Memory::makeUnique<chali_incremental::Cache>(!incremental ? Memory::String() : cacheDirectory.empty() ? defaultCache : cacheDirectory, argv[0],
                                                              searchDirs,
                                                              pathSignature,
                                                              Memory::String(reflectionEnabled ? "reflection\n" : "no reflection\n") + (stripDebug ? "strip debug\n" : "keep debug\n")
-                                                                 + (debugOptimized ? "optimized debug\n" : "development debug\n") + "\n");
+                                                                 + (debugOptimized ? "optimized debug\n" : "development debug\n") + "\n",
+                                                             editorAnalysis);
         cache->setOverlays(sourceOverlays);
     }
 
@@ -1025,7 +1027,7 @@ try
                                                    preprocess::IncludeResult::inlineText(found->second, request.resolvedPath);
         };
         Memory::Vector<Memory::String> moduleDirs = importDirs;
-        chali_module::Loader loader(options, moduleDirs, cache.get(), &project);
+        chali_module::Loader loader(options, moduleDirs, cache.get(), &project, editorAnalysis);
         Memory::String moduleError;
         const bool ok = (path != nullptr && !sourceStdin) ? loader.rootFile(path, processed, moduleError) : loader.rootText(text, sourceLabel, path ? Memory::String(std::filesystem::path(path).parent_path().string()) : Memory::String("."), processed, moduleError);
         auto analysisFiles = processed.dependencies;
@@ -1036,7 +1038,7 @@ try
             const auto lock = std::filesystem::path(project.file).parent_path() / "chali.lock";
             if (std::filesystem::exists(lock)) analysisFiles.push_back(lock.string());
         }
-        chali_analysis::dependencies(analysisDependencies, analysisFiles, ok);
+        chali_analysis::dependencies(analysisDependencies, analysisFiles, ok, loader.prefetchCount());
         for (const preprocess::Diagnostic &item : processed.diagnostics)
             if (!jsonDiagnostics) std::fprintf(stderr, CHALI_TEXT("chali: 前处理：%s\n"), item.toString().c_str());
         if (!ok)

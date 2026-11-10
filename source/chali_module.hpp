@@ -13,6 +13,8 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <future>
+#include <thread>
 #include <map>
 #include <set>
 #include <sstream>
@@ -377,7 +379,8 @@ class Loader
 public:
     Loader(preprocess::Options options, Memory::Vector<Memory::String> includeDirs,
            chali_incremental::Cache *cache = nullptr,
-           const chali_package::Project *project = nullptr) : options_(std::move(options)), includeDirs_(std::move(includeDirs)), cache_(cache), project_(project)
+           const chali_package::Project *project = nullptr, bool parallelImports = false)
+        : options_(std::move(options)), includeDirs_(std::move(includeDirs)), cache_(cache), project_(project), parallelImports_(parallelImports)
     {
         options_.allowIncludes = false;
         options_.syntax = preprocess::Options::Syntax::Custom;
@@ -418,6 +421,8 @@ public:
     }
 
     bool preprocessError() const { return preprocessError_; }
+    /** @brief 返回本次检查并行提交的模块数。 @return 已提交模块总数。 */
+    std::size_t prefetchCount() const { return prefetchCount_; }
     /**
      * @brief 源文件 → 模块名（`$module` 的取值来源）。
      *
@@ -490,7 +495,68 @@ private:
         return true;
     }
 
+    /**
+     * @brief 在语义遍历继续之前启动有限数量的独立源码前处理。
+     * @param imports 当前单元按源码顺序列出的导入。
+     * @param base 当前模块的目录。
+     * @param first 从当前导入之后开始前处理。
+     */
+    void prefetchImports(const Memory::Vector<Memory::String> &imports, const Memory::String &base, std::size_t first)
+    {
+        if (!parallelImports_ || first >= imports.size()) return;
+        const auto concurrency = std::thread::hardware_concurrency();
+        const auto limit = concurrency > 1 ? std::min(3u, concurrency - 1) : 0u;
+        if (prefetched_.size() >= limit) return;
+        Memory::Set<Memory::String> paths;
+        for (auto i = first; i < imports.size(); ++i)
+        {
+            const auto &name = imports[i];
+            if (name == "std" || name.compare(0, 5, "std::") == 0 || loaded_.count(name) || visiting_.count(name)) continue;
+            Memory::String path;
+            if (findModule(name, base, includeDirs_, path, false, cache_) && !prefetched_.count(path)) paths.insert(path);
+            if (paths.size() >= limit - prefetched_.size()) break;
+        }
+        for (const auto &path : paths)
+        {
+            try
+            {
+                prefetched_.emplace(path, std::async(std::launch::async, [this, path] {
+                    preprocess::Result unit;
+                    const bool ok = readModule(path, unit);
+                    return std::make_pair(ok, std::move(unit));
+                }));
+                ++prefetchCount_;
+            }
+            catch (const std::system_error &) { break; }
+        }
+    }
+
+    /**
+     * @brief 读取已开始的前处理，或在当前线程处理源码。
+     * @param path 模块源码文件。
+     * @param result 输出内容及诊断。
+     * @return 前处理成功时为真。
+     */
     bool preprocessFile(const Memory::String &path, preprocess::Result &result)
+    {
+        const auto pending = prefetched_.find(path);
+        if (pending != prefetched_.end())
+        {
+            auto prepared = pending->second.get();
+            prefetched_.erase(pending);
+            result = std::move(prepared.second);
+            return prepared.first;
+        }
+        return readModule(path, result);
+    }
+
+    /**
+     * @brief 独立读取和前处理一个模块，可在工作线程上执行。
+     * @param path 模块源码文件。
+     * @param result 输出内容及诊断。
+     * @return 前处理成功时为真。
+     */
+    bool readModule(const Memory::String &path, preprocess::Result &result) const
     {
         if (cache_ != nullptr) return cache_->preprocessFile(path, options_, result);
         preprocess::Preprocessor preprocessor(options_);
@@ -624,9 +690,11 @@ private:
         /* 这个单元（连同它 `%include` 的文件）属于哪个模块 —— `$module` 就查这张表。 */
         for (const preprocess::LineOrigin &origin : effective.lineMap)
             if (!origin.file.empty()) moduleByFile_[origin.file] = key;
-        for (const Memory::String &imported : info.imports)
+        for (std::size_t i = 0; i < info.imports.size(); ++i)
         {
+            const auto &imported = info.imports[i];
             if (imported == "std::core") continue;
+            prefetchImports(info.imports, base, i + 1);
             /* `std::algorithms` 没有 CHALI 文件，但仍在合并源码里保留模块边界。限定调用由
              * 编译器直接降级到 StackVM 胶水，不在这里注入函数体。 */
             if (imported == "std::algorithms")
@@ -691,6 +759,9 @@ private:
     chali_incremental::Cache *cache_ = nullptr;
     bool preprocessError_ = false;
     const chali_package::Project *project_ = nullptr;
+    bool parallelImports_ = false;
+    std::size_t prefetchCount_ = 0;
+    std::map<Memory::String, std::future<std::pair<bool, preprocess::Result>>> prefetched_;
 };
 
 }  // namespace chali_module
