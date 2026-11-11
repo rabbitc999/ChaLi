@@ -1,0 +1,14 @@
+$macro FOLDED_TEXT() -> expr
+$let<uint64> big = 18446744073709551615u
+$let text = f"\{{big}\}, {-1}, {false}, {1.23456789}, 100%"
+text
+$end_macro
+
+void main() {
+    uint64 big = 18446744073709551615u;
+    String runtime = f"\{{big}\}, {-1}, {false}, {1.23456789}, 100%";
+    assert($FOLDED_TEXT() == runtime);
+    assert(format("{1:2F}", 1.23456789) == "1.23");
+    assert(format("{}", 1.234567899) == "1.23456790");
+    println("{}", runtime);
+}

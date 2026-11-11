@@ -1,1 +1,1 @@
-ChaLi: sum=5, 2.25/A/1, {literal}
+ChaLi: sum=5, 2.25000000/A/1, {literal}

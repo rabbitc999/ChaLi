@@ -1,2 +1,2 @@
 $replace ADD(a, b) a + b
-void main() { return $!ADD(1, 2); }
+void main() { let value = $!ADD(1, 2); }

@@ -13,7 +13,7 @@ $let<char> grade = 'A'
 $let<float32> scale = 2.25f
 $let detail = f"{scale}/{grade}/{enabled}"
 $let message = f"{name}: {f"sum={BASE + 3}"}, {detail}, \{literal\}"
-$compile_assert(message == "ChaLi: sum=5, 2.25/A/1, {literal}", f"wrong message: {message}");
+$compile_assert(message == "ChaLi: sum=5, 2.25000000/A/1, {literal}", f"wrong message: {message}");
 println("{}", message);
 $end_macro
 

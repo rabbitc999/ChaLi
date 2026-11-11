@@ -30,7 +30,7 @@ void main()
 ```
 
 ```text
-sqrt=12
+sqrt=12.00000000
 upper=CHALI
 sum=10
 ```

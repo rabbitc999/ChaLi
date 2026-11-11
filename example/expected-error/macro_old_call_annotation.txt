@@ -1,1 +1,1 @@
-语法错误：example/samples-error/macro_old_call_annotation.chl 第 2 行第 22 列：认不出来的字符
+chali: example/samples-error/macro_old_call_annotation.chl 第 2 行第 1 列：$build 需要单个字符串或名称下标，例如 $build[DEBUG]

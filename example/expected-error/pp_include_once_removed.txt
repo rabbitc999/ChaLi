@@ -1,1 +1,1 @@
-语法错误：example/samples-error/pp_include_once_removed.chl 第 2 行第 1 列：期望 标识符 / 注解声明(@annotation) / at(@) / MACRO_DEFINE 等 51 个之一，实际是 取余(%)
+语法错误：example/samples-error/pp_include_once_removed.chl 第 2 行第 1 列：期望 标识符 / 注解声明(@annotation) / at(@) / MACRO_DEFINE 等 57 个之一，实际是 取余(%)

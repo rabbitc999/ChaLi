@@ -1,2 +1,2 @@
-len=22hello world42true1.5!
+len=29hello world42true1.50000000!
 after clear len=0 empty=1tail=7

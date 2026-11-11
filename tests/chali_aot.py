@@ -183,7 +183,7 @@ def main():
         # 源码所在目录里跑，才和用户 `chali run` 时 DLL 与源码同级的实际顺序一致。
         result = invoke([compiler, 'run', abi], cwd=work)
         expected_abi = result.stdout
-        assert result.returncode == 0 and expected_abi == 'aot -> c: 42\nabi values: 3.75 4294967295\nalias: 42\n', result
+        assert result.returncode == 0 and expected_abi == 'aot -> c: 42\nabi values: 3.75000000 4294967295\nalias: 42\n', result
         abi_exe = work / 'abi_use'
         result = invoke([compiler, 'build', abi, '--out', abi_exe, *backend])
         assert result.returncode == 0, (result.stdout, result.stderr)

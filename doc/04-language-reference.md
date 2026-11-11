@@ -901,6 +901,8 @@ int64 c_function(int64 x);
 | `len(x)` | 字符串 / 容器长度 |
 | `println` 里的 `{}` | 位置占位符，类型由实参推导 |
 
+花括号占位符在未指定精度时将浮点数格式化为小数点后八位。显式格式如 `{1:2F}` 使用指定的小数位数。
+
 更多能力（`json` / `toml` / `regex` / `sql` / `net` / `linalg` …）见[标准库概览](07-stdlib-overview.md)。
 
 ---

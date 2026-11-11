@@ -337,9 +337,9 @@ bool ReadConstantInterpolationValue(int id, Memory::String &result, std::string 
     if (!EvaluateConstant(id, &value)) return false;
     if (value.kind == MConstant::Floating)
     {
-        char buffer[128];
+        char buffer[512];
         const double real = value.bits == 32 ? static_cast<float>(value.floating) : value.floating;
-        const int count = std::snprintf(buffer, sizeof(buffer), "%g", real);
+        const int count = std::snprintf(buffer, sizeof(buffer), BraceDefaultFloatFormat, real);
         if (count < 0 || static_cast<std::size_t>(count) >= sizeof(buffer))
             return Fail("编译期插值无法格式化浮点数");
         result.assign(buffer, static_cast<std::size_t>(count));

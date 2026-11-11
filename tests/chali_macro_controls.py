@@ -78,7 +78,7 @@ void main(){Data d;d.a=3;d.b="text";d.c=4;assert($SUM<Data>(d)==7);}
         ('field_owner', 'struct First{int64 a;}struct Second{int64 a;}\nvoid main(){Second d;int64 x=$member(d,($fields<First>())[0]);}\n','具体类型不一致'),
         ('nested_fields', 'struct Data{int64 a;int64 b;}\n$macro NEST<T>() -> expr\nint64 total=0;\n$for outer in $fields<T>()\n$for inner in $fields<T>()\ntotal+=cast<int64>(outer.index*10+inner.index);\n$end_for\n$end_for\ntotal\n$end_macro\nvoid main(){assert($NEST<Data>()==22);}\n',None),
     ])
-    cases.append(('outside', 'void main(){\n$if true\nint64 x=1;\n$end_if\n}', '宏模板内部'))
+    cases.append(('outside', 'void main(){\n$if true\nint64 x=1;\n$end_if\nassert(x==1);\n}', None))
     cases.append(('field_shadow', 'struct Data{int64 a;int64 b;}\n$macro SHADOW<T>() -> expr\nint64 total=0;\n$for field in $fields<T>()\n{int64 field=7;total+=field;}\ntotal+=cast<int64>(field.index);\nint64 field=3;total+=field;\n$end_for\ntotal\n$end_macro\nvoid main(){assert($SHADOW<Data>()==21);}\n',None))
     cases.append(('field_pattern_shadow', 'struct Data{int64 a;int64 b;}enum Box{Value(int64 value),Empty}\n$macro SHADOW<T>(box:value) -> expr\nint64 total=0;\n$for field in $fields<T>()\nmatch(box){Value(field)=>{total+=field;} Empty=>{}}\ntotal+=cast<int64>(field.index);\n$end_for\ntotal\n$end_macro\nvoid main(){Box box=Box::Value(3);assert($SHADOW<Data>(box)==7);}\n',None))
     cases.append(('field_foreach_shadow', 'struct Data{int64 a;int64 b;}\n$macro SHADOW<T>(items:value) -> expr\nint64 total=0;\n$for field in $fields<T>()\nfor(field in items){total+=field;}\ntotal+=cast<int64>(field.index);\n$end_for\ntotal\n$end_macro\nvoid main(){List<int64> items;items.push(1);items.push(2);assert($SHADOW<Data>(items)==7);}\n',None))

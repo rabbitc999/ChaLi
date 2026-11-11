@@ -921,6 +921,8 @@ Type mapping, nullable references and glue bindings: see
 | `len(x)` | length of a string / container |
 | `{}` inside `println` | positional placeholder; the type is inferred |
 
+Brace placeholders format floats with eight digits after the decimal point by default. An explicit format such as `{1:2F}` uses the specified precision.
+
 More capabilities (`json` / `toml` / `regex` / `sql` / `net` / `linalg` …): see
 [Standard library overview](07-stdlib-overview.md).
 

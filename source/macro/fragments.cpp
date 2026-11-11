@@ -216,42 +216,28 @@ bool SourceFragments::capture(Memory::String &source, std::string &error, std::s
             output.append(text, start, at - start);
             continue;
         }
-        if (text.compare(at, 2, "$!") == 0 && at + 2 < text.size()
-            && (std::isalpha(static_cast<unsigned char>(text[at + 2])) || text[at + 2] == '_'))
-        {
-            const auto flag = at + 2;
-            at = flag + 1;
-            while (at < text.size() && identifierChar(text[at])) ++at;
-            const auto location = origin(start);
-            SourceInvocation call;
-            call.name = "build";
-            call.line = location.first;
-            call.column = location.second;
-            call.groups.push_back({ '[', { fragment({ flag, at }) } });
-            const auto reference = std::to_string(invocations_.size());
-            invocations_.push_back(std::move(call));
-            output += "$build";
-            if (anchored) output += "@!" + reference + "[@!macrofragment" + reference + "_0]";
-            continue;
-        }
-        if (text[at] != '$' || at + 1 == text.size() || !(std::isalpha(static_cast<unsigned char>(text[at + 1])) || text[at + 1] == '_'))
+        const bool shortBuild = text.compare(at, 2, "$!") == 0;
+        const auto nameBegin = at + (shortBuild ? 2 : 1);
+        if (text[at] != '$' || nameBegin >= text.size()
+            || !(std::isalpha(static_cast<unsigned char>(text[nameBegin])) || text[nameBegin] == '_'))
         {
             output += text[at++];
             continue;
         }
-        ++at;
+        at = nameBegin + 1;
         while (at < text.size() && identifierChar(text[at])) ++at;
         /* 限定名宏调用（`$std::core::assert`）：模块路径要一起吃进来。否则片段捕获把
          * `$std` 当成完整名字、在它后面插 `@!编号`，`::core::assert` 留在原文里挨着，
          * 词法只能切成「宏名 + 作用域」两个 token，解析必然报错。 */
-        while (at + 1 < text.size() && text[at] == ':' && text[at + 1] == ':' &&
+        while (!shortBuild && at + 1 < text.size() && text[at] == ':' && text[at + 1] == ':' &&
                (std::isalpha(static_cast<unsigned char>(text[at + 2])) || text[at + 2] == '_'))
         {
             at += 2;
             while (at < text.size() && identifierChar(text[at])) ++at;
         }
-        const auto name = text.substr(start + 1, at - start - 1);
-        if (text.compare(at, 2, "@!") == 0)
+        const auto endName = at;
+        const auto name = shortBuild ? std::string("build") : text.substr(nameBegin, endName - nameBegin);
+        if (!shortBuild && text.compare(at, 2, "@!") == 0)
         {
             at += 2;
             while (at < text.size() && std::isdigit(static_cast<unsigned char>(text[at]))) ++at;
@@ -271,6 +257,7 @@ bool SourceFragments::capture(Memory::String &source, std::string &error, std::s
         const auto location = origin(start);
         call.line = location.first;
         call.column = location.second;
+        if (shortBuild) call.groups.push_back({ '[', { fragment({ nameBegin, endName }) } });
         /**
          * @brief 保存公开括号的词法范围，供生成解析器读取真实的组结构。
          */
@@ -318,13 +305,18 @@ bool SourceFragments::capture(Memory::String &source, std::string &error, std::s
             at = next;
         }
         invocations_.push_back(std::move(call));
-        const auto endName = start + name.size() + 1;
-        output.append(text, start, endName - start);
+        if (shortBuild) output += "$build";
+        else output.append(text, start, endName - start);
         if (anchored)
         {
             const auto reference = std::to_string(invocations_.size() - 1);
             output += "@!" + reference;
             std::size_t previous = endName, argument = 0;
+            if (shortBuild)
+            {
+                output += "[@!macrofragment" + reference + "_0]";
+                ++argument;
+            }
             for (const auto &segment : segments)
             {
                 output.append(text, previous, segment.begin - previous);

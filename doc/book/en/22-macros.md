@@ -1290,8 +1290,6 @@ Nested user types must also derive Json. References, functions, dynamic interfac
 
 Json derivation does not expose runtime fields through @Reflect. These are separate choices. Existing reflected types without Json derivation retain their previous serialization policy. Debug in Chapter 22 is for inspection, not JSON persistence.
 
-### Local constants during macro expansion
-
 #### Test an integer for primality at compile time
 
 `$let name = expr` infers the constant's type, and `$let<T> name = expr` specifies it. The read-only binding is visible in its macro template block. Later `$let`, `$if`, and `$compile_assert` directives can read it, and generated code can use its literal value. The example accepts integers below 49 because every composite number in that range has a prime divisor of 2, 3, or 5.
@@ -1390,7 +1388,7 @@ Hello, ChaLi | 2.25 | A
 
 #### Compile-time string interpolation
 
-In `$let`, `$if`, and `$compile_assert`, `f"…{expression}…"` can use compile-time constants. Placeholders use the default runtime interpolation format and can contain nested interpolation. Write `\{` and `\}` for literal braces.
+In `$let`, `$if`, and `$compile_assert`, `f"…{expression}…"` can use compile-time constants. Placeholders use the runtime interpolation format, which prints eight digits after the decimal point for floats by default. They can contain nested interpolation. Write `\{` and `\}` for literal braces.
 
 <!-- verify-book -->
 ```chali
@@ -1409,7 +1407,7 @@ $let<char> grade = 'A'
 $let<float32> scale = 2.25f
 $let detail = f"{scale}/{grade}/{enabled}"
 $let message = f"{name}: {f"sum={BASE + 3}"}, {detail}, \{literal\}"
-$compile_assert(message == "ChaLi: sum=5, 2.25/A/1, {literal}", f"wrong message: {message}");
+$compile_assert(message == "ChaLi: sum=5, 2.25000000/A/1, {literal}", f"wrong message: {message}");
 println("{}", message);
 $end_macro
 
@@ -1427,7 +1425,7 @@ void main() {
 ```
 
 ```text
-ChaLi: sum=5, 2.25/A/1, {literal}
+ChaLi: sum=5, 2.25000000/A/1, {literal}
 ```
 
 #### Conditional compilation outside macros

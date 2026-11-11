@@ -5601,6 +5601,9 @@ ast::NodePtr BraceStringValue(int argId, const Memory::String &format)
         ast::Node::call(type->name + "." + chosen->name, names, values));
 }
 
+/** @brief 花括号浮点占位符在未指定精度时保留八位小数。 */
+constexpr char BraceDefaultFloatFormat[] = "%.8f";
+
 /**
  * @brief 把大括号格式串翻成百分号格式串，并把实参降级（`std::core::print` / `std::core::format` 共用）。
  *
@@ -5688,7 +5691,7 @@ bool BuildFormatTarget(const Memory::Vector<int> &args, const char *who,
         if (type->kind == MType::Double)
         {
             if (spec.empty())
-                target += "%g";
+                target += BraceDefaultFloatFormat;
             else
             {
                 Memory::String digits = spec;
