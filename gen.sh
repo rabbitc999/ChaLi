@@ -4,10 +4,10 @@
 #   sh gen.sh
 #
 # 文法生成器（ParseEngine）是外部依赖，按下面顺序找（也可用 ENGINE=<路径> 指定）：
-#   ./ParseEngine.exe、./ParseEngine             —— 放到本项目根目录（最省事）
 #   ../ParseEngine/build/bin/ParseEngine[.exe]   —— 与 ParseEngine 仓库并排时
+#   ./ParseEngine.exe、./ParseEngine             —— 放到本项目根目录
 #   ../build/bin/ParseEngine[.exe]               —— 还住在 ParseEngine 仓库里时
-# Windows 未找到时自动下载最新发布版 ParseEngine.exe 到本项目根目录。
+# Windows 未找到支持 %posttokens 的版本时，下载 ParseEngine v1.4.0 到项目根目录。
 set -e
 # Git Bash 的 UTF-8 输出与 Windows Python 的默认代码页可能不同，统一子进程编码。
 export PYTHONUTF8=1
@@ -19,16 +19,18 @@ export TMPDIR="$CHALI_PROJECT_TMP"
 export TMP="$CHALI_PROJECT_TMP"
 export TEMP="$CHALI_PROJECT_TMP"
 
-# 文法生成器（ParseEngine）在哪：ENGINE=<路径> 显式指定；否则先看**本项目根目录**（默认就
-# 找它），再退回同级的 ParseEngine 仓库 build/bin/。生成器是外部依赖：本项目只有 .gram。
+# ENGINE 可覆盖搜索顺序。优先使用同级 ParseEngine 仓库构建的生成器。
+supports_posttokens() {
+    [ -x "$1" ] && "$1" man '%posttokens' >/dev/null 2>&1
+}
 if [ -z "${ENGINE:-}" ]; then
     # 两条讲究：① 候选要写成带 `./` 的路径 —— 裸名会被 bash 当成 PATH 查找，
     # 当前目录不在 PATH 里，于是报 `ParseEngine.exe: command not found`；
     # ② Windows 上 `.exe` 排在前面 —— MSYS 的 `test -x ParseEngine` 会因 .exe 后缀假命中。
-    for candidate in "./ParseEngine.exe" "./ParseEngine" \
-                     "../ParseEngine/build/bin/ParseEngine.exe" "../ParseEngine/build/bin/ParseEngine" \
+    for candidate in "../ParseEngine/build/bin/ParseEngine.exe" "../ParseEngine/build/bin/ParseEngine" \
+                     "./ParseEngine.exe" "./ParseEngine" \
                      "../build/bin/ParseEngine.exe" "../build/bin/ParseEngine"; do
-        if [ -x "$candidate" ]; then
+        if supports_posttokens "$candidate"; then
             ENGINE="$candidate"
             break
         fi
@@ -37,7 +39,7 @@ fi
 if [ -z "${ENGINE:-}" ]; then
     case "${OS:-}:$(uname -s)" in
     Windows_NT:*|*:MINGW*|*:MSYS*|*:CYGWIN*)
-        echo "未找到 ParseEngine，正在下载最新发布版……"
+        echo "未找到支持 %posttokens 的 ParseEngine，正在下载 v1.4.0……"
         python - <<'PY'
 import os
 from pathlib import Path
@@ -46,8 +48,8 @@ import tempfile
 import urllib.request
 
 # 发行版下载地址：GitHub 一份，按顺序尝试，先成功的那个用。
-# GitHub 优先。解析器生成器只能使用v1.3.0版本的
-SOURCES = ["https://github.com/rabbitc999/ParseEngine/releases/download/v1.3.0/ParseEngine.exe"]
+# ChaLi 的词法后处理需要 ParseEngine v1.4.0。
+SOURCES = ["https://github.com/rabbitc999/ParseEngine/releases/download/v1.4.0/ParseEngine.exe"]
 temporary = None
 try:
     failures = []
@@ -87,6 +89,11 @@ if [ -z "${ENGINE:-}" ] || [ ! -x "$ENGINE" ]; then
     echo "  2) 复制到本项目根目录：cp ../ParseEngine/build/bin/ParseEngine.exe ." >&2
     echo "     （PowerShell：Copy-Item ..\ParseEngine\build\bin\ParseEngine.exe .）" >&2
     echo "  3) 显式指路径：ENGINE=/path/to/ParseEngine.exe sh gen.sh" >&2
+    exit 2
+fi
+
+if ! supports_posttokens "$ENGINE"; then
+    echo "ParseEngine 不支持 %posttokens，请通过 ENGINE 指定支持整批 Token 后处理的 v1.4.0 或更新版本。" >&2
     exit 2
 fi
 

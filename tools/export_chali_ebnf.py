@@ -36,10 +36,14 @@ def generate(source):
         raise ValueError("语义动作大括号未闭合")
     literals = {}
     regexes = {}
+    placeholders = set()
     declarations = source + "\n" + TOKEN_GRAMMAR.read_text(encoding="utf-8")
     for match in re.finditer(r'^%(define|token)\s+(?:(regex)\s+)?(\w+)\s+("(?:\\.|[^"\\])*")', declarations, re.M):
         value = json.loads(match[4].replace(r"\|", "|"))
-        (regexes if match[2] else literals)[match[3]] = value
+        if match[2] or value:
+            (regexes if match[2] else literals)[match[3]] = value
+        else:
+            placeholders.add(match[3])
     rules = []
     used = set()
     for index in range(len(tokens) - 1):
@@ -63,11 +67,12 @@ def generate(source):
         rhs = [", ".join(alt) for alt in alternatives]
         rules.append(name + " = " + ("\n    | ".join(rhs)) + " ;")
     definitions = {rule.split(" = ", 1)[0] for rule in rules}
-    unknown = used - definitions - literals.keys() - regexes.keys() - {"VARIABLE", "NUMBER"}
+    unknown = used - definitions - literals.keys() - regexes.keys() - placeholders - {"VARIABLE", "NUMBER"}
     if unknown:
         raise ValueError(f"未定义文法符号：{sorted(unknown)}")
     assert "function_type" in definitions and "fptr_part" not in definitions and "fptrdef_decl" not in definitions
     literal_lines = [f"| `{name}` | `{value.replace('|', '&#124;')}` |" for name, value in literals.items()]
+    literal_lines.extend(f"| `{name}` | 由词法后处理产生 |" for name in sorted(placeholders))
     regex_lines = [f"{name} = ? 正则 {json.dumps(value, ensure_ascii=False)} ? ;" for name, value in regexes.items()]
     # 附录里写的是文法的**当前仓库相对路径**，从 GRAMMAR 推出来，搬目录时不用再改这里。
     grammar_rel = GRAMMAR.relative_to(ROOT).as_posix()

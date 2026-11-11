@@ -182,9 +182,11 @@
 %token FSTRING "__chali_fstring"
 %token TYPECHECK "__chali_typecheck"
 
-/* 泛型归一化后的内部标点；不登记任何容器名关键字。 */
-%token TYPE_ARGS_BEGIN "@<"
-%token TYPE_ARGS_END "@>"
+/* 容器类型实参边界由词法后处理产生。 */
+%token TYPE_ARGS_BEGIN ""
+%token TYPE_ARGS_END ""
+
+%posttokens include "syntax/type_argument_tokens.inc"
 
 /* 显式闭包类型选择使用独立边界，避免与容器类型归约混淆。 */
 %token CLOSURE_ARGS_BEGIN "@!<"

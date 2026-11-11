@@ -17,6 +17,7 @@ namespace ast { struct Program; }
 #include <memory>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace chali_macro
@@ -1128,6 +1129,13 @@ int M_PendingType();
  */
 void M_SetDeclType(int declaratorList, int typeId, int constFlag);
 void M_SetProgram(int topList);
+
+/**
+ * @brief 查询当前单态化会话是否登记了该泛型名。
+ * @param name 词法器识别出的类型名。
+ * @return 已登记时返回 true。
+ */
+bool M_IsKnownGenericName(std::string_view name);
 
 /**
  * @brief 语义检查与 AST 降级，供原生 LLVM 后端直接访问。

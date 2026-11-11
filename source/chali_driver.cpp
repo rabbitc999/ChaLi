@@ -1188,7 +1188,6 @@ try
         return 1;
     }
     chali_lambda::markClosureTypeArguments(text);
-    chali_generic::markContainerTypeArguments(text);
     chali_macro::markHeaderBoundaries(text);
     if (!buildStandardTemplates.empty())
     {

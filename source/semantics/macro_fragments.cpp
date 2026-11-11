@@ -144,7 +144,6 @@ int ParseMacroFragment(const chali_macro::SourceFragment &source, int category, 
         success = chali_interpolation::run(normalized, problem);
         text = normalized.text;
         chali_lambda::markClosureTypeArguments(text);
-        chali_generic::markContainerTypeArguments(text, category == 2);
         chali_macro::markHeaderBoundaries(text);
         text = Memory::String(entries[category]) + text;
         g_macroFragmentFirstLine = source.line;

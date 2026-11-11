@@ -50,6 +50,16 @@ T auditImportedInner<T>(generic_monomorphization_models::Inner<T,Fixed> value){r
 T auditBareInner<T>(Inner<T,Fixed> value){return value.first;}
 
 void main(){
+    List</* > >> */List<List<int64>>> lexicalNested;
+    List<List<int64>> lexicalMiddle;
+    List<int64> lexicalInner;
+    lexicalInner.push(32);
+    lexicalMiddle.push(cast<List<int64>>(lexicalInner));
+    lexicalNested.push(lexicalMiddle);
+    int64 Bits=lexicalNested[0][0][0];
+    assert(Bits>>2==8 && Bits<128>>1 && Bits>0);
+    Bits>>=1;
+    assert(Bits==16 && "@<>>@>"=="@<>>@>");
     for(int64 iteration in range(0,512)){
         AuditTracked<String>::drops=0;
 

@@ -90,15 +90,6 @@ int main()
     require(canonicalType("demo::Generic__int64") == "Generic__int64", "泛型实例限定名称未归一");
     require(mangle("native", { "int64 fn(int64)", "(int64,std::core::String)" }) == "native____chl_330bfbc9c27b9276_int64_fn_int64_____chl_4e24b30d525edf54__int64_std__core__String_", "复杂类型的冻结宿主符号发生变化");
     require(mangle("native", { "int32" }) == "native__int32", "简单类型的既有宿主符号发生变化");
-    Memory::String marked = "List<List<int64>> xs; List<int64 fn(int64)> fs; List</* < > */int64> cs; (a<b); a<b; a>>1;";
-    markContainerTypeArguments(marked);
-    require(marked == "List@<List@<int64@>@> xs; List@<int64 fn(int64)@> fs; List@</* < > */int64@> cs; (a<b); a<b; a>>1;", "容器标点破坏了比较、右移、注释或函数类型");
-    auto once = marked;
-    markContainerTypeArguments(marked);
-    require(marked == once, "容器标点归一化不幂等");
-    Memory::String memberInterfaces = "$implement Count<T>;\n$implement Count<String>;";
-    markContainerTypeArguments(memberInterfaces);
-    require(memberInterfaces == "$implement Count@<T@>;\n$implement Count@<String@>;", "成员宏接口实参未保留类型语法");
     preprocess::Result mapped;
     mapped.text = "struct AuditOrigin<T>{\nT value;\n};\n";
     for (std::size_t line = 0; line < 3; ++line) mapped.lineMap.push_back({ "mapped.chl", 100u + line });

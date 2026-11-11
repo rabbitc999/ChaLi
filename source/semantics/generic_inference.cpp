@@ -376,7 +376,6 @@ bool PrepareGenericSignatures()
         chali::Engine parser;
         int value = 0;
         g_parseModule = generic.module;
-        chali_generic::markContainerTypeArguments(source);
         if (parser.runText(source, &value) != chali::Status::Ok)
             return Fail("泛型声明的签名无法解析：" + generic.name);
         MGenericSignature signature;

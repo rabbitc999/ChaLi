@@ -593,122 +593,6 @@ void normalizeGenericSyntax(Memory::String &source)
 }
 
 /**
- * @brief 标记标准容器类型实参的标点，保留普通标识符与比较运算符的词法角色。
- * @param source 已完成单态化的源码；仅插入内部标点，不改变换行。
- * @return 无。
- */
-void markContainerTypeArguments(Memory::String &source, bool typeFragment)
-{
-    Memory::Set<std::size_t> angles;
-    for (std::size_t at = 0; at < source.size();)
-    {
-        if (source.compare(at, 2, "//") == 0)
-        {
-            auto end = source.find('\n', at);
-            if (end == Memory::String::npos) break;
-            at = end;
-            continue;
-        }
-        if (source.compare(at, 2, "/*") == 0)
-        {
-            auto end = source.find("*/", at + 2);
-            if (end == Memory::String::npos) break;
-            at = end + 2;
-            continue;
-        }
-        if (source[at] == '"' || source[at] == '\'')
-        {
-            const char quote = source[at++];
-            while (at < source.size())
-            {
-                if (source[at] == '\\')
-                {
-                    at += 2;
-                    continue;
-                }
-                if (source[at++] == quote) break;
-            }
-            continue;
-        }
-        if (!identStart(source[at]))
-        {
-            ++at;
-            continue;
-        }
-        auto start = at++;
-        while (at < source.size() && identPart(source[at])) ++at;
-        const auto name = source.substr(start, at - start);
-        if (name.empty() || (!typeFragment && !std::isupper(static_cast<unsigned char>(name[0])) && !session.generics.count(name))) continue;
-        auto previous = start;
-        while (previous && std::isspace(static_cast<unsigned char>(source[previous - 1]))) --previous;
-        if (previous && source[previous - 1] == '$') continue;
-        auto keyword = previous;
-        while (keyword && identPart(source[keyword - 1])) --keyword;
-        if (keyword && source[keyword - 1] == '$' && (source.substr(keyword, previous - keyword) == "macro" || source.substr(keyword, previous - keyword) == "replace")) continue;
-        auto open = at;
-        skipSpace(source, open);
-        if (open >= source.size() || source[open] != '<') continue;
-        std::size_t close = 0;
-        if (!balanced(source, open, '<', '>', close)) continue;
-        int rounds = 0, squares = 0;
-        bool type = true;
-        Memory::Vector<std::size_t> candidate{ open };
-        for (auto i = open + 1; i < close; ++i)
-        {
-            if (source.compare(i, 2, "/*") == 0)
-            {
-                auto end = source.find("*/", i + 2);
-                if (end == Memory::String::npos || end > close)
-                {
-                    type = false;
-                    break;
-                }
-                i = end + 1;
-                continue;
-            }
-            if (source.compare(i, 2, "//") == 0)
-            {
-                auto end = source.find('\n', i + 2);
-                if (end == Memory::String::npos || end > close)
-                {
-                    type = false;
-                    break;
-                }
-                i = end;
-                continue;
-            }
-            const char ch = source[i];
-            if (ch == '<' || (ch == '>' && source[i - 1] != '-')) candidate.push_back(i);
-            if (ch == '(')
-                ++rounds;
-            else if (ch == ')' && --rounds < 0)
-            {
-                type = false;
-                break;
-            }
-            if (ch == '[')
-                ++squares;
-            else if (ch == ']' && --squares < 0)
-            {
-                type = false;
-                break;
-            }
-            if (ch == ';' || ch == '{' || ch == '}' || ch == '=' || ch == '+' || ch == '/' || ch == '"' || ch == '\''
-                || (ch == '&' && i + 1 < close && source[i + 1] == '&')
-                || (ch == '|' && i + 1 < close && source[i + 1] == '|'))
-            {
-                type = false;
-                break;
-            }
-        }
-        if (!type || rounds || squares) continue;
-        candidate.push_back(close);
-        for (auto i : candidate) angles.insert(i);
-    }
-    for (auto at = angles.rbegin(); at != angles.rend(); ++at) source.insert(*at, 1u, '@');
-}
-
-/**
  * @brief 提取泛型声明并保留原始行映射。
  * @param source 读取并移除模板声明的完整源码。
  * @param lines 原始源码的逐行来源。
@@ -2738,7 +2622,6 @@ interface Closeable { void close(); };
     result.text += generated;
     result.lineMap.insert(result.lineMap.end(), generatedOrigins.begin(), generatedOrigins.end());
     session.emitted = pending.size();
-    markContainerTypeArguments(result.text);
     return true;
 }
 
@@ -2773,7 +2656,6 @@ bool instantiate(const Memory::String &name, const Memory::Vector<Memory::String
         if (origins) appendInstantiationOrigins(expansion, declaration, *origins);
     }
     collectInterfaces(generated, session.implemented);
-    markContainerTypeArguments(generated);
     chali_lambda::markClosureTypeArguments(generated);
     return true;
 }

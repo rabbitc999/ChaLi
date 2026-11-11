@@ -263,10 +263,10 @@ MyBox<int64 fn(int64)> box;
 | `QUESTION` | `?` |
 | `FSTRING` | `__chali_fstring` |
 | `TYPECHECK` | `__chali_typecheck` |
-| `TYPE_ARGS_BEGIN` | `@<` |
-| `TYPE_ARGS_END` | `@>` |
 | `CLOSURE_ARGS_BEGIN` | `@!<` |
 | `CLOSURE_ARGS_END` | `@!>` |
+| `TYPE_ARGS_BEGIN` | 由词法后处理产生 |
+| `TYPE_ARGS_END` | 由词法后处理产生 |
 
 ### 显式正则词法规则
 
@@ -445,8 +445,8 @@ element_type = type
     | type, "const", "&"
     | type, "mut", "&" ;
 
-container_type = name_token, "@<", closure_type_arguments, "@>"
-    | qualified_ref, "@<", closure_type_arguments, "@>" ;
+container_type = name_token, TYPE_ARGS_BEGIN, closure_type_arguments, TYPE_ARGS_END
+    | qualified_ref, TYPE_ARGS_BEGIN, closure_type_arguments, TYPE_ARGS_END ;
 
 builtin_type = "int8"
     | "int16"

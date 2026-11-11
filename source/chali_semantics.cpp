@@ -3340,7 +3340,6 @@ int M_Compile(const char *moduleName, const char *outPrefix, int run, int emitBi
                 int value = 0;
                 g_parseModule.clear();
                 const auto firstBridgeNode = g_nodes.size();
-                chali_generic::markContainerTypeArguments(generated);
                 if (parser.runText(generated, &value) != chali::Status::Ok)
                 {
                     const auto *error = parser.lastError();
@@ -4173,6 +4172,16 @@ void M_ShiftNodeLines(std::size_t from, std::size_t lines)
         if (g_nodes[i].macroDefinitionLine != 0) g_nodes[i].macroDefinitionLine += lines;
         if (g_nodes[i].expansionLine != 0) g_nodes[i].expansionLine += lines;
     }
+}
+
+/**
+ * @brief 查询当前单态化会话中的泛型名。
+ * @param name 词法器识别出的类型名。
+ * @return 已登记时返回 true。
+ */
+bool M_IsKnownGenericName(std::string_view name)
+{
+    return chali_generic::session.generics.count(Memory::String(name)) != 0;
 }
 
 std::size_t M_ParseDiagnosticCount() { return g_parseDiagnostics.size(); }

@@ -27,7 +27,7 @@
 | 十进制整数 | `[0-9]+`；超出 `int64` 报越界，唯一例外是紧跟在 `-` 之后的 `9223372036854775808` | `NUMBER` |
 | 浮点 / 无符号 / 十六进制 / 二进制 | `1.5` / `1.5e3` / `1.5f` / `42u` / `0xFF` / `b1010` | `FLIT` `ULIT` `HEXLIT` `BINLIT` |
 | 字符串 / 字符 | `"..."`（支持转义）、`'x'`；`f"..."` 在词法期归一化为插值标记 | `STRING` `CHRLIT` `FSTRING` |
-| 泛型实参边界 | 源码写 `List<int64>`，词法期由归一化层改写成内部标记 `@<` `@>`；原始 `<` `>` 始终是比较 | `TYPE_ARGS_BEGIN` / `TYPE_ARGS_END` |
+| 泛型实参边界 | 源码写 `List<int64>`，词法后处理在类型实参处标记角括号 Token，保留原始源码位置 | `TYPE_ARGS_BEGIN` / `TYPE_ARGS_END` |
 
 内部标记（`@annotation`、`@!macrobody`、`@!macroparse_*`、`@!<`、`__chali_fstring`、`__typeTag`）
 由预处理与归一化层产生，**不是**用户可以书写的语法。

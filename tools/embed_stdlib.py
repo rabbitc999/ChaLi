@@ -394,7 +394,7 @@ def dependencies():
                            "library/desktop_gui/desktop_audio.chl.in", "library/desktop_gui/controls.def",
                            "library/xml/xml.chl.in", "library/crypto/crypto.chl.in")))
     paths.update(map(Path, ("tools/embed_stdlib.py", "tools/project_temp.py", "tools/embedded_asset_cache.py", "tools/stackvm_sources.py", "tools/embed_manual.py", "source/chali.gram",
-                           "source/chali_token.gram", "doc/04-language-reference.md",
+                           "source/chali_token.gram", "source/syntax/type_argument_tokens.inc", "doc/04-language-reference.md",
                            "doc/25-literals-operators-macros.md", "skills/chali-programming/SKILL.md")))
     names = sorted(path.as_posix() for path in paths)
     # Windows GNU make 无法可靠打开非 ASCII 前置文件名，改用固定 ASCII 路径
