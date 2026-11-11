@@ -102,13 +102,13 @@ void main() {
 
 ```text
 map    5 6 10
-map    1.5 **** 5
+map    1.50000000 **** 5
 filter 4 3 5
 reduce 14 114
-sum    14 7
+sum    14 7.00000000
 count  2 4
 closure 13 15
-float64    3.75
+float64    3.75000000
 ```
 
 </details>
