@@ -1,0 +1,16 @@
+$macro SHOW_CONSTANTS() -> stmt
+$let<String> greeting = "Hello, " + "ChaLi"
+$let<float32> scale = 1.5f + 0.75f
+$let<char> grade = 'A'
+$let enabled = grade == 'A' && scale > 2.0f
+
+$compile_assert(greeting == "Hello, ChaLi", "unexpected greeting");
+$compile_assert(enabled, "expected the feature to be enabled");
+$if enabled
+    println("{1} | {2:2F} | {3}", greeting, scale, grade);
+$end_if
+$end_macro
+
+void main() {
+    $SHOW_CONSTANTS();
+}

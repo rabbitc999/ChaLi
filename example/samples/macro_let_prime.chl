@@ -1,0 +1,15 @@
+$macro IS_PRIME_UNDER_49(value) -> expr
+$let n = value
+$let small_prime = n == 2 || n == 3 || n == 5
+$let has_small_divisor = n % 2 == 0 || n % 3 == 0 || n % 5 == 0
+$compile_assert(n < 49, "expected a value below 49");
+$let is_prime = small_prime || (n > 5 && !has_small_divisor)
+is_prime
+$end_macro
+
+void main() {
+    assert($IS_PRIME_UNDER_49(47));
+    assert(!$IS_PRIME_UNDER_49(25));
+    assert(!$IS_PRIME_UNDER_49(-7));
+    println("47 is prime");
+}

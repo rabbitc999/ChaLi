@@ -1,0 +1,4 @@
+$if 1
+    int64 selected = 1;
+$end_if
+void main() { }

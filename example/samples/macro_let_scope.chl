@@ -1,0 +1,33 @@
+$macro CHECK_BINDINGS(value, ...items: value) -> expr
+{
+    $let<uint8> limit = 255
+    $let<int8> minimum = -128
+    $let total = value + 1
+    $compile_assert(limit == 255 && minimum == -128, "integer endpoints");
+
+    int64 result = 0;
+    $for item in items
+        $let is_selected = item < total && item <= limit
+        $if is_selected
+            result += item;
+        $end_if
+    $end_for
+
+    $if true
+        $let total = 100
+        $compile_assert(total == 100, "branch shadowing");
+    $else
+        $let<uint8> bad = 300
+    $end_if
+
+    $compile_assert(total == value + 1, "branch scope leaked");
+    yield result;
+}
+$end_macro
+
+void main() {
+    int64 total = 500;
+    assert($CHECK_BINDINGS(10, 2, 20, 5) == 7);
+    assert($CHECK_BINDINGS(3, 2, 20, 5) == 2);
+    assert(total == 500);
+}

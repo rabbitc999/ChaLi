@@ -1,0 +1,7 @@
+$macro BAD() -> expr
+$let<uint8> small = -1
+small
+$end_macro
+void main() {
+    let value = $BAD();
+}

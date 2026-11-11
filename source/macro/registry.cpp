@@ -222,7 +222,7 @@ int Registry::instantiate(int call, std::string &error,
     std::function<bool(int)> needsPreparation = [&](int id) {
         if (id < 0 || !preparationSeen.insert(id).second) return false;
         const auto &syntax = nodes_[id];
-        if (syntax.kind == MNode::MacroFieldFor || syntax.kind == MNode::MacroCompileIf || (syntax.kind == MNode::MacroCall && (syntax.s == "count" || syntax.s == "compile_error" || syntax.s == "compile_assert"))) return true;
+        if (syntax.kind == MNode::MacroLet || syntax.kind == MNode::MacroFieldFor || syntax.kind == MNode::MacroCompileIf || (syntax.kind == MNode::MacroCall && (syntax.s == "count" || syntax.s == "compile_error" || syntax.s == "compile_assert"))) return true;
         for (const int child : syntax.kids)
             if (needsPreparation(child)) return true;
         if (needsPreparation(syntax.guard)) return true;

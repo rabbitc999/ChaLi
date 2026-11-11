@@ -1,0 +1,4 @@
+$if true
+    MissingType selected;
+$end_if
+void main() { }

@@ -25,6 +25,7 @@
 %token MACRO_REGEX "$regex"
 %token MACRO_END_REGEX "$end_regex"
 %token MACRO_FOR "$for"
+%token MACRO_LET "$let"
 %token MACRO_IF "$if"
 %token MACRO_END_IF "$end_if"
 %token MACRO_END_FOR "$end_for"

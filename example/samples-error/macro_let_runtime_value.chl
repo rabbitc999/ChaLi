@@ -1,0 +1,8 @@
+$macro BAD(input) -> expr
+$let small = input
+small
+$end_macro
+void main() {
+    int64 value = 42;
+    let result = $BAD(value);
+}

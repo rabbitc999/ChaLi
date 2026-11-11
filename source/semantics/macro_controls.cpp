@@ -284,17 +284,122 @@ bool MatchMacroType(const std::shared_ptr<const MType> &actual, const std::share
 }
 
 /**
+ * @brief 读取遵循普通 char 字面量规则的单个字节。
+ * @param node 带引号的字符语法。
+ * @param value 接收解码后的字节。
+ * @return 字面量能表示一个 char 时返回真。
+ */
+bool ReadMacroLetChar(const MNode &node, unsigned char &value)
+{
+    const auto text = UnescapeText(node.s.substr(1, node.s.size() - 2));
+    if (text.size() != 1) return Fail("$let 的 char 字面量必须是一个 UTF-8 字节");
+    value = static_cast<unsigned char>(text[0]);
+    return true;
+}
+
+/**
+
+ * @brief 将宏绑定的标量初始化式求值并物化为带类型的字面量。
+ * @param id 已归一化的初始化式节点。
+ * @param declaredType 显式类型编号，负数表示推导。
+ * @return 成功时返回字面量编号。
+ */
+int EvaluateMacroLet(int id, int declaredType)
+{
+    const auto type = declaredType >= 0 ? T(declaredType) : nullptr;
+    const auto source = N(id);
+    if (source.kind == MNode::Str)
+    {
+        if (!type || IsStandardOpcode(type, "String")) return id;
+        auto resolved = Memory::makeShared<MType>(*type);
+        if (resolved->unresolvedName && !ResolveImportedTypeNames(false, resolved)) return -1;
+        if (resolved->name == "std::core::String") return id;
+        Fail("$let 初始化式与显式类型不兼容");
+        return -1;
+    }
+    if (source.kind == MNode::Char)
+    {
+        unsigned char value;
+        if (type && type->kind != MType::Char)
+        {
+            Fail("$let 初始化式与显式类型不兼容");
+            return -1;
+        }
+        return ReadMacroLetChar(source, value) ? id : -1;
+    }
+    MConstant value;
+    if (!EvaluateConstant(id, &value)) return -1;
+    int literalType = declaredType;
+    if (type)
+    {
+        if (type->kind == MType::Int && value.kind == MConstant::Integer)
+        {
+            const unsigned bits = type->bits;
+            const bool negative = !value.isUnsigned && value.integer < 0;
+            const auto magnitude = static_cast<std::uint64_t>(value.integer);
+            const auto max = (std::uint64_t(1) << (bits - 1)) - 1;
+            const bool fits = type->isUnsigned ? !negative && (bits == 64 || magnitude <= (max << 1 | 1)) :
+                              negative ? value.integer >= -static_cast<long long>(max) - 1 : magnitude <= max;
+            if (!fits)
+            {
+                Fail("$let 整数初始化式超出显式类型范围");
+                return -1;
+            }
+            value.isUnsigned = type->isUnsigned;
+        }
+        else if (type->kind == MType::Double && value.kind != MConstant::Boolean)
+        {
+            if (value.kind == MConstant::Integer)
+                value.floating = value.isUnsigned ? double(std::uint64_t(value.integer)) : double(value.integer);
+            value.kind = MConstant::Floating;
+            if (type->bits == 32) value.floating = static_cast<float>(value.floating);
+            if (!std::isfinite(value.floating))
+            {
+                Fail("$let 浮点初始化式超出显式类型范围");
+                return -1;
+            }
+        }
+        else if (type->kind != MType::Bool || value.kind != MConstant::Boolean)
+        {
+            Fail("$let 初始化式与显式类型不兼容");
+            return -1;
+        }
+    }
+    else if (value.kind == MConstant::Integer)
+        literalType = M_TypeIntBits(value.bits, value.isUnsigned ? 1 : 0);
+    else if (value.kind == MConstant::Floating)
+        literalType = M_TypeFloatBits(value.bits);
+
+    auto &literal = g_nodes[id];
+    literal.kind = value.kind == MConstant::Integer ? MNode::Int :
+                   value.kind == MConstant::Floating ? MNode::Float : MNode::Bool;
+    literal.type = literalType;
+    literal.i = value.integer;
+    literal.d = value.floating;
+    literal.unsignedLiteral = value.isUnsigned;
+    literal.s.clear();
+    literal.s2.clear();
+    literal.kids.clear();
+    literal.compileMetadata.reset();
+    return id;
+}
+
+/**
  * @brief 在卫生绑定前处理字段循环、常量分支和编译期诊断，仅构造普通 AST。
  * @param root 已替换泛型类型的独立模板。
  * @param inputs 只读宏实参，条件只允许使用其中的常量表达式。
  * @param error 接收失败原因。
+ * @param sourceLocals 普通源码条件所在作用域的声明；宏模板调用时为空。
  * @return 准备成功时返回真。
  */
-bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, std::string &error)
+bool PrepareMacroControlsWithLocals(int root, const std::map<std::string, int> &inputs, std::string &error,
+                                   const Memory::Map<Memory::String, int> *sourceLocals)
 {
     using Meta = chali_macro::MetadataValue;
+    const auto templateContext = root >= 0 ? N(root).syntaxContext : 0;
     Memory::Map<Memory::String, Meta> environment;
-    Memory::Map<Memory::String, int> localBindings;
+    Memory::Map<Memory::String, int> localBindings = sourceLocals ? *sourceLocals : Memory::Map<Memory::String, int>{};
+    Memory::Map<Memory::String, int> compileBindings;
     Memory::Vector<Meta> fieldPath;
     Memory::Set<int> statementLists;
     Memory::Set<int> activeConstants;
@@ -311,7 +416,55 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
         if (node.kind == MNode::Case && !node.kids.empty()) statementLists.insert(node.kids[0]);
         if (IsMacroCompileDiagnostic(id))
             return PrepareMacroDiagnostic(id, [&](int child) { return visit(child, depth + 1, true); }, fieldPath, error);
-        if (node.kind == MNode::MacroFor) return true;
+        const auto inheritBindings = [&](int body, const Memory::Map<Memory::String, int> &bindings) {
+            if (body < 0 || bindings.empty()) return;
+            const int list = N(body).kids[0];
+            Memory::Vector<int> children;
+            for (const auto &[name, initializer] : bindings)
+            {
+                const int binding = M_New(MNode::MacroLet, name);
+                g_nodes[binding].kids = { initializer };
+                g_nodes[binding].syntaxContext = node.syntaxContext;
+                children.push_back(binding);
+            }
+            children.insert(children.end(), N(list).kids.begin(), N(list).kids.end());
+            g_nodes[list].kids = std::move(children);
+        };
+        if (node.kind == MNode::MacroFor)
+        {
+            if (compileBindings.empty()) return true;
+            auto bindings = compileBindings;
+            if (node.kids.size() == 3)
+                for (int variable : N(node.kids[1]).kids) bindings.erase(N(variable).s);
+            else
+                bindings.erase(node.s);
+            inheritBindings(node.kids[0], bindings);
+            return true;
+        }
+        if ((node.kind == MNode::MacroMatch || node.kind == MNode::MacroRegex)
+            && (!compileBindings.empty() || chali_macro::ContainsMacroLet(g_nodes, id)))
+        {
+            if (node.kind == MNode::MacroMatch)
+                for (int branch : N(node.kids[0]).kids) inheritBindings(N(branch).kids[0], compileBindings);
+            else
+                for (int body : node.kids) inheritBindings(body, compileBindings);
+            return true;
+        }
+        const bool compileScope = node.kind == MNode::MacroTemplate;
+        if (node.kind == MNode::MacroLet)
+        {
+            if (!node.syntaxContext) return Fail("$let 只能在宏模板中声明");
+            const int initializer = node.kids[0];
+            if (!visit(initializer, depth + 1, true) || EvaluateMacroLet(initializer, node.type) < 0)
+            {
+                error = "$let 初始化式必须是可赋给声明类型的编译期常量：" + std::string(node.s.data(), node.s.size());
+                return false;
+            }
+            compileBindings[node.s] = initializer;
+            g_nodes[id].kind = MNode::MacroTemplate;
+            g_nodes[id].kids = { M_List(), -1 };
+            return true;
+        }
         const bool localScope = node.kind == MNode::Block || node.kind == MNode::Case || node.kind == MNode::FuncDef || node.kind == MNode::MethodDef || node.kind == MNode::GenericLambda || node.kind == MNode::For || node.kind == MNode::Foreach;
         struct RestoreFieldEnvironment
         {
@@ -319,17 +472,22 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             Memory::Map<Memory::String, Meta> saved;
             Memory::Map<Memory::String, int> &locals;
             Memory::Map<Memory::String, int> savedLocals;
+            Memory::Map<Memory::String, int> &compileBindings;
+            Memory::Map<Memory::String, int> savedCompileBindings;
             bool active;
+            bool restoreCompile;
             /** @brief 退出普通词法作用域后恢复外层字段迭代绑定。 */
             ~RestoreFieldEnvironment()
             {
+                if (restoreCompile) compileBindings = std::move(savedCompileBindings);
                 if (active)
                 {
                     current = std::move(saved);
                     locals = std::move(savedLocals);
                 }
             }
-        } restore{ environment, localScope ? environment : Memory::Map<Memory::String, Meta>{}, localBindings, localScope ? localBindings : Memory::Map<Memory::String, int>{}, localScope };
+        } restore{ environment, localScope ? environment : Memory::Map<Memory::String, Meta>{}, localBindings, localScope ? localBindings : Memory::Map<Memory::String, int>{},
+                   compileBindings, localScope || compileScope ? compileBindings : Memory::Map<Memory::String, int>{}, localScope, localScope || compileScope };
         if (node.kind == MNode::MacroCall && node.s == "count")
         {
             if (node.kids.size() != 1 || node.kids[0] < 0 || N(node.kids[0]).kids.size() != 1) return Fail("$count 需要一个变参来源");
@@ -343,17 +501,25 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             SetMacroMetadataInteger(id, N(source->second).kids.size());
             return true;
         }
+        if (node.kind == MNode::Var && node.syntaxContext == templateContext && !node.bindingIdentity && compileBindings.count(node.s))
+        {
+            g_nodes[id] = N(compileBindings.at(node.s));
+            g_nodes[id].sourceLine = node.sourceLine;
+            g_nodes[id].sourceColumn = node.sourceColumn;
+            return true;
+        }
         if (node.kind == MNode::Var && node.syntaxContext && environment.count(node.s))
         {
             SetMacroMetadata(id, environment.at(node.s));
             return true;
         }
-        if (constant && node.kind == MNode::Var && node.syntaxContext && !node.bindingIdentity && localBindings.count(node.s))
+        if (constant && node.kind == MNode::Var && (node.syntaxContext || sourceLocals) && !node.bindingIdentity && localBindings.count(node.s))
         {
             const auto declaration = N(localBindings.at(node.s));
             if (declaration.kind != MNode::Declare || declaration.type2 != 1 || declaration.kids.empty() || declaration.kids[0] < 0)
             {
-                error = "编译期条件不能读取生成代码中的运行时局部变量：" + std::string(node.s.data(), node.s.size());
+                error = (sourceLocals ? "编译期条件不能读取运行时变量：" : "编译期条件不能读取生成代码中的运行时局部变量：")
+                        + std::string(node.s.data(), node.s.size());
                 return false;
             }
             return SubstituteMacroConstant(id, declaration.kids[0], declaration.type, depth, activeConstants, visit, error);
@@ -400,6 +566,7 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             if (!metadata || !MacroMetadataSequence(*metadata, count, element)) return Fail("编译期循环来源必须是字段、变体、载荷、方法、参数、关联类型、接口或类型实参集合");
             const auto saved = environment;
             const auto savedLocals = localBindings;
+            const auto savedCompileBindings = compileBindings;
             const int list = M_List();
             for (std::size_t index = 0; index < count; ++index)
             {
@@ -423,6 +590,8 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
                     field.type = metadata->owner->typeArguments[index];
                 environment = saved;
                 localBindings = savedLocals;
+                compileBindings = savedCompileBindings;
+                compileBindings.erase(node.s);
                 environment[node.s] = field;
                 fieldPath.push_back(field);
                 chali_macro::AstSubstitution copy(g_nodes, budget, &g_types);
@@ -439,6 +608,7 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             }
             environment = saved;
             localBindings = savedLocals;
+            compileBindings = savedCompileBindings;
             g_nodes[id].kind = MNode::MacroTemplate;
             g_nodes[id].kids = { list, -1 };
             g_nodes[id].s.clear();
@@ -470,6 +640,7 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
                 const auto pattern = N(current);
                 if (payload && pattern.kind == MNode::Var)
                 {
+                    compileBindings.erase(pattern.s);
                     environment.erase(pattern.s);
                     localBindings[pattern.s] = current;
                 }
@@ -491,6 +662,7 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
         {
             if (node.kind == MNode::Foreach && index == 1)
             {
+                compileBindings.erase(node.s);
                 environment.erase(node.s);
                 localBindings[node.s] = id;
             }
@@ -504,6 +676,7 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
         if (indexed && !visit(static_cast<int>(node.i), depth + 1, constant)) return false;
         if ((node.kind == MNode::Declare && !group) || node.kind == MNode::Params || node.kind == MNode::Foreach)
         {
+            compileBindings.erase(node.s);
             environment.erase(node.s);
             localBindings[node.s] = id;
         }
@@ -548,6 +721,17 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
             if (!ReadMacroDiagnosticString(id, text, error)) return false;
             SetMacroMetadataString(id, Memory::String(text.data(), text.size()));
         }
+        if (constant && node.kind == MNode::Bin && (node.s == "==" || node.s == "!=") && node.kids.size() == 2
+            && N(node.kids[0]).kind == MNode::Char && N(node.kids[1]).kind == MNode::Char)
+        {
+            unsigned char left, right;
+            if (!ReadMacroLetChar(N(node.kids[0]), left) || !ReadMacroLetChar(N(node.kids[1]), right)) return false;
+            auto &comparison = g_nodes[id];
+            comparison.kind = MNode::Bool;
+            comparison.i = (left == right) == (node.s == "==");
+            comparison.kids.clear();
+            comparison.s.clear();
+        }
         if (constant && node.kind == MNode::Bin && (node.s == "==" || node.s == "!=") && node.kids.size() == 2 && N(node.kids[0]).kind == MNode::Str && N(node.kids[1]).kind == MNode::Str)
         {
             std::string left, right;
@@ -572,7 +756,20 @@ bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, st
         }
         return true;
     };
-    if (visit(root, 0, false)) return true;
+    if (visit(root, 0, sourceLocals != nullptr)) return true;
     if (error.empty()) error = "宏编译期字段或条件准备失败";
     return false;
+}
+
+
+/**
+ * @brief 在绑定宏模板前处理编译期控制。
+ * @param root 已替换泛型类型的模板。
+ * @param inputs 宏实参。
+ * @param error 接收失败原因。
+ * @return 成功时返回真。
+ */
+bool PrepareMacroControls(int root, const std::map<std::string, int> &inputs, std::string &error)
+{
+    return PrepareMacroControlsWithLocals(root, inputs, error, nullptr);
 }

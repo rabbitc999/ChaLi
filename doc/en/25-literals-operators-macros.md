@@ -449,6 +449,11 @@ $end_macro
 
 ## Field iteration and compile-time conditions
 
+
+Outside a macro, `$if`, `$elif`, `$else`, and `$end_if` keep the first matching branch in a declaration, member, or statement list. The selected code enters the surrounding scope. Conditions can read compile-time Booleans and build options. Branches must match the surrounding syntax. Name, type, and borrow checks apply to the selected code. Module and import headers follow the normal file-header rules.
+
+`$let name = expr` evaluates and infers a constant during macro expansion. Use `$let<T> name = expr` to specify the type. Supported types are integers, floating-point numbers, `char`, `bool`, and `String`. The read-only binding is visible from its declaration within its macro template block. Loop iterations get independent bindings, and unselected branches skip their declarations. Explicit integer types require the value to fit the target range.
+
 Inside a macro, `$for field in $fields<T>()` generates static code for each field. `$member(object, field)` becomes an ordinary member access and checks the object's concrete type against the descriptor's owner. Normal access, mutation and borrowing rules still apply. Passing `field.type` to a `T: type` parameter preserves the precise field type.
 
 ```chali
@@ -620,6 +625,6 @@ void main() {
 build_option = ["A", "B"]
 ```
 
-CLI and manifest names form a union. Names are case sensitive; duplicates have no additional effect. `$build[A]` and `$build["A"]` are equivalent: the bare name is a literal flag name, not a variable lookup. Defined names yield `true`, undefined names yield `false`. Values such as `-BA=false`, numbers and strings are unsupported. Names must be nonempty and contain only ASCII letters, digits, underscores, dots or hyphens; quote names containing dots or hyphens.
+CLI and manifest names form a union. Names are case sensitive; duplicates have no additional effect. `$!A`, `$build[A]`, and `$build["A"]` are equivalent: the bare name is a literal flag name, not a variable lookup. Defined names yield `true`, undefined names yield `false`. Values such as `-BA=false`, numbers and strings are unsupported. Names must be nonempty and contain only ASCII letters, digits, underscores, dots or hyphens; quote names containing dots or hyphens.
 
 Inside macro templates, use `$if $build[A]`, `$else`, `$end_if` or `$if ($system == "win")` to select code. Ordinary expressions can read the same constants. `$build` accepts a literal name or string, not a computed runtime key. `-I` keeps its module-search-directory meaning.

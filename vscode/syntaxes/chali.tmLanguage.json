@@ -97,11 +97,15 @@
         },
         {
           "name": "keyword.control.macro.chali",
-          "match": "\\$(?:end_macro|end_for|if|elif|else_if|implement|end_if|match|regex|else|end_match|end_regex)\\b"
+          "match": "\\$(?:end_macro|end_for|let|if|elif|else_if|implement|end_if|match|regex|else|end_match|end_regex)\\b"
         },
         {
           "name": "keyword.control.for.chali",
           "match": "^\\s*\\$for\\b"
+        },
+        {
+          "name": "variable.language.chali",
+          "match": "\\$![A-Za-z_][A-Za-z0-9_]*\\b"
         },
         {
           "name": "variable.language.chali",

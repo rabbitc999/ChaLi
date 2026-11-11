@@ -411,6 +411,7 @@ std::vector<CompletionItem> McDocument::completion(Position) const
         { "$end_macro", "keyword", "结束参数宏", "$end_macro" },
         { "$for", "keyword", "按变参或字段集合静态展开", "$for value in rest\n$end_for" },
         { "$end_for", "keyword", "结束 $for 循环", "$end_for" },
+        { "$let", "keyword", "声明只读编译期常量", "$let<T> name = expression" },
         { "$if", "keyword", "按编译期 bool 常量选择模板", "$if condition\n$else\n$end_if" },
         { "$elif", "keyword", "依次选择尚未匹配的编译期条件分支", "$elif condition" },
         { "$else_if", "keyword", "$elif 的等价写法", "$else_if condition" },

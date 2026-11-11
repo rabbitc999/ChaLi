@@ -39,6 +39,10 @@ def main():
         for flags in [[], ['-BFEATURE_A']]:
             result = invoke(['run', ROOT / 'example/samples/macro_target_environment.chl', '--out', output, *flags])
             assert result.stdout.strip() == 'target macros ok', result
+        source = ROOT / 'example/samples/source_compile_if.chl'
+        for flags, expected in [([], '1'), (['-BFEATURE_A'], '2'), ([], '1')]:
+            result = invoke(['run', source, '--incremental', '--out', output, *flags])
+            assert result.stdout.strip() == expected, result
         book_project = fixture / 'book_project'
         book_output = Path(directory) / 'book'
         invoke(['check'], cwd=book_project)

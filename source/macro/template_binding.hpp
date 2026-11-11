@@ -7,6 +7,7 @@
 
 namespace chali_macro
 {
+bool ContainsMacroLet(const Memory::Deque<MNode> &nodes, int root, std::size_t depth = 0);
 /**
  * @brief 保存已绑定模板及形参身份，供调用展开按身份替换。
  */

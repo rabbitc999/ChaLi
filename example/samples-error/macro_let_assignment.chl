@@ -1,0 +1,7 @@
+$macro BAD() -> stmt
+$let value = 1
+value = 2;
+$end_macro
+void main() {
+    $BAD();
+}

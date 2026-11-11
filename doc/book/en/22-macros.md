@@ -1290,6 +1290,116 @@ Nested user types must also derive Json. References, functions, dynamic interfac
 
 Json derivation does not expose runtime fields through @Reflect. These are separate choices. Existing reflected types without Json derivation retain their previous serialization policy. Debug in Chapter 22 is for inspection, not JSON persistence.
 
+### Local constants during macro expansion
+
+#### Test an integer for primality at compile time
+
+`$let name = expr` infers the constant's type, and `$let<T> name = expr` specifies it. The read-only binding is visible in its macro template block. Later `$let`, `$if`, and `$compile_assert` directives can read it, and generated code can use its literal value. The example accepts integers below 49 because every composite number in that range has a prime divisor of 2, 3, or 5.
+
+<!-- verify-book -->
+```chali
+$macro IS_PRIME_UNDER_49(value) -> expr
+$let n = value
+$let small_prime = n == 2 || n == 3 || n == 5
+$let has_small_divisor = n % 2 == 0 || n % 3 == 0 || n % 5 == 0
+$compile_assert(n < 49, "expected a value below 49");
+$let is_prime = small_prime || (n > 5 && !has_small_divisor)
+is_prime
+$end_macro
+
+void main() {
+    assert($IS_PRIME_UNDER_49(47));
+    assert(!$IS_PRIME_UNDER_49(25));
+    assert(!$IS_PRIME_UNDER_49(-7));
+    println("47 is prime");
+}
+```
+
+```text
+47 is prime
+```
+
+#### Filter a list of primes at compile time
+
+Pass the candidates from 2 through 30 to the variadic loop. Each iteration computes its own conditions, and `$if` emits assignments for the primes. This call supplies the full interval and uses the known array length of 10. The generated assignments initialize the array at runtime.
+
+<!-- verify-book -->
+```chali
+$macro PRIMES_TO_30(...candidates: value) -> expr
+{
+    $let<uint8> max_candidate = 30
+    int64 primes[10];
+    int64 index = 0;
+    $for n in candidates
+        $let in_range = n >= 2 && n <= max_candidate
+        $let small_prime = n == 2 || n == 3 || n == 5
+        $let has_small_divisor = n % 2 == 0 || n % 3 == 0 || n % 5 == 0
+        $if in_range && (small_prime || !has_small_divisor)
+            primes[index] = n;
+            index += 1;
+        $end_if
+    $end_for
+    yield primes;
+}
+$end_macro
+
+void main() {
+    let primes = $PRIMES_TO_30(
+         2,  3,  4,  5,  6,  7,  8,  9, 10,
+        11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+    );
+    assert(primes[0] == 2 && primes[9] == 29);
+    println("{}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
+        primes[0], primes[1], primes[2], primes[3], primes[4],
+        primes[5], primes[6], primes[7], primes[8], primes[9]);
+}
+```
+
+```text
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29
+```
+
+#### Strings, floats, characters, and Booleans
+
+Use `+` to concatenate strings during expansion. The floating-point example uses `float32` and literals with the `f` suffix. The `grade` binding uses ChaLi’s single-byte `char`, and the comparisons and logical operation infer `bool` for `enabled`.
+
+<!-- verify-book -->
+```chali
+$macro SHOW_CONSTANTS() -> stmt
+$let<String> greeting = "Hello, " + "ChaLi"
+$let<float32> scale = 1.5f + 0.75f
+$let<char> grade = 'A'
+$let enabled = grade == 'A' && scale > 2.0f
+
+$compile_assert(greeting == "Hello, ChaLi", "unexpected greeting");
+$compile_assert(enabled, "expected the feature to be enabled");
+$if enabled
+    println("{1} | {2:2F} | {3}", greeting, scale, grade);
+$end_if
+$end_macro
+
+void main() {
+    $SHOW_CONSTANTS();
+}
+```
+
+```text
+Hello, ChaLi | 2.25 | A
+```
+
+#### Conditional compilation outside macros
+
+Outside macros, `$if` keeps the first matching branch. `$!FEATURE_A` is shorthand for `$build[FEATURE_A]`. Pass `-BFEATURE_A` to select that branch. Both branches can define the same function name because only the selected definition enters the rest of compilation.
+
+```chali
+$if $!FEATURE_A
+int64 featureLevel() { return 2; }
+$else
+int64 featureLevel() { return 1; }
+$end_if
+```
+
 ## 22.21 Choosing a Form
 
 Start with functions and generics. Choose a macro when repetition concerns syntax positions, declarations or field sets. Decide what each input represents and where the result belongs; encode both decisions in the definition header.

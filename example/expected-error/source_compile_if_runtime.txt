@@ -1,0 +1,1 @@
+chali: example/samples-error/source_compile_if_runtime.chl 第 3 行第 9 列：编译期条件不能读取运行时变量：enabled

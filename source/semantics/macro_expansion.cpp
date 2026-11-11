@@ -504,6 +504,8 @@ bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t dep
     if (ExpandAstMacroText(id, textError))
         return textError.empty() || ReportAstMacroFailure(id, textError);
     if (node.kind == MNode::MacroDefinition) return true;
+    if (node.kind == MNode::MacroLet)
+        return AddDiagnostic("$let 只能在宏模板中声明", node.sourceLine, node.sourceColumn), false;
     if (node.kind == MNode::MacroFor || node.kind == MNode::MacroFieldFor || node.kind == MNode::MacroCompileIf || node.kind == MNode::MacroMatch || node.kind == MNode::MacroRegex)
         return AddDiagnostic("编译期分支与片段循环必须位于宏模板内部", node.sourceLine, node.sourceColumn), false;
     if (node.kind == MNode::List) return ExpandAstMacroStatements(id, registry, depth, budget);
@@ -540,6 +542,123 @@ bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t dep
 #include "macro_declarations.cpp"
 
 /**
+ * @brief 在宏登记和语义检查前剪除源码中未选中的编译期条件分支。
+ * @return 所有实际读取的条件都是编译期 bool 常量时返回真。
+ */
+bool SelectSourceConditionals()
+{
+    using Locals = Memory::Map<Memory::String, int>;
+    using Nodes = Memory::Vector<int>;
+    std::size_t budget = 1000000;
+    Memory::Set<int> fragments;
+    std::function<bool(int, const Locals &, std::size_t)> visit;
+    std::function<bool(const Nodes &, Nodes &, Locals &, std::size_t)> select;
+
+    select = [&](const Nodes &items, Nodes &output, Locals &locals, std::size_t depth) {
+        for (int id : items)
+        {
+            if (id < 0)
+            {
+                output.push_back(id);
+                continue;
+            }
+            const auto node = N(id);
+            if (node.kind == MNode::MacroCompileIf)
+            {
+                if (depth >= 256 || !budget--) return Fail("源码编译期条件超过深度或规模预算");
+                g_macroSyntaxFiltering = true;
+                const int condition = node.kids[0];
+                ReductionSourceScope source(condition);
+                if (!MaterializeMacroFragments(condition, fragments, 0)) return false;
+                std::string error;
+                if (!PrepareMacroControlsWithLocals(condition, {}, error, &locals))
+                    return Fail(Memory::String(error.data(), error.size()));
+                MConstant value;
+                if (!EvaluateConstant(condition, &value) || value.kind != MConstant::Boolean)
+                    return Fail("$if 条件必须是编译期 bool 常量");
+                const int branch = node.kids[value.integer ? 1 : 2];
+                if (branch >= 0 && !select(N(N(branch).kids[0]).kids, output, locals, depth + 1)) return false;
+                continue;
+            }
+            if (!visit(id, locals, depth + 1)) return false;
+            output.push_back(id);
+            if (node.kind == MNode::Declare)
+            {
+                if (node.kids.size() == 1 && node.kids[0] >= 0 && N(node.kids[0]).kind == MNode::List)
+                    for (int child : N(node.kids[0]).kids)
+                    {
+                        if (node.type2 == 1)
+                        {
+                            if (N(child).type < 0) g_nodes[child].type = node.type;
+                            if (N(child).type2 < 0) g_nodes[child].type2 = 1;
+                        }
+                        locals[N(child).s] = child;
+                    }
+                else if (!node.s.empty())
+                    locals[node.s] = id;
+            }
+        }
+        return true;
+    };
+    visit = [&](int id, const Locals &outer, std::size_t depth) {
+        if (id < 0) return true;
+        if (depth >= 256 || !budget--) return Fail("源码编译期条件遍历超过深度或规模预算");
+        const auto node = N(id);
+        if (node.kind == MNode::MacroDefinition) return true;
+        if (node.kind == MNode::List)
+        {
+            Locals locals = outer;
+            Nodes selected;
+            if (!select(node.kids, selected, locals, depth)) return false;
+            g_nodes[id].kids = std::move(selected);
+            return true;
+        }
+        if ((node.kind == MNode::FuncDef || node.kind == MNode::MethodDef) && node.kids.size() == 2)
+        {
+            Locals locals = outer;
+            if (node.kids[0] >= 0)
+                for (int param : N(node.kids[0]).kids)
+                    if (param >= 0 && N(param).kind == MNode::Params) locals[N(param).s] = param;
+            return visit(node.kids[1], locals, depth + 1);
+        }
+        if (node.kind == MNode::Foreach && node.kids.size() == 2)
+        {
+            Locals locals = outer;
+            locals[node.s] = id;
+            return visit(node.kids[0], outer, depth + 1) && visit(node.kids[1], locals, depth + 1);
+        }
+        const bool bindMembers = (node.kind == MNode::StructDecl || node.kind == MNode::InterfaceDecl)
+                                 && !node.kids.empty() && node.kids[0] >= 0
+                                 && std::any_of(N(node.kids[0]).kids.begin(), N(node.kids[0]).kids.end(), [](int member) {
+                                     return member >= 0 && N(member).kind == MNode::MacroCompileIf;
+                                 });
+        for (int child : node.kids)
+            if (!visit(child, outer, depth + 1)) return false;
+        if (bindMembers) M_BindAssociatedTypes(node.s, node.kids[0]);
+        if (node.kind == MNode::Block || node.kind == MNode::Case)
+            return visit(static_cast<int>(node.i), outer, depth + 1);
+        return true;
+    };
+
+    if (std::none_of(g_nodes.begin(), g_nodes.end(), [](const MNode &node) { return node.kind == MNode::MacroCompileIf; }))
+        return true;
+    Nodes selected;
+    Memory::Map<Memory::String, Locals> moduleLocals;
+    for (int id : g_top)
+        if (!select(Nodes{ id }, selected, moduleLocals[N(id).module], 0)) return false;
+    g_top.clear();
+    for (int id : selected)
+    {
+        const auto &node = N(id);
+        if (node.kind == MNode::AbiBlock)
+            g_top.insert(g_top.end(), node.kids.begin(), node.kids.end());
+        else
+            g_top.push_back(id);
+    }
+    return true;
+}
+
+/**
  * @brief 注册当前程序的 AST 宏并在四元式生成前展开表达式模板。
  * @return 登记与展开全部成功时返回真。
  * @note 模板仅以 AST 替换，原始实参只用于语法候选、来源及文本工具。
@@ -553,6 +672,7 @@ bool ExpandAstMacros()
     g_macroSyntaxFiltering = false;
     g_astGenericClosures.clear();
     g_astGenericImplementations.clear();
+    if (!SelectSourceConditionals()) return false;
     Memory::Set<int> fragmentsSeen;
     for (const int id : g_top)
         if (!MaterializeMacroFragments(id, fragmentsSeen, 0)) return false;
@@ -575,7 +695,7 @@ bool ExpandAstMacros()
                 return AddDiagnostic(Memory::String(error.data(), error.size()), g_nodes[id].sourceLine, g_nodes[id].sourceColumn), false;
         }
     if (!hasDefinitions && std::none_of(g_nodes.begin(), g_nodes.end(), [](const MNode &node) {
-            return node.kind == MNode::MacroCall || node.kind == MNode::MacroFor || node.kind == MNode::MacroFieldFor || node.kind == MNode::MacroCompileIf || node.kind == MNode::MacroMatch || node.kind == MNode::MacroRegex;
+            return node.kind == MNode::MacroCall || node.kind == MNode::MacroLet || node.kind == MNode::MacroFor || node.kind == MNode::MacroFieldFor || node.kind == MNode::MacroCompileIf || node.kind == MNode::MacroMatch || node.kind == MNode::MacroRegex;
         })) return true;
     for (const int id : g_top)
     {

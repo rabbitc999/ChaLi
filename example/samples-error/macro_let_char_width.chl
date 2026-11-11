@@ -1,0 +1,7 @@
+$macro BAD() -> expr
+$let<char> letter = 'é'
+letter
+$end_macro
+void main() {
+    let value = $BAD();
+}

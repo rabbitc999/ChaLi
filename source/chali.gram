@@ -41,6 +41,8 @@ top := annotation_decl { $$ = $1; }
      | top_decl { $$ = $1; } ;
 
 top_decl := struct_decl type_decl_end { $$ = $1; }
+     | top_macro_if { $$ = $1; }
+     | macro_let { $$ = $1; }
      | macro_definition { $$ = $1; }
      | macro_call SEMI { $$ = $1; }
      | opcode_decl type_decl_end { $$ = $1; }
@@ -151,7 +153,8 @@ interface_decl := INTERFACE name_token LBRACE iface_member_list RBRACE
     { $$ = M_InterfaceInherit($2, $4, $6); } ;
 
 iface_member_list := %empty { $$ = M_List(); }
-                   | iface_member_list iface_member { M_ListAdd($1, $2); $$ = $1; } ;
+                   | iface_member_list iface_member { M_ListAdd($1, $2); $$ = $1; }
+                   | iface_member_list iface_macro_if { M_ListAdd($1, $2); $$ = $1; } ;
 
 /* 接口方法可以仅声明，也可以给出默认实现；接口本身不能有字段。 */
 iface_member := annotation_list iface_member_decl { $$ = M_Annotated($1, $2); }
@@ -268,7 +271,8 @@ enum_variant := name_token { $$ = M_EnumVariant($1, -1); }
               | name_token LPAREN param_list RPAREN { $$ = M_EnumVariant($1, $3); } ;
 
 member_list := %empty { $$ = M_List(); }
-             | member_list member { M_ListAdd($1, $2); $$ = $1; } ;
+             | member_list member { M_ListAdd($1, $2); $$ = $1; }
+             | member_list member_macro_if { M_ListAdd($1, $2); $$ = $1; } ;
 
 member := annotation_list member_decl { $$ = M_Annotated($1, $2); }
   | member_decl { $$ = $1; } ;
@@ -917,6 +921,7 @@ macro_definition := MACRO_DEFINE name_token macro_generics macro_parameters MACR
     | MACRO_REPLACE name_token macro_generics macro_parameters ARROW MACRO_MEMBER MACRO_BODY macro_member_list MACRO_END
     { $$ = M_MacroResultDefinition($2, $4, M_MacroTemplate($8, -1), $3, -2); } ;
 macro_member_list := %empty { $$ = M_List(); }
+    | macro_member_list macro_let { M_ListAdd($1, $2); $$ = $1; }
     | macro_member_list member { M_ListAdd($1, $2); $$ = $1; }
     | macro_member_list MACRO_IMPLEMENT type SEMI { M_ListAdd($1, M_MacroImplement($3)); $$ = $1; }
     | macro_member_list TYPE_KW name_token SEMI
@@ -931,6 +936,24 @@ macro_member_list := %empty { $$ = M_List(); }
     { M_ListAdd($1, M_MacroFor($3, $5, $7)); $$ = $1; }
     | macro_member_list MACRO_IF expr MACRO_BODY macro_member_template macro_member_else MACRO_END_IF
     { M_ListAdd($1, M_MacroCompileIf($3, $5, $6)); $$ = $1; } ;
+top_macro_if := MACRO_IF expr MACRO_BODY top_list top_macro_else MACRO_END_IF
+    { $$ = M_MacroCompileIf($2, M_MacroTemplate($4, -1), $5); } ;
+top_macro_else := %empty { $$ = -1; }
+    | MACRO_ELSE MACRO_BODY top_list { $$ = M_MacroTemplate($3, -1); }
+    | macro_elif expr MACRO_BODY top_list top_macro_else
+    { $$ = M_MacroTemplate(M_List1(M_MacroCompileIf($2, M_MacroTemplate($4, -1), $5)), -1); } ;
+member_macro_if := MACRO_IF expr MACRO_BODY member_list member_macro_else MACRO_END_IF
+    { $$ = M_MacroCompileIf($2, M_MacroTemplate($4, -1), $5); } ;
+member_macro_else := %empty { $$ = -1; }
+    | MACRO_ELSE MACRO_BODY member_list { $$ = M_MacroTemplate($3, -1); }
+    | macro_elif expr MACRO_BODY member_list member_macro_else
+    { $$ = M_MacroTemplate(M_List1(M_MacroCompileIf($2, M_MacroTemplate($4, -1), $5)), -1); } ;
+iface_macro_if := MACRO_IF expr MACRO_BODY iface_member_list iface_macro_else MACRO_END_IF
+    { $$ = M_MacroCompileIf($2, M_MacroTemplate($4, -1), $5); } ;
+iface_macro_else := %empty { $$ = -1; }
+    | MACRO_ELSE MACRO_BODY iface_member_list { $$ = M_MacroTemplate($3, -1); }
+    | macro_elif expr MACRO_BODY iface_member_list iface_macro_else
+    { $$ = M_MacroTemplate(M_List1(M_MacroCompileIf($2, M_MacroTemplate($4, -1), $5)), -1); } ;
 macro_member_template := macro_member_list { $$ = M_MacroTemplate($1, -1); } ;
 macro_member_else := %empty { $$ = -1; }
     | MACRO_ELSE MACRO_BODY macro_member_template { $$ = $3; }
@@ -967,7 +990,12 @@ macro_template := macro_template_parts { $$ = M_MacroTemplate($1, -1); }
 macro_template_parts := %empty { $$ = M_List(); }
     | macro_template_parts stmt { M_ListAdd($1, $2); $$ = $1; }
     | macro_template_parts macro_control { M_ListAdd($1, $2); $$ = $1; } ;
-macro_control := MACRO_MATCH name_token MACRO_IS macro_category MACRO_BODY macro_template macro_match_tail MACRO_END_MATCH
+macro_let := MACRO_LET name_token ASSIGN expr MACRO_BODY
+    { $$ = M_MacroLet($2, -1, $4); }
+    | MACRO_LET LT type GT name_token ASSIGN expr MACRO_BODY
+    { $$ = M_MacroLet($5, $3, $7); } ;
+macro_control := macro_let { $$ = $1; }
+    | MACRO_MATCH name_token MACRO_IS macro_category MACRO_BODY macro_template macro_match_tail MACRO_END_MATCH
     { $$ = M_MacroMatch($2, M_MacroBranches(M_MacroBranch($4, $6), $7)); }
     | MACRO_REGEX name_token MACRO_IS STRING MACRO_BODY macro_template macro_regex_else MACRO_END_REGEX
     { $$ = M_MacroRegex($2, $4, $6, $7); }

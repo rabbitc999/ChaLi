@@ -1,0 +1,1 @@
+chali: example/samples-error/macro_let_assignment.chl 第 6 行第 5 列：赋值目标只能是变量、下标、成员或 `*p`

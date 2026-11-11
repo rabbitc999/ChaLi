@@ -1,0 +1,29 @@
+$macro PRIMES_TO_30(...candidates: value) -> expr
+{
+    $let<uint8> max_candidate = 30
+    int64 primes[10];
+    int64 index = 0;
+    $for n in candidates
+        $let in_range = n >= 2 && n <= max_candidate
+        $let small_prime = n == 2 || n == 3 || n == 5
+        $let has_small_divisor = n % 2 == 0 || n % 3 == 0 || n % 5 == 0
+        $if in_range && (small_prime || !has_small_divisor)
+            primes[index] = n;
+            index += 1;
+        $end_if
+    $end_for
+    yield primes;
+}
+$end_macro
+
+void main() {
+    let primes = $PRIMES_TO_30(
+         2,  3,  4,  5,  6,  7,  8,  9, 10,
+        11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+    );
+    assert(primes[0] == 2 && primes[9] == 29);
+    println("{}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
+        primes[0], primes[1], primes[2], primes[3], primes[4],
+        primes[5], primes[6], primes[7], primes[8], primes[9]);
+}

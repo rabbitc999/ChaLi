@@ -28,6 +28,14 @@ int M_MacroParameter(int name, bool variadic = false);
  */
 int M_MacroCategoryParameter(int parameter, int category);
 /**
+ * @brief 构造只读宏常量声明。
+ * @param name 声明名称。
+ * @param type 显式类型编号，负数表示推导。
+ * @param initializer 编译期初始化式。
+ * @return 声明节点编号。
+ */
+int M_MacroLet(int name, int type, int initializer);
+/**
  * @brief 构造编译期片段列表循环。
  * @param variable 循环参数名称。
  * @param source 变长参数名称。

@@ -216,6 +216,24 @@ bool SourceFragments::capture(Memory::String &source, std::string &error, std::s
             output.append(text, start, at - start);
             continue;
         }
+        if (text.compare(at, 2, "$!") == 0 && at + 2 < text.size()
+            && (std::isalpha(static_cast<unsigned char>(text[at + 2])) || text[at + 2] == '_'))
+        {
+            const auto flag = at + 2;
+            at = flag + 1;
+            while (at < text.size() && identifierChar(text[at])) ++at;
+            const auto location = origin(start);
+            SourceInvocation call;
+            call.name = "build";
+            call.line = location.first;
+            call.column = location.second;
+            call.groups.push_back({ '[', { fragment({ flag, at }) } });
+            const auto reference = std::to_string(invocations_.size());
+            invocations_.push_back(std::move(call));
+            output += "$build";
+            if (anchored) output += "@!" + reference + "[@!macrofragment" + reference + "_0]";
+            continue;
+        }
         if (text[at] != '$' || at + 1 == text.size() || !(std::isalpha(static_cast<unsigned char>(text[at + 1])) || text[at + 1] == '_'))
         {
             output += text[at++];
@@ -240,10 +258,10 @@ bool SourceFragments::capture(Memory::String &source, std::string &error, std::s
             output.append(text, start, at - start);
             continue;
         }
-        const bool control = name == "macro" || name == "replace" || name == "end_macro" || name == "match" || name == "else" || name == "elif" || name == "else_if" || name == "end_match" || name == "regex" || name == "end_regex" || name == "for" || name == "end_for" || name == "if" || name == "end_if" || name == "implement";
+        const bool control = name == "macro" || name == "replace" || name == "end_macro" || name == "match" || name == "else" || name == "elif" || name == "else_if" || name == "end_match" || name == "regex" || name == "end_regex" || name == "let" || name == "for" || name == "end_for" || name == "if" || name == "end_if" || name == "implement";
         if (control)
         {
-            if (name == "for" || name == "if" || name == "match" || name == "regex" || name == "else" || name == "elif" || name == "else_if")
+            if (name == "let" || name == "for" || name == "if" || name == "match" || name == "regex" || name == "else" || name == "elif" || name == "else_if")
                 directiveLineEnd = text.find('\n', at);
             output.append(text, start, at - start);
             continue;

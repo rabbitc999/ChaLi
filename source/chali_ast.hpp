@@ -241,6 +241,7 @@ struct MNode
         MacroArguments,       ///< 按书写顺序保存全部括号实参组。
         MacroExpansionFrame,  ///< 保存调用、定义及父展开的只读诊断来源，不进入运行时树。
         MacroVariadic,        ///< 变长实参的原始片段列表，不隐式转换为表达式。
+        MacroLet,             ///< 只读的宏展开期常量绑定。
         MacroFor,             ///< 编译期遍历变长片段，逐次绑定循环形参。
         MacroMetadata,        ///< 编译期有类型元数据描述符，禁止作为运行期值。
         MacroFieldFor,        ///< 遍历具体字段描述符的编译期模板。

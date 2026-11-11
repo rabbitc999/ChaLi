@@ -1,0 +1,6 @@
+void main() {
+    bool enabled = true;
+    $if enabled
+        println("enabled");
+    $end_if
+}

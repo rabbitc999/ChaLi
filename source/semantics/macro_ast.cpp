@@ -1,4 +1,18 @@
 /**
+ * @brief 构建宏展开期常量声明。
+ * @param name 声明名称。
+ * @param type 显式类型，缺省时为负数。
+ * @param initializer 待求值的常量表达式。
+ * @return 宏常量声明节点编号。
+ */
+int M_MacroLet(int name, int type, int initializer)
+{
+    const int id = M_New(MNode::MacroLet, g_names[name]);
+    g_nodes[id].type = type;
+    g_nodes[id].kids = { initializer };
+    return id;
+}
+/**
  * @brief 建立宏参数组，不将空参数组归一化为无参数组。
  * @param names 形参列表节点。
  * @param opening 参数组的左括号字符。

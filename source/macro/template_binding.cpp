@@ -6,6 +6,24 @@
 namespace chali_macro
 {
 /**
+ * @brief 查找需要编译期局部绑定准备的模板。
+ * @param nodes 语法节点池。
+ * @param root 模板子树。
+ * @param depth 当前深度。
+ * @return 子树中有宏常量声明时返回真。
+ */
+bool ContainsMacroLet(const Memory::Deque<MNode> &nodes, int root, std::size_t depth)
+{
+    if (root < 0 || depth >= 256) return false;
+    const auto &node = nodes[root];
+    if (node.kind == MNode::MacroLet) return true;
+    if ((node.kind == MNode::Block || node.kind == MNode::Case) && ContainsMacroLet(nodes, static_cast<int>(node.i), depth + 1))
+        return true;
+    return std::any_of(node.kids.begin(), node.kids.end(), [&](int child) { return ContainsMacroLet(nodes, child, depth + 1); });
+}
+
+/**
+
  * @brief 保存节点池及卫生解析器的引用。
  * @param nodes 编译器节点池。
  * @param resolver 本次编译共用的卫生解析器。
@@ -224,6 +242,7 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
         list.kind = MNode::List;
         const int items = static_cast<int>(nodes_.size());
         nodes_.push_back(std::move(list));
+        const bool prepareIteration = ContainsMacroLet(nodes_, body);
         const auto previous = iterationInputs_;
         for (std::size_t item = 0; item < arguments.front().size(); ++item)
         {
@@ -243,6 +262,8 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
             std::string error;
             const int expanded = copy.instantiate(body, {}, node.syntaxContext, error);
             if (expanded < 0) throw std::runtime_error(error);
+            if (prepareIteration && (!prepare_ || !prepare_(expanded, iterationInputs_, error)))
+                throw std::runtime_error(error.empty() ? "$let 缺少编译期准备器" : error);
             visit(expanded, resolver_.createScope(iterationScope), depth + 1);
             nodes_[items].kids.push_back(expanded);
         }
@@ -287,7 +308,12 @@ void TemplateBinding::visit(int id, ScopeId scope, std::size_t depth)
             selected = node.kids[result == RegexResult::Matched ? 0 : 1];
         }
         if (selected >= 0)
+        {
+            std::string error;
+            if (ContainsMacroLet(nodes_, selected) && (!prepare_ || !prepare_(selected, iterationInputs_, error)))
+                throw std::runtime_error(error.empty() ? "$let 缺少编译期准备器" : error);
             node = nodes_[selected];
+        }
         else
         {
             const int empty = static_cast<int>(nodes_.size());

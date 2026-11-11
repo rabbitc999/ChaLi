@@ -1,0 +1,66 @@
+const bool FEATURE_FALLBACK = true;
+
+$if $!FEATURE_A
+    int64 featureLevel() { return 2; }
+$elif FEATURE_FALLBACK
+    int64 featureLevel() { return 1; }
+$else
+    MissingType featureLevel() { return missingFunction(); }
+$end_if
+
+$if $!FEATURE_A
+    $macro ACTIVE_LEVEL() -> expr
+    2
+    $end_macro
+$else
+    $macro ACTIVE_LEVEL() -> expr
+    1
+    $end_macro
+$end_if
+
+interface SelectValue {
+    $if false
+        MissingType value();
+    $else
+        int64 value();
+    $end_if
+}
+
+struct Selected : SelectValue {
+    $if false
+        MissingType unwanted;
+    $else
+        int64 field;
+    $end_if
+
+    int64 value() {
+        return self.field;
+    }
+}
+
+$macro OPTION_MATCH() -> expr
+$let same = $!FEATURE_A == $build[FEATURE_A]
+same
+$end_macro
+
+void main() {
+    const bool includeValue = true;
+    $if includeValue
+        int64 expected = featureLevel();
+    $else_if missingCondition()
+        int64 expected = 0;
+    $end_if
+
+    $if !$!FEATURE_A
+        assert(expected == 1);
+    $else
+        assert(expected == 2);
+    $end_if
+    Selected item;
+    item.field = expected;
+    assert(item.value() == expected);
+    assert($ACTIVE_LEVEL() == expected);
+    assert($OPTION_MATCH());
+    assert($!FEATURE_A == $build["FEATURE_A"]);
+    println("{}", item.value());
+}

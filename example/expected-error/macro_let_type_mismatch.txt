@@ -1,0 +1,1 @@
+chali: example/samples-error/macro_let_type_mismatch.chl 第 2 行第 2 列：$let 初始化式与显式类型不兼容
