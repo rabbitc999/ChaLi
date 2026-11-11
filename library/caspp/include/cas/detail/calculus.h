@@ -35,6 +35,7 @@ Ptr differentiateN(const Ptr &expression, std::uint32_t variable, int order);
  */
 Ptr integrate(const Ptr &expression, std::uint32_t variable);
 /** @brief 定积分：先求原函数再代上下限；上下限为无穷时走极限路径。 */
+Ptr integratePartial(const Ptr &expression, std::uint32_t variable);
 Ptr definiteIntegral(const Ptr &expression, std::uint32_t variable, const Ptr &lower, const Ptr &upper);
 
 /* -------------------------------------------------------------- 极限 */

@@ -184,8 +184,78 @@ void testIntegration(Cas::Engine &engine)
         }
     }
     expect(engine, "integrate(ln(x)/x,x)", "1/2*log(x)^2");
+    expect(engine, "diff(FresnelS(x*sqrt(2/pi))/sqrt(2/pi),x)", "sin(x^2)");
+    expect(engine, "diff(FresnelC(x*sqrt(2/pi))/sqrt(2/pi),x)", "cos(x^2)");
+    expect(engine, "diff(FresnelS(x),x)", "sin(1/2*pi*x^2)");
+    expect(engine, "diff(FresnelC(x),x)", "cos(1/2*pi*x^2)");
+    expect(engine, "integrate(cos(x^2),x)", "(FresnelC(x*sqrt((2/pi))))/sqrt((2/pi))");
+    expect(engine, "integrate(asin(x),x)", "x*asin(x) + sqrt((-x^2 + 1))");
+    expect(engine, "integrate(acos(x),x)", "x*acos(x) - sqrt((-x^2 + 1))");
+    expect(engine, "integrate(atan(2*x+1),x)",
+           "x*atan(2*x + 1) - 1/4*log(4*x^2 + 4*x + 2) + 1/2*atan(2*x + 1)");
+    expect(engine, "integrate(asinh(x),x)", "x*asinh(x) - sqrt((x^2 + 1))");
+    expect(engine, "integrate(acosh(x),x)", "-sqrt((x - 1))*sqrt((x + 1)) + x*acosh(x)");
+    expect(engine, "integrate(atanh(x),x)", "x*atanh(x) + 1/2*log(-x^2 + 1)");
+    expect(engine, "integrate(tanh(2*x),x)", "1/2*log(cosh(2*x))");
+    expect(engine, "integrate(sqrt(3*x+1),x)", "2/9*(3*x + 1)^(3/2)");
+    expect(engine, "integrate(sinh(x)/x,x)", "Shi(x)");
+    expect(engine, "integrate(cosh(x)/x,x)", "Chi(x)");
+    expect(engine, "integrate(1/log(x),x)", "li(x)");
+    expect(engine, "integrate(2*x/log(x^2),x)", "li(x^2)");
+    expect(engine, "diff(x*asin(x)+sqrt(1-x^2),x)", "asin(x)");
+    expect(engine, "diff(x*asinh(x)-sqrt(1+x^2),x)", "asinh(x)");
+    expect(engine, "diff(Shi(x),x)", "sinh(x)/x");
+    expect(engine, "diff(Chi(x),x)", "cosh(x)/x");
+    expect(engine, "diff(li(x^2),x)", "(2*x)/log(x^2)");
+    expect(engine, "integrate(sech(2*x)^2,x)", "1/2*tanh(2*x)");
+    expect(engine, "integrate(csch(x)^2,x)", "-coth(x)");
+    expect(engine, "integrate(coth(x)^2,x)", "x - coth(x)");
+    expect(engine, "integrate(sinh(x)^2,x)", "1/2*cosh(x)*sinh(x) - 1/2*x");
+    expect(engine, "integrate(cosh(x)^2,x)", "1/2*cosh(x)*sinh(x) + 1/2*x");
+    expect(engine, "integrate(tanh(x)^2,x)", "x - tanh(x)");
+    expect(engine, "diff(-coth(x),x)", "csch(x)^2");
+    expect(engine, "integrate(erf(x),x)", "x*erf(x) + exp(-x^2)/sqrt(pi)");
+    expect(engine, "diff(x*erf(x)+exp(-x^2)/sqrt(pi),x)", "erf(x)");
+    expect(engine, "integrate(FresnelS(x),x)", "x*FresnelS(x) + (cos(1/2*pi*x^2))/pi");
+    expect(engine, "diff(x*FresnelS(x)+cos(pi*x^2/2)/pi,x)", "FresnelS(x)");
+    expect(engine, "integrate(Ei(2*x),x)", "x*Ei(2*x) - 1/2*exp(2*x)");
+    expect(engine, "integrate(li(x),x)", "x*li(x) - li(x^2)");
+    expect(engine, "integrate(Si(x),x)", "x*Si(x) + cos(x)");
+    expect(engine, "integrate(log(1-x)/x,x)", "-Li2(x)");
+    expect(engine, "integrate(exp(-x^2),x)", "1/2*sqrt(pi)*erf(x)");
+    expect(engine, "integrate(exp(x^2),x)", "1/2*sqrt(pi)*erfi(x)");
+    expect(engine, "integrate(2*sin(x^2)/x,x)", "Si(x^2)");
+    expect(engine, "diff(1/2*sqrt(pi)*erf(x),x)", "exp(-x^2)");
+    expect(engine, "diff(1/2*sqrt(pi)*erfi(x),x)", "exp(x^2)");
+    expect(engine, "diff(Si(x^2),x)", "(2*sin(x^2))/x");
+    expect(engine, "diff(Ci(2*x),x)", "(cos(2*x))/x");
+    expect(engine, "integrate(exp(x)/x,x)", "Ei(x)");
+    expect(engine, "integrate(sin(x)/x,x)", "Si(x)");
+    expect(engine, "integrate(cos(x)/x,x)", "Ci(x)");
+    expect(engine, "diff(Ei(x),x)", "exp(x)/x");
+    expect(engine, "diff(integrate(sin(x^2), x), x)", "sin(x^2)");
+    expect(engine, "diff(sin(x^2), x)", "2*x*cos(x^2)");
+    expect(engine, "diff(1/5*x^5 + integrate(sin(x^2), x), x)", "x^4 + sin(x^2)");
+    expect(engine, "integrate(sin(x^2)+x^4,x)", "1/5*x^5 + (FresnelS(x*sqrt((2/pi))))/sqrt((2/pi))");
+    expect(engine, "integrate(3*sin(x^2),x)", "(3*FresnelS(x*sqrt((2/pi))))/sqrt((2/pi))");
     expectError(engine, "integrate(x^x,x)");
     expectError(engine, "integrate(x^x*ln(x),x)");
+    expect(engine, "integrate(2*x^2/(x^2+1),x)", "-2*atan(x) + 2*x");
+    expect(engine, "integrate(1/(x^2+1)^2,x)", "x/(2*(x^2 + 1)) + 1/2*atan(x)");
+    expect(engine, "integrate(1/sqrt(x^2+2*x+2),x)", "asinh(x + 1)");
+    expect(engine, "integrate(1/sqrt(1+2*x-x^2),x)", "asin((x - 1)/sqrt(2))");
+    expect(engine, "integrate(sqrt(x+1)/(x+2),x)", "-2*atan(sqrt((x + 1))) + 2*sqrt((x + 1))");
+    expect(engine, "integrate(1/sqrt(x^2-1),x)", "-1/2*log((sqrt((x^2 - 1)) - x)^2)");
+    expect(engine, "integrate(1/(x+sqrt(x+1)),x)",
+           "-1/2*log((sqrt((x + 1)) - 1/2*(-sqrt(5) - 1))^2)*1/sqrt(5)*(-sqrt(5) - 1)"
+           " + 1/2*log((sqrt((x + 1)) - 1/2*(sqrt(5) - 1))^2)*1/sqrt(5)*(sqrt(5) - 1)");
+    expectError(engine, "integrate(1/x^2,x,-1,1)");
+    expectError(engine, "integrate(1/x,x,0,1)");
+    expectError(engine, "integrate(1/(x^2-2)^2,x,1,2)");
+    expectError(engine, "integrate(1/(2+cos(x))^2,x,0,2*pi)");
+    expect(engine, "FresnelS(infinity)", "1/2");
+    expect(engine, "FresnelC(-infinity)", "-1/2");
+    expect(engine, "Si(infinity)", "1/2*pi");
     // 定积分
     expect(engine, "integrate(x^2, 0, 1)", "1/3");
     expect(engine, "integrate(2x, 0, 2)", "4");
@@ -359,6 +429,13 @@ void testCalculusExtensions(Cas::Engine &engine)
            "-1/2*atan((t + 1/2)/sqrt(3/4))*1/sqrt(3/4) - 1/6*log(t^2 + t + 1) + 1/3*log(t - 1)");
 
     // sin/cos 幂与 log 幂
+    expect(engine, "integrate(sec(2*x)^2,x)", "1/2*tan(2*x)");
+    expect(engine, "integrate(csc(x)^2,x)", "-cot(x)");
+    expect(engine, "integrate(cot(x)^2,x)", "-x - cot(x)");
+    expect(engine, "integrate(tan(x)^4,x)", "1/3*tan(x)^3 + x - tan(x)");
+    expect(engine, "integrate(sin(x)^4,x)", "-1/4*sin(x)^3*cos(x) - 3/8*cos(x)*sin(x) + 3/8*x");
+    expect(engine, "integrate(cos(x)^5,x)", "1/5*cos(x)^4*sin(x) + 4/15*cos(x)^2*sin(x) + 8/15*sin(x)");
+    expect(engine, "diff(-cot(x),x)", "csc(x)^2");
     expect(engine, "integrate(sin(x)^2, x)", "-1/4*sin(2*x) + 1/2*x");
     expect(engine, "integrate(cos(x)^3, x)", "-1/3*sin(x)^3 + sin(x)");
     expect(engine, "integrate(log(x), x)", "x*log(x) - x");

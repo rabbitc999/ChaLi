@@ -703,7 +703,7 @@ Result Engine::integrate(const std::string &expression, const std::string &varia
     const ParseResult parsed = parseExpression(expression);
     if (!parsed.ok) return makeError(parsed.message, parsed.position);
     const std::uint32_t id = symbolOf(variable);
-    Ptr antiderivative = Detail::integrate(parsed.expression, id);
+    Ptr antiderivative = Detail::integratePartial(parsed.expression, id);
     if (!antiderivative) return makeError("无法求出原函数（超出当前支持的积分规则集）");
     result = makeResult(antiderivative, m_unicodeOutput);
     if (result.ok) m_lastResult = result.text;

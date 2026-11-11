@@ -368,6 +368,26 @@ Ptr evaluateSpecialCall(const std::string &name, const Memory::Vector<Ptr> &argu
         if (count == 2) return harmonic(arguments[0], arguments[1]);
         return Ptr();
     }
+    if (name == "FresnelS" || name == "FresnelC" || name == "Si" ||
+        name == "Shi" || name == "Li2") {
+        if (count != 1) return Ptr();
+        const Ptr &argument = arguments[0];
+        if (argument->isZero()) return integer(0);
+        const Ptr infinity(Node::makeConstant(ConstantId::Infinity));
+        const bool positive = argument->equals(infinity.get());
+        const Ptr negativeInfinity(Node::makeConstant(ConstantId::NegativeInfinity));
+        const bool negative = argument->equals(negativeInfinity.get()) ||
+                              argument->equals(makeNegate(infinity).get());
+        if (positive || negative) {
+            if (name == "FresnelS" || name == "FresnelC")
+                return makeNumber(BigInt(positive ? 1 : -1), BigInt(2));
+            if (name == "Si") {
+                Ptr pi(Node::makeConstant(ConstantId::Pi));
+                return makeMul(pi, makeNumber(BigInt(positive ? 1 : -1), BigInt(2)));
+            }
+        }
+        return Ptr();
+    }
     if (name == "erf") {
         if (count != 1) return Ptr();
         return erf(arguments[0]);

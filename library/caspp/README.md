@@ -516,3 +516,25 @@ Copyright (c) 2026 小兔糖糖_OvO
 
 简单说：可以商用、可以改、可以闭源分发，只要在副本或实质部分里保留上面的版权声明
 与许可声明即可。软件按「现状」提供，不附任何担保。
+
+### 三角函数幂积分
+
+积分器对线性参数的 `sin`、`cos`、`tan`、`cot`、`sec`、`csc` 正整数幂应用降幂公式，递推路径支持最高 128 次幂。`cot`、`sec`、`csc` 的一次幂原函数在各实数连续区间上使用对数形式。公式参考 [NIST DLMF §4.26](https://dlmf.nist.gov/4.26) 和 [OpenStax 积分表](https://openstax.org/books/calculus-volume-1/pages/a-table-of-integrals)。
+
+### 特殊函数积分
+
+积分器支持 `exp(x)/x`、`sin(x)/x`、`cos(x)/x` 及导数比例可化简为常数的换元形式，分别返回 `Ei`、`Si`、`Ci`。指数为二次多项式且二次项系数为非零小整数时，通过配方返回 `erf` 或 `erfi`。这些函数支持链式求导。`Si`、`Ci` 当前保留符号形式。公式参考 https://dlmf.nist.gov/6.2 与 https://dlmf.nist.gov/7.2 。
+
+Fresnel 积分使用标准归一化 `FresnelS(z) = integral(sin(pi*t^2/2), t, 0, z)` 与 `FresnelC(z) = integral(cos(pi*t^2/2), t, 0, z)`。支持 `sin(a*x^2)`、`cos(a*x^2)` 的积分（a 为非零小整数）、链式求导及零点化简。函数数值求值暂未实现。
+
+积分器也支持线性参数的 `sqrt`、`tanh`、`asin`、`acos`、`atan`、`asinh`、`acosh`、`atanh`。在相应定义域内，`sinh(x)/x`、`cosh(x)/x`、`1/log(x)` 及其可识别的换元形式分别返回 `Shi`、`Chi`、`li`，并支持链式求导。
+
+### 双曲函数幂与特殊函数的原函数
+
+线性参数的 `sinh`、`cosh`、`tanh`、`coth`、`sech`、`csch` 支持 1 至 128 次整数幂的积分。对数形式按实数连续区间使用，参考 [NIST DLMF §4.40](https://dlmf.nist.gov/4.40)。
+
+线性参数的 `erf`、`erfc`、`erfi`、`FresnelS`、`FresnelC`、`Ei`、`Si`、`Ci`、`Shi`、`Chi`、`li` 可通过分部积分求原函数。在相应定义域内，`log(1-x)/x` 及可识别的换元形式可用二重对数 `Li2` 表示。参考 [NIST DLMF §6.2](https://dlmf.nist.gov/6.2)、[§7.2](https://dlmf.nist.gov/7.2) 和 [§25.12](https://dlmf.nist.gov/25.12)。
+
+### 有理式与根式换元
+
+有理函数积分通过多项式除法和部分分式处理，重不可约二次因式使用降幂公式。该规则也适用于半角换元后的三角有理式。二次根式先配方，适用时用正弦或正切换元。欧拉换元处理可化为单变量有理式的平方根表达式，并在原表达式和换元均有定义的实数区间上回代。

@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cstring>
 #include <functional>
+#include <string_view>
 
 namespace Cas::Detail {
 namespace {
@@ -103,6 +104,15 @@ Ptr derivativeOf(const Ptr &expression, std::uint32_t variable) {
         const char *name = expression->name();
         if (!name) return Ptr();
 
+        // 未求值不定积分按其积分变量求导，还原被积表达式。
+        if (std::strcmp(name, "integrate") == 0) {
+            if (expression->size() != 2) return Ptr();
+            Ptr integrationVariable = argumentOf(expression, 1);
+            if (!integrationVariable || integrationVariable->kind() != NodeKind::Symbol ||
+                integrationVariable->symbolId() != variable) return Ptr();
+            return argumentOf(expression, 0);
+        }
+
         // 导数节点 `Derivative(y, x, n)`：求导就是升一阶。
         // ODE 求解把未知函数写成这类节点，隐式解的校验与初值代入都要用到。
         if (std::strcmp(name, "Derivative") == 0) {
@@ -130,10 +140,81 @@ Ptr derivativeOf(const Ptr &expression, std::uint32_t variable) {
             return makeMul(outerDerivative, innerDerivative);
         };
 
+        if (std::strcmp(name, "FresnelS") == 0 || std::strcmp(name, "FresnelC") == 0) {
+            Ptr pi(Node::makeConstant(ConstantId::Pi));
+            Ptr phase = makeDivide(makeMul(pi, makePow(inner, integer(2))), integer(2));
+            Ptr outer(Node::makeFunction(std::strcmp(name, "FresnelS") == 0 ? "sin" : "cos", {phase.get()}));
+            return chain(outer);
+        }
+        if (std::strcmp(name, "Shi") == 0 || std::strcmp(name, "Chi") == 0) {
+            Ptr numerator(Node::makeFunction(std::strcmp(name, "Shi") == 0 ? "sinh" : "cosh", {inner.get()}));
+            return chain(makeDivide(numerator, inner));
+        }
+        if (std::strcmp(name, "Li2") == 0) {
+            Ptr complement = makeAdd(integer(1), makeNegate(inner));
+            Ptr logarithm(Node::makeFunction("log", {complement.get()}));
+            return chain(makeNegate(makeDivide(logarithm, inner)));
+        }
+        if (std::strcmp(name, "li") == 0)
+            return chain(makePow(Ptr(Node::makeFunction("log", {inner.get()})), integer(-1)));
+        if (std::strcmp(name, "coth") == 0 || std::strcmp(name, "sech") == 0 ||
+            std::strcmp(name, "csch") == 0) {
+            const bool sech = std::strcmp(name, "sech") == 0;
+            if (std::strcmp(name, "coth") == 0) {
+                Ptr cosecant(Node::makeFunction("csch", {inner.get()}));
+                return chain(makeNegate(makePow(cosecant, integer(2))));
+            }
+            Ptr factor(Node::makeFunction(sech ? "tanh" : "coth", {inner.get()}));
+            return chain(makeNegate(makeMul(expression, factor)));
+        }
+        if (std::strcmp(name, "tanh") == 0) {
+            Ptr cosine(Node::makeFunction("cosh", {inner.get()}));
+            return chain(makePow(cosine, integer(-2)));
+        }
+        if (std::strcmp(name, "asinh") == 0 || std::strcmp(name, "atanh") == 0 ||
+            std::strcmp(name, "acosh") == 0) {
+            Ptr square = makePow(inner, integer(2));
+            if (std::strcmp(name, "atanh") == 0)
+                return chain(makePow(makeAdd(integer(1), makeNegate(square)), integer(-1)));
+            Ptr inverseRoot = makeNumber(BigInt(-1), BigInt(2));
+            if (std::strcmp(name, "asinh") == 0)
+                return chain(makePow(makeAdd(integer(1), square), inverseRoot));
+            Ptr lower = makePow(makeAdd(inner, integer(-1)), inverseRoot);
+            Ptr upper = makePow(makeAdd(inner, integer(1)), inverseRoot);
+            return chain(makeMul(lower, upper));
+        }
+        if (std::strcmp(name, "Ei") == 0)
+            return chain(makeDivide(Ptr(Node::makeFunction("exp", {inner.get()})), inner));
+        if (std::strcmp(name, "Si") == 0)
+            return chain(makeDivide(Ptr(Node::makeFunction("sin", {inner.get()})), inner));
+        if (std::strcmp(name, "Ci") == 0)
+            return chain(makeDivide(Ptr(Node::makeFunction("cos", {inner.get()})), inner));
+        if (std::strcmp(name, "erf") == 0 || std::strcmp(name, "erfi") == 0 ||
+            std::strcmp(name, "erfc") == 0) {
+            Ptr pi(Node::makeConstant(ConstantId::Pi));
+            Ptr square = makePow(inner, integer(2));
+            bool imaginary = std::strcmp(name, "erfi") == 0;
+            Ptr exponent = imaginary ? square : makeNegate(square);
+            Ptr exponential(Node::makeFunction("exp", {exponent.get()}));
+            Ptr scale = makeDivide(integer(std::strcmp(name, "erfc") == 0 ? -2 : 2),
+                                   makePow(pi, makeNumber(BigInt(1), BigInt(2))));
+            return chain(makeMul(scale, exponential));
+        }
         if (std::strcmp(name, "sin") == 0)
             return chain(Ptr(Node::makeFunction("cos", Memory::Vector<NodePtr>{inner.get()})));
         if (std::strcmp(name, "cos") == 0)
             return chain(makeNegate(Ptr(Node::makeFunction("sin", Memory::Vector<NodePtr>{inner.get()}))));
+        if (std::strcmp(name, "cot") == 0 || std::strcmp(name, "sec") == 0 ||
+            std::strcmp(name, "csc") == 0) {
+            if (std::strcmp(name, "cot") == 0) {
+                Ptr cosecant(Node::makeFunction("csc", {inner.get()}));
+                return chain(makeNegate(makePow(cosecant, integer(2))));
+            }
+            bool secant = std::strcmp(name, "sec") == 0;
+            Ptr factor(Node::makeFunction(secant ? "tan" : "cot", {inner.get()}));
+            Ptr product = makeMul(expression, factor);
+            return chain(secant ? product : makeNegate(product));
+        }
         if (std::strcmp(name, "tan") == 0) {
             // (tan u)' = sec²u = 1 + tan²u
             Ptr squared = makePow(Ptr(Node::makeFunction("cos", Memory::Vector<NodePtr>{inner.get()})), integer(-2));
@@ -378,6 +459,165 @@ Ptr integrateByParts(const Ptr &product, std::uint32_t variable, int depth) {
     return simplify(makeAdd(boundary, makeNegate(innerIntegral)));
 }
 
+/**
+ * @brief 用降幂递推计算三角函数正整数幂的原函数。
+ * @param base 三角函数节点。
+ * @param power 正整数幂。
+ * @param variable 积分变量编号。
+ * @return 线性参数且幂次受支持时返回原函数，否则返回空。
+ */
+Ptr integrateTrigPower(const Ptr &base, long long power, std::uint32_t variable) {
+    if (base->size() != 1 || !base->name() || power < 1 || power > 128) return Ptr();
+    const std::string_view name(base->name());
+    const bool sine = name == "sin";
+    const bool cosine = name == "cos";
+    const bool tangent = name == "tan";
+    const bool cotangent = name == "cot";
+    const bool secant = name == "sec";
+    const bool cosecant = name == "csc";
+    if (!(sine || cosine || tangent || cotangent || secant || cosecant)) return Ptr();
+
+    Ptr inner = argumentOf(base, 0);
+    Ptr slope, offset;
+    if (!linearForm(inner, variable, &slope, &offset) || slope->isZero()) return Ptr();
+
+    Ptr result = inner;
+    if (power % 2 == 1) {
+        if (sine || cosine) {
+            Ptr other(Node::makeFunction(sine ? "cos" : "sin", {inner.get()}));
+            result = sine ? makeNegate(other) : other;
+        } else {
+            Ptr logArgument;
+            if (tangent || cotangent) {
+                logArgument = Ptr(Node::makeFunction(tangent ? "cos" : "sin", {inner.get()}));
+            } else {
+                Ptr other(Node::makeFunction(secant ? "tan" : "cot", {inner.get()}));
+                logArgument = makeAdd(base, secant ? other : makeNegate(other));
+            }
+            // ln|u| = ln(u^2)/2，适用于实数定义域内的两个符号区间。
+            Ptr squared = makePow(logArgument, integer(2));
+            Ptr logarithm(Node::makeFunction("log", {squared.get()}));
+            result = makeDivide(logarithm, integer(tangent ? -2 : 2));
+        }
+    }
+
+    for (long long n = 2 + power % 2; n <= power; n += 2) {
+        if (tangent || cotangent) {
+            Ptr term = makeDivide(makePow(base, integer(n - 1)), integer(n - 1));
+            result = makeAdd(cotangent ? makeNegate(term) : term, makeNegate(result));
+            continue;
+        }
+        const char *otherName = sine ? "cos" : cosine ? "sin" : secant ? "tan" : "cot";
+        Ptr other(Node::makeFunction(otherName, {inner.get()}));
+        bool bounded = sine || cosine;
+        long long denominator = bounded ? n : n - 1;
+        Ptr term = makeMul(other, makePow(base, integer(bounded ? n - 1 : n - 2)));
+        Ptr scaled = makeDivide(term, integer(sine || cosecant ? -denominator : denominator));
+        long long numerator = bounded ? n - 1 : n - 2;
+        result = makeAdd(scaled, makeMul(makeNumber(BigInt(numerator), BigInt(denominator)), result));
+    }
+    return makeDivide(result, slope);
+}
+
+/**
+ * @brief 按降幂公式积分线性参数的双曲函数。
+ * @param base 双曲函数节点。
+ * @param power 正整数幂。
+ * @param variable 积分变量编号。
+ * @return 支持时返回原函数，否则返回空。
+ */
+Ptr integrateHyperbolicPower(const Ptr &base, long long power, std::uint32_t variable) {
+    if (base->size() != 1 || !base->name() || power < 1 || power > 128) return Ptr();
+    const std::string_view name(base->name());
+    const bool sinh = name == "sinh";
+    const bool cosh = name == "cosh";
+    const bool tanh = name == "tanh";
+    const bool coth = name == "coth";
+    const bool sech = name == "sech";
+    const bool csch = name == "csch";
+    if (!(sinh || cosh || tanh || coth || sech || csch)) return Ptr();
+
+    Ptr inner = argumentOf(base, 0);
+    Ptr slope, offset;
+    if (!linearForm(inner, variable, &slope, &offset) || slope->isZero()) return Ptr();
+    Ptr result = inner;
+    if (power % 2 == 1) {
+        if (sinh || cosh) {
+            result = Ptr(Node::makeFunction(sinh ? "cosh" : "sinh", {inner.get()}));
+        } else if (sech) {
+            Ptr sine(Node::makeFunction("sinh", {inner.get()}));
+            result = Ptr(Node::makeFunction("atan", {sine.get()}));
+        } else {
+            Ptr logArgument;
+            if (csch) {
+                Ptr half = makeDivide(inner, integer(2));
+                logArgument = Ptr(Node::makeFunction("tanh", {half.get()}));
+            } else {
+                logArgument = Ptr(Node::makeFunction(tanh ? "cosh" : "sinh", {inner.get()}));
+            }
+            Ptr squared = tanh ? logArgument : makePow(logArgument, integer(2));
+            result = makeDivide(Ptr(Node::makeFunction("log", {squared.get()})), integer(tanh ? 1 : 2));
+        }
+    }
+    for (long long n = 2 + power % 2; n <= power; n += 2) {
+        if (tanh || coth) {
+            result = makeAdd(result, makeDivide(makePow(base, integer(n - 1)), integer(1 - n)));
+            continue;
+        }
+        const bool direct = sinh || cosh;
+        const char *factorName = sinh ? "cosh" : cosh ? "sinh" : sech ? "tanh" : "coth";
+        Ptr factor(Node::makeFunction(factorName, {inner.get()}));
+        long long denominator = direct ? n : n - 1;
+        Ptr term = makeMul(factor, makePow(base, integer(direct ? n - 1 : n - 2)));
+        Ptr boundary = makeDivide(term, integer(csch ? -denominator : denominator));
+        long long numerator = direct ? n - 1 : n - 2;
+        if (sinh || csch) numerator = -numerator;
+        result = makeAdd(boundary, makeMul(makeNumber(BigInt(numerator), BigInt(denominator)), result));
+    }
+    return makeDivide(result, slope);
+}
+
+/**
+ * @brief 用分部积分计算特殊函数的一次原函数。
+ * @param function 特殊函数节点。
+ * @param inner 函数参数。
+ * @param slope 参数对积分变量的斜率。
+ * @return 匹配时返回原函数，否则返回空。
+ */
+Ptr integrateAffineSpecial(const Ptr &function, const Ptr &inner, const Ptr &slope) {
+    const std::string_view name(function->name());
+    Ptr correction;
+    const char *elementary = nullptr;
+    if (name == "Ei") elementary = "exp";
+    if (name == "Si") elementary = "cos";
+    if (name == "Ci") elementary = "sin";
+    if (name == "Shi") elementary = "cosh";
+    if (name == "Chi") elementary = "sinh";
+    if (elementary) {
+        correction = Ptr(Node::makeFunction(elementary, {inner.get()}));
+        if (name != "Si") correction = makeNegate(correction);
+    } else if (name == "li") {
+        Ptr square = makePow(inner, integer(2));
+        correction = makeNegate(Ptr(Node::makeFunction("li", {square.get()})));
+    } else if (name == "erf" || name == "erfc" || name == "erfi") {
+        Ptr pi(Node::makeConstant(ConstantId::Pi));
+        Ptr root = makePow(pi, makeNumber(BigInt(1), BigInt(2)));
+        Ptr square = makePow(inner, integer(2));
+        Ptr exponent = name == "erfi" ? square : makeNegate(square);
+        Ptr exponential(Node::makeFunction("exp", {exponent.get()}));
+        correction = makeDivide(exponential, root);
+        if (name != "erf") correction = makeNegate(correction);
+    } else if (name == "FresnelS" || name == "FresnelC") {
+        Ptr pi(Node::makeConstant(ConstantId::Pi));
+        Ptr phase = makeDivide(makeMul(pi, makePow(inner, integer(2))), integer(2));
+        Ptr trig(Node::makeFunction(name == "FresnelS" ? "cos" : "sin", {phase.get()}));
+        correction = makeDivide(trig, pi);
+        if (name == "FresnelC") correction = makeNegate(correction);
+    }
+    if (!correction) return Ptr();
+    return makeDivide(makeAdd(makeMul(inner, function), correction), slope);
+}
+
 Ptr integrateRecursive(const Ptr &expression, std::uint32_t variable, int depth) {
     if (!expression) return Ptr();
     if (!dependsOn(expression.get(), variable)) {
@@ -547,12 +787,25 @@ Ptr integrateRecursive(const Ptr &expression, std::uint32_t variable, int depth)
             }
         }
 
+        if (base->kind() == NodeKind::Function) {
+            long long power = 0;
+            if (exponent->isSmallInteger(&power) && power >= 2) {
+                Ptr hyperbolic = integrateHyperbolicPower(base, power, variable);
+                if (hyperbolic) return hyperbolic;
+                const std::string_view name(base->name());
+                if (power >= 4 || (name != "sin" && name != "cos")) {
+                    Ptr primitive = integrateTrigPower(base, power, variable);
+                    if (primitive) return primitive;
+                }
+            }
+        }
+
         // sin^n(u)、cos^n(u)：奇数 n 直接换元，偶数 n 反复降幂后递归
         if (base->kind() == NodeKind::Function && !dependsOn(exponent.get(), variable)) {
             const char *functionName = base->name();
             long long power = 0;
             bool integerPower = exponent->isSmallInteger(&power);
-            if (functionName && integerPower && power >= 2 &&
+            if (functionName && integerPower && power >= 2 && power <= 3 &&
                 (std::strcmp(functionName, "sin") == 0 || std::strcmp(functionName, "cos") == 0)) {
                 Ptr innerArgument = Ptr::borrow(base->operand(0));
                 Ptr innerSlope, innerOffset;
@@ -635,13 +888,45 @@ Ptr integrateRecursive(const Ptr &expression, std::uint32_t variable, int depth)
             Ptr logarithm = Ptr(Node::makeFunction("log", arguments));
             return makeDivide(makeNegate(logarithm), slope);
         }
-        if (std::strcmp(name, "sqrt") == 0) {
-            // ∫ √x dx = (2/3)x^(3/2)
-            if (inner->kind() == NodeKind::Symbol && inner->symbolId() == variable) {
-                Ptr power = makePow(inner, makeNumber(BigInt(3), BigInt(2)));
-                return makeMul(makeNumber(BigInt(2), BigInt(3)), power);
+        if (std::strcmp(name, "sqrt") == 0 && linear) {
+            Ptr power = makePow(inner, makeNumber(BigInt(3), BigInt(2)));
+            return makeDivide(makeMul(makeNumber(BigInt(2), BigInt(3)), power), slope);
+        }
+        if (std::strcmp(name, "cot") == 0 || std::strcmp(name, "sec") == 0 ||
+            std::strcmp(name, "csc") == 0) {
+            return integrateTrigPower(expression, 1, variable);
+        }
+        if (std::strcmp(name, "coth") == 0 || std::strcmp(name, "sech") == 0 ||
+            std::strcmp(name, "csch") == 0) {
+            return integrateHyperbolicPower(expression, 1, variable);
+        }
+        if (std::strcmp(name, "tanh") == 0 && linear) {
+            Ptr cosine(Node::makeFunction("cosh", {inner.get()}));
+            return makeDivide(Ptr(Node::makeFunction("log", {cosine.get()})), slope);
+        }
+        if (linear && expression->size() == 1) {
+            Ptr special = integrateAffineSpecial(expression, inner, slope);
+            if (special) return special;
+            Ptr correction;
+            Ptr square = makePow(inner, integer(2));
+            Ptr half = makeNumber(BigInt(1), BigInt(2));
+            if (std::strcmp(name, "asin") == 0 || std::strcmp(name, "acos") == 0) {
+                correction = makePow(makeAdd(integer(1), makeNegate(square)), half);
+                if (std::strcmp(name, "acos") == 0) correction = makeNegate(correction);
+            } else if (std::strcmp(name, "atan") == 0 || std::strcmp(name, "atanh") == 0) {
+                Ptr argument = std::strcmp(name, "atan") == 0
+                    ? makeAdd(integer(1), square) : makeAdd(integer(1), makeNegate(square));
+                Ptr logarithm(Node::makeFunction("log", {argument.get()}));
+                correction = makeMul(half, logarithm);
+                if (std::strcmp(name, "atan") == 0) correction = makeNegate(correction);
+            } else if (std::strcmp(name, "asinh") == 0) {
+                correction = makeNegate(makePow(makeAdd(integer(1), square), half));
+            } else if (std::strcmp(name, "acosh") == 0) {
+                Ptr lower = makePow(makeAdd(inner, integer(-1)), half);
+                Ptr upper = makePow(makeAdd(inner, integer(1)), half);
+                correction = makeNegate(makeMul(lower, upper));
             }
-            return Ptr();
+            if (correction) return makeDivide(makeAdd(makeMul(inner, expression), correction), slope);
         }
         if (std::strcmp(name, "sinh") == 0) {
             if (!linear) return Ptr();
@@ -719,10 +1004,9 @@ Ptr integrateQuadraticDenominator(const UnivariatePoly &numerator, const Univari
     // 整式部分逐项积分
     Ptr polynomialPart = integer(0);
     for (std::size_t i = 0; i < quotient.coefficients.size(); ++i) {
-        if (i == 0) continue;
         Ptr term = makeMul(quotient.coefficient(i),
-                           makePow(variableNode(variable), integer(static_cast<long long>(i - 1))));
-        polynomialPart = makeAdd(polynomialPart, makeDivide(term, integer(static_cast<long long>(i))));
+                           makePow(variableNode(variable), integer(static_cast<long long>(i + 1))));
+        polynomialPart = makeAdd(polynomialPart, makeDivide(term, integer(static_cast<long long>(i + 1))));
     }
 
     const Ptr a = denominator.coefficient(2);
@@ -742,18 +1026,12 @@ Ptr integrateQuadraticDenominator(const UnivariatePoly &numerator, const Univari
         Ptr r1 = makeDivide(makeAdd(minusB, Ptr(sqrtPart.share())), twoA);
         Ptr r2 = makeDivide(makeAdd(minusB, negatedConst(sqrtPart)), twoA);
         if (!r1 || !r2) return Ptr();
-        // 只处理余项为常数或线性，且能解出 A/(x-r1)+B/(x-r2)
-        double r1v = 0, r2v = 0;
-        if (!rationalToDouble(r1, &r1v) || !rationalToDouble(r2, &r2v) || r1v == r2v) {
-            // 根式不可求值时放弃（保持原样交给上层报错）
-            if (!remainder.coefficients.empty() && !remainder.coefficient(1)->isZero()) return Ptr();
-        }
         // 由 A(x-r2) + B(x-r1) = p1·x + p0 得：
         //   A + B = p1，A·r2 + B·r1 = -p0
         // 解得 A = (p1·r1 + p0)/(r1 - r2)，B = (p1·r2 + p0)/(r2 - r1)
         const Ptr p1 = remainder.degree() >= 1 ? remainder.coefficient(1) : integer(0);
         const Ptr p0 = remainder.coefficient(0);
-        const Ptr r1MinusR2 = makeAdd(r1, negatedConst(r2));
+        const Ptr r1MinusR2 = makeDivide(sqrtPart, a);
         Ptr coeffA = makeDivide(makeAdd(makeMul(p1, r1), p0), r1MinusR2);
         Ptr coeffB = makeDivide(makeAdd(makeMul(p1, r2), p0), negatedConst(r1MinusR2));
 
@@ -768,7 +1046,7 @@ Ptr integrateQuadraticDenominator(const UnivariatePoly &numerator, const Univari
         argB.push_back(argBNode.get());
         Ptr logB = Ptr(Node::makeFunction("log", argB));
 
-        Ptr result = makeAdd(polynomialPart, makeAdd(makeMul(coeffA, logA), makeMul(coeffB, logB)));
+        Ptr result = makeAdd(polynomialPart, makeDivide(makeAdd(makeMul(coeffA, logA), makeMul(coeffB, logB)), a));
         return simplify(result);
     }
 
@@ -778,14 +1056,12 @@ Ptr integrateQuadraticDenominator(const UnivariatePoly &numerator, const Univari
         // m x + n = m(x-r) + (n + m r) ⇒ 两项分别是 m/(x-r) 与 (n+mr)/(x-r)^2
         const Ptr m = remainder.degree() >= 1 ? remainder.coefficient(1) : integer(0);
         const Ptr n = remainder.coefficient(0);
-        Ptr shifted = makeAdd(n, makeAdd(makeMul(m, r), integer(0)));
-        Ptr linear = makeDivide(m, makeMul(a, makeAdd(x, negatedConst(r))));
-        Ptr quadratic = makeDivide(negatedConst(shifted), makeMul(makeMul(a, makeAdd(x, negatedConst(r))),
-                                                                  makeAdd(x, negatedConst(r))));
-        (void)linear;
-        (void)quadratic;
-        // 数值积分不追求完全覆盖，此处保守返回空，交给外层报错
-        return Ptr();
+        Ptr shifted = makeAdd(n, makeMul(m, r));
+        Ptr distance = makeAdd(x, makeNegate(r));
+        Ptr logarithm(Node::makeFunction("log", {distance.get()}));
+        Ptr logarithmic = makeMul(m, logarithm);
+        Ptr rational = makeDivide(shifted, distance);
+        return makeAdd(polynomialPart, makeDivide(makeAdd(logarithmic, makeNegate(rational)), a));
     }
 
     // 判别式 < 0：配方 a[(x + b/2a)^2 + (4ac-b^2)/4a^2]
@@ -949,6 +1225,43 @@ Ptr integrateQuadraticFactorTerm(const Ptr &numeratorExpression, const Ptr &base
     return atanPart;
 }
 
+/**
+ * @brief 积分一次分子除以不可约二次式的整数幂。
+ * @param numeratorExpression 一次分子。
+ * @param base 二次因式。
+ * @param power 因式重数。
+ * @param variable 积分变量编号。
+ * @return 成功时返回原函数。
+ */
+Ptr integrateRepeatedQuadratic(const Ptr &numeratorExpression, const Ptr &base, int power,
+                               std::uint32_t variable) {
+    if (power == 1) return integrateQuadraticFactorTerm(numeratorExpression, base, variable);
+    UnivariatePoly quadratic, numerator;
+    if (!toPolynomial(base.get(), variable, &quadratic) ||
+        !toPolynomial(numeratorExpression.get(), variable, &numerator)) return Ptr();
+    Ptr a = quadratic.coefficient(2);
+    Ptr b = quadratic.coefficient(1);
+    Ptr c = quadratic.coefficient(0);
+    Ptr twiceA = makeMul(integer(2), a);
+    Ptr delta = simplify(makeAdd(makeMul(makeMul(integer(4), a), c), makeNegate(makePow(b, integer(2)))));
+    BigInt top, bottom;
+    if (!numberValue(delta.get(), &top, &bottom) || top.isZero() || top.isNegative()) return Ptr();
+    Ptr scale = makeDivide(numerator.coefficient(1), twiceA);
+    Ptr residual = simplify(makeAdd(numerator.coefficient(0), makeNegate(makeMul(scale, b))));
+    Ptr direct = makeDivide(makeMul(scale, makePow(base, integer(1 - power))), integer(1 - power));
+    if (residual->isZero()) return direct;
+    Ptr primitive = integrateQuadraticFactorTerm(integer(1), base, variable);
+    if (!primitive) return Ptr();
+    Ptr derivative = makeAdd(makeMul(twiceA, variableNode(variable)), b);
+    for (int n = 2; n <= power; ++n) {
+        Ptr denominator = makeMul(integer(n - 1), delta);
+        Ptr boundary = makeDivide(derivative, makeMul(denominator, makePow(base, integer(n - 1))));
+        Ptr factor = makeDivide(makeMul(twiceA, integer(2LL * n - 3)), denominator);
+        primitive = makeAdd(boundary, makeMul(factor, primitive));
+    }
+    return makeAdd(direct, makeMul(residual, primitive));
+}
+
 /** @brief 分母分解后要设的一个待定系数（未知量的位置）。 */
 struct PartialTerm {
     std::size_t factorIndex = 0;   ///< 属于第几个因式
@@ -957,23 +1270,24 @@ struct PartialTerm {
 };
 
 Ptr integratePartialFractions(const UnivariatePoly &numerator, const UnivariatePoly &denominator,
-                              std::uint32_t variable) {
+                              std::uint32_t variable, const Ptr &originalDenominator) {
     if (numerator.degree() >= denominator.degree()) return Ptr();
     Ptr factored = factor(fromPolynomial(denominator));
     if (!factored) return Ptr();
     Memory::Vector<FractionFactor> factors;
-    if (!collectFractionFactors(factored, variable, &factors)) return Ptr();
+    if (!collectFractionFactors(factored, variable, &factors)) {
+        factors.clear();
+        Ptr expandedOriginal = expand(originalDenominator);
+        Ptr expandedDenominator = expand(fromPolynomial(denominator));
+        if (!expandedOriginal || !expandedDenominator || !expandedOriginal->equals(expandedDenominator.get()) ||
+            !collectFractionFactors(originalDenominator, variable, &factors)) return Ptr();
+    }
     if (factors.empty()) return Ptr();
 
     // 分母本身就是单个不可约二次因式（无重数）：直接走二次分母公式
     if (factors.size() == 1 && factors[0].multiplicity == 1 && factors[0].degree == 2) {
         return integrateQuadraticFactorTerm(fromPolynomial(numerator), factors[0].base, variable);
     }
-    // 二次因式带重数：需要降幂递推，暂不支持
-    for (const FractionFactor &entry : factors) {
-        if (entry.degree == 2 && entry.multiplicity > 1) return Ptr();
-    }
-
     // 设每个部分分式项的分子：一次因子给常数 A；二次因子给 A·x + B
     std::vector<PartialTerm> terms;
     for (std::size_t i = 0; i < factors.size(); ++i) {
@@ -1104,7 +1418,7 @@ Ptr integratePartialFractions(const UnivariatePoly &numerator, const UnivariateP
                 cursor += 2;
                 Ptr numeratorExpression = makeAdd(makeMul(first, variableNode(variable)), second);
                 if (numeratorExpression && !(first->isZero() && second->isZero())) {
-                    Ptr piece = integrateQuadraticFactorTerm(numeratorExpression, entry.base, variable);
+                    Ptr piece = integrateRepeatedQuadratic(numeratorExpression, entry.base, power, variable);
                     if (!piece) return Ptr();
                     result = makeAdd(result, piece);
                 }
@@ -1293,8 +1607,26 @@ Ptr integrateRadicalSubstitution(const Ptr &expression, std::uint32_t variable) 
     if (polynomial.degree() != 2) return Ptr();
     const Ptr quadratic = polynomial.coefficient(2);
     const Ptr linearCoefficient = polynomial.coefficient(1);
-    const Ptr constantTerm = polynomial.coefficient(0);
-    if (!linearCoefficient->isZero()) return Ptr(); // 含 x 一次项时需先配方，暂不处理
+    Ptr shift = makeDivide(linearCoefficient, makeMul(integer(2), quadratic));
+    Ptr constantTerm = simplify(makeAdd(polynomial.coefficient(0),
+        makeNegate(makeMul(quadratic, makePow(shift, integer(2))))));
+
+    Ptr reciprocal = makePow(kernel, makeNumber(BigInt(-1), BigInt(2)));
+    if (expression->equals(reciprocal.get())) {
+        BigInt top, bottom;
+        if (numberValue(quadratic.get(), &top, &bottom) &&
+            numberValue(constantTerm.get(), &top, &bottom) && !top.isNegative() && !top.isZero()) {
+            numberValue(quadratic.get(), &top, &bottom);
+            const bool negative = top.isNegative();
+            Ptr magnitude = negative ? makeNegate(quadratic) : quadratic;
+            Ptr half = makeNumber(BigInt(1), BigInt(2));
+            Ptr scale = makePow(magnitude, half);
+            Ptr radius = makePow(makeDivide(constantTerm, magnitude), half);
+            Ptr argument = makeDivide(makeAdd(variableNode(variable), shift), radius);
+            Ptr primitive(Node::makeFunction(negative ? "asin" : "asinh", {argument.get()}));
+            return makeDivide(primitive, scale);
+        }
+    }
 
     const std::uint32_t tSymbol = internSymbol("__s");
     Ptr t = Ptr(Node::makeSymbolById(tSymbol));
@@ -1310,7 +1642,7 @@ Ptr integrateRadicalSubstitution(const Ptr &expression, std::uint32_t variable) 
     quadraticValue = numerator.toDouble() / denominator.toDouble();
     if (!numberValue(constantTerm.get(), &numerator, &denominator)) return Ptr();
     constantValue = numerator.toDouble() / denominator.toDouble();
-    if (quadraticValue > 0.0 && constantValue < 0.0) return Ptr(); // x²−a² 需要 a 的具体值
+    if (constantValue <= 0.0) return Ptr();
 
     // a = √|常数项 / 二次项系数|：
     // a² − x² 型常数项为正、二次项为负；a² + x² 型两者同号。
@@ -1342,6 +1674,9 @@ Ptr integrateRadicalSubstitution(const Ptr &expression, std::uint32_t variable) 
         Ptr cosineSquared = makePow(cosine, integer(2));
         derivativeFactor = makeDivide(a, cosineSquared);
     }
+    Ptr magnitude = quadraticValue < 0.0 ? makeNegate(quadratic) : quadratic;
+    radicalAfter = makeMul(makePow(magnitude, makeNumber(BigInt(1), BigInt(2))), radicalAfter);
+    substitution = makeAdd(substitution, makeNegate(shift));
     if (!substitution || !radicalAfter || !derivativeFactor) return Ptr();
 
     // 先把根式节点换成代换后的形式，再把 x 换成 substitution。
@@ -1370,12 +1705,194 @@ Ptr integrateRadicalSubstitution(const Ptr &expression, std::uint32_t variable) 
     if (!anti) return Ptr();
 
     // t 回代：x = a sin t ⇒ t = asin(x/a)；x = a tan t ⇒ t = atan(x/a)
-    Ptr argument = makeDivide(variableNode(variable), a);
+    Ptr argument = makeDivide(makeAdd(variableNode(variable), shift), a);
     if (!argument) return Ptr();
     const char *inverseName = quadraticValue < 0.0 ? "asin" : "atan";
     Ptr inverse = Ptr(Node::makeFunction(inverseName, Memory::Vector<NodePtr>{argument.get()}));
     if (!inverse) return Ptr();
     return substitute(anti, tSymbol, inverse);
+}
+
+/**
+ * @brief 将有理积分的对数改为实数区间上的对数绝对值。
+ * @param expression 有理积分原函数。
+ * @return 替换后的表达式。
+ */
+Ptr realRationalPrimitive(const Ptr &expression) {
+    if (expression->kind() == NodeKind::Function && expression->size() == 1 &&
+        std::strcmp(expression->name(), "log") == 0) {
+        Ptr squared = makePow(argumentOf(expression, 0), integer(2));
+        Ptr logarithm(Node::makeFunction("log", {squared.get()}));
+        return makeDivide(logarithm, integer(2));
+    }
+    Ptr result = expression;
+    for (NodePtr child : expression->operands()) {
+        Ptr original = Ptr::borrow(child);
+        Ptr rewritten = realRationalPrimitive(original);
+        if (!rewritten->equals(child)) result = replaceSubtree(result, original, rewritten);
+    }
+    return result;
+}
+
+/**
+ * @brief 用欧拉换元把含单一二次根式的表达式有理化。
+ * @param expression 被积表达式。
+ * @param variable 积分变量编号。
+ * @return 有理积分成功时返回回代结果。
+ */
+Ptr integrateEulerSubstitution(const Ptr &expression, std::uint32_t variable) {
+    Ptr kernel;
+    if (!radicalKernel(expression, variable, &kernel)) return Ptr();
+    UnivariatePoly polynomial;
+    if (!toPolynomial(expand(kernel).get(), variable, &polynomial) ||
+        polynomial.degree() < 1 || polynomial.degree() > 2) return Ptr();
+    Ptr a = polynomial.coefficient(2);
+    Ptr b = polynomial.coefficient(1);
+    Ptr c = polynomial.coefficient(0);
+    BigInt an, ad, bn, bd, cn, cd;
+    if (!numberValue(a.get(), &an, &ad) || !numberValue(b.get(), &bn, &bd) ||
+        !numberValue(c.get(), &cn, &cd)) return Ptr();
+
+    std::uint32_t parameter = internSymbol("__euler");
+    for (int suffix = 1; parameter == variable || dependsOn(expression.get(), parameter); ++suffix) {
+        parameter = internSymbol("__euler" + std::to_string(suffix));
+    }
+    Ptr t = variableNode(parameter);
+    Ptr x = variableNode(variable);
+    Ptr half = makeNumber(BigInt(1), BigInt(2));
+    Ptr radical = makePow(kernel, half);
+    Ptr square = makePow(t, integer(2));
+    Ptr substitution, radicalAfter, inverse;
+    if (an.isZero()) {
+        substitution = makeDivide(makeAdd(square, makeNegate(c)), b);
+        radicalAfter = t;
+        inverse = radical;
+    } else if (!an.isNegative()) {
+        Ptr root = makePow(a, half);
+        Ptr denominator = makeAdd(makeMul(makeMul(integer(2), root), t), makeNegate(b));
+        substitution = makeDivide(makeAdd(c, makeNegate(square)), denominator);
+        radicalAfter = makeAdd(t, makeMul(root, substitution));
+        inverse = makeAdd(radical, makeNegate(makeMul(root, x)));
+    } else if (!cn.isZero() && !cn.isNegative()) {
+        Ptr root = makePow(c, half);
+        Ptr numerator = makeAdd(b, makeNegate(makeMul(makeMul(integer(2), root), t)));
+        substitution = makeDivide(numerator, makeAdd(square, makeNegate(a)));
+        radicalAfter = makeAdd(root, makeMul(t, substitution));
+        inverse = makeDivide(makeAdd(radical, makeNegate(root)), x);
+    } else {
+        Ptr discriminant = simplify(makeAdd(makePow(b, integer(2)), makeNegate(makeMul(makeMul(integer(4), a), c))));
+        BigInt dn, dd;
+        if (!numberValue(discriminant.get(), &dn, &dd) || dn.isNegative() || dn.isZero()) return Ptr();
+        Ptr root = makeDivide(makeAdd(makeNegate(b), makePow(discriminant, half)), makeMul(integer(2), a));
+        Ptr offset = makeAdd(makeMul(a, root), b);
+        substitution = makeDivide(makeAdd(makeMul(root, square), offset), makeAdd(square, makeNegate(a)));
+        radicalAfter = makeMul(t, makeAdd(substitution, makeNegate(root)));
+        inverse = makeDivide(radical, makeAdd(x, makeNegate(root)));
+    }
+    Ptr reciprocal = makePow(kernel, makeNumber(BigInt(-1), BigInt(2)));
+    Ptr replaced = replaceSubtree(expression, reciprocal, makeDivide(integer(1), radicalAfter));
+    replaced = replaceSubtree(replaced, radical, radicalAfter);
+    replaced = substitute(replaced, variable, substitution);
+    Ptr jacobian = differentiate(substitution, parameter);
+    if (!replaced || !jacobian) return Ptr();
+
+    Ptr integrand = togetherDeep(makeMul(replaced, jacobian));
+    Ptr numerator, denominator;
+    UnivariatePoly numeratorPoly, denominatorPoly;
+    if (!integrand || !toQuotient(integrand, &numerator, &denominator) ||
+        !toPolynomial(expand(numerator).get(), parameter, &numeratorPoly) ||
+        !toPolynomial(expand(denominator).get(), parameter, &denominatorPoly)) return Ptr();
+    Ptr primitive = integrate(integrand, parameter);
+    return primitive ? simplify(substitute(realRationalPrimitive(primitive), parameter, inverse)) : Ptr();
+}
+
+/**
+ * @brief 搜索指数积分及三角积分的换元候选。
+ * @param expression 完整被积表达式。
+ * @param candidate 当前候选子树。
+ * @param variable 积分变量。
+ * @return 经导数比值验证的原函数，未匹配时返回空。
+ */
+Ptr integrateSpecialSubstitution(const Ptr &expression, const Ptr &candidate, std::uint32_t variable) {
+    if (candidate->kind() == NodeKind::Function && candidate->size() == 1) {
+        const char *name = candidate->name();
+        const char *primitiveName = nullptr;
+        if (std::strcmp(name, "exp") == 0) primitiveName = "Ei";
+        if (std::strcmp(name, "sin") == 0) primitiveName = "Si";
+        if (std::strcmp(name, "cos") == 0) primitiveName = "Ci";
+        if (std::strcmp(name, "sinh") == 0) primitiveName = "Shi";
+        if (std::strcmp(name, "cosh") == 0) primitiveName = "Chi";
+        if (std::strcmp(name, "log") == 0) primitiveName = "li";
+        if (std::strcmp(name, "sin") == 0 || std::strcmp(name, "cos") == 0) {
+            Ptr inner = argumentOf(candidate, 0);
+            UnivariatePoly polynomial;
+            if (toPolynomial(expand(inner).get(), variable, &polynomial) && polynomial.degree() == 2) {
+                long long quadratic = 0;
+                Ptr a = polynomial.coefficient(2);
+                if (a->isSmallInteger(&quadratic) && quadratic != 0 &&
+                    polynomial.coefficient(1)->isZero() && polynomial.coefficient(0)->isZero()) {
+                    Ptr magnitude = quadratic < 0 ? makeNegate(a) : a;
+                    Ptr pi(Node::makeConstant(ConstantId::Pi));
+                    Ptr scale = makePow(makeDivide(makeMul(integer(2), magnitude), pi),
+                                        makeNumber(BigInt(1), BigInt(2)));
+                    Ptr argument = makeMul(scale, variableNode(variable));
+                    bool sine = std::strcmp(name, "sin") == 0;
+                    Ptr special(Node::makeFunction(sine ? "FresnelS" : "FresnelC", {argument.get()}));
+                    Ptr ratio = simplify(makeDivide(expression, candidate));
+                    if (ratio && !dependsOn(ratio.get(), variable)) {
+                        if (sine && quadratic < 0) ratio = makeNegate(ratio);
+                        return makeDivide(makeMul(ratio, special), scale);
+                    }
+                }
+            }
+        }
+        if (std::strcmp(name, "exp") == 0) {
+            UnivariatePoly polynomial;
+            Ptr inner = argumentOf(candidate, 0);
+            if (toPolynomial(expand(inner).get(), variable, &polynomial) && polynomial.degree() == 2) {
+                Ptr a = polynomial.coefficient(2);
+                long long quadratic = 0;
+                if (a->isSmallInteger(&quadratic) && quadratic != 0) {
+                    Ptr b = polynomial.coefficient(1);
+                    Ptr c = polynomial.coefficient(0);
+                    Ptr magnitude = quadratic < 0 ? makeNegate(a) : a;
+                    Ptr root = makePow(magnitude, makeNumber(BigInt(1), BigInt(2)));
+                    Ptr shifted = makeAdd(variableNode(variable), makeDivide(b, makeMul(integer(2), a)));
+                    Ptr argument = makeMul(root, shifted);
+                    Ptr special(Node::makeFunction(quadratic < 0 ? "erf" : "erfi", {argument.get()}));
+                    Ptr correction = simplify(makeAdd(c, makeNegate(makeDivide(makePow(b, integer(2)), makeMul(integer(4), a)))));
+                    Ptr exponential(Node::makeFunction("exp", {correction.get()}));
+                    Ptr pi(Node::makeConstant(ConstantId::Pi));
+                    Ptr primitive = makeDivide(makeMul(makeMul(exponential, makePow(pi, makeNumber(BigInt(1), BigInt(2)))), special), makeMul(integer(2), root));
+                    Ptr ratio = simplify(makeDivide(expression, candidate));
+                    if (ratio && !dependsOn(ratio.get(), variable)) return makeMul(ratio, primitive);
+                }
+            }
+        }
+        if (std::strcmp(name, "log") == 0) {
+            Ptr complement = simplify(expand(makeAdd(integer(1), makeNegate(argumentOf(candidate, 0)))));
+            Ptr dilog(Node::makeFunction("Li2", {complement.get()}));
+            Ptr derivative = differentiate(dilog, variable);
+            if (derivative && !derivative->isZero()) {
+                Ptr ratio = simplify(makeDivide(expression, derivative));
+                if (ratio && !dependsOn(ratio.get(), variable)) return makeMul(ratio, dilog);
+            }
+        }
+        if (primitiveName) {
+            Ptr inner = argumentOf(candidate, 0);
+            Ptr primitive(Node::makeFunction(primitiveName, {inner.get()}));
+            Ptr derivative = derivativeOf(primitive, variable);
+            if (derivative && !derivative->isZero()) {
+                Ptr ratio = simplify(makeDivide(expression, derivative));
+                if (ratio && !dependsOn(ratio.get(), variable)) return makeMul(ratio, primitive);
+            }
+        }
+    }
+    for (NodePtr child : candidate->operands()) {
+        Ptr result = integrateSpecialSubstitution(expression, Ptr::borrow(child), variable);
+        if (result) return result;
+    }
+    return Ptr();
 }
 
 Ptr integrate(const Ptr &expression, std::uint32_t variable) {
@@ -1385,10 +1902,13 @@ Ptr integrate(const Ptr &expression, std::uint32_t variable) {
 
     // 先把分式改写为幂形式
     Ptr result = integrateRecursive(simplified, variable);
+    if (!result) result = integrateSpecialSubstitution(simplified, simplified, variable);
     if (!result) {
         // 根式三角代换：√(a²−x²)、√(a²+x²) 一类
         Ptr radical = integrateRadicalSubstitution(simplified, variable);
         if (radical) return simplify(radical);
+        Ptr euler = integrateEulerSubstitution(simplified, variable);
+        if (euler) return euler;
     }
     if (!result) {
         // 三角有理式：万能代换 t = tan(u/2)
@@ -1433,11 +1953,11 @@ Ptr integrate(const Ptr &expression, std::uint32_t variable) {
         UnivariatePoly quotientPart, remainderPart;
         if (!polyDivide(numerator, denominator, &quotientPart, &remainderPart)) return Ptr();
         Ptr polynomialPart = integer(0);
-        for (std::size_t i = 1; i < quotientPart.coefficients.size(); ++i) {
+        for (std::size_t i = 0; i < quotientPart.coefficients.size(); ++i) {
             Ptr term = makeMul(
                 quotientPart.coefficient(i),
-                makePow(variableNode(variable), integer(static_cast<long long>(i - 1))));
-            polynomialPart = makeAdd(polynomialPart, makeDivide(term, integer(static_cast<long long>(i))));
+                makePow(variableNode(variable), integer(static_cast<long long>(i + 1))));
+            polynomialPart = makeAdd(polynomialPart, makeDivide(term, integer(static_cast<long long>(i + 1))));
         }
 
         if (remainderPart.isZero()) return simplify(polynomialPart);
@@ -1453,7 +1973,7 @@ Ptr integrate(const Ptr &expression, std::uint32_t variable) {
         } else if (denominator.degree() == 2) {
             remainderResult = integrateQuadraticDenominator(remainderPart, denominator, variable);
         } else {
-            remainderResult = integratePartialFractions(remainderPart, denominator, variable);
+            remainderResult = integratePartialFractions(remainderPart, denominator, variable, bottom);
         }
         if (!remainderResult) return Ptr();
         return simplify(makeAdd(polynomialPart, remainderResult));
@@ -1463,15 +1983,164 @@ Ptr integrate(const Ptr &expression, std::uint32_t variable) {
     return simplify(expanded ? expanded : result);
 }
 
+/**
+ * @brief 按加法与数字乘法分解积分，保留无法积分的子项。
+ * @param expression 被积表达式。
+ * @param variable 积分变量编号。
+ * @return 部分求值结果；不可分解且无法积分时返回空。
+ */
+Ptr integratePartial(const Ptr &expression, std::uint32_t variable) {
+    Ptr result = integrate(expression, variable);
+    if (result || !expression) return result;
+    Ptr normalized = simplify(expression);
+    if (!normalized) return Ptr();
+    Memory::Vector<Ptr> holders;
+    Memory::Vector<NodePtr> operands;
+    if (normalized->kind() == NodeKind::Add) {
+        for (NodePtr child : normalized->operands()) {
+            Ptr part = integratePartial(Ptr::borrow(child), variable);
+            if (!part) {
+                Ptr symbol = variableNode(variable);
+                part = Ptr(Node::makeFunction("integrate", {child, symbol.get()}));
+            }
+            holders.push_back(part);
+            operands.push_back(part.get());
+        }
+        return simplify(makeAddMany(operands));
+    }
+    if (normalized->kind() == NodeKind::Mul) {
+        Ptr coefficient = integer(1);
+        for (NodePtr child : normalized->operands()) {
+            if (child->isNumber()) coefficient = makeMul(coefficient, Ptr::borrow(child));
+            else operands.push_back(child);
+        }
+        if (operands.size() == normalized->operands().size()) return Ptr();
+        Ptr varying = makeMulMany(operands);
+        Ptr part = integratePartial(varying, variable);
+        if (!part) {
+            Ptr symbol = variableNode(variable);
+            part = Ptr(Node::makeFunction("integrate", {varying.get(), symbol.get()}));
+        }
+        return simplify(makeMul(coefficient, part));
+    }
+    return Ptr();
+}
+
+/**
+ * @brief 以精确有理数计算多项式在端点的符号。
+ * @param polynomial 待求值多项式。
+ * @param point 积分端点。
+ * @param sign 输出符号。
+ * @return 能判定符号时返回真。
+ */
+bool polynomialSignAt(const UnivariatePoly &polynomial, const Ptr &point, int *sign) {
+    Ptr value = integer(0);
+    for (std::size_t i = polynomial.coefficients.size(); i-- > 0;) {
+        value = makeAdd(makeMul(value, point), polynomial.coefficient(i));
+    }
+    BigInt numerator, denominator;
+    if (!numberValue(value.get(), &numerator, &denominator)) return false;
+    *sign = numerator.isZero() ? 0 : numerator.isNegative() ? -1 : 1;
+    return true;
+}
+
+/**
+ * @brief 用 Sturm 序列检测约分后的有理函数分母是否在闭区间内有根。
+ * @param expression 被积表达式。
+ * @param variable 积分变量编号。
+ * @param lower 下限。
+ * @param upper 上限。
+ * @return 确认存在极点时返回真。
+ */
+bool rationalPoleInInterval(const Ptr &expression, std::uint32_t variable,
+                            const Ptr &lower, const Ptr &upper) {
+    if (!lower->isNumber() || !upper->isNumber()) return false;
+    Ptr numerator, denominator;
+    if (!toQuotient(expression, &numerator, &denominator) || isInt(denominator, 1)) return false;
+    Ptr reduced = cancelCommon(expand(numerator), expand(denominator), variable);
+    if (reduced && !toQuotient(reduced, &numerator, &denominator)) return false;
+    UnivariatePoly first, second;
+    if (!toPolynomial(expand(denominator).get(), variable, &first) || first.degree() == 0) return false;
+    Ptr derivative = differentiate(fromPolynomial(first), variable);
+    if (!derivative || !toPolynomial(derivative.get(), variable, &second)) return false;
+
+    int leftPrevious = 0, rightPrevious = 0, leftChanges = 0, rightChanges = 0;
+    auto count = [&](const UnivariatePoly &term) {
+        int left, right;
+        if (!polynomialSignAt(term, lower, &left) || !polynomialSignAt(term, upper, &right)) return false;
+        if (left) {
+            if (leftPrevious && left != leftPrevious) ++leftChanges;
+            leftPrevious = left;
+        }
+        if (right) {
+            if (rightPrevious && right != rightPrevious) ++rightChanges;
+            rightPrevious = right;
+        }
+        return true;
+    };
+    int left, right;
+    if (!polynomialSignAt(first, lower, &left) || !polynomialSignAt(first, upper, &right)) return false;
+    if (left == 0 || right == 0) return true;
+    if (!count(first)) return false;
+    while (!second.isZero()) {
+        if (!count(second)) return false;
+        UnivariatePoly quotient, remainder;
+        if (!polyDivide(first, second, &quotient, &remainder)) return false;
+        for (Ptr &coefficient : remainder.coefficients) coefficient = makeNegate(coefficient);
+        first = second;
+        second = remainder;
+    }
+    return leftChanges != rightChanges;
+}
+
+/**
+ * @brief 检查原函数中线性参数的正切是否跨越极点。
+ * @param primitive 原函数。
+ * @param variable 积分变量编号。
+ * @param lower 下限。
+ * @param upper 上限。
+ * @return 检测到跨分支时返回真。
+ */
+bool tangentBranchInInterval(const Ptr &primitive, std::uint32_t variable,
+                             const Ptr &lower, const Ptr &upper) {
+    if (primitive->kind() == NodeKind::Function && primitive->size() == 1 &&
+        std::strcmp(primitive->name(), "tan") == 0) {
+        Ptr phase = argumentOf(primitive, 0);
+        Ptr slope, offset;
+        if (linearForm(phase, variable, &slope, &offset) && !slope->isZero()) {
+            Ptr pi(Node::makeConstant(ConstantId::Pi));
+            auto phaseInPi = [&](const Ptr &point, double *value) {
+                Ptr atPoint = simplify(substitute(phase, variable, point));
+                if (rationalToDouble(simplify(makeDivide(atPoint, pi)), value)) return true;
+                if (!rationalToDouble(atPoint, value)) return false;
+                *value /= std::acos(-1.0);
+                return std::isfinite(*value);
+            };
+            double first, last;
+            if (phaseInPi(lower, &first) && phaseInPi(upper, &last) &&
+                std::isfinite(first) && std::isfinite(last)) {
+                if (first > last) std::swap(first, last);
+                if (std::ceil(first - 0.5) <= std::floor(last - 0.5)) return true;
+            }
+        }
+    }
+    for (NodePtr child : primitive->operands()) {
+        if (tangentBranchInInterval(Ptr::borrow(child), variable, lower, upper)) return true;
+    }
+    return false;
+}
+
 Ptr definiteIntegral(const Ptr &expression, std::uint32_t variable, const Ptr &lower, const Ptr &upper) {
     Ptr primitive = integrate(expression, variable);
     if (!primitive) return Ptr();
     const bool lowerInfinite = containsInfinity(lower.get());
     const bool upperInfinite = containsInfinity(upper.get());
     if (!lowerInfinite && !upperInfinite) {
+        if (rationalPoleInInterval(expression, variable, lower, upper) ||
+            tangentBranchInInterval(primitive, variable, lower, upper)) return Ptr();
         Ptr atUpper = substitute(primitive, variable, upper);
         Ptr atLower = substitute(primitive, variable, lower);
-        if (!atUpper || !atLower) return Ptr();
+        if (!atUpper || !atLower || containsInfinity(atUpper.get()) || containsInfinity(atLower.get())) return Ptr();
         return simplify(makeAdd(atUpper, makeNegate(atLower)));
     }
     // 含无穷限：转成极限

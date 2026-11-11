@@ -308,7 +308,7 @@ int64_t casUnary(ChaliAbiFrame *state)
     case 6:
     {
         const auto id = variableId(readText(state, integerArgument(state, 2)));
-        result = integrate(value->root, id);
+        result = integratePartial(value->root, id);
         if (!result)
         {
             Ptr symbol(Node::makeSymbolById(id));
