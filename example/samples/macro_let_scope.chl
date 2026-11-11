@@ -25,9 +25,32 @@ $macro CHECK_BINDINGS(value, ...items: value) -> expr
 }
 $end_macro
 
+$macro ADD_ONE(value) -> expr
+$let result = value + 1
+result
+$end_macro
+
+$macro CHECK_NESTED(value) -> expr
+{
+    $let result = value + 1
+    const bool original = true;
+    const bool saved = original;
+    {
+        bool original = false;
+        $if saved
+            assert(!original);
+        $else
+            missingFunction();
+        $end_if
+    }
+    yield $ADD_ONE(result);
+}
+$end_macro
+
 void main() {
     int64 total = 500;
     assert($CHECK_BINDINGS(10, 2, 20, 5) == 7);
     assert($CHECK_BINDINGS(3, 2, 20, 5) == 2);
     assert(total == 500);
+    assert($CHECK_NESTED(40) == 42);
 }

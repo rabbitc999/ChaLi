@@ -547,12 +547,36 @@ bool ExpandAstMacroNode(int id, chali_macro::Registry &registry, std::size_t dep
  */
 bool SelectSourceConditionals()
 {
-    using Locals = Memory::Map<Memory::String, int>;
+    using Locals = SourceConditionalLocals;
+    SourceConditionalScopes constantScopes;
     using Nodes = Memory::Vector<int>;
     std::size_t budget = 1000000;
     Memory::Set<int> fragments;
     std::function<bool(int, const Locals &, std::size_t)> visit;
     std::function<bool(const Nodes &, Nodes &, Locals &, std::size_t)> select;
+
+    const auto rememberDeclarations = [&](int id, Locals &locals) {
+        if (id < 0 || N(id).kind != MNode::Declare) return;
+        const auto node = N(id);
+        const auto remember = [&](int declaration) {
+            const auto &entry = N(declaration);
+            if (entry.type2 == 1 && !entry.kids.empty() && entry.kids[0] >= 0)
+                constantScopes.emplace(entry.kids[0], locals);
+            locals[entry.s] = declaration;
+        };
+        if (node.kids.size() == 1 && node.kids[0] >= 0 && N(node.kids[0]).kind == MNode::List)
+            for (int child : N(node.kids[0]).kids)
+            {
+                if (node.type2 == 1)
+                {
+                    if (N(child).type < 0) g_nodes[child].type = node.type;
+                    if (N(child).type2 < 0) g_nodes[child].type2 = 1;
+                }
+                remember(child);
+            }
+        else if (!node.s.empty())
+            remember(id);
+    };
 
     select = [&](const Nodes &items, Nodes &output, Locals &locals, std::size_t depth) {
         for (int id : items)
@@ -571,7 +595,7 @@ bool SelectSourceConditionals()
                 ReductionSourceScope source(condition);
                 if (!MaterializeMacroFragments(condition, fragments, 0)) return false;
                 std::string error;
-                if (!PrepareMacroControlsWithLocals(condition, {}, error, &locals))
+                if (!PrepareMacroControlsWithLocals(condition, {}, error, &locals, &constantScopes))
                     return Fail(Memory::String(error.data(), error.size()));
                 MConstant value;
                 if (!EvaluateConstant(condition, &value) || value.kind != MConstant::Boolean)
@@ -582,21 +606,7 @@ bool SelectSourceConditionals()
             }
             if (!visit(id, locals, depth + 1)) return false;
             output.push_back(id);
-            if (node.kind == MNode::Declare)
-            {
-                if (node.kids.size() == 1 && node.kids[0] >= 0 && N(node.kids[0]).kind == MNode::List)
-                    for (int child : N(node.kids[0]).kids)
-                    {
-                        if (node.type2 == 1)
-                        {
-                            if (N(child).type < 0) g_nodes[child].type = node.type;
-                            if (N(child).type2 < 0) g_nodes[child].type2 = 1;
-                        }
-                        locals[N(child).s] = child;
-                    }
-                else if (!node.s.empty())
-                    locals[node.s] = id;
-            }
+            rememberDeclarations(id, locals);
         }
         return true;
     };
@@ -621,11 +631,17 @@ bool SelectSourceConditionals()
                     if (param >= 0 && N(param).kind == MNode::Params) locals[N(param).s] = param;
             return visit(node.kids[1], locals, depth + 1);
         }
-        if (node.kind == MNode::Foreach && node.kids.size() == 2)
+        if (node.kind == MNode::For || node.kind == MNode::Foreach)
         {
             Locals locals = outer;
-            locals[node.s] = id;
-            return visit(node.kids[0], outer, depth + 1) && visit(node.kids[1], locals, depth + 1);
+            if (!visit(node.kids[0], outer, depth + 1)) return false;
+            if (node.kind == MNode::For)
+                rememberDeclarations(node.kids[0], locals);
+            else
+                locals[node.s] = id;
+            for (std::size_t i = 1; i < node.kids.size(); ++i)
+                if (!visit(node.kids[i], locals, depth + 1)) return false;
+            return true;
         }
         const bool bindMembers = (node.kind == MNode::StructDecl || node.kind == MNode::InterfaceDecl)
                                  && !node.kids.empty() && node.kids[0] >= 0

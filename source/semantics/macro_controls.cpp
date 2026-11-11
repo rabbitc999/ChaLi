@@ -298,7 +298,103 @@ bool ReadMacroLetChar(const MNode &node, unsigned char &value)
 }
 
 /**
+ * @brief 判断调用是否是插值归一化使用的核心格式化入口。
+ * @param node 待检查的表达式。
+ * @return 具有限定的核心格式化调用形状时返回真。
+ */
+bool IsConstantInterpolation(const MNode &node)
+{
+    if (node.kind != MNode::Call || node.kids.size() != 2) return false;
+    const auto &callee = N(node.kids[0]);
+    return callee.kind == MNode::EnumCtor && callee.s == "std::core" && callee.s2 == "format";
+}
 
+/**
+ * @brief 按普通插值的默认格式把编译期标量转换为文本。
+ * @param id 已归一化的占位表达式。
+ * @param result 接收标量文本。
+ * @param error 接收字符串解码错误。
+ * @return 成功转换时返回真。
+ */
+bool ReadConstantInterpolationValue(int id, Memory::String &result, std::string &error)
+{
+    const auto &node = N(id);
+    if (node.kind == MNode::Str)
+    {
+        std::string text;
+        if (!ReadMacroDiagnosticString(id, text, error)) return false;
+        result.assign(text.data(), text.size());
+        return true;
+    }
+    if (node.kind == MNode::Char)
+    {
+        unsigned char value;
+        if (!ReadMacroLetChar(node, value)) return false;
+        result.assign(1, static_cast<char>(value));
+        return true;
+    }
+    MConstant value;
+    if (!EvaluateConstant(id, &value)) return false;
+    if (value.kind == MConstant::Floating)
+    {
+        char buffer[128];
+        const double real = value.bits == 32 ? static_cast<float>(value.floating) : value.floating;
+        const int count = std::snprintf(buffer, sizeof(buffer), "%g", real);
+        if (count < 0 || static_cast<std::size_t>(count) >= sizeof(buffer))
+            return Fail("编译期插值无法格式化浮点数");
+        result.assign(buffer, static_cast<std::size_t>(count));
+    }
+    else
+        result = value.isUnsigned && value.kind == MConstant::Integer
+                     ? Memory::toString(static_cast<std::uint64_t>(value.integer))
+                     : Memory::toString(value.integer);
+    return true;
+}
+
+/**
+ * @brief 折叠 f 字符串生成的顺序占位符和转义花括号。
+ * @param id 待替换的格式调用。
+ * @param error 接收常量字符串诊断。
+ * @return 所有占位表达式都能在编译期求值时返回真。
+ */
+bool FoldConstantInterpolation(int id, std::string &error)
+{
+    constexpr std::size_t textBudget = 1048576;
+    const auto args = N(N(id).kids[1]).kids;
+    if (args.empty() || N(args[0]).kind != MNode::Str)
+        return Fail("编译期插值需要字面量格式串");
+    std::string format;
+    if (!ReadMacroDiagnosticString(args[0], format, error)) return false;
+    Memory::String result;
+    std::size_t argument = 1;
+    for (std::size_t at = 0; at < format.size(); ++at)
+    {
+        const char ch = format[at];
+        if (ch != '{' && ch != '}')
+            result += ch;
+        else if (at + 1 < format.size() && format[at + 1] == ch)
+        {
+            result += ch;
+            ++at;
+        }
+        else if (ch == '{' && at + 1 < format.size() && format[at + 1] == '}' && argument < args.size())
+        {
+            Memory::String value;
+            if (!ReadConstantInterpolationValue(args[argument++], value, error)) return false;
+            if (value.size() > textBudget - result.size()) return Fail("编译期插值超过字节预算");
+            result += value;
+            ++at;
+        }
+        else
+            return Fail("编译期插值需要与实参对应的 {} 占位符");
+        if (result.size() > textBudget) return Fail("编译期插值超过字节预算");
+    }
+    if (argument != args.size()) return Fail("编译期插值的占位符数量与实参不一致");
+    SetMacroMetadataString(id, result);
+    return true;
+}
+
+/**
  * @brief 将宏绑定的标量初始化式求值并物化为带类型的字面量。
  * @param id 已归一化的初始化式节点。
  * @param declaredType 显式类型编号，负数表示推导。
@@ -384,22 +480,28 @@ int EvaluateMacroLet(int id, int declaredType)
     return id;
 }
 
+/** @brief 保存源码常量初始化时可见的声明，用于后续条件编译。 */
+using SourceConditionalLocals = Memory::Map<Memory::String, int>;
+using SourceConditionalScopes = Memory::Map<int, SourceConditionalLocals>;
+
 /**
  * @brief 在卫生绑定前处理字段循环、常量分支和编译期诊断，仅构造普通 AST。
  * @param root 已替换泛型类型的独立模板。
  * @param inputs 只读宏实参，条件只允许使用其中的常量表达式。
  * @param error 接收失败原因。
  * @param sourceLocals 普通源码条件所在作用域的声明；宏模板调用时为空。
+ * @param sourceScopes 按初始化式编号保存的声明处作用域。
  * @return 准备成功时返回真。
  */
 bool PrepareMacroControlsWithLocals(int root, const std::map<std::string, int> &inputs, std::string &error,
-                                   const Memory::Map<Memory::String, int> *sourceLocals)
+                                   const SourceConditionalLocals *sourceLocals, const SourceConditionalScopes *sourceScopes = nullptr)
 {
     using Meta = chali_macro::MetadataValue;
     const auto templateContext = root >= 0 ? N(root).syntaxContext : 0;
     Memory::Map<Memory::String, Meta> environment;
     Memory::Map<Memory::String, int> localBindings = sourceLocals ? *sourceLocals : Memory::Map<Memory::String, int>{};
     Memory::Map<Memory::String, int> compileBindings;
+    SourceConditionalScopes templateConstantScopes;
     Memory::Vector<Meta> fieldPath;
     Memory::Set<int> statementLists;
     Memory::Set<int> activeConstants;
@@ -513,6 +615,32 @@ bool PrepareMacroControlsWithLocals(int root, const std::map<std::string, int> &
             SetMacroMetadata(id, environment.at(node.s));
             return true;
         }
+        const auto substituteConstant = [&](int initializer, int declaredType) {
+            const auto &scopes = sourceScopes ? *sourceScopes : templateConstantScopes;
+            const auto scope = scopes.find(initializer);
+            if (!sourceScopes && scope == scopes.end())
+                return SubstituteMacroConstant(id, initializer, declaredType, depth, activeConstants, visit, error);
+            if (!activeConstants.insert(initializer).second)
+                return Fail("编译期常量存在循环依赖：" + node.s);
+            chali_macro::AstSubstitution copy(g_nodes, budget);
+            const auto before = g_nodes.size();
+            const int expression = copy.instantiate(initializer, {}, N(initializer).syntaxContext, error);
+            bool success = false;
+            if (expression >= 0)
+            {
+                const auto cost = g_nodes.size() - before;
+                if (cost >= budget) return Fail("源码编译期常量超过规模预算");
+                budget -= cost;
+                Memory::Set<int> seen;
+                auto saved = std::move(localBindings);
+                localBindings = scope != scopes.end() ? scope->second : SourceConditionalLocals{};
+                success = MaterializeMacroFragments(expression, seen, 0)
+                          && SubstituteMacroConstant(id, expression, declaredType, depth, activeConstants, visit, error);
+                localBindings = std::move(saved);
+            }
+            activeConstants.erase(initializer);
+            return success;
+        };
         if (constant && node.kind == MNode::Var && (node.syntaxContext || sourceLocals) && !node.bindingIdentity && localBindings.count(node.s))
         {
             const auto declaration = N(localBindings.at(node.s));
@@ -522,7 +650,7 @@ bool PrepareMacroControlsWithLocals(int root, const std::map<std::string, int> &
                         + std::string(node.s.data(), node.s.size());
                 return false;
             }
-            return SubstituteMacroConstant(id, declaration.kids[0], declaration.type, depth, activeConstants, visit, error);
+            return substituteConstant(declaration.kids[0], declaration.type);
         }
         if (constant && (node.kind == MNode::MacroHole || (node.kind == MNode::Var && node.syntaxContext && !node.bindingIdentity)))
         {
@@ -537,14 +665,10 @@ bool PrepareMacroControlsWithLocals(int root, const std::map<std::string, int> &
         }
         if (constant && node.kind == MNode::Var)
         {
-            const auto binding = FindNodeVar(node);
+            const auto savedBinding = g_constantBindings.find(id);
+            const auto binding = savedBinding == g_constantBindings.end() ? FindNodeVar(node) : &savedBinding->second;
             if (binding && binding->isConst && binding->constantExpression >= 0 && IsStandardOpcode(binding->type, "String"))
-            {
-                std::string text;
-                if (!ReadMacroDiagnosticString(binding->constantExpression, text, error)) return false;
-                SetMacroMetadataString(id, Memory::String(text.data(), text.size()));
-                return true;
-            }
+                return substituteConstant(binding->constantExpression, -1);
         }
         if (constant && (node.kind == MNode::Var || node.kind == MNode::EnumCtor))
         {
@@ -554,7 +678,7 @@ bool PrepareMacroControlsWithLocals(int root, const std::map<std::string, int> &
                 int declaredType = -1;
                 const int initializer = FindMacroSyntaxConstant(node, error, &declaredType);
                 if (!error.empty()) return false;
-                if (initializer >= 0) return SubstituteMacroConstant(id, initializer, declaredType, depth, activeConstants, visit, error);
+                if (initializer >= 0) return substituteConstant(initializer, declaredType);
             }
         }
         if (node.kind == MNode::MacroFieldFor)
@@ -676,6 +800,8 @@ bool PrepareMacroControlsWithLocals(int root, const std::map<std::string, int> &
         if (indexed && !visit(static_cast<int>(node.i), depth + 1, constant)) return false;
         if ((node.kind == MNode::Declare && !group) || node.kind == MNode::Params || node.kind == MNode::Foreach)
         {
+            if (node.kind == MNode::Declare && node.type2 == 1 && !node.kids.empty() && node.kids[0] >= 0)
+                templateConstantScopes.emplace(node.kids[0], localBindings);
             compileBindings.erase(node.s);
             environment.erase(node.s);
             localBindings[node.s] = id;
@@ -698,6 +824,8 @@ bool PrepareMacroControlsWithLocals(int root, const std::map<std::string, int> &
             g_nodes[id].kids = std::move(statements);
         }
         if (!NormalizeMacroMetadata(id, 0) || !PrepareMacroMember(id) || !PrepareMacroVariant(id)) return false;
+        if (constant && IsConstantInterpolation(node))
+            return FoldConstantInterpolation(id, error);
         if (constant && node.kind == MNode::Bin && (node.s == "==" || node.s == "!=") && node.kids.size() == 2)
         {
             const auto left = N(node.kids[0]).compileMetadata;

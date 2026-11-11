@@ -43,6 +43,11 @@ def main():
         for flags, expected in [([], '1'), (['-BFEATURE_A'], '2'), ([], '1')]:
             result = invoke(['run', source, '--incremental', '--out', output, *flags])
             assert result.stdout.strip() == expected, result
+        source = ROOT / 'example/samples/source_compile_if_nested.chl'
+        for flags, expected in [([], '0'), (['-BA'], '2'), (['-BB'], '1'),
+                                (['-BA', '-BB'], '3'), ([], '0')]:
+            result = invoke(['run', source, '--incremental', '--out', output, *flags])
+            assert result.stdout.strip() == expected, result
         book_project = fixture / 'book_project'
         book_output = Path(directory) / 'book'
         invoke(['check'], cwd=book_project)

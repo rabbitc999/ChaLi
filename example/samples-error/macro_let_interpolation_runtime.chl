@@ -1,0 +1,9 @@
+$macro BAD(value) -> expr
+$let message = f"value={value}"
+message
+$end_macro
+
+void main() {
+    int64 input = 5;
+    println("{}", $BAD(input));
+}

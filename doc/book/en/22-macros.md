@@ -1388,17 +1388,69 @@ void main() {
 Hello, ChaLi | 2.25 | A
 ```
 
+#### Compile-time string interpolation
+
+In `$let`, `$if`, and `$compile_assert`, `f"…{expression}…"` can use compile-time constants. Placeholders use the default runtime interpolation format and can contain nested interpolation. Write `\{` and `\}` for literal braces.
+
+<!-- verify-book -->
+```chali
+const int64 BASE = 2;
+const String LABEL = f"base={BASE + 1}";
+
+$if LABEL != "base=3"
+    MissingType unselected;
+$end_if
+
+$macro SHOW_INTERPOLATION() -> stmt
+$let name = "ChaLi"
+$compile_assert(f"[{LABEL}]" == "[base=3]", "global constant interpolation");
+$let<bool> enabled = true
+$let<char> grade = 'A'
+$let<float32> scale = 2.25f
+$let detail = f"{scale}/{grade}/{enabled}"
+$let message = f"{name}: {f"sum={BASE + 3}"}, {detail}, \{literal\}"
+$compile_assert(message == "ChaLi: sum=5, 2.25/A/1, {literal}", f"wrong message: {message}");
+println("{}", message);
+$end_macro
+
+$macro WRAP(value) -> expr
+$let message = f"[{value}]"
+message
+$end_macro
+
+void main() {
+    const String local = f"local={BASE + 5}";
+    assert($WRAP(local) == "[local=7]");
+    $SHOW_INTERPOLATION();
+    assert(LABEL == f"base={BASE + 1}");
+}
+```
+
+```text
+ChaLi: sum=5, 2.25/A/1, {literal}
+```
+
 #### Conditional compilation outside macros
 
-Outside macros, `$if` keeps the first matching branch. `$!FEATURE_A` is shorthand for `$build[FEATURE_A]`. Pass `-BFEATURE_A` to select that branch. Both branches can define the same function name because only the selected definition enters the rest of compilation.
+Outside macros, `$if` keeps the first matching branch. An inner condition is evaluated only after its outer branch is selected. `$!A` is shorthand for `$build[A]`, and `-BA` enables A. The four branches define the same function name, with only the selected definition entering semantic checks.
 
 ```chali
-$if $!FEATURE_A
-int64 featureLevel() { return 2; }
+$if $!A
+    $if $!B
+        int64 featureLevel() { return 3; }
+    $else
+        int64 featureLevel() { return 2; }
+    $end_if
 $else
-int64 featureLevel() { return 1; }
+    $if $!B
+        int64 featureLevel() { return 1; }
+    $else
+        int64 featureLevel() { return 0; }
+    $end_if
 $end_if
 ```
+
+With both flags off, `featureLevel()` returns `0`. B alone gives `1`, A alone gives `2`, and both give `3`. A condition can read a declaration such as `const bool enabled = $!A;`. Its initializer is evaluated in the declaration scope, so an inner variable with the same name does not change what an outer constant references.
 
 ## 22.21 Choosing a Form
 

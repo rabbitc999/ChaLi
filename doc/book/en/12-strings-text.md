@@ -61,6 +61,7 @@ The f prefix enables interpolation. `{count + 1}` evaluates to four before inser
 
 Escaped braces around literal preserve those characters instead of requesting a variable lookup. Once text is constructed, println merely prints that completed string through its placeholder. Calculating count+1 does not assign to count, explaining why the result contains both four and three.
 
+When every placeholder can be evaluated at compile time, interpolation also works in macro `$let`, `$if`, and `$compile_assert` directives. See [Chapter 22](22-macros.md) for compile-time examples.
 
 ## 12.4 Structural and custom display
 

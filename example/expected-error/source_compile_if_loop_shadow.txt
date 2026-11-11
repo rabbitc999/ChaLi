@@ -1,0 +1,1 @@
+chali: example/samples-error/source_compile_if_loop_shadow.chl 第 4 行第 13 列：编译期条件不能读取运行时变量：flag

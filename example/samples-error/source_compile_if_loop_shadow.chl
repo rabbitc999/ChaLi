@@ -1,0 +1,8 @@
+const bool flag = true;
+void main() {
+    for (int64 flag = 0; flag < 1; flag += 1) {
+        $if flag
+            println("wrong");
+        $end_if
+    }
+}

@@ -1,0 +1,30 @@
+const int64 BASE = 2;
+const String LABEL = f"base={BASE + 1}";
+
+$if LABEL != "base=3"
+    MissingType unselected;
+$end_if
+
+$macro SHOW_INTERPOLATION() -> stmt
+$let name = "ChaLi"
+$compile_assert(f"[{LABEL}]" == "[base=3]", "global constant interpolation");
+$let<bool> enabled = true
+$let<char> grade = 'A'
+$let<float32> scale = 2.25f
+$let detail = f"{scale}/{grade}/{enabled}"
+$let message = f"{name}: {f"sum={BASE + 3}"}, {detail}, \{literal\}"
+$compile_assert(message == "ChaLi: sum=5, 2.25/A/1, {literal}", f"wrong message: {message}");
+println("{}", message);
+$end_macro
+
+$macro WRAP(value) -> expr
+$let message = f"[{value}]"
+message
+$end_macro
+
+void main() {
+    const String local = f"local={BASE + 5}";
+    assert($WRAP(local) == "[local=7]");
+    $SHOW_INTERPOLATION();
+    assert(LABEL == f"base={BASE + 1}");
+}
