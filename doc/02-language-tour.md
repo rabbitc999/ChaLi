@@ -28,7 +28,7 @@ void main() {
 ```
 
 ```text
-127 0 3.5 1 M ChaLi
+127 0 3.50000000 1 M ChaLi
 ```
 
 整数显式标宽：`int8` / `int16` / `int32` / `int64`，无符号是 `uint8` … `uint64`；浮点是 `float32` / `float64`。隐式转换只放行**变宽**（`int8 -> int64`、`uint8 -> int16`、整型 → 浮点、`float32 -> float64`）；缩窄和换符号要显式强转 `(int32)x`。
@@ -48,7 +48,7 @@ void main() {
 
 `println` 的 `{}` 是位置占位符，不是 `printf` 的 `%d`——类型由实参推导，写错了编译期就报。
 
-`String` 是 `std::core::String` 的简写，来自自动加载的核心模块 `lang`。没有命名冲突时前缀可省。
+`String` 是 `std::core::String` 的简写，来自自动加载的核心模块 `core`。没有命名冲突时前缀可省。
 
 ---
 
@@ -74,7 +74,7 @@ void main() {
 ```
 
 ```text
-sum=15 classify(7)=1
+sum=15 classify(7)=true
 ```
 
 条件使用 `if / elif / else`，循环使用 `while`、`for-in` 和 `loop`。后两种形态如下：

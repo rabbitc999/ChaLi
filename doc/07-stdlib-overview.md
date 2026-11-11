@@ -25,7 +25,7 @@ void main() {
 ```
 
 ```text
-sin0=0 sqrt16=4
+sin0=0.00000000 sqrt16=4.00000000
 isObject=1 len=1
 ```
 
