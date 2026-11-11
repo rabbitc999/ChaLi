@@ -6588,7 +6588,7 @@ __Range range(int64 start, int64 stop);
 range(start, stop);
 ```
 
-**源码**：[source/chali_generic.cpp:2399](../../source/chali_generic.cpp#L2399)。
+**源码**：[source/chali_generic.cpp:2283](../../source/chali_generic.cpp#L2283)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6629,7 +6629,7 @@ __Range range(int64 start, int64 stop, int64 step);
 range(start, stop, step);
 ```
 
-**源码**：[source/chali_generic.cpp:2407](../../source/chali_generic.cpp#L2407)。
+**源码**：[source/chali_generic.cpp:2291](../../source/chali_generic.cpp#L2291)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6670,7 +6670,7 @@ __Interval_int64 rangeEq(int64 start, int64 stop);
 rangeEq(start, stop);
 ```
 
-**源码**：[source/chali_generic.cpp:2422](../../source/chali_generic.cpp#L2422)。
+**源码**：[source/chali_generic.cpp:2306](../../source/chali_generic.cpp#L2306)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6706,7 +6706,7 @@ void drop();
 obj.drop();
 ```
 
-**源码**：[source/chali_generic.cpp:2628](../../source/chali_generic.cpp#L2628)。
+**源码**：[source/chali_generic.cpp:2512](../../source/chali_generic.cpp#L2512)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -6742,7 +6742,7 @@ void close();
 obj.close();
 ```
 
-**源码**：[source/chali_generic.cpp:2636](../../source/chali_generic.cpp#L2636)。
+**源码**：[source/chali_generic.cpp:2520](../../source/chali_generic.cpp#L2520)。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7415,7 +7415,7 @@ T mut& toReference<T>(Option<T mut&> value);
 toReference<T>(value);
 ```
 
-**源码**：[source/chali_generic.cpp:2336](../../source/chali_generic.cpp#L2336)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:2220](../../source/chali_generic.cpp#L2220)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -7453,7 +7453,7 @@ Option<T mut&> toOptional<T>(T mut& value);
 toOptional<T>(value);
 ```
 
-**源码**：[source/chali_generic.cpp:2342](../../source/chali_generic.cpp#L2342)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:2226](../../source/chali_generic.cpp#L2226)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
@@ -10709,7 +10709,7 @@ T copy();
 obj.copy();
 ```
 
-**源码**：[source/chali_generic.cpp:2319](../../source/chali_generic.cpp#L2319)（编译器内建，签名为等价调用形式）。
+**源码**：[source/chali_generic.cpp:2203](../../source/chali_generic.cpp#L2203)（编译器内建，签名为等价调用形式）。
 
 **完整示例**：[example/samples/std_collections_algorithms.chl](../../example/samples/std_collections_algorithms.chl)。
 
