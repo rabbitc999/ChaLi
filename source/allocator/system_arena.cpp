@@ -7,6 +7,17 @@
 namespace Memory
 {
 /**
+ * @brief 为后续默认分配安装系统分配器；已分配的对象保留原来的分配器。
+ */
+void installCompilerAllocator()
+{
+    alignas(SystemRuntimeArena) static unsigned char storage[sizeof(SystemRuntimeArena)];
+    static auto *arena = new (storage) SystemRuntimeArena(std::numeric_limits<std::size_t>::max());
+    // 静态初始化可能已创建后备池。该池存活至进程退出，旧对象仍向它释放内存。
+    defaultRuntimeAllocatorSlot().store(arena);
+}
+
+/**
  * @brief 初始化系统分配预算，不预留连续内存池。
  * @param capacity 有效载荷预算。
  */

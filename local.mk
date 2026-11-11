@@ -392,6 +392,8 @@ $(CHALI_STDLIB_OBJ): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 CHALI_BUILD_HOST_BUILD := $(CHALI_BUILD_ROOT)/chali-aot-host
 CHALI_BUILD_HOST_OBJECT := $(CHALI_BUILD_HOST_BUILD)/native_runtime.o
 CHALI_BUILD_SYSTEM_OBJECT := $(CHALI_BUILD_HOST_BUILD)/system_arena.o
+LIB_OBJS += $(CHALI_BUILD_SYSTEM_OBJECT)
+$(LIB): $(CHALI_BUILD_SYSTEM_OBJECT)
 CHALI_BUILD_PROFILE_OBJECT := $(CHALI_BUILD_HOST_BUILD)/backend_profile.o
 $(CHALI_BUILD_PROFILE_OBJECT): source/aot/backend_profile.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 	$(PYTHON) -c "from pathlib import Path; Path(r'$(@D)').mkdir(parents=True, exist_ok=True)"

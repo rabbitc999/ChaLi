@@ -1,4 +1,4 @@
-"""验证综合标准错误样例的前端预算边界，禁止未捕获分配异常与异常退出。"""
+"""验证曾触及前端预算的综合标准错误样例可以编译并执行。"""
 from compiler_path import compiler_path, compiler_build_info
 from project_temp import tempfile
 from pathlib import Path
@@ -23,7 +23,7 @@ def invoke(command, environment, directory):
 
 
 def main():
-    """允许成功或明确的预算拒绝，两端都必须保持有界退出。"""
+    """检查 checked 和 unchecked 原生产物的执行结果。"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--chali', type=Path, default=compiler_path())
     compiler = parser.parse_args().chali.resolve()
@@ -37,8 +37,7 @@ def main():
     source.write_text(current_source, encoding='utf-8')
     report = dict(compiler_sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(),
                   source=current_source, historical_fixture='budget_followup_0_31_0.json', results={})
-    for backend, language, marker in [('run', 'zh', '编译器内存预算不足'),
-                                      ('build', 'en', 'compiler memory budget exhausted')]:
+    for backend, language in [('run', 'zh'), ('build', 'en')]:
         output = work / backend
         environment = dict(os.environ, CHALI_LANG=language)
         command = [compiler, backend, source, '--out', output]
@@ -47,21 +46,15 @@ def main():
         result = invoke(command, environment, work)
         report['results'][backend] = result
         (work / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
-        assert result['code'] in (0, 1), (backend, result, work)
-        assert 'terminate called' not in result['stderr'] and 'std::bad_alloc' not in result['stderr'], (backend, result, work)
-        if result['code'] == 1:
-            assert marker in result['stderr'], (backend, result, work)
-            result['outcome'] = 'diagnosed_budget_limit'
-        else:
-            executed = result
-            if backend == 'build':
-                executed = invoke([str(output) + ('.exe' if os.name == 'nt' else '')], environment, work)
-                result['execution'] = executed
-            assert executed['code'] == 0 and executed['stdout'].replace('\r\n', '\n') == 'all Error modules OK\n', (backend, executed, work)
-            assert not executed['stderr'].strip(), (backend, executed, work)
-            result['outcome'] = 'pass'
+        assert result['code'] == 0, (backend, result, work)
+        executed = result
+        if backend == 'build':
+            executed = invoke([str(output) + ('.exe' if os.name == 'nt' else '')], environment, work)
+            result['execution'] = executed
         (work / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
-        print('综合标准错误编译预算验证：' + backend + ' ' + result['outcome'], flush=True)
+        assert executed['code'] == 0 and executed['stdout'].replace('\r\n', '\n') == 'all Error modules OK\n', (backend, executed, work)
+        assert not executed['stderr'].strip(), (backend, executed, work)
+        print(f'综合标准错误编译验证：{backend} 通过', flush=True)
     print('完整证据：' + str(work), flush=True)
 
 

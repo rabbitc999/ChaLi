@@ -10,6 +10,11 @@
 namespace Memory
 {
 /**
+ * @brief 在命令行入口启动线程前，为后续默认分配安装进程级系统 malloc。
+ */
+void installCompilerAllocator();
+
+/**
  * @brief 每次分配直接调用系统 malloc，独立跟踪活跃范围与运行预算。
  */
 class SystemRuntimeArena final : public RuntimeAllocator

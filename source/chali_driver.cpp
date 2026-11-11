@@ -46,6 +46,7 @@
 #include "abi/chali_standard_internal.h"
 #include "chali_report.hpp"
 #include "abi/chali_standard.h"
+#include "system_arena.hpp"
 
 namespace
 {
@@ -306,6 +307,16 @@ int chali_main_entry(int argc, char **argv)
 try
 {
 #ifndef CHALI_FRONT_END_NO_MAIN
+#if defined(__GNUC__) || defined(__clang__)
+/**
+ * @brief 在独立编译器其他全局对象构造前安装系统分配器。
+ */
+[[gnu::constructor(101)]] static void initializeCompilerAllocator()
+{
+    Memory::installCompilerAllocator();
+}
+#endif
+
     auto originalArguments = chali_i18n::processArguments(argc, argv);
     std::vector<char *> originalValues;
     for (auto &argument : originalArguments) originalValues.push_back(argument.data());
@@ -1654,10 +1665,7 @@ try
     return 0;
 } catch (const std::bad_alloc &)
 {
-    // 失败快照不使用池内存，耗尽后也能保留真实的容量、活动量与申请量。
-    const auto failure = Memory::allocationFailureSignal().peek();
-    std::fprintf(stderr, CHALI_TEXT("chali: 编译器内存预算不足（池容量 %zu 字节，失败时活动 %zu 字节，本次申请 %zu 字节）\n"),
-                 failure.capacity, failure.liveBytes, failure.requestedBytes);
+    std::fprintf(stderr, "chali: %s\n", CHALI_TEXT("内存不足"));
     return 1;
 }
 
@@ -1671,5 +1679,11 @@ try
  * @param argv 命令行参数指针数组。
  * @retval 进程退出状态，0 表示成功，非零表示失败。
  */
-int main(int argc, char **argv) { return chali_main_entry(argc, argv); }
+int main(int argc, char **argv)
+{
+#if !defined(__GNUC__) && !defined(__clang__)
+    Memory::installCompilerAllocator();
+#endif
+    return chali_main_entry(argc, argv);
+}
 #endif

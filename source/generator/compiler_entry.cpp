@@ -7,6 +7,7 @@
 #include "chali_linker.hpp"
 #include "chali_library.hpp"
 #include "chali_i18n.hpp"
+#include "system_arena.hpp"
 #include "tools/abi_import.hpp"
 #include <cstdio>
 
@@ -18,6 +19,16 @@
  */
 int chali_main_entry(int argc, char **argv);
 
+#if defined(__GNUC__) || defined(__clang__)
+/**
+ * @brief 在独立编译器其他全局对象构造前安装系统分配器。
+ */
+[[gnu::constructor(101)]] static void initializeCompilerAllocator()
+{
+    Memory::installCompilerAllocator();
+}
+#endif
+
 /**
  * @brief 派发独立工程的 C 头导入或普通前端命令。
  * @param argc 原始参数数量。
@@ -26,6 +37,9 @@ int chali_main_entry(int argc, char **argv);
  */
 int main(int argc, char **argv)
 {
+#if !defined(__GNUC__) && !defined(__clang__)
+    Memory::installCompilerAllocator();
+#endif
     auto original = chali_i18n::processArguments(argc, argv);
     std::vector<char *> values;
     for (auto &argument : original) values.push_back(argument.data());

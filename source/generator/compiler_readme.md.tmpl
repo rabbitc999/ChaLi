@@ -16,7 +16,7 @@ cmake --build build --config Release
 
 ## 构建裁剪
 
-CMake 提供 `NO_CHALI_XXX` 布尔选项，默认 OFF。例如 `-DNO_CHALI_BIG_INT=ON` 同时关闭大整数和大浮点，`-DNO_CHALI_STD_REGEX=ON` 关闭正则宿主胶水。定义在运行时和前端之间统一传播。启用 `NO_CHALI_DEFAULT_POOL` 后需要嵌入宿主显式提供区域，不适合直接运行默认命令行入口。
+CMake 提供 `NO_CHALI_XXX` 布尔选项，默认 OFF。例如 `-DNO_CHALI_BIG_INT=ON` 同时关闭大整数和大浮点，`-DNO_CHALI_STD_REGEX=ON` 关闭正则宿主胶水。定义在运行时和前端之间统一传播。启用 `NO_CHALI_DEFAULT_POOL` 后，嵌入宿主需要显式提供分配器。编译器命令行入口使用系统 malloc。
 
 旧版 MinGW 在低优化构建大型生成解析器时可能遇到 COFF 字符串表上限；推荐 Release 配置或更新工具链。
 

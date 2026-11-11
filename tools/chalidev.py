@@ -784,9 +784,6 @@ _MESSAGES = {
   "BUILD：复杂 ABI 宿主封送编译失败；可用 CHALI_ABI_CXX 指定同位数 C++ 编译器": [
     "BUILD: complex ABI marshalling compilation failed; set CHALI_ABI_CXX to a C++ compiler with matching bitness"
   ],
-  "chali: 编译器内存预算不足（池容量 %zu 字节，失败时活动 %zu 字节，本次申请 %zu 字节）\n": [
-    "chali: compiler memory budget exhausted (capacity %zu bytes, live at failure %zu bytes, requested %zu bytes)\n"
-  ],
   "出错位置：%s:%lld%s%s%s\n": [
     "Error location: %s:%lld%s%s%s\n"
   ],

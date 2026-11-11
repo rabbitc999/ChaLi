@@ -1,6 +1,6 @@
 /**
  * @file chali_system_arena.cpp
- * @brief 核对系统 malloc 后端的预算、对齐、活跃身份与并发释放。
+ * @brief 核对编译器默认分配器及运行时 malloc 后端的预算、对齐、活跃身份与并发释放。
  */
 #include "allocator/system_arena.hpp"
 #include <cassert>
@@ -22,11 +22,36 @@ void exercise(Memory::SystemRuntimeArena &arena)
 }
 
 /**
- * @brief 核对失败路径不漏字节，普通和过度对齐分配均由系统释放。
+ * @brief 核对编译器可分配超过旧预算的内存，以及运行时的预算和释放行为。
  * @return 全部断言通过时返回零。
  */
 int main()
 {
+#ifndef NO_CHALI_DEFAULT_POOL
+    auto *fallback = Memory::defaultRuntimeAllocator();
+    const auto previousBlocks = fallback->stats().liveBlocks;
+    {
+        Memory::Vector<unsigned char> early(8u, 7u);
+        assert(fallback->owns(early.data()));
+        Memory::installCompilerAllocator();
+        assert(early.front() == 7u && fallback->owns(early.data()));
+    }
+    assert(fallback->stats().liveBlocks == previousBlocks);
+#else
+    Memory::installCompilerAllocator();
+#endif
+    auto *compiler = Memory::defaultRuntimeAllocator();
+    assert(compiler->usesSystemMalloc());
+    constexpr std::size_t bytes = Memory::defaultRuntimeCapacity + 1024u * 1024u;
+    auto *buffer = static_cast<unsigned char *>(Memory::allocate(nullptr, bytes, 64));
+    assert(reinterpret_cast<std::uintptr_t>(buffer) % 64 == 0);
+    buffer[0] = 1;
+    buffer[bytes - 1] = 2;
+    assert(compiler->owns(buffer + bytes - 1));
+    assert(compiler->stats().liveBytes == bytes);
+    Memory::release(nullptr, buffer);
+    assert(compiler->stats().liveBlocks == 0);
+
     Memory::SystemRuntimeArena arena(4096);
     assert(arena.usesSystemMalloc());
     void *first = arena.allocate(4096);

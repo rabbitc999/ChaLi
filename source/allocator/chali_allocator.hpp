@@ -170,6 +170,12 @@ inline std::atomic<RuntimeAllocator *> &defaultRuntimeAllocatorSlot()
     return pointer;
 }
 inline RuntimeAllocator *defaultRuntimeAllocatorIfCreated() { return defaultRuntimeAllocatorSlot().load(); }
+/// 记录进程早期创建的后备池，以便默认分配器切换后释放旧分配。
+inline std::atomic<RuntimeAllocator *> &fallbackRuntimeAllocatorSlot()
+{
+    static std::atomic<RuntimeAllocator *> pointer{ nullptr };
+    return pointer;
+}
 
 /* ---------------------------------------------------------------------------
  *  内存分配失败记录
@@ -553,8 +559,13 @@ public:
         std::free(storage_);
     }
 };
+/**
+ * @brief 获取进程选定的默认分配器，按需初始化宿主后备池。
+ * @return 默认分配器；禁用后备池且宿主未配置分配器时抛出分配异常。
+ */
 inline RuntimeAllocator *defaultRuntimeAllocator()
 {
+    if (auto *allocator = defaultRuntimeAllocatorIfCreated()) return allocator;
 #ifdef NO_CHALI_DEFAULT_POOL
     throw std::bad_alloc();
 #else
@@ -562,6 +573,7 @@ inline RuntimeAllocator *defaultRuntimeAllocator()
     alignas(DynamicRuntimeArena) static unsigned char storage[sizeof(DynamicRuntimeArena)];
     static auto *arena = [] {
         auto *result = new (storage) DynamicRuntimeArena();
+        fallbackRuntimeAllocatorSlot().store(result);
         defaultRuntimeAllocatorSlot().store(result);
         return result;
     }();
@@ -670,12 +682,19 @@ inline void *allocate(Memory::RuntimeAllocator *owner, std::size_t bytes, std::s
 inline void release(Memory::RuntimeAllocator *owner, void *p) noexcept
 {
     if (!p) return;
-    if (!owner) owner = Memory::defaultRuntimeAllocator();
-    if (!owner->release(p))
+    if (owner)
     {
-        std::fputs("运行时分配器：无效或重复释放 arena 内存\n", stderr);
-        std::abort();
+        if (owner->release(p)) return;
     }
+    else
+    {
+        auto *selected = Memory::defaultRuntimeAllocator();
+        if (selected->release(p)) return;
+        auto *fallback = Memory::fallbackRuntimeAllocatorSlot().load();
+        if (fallback && fallback != selected && fallback->owns(p) && fallback->release(p)) return;
+    }
+    std::fputs("运行时分配器：无效或重复释放 arena 内存\n", stderr);
+    std::abort();
 }
 template <class T>
 class Allocator

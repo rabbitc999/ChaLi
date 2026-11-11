@@ -166,7 +166,6 @@ inline constexpr Message messages[] = {
     {"chali: 无效工程名；请用 name 指定字母开头的字母、数字、- 或 _ 组合\n", "chali: invalid project name; use name with a leading letter and letters, digits, - or _\n"},
     {"chali: 无法生成标准库二进制预编译资产\n", "chali: cannot generate the standard-library binary asset\n"},
     {"chali: 泛型：%s\n", "chali: generics: %s\n"},
-    {"chali: 编译器内存预算不足（池容量 %zu 字节，失败时活动 %zu 字节，本次申请 %zu 字节）\n", "chali: compiler memory budget exhausted (capacity %zu bytes, live at failure %zu bytes, requested %zu bytes)\n"},
     {"lambda 不能按值捕获引用或不可安全复制的资源：", "lambda cannot capture references or resources without safe value copying: "},
     {"lambda 不能隐式捕获 self 或接收者字段：", "lambda cannot implicitly capture self or receiver fields: "},
     {"lang 后需要 zh、en 或 auto", "lang requires zh, en or auto"},

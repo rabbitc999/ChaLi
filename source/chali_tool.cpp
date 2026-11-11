@@ -3,6 +3,7 @@
  * @brief 统一 运行时 前端、工程生成器和原生开发命令的入口。
  */
 #include "chali_runtime_allocator.hpp"
+#include "system_arena.hpp"
 #include "lsp/language_server.hpp"
 #include "tools/native_development.hpp"
 #include "tools/abi_import.hpp"
@@ -22,6 +23,16 @@
 int chali_main_entry(int argc, char **argv);
 
 namespace fs = std::filesystem;
+
+#if defined(__GNUC__) || defined(__clang__)
+/**
+ * @brief 在编译器其他全局对象构造前安装系统分配器。
+ */
+[[gnu::constructor(101)]] static void initializeCompilerAllocator()
+{
+    Memory::installCompilerAllocator();
+}
+#endif
 
 /**
  * @brief 解析从 PATH 启动的工具位置。
@@ -64,6 +75,9 @@ fs::path DevelopmentCompilerPath(const char *name)
  */
 int main(int argc, char **argv)
 {
+#if !defined(__GNUC__) && !defined(__clang__)
+    Memory::installCompilerAllocator();
+#endif
     auto originalArguments = chali_i18n::processArguments(argc, argv);
     std::vector<char *> originalValues;
     for (auto &argument : originalArguments) originalValues.push_back(argument.data());
