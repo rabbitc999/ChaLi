@@ -1,0 +1,35 @@
+// Count the transitions until the sequence first reaches 1.
+// Limit recursion to 32 transitions to bound compiler expansion depth.
+$macro COLLATZ_COUNT(number, steps) -> expr
+$let n = number
+$let count = steps
+$let next_count = count + 1
+$if n == 1
+    count
+$elif count >= 32
+    $compile_error("Collatz step limit exceeded");
+$elif n % 2 == 0
+    $let next = n / 2
+    $COLLATZ_COUNT(next, next_count)
+$else
+    // The largest n for which 3 * n + 1 fits in int64.
+    $compile_assert(n <= 3074457345618258602, "Collatz 3n + 1 would overflow int64");
+    $let next = 3 * n + 1
+    $COLLATZ_COUNT(next, next_count)
+$end_if
+$end_macro
+
+$macro COLLATZ_STEPS(value) -> expr
+$let<int64> n = value
+$compile_assert(n > 0, "Collatz requires a positive integer");
+$COLLATZ_COUNT(n, 0)
+$end_macro
+
+void main() {
+    assert($COLLATZ_STEPS(1) == 0);
+    assert($COLLATZ_STEPS(2) == 1);
+    assert($COLLATZ_STEPS(6) == 8);
+    assert($COLLATZ_STEPS(19) == 20);
+    println("1: {}, 2: {}, 6: {}, 19: {}", $COLLATZ_STEPS(1), $COLLATZ_STEPS(2),
+        $COLLATZ_STEPS(6), $COLLATZ_STEPS(19));
+}
