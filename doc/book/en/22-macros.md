@@ -1358,6 +1358,60 @@ void main() {
 2, 3, 5, 7, 11, 13, 17, 19, 23, 29
 ```
 
+#### Filter primes by trial division at compile time
+
+For each candidate, start trial division at `d = 2`. The macro first checks `d > n / d`. For positive integers, this is equivalent to `d × d > n` and avoids multiplication overflow. If the divisor has not passed that bound and the remainder is zero, expansion for the candidate stops. A nonzero remainder triggers the next divisor.
+
+<!-- verify-book -->
+```chali
+$macro TRIAL_PRIME(number, divisor, on_prime: block) -> stmt
+$let n = number
+$let d = divisor
+$if n >= 2
+    $if d > n / d
+        on_prime;
+    $elif n % d != 0
+        $let next = d + 1
+        $TRIAL_PRIME(n, next, on_prime);
+    $end_if
+$end_if
+$end_macro
+
+$macro TRIAL_PRIMES(...candidates: value) -> expr
+{
+    int64 primes[15];
+    int64 count = 0;
+    $for candidate in candidates
+        $let number = candidate
+        $TRIAL_PRIME(number, 2, { primes[count] = number; count += 1; });
+    $end_for
+    assert(count == 15);
+    yield primes;
+}
+$end_macro
+
+void main() {
+    let primes = $TRIAL_PRIMES(
+         2,  3,  4,  5,  6,  7,  8,  9, 10,
+        11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+        31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+        41, 42, 43, 44, 45, 46, 47, 48, 49, 50
+    );
+    for (int64 i = 0; i < 15; i += 1) {
+        if (i != 0) { print(", "); }
+        print("{}", primes[i]);
+    }
+    println("");
+}
+```
+
+```text
+2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47
+```
+
+The macro expands the `on_prime` block only after ruling out every possible divisor. Each `$for` iteration uses `$let` to get the candidate as a constant before passing it to the recursive macro. This call supplies the candidates from 2 through 50 and uses an array sized for the 15 primes in that interval. Division and remainder are evaluated during expansion. At runtime, the generated assignments fill the array and the program prints it.
+
 #### Strings, floats, characters, and Booleans
 
 Use `+` to concatenate strings during expansion. The floating-point example uses `float32` and literals with the `f` suffix. The `grade` binding uses ChaLi’s single-byte `char`, and the comparisons and logical operation infer `bool` for `enabled`.

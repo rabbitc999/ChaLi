@@ -1,0 +1,40 @@
+$macro TRIAL_PRIME(number, divisor, on_prime: block) -> stmt
+$let n = number
+$let d = divisor
+$if n >= 2
+    $if d > n / d
+        on_prime;
+    $elif n % d != 0
+        $let next = d + 1
+        $TRIAL_PRIME(n, next, on_prime);
+    $end_if
+$end_if
+$end_macro
+
+$macro TRIAL_PRIMES(...candidates: value) -> expr
+{
+    int64 primes[15];
+    int64 count = 0;
+    $for candidate in candidates
+        $let number = candidate
+        $TRIAL_PRIME(number, 2, { primes[count] = number; count += 1; });
+    $end_for
+    assert(count == 15);
+    yield primes;
+}
+$end_macro
+
+void main() {
+    let primes = $TRIAL_PRIMES(
+         2,  3,  4,  5,  6,  7,  8,  9, 10,
+        11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+        31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+        41, 42, 43, 44, 45, 46, 47, 48, 49, 50
+    );
+    for (int64 i = 0; i < 15; i += 1) {
+        if (i != 0) { print(", "); }
+        print("{}", primes[i]);
+    }
+    println("");
+}
