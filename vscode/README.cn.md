@@ -46,3 +46,5 @@ node tools/package.js --llvm-variant static --compiler 编译器绝对路径 --o
 发布者标识为 `rabbitc999`，作者为小兔糖糖_OvO <rabbitc999@outlook.com>。扩展使用 Apache-2.0，保留根目录 LICENSE、NOTICE 和依赖署名。
 
 真实扩展宿主测试入口为 `npm run test:extension`，调试测试使用 `npm run test:extension -- --debug`（端口 9333，总超时 240 秒）。需要已安装的 VSCode、GDB 和图形会话；可用 `CHALI_VSCODE_EXECUTABLE`、`CHALI_BIN`、`CHALI_GDB` 选择工具。测试覆盖断点值查看、取消、panic 和原生进程清理，详见[原生调试](../doc/43-native-debugging.md)。
+
+代码块折叠由原生 LSP 提供，支持嵌套花括号和未闭合块；宏指令块继续支持折叠。

@@ -4390,6 +4390,7 @@ class Server
         return object({ { "text", text }, { "format", "json" }, { "diagnostics", diagnostics }, { "mappings", mappings } });
     }
 #include "native_lsp_features.hpp"
+#include "native_lsp_folding.hpp"
 #include "native_lsp_integration.hpp"
 #include "native_lsp_actions.hpp"
     /**
@@ -4509,6 +4510,7 @@ class Server
                           { "renameProvider", object({ { "prepareProvider", true } }) },
                           { "inlayHintProvider", true },
                           { "documentSymbolProvider", true },
+                          { "foldingRangeProvider", true },
                           { "workspaceSymbolProvider", true },
                           { "documentFormattingProvider", true },
                           { "signatureHelpProvider",
@@ -4554,6 +4556,7 @@ class Server
         const auto &s = *unit->text;
         LspIndexScope index(*unit);
         size_t cursor = offsetAt(s, get(params, "position"));
+        if (method == "textDocument/foldingRange") return foldingRanges(s);
         auto records = collect(u, s);
         if (method == "chali/expandTypeAlias") return aliasPreview(u, s, cursor, records);
         J compilerReport;

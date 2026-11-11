@@ -46,3 +46,5 @@ Use `external` for the external LLVM package. Packaging checks the manifest, rea
 The publisher is `rabbitc999`; the author is 小兔糖糖_OvO <rabbitc999@outlook.com>. The extension uses Apache-2.0; retain the root LICENSE, NOTICE and dependency notices.
 
 Run `npm run test:extension` for real extension-host tests, or `npm run test:extension -- --debug` to debug the tests (port 9333, overall timeout 240 seconds). An installed VSCode, GDB and graphical session are required. Select tools with `CHALI_VSCODE_EXECUTABLE`, `CHALI_BIN` and `CHALI_GDB`. Tests cover breakpoint values, cancellation, panic and native process cleanup; see [native debugging](../doc/en/43-native-debugging.md).
+
+Code block folding uses the native LSP, including nested braces and unfinished blocks. Macro directive folding remains available.

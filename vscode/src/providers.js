@@ -423,7 +423,7 @@ function registerProviders(context, deps) {
       },
     }),
 
-    /* ChaLi 宏块折叠：`$macro` / `$for` 各自成块，
+    /* ChaLi 代码块与宏块折叠：代码块来自 LSP，宏块
      * 靠 `src/folding.js` 的栈配对（纯计算，冒烟测试直接测它）。 */
     vscode.languages.registerFoldingRangeProvider(SELECTOR, {
       /**
@@ -432,14 +432,18 @@ function registerProviders(context, deps) {
        * @param {vscode.TextDocument} document 文档。
        * @returns {vscode.FoldingRange[]} 折叠区间。
        */
-      provideFoldingRanges: (document) => {
+      provideFoldingRanges: async (document, _context, token) => {
+        const result = await request('textDocument/foldingRange', {
+          textDocument: { uri: document.uri.toString() },
+        }, token, document);
         const lines = [];
         for (let index = 0; index < document.lineCount; index++) {
           lines.push(document.lineAt(index).text);
         }
-        return folding
-          .planFoldingRanges(lines)
-          .map((block) => new vscode.FoldingRange(block.start, block.end));
+        const ranges = Array.isArray(result) ? result.map(block =>
+          new vscode.FoldingRange(block.startLine, block.endLine)) : [];
+        return ranges.concat(folding.planFoldingRanges(lines)
+          .map(block => new vscode.FoldingRange(block.start, block.end)));
       },
     }),
   );
