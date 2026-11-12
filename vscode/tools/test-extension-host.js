@@ -40,7 +40,7 @@ fs.writeFileSync(path.join(workspace, '.vscode/settings.json'), JSON.stringify({
   'update.mode': 'none', 'extensions.autoUpdate': false,
 }));
 const startupFile = path.join(workspace, 'first-open.chl');
-fs.writeFileSync(startupFile, 'import std::macro;\nvoid main() { bool same = $std::macro::Equal<int64>(1, 1); }\n');
+fs.writeFileSync(startupFile, 'import std::macro;\nstruct Point : Equal<bool, Point> { int64 x;\n    $std::macro::Equal<Point>(leftEqual);\n}\nvoid main() {}\n');
 const env = { ...process.env, TMPDIR: path.join(root, 'tmp'), TMP: path.join(root, 'tmp'), TEMP: path.join(root, 'tmp'),
   CHALI_EXTENSION_TEST_WORK: work, CHALI_BIN: compiler };
 if (llvmPath) env.CHALI_LLVM_CLANG = llvmPath;

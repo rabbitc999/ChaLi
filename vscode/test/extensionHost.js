@@ -112,9 +112,10 @@ exports.run = async function () {
   const startupUri = vscode.Uri.joinPath(folder.uri, 'first-open.chl');
   const startupDocument = await vscode.workspace.openTextDocument(startupUri);
   await vscode.window.showTextDocument(startupDocument);
-  const startupLine = startupDocument.lineAt(1).text;
+  const macroLine = 2;
+  const startupLine = startupDocument.lineAt(macroLine).text;
   const macroColumn = startupLine.indexOf('Equal');
-  const hoverPosition = new vscode.Position(1, macroColumn + 1);
+  const hoverPosition = new vscode.Position(macroLine, macroColumn + 1);
   await bounded((async () => {
     for (let attempt = 0; attempt < 100; attempt++) {
       const tokens = await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', startupUri);
@@ -123,7 +124,7 @@ exports.run = async function () {
       for (let i = 0; i < (tokens?.data.length || 0); i += 5) {
         column = tokens.data[i] ? tokens.data[i + 1] : column + tokens.data[i + 1];
         line += tokens.data[i];
-        if (line === 1 && column === macroColumn && tokens.data[i + 2] === 'Equal'.length && tokens.data[i + 3] === 6) return;
+        if (line === macroLine && column === macroColumn && tokens.data[i + 2] === 'Equal'.length && tokens.data[i + 3] === 6) return;
       }
       await new Promise(resolve => setTimeout(resolve, 100));
     }
@@ -131,14 +132,14 @@ exports.run = async function () {
   })(), '首次打开语义高亮');
   assert.equal(startupDocument.isDirty, false);
   const hovers = await vscode.commands.executeCommand('vscode.executeHoverProvider', startupUri, hoverPosition);
-  assert(hovers?.some(hover => hover.contents.some(content => content.value?.includes('$Equal'))));
+  assert(hovers?.some(hover => hover.contents.some(content => content.value?.includes('$macro Equal'))));
   const completions = await vscode.commands.executeCommand('vscode.executeCompletionItemProvider',
-    startupUri, new vscode.Position(1, macroColumn + 2));
+    startupUri, new vscode.Position(macroLine, macroColumn + 2));
   assert(completions?.items.some(item => item.label === '$Equal' && item.insertText === 'Equal' && item.filterText === 'Equal'));
-  const argumentsColumn = startupLine.lastIndexOf(',') + 2;
+  const argumentsColumn = startupLine.indexOf('leftEqual') + 1;
   const signature = await vscode.commands.executeCommand('vscode.executeSignatureHelpProvider',
-    startupUri, new vscode.Position(1, argumentsColumn));
-  assert(signature?.signatures.some(item => item.label.includes('$Equal')));
+    startupUri, new vscode.Position(macroLine, argumentsColumn));
+  assert.deepEqual(signature?.signatures.map(item => item.label.match(/\$macro Equal/)?.[0]), ['$macro Equal']);
   const extension = vscode.extensions.getExtension('rabbitc999.chali-editor');
   assert(extension); await extension.activate(); assert(extension.isActive);
   const commands = await vscode.commands.getCommands(true);
