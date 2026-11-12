@@ -2,14 +2,14 @@
 # chali/build.sh —— 一键构建与打包。
 #
 # 用法（在本目录跑）：
-#   sh build.sh              生成解析器 → 构建静态 LLVM 编译器 → 按环境打包插件与书稿
+#   sh build.sh              生成解析器 → 构建原生扩展和静态 LLVM 编译器 → 按环境打包插件与书稿
 #   sh build.sh --no-gen     跳过文法生成，直接用现有解析器构建
 #   sh build.sh --jobs 4     指定并行度（默认取 CPU 核数）
 #   sh build.sh --help
 #
 # 四个阶段：
 #   1. gen.sh 生成解析器 / 驱动 / 工程文件。
-#   2. 以 CHALI_STATIC_LLVM=1 构建静态 LLVM 主程序，产物落到 dist/。
+#   2. 以 CHALI_STATIC_LLVM=1 构建原生扩展，再构建内嵌扩展的静态 LLVM 主程序。
 #   3. 环境检测：npm 决定是否打 VSCode 插件，latexmk / pdflatex 决定是否编书稿；
 #      缺哪个就打印提示跳过，**不中断构建**。
 #   4. 统一整理到 dist/，命名规范 chali-<组件>-<平台>-<架构>.<扩展名>：
@@ -120,6 +120,13 @@ echo "== 2/4 构建主程序（-j$jobs）=="
 # 静态 LLVM 变体只支持已准备好的 Windows x64 SDK；该变量同时让
 # tools/compiler_path.py 和 VSCode 打包流程选择同一份静态编译器产物。
 export CHALI_STATIC_LLVM=1
+# 先生成原生归档，再由下一次 make 读取内嵌资产依赖。
+echo "构建原生扩展（-j$jobs）..."
+"$make_cmd" CHALI_STATIC_LLVM=1 native-extensions \
+    CHALI_NATIVE_EXTENSIONS_FLAGS="--jobs $jobs ${CHALI_NATIVE_EXTENSIONS_FLAGS:-}" || {
+    echo "原生扩展构建失败，构建中止" >&2
+    exit 1
+}
 "$make_cmd" CHALI_STATIC_LLVM=1 -j"$jobs" || { echo "构建失败" >&2; exit 1; }
 # 产物名带版本与 LLVM 链接方式（见 tools/compiler_path.py），与 ci.sh 取同一份口径，
 # 不要另猜一个固定文件名：Windows 的正式产物是 chali-<版本>-llvm-static-windows-x64.exe。
