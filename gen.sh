@@ -7,7 +7,7 @@
 #   ../ParseEngine/build/bin/ParseEngine[.exe]   —— 与 ParseEngine 仓库并排时
 #   ./ParseEngine.exe、./ParseEngine             —— 放到本项目根目录
 #   ../build/bin/ParseEngine[.exe]               —— 还住在 ParseEngine 仓库里时
-# Windows 未找到支持 %posttokens 的版本时，下载 ParseEngine v1.4.0 到项目根目录。
+# Windows 未找到支持 %posttokens 的版本时，下载 ParseEngine v1.4.2 到项目根目录。
 set -e
 # Git Bash 的 UTF-8 输出与 Windows Python 的默认代码页可能不同，统一子进程编码。
 export PYTHONUTF8=1
@@ -39,7 +39,7 @@ fi
 if [ -z "${ENGINE:-}" ]; then
     case "${OS:-}:$(uname -s)" in
     Windows_NT:*|*:MINGW*|*:MSYS*|*:CYGWIN*)
-        echo "未找到支持 %posttokens 的 ParseEngine，正在下载 v1.4.0……"
+        echo "未找到支持 %posttokens 的 ParseEngine，正在下载 v1.4.2……"
         python - <<'PY'
 import os
 from pathlib import Path
@@ -48,8 +48,8 @@ import tempfile
 import urllib.request
 
 # 发行版下载地址：GitHub 一份，按顺序尝试，先成功的那个用。
-# ChaLi 的词法后处理需要 ParseEngine v1.4.0。
-SOURCES = ["https://github.com/rabbitc999/ParseEngine/releases/download/v1.4.0/ParseEngine.exe"]
+# ChaLi 的词法后处理需要 ParseEngine v1.4.2。
+SOURCES = ["https://github.com/rabbitc999/ParseEngine/releases/download/v1.4.2/ParseEngine.exe"]
 temporary = None
 try:
     failures = []
@@ -93,7 +93,7 @@ if [ -z "${ENGINE:-}" ] || [ ! -x "$ENGINE" ]; then
 fi
 
 if ! supports_posttokens "$ENGINE"; then
-    echo "ParseEngine 不支持 %posttokens，请通过 ENGINE 指定支持整批 Token 后处理的 v1.4.0 或更新版本。" >&2
+    echo "ParseEngine 不支持 %posttokens，请通过 ENGINE 指定支持整批 Token 后处理的 v1.4.2 或更新版本。" >&2
     exit 2
 fi
 

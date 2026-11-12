@@ -16,7 +16,6 @@
 %cpp_lexer std
 %namespace chali
 %value_type int
-%max_stack_depth 4096
 
 %include "chali_token.gram"
 
