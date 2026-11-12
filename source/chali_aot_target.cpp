@@ -87,12 +87,21 @@ bool describeTarget(const Memory::String &requested, TargetInfo &target, Memory:
     auto triple = requested.empty() ? hostTarget() : requested;
     if (triple == "windows-x64" || triple == "x86_64-pc-windows-gnu") triple = "x86_64-w64-windows-gnu";
     if (triple == "linux-x64" || triple == "x86_64-linux-gnu" || triple == "x86_64-pc-linux-gnu") triple = "x86_64-unknown-linux-gnu";
+    if (triple == "linux-x86" || triple == "i686-linux-gnu") triple = "i686-unknown-linux-gnu";
     if (triple == "linux-arm64" || triple == "aarch64-linux-gnu") triple = "aarch64-unknown-linux-gnu";
+    if (triple == "linux-riscv32" || triple == "riscv32-linux-gnu") triple = "riscv32-unknown-linux-gnu";
+    if (triple == "linux-riscv64" || triple == "riscv64-linux-gnu") triple = "riscv64-unknown-linux-gnu";
+    if (triple == "linux-mipsel" || triple == "mipsel-linux-gnu") triple = "mipsel-unknown-linux-gnu";
+    if (triple == "linux-arm32" || triple == "arm-linux-gnueabihf" || triple == "armv7-linux-gnueabihf") triple = "armv7-unknown-linux-gnueabihf";
+    if (triple == "linux-mips64el" || triple == "mips64el-linux-gnuabi64") triple = "mips64el-unknown-linux-gnuabi64";
     target.triple = triple;
     target.native = triple == hostTarget();
     target.windows = triple == "x86_64-w64-windows-gnu";
     target.arm64 = triple == "aarch64-unknown-linux-gnu";
-    target.cpu = target.arm64 ? "generic" : "x86-64";
+    target.x86 = triple == "i686-unknown-linux-gnu";
+    target.riscv64 = triple == "riscv64-unknown-linux-gnu";
+    target.mipsel = triple == "mipsel-unknown-linux-gnu";
+    target.cpu = "x86-64";
     if (target.windows)
     {
         target.runtime = "aot/runtime_windows.ll";
@@ -103,14 +112,51 @@ bool describeTarget(const Memory::String &requested, TargetInfo &target, Memory:
         target.runtime = "aot/runtime_linux.ll";
         target.dataLayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128";
     }
+    else if (target.x86)
+    {
+        target.cpu = "pentium4";
+        target.runtime = "aot/runtime_linux_x86.ll";
+        target.dataLayout = "e-m:e-p:32:32-p270:32:32-p271:32:32-p272:64:64-i128:128-f64:32:64-f80:32-n8:16:32-S128";
+    }
+    else if (target.riscv32())
+    {
+        target.cpu = "generic-rv32";
+        target.runtime = "aot/runtime_linux_riscv32.ll";
+        target.dataLayout = "e-m:e-p:32:32-i64:64-n32-S128";
+    }
+    else if (target.riscv64)
+    {
+        target.cpu = "generic-rv64";
+        target.runtime = "aot/runtime_linux_riscv64.ll";
+        target.dataLayout = "e-m:e-p:64:64-i64:64-i128:128-n32:64-S128";
+    }
+    else if (target.mipsel)
+    {
+        target.cpu = "mips32r2";
+        target.runtime = "aot/runtime_linux_mipsel.ll";
+        target.dataLayout = "e-m:m-p:32:32-i8:8:32-i16:16:32-i64:64-n32-S64";
+    }
+    else if (target.arm32())
+    {
+        target.cpu = "generic";
+        target.runtime = "aot/runtime_linux_arm32.ll";
+        target.dataLayout = "e-m:e-p:32:32-Fi8-i64:64-v128:64:128-a:0:32-n32-S64";
+    }
+    else if (target.mips64el())
+    {
+        target.cpu = "mips64r2";
+        target.runtime = "aot/runtime_linux_mips64el.ll";
+        target.dataLayout = "e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128";
+    }
     else if (target.arm64)
     {
+        target.cpu = "generic";
         target.runtime = "aot/runtime_linux_arm64.ll";
         target.dataLayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128-Fn32";
     }
     else
     {
-        if (error) *error = "BUILD：没有登记的目标运行时：" + triple + "；支持 windows-x64、linux-x64、linux-arm64";
+        if (error) *error = "BUILD：没有登记的目标运行时：" + triple + "；支持 windows-x64、linux-x64、linux-x86、linux-arm32、linux-arm64、linux-riscv32、linux-riscv64、linux-mipsel、linux-mips64el";
         return false;
     }
     return true;

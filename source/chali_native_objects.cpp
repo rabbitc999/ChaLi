@@ -128,10 +128,14 @@ void check(View view, Format target, bool archive, bool bitcode)
     }
     if (count >= 4 && header[0] == 0x7f && header[1] == 'E' && header[2] == 'L' && header[3] == 'F')
     {
-        if (target == Format::CoffX64 || count < 64 || header[4] != 2 || header[5] != 1 || header[6] != 1)
+        const bool elf32 = target == Format::ElfX86 || target == Format::ElfMipsel || target == Format::ElfArm32 || target == Format::ElfRiscv32;
+        if (target == Format::CoffX64 || count < (elf32 ? 52u : 64u) || header[4] != (elf32 ? 1 : 2) || header[5] != 1 || header[6] != 1)
             throw std::runtime_error("ELF 格式、位宽或字节序与目标不匹配");
         const auto kind = word(header.data() + 16), machine = word(header.data() + 18);
-        if ((kind != 1 && (kind != 3 || !archive)) || machine != (target == Format::ElfArm64 ? 183 : 62))
+        const auto expected = target == Format::ElfArm64 ? 183 : target == Format::ElfRiscv64 || target == Format::ElfRiscv32 ? 243 :
+                              target == Format::ElfMipsel || target == Format::ElfMips64el ? 8 :
+                              target == Format::ElfArm32 ? 40 : target == Format::ElfX86 ? 3 : 62;
+        if ((kind != 1 && (kind != 3 || !archive)) || machine != expected)
             throw std::runtime_error("ELF 类型或架构与目标不匹配");
         return;
     }

@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdint.h>
 #else
-typedef unsigned long size_t;
+typedef __SIZE_TYPE__ size_t;
 typedef long long int64_t;
 typedef unsigned long long uint64_t;
 typedef int int32_t;
@@ -27,7 +27,7 @@ extern int feof(FILE *);
 #define NULL ((void *)0)
 #endif
 extern const unsigned char chali_data_image[];
-extern const size_t chali_data_size, chali_heap_size;
+extern const uint64_t chali_data_size, chali_heap_size;
 
 typedef int64_t chali_i64;
 typedef uint64_t chali_u64;
@@ -43,8 +43,8 @@ FILE *chali_standard_stream(int index)
 }
 
 extern void chali_host_init(void), chali_host_finish(void), chali_host_drop(chali_i64);
-extern unsigned char *chali_host_address(chali_i64, size_t);
-extern chali_i64 chali_host_allocate(size_t), chali_host_function(chali_i64, int);
+extern unsigned char *chali_host_address(chali_i64, chali_u64);
+extern chali_i64 chali_host_allocate(chali_u64), chali_host_function(chali_i64, int);
 extern chali_i64 chali_host_call(const char *, chali_i64, const chali_i64 *, const unsigned char *);
 extern void chali_host_trace(void);
 extern void chali_host_raise_callback_error(const char *);
@@ -124,7 +124,7 @@ void chali_finish(void)
  * @param bytes 待复制的源字节或待分配的字节数。
  * @return 新分配范围的字节偏移。
  */
-chali_i64 chali_alloc(size_t bytes)
+chali_i64 chali_alloc(chali_u64 bytes)
 {
     return chali_host_allocate(bytes);
 }
@@ -328,7 +328,7 @@ void chali_string_drop(chali_i64 s)
 chali_i64 chali_new_array(chali_i64 length, chali_i64 stride)
 {
     const chali_i64 count = length < 0 ? 0 : length;
-    const chali_i64 base = chali_alloc((size_t)count * (size_t)stride + 8u);
+    const chali_i64 base = chali_alloc((chali_u64)count * (chali_u64)stride + 8u);
     memcpy(chali_host_address(base, 8), &count, 8);
     return base + 8;
 }
@@ -773,7 +773,7 @@ void chali_assert(chali_i64 condition, chali_i64 message)
  */
 chali_i64 chali_copy_bytes(chali_i64 to, chali_i64 from, chali_i64 size)
 {
-    memmove(chali_host_address(to, (size_t)size), chali_host_address(from, (size_t)size), (size_t)size);
+    memmove(chali_host_address(to, (chali_u64)size), chali_host_address(from, (chali_u64)size), (size_t)size);
     return to;
 }
 /**
@@ -785,7 +785,7 @@ chali_i64 chali_copy_bytes(chali_i64 to, chali_i64 from, chali_i64 size)
  */
 chali_i64 chali_set_bytes(chali_i64 to, chali_i64 byte, chali_i64 size)
 {
-    memset(chali_host_address(to, (size_t)size), (int)byte, (size_t)size);
+    memset(chali_host_address(to, (chali_u64)size), (int)byte, (size_t)size);
     return to;
 }
 /**

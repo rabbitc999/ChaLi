@@ -160,7 +160,7 @@ void PrintUsage(std::FILE *out)
              "  --warn=规则 --allow=规则 --deny=规则  配置警告（all／naming／稳定代码）\n"
              "  --warnings-as-errors  把启用的警告提升为错误\n",
              "  --macro-backtrace short|full  宏诊断展开栈显示；缺省 full\n",
-             "  --target 三元组        windows-x64、linux-x64、linux-arm64 或规范 LLVM 三元组\n",
+             "  --target 三元组        windows-x64、linux-x64、linux-x86、linux-arm32、linux-arm64、linux-riscv32、linux-riscv64、linux-mipsel、linux-mips64el 或规范 LLVM 三元组\n",
              "  --asm 文件.s          汇编后加入最终链接，可重复指定\n"
              "  --asm-include 目录     汇编 .include 的搜索目录，可重复指定\n"
              "  --emit-asm             生成目标机器汇编 .s，不链接；可配合 --target\n"

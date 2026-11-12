@@ -61,7 +61,11 @@ int assemble(const Memory::String &input, const Memory::String &output, const ch
             }
             std::vector<std::string> arguments{ compiler.c_str(), "--target=" + std::string(target.triple.c_str()), "-x", "assembler", "-integrated-as", "-c", source.u8string(), "-o", object.u8string(), "-I", source.parent_path().u8string() };
             if (!target.windows) arguments.push_back("-Wa,--noexecstack");
-            if (!options.cpu.empty()) arguments.push_back(std::string(target.arm64 ? "-mcpu=" : "-march=") + options.cpu.c_str());
+            if (target.riscv32()) arguments.insert(arguments.end(), {"-march=rv32gc", "-mabi=ilp32d"});
+            if (target.riscv64) arguments.insert(arguments.end(), {"-march=rv64gc", "-mabi=lp64d"});
+            if (target.mipsel) arguments.push_back("-mabi=o32");
+            if (target.mips64el()) arguments.push_back("-mabi=n64");
+            if (!options.cpu.empty()) arguments.push_back(std::string(target.arm64 || target.arm32() || target.riscv() ? "-mcpu=" : "-march=") + options.cpu.c_str());
             if (options.debug) arguments.insert(arguments.end(), { "-g", "-gdwarf-4" });
             for (const auto &include : options.assemblyIncludes) arguments.insert(arguments.end(), { "-I", fs::absolute(fs::u8path(include.c_str())).u8string() });
             code = chali_native_tools::execute(arguments, work.path / "assembler.log", diagnostic);

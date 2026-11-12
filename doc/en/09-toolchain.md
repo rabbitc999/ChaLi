@@ -189,7 +189,7 @@ output = "object"
 allocator = "malloc"
 ```
 
-Build Current File respects executable, `.o`, or `.ll` output. Linux executables have no `.exe` suffix. Build Executable requires `output = "executable"` and does not rewrite the manifest. The status bar shows the target, output kind, and actual compiler LLVM variant. Choices include only registered Windows x64, Linux x64, and Linux ARM64 targets. Object generation does not validate target linking or execution; cross executables still require the corresponding SDK, runtime, and link dependencies.
+Build Current File respects executable, `.o`, or `.ll` output. Linux executables have no `.exe` suffix. Build Executable requires `output = "executable"` and does not rewrite the manifest. The status bar shows the target, output kind, and actual compiler LLVM variant. The target picker lists the registered Windows x64 and Linux x64, x86, ARM32, ARM64, RISC-V 32/64 and little-endian MIPS32/64 targets. Object generation does not validate target linking or execution; cross executables still require the corresponding SDK, runtime, and link dependencies.
 
 Rename edits include source fingerprints. Before returning edits, the extension checks open document versions and the current text of closed dependencies. Standard sources are read-only. Ambiguous bindings or macro-template references cause the entire rename to be rejected.
 

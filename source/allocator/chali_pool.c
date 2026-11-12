@@ -74,7 +74,7 @@ static inline int chali_bit_high(size_t x)
 #elif defined(__GNUC__) || defined(__clang__)
     /* 注意 MinGW 的 `unsigned long` 只有 32 位，必须用 long long 的版本，
      * 否则 64 位平台上算出来的下标会整体偏移。 */
-    return (int)(sizeof(size_t) * 8u - 1u - (unsigned)__builtin_clzll((unsigned long long)x));
+    return (int)(sizeof(unsigned long long) * 8u - 1u - (unsigned)__builtin_clzll((unsigned long long)x));
 #else
     int index = -1;
     while (x) { x >>= 1; ++index; }

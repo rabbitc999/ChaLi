@@ -38,6 +38,14 @@
 #define CHALI_ABI_TARGET_ARCH 4u
 #elif defined(_M_ARM) || defined(__arm__)
 #define CHALI_ABI_TARGET_ARCH 3u
+#elif defined(__riscv) && __riscv_xlen == 64 && defined(__riscv_float_abi_double)
+#define CHALI_ABI_TARGET_ARCH 5u
+#elif defined(__mips__) && defined(__MIPSEL__) && defined(_ABIO32) && _MIPS_SIM == _ABIO32 && defined(__mips_hard_float)
+#define CHALI_ABI_TARGET_ARCH 6u
+#elif defined(__mips__) && defined(__MIPSEL__) && defined(_ABI64) && _MIPS_SIM == _ABI64 && defined(__mips_hard_float)
+#define CHALI_ABI_TARGET_ARCH 7u
+#elif defined(__riscv) && __riscv_xlen == 32 && defined(__riscv_float_abi_double)
+#define CHALI_ABI_TARGET_ARCH 8u
 #else
 #define CHALI_ABI_TARGET_ARCH 0u
 #endif
@@ -190,7 +198,7 @@ typedef struct ChaliAbiInfo
     uint32_t pointerBits;        ///< 对象指针位数。
     uint32_t littleEndian;       ///< 小端为一，大端为零。
     uint32_t callingConvention;  ///< 一为默认 C，二为 ARM32 硬浮点 C 调用约定。
-    uint32_t architecture;       ///< 一为 x86，二为 x64，三为 ARM，四为 ARM64；零不支持。
+    uint32_t architecture;       ///< 一至八依次为 x86、x64、ARM、ARM64、RV64 LP64D、MIPS 小端 O32、MIPS 小端 N64、RV32 ILP32D；零不支持。
     uint32_t platform;           ///< 一为 Windows，二为 Linux，三为 Darwin；零不支持。
     uint32_t frameSize;          ///< ChaliAbiFrame 字节数。
     uint32_t frameAlignment;     ///< ChaliAbiFrame 对齐。

@@ -13,7 +13,13 @@ enum class Format
 {
     CoffX64,
     ElfX64,
-    ElfArm64
+    ElfArm64,
+    ElfX86,
+    ElfRiscv64,
+    ElfRiscv32,
+    ElfMipsel,
+    ElfArm32,
+    ElfMips64el
 };
 /**
  * @brief 检查原生输入的格式、架构及自包含归档成员的文件边界。

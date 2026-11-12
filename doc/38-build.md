@@ -69,7 +69,7 @@ chali build app.chl --allocator pool --out build/app-pool
 
 `python tools/release_variants.py` 顺序构建和验收两个程序与插件变体，发布 ZIP 分别保存在 `dist/llvm-static/` 与 `dist/llvm-external/`。插件版本与 VERSION 中的编译器版本一致，VSIX 文件名分别使用 `-llvm-static` 与 `-llvm-external` 后缀；二者安装为同一个扩展的替代变体。单独打包可在 `vscode/` 使用 `npm run package -- --llvm-variant static --compiler 编译器路径`，或将 static 改为 external。发布脚本只生成本地产物，远端发布仍需显式执行。
 
-程序代码直接生成 LLVM 指令、基本块和全局存储，不经过 C/C++ 程序源码。手写的 [原生运行时](../source/aot/runtime.c) 在维护期使用固定版本 LLVM 生成为平台模块，再内嵌进编译器；执行 `sh tools/build_aot_runtime.sh --check` 可验证生成结果同步。当前运行时提供 Windows x64、Linux x64 与 Linux ARM64 布局，Windows x64 已提供配套工具分发。Linux x64 构建机需准备对应宿主的 LLVM clang 和系统链接环境。
+程序代码直接生成 LLVM 指令、基本块和全局存储，不经过 C/C++ 程序源码。手写的 [原生运行时](../source/aot/runtime.c) 在维护期使用固定版本 LLVM 生成为平台模块，再内嵌进编译器；执行 `sh tools/build_aot_runtime.sh --check` 可验证生成结果同步。当前运行时提供 Windows x64 及 Linux x64、x86、ARM32、ARM64、RISC-V 32/64 和 MIPS32/64 小端布局，Windows x64 已提供配套工具分发。Linux x64 构建机需准备对应宿主的 LLVM clang 和系统链接环境。
 
 `--incremental` 在 LLVM 构建 路径不复用编译产物，ABI 声明来自本次语义分析。功能验证由 [LLVM 构建 回归](../tests/chali_aot.py)、[列表与 opcode 差分回归](../tests/chali_aot_values.py)、[复杂 ABI 值与引用回归](../tests/chali_abi_values.py)（--aot）、[C 回调及返回所有权回归](../tests/chali_abi_contracts.py)（--aot）和[静态 LLVM 隔离回归](../tests/chali_aot_static.py)覆盖。
 
@@ -97,7 +97,19 @@ Windows 原生进程入口从 CRT 宽字符参数转换到 UTF-8，再交给 mai
 
 ## 交叉编译与项目配置
 
-交叉编译时，编译器运行的平台是宿主，生成程序运行的平台是目标。当前可选择 Windows x64、Linux x64 和 Linux ARM64，分别使用 `x86_64-w64-windows-gnu`、`x86_64-unknown-linux-gnu` 和 `aarch64-unknown-linux-gnu`；也可使用 `windows-x64`、`linux-x64`、`linux-arm64` 简写。
+交叉编译时，编译器运行的平台是宿主，生成程序运行的平台是目标。目标可使用下列简写或规范三元组。
+
+| 简写 | LLVM 三元组 | 目标 ABI |
+| --- | --- | --- |
+| `windows-x64` | `x86_64-w64-windows-gnu` | MinGW x64 |
+| `linux-x64` | `x86_64-unknown-linux-gnu` | x86-64 GNU |
+| `linux-arm32` | `armv7-unknown-linux-gnueabihf` | ARMv7-A GNU 硬浮点 |
+| `linux-arm64` | `aarch64-unknown-linux-gnu` | AArch64 GNU |
+| `linux-x86` | `i686-unknown-linux-gnu` | 32 位 x86 GNU |
+| `linux-riscv32` | `riscv32-unknown-linux-gnu` | RV32GC / ILP32D |
+| `linux-riscv64` | `riscv64-unknown-linux-gnu` | RV64GC / LP64D |
+| `linux-mipsel` | `mipsel-unknown-linux-gnu` | 小端 MIPS32r2 / O32 |
+| `linux-mips64el` | `mips64el-unknown-linux-gnuabi64` | 小端 MIPS64r2 / N64 |
 
 先导出目标 LLVM IR 或目标文件，不必准备目标链接库：
 
@@ -114,7 +126,11 @@ chali build aot_demo.chl --target linux-arm64 --emit-obj --out build/arm64/demo
 sh tools/build_cross_runtime.sh linux-arm64 2
 ```
 
-脚本将 ARM64 对象与宿主对象隔离构建，并在 `build/cross-sdk/linux-arm64/` 生成 `sysroot/`、`lib/`、许可证和摘要。Windows 编译器使用该目录时，应填写 Windows 能访问的实际路径。
+脚本也接受 `linux-x86`、`linux-arm32`、`linux-riscv32`、`linux-riscv64`、`linux-mipsel` 和 `linux-mips64el`，分别使用 `i686-linux-gnu`、`arm-linux-gnueabihf`、`riscv32-linux-gnu`、`riscv64-linux-gnu`、`mipsel-linux-gnu` 和 `mips64el-linux-gnuabi64` 的 GCC/G++ 工具链。脚本隔离构建目标对象，并在 `build/cross-sdk/<目标简写>/` 生成 `sysroot/`、`lib/`、许可证和摘要。Windows 编译器使用该目录时，应填写 Windows 能访问的实际路径。
+
+完整交叉链接使用外部 clang 和 LLD。若当前 LLVM 发行版缺少所选目标后端，可用 `CHALI_LLVM_CLANG` 指向带该后端的 clang，并让对应的 LLD 位于 `PATH`。MIPS SDK 若含明确要求可执行栈的 GNU 启动对象，准备脚本会记录该要求，链接时按记录设置 ELF 栈权限。
+
+MIPS32 和 MIPS64 可执行文件使用非 PIE 和常规机器码对象链接，保留目标代码优化并跳过 LTO。MIPS32 和 RV32 运行环境需要匹配的 `libatomic.so.1`。
 
 在 `chali.toml` 中集中保存配置：
 
@@ -183,7 +199,7 @@ chali link build/start.o --target linux-arm64 --no-runtime --entry _start --out 
 
 `link` 接受多个对象／归档，支持 `--target`、`--shared`、重复 `--export SYMBOL`、`--entry SYMBOL`、`--debug`、`-L DIR`／`-LDIR`／`--library-path DIR`、重复 `--library NAME`、`--sysroot`、`--runtime-dir` 和仅外置变体支持的 `--llvm CLANG`。入口及导出使用原始对象符号名。对象和库按输入顺序进入同一链接组，归档按需提取并重复扫描，允许库间循环引用；未提取成员的未定义符号不引发错误。重复定义及已引用的缺失符号由 LLD 报告。共享库只公开显式导出的符号，其他符号隐藏；不提供任意原始链接器参数透传。
 
-静态 Windows x64 变体默认使用内置 LLD、CRT 与 ChaLi 运行时，无需外置 clang；外置变体使用匹配 clang／LLD 和所需系统工具链。完整跨目标链接需要目标运行时与 SDK。显式 `--no-runtime` 不添加 CRT 或 ChaLi 运行时，可用于自备入口与依赖的程序；内置 LLD 可为受支持 Linux x64／ARM64 目标链接此类输入，生成成功不等于已在目标系统运行。普通独立 C 程序也可使用默认运行时链接，未被引用的归档成员不装入应用。
+静态 Windows x64 变体默认使用内置 LLD、CRT 与 ChaLi 运行时，无需外置 clang；外置变体使用匹配 clang／LLD 和所需系统工具链。完整跨目标链接需要目标运行时与 SDK。显式 `--no-runtime` 不添加 CRT 或 ChaLi 运行时，可用于自备入口与依赖的程序；内置 LLD 可为已登记的 Linux 目标链接此类输入，生成成功不等于已在目标系统运行。普通独立 C 程序也可使用默认运行时链接，未被引用的归档成员不装入应用。
 
 输入先检查对象格式、位宽、架构及归档成员边界；实际符号、节和重定位仍由 LLVM／LLD 检查。这些工具不构成执行不可信代码的沙箱。产物先在私有工作区生成，成功后才替换最终文件；失败保留原文件，禁止输出覆盖输入。链接错误不能作为旧产物仍有效的依据，调用方必须检查返回状态。
 

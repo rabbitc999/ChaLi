@@ -250,7 +250,10 @@ int link(const chali_linker::Request &request, const Memory::String &product, Me
         library = assets.root.generic_u8string();
         runtimeLibrary = runtime.root.generic_u8string();
     }
-    std::vector<std::string> storage{"ld.lld", "-m", target.windows ? "i386pep" : target.arm64 ? "aarch64linux" : "elf_x86_64", "-o", product.c_str(), "--gc-sections"};
+    std::vector<std::string> storage{"ld.lld", "-m", target.windows ? "i386pep" : target.arm64 ? "aarch64linux" :
+                                    target.arm32() ? "armelf_linux_eabi" : target.riscv32() ? "elf32lriscv" : target.riscv64 ? "elf64lriscv" :
+                                    target.mips64el() ? "elf64ltsmip" : target.mipsel ? "elf32ltsmip" :
+                                    target.x86 ? "elf_i386" : "elf_x86_64", "-o", product.c_str(), "--gc-sections"};
     if (!request.options.subsystem.empty()) storage.insert(storage.end(), {"--subsystem", request.options.subsystem.c_str()});
     if (!request.options.debug) storage.push_back("--strip-all");
     if (request.options.shared) storage.push_back("--shared");
@@ -266,7 +269,11 @@ int link(const chali_linker::Request &request, const Memory::String &product, Me
     for (const auto &path : request.libraryDirectories) storage.push_back("-L" + std::string(path.c_str()));
     storage.push_back("--start-group");
     for (const auto &input : request.inputs) storage.emplace_back(input.c_str());
-    if (request.options.lto) storage.push_back((request.options.debug && !request.options.debugOptimized) ? "--lto-O0" : "--lto-O3");
+    if (request.options.lto)
+    {
+        storage.push_back((request.options.debug && !request.options.debugOptimized) ? "--lto-O0" : "--lto-O3");
+        if (target.riscv()) storage.push_back("--mllvm=-mattr=+m,+a,+f,+d,+c");
+    }
     for (const auto &name : request.libraryNames) storage.push_back("-l" + std::string(name.c_str()));
     if (!request.noRuntime)
     {
@@ -338,6 +345,30 @@ int compile(const Request &request, const Memory::String &module, const Memory::
         LLVMInitializeAArch64AsmParser();
         LLVMInitializeAArch64AsmPrinter();
     }
+    else if (targetInfo.arm32())
+    {
+        LLVMInitializeARMTargetInfo();
+        LLVMInitializeARMTarget();
+        LLVMInitializeARMTargetMC();
+        LLVMInitializeARMAsmParser();
+        LLVMInitializeARMAsmPrinter();
+    }
+    else if (targetInfo.riscv())
+    {
+        LLVMInitializeRISCVTargetInfo();
+        LLVMInitializeRISCVTarget();
+        LLVMInitializeRISCVTargetMC();
+        LLVMInitializeRISCVAsmParser();
+        LLVMInitializeRISCVAsmPrinter();
+    }
+    else if (targetInfo.mipsel || targetInfo.mips64el())
+    {
+        LLVMInitializeMipsTargetInfo();
+        LLVMInitializeMipsTarget();
+        LLVMInitializeMipsTargetMC();
+        LLVMInitializeMipsAsmParser();
+        LLVMInitializeMipsAsmPrinter();
+    }
     else
     {
         LLVMInitializeX86TargetInfo();
@@ -371,7 +402,24 @@ int compile(const Request &request, const Memory::String &module, const Memory::
     if (!failed)
     {
         const auto cpu = request.options.cpu.empty() ? targetInfo.cpu : request.options.cpu;
-        machine = LLVMCreateTargetMachine(target, triple, cpu.c_str(), "", (request.options.debug && !request.options.debugOptimized) ? LLVMCodeGenLevelNone : LLVMCodeGenLevelAggressive, LLVMRelocPIC, LLVMCodeModelDefault);
+        auto options = LLVMCreateTargetMachineOptions();
+        LLVMTargetMachineOptionsSetCPU(options, cpu.c_str());
+        if (targetInfo.riscv())
+        {
+            LLVMTargetMachineOptionsSetABI(options, targetInfo.riscv32() ? "ilp32d" : "lp64d");
+            LLVMTargetMachineOptionsSetFeatures(options, "+m,+a,+f,+d,+c");
+        }
+        if (targetInfo.mipsel)
+        {
+            LLVMTargetMachineOptionsSetABI(options, "o32");
+            LLVMTargetMachineOptionsSetFeatures(options, "+fpxx,+nooddspreg");
+        }
+        if (targetInfo.mips64el()) LLVMTargetMachineOptionsSetABI(options, "n64");
+        if (targetInfo.arm32()) LLVMTargetMachineOptionsSetFeatures(options, "+vfp3d16");
+        LLVMTargetMachineOptionsSetCodeGenOptLevel(options, (request.options.debug && !request.options.debugOptimized) ? LLVMCodeGenLevelNone : LLVMCodeGenLevelAggressive);
+        LLVMTargetMachineOptionsSetRelocMode(options, LLVMRelocPIC);
+        machine = LLVMCreateTargetMachineWithOptions(target, triple, options);
+        LLVMDisposeTargetMachineOptions(options);
         failed = machine == nullptr;
         if (!failed)
         {

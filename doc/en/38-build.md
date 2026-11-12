@@ -68,7 +68,7 @@ The first static build runs [setup_static.py](../../library/llvm/setup_static.py
 
 `python tools/release_variants.py` builds and validates both program and plugin variants in sequence. Release ZIPs are placed in `dist/llvm-static/` and `dist/llvm-external/`. Plugin versions match the compiler version in `VERSION`; VSIX filenames use `-llvm-static` and `-llvm-external` suffixes. They are alternative builds of the same extension. To package one, run `npm run package -- --llvm-variant static --compiler COMPILER_PATH` in `vscode/`, or replace static with external. The script creates local artifacts; remote publication requires an explicit action.
 
-Program code is emitted directly as LLVM instructions, basic blocks and global storage. The hand-written [native runtime](../../source/aot/runtime.c) is compiled into platform modules during maintenance using the pinned LLVM version and embedded in the compiler. `sh tools/build_aot_runtime.sh --check` verifies synchronization. Runtime layouts cover Windows x64 and Linux x64; the bundled executable toolchain targets Windows x64. Linux x64 build hosts require their native LLVM clang and system linker environment.
+Program code is emitted directly as LLVM instructions, basic blocks and global storage. The hand-written [native runtime](../../source/aot/runtime.c) is compiled into platform modules during maintenance using the pinned LLVM version and embedded in the compiler. `sh tools/build_aot_runtime.sh --check` verifies synchronization. Runtime layouts cover Windows x64 and Linux x64, x86, ARM32, ARM64, RISC-V 32/64 and little-endian MIPS32/64; the bundled executable toolchain targets Windows x64. Linux x64 build hosts require their native LLVM clang and system linker environment.
 
 Native compilation does not reuse compiled outputs with `--incremental`, so ABI declarations come from the current semantic analysis. See the [functional regression](../../tests/chali_aot.py), [list and opcode differential checks](../../tests/chali_aot_values.py) and [static LLVM isolation checks](../../tests/chali_aot_static.py).
 
@@ -100,7 +100,19 @@ Online toolchain setup also covers Linux x64, Linux ARM64 and macOS ARM64. Use `
 
 ## Cross-compilation and project configuration
 
-The compiler host and the application target may differ. Supported target selections are `windows-x64` (`x86_64-w64-windows-gnu`), `linux-x64` (`x86_64-unknown-linux-gnu`) and `linux-arm64` (`aarch64-unknown-linux-gnu`).
+The compiler host and the application target may differ. Select a target by alias or canonical triple.
+
+| Alias | LLVM triple | Target ABI |
+| --- | --- | --- |
+| `windows-x64` | `x86_64-w64-windows-gnu` | MinGW x64 |
+| `linux-x64` | `x86_64-unknown-linux-gnu` | x86-64 GNU |
+| `linux-arm32` | `armv7-unknown-linux-gnueabihf` | ARMv7-A GNU hard-float |
+| `linux-arm64` | `aarch64-unknown-linux-gnu` | AArch64 GNU |
+| `linux-x86` | `i686-unknown-linux-gnu` | 32-bit x86 GNU |
+| `linux-riscv32` | `riscv32-unknown-linux-gnu` | RV32GC / ILP32D |
+| `linux-riscv64` | `riscv64-unknown-linux-gnu` | RV64GC / LP64D |
+| `linux-mipsel` | `mipsel-unknown-linux-gnu` | little-endian MIPS32r2 / O32 |
+| `linux-mips64el` | `mips64el-unknown-linux-gnuabi64` | little-endian MIPS64r2 / N64 |
 
 ```sh
 chali build hello.chl --target linux-arm64 --emit-llvm --out build/arm64/hello
@@ -109,7 +121,11 @@ chali build hello.chl --target linux-arm64 --emit-obj --out build/arm64/hello
 
 `--emit-llvm` exports target LLVM IR; `--emit-obj` generates a target `.o` without linking. These options are mutually exclusive. Windows objects use COFF, Linux objects use ELF. Static LLVM can generate objects using its embedded target backends; external LLVM requires clang with the selected backend.
 
-Full cross-linking additionally requires matching target startup objects, C/C++ libraries, a linker and `libchali_aot_host.a`. Use `--sysroot` for the target system root, `--runtime-dir` for the ChaLi runtime library directory and `--cpu` to select a CPU. On Linux or WSL, `sh tools/build_cross_runtime.sh linux-arm64 2` prepares an isolated SDK with the installed GNU target toolchain under `build/cross-sdk/linux-arm64/`, including library licenses and hashes.
+Full cross-linking additionally requires matching target startup objects, C/C++ libraries, a linker and `libchali_aot_host.a`. Use `--sysroot` for the target system root, `--runtime-dir` for the ChaLi runtime library directory and `--cpu` to select a CPU. On Linux or WSL, `sh tools/build_cross_runtime.sh linux-arm64 2` prepares an isolated SDK with the installed GNU target toolchain under `build/cross-sdk/linux-arm64/`, including library licenses and hashes. The script also accepts `linux-x86`, `linux-arm32`, `linux-riscv32`, `linux-riscv64`, `linux-mipsel` and `linux-mips64el` with the corresponding `i686-linux-gnu`, `arm-linux-gnueabihf`, `riscv32-linux-gnu`, `riscv64-linux-gnu`, `mipsel-linux-gnu` and `mips64el-linux-gnuabi64` GCC/G++ toolchains.
+
+Full cross-linking uses external clang and LLD. If the installed LLVM distribution lacks the target backend, set `CHALI_LLVM_CLANG` to a clang that includes it and put the matching LLD on `PATH`. The SDK script records when MIPS GNU startup objects explicitly require an executable stack, and the linker uses that record to set the ELF stack permission.
+
+MIPS32 and MIPS64 executables use non-PIE machine-code linking with target optimization and LTO disabled. MIPS32 and RV32 runtime environments need a matching `libatomic.so.1`.
 
 ```toml
 [build]
@@ -176,7 +192,7 @@ chali link build/start.o --target linux-arm64 --no-runtime --entry _start --out 
 
 `link` accepts multiple objects/archives and supports `--target`, `--shared`, repeated `--export SYMBOL`, `--entry SYMBOL`, `--debug`, `-L DIR` / `-LDIR` / `--library-path DIR`, repeated `--library NAME`, `--sysroot`, `--runtime-dir` and the external-only `--llvm CLANG`. Entry/export names are raw object symbols. Inputs enter one link group in their supplied order. Archives extract members on demand and are rescanned for cyclic references; unresolved symbols in unextracted members are irrelevant. LLD diagnoses duplicate definitions and referenced missing symbols. Shared libraries expose only explicit exports and hide other symbols. Arbitrary raw linker flags are not forwarded.
 
-The static Windows x64 variant uses embedded LLD, CRT and ChaLi runtime assets without external clang. The external variant requires matching clang/LLD and the applicable system toolchain. Full cross-target linking requires a target runtime and SDK. Explicit `--no-runtime` omits CRT and the ChaLi runtime for programs supplying their own entry and dependencies. Embedded LLD can link such inputs for the supported Linux x64/ARM64 targets; successful generation is distinct from execution on the target. Ordinary standalone C programs may use default runtime linkage; unreferenced archive members are omitted.
+The static Windows x64 variant uses embedded LLD, CRT and ChaLi runtime assets without external clang. The external variant requires matching clang/LLD and the applicable system toolchain. Full cross-target linking requires a target runtime and SDK. Explicit `--no-runtime` omits CRT and the ChaLi runtime for programs supplying their own entry and dependencies. Embedded LLD can link such inputs for the registered Linux targets; successful generation is distinct from execution on the target. Ordinary standalone C programs may use default runtime linkage; unreferenced archive members are omitted.
 
 Input checks cover object format, width, architecture and archive-member bounds; LLVM/LLD performs the final symbol, section and relocation validation. These tools are not an untrusted-code sandbox. Output is generated in a private workspace and published only on success. Failures preserve an existing output, and output cannot overwrite an input. Callers must check the exit status rather than treat an old output as evidence of a successful link.
 

@@ -72,6 +72,27 @@ int assemble(const std::string &input, const std::string &output, const chali_bu
         LLVMInitializeAArch64TargetMC();
         LLVMInitializeAArch64AsmParser();
     }
+    else if (selected.arm32())
+    {
+        LLVMInitializeARMTargetInfo();
+        LLVMInitializeARMTarget();
+        LLVMInitializeARMTargetMC();
+        LLVMInitializeARMAsmParser();
+    }
+    else if (selected.riscv())
+    {
+        LLVMInitializeRISCVTargetInfo();
+        LLVMInitializeRISCVTarget();
+        LLVMInitializeRISCVTargetMC();
+        LLVMInitializeRISCVAsmParser();
+    }
+    else if (selected.mipsel || selected.mips64el())
+    {
+        LLVMInitializeMipsTargetInfo();
+        LLVMInitializeMipsTarget();
+        LLVMInitializeMipsTargetMC();
+        LLVMInitializeMipsAsmParser();
+    }
     else
     {
         LLVMInitializeX86TargetInfo();
@@ -98,10 +119,15 @@ int assemble(const std::string &input, const std::string &output, const chali_bu
     llvm::MCTargetOptions settings;
     settings.MCNoExecStack = !selected.windows;
     settings.DwarfVersion = 4;
+    if (selected.riscv()) settings.ABIName = selected.riscv32() ? "ilp32d" : "lp64d";
+    if (selected.mipsel) settings.ABIName = "o32";
+    if (selected.mips64el()) settings.ABIName = "n64";
     const auto cpu = options.cpu.empty() ? selected.cpu : options.cpu;
     std::unique_ptr<llvm::MCRegisterInfo> registers(target->createMCRegInfo(triple));
     std::unique_ptr<llvm::MCInstrInfo> instructions(target->createMCInstrInfo());
-    std::unique_ptr<llvm::MCSubtargetInfo> subtarget(target->createMCSubtargetInfo(triple, cpu.c_str(), ""));
+    const auto *features = selected.riscv() ? "+m,+a,+f,+d,+c" : selected.mipsel ? "+fpxx,+nooddspreg" :
+                           selected.arm32() ? "+vfp3d16" : "";
+    std::unique_ptr<llvm::MCSubtargetInfo> subtarget(target->createMCSubtargetInfo(triple, cpu.c_str(), features));
     if (!registers || !instructions || !subtarget || !subtarget->isCPUStringValid(cpu.c_str()))
     {
         diagnostic = "汇编目标或 CPU 不可用";

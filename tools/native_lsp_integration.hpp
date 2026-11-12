@@ -90,7 +90,7 @@ J projectInfo(const J &params)
     if (valid) valid = chali_build::describeTarget(project.aotTarget, target, &error);
     const auto manifest = project.file.empty() ? file.parent_path() / "chali.toml" : fs::u8path(projectText(project.file));
     A targets;
-    for (const auto name : { "windows-x64", "linux-x64", "linux-arm64" })
+    for (const auto name : { "windows-x64", "linux-x64", "linux-arm64", "linux-x86", "linux-arm32", "linux-riscv32", "linux-riscv64", "linux-mipsel", "linux-mips64el" })
     {
         chali_build::TargetInfo supported;
         if (chali_build::describeTarget(name, supported)) targets.push_back(object({ { "label", name }, { "target", projectText(supported.triple) } }));

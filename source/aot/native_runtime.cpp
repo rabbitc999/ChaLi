@@ -73,16 +73,16 @@ extern const unsigned char chali_data_image[];
  */
 struct ChaliDataSegment
 {
-    std::size_t destination, source, size;
+    std::uint64_t destination, source, size;
 };
 extern const ChaliDataSegment chali_data_segments[];
-extern const std::size_t chali_data_segment_count;
+extern const std::uint64_t chali_data_segment_count;
 extern const char chali_data_layout[];
-extern const std::size_t chali_data_layout_size;
-extern const std::size_t chali_data_size, chali_heap_size;
+extern const std::uint64_t chali_data_layout_size;
+extern const std::uint64_t chali_data_size, chali_heap_size;
 extern const int chali_allocator_kind;
-extern const std::size_t chali_step_limit;
-extern const std::size_t chali_function_count;
+extern const std::uint64_t chali_step_limit;
+extern const std::uint64_t chali_function_count;
 extern const std::int64_t chali_function_addresses[];
 extern const int chali_threads_enabled;
 void chali_panic(const char *message);
@@ -94,7 +94,7 @@ void chali_reset_address_view();
 void chali_host_tick(std::uint64_t steps);
 int32_t chali_program_abi_bind(ChaliAbiRegistry *registry, ChaliAbiError *error);
 void chali_location(const char **file, std::int64_t *line, const void **function);
-extern const std::size_t chali_trace_count;
+extern const std::uint64_t chali_trace_count;
 extern const void *const chali_trace_functions[];
 extern const char *const chali_trace_names[];
 #if defined(__linux__)
@@ -988,8 +988,13 @@ std::int64_t chali_host_storage_lifetime(std::int64_t operation, std::int64_t va
  * @return 当前操作结束前有效的物理地址。
  * @note 根上下文和隔离线程上下文的堆均由本执行器建立为 Heap，直接调用具体实现避免逐次 RTTI。
  */
-unsigned char *chali_host_address(std::int64_t address, std::size_t count)
+unsigned char *chali_host_address(std::int64_t address, std::uint64_t count)
 {
+    if (static_cast<std::uint64_t>(address) > std::numeric_limits<std::size_t>::max() || count > std::numeric_limits<std::size_t>::max())
+    {
+        chali_panic("访问未分配或已释放的内存");
+        return nullptr;
+    }
     auto &context = currentContext();
     const auto at = static_cast<std::size_t>(address);
     if (context.data && address >= 0 && at < context.data->binary.size() && count <= context.data->binary.size() - at)
@@ -1007,12 +1012,17 @@ unsigned char *chali_host_address(std::int64_t address, std::size_t count)
  * @param view 当前线程的非空 LLVM 视图存储，只在本次调用写入，不保留指针。
  * @return 验证成功后的物理地址，失效时按原诊断终止。
  */
-unsigned char *chali_host_address_view(std::int64_t address, std::size_t count, Heap::AddressView *view)
+unsigned char *chali_host_address_view(std::int64_t address, std::uint64_t count, Heap::AddressView *view)
 {
-    static_assert(sizeof(Heap::AddressView) == 40 && offsetof(Heap::AddressView, stamp) == 32,
-                  "BUILD 地址视图必须与 64 位 LLVM 布局一致");
-    static_assert(std::atomic<std::uint64_t>::is_always_lock_free && sizeof(std::atomic<std::uint64_t>) == 8,
-                  "LLVM 地址原语要求原生无锁的 64 位映射代次");
+    static_assert(offsetof(Heap::AddressView, stamp) == 16 + 2 * sizeof(void *),
+                  "BUILD 地址视图必须与 LLVM 布局一致");
+    static_assert(sizeof(std::atomic<std::uint64_t>) == 8 && alignof(std::atomic<std::uint64_t>) >= 8,
+                  "LLVM 地址原语要求对齐的 64 位映射代次");
+    if (static_cast<std::uint64_t>(address) > std::numeric_limits<std::size_t>::max() || count > std::numeric_limits<std::size_t>::max())
+    {
+        chali_panic("访问未分配或已释放的内存");
+        return nullptr;
+    }
     auto &context = currentContext();
     auto *heap = static_cast<Heap *>(context.heap);
     const auto at = static_cast<std::size_t>(address);
@@ -1114,8 +1124,13 @@ std::int64_t chali_host_copy_words(std::int64_t destination, std::int64_t source
  * @param bytes 需要分配的字节数。
  * @return 新的活跃逻辑地址。
  */
-std::int64_t chali_host_allocate(std::size_t bytes)
+std::int64_t chali_host_allocate(std::uint64_t bytes)
 {
+    if (bytes > std::numeric_limits<std::size_t>::max())
+    {
+        chali_panic("堆内存不足");
+        return 0;
+    }
     auto &context = currentContext();
     const auto address = nativeAllocate(context, bytes);
     if (!address) chali_panic("堆内存不足");

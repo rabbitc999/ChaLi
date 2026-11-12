@@ -106,6 +106,13 @@ def main():
             command([clang, '--target='+triple, '-c', debug_prefix.with_suffix('.s'), '-o', debug_object], work)
             debug_bytes = debug_object.read_bytes()
             assert debug_bytes[:4] == b'\x7fELF' and struct.unpack_from('<H', debug_bytes, 18)[0] == machine
+        for target, elf_class, machine in [('linux-x86', 1, 3), ('linux-riscv32', 1, 243), ('linux-riscv64', 2, 243), ('linux-mipsel', 1, 8),
+                                           ('linux-arm32', 1, 40), ('linux-mips64el', 2, 8)]:
+            prefix = work / target
+            command([compiler, 'build', source, '--target', target, '--emit-obj', '--out', prefix, *backend], work)
+            raw = prefix.with_suffix('.o').read_bytes()
+            assert raw[:6] == b'\x7fELF' + bytes([elf_class, 1])
+            assert struct.unpack_from('<H', raw, 18)[0] == machine
         for left, right in itertools.combinations(['--emit-asm','--emit-obj','--emit-llvm'], 2):
             result = command([compiler,'build',source,left,right,'--out',work/'invalid'],work,expected=2)
             assert '只能选择一种' in result.stderr
@@ -124,7 +131,7 @@ def main():
         command([compiler,'build',source,'--emit-obj','--out',work/'override',*backend],work)
         assert (work/'override.o').is_file() and not (work/'override.s').exists()
         assert command([compiler,'run',source,'--out',work/'run',*backend],work).stdout == 'assembly 48\n'
-    print('assembly: checked/unchecked/debug native roundtrips, two ELF targets including debug source maps, exclusive flags, TOML override, ABI sidecar without a C++ compiler and run default passed')
+    print('assembly: checked/unchecked/debug native roundtrips, eight ELF targets including debug source maps, exclusive flags, TOML override, ABI sidecar without a C++ compiler and run default passed')
 
 
 if __name__ == '__main__':

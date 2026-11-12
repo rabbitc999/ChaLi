@@ -30,6 +30,10 @@ namespace
 chali_native_objects::Format format(const chali_build::TargetInfo &target)
 {
     return target.windows ? chali_native_objects::Format::CoffX64 : target.arm64 ? chali_native_objects::Format::ElfArm64 :
+           target.riscv32() ? chali_native_objects::Format::ElfRiscv32 :
+           target.riscv64 ? chali_native_objects::Format::ElfRiscv64 : target.mipsel ? chali_native_objects::Format::ElfMipsel :
+           target.mips64el() ? chali_native_objects::Format::ElfMips64el :
+           target.arm32() ? chali_native_objects::Format::ElfArm32 : target.x86 ? chali_native_objects::Format::ElfX86 :
                                                                                    chali_native_objects::Format::ElfX64;
 }
 /**
@@ -134,11 +138,18 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
         {
             const auto compiler = chali_build::llvmCompilerPath(request.options.compiler);
             std::vector<std::string> arguments{ compiler.c_str(), "--target=" + std::string(target.triple.c_str()), "-fuse-ld=lld", "-o", temporary.u8string(), "-Wl,--gc-sections" };
+            const bool mipsTarget = target.mipsel || target.mips64el();
+            if (mipsTarget && !request.noRuntime)
+            {
+                if (!request.options.shared) arguments.push_back("-no-pie");
+                arguments.push_back("-Wl,-z,now");
+            }
             if (!request.options.subsystem.empty()) arguments.push_back(request.options.subsystem == "windows" ? "-mwindows" : "-mconsole");
-            if (request.options.lto)
+            if (request.options.lto && !mipsTarget)
             {
                 arguments.push_back(request.options.thinLto ? "-flto=thin" : "-flto=full");
                 if (request.options.thinLto) arguments.push_back("-fno-split-lto-unit");
+                if (target.riscv()) arguments.insert(arguments.end(), {"-Xlinker", "--mllvm=-mattr=+m,+a,+f,+d,+c"});
                 arguments.push_back((request.options.debug && !request.options.debugOptimized) ? "-Wl,--lto-O0" : "-Wl,--lto-O3");
             }
             if (!request.options.sysroot.empty()) arguments.push_back("--sysroot=" + std::string(request.options.sysroot.c_str()));
@@ -146,6 +157,10 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
             if (!request.options.debug) arguments.push_back("-s");
             if (request.noRuntime) arguments.push_back("-nostdlib");
             if (!request.entry.empty()) arguments.push_back("-Wl,-e," + std::string(request.entry.c_str()));
+            if (target.riscv32()) arguments.insert(arguments.end(), {"-march=rv32gc", "-mabi=ilp32d"});
+            if (target.riscv64) arguments.insert(arguments.end(), {"-march=rv64gc", "-mabi=lp64d"});
+            if (target.mipsel) arguments.push_back("-mabi=o32");
+            if (target.mips64el()) arguments.push_back("-mabi=n64");
             if (target.windows && request.options.shared) arguments.push_back("-Wl,--exclude-all-symbols");
             for (const auto &path : request.libraryDirectories) arguments.push_back("-L" + std::string(path.c_str()));
             arguments.push_back("-Wl,--start-group");
@@ -187,7 +202,12 @@ int link(const Request &original, const Memory::String &output, Memory::Vector<M
                         for (const auto name : { "gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a" }) arguments.push_back((directory / name).u8string());
                 }
                 else
+                {
                     arguments.insert(arguments.end(), { "-pthread", "-lm", "-ldl" });
+                    if (target.mipsel || target.riscv32()) arguments.push_back("-l:libatomic.so.1");
+                    if (mipsTarget && fs::is_regular_file(directory / "requires-execstack"))
+                        arguments.push_back("-Wl,-z,execstack");
+                }
             }
             arguments.push_back("-Wl,--end-group");
             if (!request.options.exports.empty() || (!target.windows && request.options.shared))

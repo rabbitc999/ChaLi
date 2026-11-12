@@ -38,7 +38,9 @@ def main():
             assert capabilities['codeActionProvider']['codeActionKinds'] == ['quickfix']
             info = server.query('chali/projectInfo', dict(uri=uri))
             assert info['valid'] and info['llvm'] in ('static', 'external') and info['output'] == 'object', info
-            assert {entry['label'] for entry in info['targets']} == {'windows-x64', 'linux-x64', 'linux-arm64'}, info
+            assert {entry['label'] for entry in info['targets']} == {'windows-x64', 'linux-x64', 'linux-arm64',
+                                                                    'linux-x86', 'linux-arm32', 'linux-riscv32', 'linux-riscv64',
+                                                                    'linux-mipsel', 'linux-mips64el'}, info
             dirty = original + '# unsaved comment\n'
             edit = server.query('chali/projectEdit', dict(uri=uri, text=dirty, version=7, key='target', value='linux-arm64'))
             change = edit['documentChanges'][0]

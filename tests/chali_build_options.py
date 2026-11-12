@@ -61,7 +61,9 @@ def main():
             invoke(['check', source], success=False)
         # LLVM 导出无需目标系统链接器，可直接核对目标元数据常量。
         for target, system, cpu in [('windows-x64', 'win', 'amd64'), ('linux-x64', 'linux', 'amd64'),
-                                    ('linux-arm64', 'linux', 'arm64')]:
+                                    ('linux-arm64', 'linux', 'arm64'), ('linux-x86', 'linux', 'x86'),
+                                    ('linux-riscv32', 'linux', 'riscv32'), ('linux-riscv64', 'linux', 'riscv64'), ('linux-mipsel', 'linux', 'mipsel'),
+                                    ('linux-arm32', 'linux', 'arm32'), ('linux-mips64el', 'linux', 'mips64el')]:
             source = ROOT / 'example/feature_tests/build_options/target.chl'
             invoke(['build', source, '--target', target, '--emit-llvm', '--out', output])
             text = output.with_suffix('.ll').read_text(encoding='utf-8')

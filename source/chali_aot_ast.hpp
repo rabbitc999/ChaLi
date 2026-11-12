@@ -124,10 +124,10 @@ slow:
             result += "  %promote" + number + " = icmp eq i64 %period" + number + ", 0\n";
             result += "  br i1 %promote" + number + ", label %swap" + number + ", label %return" + number + "\n";
             result += "swap" + number + ":\n";
-            result += "  %old" + number + " = load { i64, i64, ptr, ptr, i64 }, ptr @chali_address_view, align 8\n";
-            result += "  %new" + number + " = load { i64, i64, ptr, ptr, i64 }, ptr " + view + ", align 8\n";
-            result += "  store { i64, i64, ptr, ptr, i64 } %new" + number + ", ptr @chali_address_view, align 8\n";
-            result += "  store { i64, i64, ptr, ptr, i64 } %old" + number + ", ptr " + view + ", align 8\n";
+            result += "  %old" + number + " = load { i64, i64, ptr, ptr, i64 }, ptr @chali_address_view\n";
+            result += "  %new" + number + " = load { i64, i64, ptr, ptr, i64 }, ptr " + view + "\n";
+            result += "  store { i64, i64, ptr, ptr, i64 } %new" + number + ", ptr @chali_address_view\n";
+            result += "  store { i64, i64, ptr, ptr, i64 } %old" + number + ", ptr " + view + "\n";
             result += "  br label %return" + number + "\nreturn" + number + ":\n";
         }
         result += "  ret ptr %cached" + number + "\n";

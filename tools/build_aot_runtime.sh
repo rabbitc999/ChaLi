@@ -28,12 +28,18 @@ temporary_root="$root/tmp"
 if command -v cygpath >/dev/null 2>&1; then temporary_root=$(cygpath -m "$temporary_root"); fi
 export TMPDIR="$temporary_root" TMP="$temporary_root" TEMP="$temporary_root"
 directory=$(mktemp -d "$root/tmp/chali-aot-runtime.XXXXXX")
-trap 'rm -f "$directory/runtime-windows.ll" "$directory/runtime-linux.ll" "$directory/runtime-linux_arm64.ll"; rmdir "$directory"' EXIT HUP INT TERM
-for platform in windows linux linux_arm64; do
+trap 'rm -f "$directory"/runtime-*.ll; rmdir "$directory"' EXIT HUP INT TERM
+for platform in windows linux linux_arm64 linux_x86 linux_riscv32 linux_riscv64 linux_mipsel linux_arm32 linux_mips64el; do
     case "$platform" in
         windows) triple=x86_64-w64-windows-gnu ;;
         linux) triple=x86_64-unknown-linux-gnu ;;
         linux_arm64) triple=aarch64-unknown-linux-gnu ;;
+        linux_x86) triple=i686-unknown-linux-gnu ;;
+        linux_riscv32) triple=riscv32-unknown-linux-gnu ;;
+        linux_riscv64) triple=riscv64-unknown-linux-gnu ;;
+        linux_mipsel) triple=mipsel-unknown-linux-gnu ;;
+        linux_arm32) triple=armv7-unknown-linux-gnueabihf ;;
+        linux_mips64el) triple=mips64el-unknown-linux-gnuabi64 ;;
     esac
     output="$directory/runtime-$platform.ll"
     if [ "$platform" = windows ]; then

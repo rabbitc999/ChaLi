@@ -133,12 +133,13 @@ $(filter-out $(HOST_BUILD)/runtime_%,$(BIGINT_MODULE_OBJS)): $(HOST_BUILD)/%.o: 
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 RUNTIME_C_SRCS := $(wildcard source/runtime_c/*.c)
 RUNTIME_C_OBJS := $(patsubst source/runtime_c/%.c,$(HOST_BUILD)/runtime_%.o,$(RUNTIME_C_SRCS))
+$(RUNTIME_C_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 $(HOST_BUILD)/runtime_%.o: source/runtime_c/%.c $(CHALI_DEPENDENCY_DIR)/yyjson/src/yyjson.h $(CHALI_DEPENDENCY_DIR)/tomlc17/src/tomlc17.h | $(HOST_BUILD)
 	$(CC) $(CFLAGS) -I$(CHALI_DEPENDENCY_DIR)/yyjson/src -I$(CHALI_DEPENDENCY_DIR)/tomlc17/src -MMD -MP -c $< -o $@
-$(HOST_BUILD)/tomlc17.o: $(CHALI_DEPENDENCY_DIR)/tomlc17/src/chali_tomlc17.c $(CHALI_DEPENDENCY_DIR)/tomlc17/src/tomlc17.h | $(HOST_BUILD)
+$(HOST_BUILD)/tomlc17.o: $(CHALI_DEPENDENCY_DIR)/tomlc17/src/chali_tomlc17.c $(CHALI_DEPENDENCY_DIR)/tomlc17/src/tomlc17.h $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(HOST_BUILD)
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
-$(HOST_BUILD)/yyjson.o: $(CHALI_DEPENDENCY_DIR)/yyjson/src/yyjson.c $(CHALI_DEPENDENCY_DIR)/yyjson/src/yyjson.h | $(HOST_BUILD)
+$(HOST_BUILD)/yyjson.o: $(CHALI_DEPENDENCY_DIR)/yyjson/src/yyjson.c $(CHALI_DEPENDENCY_DIR)/yyjson/src/yyjson.h $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(HOST_BUILD)
 	$(CC) $(CFLAGS) -DYYJSON_DISABLE_FILE=1 -DYYJSON_DISABLE_WRITER=1 -DYYJSON_DISABLE_UTILS=1 -DYYJSON_DISABLE_INCR_READER=1 -DYYJSON_READER_DEPTH_LIMIT=256 -MMD -MP -c $< -o $@
 
 -include $(BIGINT_MODULE_OBJS:.o=.d) $(HOST_BUILD)/bigint.d $(HOST_BUILD)/bigfloat.d
@@ -147,7 +148,7 @@ BIGFLOAT_MATH_OBJS := $(HOST_BUILD)/bigfloat_roots.o $(HOST_BUILD)/bigfloat_tran
 $(BIGFLOAT_MATH_OBJS): $(HOST_BUILD)/%.o: source/bignum/%.cpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I$(CHALI_LIBRARY_DIR)/bignum -c $< -o $@
 
-$(HOST_BUILD)/sqlite3.o: $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.c $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h | $(HOST_BUILD)
+$(HOST_BUILD)/sqlite3.o: $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.c $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(HOST_BUILD)
 	$(CC) $(CFLAGS) -std=c11 -O2 -DSQLITE_THREADSAFE=1 -DSQLITE_OMIT_LOAD_EXTENSION=1 -c $< -o $@
 
 $(VM_LIB): $(VM_OBJS)

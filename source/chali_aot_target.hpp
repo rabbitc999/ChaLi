@@ -34,17 +34,31 @@ bool validBuildOption(const Memory::String &name);
 Memory::String targetMacroName(bool cpu);
 
 /**
- * @brief 一个已经验证的六十四位小端 BUILD 目标。
+ * @brief 一个已登记的小端 BUILD 目标。
  */
 struct TargetInfo
 {
     Memory::String triple;      ///< LLVM 的规范目标三元组。
     Memory::String runtime;     ///< 内嵌的目标运行时 LLVM 模块。
     Memory::String cpu;         ///< 默认 CPU 名称。
+    bool x86 = false;           ///< 使用 32 位 x86 指令集和 ABI。
+    bool riscv64 = false;       ///< 使用 RV64GC 与 LP64D ABI。
+    bool mipsel = false;        ///< 使用小端 MIPS32r2 与 O32 ABI。
     bool windows = false;       ///< 使用 Windows CRT、COFF 和 PE 产物。
     bool arm64 = false;         ///< 使用 AArch64 指令集。
     bool native = false;        ///< 三元组与当前编译器宿主一致。
     Memory::String dataLayout;  ///< 与目标运行时一致的数据布局，用于独立实现兼容检查。
+
+    /** @brief 是否为 RV32GC / ILP32D Linux 目标。 */
+    bool riscv32() const { return triple == "riscv32-unknown-linux-gnu"; }
+    /** @brief 是否使用 RISC-V Linux 硬浮点 ABI。 */
+    bool riscv() const { return riscv64 || riscv32(); }
+    /** @brief 是否为 ARMv7 Linux 硬浮点目标。 */
+    bool arm32() const { return triple == "armv7-unknown-linux-gnueabihf"; }
+    /** @brief 是否为 MIPS64 小端 Linux N64 目标。 */
+    bool mips64el() const { return triple == "mips64el-unknown-linux-gnuabi64"; }
+    /** @brief 目标 C ABI 的指针和 size_t 是否使用 32 位。 */
+    bool pointer32() const { return x86 || mipsel || arm32() || riscv32(); }
 };
 
 /**
@@ -55,7 +69,7 @@ Memory::String hostTarget();
 
 /**
  * @brief 解析受支持的目标，空输入使用宿主目标。
- * @param requested 规范三元组或 linux-x64、linux-arm64、windows-x64 别名。
+ * @param requested 规范三元组或已登记的平台别名。
  * @param target 接收完整目标信息。
  * @param error 接收未知目标诊断，可为空。
  * @return 目标有对应运行时和布局时为 true。

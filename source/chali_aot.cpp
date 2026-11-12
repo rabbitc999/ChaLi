@@ -1068,6 +1068,7 @@ Text abiExtension(const Memory::String &name, const TargetInfo &target)
     if (name == "bool") return target.arm64 ? Text() : Text("zeroext ");
     if (target.windows || target.arm64) return {};
     const auto type = abiType(name);
+    if ((target.riscv64 || target.mips64el()) && type == "i32") return "signext ";
     if (type == "i8" || type == "i16") return name.find("unsigned") != Memory::String::npos ? "zeroext " : "signext ";
     return {};
 }
@@ -1606,7 +1607,8 @@ struct Builder
             const auto content = call("chali_host_string_storage", "i64", { { "i64", "1" }, handle });
             const auto data = call("chali_host_address", "ptr", { content, length });
             const auto stream = call("chali_standard_stream", "ptr", { { "i32", "2" } });
-            const auto written = call("fwrite", "i64", { data, { "i64", "1" }, length, stream });
+            const auto sizeType = state.target.pointer32() ? "i32" : "i64";
+            const auto written = convert(call("fwrite", sizeType, { data, { sizeType, "1" }, convert(length, sizeType), stream }), "i64", true);
             const auto flushed = call("fflush", "i32", { stream });
             const auto shortWrite = instruction("i1", "icmp ne i64 " + written.text + ", " + length.text);
             const auto flushFailed = instruction("i1", "icmp ne i32 " + flushed.text + ", 0");
@@ -1716,14 +1718,16 @@ struct Builder
                         state.printLiterals.push_back(step.second);
                         const auto bytes = instruction("ptr", "getelementptr [" + std::to_string(step.second.size())
                                                                           + " x i8], ptr " + name + ", i64 0, i64 0");
-                        call("fwrite", "i64", { bytes, { "i64", "1" }, { "i64", std::to_string(step.second.size()) }, stream });
+                        const auto sizeType = state.target.pointer32() ? "i32" : "i64";
+                        call("fwrite", sizeType, { bytes, { sizeType, "1" }, { sizeType, std::to_string(step.second.size()) }, stream });
                         continue;
                     }
                     const Value handle = convert(argument(1 + stringIndex++), "i64");
                     const auto length = call("chali_host_string_storage", "i64", { { "i64", "0" }, handle });
                     const auto content = call("chali_host_string_storage", "i64", { { "i64", "1" }, handle });
                     const auto data = call("chali_host_address", "ptr", { content, length });
-                    call("fwrite", "i64", { data, { "i64", "1" }, length, stream });
+                    const auto sizeType = state.target.pointer32() ? "i32" : "i64";
+                    call("fwrite", sizeType, { data, { sizeType, "1" }, convert(length, sizeType), stream });
                 }
                 write(destination, { "i64", "0" });
                 pendingFormatValid = false;
@@ -2575,8 +2579,8 @@ static Memory::String generateLinkedLLVM(Request &request, Memory::Vector<Memory
     out += "]\n";
     emitDataImage(state, out);
 
-    out += "@chali_data_size = constant i64 " + std::to_string(request.dataBytes.size()) + "\n";
-    out += "@chali_heap_size = constant i64 " + std::to_string(request.options.memoryBytes) + "\n";
+    out += "@chali_data_size = constant i64 " + std::to_string(request.dataBytes.size()) + ", align 8\n";
+    out += "@chali_heap_size = constant i64 " + std::to_string(request.options.memoryBytes) + ", align 8\n";
     out += "@chali_allocator_kind = constant i32 " + Text(request.options.allocator == "pool" ? "0" : "1") + "\n";
     std::set<Text> shared;
     Text definitions;
@@ -2941,6 +2945,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     const bool objectOnly = request.options.emitObjectOnly;
     const bool assemblyOnly = request.options.emitAssemblyOnly;
     const bool codeOnly = objectOnly || assemblyOnly;
+    const bool mipsTarget = target.mipsel || target.mips64el();
     if (!codeOnly && !request.options.emitLLVMOnly)
     {
         const auto error = windowsSubsystemError(request.options.subsystem, target.windows && !request.options.shared);
@@ -2963,6 +2968,12 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     if (!request.options.assemblySources.empty() && (codeOnly || request.options.emitLLVMOnly))
     {
         if (diagnostics) diagnostics->push_back("BUILD：--asm 只用于最终链接，不能与 --emit-asm、--emit-obj 或 --emit-llvm 组合");
+        return 1;
+    }
+    if (target.pointer32() && (request.options.memoryBytes > UINT32_MAX ||
+                               request.dataBytes.size() > UINT32_MAX - request.options.memoryBytes))
+    {
+        if (diagnostics) diagnostics->push_back("BUILD：静态数据与堆容量之和超出 32 位目标的地址范围");
         return 1;
     }
     Memory::String header;
@@ -3064,8 +3075,11 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     {
         const auto cpu = quote(textOf(request.options.cpu));
         if (cpu.empty()) return 1;
-        command += Text(target.arm64 ? " -mcpu=" : " -march=") + cpu;
+        command += Text(target.arm64 || target.arm32() || target.riscv() ? " -mcpu=" : " -march=") + cpu;
     }
+    if (target.riscv()) command += target.riscv32() ? " -march=rv32gc -mabi=ilp32d" : " -march=rv64gc -mabi=lp64d";
+    if (target.mipsel) command += " -mabi=o32";
+    if (target.mips64el()) command += " -mabi=n64";
     command += (request.options.debug && !request.options.debugOptimized) ? " -O0 " : " -O3 ";
     if (request.options.debug) command += "-g -gdwarf-4 ";
     command += "-Wno-override-module ";
@@ -3076,12 +3090,19 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     else
     {
         command += "-fuse-ld=lld -Wl,--gc-sections ";
+        if (mipsTarget)
+        {
+            // GNU MIPS 的异常帧含绝对重定位，验证通过的可执行文件使用非 PIE 与普通对象链接。
+            if (!request.options.shared) command += "-no-pie ";
+            command += "-Wl,-z,now ";
+        }
         if (!request.options.subsystem.empty())
             command += request.options.subsystem == "windows" ? "-mwindows " : "-mconsole ";
-        if (request.options.lto)
+        if (request.options.lto && !mipsTarget)
         {
             command += request.options.thinLto ? "-flto=thin " : "-flto=full ";
             if (request.options.thinLto) command += "-fno-split-lto-unit ";
+            if (target.riscv()) command += "-Xlinker --mllvm=-mattr=+m,+a,+f,+d,+c ";
             command += (request.options.debug && !request.options.debugOptimized) ? "-Wl,--lto-O0 " : "-Wl,--lto-O3 ";
         }
         if (!request.options.debug)
@@ -3108,7 +3129,13 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
             if (request.options.runtimeDirectory.empty())
                 for (const char *name : { "gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a" }) command += quote((runtimeDirectory / name).generic_u8string()) + " ";
         }
-        else command += " -pthread -lm -ldl ";
+        else
+        {
+            command += " -pthread -lm -ldl ";
+            if (target.mipsel || target.riscv32()) command += "-l:libatomic.so.1 ";
+            if (mipsTarget && std::filesystem::is_regular_file(runtimeDirectory / "requires-execstack"))
+                command += "-Wl,-z,execstack ";
+        }
         // linked 包含按实际使用恢复的原生归档；原始 request 不含这些链接输入。
         for (const auto &library : linked.options.linkLibraries)
         {
