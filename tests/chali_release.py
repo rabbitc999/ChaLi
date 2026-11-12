@@ -73,8 +73,9 @@ class ReleaseTests(unittest.TestCase):
             (root / 'doc/book/latex/book.pdf').write_bytes(b'%PDF-1.7\n')
             for name in ('VERSION', 'LICENSE', 'NOTICE', 'CHANGELOG.md'):
                 (root / name).write_text('0.21.0', encoding='utf-8')
-            for name in ('miniz', 'ipage', 'caspp'):
-                directory = root / ('licenses' if name == 'miniz' else 'library') / name
+            license_names = ('miniz', 'ipage', 'caspp', 'yyjson', 'tomlc17', 'raylib', 'raygui', 'expat')
+            for name in license_names:
+                directory = root / ('library' if name in ('ipage', 'caspp') else 'licenses') / name
                 directory.mkdir(parents=True)
                 (directory / 'LICENSE').write_text('fixture license: ' + name, encoding='utf-8')
             for name in release.SAMPLES:
@@ -94,7 +95,7 @@ class ReleaseTests(unittest.TestCase):
                 self.assertEqual(packed.read('ChaLi.exe'), b'compiler')
                 self.assertIn('examples/any_generics.chl', packed.namelist())
                 self.assertIn('NOTICE', packed.namelist())
-                for name in ('miniz', 'ipage', 'caspp'):
+                for name in license_names:
                     self.assertEqual(packed.read('licenses/' + name + '/LICENSE'), ('fixture license: ' + name).encode())
             for line in (output / 'SHA256SUMS.txt').read_text().splitlines():
                 digest, name = line.split('  ', 1)
