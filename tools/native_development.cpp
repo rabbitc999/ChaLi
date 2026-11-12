@@ -4842,6 +4842,7 @@ class Server
                     const std::string plain = builtin;
                     out.push_back(object({ { "label", "$" + plain },
                                            { "insertText", (starts(name, "$") ? "" : "$") + plain },
+                                           { "filterText", plain },
                                            { "kind", 3 },
                                            { "detail", "$" + plain + "<T>()" },
                                            { "documentation", markup("具体类型的编译期只读元数据；仅接受一个显式类型实参") } }));
@@ -4876,11 +4877,12 @@ class Server
                                   { "kind", completionKind(r) },
                                   { "detail", r.signature },
                                   { "documentation", markup(r.documentation) } });
+                if (dollarMacro) (*item.asObject())["filterText"] = plain;
                 if (qualifiedName && aliasTarget.empty())
                     addImport(item, r.module);
                 out.push_back(item);
             }
-            if (qualifiedName)
+            if (qualifiedName && !macroCompletion)
                 for (auto &r : standard)
                     if (r.module == receiver && !r.owner.empty())
                         ownerTypes.insert(r.owner.substr(0, r.owner.find("::")));
@@ -4915,12 +4917,16 @@ class Server
                 out.clear();
             else if (qualifiedName)
                 prefix = receiver + "::";
-            if (!member && !macroCompletion)
+            if (!member && (!macroCompletion || qualifiedName))
             {
                 auto split = prefix.rfind("::");
                 auto base = split == prefix.npos ? "" : prefix.substr(0, split + 2);
                 std::set<std::string> choices;
-                for (auto &m : modules)
+                std::set<std::string> macroModules;
+                if (macroCompletion)
+                    for (const auto &record : records)
+                        if (record.kind == "macro") macroModules.insert(record.module);
+                for (const auto &m : macroCompletion ? macroModules : modules)
                     if (starts(m, prefix) && m.size() > base.size())
                         choices.insert(m.substr(
                             base.size(), m.find("::", base.size()) == m.npos ? m.size() - base.size() : m.find("::", base.size()) - base.size()));
@@ -5006,7 +5012,7 @@ class Server
         }
         const bool callSite = callStart < s.size() && s[callStart] == '(';
         std::string macroCounter;
-        if (starts(token->word, "$") && method == "textDocument/hover" && callStart < s.size() && chali_syntax::groupClose(s[callStart]))
+        if (starts(name, "$") && method == "textDocument/hover" && callStart < s.size() && chali_syntax::groupClose(s[callStart]))
         {
             size_t end = callStart, next = callStart;
             for (;;)
@@ -5030,17 +5036,14 @@ class Server
                         macroCounter = label.substr(0, counter + 1) + "\n\n";
                         label.erase(0, counter + 2);
                     }
-                    entries.clear();
-                    for (const auto &record : records)
-                        if (record.kind == "macro" && record.signature == label)
-                        {
-                            entries.push_back(record);
-                            break;
-                        }
+                    const auto selected = std::find_if(entries.begin(), entries.end(), [&](const Record &record) {
+                        return record.kind == "macro" && record.signature == label;
+                    });
+                    if (selected != entries.end()) entries = { *selected };
                 }
             }
         }
-        if (callSite && !starts(token->word, "$") && method == "textDocument/hover")
+        if (callSite && !starts(name, "$") && method == "textDocument/hover")
         {
             Memory::Vector<Memory::String> arguments;
             size_t end = callStart;

@@ -28,6 +28,7 @@ J lspMacroSignature(const std::string &text, size_t cursor, const std::vector<Re
         }
         A signatures, allGroups;
         std::vector<bool> compatible;
+        std::set<std::pair<std::string, std::string>> seen;
         for (const auto &record : records)
         {
             if (record.kind != "macro" || (record.name != name && record.qualified != name) || (!starts(record.signature, "$macro") && !starts(record.signature, "$replace"))) continue;
@@ -121,7 +122,7 @@ J lspMacroSignature(const std::string &text, size_t cursor, const std::vector<Re
                 at = end;
                 if (!closed) break;
             }
-            if (!hit) continue;
+            if (!hit || !seen.emplace(record.qualified, record.signature).second) continue;
             signatures.push_back(object({ { "label", record.signature }, { "documentation", object({ { "kind", "markdown" }, { "value", description } }) }, { "parameters", parameters }, { "activeParameter", int(active) } }));
             allGroups.push_back(details);
             compatible.push_back(accepts);

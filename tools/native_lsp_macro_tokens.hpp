@@ -26,6 +26,23 @@ std::map<size_t, LspMacroToken> lspMacroTokens(const std::string &text, const st
     {
         const auto &token = tokens[i];
         const auto &word = token.word;
+        if (starts(word, "$") && identifier(word.substr(1)) && i + 2 < tokens.size() &&
+            tokens[i + 1].word == "::" && tokens[i + 1].a == token.b &&
+            tokens[i + 2].a == tokens[i + 1].b && identifier(tokens[i + 2].word))
+        {
+            size_t part = i;
+            do
+            {
+                result[tokens[part].a] = { tokens[part].b, 0, 0 };
+                part += 2;
+            }
+            while (part + 2 < tokens.size() && tokens[part + 1].word == "::" &&
+                   tokens[part + 1].a == tokens[part].b && tokens[part + 2].a == tokens[part + 1].b &&
+                   identifier(tokens[part + 2].word));
+            result[tokens[part].a] = { tokens[part].b, 6, 0 };
+            i = part;
+            continue;
+        }
         const auto newline = directives.count(word) ? text.rfind('\n', token.a) : token.a;
         const bool leading = directives.count(word) && trim(text.substr(newline == text.npos ? 0 : newline + 1, token.a - (newline == text.npos ? 0 : newline + 1))).empty();
         if (word == "$macro" && leading)

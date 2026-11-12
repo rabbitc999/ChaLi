@@ -39,6 +39,8 @@ fs.writeFileSync(path.join(workspace, '.vscode/settings.json'), JSON.stringify({
   ...(llvmPath ? { 'chali.build.llvmPath': llvmPath } : {}),
   'update.mode': 'none', 'extensions.autoUpdate': false,
 }));
+const startupFile = path.join(workspace, 'first-open.chl');
+fs.writeFileSync(startupFile, 'import std::macro;\nvoid main() { bool same = $std::macro::Equal<int64>(1, 1); }\n');
 const env = { ...process.env, TMPDIR: path.join(root, 'tmp'), TMP: path.join(root, 'tmp'), TEMP: path.join(root, 'tmp'),
   CHALI_EXTENSION_TEST_WORK: work, CHALI_BIN: compiler };
 if (llvmPath) env.CHALI_LLVM_CLANG = llvmPath;
@@ -49,7 +51,7 @@ async function main() {
   '--wait', '--disable-gpu', '--disable-extensions', '--skip-welcome', '--skip-release-notes',
   '--disable-workspace-trust', '--user-data-dir=' + path.join(work, 'user'), '--extensions-dir=' + path.join(work, 'extensions'),
   '--extensionDevelopmentPath=' + extension,
-  '--extensionTestsPath=' + path.join(root, 'vscode/test/extensionHost.js'), workspace],
+  '--extensionTestsPath=' + path.join(root, 'vscode/test/extensionHost.js'), workspace, startupFile],
   { cwd: root, env, windowsHide: true, detached: process.platform !== 'win32' });
   let output = '', failure;
   const stop = error => { failure ||= error; void stopProcessTree(child).catch(cleanup => { failure ||= cleanup; }); };

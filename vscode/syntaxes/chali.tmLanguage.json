@@ -96,6 +96,15 @@
           }
         },
         {
+          "name": "meta.function-call.macro.chali",
+          "match": "(\\$)((?:[A-Za-z_][A-Za-z0-9_]*::)+)([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": { "name": "punctuation.definition.variable.chali" },
+            "2": { "name": "entity.name.namespace.chali" },
+            "3": { "name": "entity.name.function.macro.chali" }
+          }
+        },
+        {
           "name": "keyword.control.macro.chali",
           "match": "\\$(?:end_macro|end_for|let|if|elif|else_if|implement|end_if|match|regex|else|end_match|end_regex)\\b"
         },
@@ -110,6 +119,10 @@
         {
           "name": "variable.language.chali",
           "match": "\\$(?:line|file|module|concat|stringify|fields|variants|methods|interfaces|member|compile_assert|compile_error|argc|count|typecheck)\\b"
+        },
+        {
+          "name": "entity.name.function.macro.chali",
+          "match": "\\$[A-Za-z_][A-Za-z0-9_]*(?=\\s*[<({\\[])"
         },
         {
           "name": "keyword.control.chali",

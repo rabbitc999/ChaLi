@@ -109,6 +109,36 @@ exports.run = async function () {
   const vscode = require('vscode');
   const work = process.env.CHALI_EXTENSION_TEST_WORK;
   const folder = vscode.workspace.workspaceFolders[0];
+  const startupUri = vscode.Uri.joinPath(folder.uri, 'first-open.chl');
+  const startupDocument = await vscode.workspace.openTextDocument(startupUri);
+  await vscode.window.showTextDocument(startupDocument);
+  const startupLine = startupDocument.lineAt(1).text;
+  const macroColumn = startupLine.indexOf('Equal');
+  const hoverPosition = new vscode.Position(1, macroColumn + 1);
+  await bounded((async () => {
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const tokens = await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', startupUri);
+      let line = 0;
+      let column = 0;
+      for (let i = 0; i < (tokens?.data.length || 0); i += 5) {
+        column = tokens.data[i] ? tokens.data[i + 1] : column + tokens.data[i + 1];
+        line += tokens.data[i];
+        if (line === 1 && column === macroColumn && tokens.data[i + 2] === 'Equal'.length && tokens.data[i + 3] === 6) return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    assert.fail('首次打开文档时限定宏的语义高亮未就绪');
+  })(), '首次打开语义高亮');
+  assert.equal(startupDocument.isDirty, false);
+  const hovers = await vscode.commands.executeCommand('vscode.executeHoverProvider', startupUri, hoverPosition);
+  assert(hovers?.some(hover => hover.contents.some(content => content.value?.includes('$Equal'))));
+  const completions = await vscode.commands.executeCommand('vscode.executeCompletionItemProvider',
+    startupUri, new vscode.Position(1, macroColumn + 2));
+  assert(completions?.items.some(item => item.label === '$Equal' && item.insertText === 'Equal' && item.filterText === 'Equal'));
+  const argumentsColumn = startupLine.lastIndexOf(',') + 2;
+  const signature = await vscode.commands.executeCommand('vscode.executeSignatureHelpProvider',
+    startupUri, new vscode.Position(1, argumentsColumn));
+  assert(signature?.signatures.some(item => item.label.includes('$Equal')));
   const extension = vscode.extensions.getExtension('rabbitc999.chali-editor');
   assert(extension); await extension.activate(); assert(extension.isActive);
   const commands = await vscode.commands.getCommands(true);

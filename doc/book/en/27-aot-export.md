@@ -149,6 +149,22 @@ The exported program is `build/counter.exe` on Windows and `build/counter` on Li
 
 Cross compilation needs a target triple, CPU/features, ABI, sysroot, linker, runtime libraries and startup assets. Store supported settings in toml using the exact keys and override rules in the [LLVM build reference](../../en/38-build.md). Do not link host libraries into the target.
 
+VS Code’s **ChaLi: Select Project Target** reads the compiler’s target list and saves the selection in `[build].target`. The CLI accepts the same aliases and triples. All targets in this table are little-endian.
+
+| Alias | LLVM triple | Target ABI |
+| --- | --- | --- |
+| `windows-x64` | `x86_64-w64-windows-gnu` | Windows x64 |
+| `linux-x64` | `x86_64-unknown-linux-gnu` | Linux x86-64 |
+| `linux-x86` | `i686-unknown-linux-gnu` | Linux i686 |
+| `linux-arm32` | `armv7-unknown-linux-gnueabihf` | ARMv7-A hard-float |
+| `linux-arm64` | `aarch64-unknown-linux-gnu` | AArch64 |
+| `linux-riscv32` | `riscv32-unknown-linux-gnu` | RV32GC / ILP32D |
+| `linux-riscv64` | `riscv64-unknown-linux-gnu` | RV64GC / LP64D |
+| `linux-mipsel` | `mipsel-unknown-linux-gnu` | MIPS32r2 / O32 |
+| `linux-mips64el` | `mips64el-unknown-linux-gnuabi64` | MIPS64r2 / N64 |
+
+Choose object output to verify the architecture first. For an executable, prepare the matching GNU Linux SDK with `tools/build_cross_runtime.sh` and configure `sysroot`, `runtime_dir` and clang/LLD with the target backend. MIPS executables use non-PIE linking with LTO disabled. MIPS32 and RV32 require `libatomic.so.1` on the target.
+
 ```toml
 [build]
 target = "aarch64-unknown-linux-gnu"

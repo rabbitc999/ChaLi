@@ -77,6 +77,20 @@ async function main() {
   assert(interfaces[1][0].scopes.includes('keyword.control.macro.chali'));
   assert(interfaces[2][0].scopes.includes('keyword.control.macro.chali'));
   assert(interfaces[3][0].scopes.includes('comment.line.double-slash.chali'));
+  const qualified = '$std::macro::Equal<T>(left, right)';
+  const calls = tokenize([qualified, '// ' + qualified, '"' + qualified + '"',
+    '$macro forward<T>() -> expr', qualified, '$end_macro']);
+  for (const line of [0, 4]) {
+    const at = (name) => calls[line].find(token => token.startIndex <= qualified.indexOf(name)
+      && qualified.indexOf(name) < token.endIndex).scopes;
+    assert(at('$').includes('punctuation.definition.variable.chali'));
+    assert(at('std').includes('entity.name.namespace.chali'));
+    assert(at('macro').includes('entity.name.namespace.chali'));
+    assert(at('Equal').includes('entity.name.function.macro.chali'));
+  }
+  for (const line of [1, 2]) {
+    assert(!calls[line].some(token => token.scopes.includes('entity.name.function.macro.chali')));
+  }
   registry.dispose();
   console.log('真实 TextMate 宏头、独立宏体、两组循环、卫生局部变量、字符串/注释保护与结束恢复高亮通过。');
 }

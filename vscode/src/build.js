@@ -106,6 +106,7 @@ function registerBuild(vscode, context, deps) {
       const product = prefix + (format === 'assembly' ? '.s' : format === 'object' ? '.o' : format === 'llvm' ? '.ll' : (project ? project.windows : process.platform === 'win32') ? '.exe' : '');
       output.show(true);
       output.appendLine(text(`编译器：${compiler}\n源文件：${selected.fsPath}\n产物：${product}`, `Compiler: ${compiler}\nSource: ${selected.fsPath}\nOutput: ${product}`));
+      if (project?.target) output.appendLine(text(`目标：${project.target}`, `Target: ${project.target}`));
       await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification,
         title: text('ChaLi：发布构建', 'ChaLi: Release build'), cancellable: false },
       () => runBuild(compiler, args, cwd, (chunk) => output.append(chunk), language));

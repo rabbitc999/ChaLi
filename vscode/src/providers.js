@@ -168,7 +168,7 @@ function registerProviders(context, deps) {
     try {
       const version = document && document.version;
       const result = await client.request(method, params, token);
-      if ((token && token.isCancellationRequested) || (document && document.version !== version)) return null;
+      if (client !== usableClient() || (token && token.isCancellationRequested) || (document && document.version !== version)) return null;
       return result;
     } catch (error) {
       if (error.code === -32800 || error.code === -32801) return null;
@@ -213,18 +213,21 @@ function registerProviders(context, deps) {
     return result;
   }));
 
-  context.subscriptions.push(
+  const semanticTokensChanged = new vscode.EventEmitter();
+  context.subscriptions.push(semanticTokensChanged,
     vscode.languages.registerDocumentSemanticTokensProvider(SELECTOR, {
+      onDidChangeSemanticTokens: semanticTokensChanged.event,
       /**
        * 将服务端 UTF-16 语义 token 转交编辑器，由主题区分类型、变量和其他角色。
        * @param {vscode.TextDocument} document 当前文档。
        * @returns {Promise<vscode.SemanticTokens>} 语义着色数据。
        */
       provideDocumentSemanticTokens: async (document, token) => {
+        deps.flushDocument?.(document);
         const result = await request('textDocument/semanticTokens/full', {
           textDocument: { uri: document.uri.toString() },
         }, token, document);
-        return new vscode.SemanticTokens(new Uint32Array((result && result.data) || []));
+        return result ? new vscode.SemanticTokens(new Uint32Array(result.data)) : null;
       },
     }, new vscode.SemanticTokensLegend(
       ['namespace', 'type', 'typeParameter', 'parameter', 'variable', 'property', 'function',
@@ -272,6 +275,7 @@ function registerProviders(context, deps) {
          * @returns {Promise<vscode.CompletionItem[]>} 候选列表。
          */
         provideCompletionItems: async (document, position, token) => {
+          deps.flushDocument?.(document);
           const result = await request('textDocument/completion', {
             textDocument: { uri: document.uri.toString() },
             position: { line: position.line, character: position.character },
@@ -281,6 +285,7 @@ function registerProviders(context, deps) {
             const completion = new vscode.CompletionItem(item.label, toCompletionKind(item.kind));
             if (item.detail) completion.detail = item.detail;
             completion.insertText = item.insertText || item.label;
+            if (item.filterText) completion.filterText = item.filterText;
             completion.additionalTextEdits = (item.additionalTextEdits || []).map((edit) => new vscode.TextEdit(toRange(edit.range), edit.newText));
             if (item.documentation && item.documentation.value) {
               completion.documentation = new vscode.MarkdownString(item.documentation.value);
@@ -292,6 +297,7 @@ function registerProviders(context, deps) {
       // 与服务器声明的 triggerCharacters 对齐（`::` / 成员访问会用到）。
       ':',
       '.',
+      '$',
     ),
 
     vscode.languages.registerSignatureHelpProvider(SELECTOR, {
@@ -447,6 +453,7 @@ function registerProviders(context, deps) {
       },
     }),
   );
+  return () => semanticTokensChanged.fire();
 }
 
 module.exports = {

@@ -131,8 +131,27 @@ async function main() {
       const assembly = fs.readFileSync(prefix + '.s', 'utf8');
       assert.ok(assembly.includes('.text') && !assembly.includes('target triple ='));
 
+      const targets = [
+        ['linux-x86', 1, 3], ['linux-arm32', 1, 40],
+        ['linux-riscv32', 1, 243], ['linux-riscv64', 2, 243],
+        ['linux-mipsel', 1, 8], ['linux-mips64el', 2, 8],
+      ];
+      for (const [target, elfClass, machine] of targets) {
+        manifest.text = '[build]\ntarget="' + target + '"\noutput="object"\n';
+        manifest.isDirty = true;
+        fs.unlinkSync(prefix + '.o');
+        await commands.get('chali.build')(uri(source));
+        assert.equal(errors.length, 3, errors.join('\n'));
+        const header = fs.readFileSync(prefix + '.o');
+        assert.equal(header.subarray(0, 4).toString('hex'), '7f454c46', target);
+        assert.equal(header[4], elfClass, target);
+        assert.equal(header[5], 1, target);
+        assert.equal(header.readUInt16LE(18), machine, target);
+      }
+      assert.equal(configSaved, 3 + targets.length);
+
     } finally { await client.stop(); }
-    console.log('VS Code 构建：原生产物、配置保存、ARM64 对象、LLVM IR、错误输出模式及既有交互通过');
+    console.log('VS Code 构建：原生产物、配置保存、七种 Linux 目标对象、LLVM IR、错误输出模式及既有交互通过');
   } finally {
     for (const item of context.subscriptions) item.dispose();
     fs.rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });

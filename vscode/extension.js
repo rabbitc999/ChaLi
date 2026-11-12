@@ -33,6 +33,7 @@ const { registerDebugger } = require('./src/debugger');
 let client = null;
 let standardSources = null;
 let projectTools = null;
+let refreshSemanticTokens = null;
 let serverLifecycle = null;
 
 /** 上一次「运行」开的终端（同一时刻只留一个）。 */
@@ -70,7 +71,7 @@ function activate(context) {
   context.subscriptions.push(outputChannel, diagnosticCollection, statusItem);
 
   // 1. 语言能力：诊断由服务器推送，其余按需请求。
-  providers.registerProviders(context, { getClient: () => client, logLine, flushDocument: notifyChange });
+  refreshSemanticTokens = providers.registerProviders(context, { getClient: () => client, logLine, flushDocument: notifyChange });
   standardSources = registerStandardSources(vscode, context, { getClient: () => client });
 
   // 2. 文档同步。
@@ -278,6 +279,7 @@ async function startServerNow(context) {
   for (const document of vscode.workspace.textDocuments) {
     if (document.languageId === providers.LANGUAGE_ID) notifyOpen(document);
   }
+  refreshSemanticTokens?.();
   void context;
 }
 
@@ -347,6 +349,10 @@ function notifyChange(document, changes) {
   if (!client || !client.running || ['chali-expanded', 'chali-stdlib'].includes(document.uri.scheme)) return;
   const key = document.uri.toString();
   const previous = documentVersions.get(key);
+  if (previous === undefined) {
+    notifyOpen(document);
+    return;
+  }
   const version = typeof document.version === 'number' ? document.version : (previous || 1) + 1;
   if (previous === version) return;
   documentVersions.set(key, version);
