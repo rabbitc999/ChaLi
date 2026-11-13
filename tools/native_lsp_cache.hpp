@@ -278,7 +278,7 @@ public:
         std::error_code ec;
         const auto modified = fs::last_write_time(compiler, ec).time_since_epoch().count();
         const auto size = fs::file_size(compiler, ec);
-        stamp_ = lspHash(compiler.u8string() + std::to_string(modified) + ":" + std::to_string(ec ? 0 : size) + __DATE__ + __TIME__);
+        stamp_ = lspHash(compiler.u8string() + std::to_string(static_cast<long long>(modified)) + ":" + std::to_string(ec ? 0 : size) + __DATE__ + __TIME__);
         const auto config = compiler.parent_path() / "compiler.toml";
         if (!fs::is_regular_file(config, ec)) return;
         try

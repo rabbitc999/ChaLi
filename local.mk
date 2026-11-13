@@ -88,11 +88,11 @@ $(FRONTEND_BUILD)/chali_main.o $(FRONTEND_BUILD)/chali_tool.o $(FRONTEND_BUILD)/
 
 $(FRONTEND_BUILD)/chali_tool.o: source/chali_tool.cpp source/chali_package.hpp tools/abi_import.hpp source/generator/generator_cli.hpp \
         source/chali_runtime_allocator.hpp source/allocator/chali_allocator.hpp
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 
 $(FRONTEND_BUILD)/generator_cli.o: source/generator/generator_cli.cpp source/generator/generator_cli.hpp \
         source/template/engine.hpp source/chali_runtime_allocator.hpp
-	$(CXX) $(CXXFLAGS) -MMD -MP -DCHALI_GENERATOR_NO_MAIN=1 -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -DCHALI_GENERATOR_NO_MAIN=1 -iquote . -c $< -o $@
 
 # 注意顺序：libparser.a 引用了 ast / stackvm 的符号，必须排在它们前面。
 # 直通 ABI 桥接在宿主胶水库里引用 VM 核心的上下文与堆接口，两者互相引用，
@@ -159,16 +159,16 @@ $(VM_LIB): $(VM_OBJS)
 CHALI_STANDARD_SRCS := $(wildcard source/abi/std_*.cpp)
 CHALI_STANDARD_OBJS := $(patsubst source/abi/%.cpp,$(HOST_BUILD)/%.o,$(CHALI_STANDARD_SRCS))
 $(HOST_BUILD)/std_%.o: source/abi/std_%.cpp | $(HOST_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(HOST_BUILD)/abi_abi_cas.o: private CXXFLAGS += -Ilibrary/caspp/include
 $(HOST_BUILD)/lztext_kernel.o: source/lztext/lztext.cpp source/lztext/lztext.hpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(HOST_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(HOST_BUILD)/json.o: source/json/json.cpp | $(HOST_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(HOST_BUILD)/toml.o: source/toml/toml.cpp | $(HOST_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(HOST_BUILD)/toml_source.o: source/toml/toml_source.cpp | $(HOST_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(CHALI_STANDARD_OBJS) $(HOST_BUILD)/json.o $(HOST_BUILD)/toml.o $(HOST_BUILD)/toml_source.o: $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 -include $(wildcard $(HOST_BUILD)/*.d)
 
@@ -182,7 +182,7 @@ $(CAS_BUILD)/%.o: library/caspp/%.c
 $(CAS_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
 $(HOST_BUILD)/ipage_%.o: library/ipage/source/ipage/%.cpp | $(HOST_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(IPAGE_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
 # 直通 ABI：C 胶水按模块分文件编译，命名沿用 abi_*.c。
@@ -193,7 +193,7 @@ CHALI_ABI_OBJS := $(patsubst source/abi/%.c,$(HOST_BUILD)/abi_%.o,$(CHALI_ABI_C_
 $(HOST_BUILD)/abi_%.o: source/abi/%.c | $(HOST_BUILD)
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 $(HOST_BUILD)/abi_%.o: source/abi/%.cpp | $(HOST_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(CHALI_ABI_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 $(HOST_BUILD)/abi_abi_sql.o: $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h
 
@@ -252,9 +252,9 @@ EMBEDDED_LSP_BUILD := $(CHALI_BUILD_ROOT)/chali-embedded-lsp
 $(EMBEDDED_LSP_BUILD):
 	$(CHALI_RUNTIME_MKDIR)
 $(EMBEDDED_LSP_BUILD)/macro_analyzer.o: $(LSP_DIR)/macro_analyzer.cpp $(LSP_DIR)/macro_analyzer.hpp $(LSP_LIB_DIR)/protocol_types.hpp source/macro/signature.hpp source/syntax/source_text.hpp | $(EMBEDDED_LSP_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(EMBEDDED_LSP_BUILD)/language_server.o: $(LSP_DIR)/language_server.cpp $(LSP_DIR)/language_server.hpp $(LSP_DIR)/macro_analyzer.hpp source/json/json.hpp | $(EMBEDDED_LSP_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 CHALI_LSP_OBJS := $(EMBEDDED_LSP_BUILD)/macro_analyzer.o $(EMBEDDED_LSP_BUILD)/language_server.o
 DEMO_OBJS += $(CHALI_LSP_OBJS)
 $(TARGET): $(CHALI_LSP_OBJS)
@@ -277,7 +277,7 @@ $(TARGET): $(CHALI_NATIVE_DEVELOPMENT)
 $(CHALI_BUILD_ROOT)/chali-native: | tmp
 	$(CHALI_RUNTIME_MKDIR)
 $(CHALI_NATIVE_DEVELOPMENT): tools/native_development.cpp tools/native_development.hpp source/syntax/source_text.hpp source/chali_module.hpp source/chali_stdlib.hpp source/chali_package.hpp $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json | $(CHALI_BUILD_ROOT)/chali-native
-	$(CXX) $(CXXFLAGS) -MMD -MP -MF $(CHALI_BUILD_ROOT)/chali-native-development.d -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -MF $(CHALI_BUILD_ROOT)/chali-native-development.d -iquote . -c $< -o $@
 -include $(CHALI_BUILD_ROOT)/chali-native-development.d
 $(CHALI_NATIVE_DEVELOPMENT): source/chali_i18n.hpp source/console/utf8.hpp
 $(FRONTEND_BUILD)/chali_tool.o: tools/native_development.hpp
@@ -300,7 +300,7 @@ CHALI_FRONTEND_MODULE_OBJS := $(addprefix $(FRONTEND_BUILD)/,$(addsuffix .o,$(CH
 LIB_OBJS += $(CHALI_FRONTEND_MODULE_OBJS)
 $(LIB): $(CHALI_FRONTEND_MODULE_OBJS)
 $(CHALI_FRONTEND_MODULE_OBJS): $(FRONTEND_BUILD)/%.o: source/%.cpp | $(FRONTEND_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(CHALI_FRONTEND_MODULE_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 -include $(wildcard $(FRONTEND_BUILD)/*.d)
 
@@ -357,27 +357,27 @@ CHALI_MACRO_OBJS := $(addprefix $(FRONTEND_BUILD)/macro_,$(addsuffix .o,$(CHALI_
 LIB_OBJS += $(CHALI_MACRO_OBJS)
 $(LIB): $(CHALI_MACRO_OBJS)
 $(CHALI_MACRO_OBJS): $(FRONTEND_BUILD)/macro_%.o: source/macro/%.cpp | $(FRONTEND_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(CHALI_MACRO_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
 CHALI_LITERAL_OBJ := $(FRONTEND_BUILD)/string_escape.o
 LIB_OBJS += $(CHALI_LITERAL_OBJ)
 $(LIB): $(CHALI_LITERAL_OBJ)
 $(CHALI_LITERAL_OBJ): source/literals/string_escape.cpp source/literals/string_escape.hpp | $(FRONTEND_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 
 CHALI_EDITOR_ANALYSIS_OBJ := $(FRONTEND_BUILD)/compiler_analysis.o
 LIB_OBJS += $(CHALI_EDITOR_ANALYSIS_OBJ)
 $(LIB): $(CHALI_EDITOR_ANALYSIS_OBJ)
 $(CHALI_EDITOR_ANALYSIS_OBJ): source/editor/compiler_analysis.cpp source/editor/compiler_analysis.hpp | $(FRONTEND_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 
 CHALI_SYNTAX_MODULES := source_text constant_expression
 CHALI_SYNTAX_OBJS := $(addprefix $(FRONTEND_BUILD)/syntax_,$(addsuffix .o,$(CHALI_SYNTAX_MODULES)))
 LIB_OBJS += $(CHALI_SYNTAX_OBJS)
 $(LIB): $(CHALI_SYNTAX_OBJS)
 $(CHALI_SYNTAX_OBJS): $(FRONTEND_BUILD)/syntax_%.o: source/syntax/%.cpp | $(FRONTEND_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(CHALI_LITERAL_OBJ): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
 CHALI_EMBED_SOURCE := $(FRONTEND_BUILD)/chali_stdlib_embedded.cpp
@@ -385,7 +385,7 @@ CHALI_STDLIB_OBJ := $(FRONTEND_BUILD)/chali_stdlib_embedded.o
 LIB_OBJS += $(CHALI_STDLIB_OBJ)
 $(LIB): $(CHALI_STDLIB_OBJ)
 $(CHALI_STDLIB_OBJ): $(CHALI_EMBED_SOURCE) source/chali_stdlib.hpp | $(FRONTEND_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(CHALI_STDLIB_OBJ): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
 
 -include $(wildcard $(EMBEDDED_LSP_BUILD)/*.d)
@@ -432,5 +432,5 @@ CHALI_PRECOMPILED_OBJ := $(FRONTEND_BUILD)/chali_precompiled.o
 LIB_OBJS += $(CHALI_PRECOMPILED_OBJ)
 $(LIB): $(CHALI_PRECOMPILED_OBJ)
 $(CHALI_PRECOMPILED_OBJ): source/chali_precompiled.cpp source/chali_precompiled.hpp source/chali_ast.hpp source/chali_incremental.hpp source/chali_package.hpp source/chali_i18n.hpp $(wildcard source/chali_precompiled_data.inc) | $(FRONTEND_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 $(FRONTEND_BUILD)/chali_main.o: source/chali_precompiled.hpp

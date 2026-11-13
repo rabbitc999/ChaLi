@@ -2791,7 +2791,7 @@ fs::path extract(std::string data, const fs::path &destination)
         auto p = fs::u8path(name);
         if (name.empty() || name[0] == '/' || name.find(':') != name.npos || name.find('\0') != name.npos)
             throw std::runtime_error("在线依赖包含不安全路径：" + name);
-        for (auto &part : p)
+        for (const auto &part : p)
             if (part == "..")
                 throw std::runtime_error("在线依赖包含不安全路径：" + name);
         if (++count > 10000 || content.size() > unpackLimit - total)

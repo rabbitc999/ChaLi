@@ -790,11 +790,11 @@ void chali_host_trace()
         std::fprintf(stderr, CHALI_RUNTIME_TEXT("出错位置：%s:%lld%s%s%s\n"), file, static_cast<long long>(line), name ? "（" : "", name ? name : "", name ? "）" : "");
     void *frames[96];
     std::size_t count = 0;
-#ifdef _WIN32
+#if defined(_WIN64)
     const auto module = GetModuleHandleW(L"ntdll.dll");
     using Capture = USHORT(WINAPI *)(ULONG, ULONG, PVOID *, PULONG);
-    using Lookup = PRUNTIME_FUNCTION(WINAPI *)(DWORD64, PDWORD64, PUNWIND_HISTORY_TABLE);
     const auto capture = module ? reinterpret_cast<Capture>(GetProcAddress(module, "RtlCaptureStackBackTrace")) : nullptr;
+    using Lookup = PRUNTIME_FUNCTION(WINAPI *)(DWORD64, PDWORD64, PUNWIND_HISTORY_TABLE);
     const auto lookup = module ? reinterpret_cast<Lookup>(GetProcAddress(module, "RtlLookupFunctionEntry")) : nullptr;
     if (capture && lookup) count = capture(0, 96, frames, nullptr);
 #elif defined(__linux__)
@@ -811,7 +811,7 @@ void chali_host_trace()
     {
         const auto pc = reinterpret_cast<std::uintptr_t>(frames[frame]) - 1;
         const void *start = nullptr;
-#ifdef _WIN32
+#if defined(_WIN64)
         DWORD64 base = 0;
         if (const auto *entry = lookup(static_cast<DWORD64>(pc), &base, nullptr))
             start = reinterpret_cast<const void *>(base + entry->BeginAddress);

@@ -87,14 +87,15 @@ def cross_windows(architectures, sdk, jobs, make):
              'TARGET=' + host.relative_to(ROOT).as_posix(),
              'build/windows-cross-host/chali-frontend/chali-stdlib-bootstrap.exe'])
     bootstrap = host.parent / 'chali-frontend/chali-stdlib-bootstrap.exe'
+    execute([make, python, 'CHALI_BUILD_ROOT=build/windows-cross-host',
+             'CHALI_STDLIB_COMPILER=' + bootstrap.relative_to(ROOT).as_posix(), 'stdlib-units'])
     for arch, (cc, cxx, ar) in tools.items():
         binary = output / f'chali-{version}-llvm-external-windows-{arch}.exe'
         execute([make, '-j' + str(jobs), python, 'CHALI_STATIC_LLVM=0',
                  'CHALI_BUILD_ROOT=build/windows-cross-' + arch,
-                 'CHALI_STDLIB_COMPILER=' + bootstrap.relative_to(ROOT).as_posix(),
                  'TARGET=' + binary.relative_to(ROOT).as_posix(),
                  'CC=' + cc.as_posix(), 'CXX=' + cxx.as_posix(),
-                 'AR=' + ar.as_posix(), 'stdlib-embedded'])
+                 'AR=' + ar.as_posix(), binary.relative_to(ROOT).as_posix()])
         validate(binary, 'windows', arch)
         machine = platform.machine().lower()
         can_run = machine in ('arm64', 'aarch64') or (

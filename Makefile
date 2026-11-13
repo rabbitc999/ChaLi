@@ -112,10 +112,10 @@ else
 endif
 
 $(FRONTEND_BUILD)/%.o: source/%.cpp $(HDRS) | $(FRONTEND_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 
 $(FRONTEND_BUILD)/lztext.o: source/lztext/lztext.cpp $(HDRS) | $(FRONTEND_BUILD)
-	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -iquote . -c $< -o $@
 
 reflection:
 	$(MAKE) CHALI_WITH_REFLECTION=1 RUNTIME_WITH_REFLECTION=1
@@ -141,7 +141,10 @@ $(CHALI_STDLIB_BOOTSTRAP): $(DEMO_OBJS) $(LIB) $(AST_LIB) $(VM_LIB) $(HOST_LIB) 
 # 先链接独立阶段编译器，再生成确定性核心单元，最后构建发行编译器。
 .PHONY: stdlib-embedded
 CHALI_STDLIB_COMPILER ?= $(CHALI_STDLIB_BOOTSTRAP)
-stdlib-embedded: $(CHALI_STDLIB_COMPILER)
+.PHONY: stdlib-units
+stdlib-units: $(CHALI_STDLIB_COMPILER)
 	$(PYTHON) tools/build_stdlib_units.py --compiler "$(abspath $(CHALI_STDLIB_COMPILER))" $(if $(CHALI_STDLIB_RUNNER),--runner "$(CHALI_STDLIB_RUNNER)")
+
+stdlib-embedded: stdlib-units
 	$(MAKE) $(TARGET)
 	$(PYTHON) tools/build_stdlib_units.py --sync-embedded-source "$(CHALI_EMBED_SOURCE)"
