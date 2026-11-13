@@ -75,12 +75,23 @@ python tools/build.py --wsl never --jobs 4
 
 The entry point detects WSL distributions capable of running Linux commands. Without WSL it keeps native build outputs. Windows x64 defaults to statically embedded LLVM; `--variant external` selects the external toolchain build. Windows x86 MSI packaging remains unsupported.
 
+On Windows x64, use a full LLVM-MinGW SDK and GNU Make to cross-build the Windows ARM64 and x86 compilers:
+
+```powershell
+python tools/build.py --windows-cross arm64 x86 --llvm-mingw D:/sdk/llvm-mingw --make mingw32-make
+```
+
+The external LLVM binaries go to `dist/installers/`. Each architecture uses separate build objects and its PE header is verified. The host bootstrap compiler generates the embedded standard-library units.
+
 WSL/Linux uses native and installed cross toolchains. To build ARM64 and x86 packages on x64 Ubuntu, install `g++-aarch64-linux-gnu`, `g++-i686-linux-gnu`, and `qemu-user`. The build runs the bootstrap compiler under QEMU with the target runtime libraries to generate the embedded standard library. DEB requires `dpkg-deb`, and RPM requires `rpmbuild`. The builder probes compiler, linker, and ELF architecture support. Automatic mode skips targets that lack a cross toolchain or emulator.
 
 ```sh
 python3.11 tools/build_linux_packages.py --available --jobs 4
 python3.11 tools/build_linux_packages.py --arch arm64 x86 --jobs 4
+python3.11 tools/build_linux_packages.py --arch arm64 x86 --jobs 4 --vsix
 ```
+
+`--vsix` requires Node.js and npm. The ARM64 package targets `linux-arm64` and embeds the external LLVM compiler built in the same run. VS Code has no `linux-ia32` extension target. The x86 compiler ships in Linux installation packages.
 
 Target source snapshots and objects stay in separate `build/release-*` directories. Temporary files stay under the repository's `tmp/`. Outputs go to `dist/installers/`. Before packaging, the builder uses an LSP handshake to verify that the target compiler starts and reports the expected version. A Linux snapshot reuses the current host-generated parser, so first run `sh gen.sh` on a host with ParseEngine. Embedded standard-library and native-service assets are rebuilt for each target.
 

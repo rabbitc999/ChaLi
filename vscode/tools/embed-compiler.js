@@ -90,7 +90,9 @@ function main() {
     console.error('或用 `--from <路径>` / 环境变量 CHALI_BIN 指定。');
     process.exit(2);
   }
-  const report = require('node:child_process').spawnSync(source.file, ['--build-info'], { encoding: 'utf8', windowsHide: true });
+  const runner = process.env.CHALI_COMPILER_RUNNER;
+  const args = runner ? [source.file, '--build-info'] : ['--build-info'];
+  const report = require('node:child_process').spawnSync(runner || source.file, args, { encoding: 'utf8', windowsHide: true });
   if (report.status !== 0) throw new Error('内嵌编译器缺少可验证的 --build-info：' + report.stderr);
   const buildInfo = JSON.parse(report.stdout);
   const manifest = require(path.join(EXT_ROOT, 'package.json'));

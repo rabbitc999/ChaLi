@@ -61,6 +61,50 @@ def native_windows(jobs, variant):
     print('当前不发布 x86 安装包。', flush=True)
 
 
+def cross_windows(architectures, sdk, jobs, make):
+    """用独立对象目录生成 ARM64 与 x86 PE，使用可在宿主运行的标准库阶段编译器。"""
+    from package_installers import validate
+    from release import compiler_version
+
+    version = (ROOT / 'VERSION').read_text().strip()
+    sdk = sdk.resolve()
+    if any(character.isspace() for character in str(sdk)):
+        raise ValueError('GNU Make 交叉构建需要不含空白的 SDK 路径')
+    host = ROOT / 'build/windows-cross-host/chali-bootstrap-source.exe'
+    output = ROOT / 'dist/installers'
+    output.mkdir(parents=True, exist_ok=True)
+    tools = {}
+    python = 'PYTHON="' + Path(sys.executable).as_posix() + '"'
+    for arch in architectures:
+        triple = {'arm64': 'aarch64-w64-mingw32', 'x86': 'i686-w64-mingw32'}[arch]
+        commands = [sdk / 'bin' / name for name in
+                    (triple + '-clang.exe', triple + '-clang++.exe', 'llvm-ar.exe')]
+        if not all(command.is_file() for command in commands):
+            raise ValueError('LLVM-MinGW SDK 缺少目标工具：' + triple)
+        tools[arch] = commands
+    execute([make, '-j' + str(jobs), python, 'CHALI_STATIC_LLVM=0',
+             'CHALI_BUILD_ROOT=build/windows-cross-host',
+             'TARGET=' + host.relative_to(ROOT).as_posix(),
+             'build/windows-cross-host/chali-frontend/chali-stdlib-bootstrap.exe'])
+    bootstrap = host.parent / 'chali-frontend/chali-stdlib-bootstrap.exe'
+    for arch, (cc, cxx, ar) in tools.items():
+        binary = output / f'chali-{version}-llvm-external-windows-{arch}.exe'
+        execute([make, '-j' + str(jobs), python, 'CHALI_STATIC_LLVM=0',
+                 'CHALI_BUILD_ROOT=build/windows-cross-' + arch,
+                 'CHALI_STDLIB_COMPILER=' + bootstrap.relative_to(ROOT).as_posix(),
+                 'TARGET=' + binary.relative_to(ROOT).as_posix(),
+                 'CC=' + cc.as_posix(), 'CXX=' + cxx.as_posix(),
+                 'AR=' + ar.as_posix(), 'stdlib-embedded'])
+        validate(binary, 'windows', arch)
+        machine = platform.machine().lower()
+        can_run = machine in ('arm64', 'aarch64') or (
+            arch == 'x86' and machine in ('amd64', 'x86_64', 'i386', 'i686', 'x86'))
+        if can_run and compiler_version(binary) != version:
+            raise ValueError('目标编译器启动后报告了错误版本：' + arch)
+        if not can_run:
+            print('已核对 PE 架构，尚需在 Windows ARM64 上启动验证：' + str(binary), flush=True)
+
+
 def main():
     """按宿主能力选择构建目标，WSL 缺失时正常完成本机交付。"""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -70,9 +114,19 @@ def main():
                         default='static' if os.name == 'nt' and platform.machine().lower() in ('amd64', 'x86_64') else 'external',
                         help='Windows x64 默认静态内置 LLVM；external 构建外置工具链版本')
     parser.add_argument('--linux-only', action='store_true', help='Windows 上仅调度 WSL，不重复构建本机')
+    parser.add_argument('--windows-cross', nargs='+', choices=['arm64', 'x86'])
+    parser.add_argument('--llvm-mingw', type=Path, help='完整的 LLVM-MinGW SDK 目录')
+    parser.add_argument('--make', default='make', help='Windows 交叉构建使用的 GNU Make')
     args = parser.parse_args()
     if args.jobs < 1:
         parser.error('jobs 必须大于零')
+    if args.windows_cross:
+        if os.name != 'nt' or args.linux_only or args.llvm_mingw is None:
+            parser.error('--windows-cross 需要 Windows 宿主和 --llvm-mingw')
+        if not (ROOT / 'source/chali_main.cpp').is_file():
+            execute(['sh', 'gen.sh'])
+        cross_windows(args.windows_cross, args.llvm_mingw, args.jobs, args.make)
+        return
     if os.name == 'nt' or not (ROOT / 'source/chali_main.cpp').is_file():
         execute(['sh', 'gen.sh'])
     else:

@@ -61,7 +61,8 @@ LIB_OBJS  := $(FRONTEND_BUILD)/chali_parser.o $(FRONTEND_BUILD)/lztext.o
 DEMO_OBJS := $(FRONTEND_BUILD)/chali_main.o
 
 LIB    := $(FRONTEND_BUILD)/libparser.a
-CHALI_VERSION := $(strip $(shell python -c "from pathlib import Path; print(Path('VERSION').read_text().strip())"))
+include features.mk
+CHALI_VERSION := $(strip $(shell $(PYTHON) -c "from pathlib import Path; print(Path('VERSION').read_text().strip())"))
 CHALI_STATIC_LLVM ?= 0
 CHALI_TARGET_ARCH ?= x64
 ifeq ($(OS),Windows_NT)
@@ -75,7 +76,7 @@ endif
 all: stdlib-embedded
 
 tmp:
-	python -c "from pathlib import Path; Path('tmp').mkdir(parents=True, exist_ok=True)"
+	$(PYTHON) -c "from pathlib import Path; Path('tmp').mkdir(parents=True, exist_ok=True)"
 
 # BUILD 的 LLVM 工具及静态 SDK 从锁定上游在线准备，下载缓存不入库。
 llvm:
@@ -128,7 +129,6 @@ clean:
 # 挂载点：生成目录里如果有一个 local.mk（可以用 `%copy local.mk` 一起带出来），
 # 就在所有默认变量与规则之后被包含进来——工程可以在这里补自己的源文件、
 # 头文件搜索路径、链接库与额外目标（例如 `check`）。
-include features.mk
 -include local.mk
 
 override CXXFLAGS += $(CHALI_TRIM_FLAGS)
@@ -140,7 +140,8 @@ $(CHALI_STDLIB_BOOTSTRAP): $(DEMO_OBJS) $(LIB) $(AST_LIB) $(VM_LIB) $(HOST_LIB) 
 
 # 先链接独立阶段编译器，再生成确定性核心单元，最后构建发行编译器。
 .PHONY: stdlib-embedded
-stdlib-embedded: $(CHALI_STDLIB_BOOTSTRAP)
-	$(PYTHON) tools/build_stdlib_units.py --compiler "$(abspath $(CHALI_STDLIB_BOOTSTRAP))" $(if $(CHALI_STDLIB_RUNNER),--runner "$(CHALI_STDLIB_RUNNER)")
+CHALI_STDLIB_COMPILER ?= $(CHALI_STDLIB_BOOTSTRAP)
+stdlib-embedded: $(CHALI_STDLIB_COMPILER)
+	$(PYTHON) tools/build_stdlib_units.py --compiler "$(abspath $(CHALI_STDLIB_COMPILER))" $(if $(CHALI_STDLIB_RUNNER),--runner "$(CHALI_STDLIB_RUNNER)")
 	$(MAKE) $(TARGET)
 	$(PYTHON) tools/build_stdlib_units.py --sync-embedded-source "$(CHALI_EMBED_SOURCE)"

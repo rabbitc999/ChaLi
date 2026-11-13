@@ -77,12 +77,23 @@ python tools/build.py --wsl never --jobs 4
 
 入口自动检测可运行 Linux 命令的 WSL 发行版；没有可用 WSL 时正常保留本机产物。默认安装包使用静态内置 LLVM，`--variant external` 选择外置工具链版本。Windows x86 MSI 仍不支持。
 
+在 Windows x64 上，使用完整的 LLVM-MinGW SDK 和 GNU Make 构建 Windows ARM64 与 x86 编译器：
+
+```powershell
+python tools/build.py --windows-cross arm64 x86 --llvm-mingw D:/sdk/llvm-mingw --make mingw32-make
+```
+
+产物使用外置 LLVM，位于 `dist/installers/`。两种架构分别构建并核对 PE 文件头，标准库二进制由宿主阶段编译器生成。
+
 WSL/Linux 使用本机工具链及已安装的交叉工具链。在 x64 Ubuntu 上构建 ARM64 和 x86 包分别需要 `g++-aarch64-linux-gnu`、`g++-i686-linux-gnu`，以及 `qemu-user`，构建器用 QEMU 和目标运行库执行阶段编译器来生成内嵌标准库。DEB 需要 `dpkg-deb`，RPM 需要 `rpmbuild`。构建器先探测编译链接与 ELF 机器类型。自动模式会跳过缺少交叉工具链或模拟器的目标。
 
 ```sh
 python3.11 tools/build_linux_packages.py --available --jobs 4
 python3.11 tools/build_linux_packages.py --arch arm64 x86 --jobs 4
+python3.11 tools/build_linux_packages.py --arch arm64 x86 --jobs 4 --vsix
 ```
+
+`--vsix` 需要 Node.js 和 npm。ARM64 包使用 `linux-arm64` 目标，内嵌本轮构建的外置 LLVM 编译器。VS Code 没有 `linux-ia32` 扩展目标，x86 编译器通过 Linux 安装包交付。
 
 各目标源码副本和对象位于独立的 `build/release-*` 目录，中转文件位于仓库的 `tmp/`，产物位于 `dist/installers/`。构建器在打包前通过 LSP 握手核对目标编译器可启动且版本正确。Linux 副本复用本次宿主生成的解析器，因此首次构建前要先在具备 ParseEngine 的宿主执行 `sh gen.sh`。内嵌标准库及原生服务资产仍按各目标重新生成。
 

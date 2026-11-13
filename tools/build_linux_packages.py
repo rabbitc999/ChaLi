@@ -9,6 +9,7 @@ import sys
 import platform
 import hashlib
 import re
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGETS = {'amd64': ('x86_64-linux-gnu-gcc', 'x86_64-linux-gnu-g++', 'x86_64-linux-gnu-ar'),
@@ -48,6 +49,7 @@ def main():
     parser.add_argument('--jobs', type=int, default=4)
     parser.add_argument('--available', action='store_true', help='仅构建宿主或已安装交叉工具链可编译链接的目标')
     parser.add_argument('--formats', nargs='+', choices=['deb', 'rpm', 'tar'])
+    parser.add_argument('--vsix', action='store_true', help='为 VS Code 支持的 Linux 架构生成并核对 VSIX')
     args = parser.parse_args()
     if sys.platform != 'linux' or args.jobs < 1:
         parser.error('请在 Linux 或 WSL 中运行，jobs 必须大于零')
@@ -127,6 +129,27 @@ def main():
             'gatesRun': False, 'generatedParser': 'copied from the current host generation'}, indent=2) + '\n')
         run([sys.executable, ROOT / 'tools/package_installers.py', '--binary', binary, '--arch', arch,
              '--platform', 'linux', '--build-metadata', receipt, '--formats', *formats, '--out', output], ROOT, env)
+        if args.vsix and arch == 'x86':
+            print('VS Code 没有 linux-ia32 VSIX 目标；x86 编译器通过 Linux 安装包交付。', flush=True)
+        elif args.vsix:
+            target = {'amd64': 'linux-x64', 'arm64': 'linux-arm64'}[arch]
+            editor = work / 'vscode'
+            run(['npm', 'ci', '--no-audit', '--no-fund'], editor, env)
+            package_env = dict(env)
+            package_env.pop('CHALI_COMPILER_RUNNER', None)
+            if runner:
+                package_env['CHALI_COMPILER_RUNNER'] = runner[0]
+            run(['node', 'tools/package.js', '--skip-tests', '--target', target,
+                 '--compiler', binary, '--llvm-variant', 'external', '--out', output], editor, package_env)
+            manifest = json.loads((editor / 'package.json').read_text(encoding='utf-8'))
+            archive = output / f"{manifest['name']}-{version}-llvm-external-{target}.vsix"
+            with zipfile.ZipFile(archive) as package:
+                embedded = json.loads(package.read('extension/package.json'))
+                if embedded['version'] != version or embedded['chaliCompilerVersion'] != version:
+                    raise ValueError('VSIX 清单版本与编译器不符')
+                if hashlib.sha256(package.read('extension/bin/chali')).hexdigest() != json.loads(
+                        receipt.read_text(encoding='utf-8'))['binarySha256']:
+                    raise ValueError('VSIX 内嵌编译器与本轮交叉产物不符')
 
 
 if __name__ == '__main__':

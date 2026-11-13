@@ -42,7 +42,8 @@ if (!['static', 'external'].includes(variant)) {
 const compiler = option('--compiler', '');
 if (compiler) process.env.CHALI_BIN = path.resolve(EXT_ROOT, compiler);
 process.env.CHALI_LLVM_VARIANT = variant;
-const suffix = `-llvm-${variant}`;
+const target = option('--target', '');
+const suffix = `-llvm-${variant}${target ? '-' + target : ''}`;
 const vsix = path.join(outDir, `${manifest.name}-${manifest.version}${suffix}.vsix`);
 
 /**
@@ -164,7 +165,7 @@ function main() {
     }
     const [command, prefix] = vsce();
     fs.mkdirSync(outDir, { recursive: true });
-    run(command, [...prefix, 'package', '--out', vsix, '--allow-missing-repository',
+    run(command, [...prefix, 'package', '--out', vsix, ...(target ? ['--target', target] : []), '--allow-missing-repository',
       '--baseContentUrl', 'https://github.com/rabbitc999/ChaLi/blob/master/vscode',
       '--baseImagesUrl', 'https://github.com/rabbitc999/ChaLi/raw/master/vscode'],
         process.platform === 'win32');

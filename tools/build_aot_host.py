@@ -25,8 +25,10 @@ def main():
     dependencies = [build_root / 'chali-ircode-aot-core/libstackvm.a',
                     build_root / 'chali-host-records/librecords.a',
                     *[path.resolve() for path in args.object]]
-    names = ['libstdc++.a', 'libgcc_eh.a', 'libgcc.a']
-    if os.name == 'nt':
+    macros = subprocess.check_output([args.cxx, '-dM', '-E', '-x', 'c++', '-'], input='', text=True)
+    llvm_mingw = '#define _WIN32 1' in macros and '#define __clang__ 1' in macros
+    names = ['libc++.a', 'libunwind.a'] if llvm_mingw else ['libstdc++.a', 'libgcc_eh.a', 'libgcc.a']
+    if os.name == 'nt' and not llvm_mingw:
         names += ['libmingw32.a', 'libmingwex.a', 'libmoldname.a', 'libwinpthread.a', 'libwinhttp.a', 'libws2_32.a', 'libcrypt32.a', 'libbcrypt.a']
     libraries = []
     for name in names:
