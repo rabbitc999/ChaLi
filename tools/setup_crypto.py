@@ -14,8 +14,9 @@ import urllib.request
 from project_temp import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-URL = 'https://download.libsodium.org/libsodium/releases/libsodium-1.0.22-stable-mingw.tar.gz'
-SHA256 = '751d5048db30f157d7bf7afef48f06427d4b071dd7ad184c26939198753e5697'
+ARCHIVE_NAME = 'libsodium-1.0.22-mingw.tar.gz'
+URL = f'https://github.com/jedisct1/libsodium/releases/download/1.0.22-RELEASE/{ARCHIVE_NAME}'
+SHA256 = '1d99e0afaf27bce664249232e9dc628ae6bb7b49f0ab53ad6db372b028a35d9d'
 
 
 def main():
@@ -41,7 +42,7 @@ def main():
                 parser.error('Windows 宿主需要 x64')
             archive = options.archive
             if archive is None:
-                archive = ROOT/'build/downloads/libsodium-1.0.22-stable-mingw.tar.gz'
+                archive = ROOT/'build/downloads'/ARCHIVE_NAME
                 archive.parent.mkdir(parents=True, exist_ok=True)
                 if not archive.exists():
                     if options.offline:

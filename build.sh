@@ -4,7 +4,7 @@
 # 用法（在本目录跑）：
 #   sh build.sh              生成解析器 → 构建原生扩展和静态 LLVM 编译器 → 按环境打包插件与书稿
 #   sh build.sh --no-gen     跳过文法生成，直接用现有解析器构建
-#   sh build.sh --jobs 4     指定并行度（默认取 CPU 核数）
+#   sh build.sh --jobs 4     指定并行度（默认取系统逻辑核心数的一半，向下取整，至少为 1）
 #   sh build.sh --help
 #
 # 四个阶段：
@@ -92,6 +92,8 @@ if [ -z "$jobs" ]; then
     case "$jobs" in
     '' | *[!0-9]*) jobs=4 ;;
     esac
+    jobs=$((jobs / 2))
+    [ "$jobs" -ge 1 ] || jobs=1
 fi
 
 # python：书稿生成脚本与压缩包都用它。Windows 商店的 python3 可能只是个占位存根，

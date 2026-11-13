@@ -195,6 +195,7 @@ $(HOST_BUILD)/abi_%.o: source/abi/%.c | $(HOST_BUILD)
 $(HOST_BUILD)/abi_%.o: source/abi/%.cpp | $(HOST_BUILD)
 	$(CXX) $(CXXFLAGS) -MMD -MP -I. -c $< -o $@
 $(CHALI_ABI_OBJS): $(CHALI_BUILD_ROOT)/chali-runtime/buildConfig.json
+$(HOST_BUILD)/abi_abi_sql.o: $(CHALI_DEPENDENCY_DIR)/sqlite/sqlite3.h
 
 $(HOST_LIB): $(RUNTIME_C_OBJS) $(HOST_BUILD)/yyjson.o $(HOST_BUILD)/tomlc17.o $(HOST_BUILD)/lztext_kernel.o $(BIGINT_MODULE_OBJS) $(HOST_BUILD)/sqlite3.o $(HOST_BUILD)/bigint.o $(HOST_BUILD)/bigfloat.o $(BIGFLOAT_MATH_OBJS) $(CHALI_STANDARD_OBJS) $(HOST_BUILD)/json.o $(HOST_BUILD)/toml.o $(HOST_BUILD)/toml_source.o $(CAS_OBJS) $(IPAGE_OBJS) $(CHALI_ABI_OBJS)
 	$(PYTHON) -c "from pathlib import Path; Path(r'$@').unlink(missing_ok=True)"
