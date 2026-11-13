@@ -145,6 +145,20 @@ chali build --target linux-x64 --emit-obj --out build/x64/app
 
 `run` rejects a foreign target instead of starting an emulator. Object generation, full linking and execution are separate validation steps. Test the resulting application on its target or an appropriate emulator. Complex imported C ABI adapters currently require target-toolchain compilation and linking after object export.
 
+## MCU firmware
+
+`mcu-cortex-m4` uses Thumb on Cortex-M4 with the soft-float ABI. `mcu-rv32` uses RV32IMAC with ILP32. Linking uses external clang and LLD with the matching backend and writes an `.elf` file. Supply startup objects, runtime objects, and the board's `.ld` linker script with repeated `--link` arguments.
+
+```sh
+chali build app.chl --target mcu-cortex-m4 --llvm clang \
+  --link board.ld --link startup.o --link board-runtime.a \
+  --out build/firmware
+```
+
+Compile the C sources under `source/aot/mcu/` into the board runtime. A bare-metal port provides `HAL_Chali_Print`, `HAL_Chali_Allocate`, and `HAL_Chali_Free`. For an RTOS build, compile the HAL forwarding layer with `CHALI_MCU_RTOS` and provide the corresponding `RTOS_HAL_Chali_*` symbols. Both modes require the board to supply `HAL_Chali_Panic`. The print hook receives a byte pointer and length. The allocation hook returns a 16-byte-aligned address.
+
+The MCU core omits file, process, and standard input entry points, and rejects imports of `std::reflect`. Dynamic strings and collections still require board runtime primitives that are unavailable. Bare-metal print samples ran in instruction emulators for Cortex-M4 and RV32. The Cortex-M4 [FreeRTOS test script](../../tests/chali_mcu_freertos.py) downloads and verifies a pinned kernel and uses QEMU to check that a scheduled task prints, allocates, and frees memory through the HAL.
+
 ## Target machine assembly
 
 The project `[build]` table accepts arrays named `assembly_sources`, `assembly_includes`, `objects`, `libraries`, and `search_paths`. Paths are relative to the directory containing `chali.toml`. Bare library names containing neither a dot nor a path separator are resolved by the linker.

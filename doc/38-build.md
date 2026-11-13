@@ -152,6 +152,20 @@ chali build --target linux-x64 --emit-obj --out build/x64/app
 
 生成成功后应在目标机器或相应模拟器中验证参数、标准输入输出、文件、资源清理和错误路径。`run` 不会自动启动模拟器，目标与宿主不同时会拒绝直接运行。导出目标文件成功仅证明代码生成完成，不能据此声称目标链接或实际运行已验证。复杂 C ABI 的跨目标完整链接需要兼容的目标适配器；当前可先导出目标文件，并在目标工具链中完成适配器编译与链接。
 
+## MCU 固件
+
+`mcu-cortex-m4` 使用 Thumb Cortex-M4 和软浮点 ABI，`mcu-rv32` 使用 RV32IMAC 和 ILP32。最终链接使用带对应后端的外置 clang 和 LLD，输出 `.elf`。板级工程通过重复的 `--link` 参数提供启动对象、运行时对象与 `.ld` 链接脚本。
+
+```sh
+chali build app.chl --target mcu-cortex-m4 --llvm clang \
+  --link board.ld --link startup.o --link board-runtime.a \
+  --out build/firmware
+```
+
+板级运行时编入 `source/aot/mcu/` 中的 C 源码。裸机端口提供 `HAL_Chali_Print`、`HAL_Chali_Allocate` 和 `HAL_Chali_Free`。使用 RTOS 时以 `CHALI_MCU_RTOS` 编译 HAL 转发层，并提供相应的 `RTOS_HAL_Chali_*` 符号。两种模式均由板级工程提供 `HAL_Chali_Panic`。打印接口接收字节指针和长度，分配返回的地址须满足 16 字节对齐。
+
+MCU 核心库裁去文件、进程和标准输入入口，并拒绝导入 `std::reflect`。动态字符串和集合仍依赖尚未提供的板级运行时原语。裸机打印样例在 Cortex-M4 和 RV32 指令模拟器中执行。Cortex-M4 的 [FreeRTOS 验证脚本](../tests/chali_mcu_freertos.py) 下载并校验固定版本的内核，用 QEMU 验证真实任务经 HAL 打印、分配并释放内存。
+
 ## 目标机器汇编
 
 项目 `[build]` 支持 `assembly_sources`（汇编源）、`assembly_includes`（汇编包含目录）、`objects`（对象文件）、`libraries`（链接库）、`search_paths`（模块及包含搜索目录）数组。路径以 `chali.toml` 所在目录为基准；`libraries` 中不含点或路径分隔符的裸库名交给链接器解析。

@@ -192,6 +192,12 @@ Paths are relative to chali.toml. Explicit command-line options override matchin
 
 An object file does not establish a deployable application. Validate object generation, target linking and device execution separately. Building a cross-architecture compiler does not automatically enable every native target.
 
+### Linking MCU firmware
+
+A Linux target SDK supplies system libraries and startup files. For MCU firmware, the board project supplies startup code, the memory layout, and a linker script. With `--target mcu-cortex-m4` or `--target mcu-rv32`, `chali build` uses external clang and LLD to link the ChaLi code with board inputs passed through `--link`. See the [MCU firmware reference](../../en/38-build.md#mcu-firmware) for the complete command and board interface.
+
+A bare-metal port can route print output to a serial port and allocations to the board heap. With FreeRTOS, a task calls the generated program's entry point, and `RTOS_HAL_Chali_*` forwards print, allocation, and release to the board. The Cortex-M4 QEMU test checks printing and heap cleanup after the task wakes. RV32 simulation covers bare-metal printing. MCU builds reject imports of `std::reflect`. Full dynamic string and collection support depends on board primitives that are currently unavailable.
+
 ## 27.4 Deployment checks and diagnostics
 
 In a clean directory verify configuration, web assets, dynamic libraries, data-directory permissions and working directory. Begin with a harmless operation before real workflows. Native debugging uses DWARF and GDB/MI; retain symbols and diagnostics to identify the failing stage.
