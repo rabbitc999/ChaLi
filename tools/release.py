@@ -52,14 +52,15 @@ def editor_version_of(root):
     return version
 
 
-def compiler_version(binary):
+def compiler_version(binary, *, runner=(), env=None):
     """通过标准 LSP 握手核对运行中编译器的版本。"""
     payload = b''
     for request in ({'id': 1, 'method': 'initialize', 'params': {'processId': None, 'capabilities': {}}},
                     {'id': 2, 'method': 'shutdown'}, {'method': 'exit'}):
         body = json.dumps(dict(jsonrpc='2.0', **request)).encode('utf-8')
         payload += f'Content-Length: {len(body)}\r\n\r\n'.encode() + body
-    result = subprocess.run([str(binary), 'lsp'], input=payload, capture_output=True, timeout=60, check=True)
+    result = subprocess.run([*runner, str(binary), 'lsp'], input=payload, capture_output=True,
+                            timeout=60, check=True, env=env)
     data = result.stdout
     while data:
         header, separator, rest = data.partition(b'\r\n\r\n')

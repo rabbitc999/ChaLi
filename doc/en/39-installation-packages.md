@@ -73,16 +73,16 @@ python tools/build.py --variant external --jobs 4
 python tools/build.py --wsl never --jobs 4
 ```
 
-The entry point detects WSL distributions capable of running Linux commands. Without WSL it keeps native build outputs. Windows x64 defaults to statically embedded LLVM; `--variant external` selects the external toolchain build. Release builds skip x86, and the installer generator refuses x86 packaging.
+The entry point detects WSL distributions capable of running Linux commands. Without WSL it keeps native build outputs. Windows x64 defaults to statically embedded LLVM; `--variant external` selects the external toolchain build. Windows x86 MSI packaging remains unsupported.
 
-WSL/Linux uses native and installed cross toolchains. To build an ARM64 package on x64 Ubuntu, install `g++-aarch64-linux-gnu` and `qemu-user`. The build runs the bootstrap compiler under QEMU with the target runtime libraries to generate the embedded standard library. DEB requires `dpkg-deb`, and RPM requires `rpmbuild`. The builder probes compiler, linker, and ELF architecture support. Automatic mode skips targets that lack a cross toolchain or emulator.
+WSL/Linux uses native and installed cross toolchains. To build ARM64 and x86 packages on x64 Ubuntu, install `g++-aarch64-linux-gnu`, `g++-i686-linux-gnu`, and `qemu-user`. The build runs the bootstrap compiler under QEMU with the target runtime libraries to generate the embedded standard library. DEB requires `dpkg-deb`, and RPM requires `rpmbuild`. The builder probes compiler, linker, and ELF architecture support. Automatic mode skips targets that lack a cross toolchain or emulator.
 
 ```sh
 python3.11 tools/build_linux_packages.py --available --jobs 4
-python3.11 tools/build_linux_packages.py --arch amd64 arm64 --jobs 4
+python3.11 tools/build_linux_packages.py --arch arm64 x86 --jobs 4
 ```
 
-Target source snapshots, objects and temporary files stay under the repository's `tmp/`. Outputs go to `dist/installers/`. A Linux snapshot reuses the current host-generated parser, so first run `sh gen.sh` on a host with ParseEngine. Embedded standard-library and native-service assets are rebuilt for each target.
+Target source snapshots and objects stay in separate `build/release-*` directories. Temporary files stay under the repository's `tmp/`. Outputs go to `dist/installers/`. Before packaging, the builder uses an LSP handshake to verify that the target compiler starts and reports the expected version. A Linux snapshot reuses the current host-generated parser, so first run `sh gen.sh` on a host with ParseEngine. Embedded standard-library and native-service assets are rebuilt for each target.
 
 ## CentOS build environment
 

@@ -69,6 +69,8 @@ Memory::String hostTarget()
     return "aarch64-unknown-linux-gnu";
 #elif defined(__linux__) && defined(__x86_64__)
     return "x86_64-unknown-linux-gnu";
+#elif defined(__linux__) && defined(__i386__)
+    return "i686-unknown-linux-gnu";
 #else
     return {};
 #endif

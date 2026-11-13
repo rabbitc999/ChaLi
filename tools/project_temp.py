@@ -5,8 +5,12 @@ import tempfile as _tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
-TEMP_ROOT = (ROOT / 'tmp').resolve()
-if TEMP_ROOT.parent != ROOT.resolve():
+workspace = ROOT
+# 交叉构建的源码副本位于仓库 build/ 下，共用原始仓库的临时目录。
+if ROOT.parent.name == 'build' and (ROOT.parent.parent / '.git').exists():
+    workspace = ROOT.parent.parent
+TEMP_ROOT = (workspace / 'tmp').resolve()
+if TEMP_ROOT.parent != workspace.resolve():
     raise RuntimeError('项目 tmp 不能重定向到仓库外部')
 TEMP_ROOT.mkdir(parents=True, exist_ok=True)
 _tempfile.tempdir = str(TEMP_ROOT)

@@ -106,7 +106,7 @@ def main():
     parser.add_argument('--formats', nargs='+', choices=['msi', 'deb', 'rpm', 'tar'], required=True)
     parser.add_argument('--out', type=Path, default=ROOT / 'dist/installers')
     args = parser.parse_args()
-    if args.arch == 'x86':
+    if args.arch == 'x86' and args.platform == 'windows':
         parser.error('当前不提供 x86 安装包：32 位运行时未通过启动验证')
     binary = args.binary.resolve()
     validate(binary, args.platform, args.arch)
