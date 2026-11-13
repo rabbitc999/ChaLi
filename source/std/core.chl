@@ -664,6 +664,7 @@ struct MessageError : Error {
     }
 };
 
+// CHALI_MCU_OMIT_BEGIN
 #NonCopyable
 opcode File {
     new = __std_file_open;
@@ -688,6 +689,7 @@ opcode Process {
     new = std::process::__processRun;
     drop = std::process::__processDrop;
 };
+// CHALI_MCU_OMIT_END
 
 /**
  * @brief 由宿主将已格式化文本写入标准错误流。
@@ -728,6 +730,7 @@ inline String __std_str_of_flt(float64 value, int64 precision) {
     return text;
 }
 
+// CHALI_MCU_OMIT_BEGIN
 String __readLine();
 /** 查询标准输入是否已到 EOF；仅用于区分 EOF 与读到空行。 */
 bool __stdinEof();
@@ -755,6 +758,7 @@ String readLines(int32 N) { assert(N>=0,"readLines requires a nonnegative line c
  * @param N 0 至 2147483647 的行数；超界触发 panic。
  * @return 最多 N 行，以 LF 连接，EOF 提前结束。 */
 String readLines(int64 N) { assert(N>=0 && N<=2147483647,"readLines requires a nonnegative int32 line count"); return __readLines((int32)N); }
+// CHALI_MCU_OMIT_END
 
 /* 核心数值转换与 IEEE 754 编解码由语言内核实现。 */
 /** 向零截断为 int32；非有限数或截断后越界返回 None。 */

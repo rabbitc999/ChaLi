@@ -568,8 +568,26 @@ private:
     {
         Memory::String embeddedText;
         if (embedded::find("std::core", &embeddedText))
+        {
+            if (mcu_)
+            {
+                const Memory::String begin = "// CHALI_MCU_OMIT_BEGIN";
+                const Memory::String end = "// CHALI_MCU_OMIT_END";
+                for (std::size_t at = 0; (at = embeddedText.find(begin, at)) != Memory::String::npos;)
+                {
+                    const auto stop = embeddedText.find(end, at + begin.size());
+                    if (stop == Memory::String::npos)
+                    {
+                        error = "MCU 核心库裁剪标记未闭合";
+                        return false;
+                    }
+                    for (; at < stop + end.size(); ++at)
+                        if (embeddedText[at] != '\n' && embeddedText[at] != '\r') embeddedText[at] = ' ';
+                }
+            }
             return load(embeddedUnit("std::core", embeddedText), base, "std::core",
                         false, output, error);
+        }
         Memory::String path;
         if (!findModule("std::core", base, includeDirs_, path))
         {

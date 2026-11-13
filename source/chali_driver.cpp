@@ -947,6 +947,7 @@ try
         }
         reflectionEnabled = false;
         threadsEnabled = false;
+        standardUnit = false;
         M_SetReflectionEnabled(false);
     }
     chali_build::macroEnvironment().target = selectedTarget.triple.empty() ? aotOptions.target : selectedTarget.triple;
