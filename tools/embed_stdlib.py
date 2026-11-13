@@ -193,6 +193,8 @@ GENERATOR_ASSETS = [
     "aot/runtime_linux_riscv64.ll",
     "aot/runtime_linux_mipsel.ll",
     "aot/runtime_linux_arm32.ll",
+    "aot/runtime_mcu_arm.ll",
+    "aot/runtime_mcu_rv32.ll",
     "aot/runtime_linux_mips64el.ll",
     "aot/runtime.c",
     "chali_generic_name.hpp",

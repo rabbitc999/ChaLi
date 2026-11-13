@@ -29,7 +29,7 @@ if command -v cygpath >/dev/null 2>&1; then temporary_root=$(cygpath -m "$tempor
 export TMPDIR="$temporary_root" TMP="$temporary_root" TEMP="$temporary_root"
 directory=$(mktemp -d "$root/tmp/chali-aot-runtime.XXXXXX")
 trap 'rm -f "$directory"/runtime-*.ll; rmdir "$directory"' EXIT HUP INT TERM
-for platform in windows linux linux_arm64 linux_x86 linux_riscv32 linux_riscv64 linux_mipsel linux_arm32 linux_mips64el; do
+for platform in windows linux linux_arm64 linux_x86 linux_riscv32 linux_riscv64 linux_mipsel linux_arm32 linux_mips64el mcu_arm mcu_rv32; do
     case "$platform" in
         windows) triple=x86_64-w64-windows-gnu ;;
         linux) triple=x86_64-unknown-linux-gnu ;;
@@ -40,9 +40,15 @@ for platform in windows linux linux_arm64 linux_x86 linux_riscv32 linux_riscv64 
         linux_mipsel) triple=mipsel-unknown-linux-gnu ;;
         linux_arm32) triple=armv7-unknown-linux-gnueabihf ;;
         linux_mips64el) triple=mips64el-unknown-linux-gnuabi64 ;;
+        mcu_arm) triple=thumbv7em-none-eabi ;;
+        mcu_rv32) triple=riscv32-unknown-elf ;;
     esac
     output="$directory/runtime-$platform.ll"
-    if [ "$platform" = windows ]; then
+    if [ "$platform" = mcu_arm ]; then
+        "$clang" --target="$triple" -mcpu=cortex-m4 -mfloat-abi=soft -DCHALI_MCU_RUNTIME -ffreestanding -S -emit-llvm -O1 source/aot/runtime.c -o "$output"
+    elif [ "$platform" = mcu_rv32 ]; then
+        "$clang" --target="$triple" -march=rv32imac -mabi=ilp32 -DCHALI_MCU_RUNTIME -ffreestanding -S -emit-llvm -O1 source/aot/runtime.c -o "$output"
+    elif [ "$platform" = windows ]; then
         "$clang" --target="$triple" -S -emit-llvm -O1 -fexceptions -funwind-tables source/aot/runtime.c -o "$output" -isystem build/dependencies/llvm/toolchain/include
     else
         "$clang" --target="$triple" -S -emit-llvm -O1 -fexceptions -funwind-tables source/aot/runtime.c -o "$output"

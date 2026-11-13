@@ -8,4 +8,4 @@
 
 Windows 两种 PE 已构建并核对机器类型。x86 通过 `--build-info`、LSP 初始化和样例检查，ARM64 仍需 Windows ARM64 环境启动。Linux ARM64 已通过 QEMU 启动并生成 DEB、tar.gz 和 `linux-arm64` VSIX，插件版本和编译器字节一致。
 
-MCU 的 ChaLi 打印样例已在 Cortex-M4 和 RV32 指令模拟器中运行。此次验收通过手工调整生成的 LLVM IR 并链接板级测试端口完成，正常 BUILD 入口、精简核心库及真实 RTOS 调度仍待完成。
+MCU 的 ChaLi 打印样例已通过正常 BUILD 入口生成 Cortex-M4 和 RV32 ELF，并在 Unicorn 中执行。精简核心库和真实 RTOS 调度仍待验收。

@@ -938,6 +938,17 @@ try
         std::fputs("chali: run 只能执行宿主目标；请使用 build 发布构建交叉编译产物。\n", stderr);
         return 2;
     }
+    if (selectedTarget.mcu())
+    {
+        if (reflectionExplicit && reflectionEnabled)
+        {
+            std::fputs("chali: MCU 目标不提供反射。\n", stderr);
+            return 2;
+        }
+        reflectionEnabled = false;
+        threadsEnabled = false;
+        M_SetReflectionEnabled(false);
+    }
     chali_build::macroEnvironment().target = selectedTarget.triple.empty() ? aotOptions.target : selectedTarget.triple;
     chali_build::macroEnvironment().flags.clear();
     for (const auto &option : project.buildOptions) chali_build::macroEnvironment().flags.insert(option);
@@ -1038,7 +1049,7 @@ try
                                                    preprocess::IncludeResult::inlineText(found->second, request.resolvedPath);
         };
         Memory::Vector<Memory::String> moduleDirs = importDirs;
-        chali_module::Loader loader(options, moduleDirs, cache.get(), &project, editorAnalysis);
+        chali_module::Loader loader(options, moduleDirs, cache.get(), &project, editorAnalysis, selectedTarget.mcu());
         Memory::String moduleError;
         const bool ok = (path != nullptr && !sourceStdin) ? loader.rootFile(path, processed, moduleError) : loader.rootText(text, sourceLabel, path ? Memory::String(std::filesystem::path(path).parent_path().string()) : Memory::String("."), processed, moduleError);
         auto analysisFiles = processed.dependencies;
@@ -1626,7 +1637,7 @@ try
         if (status != 0) return status;
         const char *extension = aotOptions.emitLLVMOnly ? ".ll" : aotOptions.emitObjectOnly ? ".o" :
                                     aotOptions.emitAssemblyOnly ? ".s" : aotOptions.shared ? (selectedTarget.windows ? ".dll" : ".so") :
-                                    selectedTarget.windows ? ".exe" : "";
+                                    selectedTarget.windows ? ".exe" : selectedTarget.mcu() ? ".elf" : "";
         if (defaultArtifacts)
         {
             std::vector<const char *> products{ extension };

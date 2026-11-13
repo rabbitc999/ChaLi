@@ -55,11 +55,17 @@ extern void chali_host_raise_callback_error(const char *);
  */
 void chali_panic(const char *message)
 {
+#ifdef CHALI_MCU_RUNTIME
+    extern void chali_mcu_panic(const char *);
+    chali_mcu_panic(message);
+    __builtin_unreachable();
+#else
     chali_host_raise_callback_error(message);
     fflush(stdout);
     fprintf(stderr, "chali build: %s\n", message);
     chali_host_trace();
     exit(1);
+#endif
 }
 
 /**

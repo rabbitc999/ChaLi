@@ -87,6 +87,8 @@ bool describeTarget(const Memory::String &requested, TargetInfo &target, Memory:
 {
     target = TargetInfo{};
     auto triple = requested.empty() ? hostTarget() : requested;
+    if (triple == "mcu-cortex-m4") triple = "thumbv7em-none-eabi";
+    if (triple == "mcu-rv32") triple = "riscv32-unknown-elf";
     if (triple == "windows-x64" || triple == "x86_64-pc-windows-gnu") triple = "x86_64-w64-windows-gnu";
     if (triple == "linux-x64" || triple == "x86_64-linux-gnu" || triple == "x86_64-pc-linux-gnu") triple = "x86_64-unknown-linux-gnu";
     if (triple == "linux-x86" || triple == "i686-linux-gnu") triple = "i686-unknown-linux-gnu";
@@ -104,7 +106,14 @@ bool describeTarget(const Memory::String &requested, TargetInfo &target, Memory:
     target.riscv64 = triple == "riscv64-unknown-linux-gnu";
     target.mipsel = triple == "mipsel-unknown-linux-gnu";
     target.cpu = "x86-64";
-    if (target.windows)
+    if (target.mcu())
+    {
+        target.cpu = target.cortexM4() ? "cortex-m4" : "generic-rv32";
+        target.runtime = target.cortexM4() ? "aot/runtime_mcu_arm.ll" : "aot/runtime_mcu_rv32.ll";
+        target.dataLayout = target.cortexM4() ? "e-m:e-p:32:32-Fi8-i64:64-v128:64:128-a:0:32-n32-S64" :
+                                              "e-m:e-p:32:32-i64:64-n32-S128";
+    }
+    else if (target.windows)
     {
         target.runtime = "aot/runtime_windows.ll";
         target.dataLayout = "e-m:w-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128";

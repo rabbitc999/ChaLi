@@ -2814,6 +2814,11 @@ static Memory::String generateLinkedLLVM(Request &request, Memory::Vector<Memory
     if (nativeLibraries.empty())
         request.externs.erase(std::remove_if(request.externs.begin(), request.externs.end(),
             [](const auto &external) { return isBuiltinNativeLibrary(external.library); }), request.externs.end());
+    if (state.target.mcu())
+    {
+        for (std::size_t at = 0; (at = out.find(" thread_local global ", at)) != Text::npos;)
+            out.erase(at, sizeof(" thread_local") - 1);
+    }
     return Memory::String(out.data(), out.size());
 }
 
@@ -2960,7 +2965,17 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
         if (diagnostics) diagnostics->push_back("BUILD：LLVM 文本、对象文件与机器汇编输出只能选择一种");
         return 1;
     }
-    if (!target.native && !codeOnly && !request.options.emitLLVMOnly && request.options.runtimeDirectory.empty())
+    if (target.mcu() && (request.options.shared || request.options.debug))
+    {
+        if (diagnostics) diagnostics->push_back("BUILD：MCU 目标不支持共享库或宿主调试服务");
+        return 1;
+    }
+    if (target.mcu() && !codeOnly && !request.options.emitLLVMOnly && request.options.linkLibraries.empty() && request.options.linkObjects.empty())
+    {
+        if (diagnostics) diagnostics->push_back("BUILD：MCU 固件需要板级启动代码、运行时和链接脚本");
+        return 1;
+    }
+    if (!target.mcu() && !target.native && !codeOnly && !request.options.emitLLVMOnly && request.options.runtimeDirectory.empty())
     {
         if (diagnostics) diagnostics->push_back("BUILD：跨目标链接需要 --runtime-dir 指定目标 libchali_aot_host.a，并准备目标 sysroot；可先使用 --emit-obj、--emit-asm 或 --emit-llvm");
         return 1;
@@ -3023,8 +3038,8 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
                                                      objectOnly             ? ".o" :
                                                      request.options.shared ? target.windows ? ".dll" : ".so" :
                                                      target.windows         ? ".exe" :
-                                                                              "");
-    if (builtin::available() && request.options.compiler.empty() && (codeOnly || (target.native && request.options.sysroot.empty() && request.options.runtimeDirectory.empty())))
+                                                     target.mcu()           ? ".elf" : "");
+    if (!target.mcu() && builtin::available() && request.options.compiler.empty() && (codeOnly || (target.native && request.options.sysroot.empty() && request.options.runtimeDirectory.empty())))
         return builtin::compile(linked, Memory::String(llvmPath.c_str()), source, Memory::String(product.c_str()), diagnostics);
     const Text compiler = compilerPath(request.options.compiler);
     if (quote(compiler).empty() || quote(llvmPath).empty() || quote(product).empty())
@@ -3034,7 +3049,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     }
     RuntimeAssets runtimeAssets;
     std::filesystem::path runtimeDirectory;
-    if (!codeOnly)
+    if (!codeOnly && !target.mcu())
     {
         if (request.options.runtimeDirectory.empty())
         {
@@ -3065,13 +3080,16 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
         }
     }
     Text command = quote(compiler) + " --target=" + quote(textOf(target.triple));
+    if (target.cortexM4()) command += " -mcpu=cortex-m4 -mfloat-abi=soft";
+    if (target.mcuRv32()) command += " -march=rv32imac -mabi=ilp32";
+    if (target.mcu()) command += " -ffreestanding -fno-pic -ffunction-sections -fdata-sections";
     if (!request.options.sysroot.empty())
     {
         const auto root = quote(textOf(request.options.sysroot));
         if (root.empty()) return 1;
         command += " --sysroot=" + root;
     }
-    if (!request.options.cpu.empty())
+    if (!target.mcu() && !request.options.cpu.empty())
     {
         const auto cpu = quote(textOf(request.options.cpu));
         if (cpu.empty()) return 1;
@@ -3090,6 +3108,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
     else
     {
         command += "-fuse-ld=lld -Wl,--gc-sections ";
+        if (target.mcu()) command += "-nostdlib ";
         if (mipsTarget)
         {
             // GNU MIPS 的异常帧含绝对重定位，验证通过的可执行文件使用非 PIE 与普通对象链接。
@@ -3111,7 +3130,7 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
         }
         if (request.options.shared) command += "-shared ";
     }
-    if (!target.windows) command += "-fPIC ";
+    if (!target.windows && !target.mcu()) command += "-fPIC ";
     command += quote(llvmPath) + " -o " + quote(product);
     if (!codeOnly)
     {
@@ -3119,22 +3138,25 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
         if (runtime.empty()) return 1;
         command += " -Wl,--start-group";
         for (const auto &object : linked.options.linkObjects) command += " " + quote(textOf(object));
-        command += " -L" + runtime + " -lchali_aot_host ";
-        if (request.options.runtimeDirectory.empty()) command += quote((runtimeDirectory / "libstdc++.a").generic_u8string());
-        else command += "-lstdc++";
-        command += " -lgcc_eh -lgcc";
-        if (target.windows)
+        if (!target.mcu())
         {
-            command += " -static -lwinpthread -lwinhttp -lws2_32 -lcrypt32 -lbcrypt ";
-            if (request.options.runtimeDirectory.empty())
-                for (const char *name : { "gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a" }) command += quote((runtimeDirectory / name).generic_u8string()) + " ";
-        }
-        else
-        {
-            command += " -pthread -lm -ldl ";
-            if (target.mipsel || target.riscv32()) command += "-l:libatomic.so.1 ";
-            if (mipsTarget && std::filesystem::is_regular_file(runtimeDirectory / "requires-execstack"))
-                command += "-Wl,-z,execstack ";
+            command += " -L" + runtime + " -lchali_aot_host ";
+            if (request.options.runtimeDirectory.empty()) command += quote((runtimeDirectory / "libstdc++.a").generic_u8string());
+            else command += "-lstdc++";
+            command += " -lgcc_eh -lgcc";
+            if (target.windows)
+            {
+                command += " -static -lwinpthread -lwinhttp -lws2_32 -lcrypt32 -lbcrypt ";
+                if (request.options.runtimeDirectory.empty())
+                    for (const char *name : { "gcc_libmingw32.a", "gcc_libmingwex.a", "gcc_libmoldname.a" }) command += quote((runtimeDirectory / name).generic_u8string()) + " ";
+            }
+            else
+            {
+                command += " -pthread -lm -ldl ";
+                if (target.mipsel || target.riscv32()) command += "-l:libatomic.so.1 ";
+                if (mipsTarget && std::filesystem::is_regular_file(runtimeDirectory / "requires-execstack"))
+                    command += "-Wl,-z,execstack ";
+            }
         }
         // linked 包含按实际使用恢复的原生归档；原始 request 不含这些链接输入。
         for (const auto &library : linked.options.linkLibraries)
@@ -3145,7 +3167,10 @@ int run(const Request &request, Memory::Vector<Memory::String> *diagnostics)
                 if (diagnostics != nullptr) diagnostics->push_back("BUILD：链接库路径含不支持的字符");
                 return 1;
             }
-            command += " " + argument;
+            if (target.mcu() && std::filesystem::u8path(textOf(library)).extension() == ".ld")
+                command += " -Xlinker -T -Xlinker " + argument;
+            else
+                command += " " + argument;
         }
         command += " -Wl,--end-group";
     }

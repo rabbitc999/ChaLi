@@ -58,7 +58,13 @@ struct TargetInfo
     /** @brief 是否为 MIPS64 小端 Linux N64 目标。 */
     bool mips64el() const { return triple == "mips64el-unknown-linux-gnuabi64"; }
     /** @brief 目标 C ABI 的指针和 size_t 是否使用 32 位。 */
-    bool pointer32() const { return x86 || mipsel || arm32() || riscv32(); }
+    bool pointer32() const { return x86 || mipsel || arm32() || riscv32() || mcu(); }
+    /** @brief 是否为 Cortex-M4 裸机目标。 */
+    bool cortexM4() const { return triple == "thumbv7em-none-eabi"; }
+    /** @brief 是否为 RV32 裸机目标。 */
+    bool mcuRv32() const { return triple == "riscv32-unknown-elf"; }
+    /** @brief 是否使用板级运行时。 */
+    bool mcu() const { return cortexM4() || mcuRv32(); }
 };
 
 /**

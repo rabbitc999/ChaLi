@@ -379,8 +379,8 @@ class Loader
 public:
     Loader(preprocess::Options options, Memory::Vector<Memory::String> includeDirs,
            chali_incremental::Cache *cache = nullptr,
-           const chali_package::Project *project = nullptr, bool parallelImports = false)
-        : options_(std::move(options)), includeDirs_(std::move(includeDirs)), cache_(cache), project_(project), parallelImports_(parallelImports)
+           const chali_package::Project *project = nullptr, bool parallelImports = false, bool mcu = false)
+        : options_(std::move(options)), includeDirs_(std::move(includeDirs)), cache_(cache), project_(project), parallelImports_(parallelImports), mcu_(mcu)
     {
         options_.allowIncludes = false;
         options_.syntax = preprocess::Options::Syntax::Custom;
@@ -694,6 +694,11 @@ private:
         {
             const auto &imported = info.imports[i];
             if (imported == "std::core") continue;
+            if (mcu_ && imported == "std::reflect")
+            {
+                error = "MCU 目标不提供 std::reflect";
+                return false;
+            }
             prefetchImports(info.imports, base, i + 1);
             /* `std::algorithms` 没有 CHALI 文件，但仍在合并源码里保留模块边界。限定调用由
              * 编译器直接降级到 StackVM 胶水，不在这里注入函数体。 */
@@ -760,6 +765,7 @@ private:
     bool preprocessError_ = false;
     const chali_package::Project *project_ = nullptr;
     bool parallelImports_ = false;
+    bool mcu_ = false;
     std::size_t prefetchCount_ = 0;
     std::map<Memory::String, std::future<std::pair<bool, preprocess::Result>>> prefetched_;
 };
