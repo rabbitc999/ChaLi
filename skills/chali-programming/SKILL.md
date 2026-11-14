@@ -5,6 +5,28 @@ description: 编写、修改与调试 ChaLi (.chl) 程序，依据实际文法�
 
 # 编写 ChaLi 程序
 
+本 Skill 面向使用 MCP 编写 ChaLi 的 AI。目标是交付可检查、可运行的完整 `.chl` 程序，而不是只给出看起来像 C++、Rust 或 JavaScript 的代码。
+
+## MCP 工作流
+
+如果当前会话提供了 ChaLi MCP，优先使用它完成文件操作和验证：
+
+1. 需要陌生语法、关键字或标准库 API 时，先调用 `chali_man` 查询实际编译器手册。
+2. 使用 `chali_write` 写入完整源码；默认让工具立即执行 `chali check`，先修复诊断再继续。
+3. 需要验证行为时调用 `chali_run` 的 `run` 模式，并依据真实 stdout、stderr 和退出码修改程序。
+4. 用户需要可交付可执行文件时调用 `chali_run` 的 `build` 模式；不要把 `check` 的成功误报为构建成功。
+5. 用户要求新工程时调用 `chali_new`，再用 `chali_write` 创建或修改源文件。
+
+工具不可用时才使用当前环境中的 `chali` / `ChaLi.exe` 命令，并明确报告实际使用的编译器路径和未执行的检查。不要自行实现编译器规则，也不要凭记忆发明标准库 API。
+
+## 交付习惯
+
+- 先给出最小完整程序，再按需求增加模块、错误处理和性能优化。
+- 每次修改后至少重新 `check`；涉及输出、断言或资源生命周期时再 `run`。
+- 报告验证结果时引用实际退出码和关键输出；编译失败时保留原始诊断中的文件和行号。
+- 源码使用 UTF-8，不在 `.chl` 文件中混入 Markdown fences。
+- 除非用户明确要求，不修改文法、解析器、类型系统或运行时实现；本 Skill 只指导 ChaLi 应用代码。
+
 <!-- LANGUAGE NAVIGATION -->
 [English（中文原文）](SKILL.md) · **简体中文**
 <!-- END LANGUAGE NAVIGATION -->

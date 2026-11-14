@@ -1,0 +1,2 @@
+import assert from 'node:assert/strict'; import test from 'node:test'; import { readFile } from 'node:fs/promises'; import { join } from 'node:path';
+test('package contains original skill and generated copy', async () => { const source=await readFile(join(import.meta.dirname,'..','skill-source','SKILL.md'),'utf8'); const generated=await readFile(join(import.meta.dirname,'..','generated','skill-content.mjs'),'utf8'); assert.match(source,/name: chali-programming/); assert.match(generated,/skillContent/) })
