@@ -1,4 +1,4 @@
-# ChaLi 语言 （中文名称：茶理）
+# ChaLi 语言
 
 <!-- LANGUAGE NAVIGATION -->
 [English](README.en.md) · **简体中文**
