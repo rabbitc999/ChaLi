@@ -1,0 +1,29 @@
+{
+  "name": "dsh-chali",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DeepSeek Harness plugin that registers the ChaLi programming skill and tools for writing, checking, running, and building ChaLi (.chl) programs.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin/**/*",
+    "lib/index.js",
+    "lib/skill-content.js",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "package": "node scripts/package.mjs",
+    "test": "node --test test/plugin.test.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

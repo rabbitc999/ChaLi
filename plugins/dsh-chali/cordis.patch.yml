@@ -1,0 +1,10 @@
+# dsh-chali bundle patch: one host-plane row.
+#
+# The row registers the embedded ChaLi programming skill and four host tools
+# (chali_write / chali_run / chali_man / chali_new). Tools registered on the
+# host layer are inherited by every agent preset; the skill lands in the global
+# skills layer for the same reason. The plugin resolves the ChaLi compiler from
+# the session working directory, so no compiler path is baked into this file.
+- insert:
+    - id: chali
+      name: dsh-chali

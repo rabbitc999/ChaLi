@@ -1,0 +1,6 @@
+node_modules/
+bin/chali
+bin/chali.exe
+bin/compiler.json
+dist/
+*.tgz
