@@ -12,6 +12,7 @@ import zipfile
 
 from fetch_dependencies import download_lock
 from project_temp import tempfile
+from native_cmake import generator_args
 
 ROOT = Path(__file__).resolve().parents[1]
 DEPENDENCIES = {
@@ -95,7 +96,7 @@ def main():
                     for name, (version, checksum) in DEPENDENCIES.items()}
         build = workspace / 'build'
         stage = workspace / 'install'
-        subprocess.run(['cmake', '-S', str(sources), '-B', str(build), '-G', 'Ninja',
+        subprocess.run(['cmake', '-S', str(sources), '-B', str(build), *generator_args(),
                         '-DCMAKE_BUILD_TYPE=Release', f'-DRAYLIB_SOURCE={deps["raylib"].as_posix()}',
                         f'-DRAYGUI_SOURCE={deps["raygui"].as_posix()}', f'-DCHALI_GUI_ICONS={"ON" if options.icons else "OFF"}',
                         f'-DCHALI_NATIVE_STATIC={"ON" if options.static else "OFF"}',

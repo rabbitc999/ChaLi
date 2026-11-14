@@ -5,6 +5,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+import project_temp  # 子进程统一继承仓库临时目录。
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -39,6 +41,8 @@ def main():
     if args.cc:
         compiler = Path(args.cc)
         env['CC'] = str(compiler.resolve()) if compiler.is_file() else args.cc
+        if compiler.is_file():
+            env['PATH'] = str(compiler.resolve().parent) + os.pathsep + env.get('PATH', '')
     if args.sysroot:
         env['CFLAGS'] = (env.get('CFLAGS', '') + ' --sysroot="' + args.sysroot.resolve().as_posix() + '"').strip()
     for script, flags in [('setup_desktop_gui.py', gui), ('setup_xml.py', xml), ('setup_crypto.py', crypto)]:

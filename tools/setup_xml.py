@@ -6,6 +6,7 @@ import shutil
 import subprocess
 
 from project_temp import tempfile
+from native_cmake import generator_args
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -24,7 +25,7 @@ def main():
     library = 'chali_xml.dll' if os.name == 'nt' else 'chali_xml.so'
     with tempfile.TemporaryDirectory(prefix='xml-build-') as directory:
         work = Path(directory)
-        args = ['cmake','-S',str(source),'-B',str(work/'build'),'-G','Ninja','-DCMAKE_BUILD_TYPE=Release',
+        args = ['cmake','-S',str(source),'-B',str(work/'build'),*generator_args(),'-DCMAKE_BUILD_TYPE=Release',
                 '-DCMAKE_INSTALL_LIBDIR=lib']
         if options.static:
             args.append('-DCHALI_NATIVE_STATIC=ON')
